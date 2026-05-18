@@ -1,0 +1,3 @@
+//@version=5
+indicator("Realtime forming close")
+plot(close)

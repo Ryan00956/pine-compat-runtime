@@ -1,0 +1,6 @@
+//@version=5
+indicator("Extremes")
+hi = ta.highest(close, 3)
+lo = ta.lowest(close, 3)
+plot(hi)
+plot(lo)

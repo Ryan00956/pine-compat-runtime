@@ -1,0 +1,140 @@
+# Task Breakdown
+
+This document tracks implementation work at the level of issues or focused
+commits. Later phases should be expanded when the previous phase stabilizes.
+
+## Phase 0: Repository Foundation
+
+Status: started.
+
+- [x] Create Cargo workspace.
+- [x] Create initial crates.
+- [x] Add `.gitignore`.
+- [x] Add license.
+- [x] Add contribution guidelines.
+- [x] Add CI for format, clippy, and tests.
+- [x] Verify `cargo fmt --check`.
+- [x] Verify `cargo clippy --workspace --all-targets -- -D warnings`.
+- [x] Verify `cargo test --workspace`.
+
+## Phase 1: Syntax
+
+Status: started.
+
+- [x] Add `SourceFile`.
+- [x] Add `Span` and line/column mapping.
+- [x] Add diagnostic model.
+- [x] Add token model.
+- [x] Add lexer for identifiers, literals, operators, comments, version
+  directives, history brackets, and call punctuation.
+- [x] Add lexer tests.
+- [x] Add AST model for the executable Phase 1 subset.
+- [x] Add Pratt expression parser.
+- [x] Add parser support for calls, named arguments, qualified names, and
+  history references.
+- [x] Add parser support for declarations and reassignment.
+- [x] Add parser tests.
+- [x] Add parse recovery tests for malformed scripts.
+- [x] Add fixture-based parser tests.
+- [x] Add parser support for `if` syntax as parse-only when execution is not
+  enabled.
+- [x] Add tuple expression and tuple assignment parsing.
+- [x] Add function declaration parsing as parse-only until UDF semantics are
+  implemented.
+- [x] Add simple `for` parsing as unsupported syntax.
+
+## Phase 2: Semantic Analysis and Compatibility Gating
+
+Status: started.
+
+- [x] Add compatibility report data model.
+- [x] Add first unsupported-feature diagnostics.
+- [x] Add Phase 1 builtin registry scaffold.
+- [x] Wire analyzer to the builtin registry.
+- [x] Add stable diagnostic code catalog.
+- [x] Add minimal global symbol table.
+- [x] Add scope resolver.
+- [x] Add type model integration.
+- [x] Add qualifier promotion rules.
+- [x] Add builtin signature validation.
+- [x] Add constant-history-offset validation.
+- [x] Add dynamic-history-offset rejection.
+- [x] Add `varip` rejection fixture.
+- [x] Add first `request.*` unsupported fixture.
+- [x] Add `strategy.*`, drawing object, array, import, and alert
+  unsupported fixtures.
+- [x] Assign stable `SeriesId`, `CallSiteId`, and `VarSlotId` during lowering.
+- [x] Lower AST to executable HIR for the Phase 1 subset.
+
+## Phase 3: Minimal Historical Runtime
+
+Status: started.
+
+- [x] Add bar input model and CSV fixture reader.
+- [x] Add runtime value model.
+- [x] Add frame/current-value store.
+- [x] Add committed series store.
+- [x] Add persistent `var` store.
+- [x] Evaluate literals and identifiers.
+- [x] Evaluate unary and binary expressions.
+- [x] Evaluate ternary expressions.
+- [x] Evaluate history references with constant offsets.
+- [x] Implement `na` and `nz`.
+- [x] Implement initial `input.*` value injection using defaults.
+- [x] Implement initial `plot` output collection.
+- [x] Implement `hline` and `fill` output collection.
+- [x] Implement `ta.sma`.
+- [x] Implement `ta.ema`.
+- [x] Add first runtime tests.
+
+## Phase 4: Expanded Built-Ins and Output
+
+Status: planned.
+
+- [x] Define initial normalized result JSON schema in code.
+- [x] Add CLI `run`.
+- [x] Add tuple lowering.
+- [x] Implement `ta.rma`.
+- [x] Implement `ta.rsi`.
+- [x] Implement `ta.macd`.
+- [x] Implement `ta.bb`.
+- [x] Implement `ta.tr` and `ta.atr`.
+- [x] Implement `ta.change`, `ta.cross`, `ta.crossover`, and `ta.crossunder`.
+- [x] Implement highest/lowest.
+- [x] Add color registry and `color.new`.
+- [x] Add selected `math.*` functions.
+- [x] Add conformance matrix output.
+
+## Phase 5: Python Binding
+
+Status: planned.
+
+- [x] Add `pine-python` crate.
+- [x] Add PyO3 and maturin configuration.
+- [x] Expose `compile_script`.
+- [x] Expose `analyze_script`.
+- [x] Expose `run_script`.
+- [x] Add Python tests.
+- [x] Add package metadata.
+
+## Phase 6: Performance and Incremental Runtime
+
+Status: planned.
+
+- [x] Add compile cache.
+- [x] Profile runtime allocations.
+- [x] Optimize rolling TA built-ins.
+- [x] Add append-bar execution.
+- [x] Verify incremental execution against full recomputation.
+- [x] Evaluate optional bytecode VM after MIR semantics stabilize.
+
+## Phase 7: Realtime and Wider Compatibility
+
+Status: planned.
+
+- [x] Define forming-bar model.
+- [x] Add rollback semantics.
+- [x] Implement or reject `varip` precisely.
+- [x] Add repeated-update fixtures.
+- [x] Expand syntax and semantic support based on conformance gaps.
+- [x] Add optional WASM binding after the core API is stable.

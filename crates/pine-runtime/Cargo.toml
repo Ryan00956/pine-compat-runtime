@@ -1,0 +1,18 @@
+[package]
+name = "pine-runtime"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+pine-builtins = { path = "../pine-builtins" }
+pine-ir = { path = "../pine-ir" }
+
+[dev-dependencies]
+pine-sema = { path = "../pine-sema" }
+pine-syntax = { path = "../pine-syntax" }
+
+[lib]
+name = "pine_runtime"
+path = "src/lib.rs"

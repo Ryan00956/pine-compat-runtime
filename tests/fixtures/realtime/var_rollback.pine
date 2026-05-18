@@ -1,0 +1,5 @@
+//@version=5
+indicator("Realtime var rollback")
+var x = 0
+x := x + 1
+plot(x)

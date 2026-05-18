@@ -1,0 +1,6 @@
+//@version=5
+indicator("Math")
+x = math.max(math.abs(close - 3), math.round(close / 2), 1)
+y = math.min(x, 3.5)
+plot(x)
+plot(y)

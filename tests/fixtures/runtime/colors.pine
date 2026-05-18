@@ -1,0 +1,5 @@
+//@version=5
+indicator("Colors")
+base = input.color(color.orange, "Base")
+shade = color.new(base, 50)
+plot(close, color=shade)

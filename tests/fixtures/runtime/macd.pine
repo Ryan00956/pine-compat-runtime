@@ -1,0 +1,7 @@
+//@version=5
+indicator("MACD")
+[macd, signal, hist] = ta.macd(close, 2, 3, 2)
+plot(macd)
+plot(signal)
+plot(hist)
+

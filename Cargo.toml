@@ -1,0 +1,18 @@
+[workspace]
+members = [
+    "crates/pine-builtins",
+    "crates/pine-cli",
+    "crates/pine-ir",
+    "crates/pine-python",
+    "crates/pine-runtime",
+    "crates/pine-sema",
+    "crates/pine-syntax",
+    "crates/pine-wasm",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = ""
+rust-version = "1.95"

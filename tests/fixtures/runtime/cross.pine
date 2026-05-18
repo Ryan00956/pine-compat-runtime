@@ -1,0 +1,10 @@
+//@version=5
+indicator("Cross")
+baseline = 2.0
+crossed = ta.cross(close, baseline)
+over = ta.crossover(close, baseline)
+under = ta.crossunder(close, baseline)
+plot(crossed ? 1 : 0)
+plot(over ? 1 : 0)
+plot(under ? 1 : 0)
+
