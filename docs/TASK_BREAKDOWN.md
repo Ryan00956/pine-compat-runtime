@@ -179,7 +179,7 @@ Status: in progress.
 - [x] Support executable `for` loops for inclusive integer ranges with optional
   explicit step.
 - [x] Support `break` and `continue` inside executable `for` loops.
-- [x] Support scalar `for` expression results in declarations.
+- [x] Support scalar and tuple `for` expression results in declarations.
 - [x] Add fixture-derived conformance metadata for block statements.
 - [x] Add fixture-derived conformance metadata for user-defined functions.
 - [ ] Implement full local-scope declarations and shadowing rules.

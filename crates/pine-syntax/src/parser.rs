@@ -106,7 +106,7 @@ impl Parser {
             });
         }
 
-        if self.at(TokenKind::LBracket) {
+        if self.at(TokenKind::LBracket) && self.looks_like_tuple_decl() {
             return self.parse_tuple_decl();
         }
 
@@ -406,10 +406,41 @@ impl Parser {
         false
     }
 
+    fn looks_like_tuple_decl(&self) -> bool {
+        if !self.at(TokenKind::LBracket) {
+            return false;
+        }
+
+        let mut depth = 0_u32;
+        let mut index = self.pos;
+        while let Some(token) = self.tokens.get(index) {
+            match token.kind {
+                TokenKind::Newline | TokenKind::Eof => return false,
+                TokenKind::LBracket => depth += 1,
+                TokenKind::RBracket => {
+                    depth = depth.saturating_sub(1);
+                    if depth == 0 {
+                        return self
+                            .tokens
+                            .get(index + 1)
+                            .is_some_and(|next| matches!(next.kind, TokenKind::Eq));
+                    }
+                }
+                _ => {}
+            }
+            index += 1;
+        }
+
+        false
+    }
+
     fn parse_expr(&mut self, min_bp: u8) -> Option<Expr> {
         let mut left = self.parse_prefix()?;
 
         loop {
+            if matches!(left.kind, ExprKind::For { .. }) {
+                break;
+            }
             if self.at(TokenKind::LParen) {
                 left = self.finish_call(left)?;
                 continue;

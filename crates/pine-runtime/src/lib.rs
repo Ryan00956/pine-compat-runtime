@@ -2931,6 +2931,34 @@ plot(close + value)
     }
 
     #[test]
+    fn runs_tuple_for_expression_result() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("tuple for expression")
+[x, y] = for i = 0 to 3
+    if i == 1
+        continue
+    if i == 3
+        break
+    [i, i * 2]
+plot(close + x + y)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[7.0, 8.0, 9.0]);
+    }
+
+    #[test]
     fn runs_stateful_call_as_function_argument_once() {
         let source = SourceFile::new(
             "test.pine",

@@ -1895,6 +1895,13 @@ impl Analyzer {
                     _ => None,
                 }
             }
+            ExprKind::For { body, .. } => {
+                let last = body.last()?;
+                let StmtKind::Expr(expr) = &last.kind else {
+                    return None;
+                };
+                self.tuple_element_types(expr)
+            }
             _ => None,
         }
     }
@@ -2960,6 +2967,18 @@ plot(y)
     #[test]
     fn accepts_for_expression_result() {
         let analysis = analyze("x = for i = 0 to 2\n    i * 2\nplot(x)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_tuple_for_expression_result() {
+        let analysis = analyze("[x, y] = for i = 0 to 2\n    [i, i * 2]\nplot(x + y)\n");
 
         assert!(
             analysis.diagnostics.is_empty(),
