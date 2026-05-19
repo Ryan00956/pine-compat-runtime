@@ -1319,6 +1319,10 @@ impl<'a> HistoricalRuntime<'a> {
             }
             "color.new" => self.eval_color_new(args),
             "color.rgb" => self.eval_color_rgb(args),
+            "color.r" => self.eval_color_component(args, ColorComponent::Red),
+            "color.g" => self.eval_color_component(args, ColorComponent::Green),
+            "color.b" => self.eval_color_component(args, ColorComponent::Blue),
+            "color.t" => self.eval_color_component(args, ColorComponent::Transparency),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -1745,6 +1749,18 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let color = (color_channel(red) << 16) | (color_channel(green) << 8) | color_channel(blue);
         Ok(PineValue::Color(apply_transparency(color, transp)))
+    }
+
+    fn eval_color_component(
+        &mut self,
+        args: &[HirCallArg],
+        component: ColorComponent,
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Color(color) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        Ok(PineValue::Float(color_component(color, component)))
     }
 
     fn eval_math_abs(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -2760,6 +2776,29 @@ fn color_channel(value: f64) -> u32 {
     value.round().clamp(0.0, 255.0) as u32
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ColorComponent {
+    Red,
+    Green,
+    Blue,
+    Transparency,
+}
+
+fn color_component(color: u32, component: ColorComponent) -> f64 {
+    let (rgb, alpha) = if color > 0xFF_FFFF {
+        (color >> 8, color & 0xFF)
+    } else {
+        (color, 0xFF)
+    };
+
+    match component {
+        ColorComponent::Red => ((rgb >> 16) & 0xFF) as f64,
+        ColorComponent::Green => ((rgb >> 8) & 0xFF) as f64,
+        ColorComponent::Blue => (rgb & 0xFF) as f64,
+        ColorComponent::Transparency => (100.0 - (alpha as f64 * 100.0 / 255.0)).round(),
+    }
+}
+
 fn math_extreme(left: f64, right: f64, mode: MathExtreme) -> f64 {
     match mode {
         MathExtreme::Max => left.max(right),
@@ -3706,9 +3745,11 @@ plot(lo)
 c = color.new(color.red, 50)
 opaque = color.new(color.blue)
 custom = color.rgb(255, 153, 0, 50)
+channels = color.r(custom) + color.g(custom) + color.b(custom) + color.t(custom)
 bgcolor(custom)
 plot(na(c) ? 0 : 1)
 plot(opaque == color.new(color.blue, 0) ? 1 : 0)
+plot(channels)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -3723,6 +3764,7 @@ plot(opaque == color.new(color.blue, 0) ? 1 : 0)
 
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[458.0, 458.0]);
         assert_eq!(apply_transparency(0xFF0000, 50), 0xFF000080);
         assert_eq!(
             result.bg_colors[0].values,

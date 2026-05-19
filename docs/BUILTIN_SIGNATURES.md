@@ -184,10 +184,16 @@ Rules:
 ```text
 color.new(color: color-compatible, transp?: simple int) -> same qualifier color
 color.rgb(red: numeric, green: numeric, blue: numeric, transp?: numeric) -> color with strongest qualifier
+color.r(color: color-compatible) -> float with same qualifier
+color.g(color: color-compatible) -> float with same qualifier
+color.b(color: color-compatible) -> float with same qualifier
+color.t(color: color-compatible) -> float with same qualifier
 ```
 
 Named colors include the common TradingView color constants used by fixtures.
 `color.new` defaults `transp` to 0 when omitted.
+`color.r`, `color.g`, `color.b`, and `color.t` return `na` for `na` colors;
+`color.t` returns transparency on the 0-100 scale.
 
 Hex color parsing should be implemented in the syntax or semantic layer with a
 single normalized `Color` representation.

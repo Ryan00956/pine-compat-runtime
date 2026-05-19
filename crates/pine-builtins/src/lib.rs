@@ -539,6 +539,12 @@ const COLOR_RGB_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const COLOR_COMPONENT_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "color",
+    accepts: Accepts::ColorCompatible,
+    optional: false,
+}];
+
 const MATH_NUMBER_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "number",
     accepts: Accepts::Numeric,
@@ -933,6 +939,34 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: COLOR_RGB_PARAMS,
         returns: ReturnSpec::PromotedColor,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "color.r",
+        phase: BuiltinPhase::Phase1Core,
+        params: COLOR_COMPONENT_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "color.g",
+        phase: BuiltinPhase::Phase1Core,
+        params: COLOR_COMPONENT_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "color.b",
+        phase: BuiltinPhase::Phase1Core,
+        params: COLOR_COMPONENT_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "color.t",
+        phase: BuiltinPhase::Phase1Core,
+        params: COLOR_COMPONENT_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
         variadic: false,
     },
     BuiltinSignature {

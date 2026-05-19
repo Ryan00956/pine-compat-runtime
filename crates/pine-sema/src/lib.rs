@@ -3201,6 +3201,7 @@ base = input.color(color.orange, "Base")
 shade = color.new(base, 50)
 opaque = color.new(color.blue)
 custom = color.rgb(255, 153, 0, 50)
+channels = color.r(custom) + color.g(custom) + color.b(custom) + color.t(custom)
 plot(close, color=shade)
 "#,
         );
@@ -3223,6 +3224,34 @@ plot(close, color=shade)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "color.rgb")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "color.r")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "color.g")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "color.b")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "color.t")
         );
         assert!(
             analysis

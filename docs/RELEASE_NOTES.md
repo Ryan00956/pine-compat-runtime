@@ -29,6 +29,7 @@
   wick, and border colors.
 - Added `color.rgb` support for numeric RGB channels and optional transparency.
 - Added optional transparency defaulting for `color.new`.
+- Added `color.r`, `color.g`, `color.b`, and `color.t` channel extraction.
 - Added `math.floor` and `math.ceil` support for numeric values.
 - Added `math.sqrt`, `math.log`, and `math.pow` support for numeric values.
 - Added `math.sin`, `math.cos`, and `math.tan` support for numeric values.

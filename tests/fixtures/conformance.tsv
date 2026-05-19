@@ -23,6 +23,10 @@ hline	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
 fill	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
 color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 color.rgb	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
+color.r	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
+color.g	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
+color.b	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
+color.t	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
 math.abs	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.max	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.min	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
