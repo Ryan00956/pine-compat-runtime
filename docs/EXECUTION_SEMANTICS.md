@@ -89,15 +89,22 @@ plot(spread(lo=low, hi=high))
 range2(hi, lo) =>
     value = hi - lo
     value * 2
+
+select_value(x, y) =>
+    result = y
+    if x > y
+        result := x
+    result
 ```
 
 Inlining gives stateful calls inside the function body independent callsite
 state for each syntactic UDF call. Named arguments are resolved before
 lowering, and arguments are evaluated once into callsite-local temporaries.
 Multi-statement function bodies execute local statements and return the final
-expression. Recursive functions, output side effects inside functions, global
-reassignment inside functions, and side-effecting calls as UDF arguments are
-rejected in the current executable subset.
+expression. Local declarations and reassignments inside function block bodies
+are scoped to the function callsite. Recursive functions, output side effects
+inside functions, global reassignment inside functions, and side-effecting calls
+as UDF arguments are rejected in the current executable subset.
 
 ## Series and History References
 

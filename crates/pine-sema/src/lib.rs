@@ -2418,6 +2418,20 @@ plot(y)
     }
 
     #[test]
+    fn accepts_if_reassignment_inside_block_body_function() {
+        let analysis = analyze(
+            "select(x, y) =>\n    result = y\n    if x > y\n        result := x\n    result\nplot(select(high, low))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_block_body_function_without_final_expression() {
         let analysis = analyze("double(x) =>\n    y = x * 2\nplot(double(close))\n");
 

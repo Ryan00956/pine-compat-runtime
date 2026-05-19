@@ -2596,6 +2596,37 @@ plot(smooth2(close, 2))
     }
 
     #[test]
+    fn runs_if_reassignment_inside_block_body_function() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf if")
+select_value(x, y) =>
+    result = y
+    if x > y
+        result := x
+    result
+plot(select_value(high, close))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 3.0, 1.0, 2.0),
+            bar_ohlc(4.0, 4.0, 2.0, 5.0),
+            bar_ohlc(2.0, 8.0, 4.0, 6.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[3.0, 5.0, 8.0]);
+    }
+
+    #[test]
     fn runs_stateful_call_as_function_argument_once() {
         let source = SourceFile::new(
             "test.pine",
