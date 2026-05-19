@@ -134,10 +134,11 @@ x = close + open
 The declaration creates or updates the current bar value for that symbol. If the
 symbol is series-qualified, the current value is committed after bar execution.
 
-Block-local declarations inside `if` blocks are not executable yet. The
-analyzer rejects them instead of leaking the symbol into global scope. Scripts
-that need conditional mutation should declare the symbol before the block and
-use reassignment inside the branch.
+Normal block-local declarations inside `if` blocks are executable and scoped to
+their branch. The analyzer records resolved symbol bindings before lowering so
+locals do not leak into outer scopes. Tuple declarations that would create new
+block-local symbols are still rejected; tuple assignment to predeclared symbols
+is executable.
 
 ## Reassignment
 

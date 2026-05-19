@@ -51,6 +51,7 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
             ..CompatibilityReport::default()
         },
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
+        bindings: HashMap::new(),
         functions: HashMap::new(),
         function_stack: Vec::new(),
         next_symbol_id: initial_symbol_count(),
@@ -132,6 +133,7 @@ struct Analyzer {
     diagnostics: Vec<Diagnostic>,
     compatibility: CompatibilityReport,
     scope: ScopeResolver,
+    bindings: HashMap<BindingKey, SymbolInfo>,
     functions: HashMap<String, FunctionInfo>,
     function_stack: Vec<String>,
     next_symbol_id: u32,
@@ -166,17 +168,33 @@ struct SymbolInfo {
     var_slot_id: Option<VarSlotId>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct BindingKey {
+    span_start: usize,
+    span_end: usize,
+    name: String,
+}
+
 #[derive(Debug, Clone)]
 struct ScopeResolver {
     scopes: Vec<HashMap<String, SymbolInfo>>,
-    symbol_order: Vec<String>,
+    all_symbols: Vec<(String, SymbolInfo)>,
 }
 
 impl ScopeResolver {
     fn new(global_symbols: HashMap<String, SymbolInfo>, symbol_order: Vec<String>) -> Self {
+        let all_symbols = symbol_order
+            .iter()
+            .filter_map(|name| {
+                global_symbols
+                    .get(name)
+                    .copied()
+                    .map(|symbol| (name.clone(), symbol))
+            })
+            .collect();
         Self {
             scopes: vec![global_symbols],
-            symbol_order,
+            all_symbols,
         }
     }
 
@@ -193,7 +211,13 @@ impl ScopeResolver {
             .first_mut()
             .expect("scope resolver always has a global scope");
         if !global_scope.contains_key(name) {
-            self.symbol_order.push(name.to_owned());
+            self.all_symbols.push((name.to_owned(), info));
+        } else if let Some((_, symbol)) = self
+            .all_symbols
+            .iter_mut()
+            .find(|(_, symbol)| symbol.id == info.id)
+        {
+            *symbol = info;
         }
         global_scope.insert(name.to_owned(), info);
     }
@@ -207,6 +231,13 @@ impl ScopeResolver {
         {
             scope.insert(name.to_owned(), info);
         }
+        if let Some((_, symbol)) = self
+            .all_symbols
+            .iter_mut()
+            .find(|(_, symbol)| symbol.id == info.id)
+        {
+            *symbol = info;
+        }
     }
 
     fn push_scope(&mut self) {
@@ -219,29 +250,26 @@ impl ScopeResolver {
         }
     }
 
-    fn define_local(&mut self, name: &str, info: SymbolInfo) {
+    fn define_local(&mut self, name: &str, info: SymbolInfo, lower: bool) {
         let scope = self
             .scopes
             .last_mut()
             .expect("scope resolver always has a current scope");
         scope.insert(name.to_owned(), info);
+        if lower {
+            self.all_symbols.push((name.to_owned(), info));
+        }
     }
 
     fn lower_symbols(&self) -> Vec<HirSymbol> {
-        let global_scope = self
-            .scopes
-            .first()
-            .expect("scope resolver always has a global scope");
-        self.symbol_order
+        self.all_symbols
             .iter()
-            .filter_map(|name| {
-                global_scope.get(name).map(|symbol| HirSymbol {
-                    id: symbol.id,
-                    name: name.clone(),
-                    pine_type: symbol.pine_type,
-                    series_id: symbol.series_id,
-                    var_slot_id: symbol.var_slot_id,
-                })
+            .map(|(name, symbol)| HirSymbol {
+                id: symbol.id,
+                name: name.clone(),
+                pine_type: symbol.pine_type,
+                series_id: symbol.series_id,
+                var_slot_id: symbol.var_slot_id,
             })
             .collect()
     }
@@ -319,9 +347,16 @@ impl Analyzer {
                 });
 
                 self.block_depth += 1;
-                for branch_statement in then_branch.iter().chain(else_branch) {
+                self.scope.push_scope();
+                for branch_statement in then_branch {
                     self.analyze_stmt(branch_statement);
                 }
+                self.scope.pop_scope();
+                self.scope.push_scope();
+                for branch_statement in else_branch {
+                    self.analyze_stmt(branch_statement);
+                }
+                self.scope.pop_scope();
                 self.block_depth -= 1;
             }
             StmtKind::Function { .. } => {
@@ -338,20 +373,17 @@ impl Analyzer {
                     self.unsupported("varip", VARIP_UNSUPPORTED_REASON, statement.span);
                 }
                 let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
-                if self.block_depth > 0 {
-                    self.unsupported(
-                        "block_local_declaration",
-                        "declarations inside if blocks are not supported yet; declare the variable before the block and use reassignment",
-                        statement.span,
-                    );
-                    return;
-                }
                 let var_slot_id = if matches!(mode, pine_syntax::DeclMode::Var) {
                     Some(self.alloc_var_slot())
                 } else {
                     None
                 };
-                self.define_symbol(name, value_type, var_slot_id);
+                let symbol = if self.block_depth > 0 {
+                    self.define_local_symbol(name, value_type, var_slot_id, true)
+                } else {
+                    self.define_symbol(name, value_type, var_slot_id)
+                };
+                self.bind_symbol(name, statement.span, symbol);
             }
             StmtKind::Reassign { name, value } => {
                 if self.scope.resolve(name).is_none() {
@@ -368,6 +400,9 @@ impl Analyzer {
                 ) {
                     self.validate_assignment(name, target_type, value_type, statement.span);
                     self.update_symbol_type(name, value_type);
+                }
+                if let Some(symbol) = self.scope.resolve(name) {
+                    self.bind_symbol(name, statement.span, symbol);
                 }
             }
             StmtKind::TupleDecl { .. } => {
@@ -419,10 +454,16 @@ impl Analyzer {
                 };
                 self.validate_assignment(name, target.pine_type, pine_type, statement.span);
                 self.update_symbol_type(name, pine_type);
+                if let Some(symbol) = self.scope.resolve(name) {
+                    self.bind_symbol(name, statement.span, symbol);
+                }
             }
         } else {
             for (name, pine_type) in names.iter().zip(element_types) {
                 self.define_symbol(name, pine_type, None);
+                if let Some(symbol) = self.scope.resolve(name) {
+                    self.bind_symbol(name, statement.span, symbol);
+                }
             }
         }
     }
@@ -570,7 +611,7 @@ impl Analyzer {
             resolved_arg_types[param_index] = arg_types.get(arg_index).copied().flatten();
         }
         for (param, arg_type) in function.params.iter().zip(resolved_arg_types) {
-            self.define_local_symbol(param, arg_type.unwrap_or(UNKNOWN));
+            self.define_local_symbol(param, arg_type.unwrap_or(UNKNOWN), None, false);
         }
         self.function_stack.push(name.to_owned());
         self.function_depth += 1;
@@ -819,6 +860,7 @@ impl Analyzer {
 
     fn resolve_symbol(&mut self, name: &str, span: Span) -> Option<PineType> {
         if let Some(symbol) = self.scope.resolve(name) {
+            self.bind_symbol(name, span, symbol);
             Some(symbol.pine_type)
         } else {
             self.diagnostics.push(Diagnostic::error(
@@ -835,7 +877,7 @@ impl Analyzer {
         name: &str,
         pine_type: PineType,
         var_slot_id: Option<VarSlotId>,
-    ) -> SymbolId {
+    ) -> SymbolInfo {
         if let Some(existing) = self.scope.resolve(name) {
             let updated = SymbolInfo {
                 pine_type,
@@ -846,33 +888,35 @@ impl Analyzer {
                 ..existing
             };
             self.scope.update(name, updated);
-            return existing.id;
+            return updated;
         }
 
-        let id = self.alloc_symbol();
         let info = SymbolInfo {
-            id,
+            id: self.alloc_symbol(),
             pine_type,
             series_id: self.series_id_for_type(pine_type),
             var_slot_id,
         };
         self.scope.define_global(name, info);
-        id
+        info
     }
 
-    fn define_local_symbol(&mut self, name: &str, pine_type: PineType) -> SymbolId {
-        let id = self.alloc_symbol();
+    fn define_local_symbol(
+        &mut self,
+        name: &str,
+        pine_type: PineType,
+        var_slot_id: Option<VarSlotId>,
+        lower: bool,
+    ) -> SymbolInfo {
         let series_id = self.series_id_for_type(pine_type);
-        self.scope.define_local(
-            name,
-            SymbolInfo {
-                id,
-                pine_type,
-                series_id,
-                var_slot_id: None,
-            },
-        );
-        id
+        let info = SymbolInfo {
+            id: self.alloc_symbol(),
+            pine_type,
+            series_id,
+            var_slot_id,
+        };
+        self.scope.define_local(name, info, lower);
+        info
     }
 
     fn update_symbol_type(&mut self, name: &str, pine_type: PineType) {
@@ -1114,6 +1158,14 @@ impl Analyzer {
         self.scope.lower_symbols()
     }
 
+    fn bind_symbol(&mut self, name: &str, span: Span, symbol: SymbolInfo) {
+        self.bindings.insert(binding_key(name, span), symbol);
+    }
+
+    fn bound_symbol(&self, name: &str, span: Span) -> Option<SymbolInfo> {
+        self.bindings.get(&binding_key(name, span)).copied()
+    }
+
     fn lower_stmt(&mut self, statement: &pine_syntax::Stmt) -> Option<HirStmt> {
         let kind = match &statement.kind {
             StmtKind::Expr(expr) => HirStmtKind::Expr(self.lower_expr(expr)?),
@@ -1133,17 +1185,20 @@ impl Analyzer {
                     .collect::<Option<_>>()?,
             },
             StmtKind::Decl { name, value, .. } => HirStmtKind::Decl {
-                symbol: self.scope.resolve(name)?.id,
+                symbol: self.bound_symbol(name, statement.span)?.id,
                 value: self.lower_expr(value)?,
             },
             StmtKind::Reassign { name, value } => HirStmtKind::Reassign {
-                symbol: self.scope.resolve(name)?.id,
+                symbol: self.bound_symbol(name, statement.span)?.id,
                 value: self.lower_expr(value)?,
             },
             StmtKind::TupleDecl { names, value } => HirStmtKind::TupleDecl {
                 symbols: names
                     .iter()
-                    .map(|name| self.scope.resolve(name).map(|symbol| symbol.id))
+                    .map(|name| {
+                        self.bound_symbol(name, statement.span)
+                            .map(|symbol| symbol.id)
+                    })
                     .collect::<Option<_>>()?,
                 value: self.lower_expr(value)?,
             },
@@ -1174,9 +1229,9 @@ impl Analyzer {
         let series_id =
             if pine_type.qualifier == Qualifier::Series && pine_type.kind != ValueKind::Tuple {
                 match &expr.kind {
-                    ExprKind::Identifier(name) => {
-                        self.scope.resolve(name).and_then(|symbol| symbol.series_id)
-                    }
+                    ExprKind::Identifier(name) => self
+                        .bound_symbol(name, expr.span)
+                        .and_then(|symbol| symbol.series_id),
                     _ => Some(self.alloc_series()),
                 }
             } else {
@@ -1185,7 +1240,9 @@ impl Analyzer {
 
         let kind = match &expr.kind {
             ExprKind::Literal(literal) => HirExprKind::Literal(lower_literal(literal)),
-            ExprKind::Identifier(name) => HirExprKind::Symbol(self.scope.resolve(name)?.id),
+            ExprKind::Identifier(name) => {
+                HirExprKind::Symbol(self.bound_symbol(name, expr.span)?.id)
+            }
             ExprKind::QualifiedName(parts) => HirExprKind::Builtin(parts.join(".")),
             ExprKind::Unary { op, expr } => HirExprKind::Unary {
                 op: lower_unary_op(*op),
@@ -1295,6 +1352,10 @@ impl Analyzer {
             ExprKind::Identifier(name) => param_types
                 .get(name)
                 .copied()
+                .or_else(|| {
+                    self.bound_symbol(name, expr.span)
+                        .map(|symbol| symbol.pine_type)
+                })
                 .or_else(|| self.scope.resolve(name).map(|symbol| symbol.pine_type)),
             ExprKind::QualifiedName(_) => {
                 let name = expr_name(expr)?;
@@ -1414,6 +1475,14 @@ fn unsupported_syntax_reason(feature: &str) -> &'static str {
         "function_block" => "multi-statement user-defined functions need local block semantics",
         "for" => "for loops are parsed for compatibility reporting but not executable yet",
         _ => "syntax is not supported in Phase 1",
+    }
+}
+
+fn binding_key(name: &str, span: Span) -> BindingKey {
+    BindingKey {
+        span_start: span.start,
+        span_end: span.end,
+        name: name.to_owned(),
     }
 }
 
@@ -1966,16 +2035,21 @@ plot(y)
     }
 
     #[test]
-    fn rejects_block_local_declaration_in_if() {
-        let analysis = analyze("if close > open\n    x = close\nplot(x)\n");
+    fn accepts_block_local_declaration_in_if() {
+        let analysis = analyze("if close > open\n    x = high - low\n    plot(x)\n");
 
         assert!(
-            analysis
-                .compatibility
-                .unsupported
-                .iter()
-                .any(|feature| feature.feature == "block_local_declaration")
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
         );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_block_local_declaration_escape() {
+        let analysis = analyze("if close > open\n    x = close\nplot(x)\n");
+
         assert!(
             analysis
                 .diagnostics

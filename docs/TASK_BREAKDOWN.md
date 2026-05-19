@@ -167,8 +167,9 @@ Status: in progress.
 - [x] Support stateful calls inside `if` blocks with callsite state advancing
   only when the branch executes.
 - [x] Cover conditional SMA, EMA, BB, RSI, ATR, and MACD fixtures.
-- [x] Reject block-local declarations inside `if` until local-scope semantics
-  are implemented.
+- [x] Support normal block-local declarations inside `if` branches.
+- [x] Reject tuple block-local declarations until tuple local bindings are
+  implemented.
 - [x] Add expression-body user-defined function execution by inlining.
 - [x] Support named arguments for expression-body user-defined functions.
 - [x] Reject recursive functions and function side effects.

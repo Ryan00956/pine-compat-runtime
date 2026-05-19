@@ -2269,6 +2269,42 @@ plot(x)
     }
 
     #[test]
+    fn runs_block_local_declaration_in_if() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("block local")
+if close > open
+    spread = high - low
+    plot(spread)
+else
+    spread = open - close
+    plot(spread)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 3.0, 1.0, 2.0),
+            bar_ohlc(4.0, 5.0, 3.0, 2.0),
+            bar_ohlc(2.0, 8.0, 4.0, 6.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 2);
+        assert_values_close(&result.plots[0].values[..1], &[2.0]);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[4.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_values_close(&result.plots[1].values[1..2], &[2.0]);
+        assert_eq!(result.plots[1].values[2], PineValue::Na);
+    }
+
+    #[test]
     fn advances_conditional_tuple_builtin_only_when_branch_executes() {
         let source = SourceFile::new(
             "test.pine",
