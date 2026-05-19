@@ -3209,6 +3209,7 @@ x = math.max(math.abs(close - 3), math.round(close / 2), 1)
 y = math.min(x, 3.5)
 z = math.floor(close / 2) + math.ceil(close / 2)
 w = math.sqrt(close) + math.log(close) + math.pow(close, 2)
+trig = math.sin(close) + math.cos(close) + math.tan(close)
 plot(y)
 "#,
         );
@@ -3266,6 +3267,27 @@ plot(y)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "math.pow")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.sin")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.cos")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.tan")
         );
     }
 

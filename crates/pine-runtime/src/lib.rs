@@ -1325,6 +1325,9 @@ impl<'a> HistoricalRuntime<'a> {
             "math.ceil" => self.eval_math_ceil(args),
             "math.sqrt" => self.eval_math_unary_float(args, f64::sqrt),
             "math.log" => self.eval_math_unary_float(args, f64::ln),
+            "math.sin" => self.eval_math_unary_float(args, f64::sin),
+            "math.cos" => self.eval_math_unary_float(args, f64::cos),
+            "math.tan" => self.eval_math_unary_float(args, f64::tan),
             "math.pow" => self.eval_math_pow(args),
             "math.round" => self.eval_math_round(args),
             "ta.sma" => self.eval_sma(call_site_id, args),
@@ -3643,6 +3646,9 @@ ceil_value = math.ceil(close / 2 - 0.25)
 const_value = math.floor(2) + math.ceil(1)
 sqrt_value = math.sqrt(close)
 log_value = math.log(close)
+sin_value = math.sin(close)
+cos_value = math.cos(close)
+tan_value = math.tan(close)
 pow_value = math.pow(close, 2)
 plot(x)
 plot(y)
@@ -3650,6 +3656,9 @@ plot(floor_value + ceil_value)
 plot(const_value)
 plot(sqrt_value)
 plot(log_value)
+plot(sin_value)
+plot(cos_value)
+plot(tan_value)
 plot(pow_value)
 plot(math.sqrt(-1))
 plot(math.log(0))
@@ -3678,10 +3687,22 @@ plot(math.pow(-1, 0.5))
             &result.plots[5].values,
             &[0.0, 2.0_f64.ln(), 3.0_f64.ln(), 4.0_f64.ln()],
         );
-        assert_values_close(&result.plots[6].values, &[1.0, 4.0, 9.0, 16.0]);
-        assert_eq!(result.plots[7].values, vec![PineValue::Na; 4]);
-        assert_eq!(result.plots[8].values, vec![PineValue::Na; 4]);
-        assert_eq!(result.plots[9].values, vec![PineValue::Na; 4]);
+        assert_values_close(
+            &result.plots[6].values,
+            &[1.0_f64.sin(), 2.0_f64.sin(), 3.0_f64.sin(), 4.0_f64.sin()],
+        );
+        assert_values_close(
+            &result.plots[7].values,
+            &[1.0_f64.cos(), 2.0_f64.cos(), 3.0_f64.cos(), 4.0_f64.cos()],
+        );
+        assert_values_close(
+            &result.plots[8].values,
+            &[1.0_f64.tan(), 2.0_f64.tan(), 3.0_f64.tan(), 4.0_f64.tan()],
+        );
+        assert_values_close(&result.plots[9].values, &[1.0, 4.0, 9.0, 16.0]);
+        assert_eq!(result.plots[10].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[11].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[12].values, vec![PineValue::Na; 4]);
     }
 
     #[test]

@@ -934,6 +934,27 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "math.sin",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "math.cos",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "math.tan",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "math.pow",
         phase: BuiltinPhase::Phase1Core,
         params: MATH_POW_PARAMS,
