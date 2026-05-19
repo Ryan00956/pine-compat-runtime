@@ -798,7 +798,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "indicator, input, plot, hline, fill, bgcolor, and barcolor calls are not supported inside user-defined functions",
+                    "indicator, input, plot, hline, fill, bgcolor, barcolor, and plotchar calls are not supported inside user-defined functions",
                     callee.span,
                 );
             }
@@ -2315,7 +2315,7 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
 fn is_output_or_declaration_builtin(name: &str) -> bool {
     matches!(
         name,
-        "indicator" | "plot" | "hline" | "fill" | "bgcolor" | "barcolor"
+        "indicator" | "plot" | "hline" | "fill" | "bgcolor" | "barcolor" | "plotchar"
     ) || name == "input"
         || name.starts_with("input.")
 }
@@ -2643,6 +2643,10 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
         Accepts::SeriesOrSimpleNumeric => {
             qualifier_at_most(arg_type.qualifier, Qualifier::Series) && is_numeric(arg_type.kind)
         }
+        Accepts::SeriesOrSimpleNumericOrBool => {
+            qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+                && (is_numeric(arg_type.kind) || arg_type.kind == ValueKind::Bool)
+        }
         Accepts::SimpleInt => {
             qualifier_at_most(arg_type.qualifier, Qualifier::Simple)
                 && arg_type.kind == ValueKind::Int
@@ -2894,6 +2898,26 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "barcolor")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_plotchar() {
+        let analysis =
+            analyze("plotchar(close > open, char=\"x\", color=color.green)\nplot(close)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "plotchar")
         );
         assert!(analysis.hir.is_some());
     }

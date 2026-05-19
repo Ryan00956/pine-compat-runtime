@@ -95,6 +95,9 @@ Rules:
 plot(series: series float, title?: const string, color?: color-compatible, ...)
   -> plot
 
+plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, ...)
+  -> void
+
 hline(price: const-or-input float, title?: const string, color?: color-compatible, ...)
   -> hline
 

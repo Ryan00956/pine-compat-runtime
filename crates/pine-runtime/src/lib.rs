@@ -151,6 +151,7 @@ impl SeriesStore {
 #[derive(Debug, Clone, PartialEq)]
 pub struct RuntimeResult {
     pub plots: Vec<PlotSeries>,
+    pub plot_chars: Vec<PlotCharSeries>,
     pub bg_colors: Vec<ColorSeries>,
     pub bar_colors: Vec<ColorSeries>,
     pub hlines: Vec<HLineOutput>,
@@ -193,6 +194,9 @@ pub struct RuntimeProfile {
     pub plots: usize,
     pub plot_values: usize,
     pub plot_capacity: usize,
+    pub plot_chars: usize,
+    pub plot_char_values: usize,
+    pub plot_char_capacity: usize,
     pub bg_colors: usize,
     pub bg_color_values: usize,
     pub bg_color_capacity: usize,
@@ -215,6 +219,14 @@ pub struct PlotSeries {
 pub struct ColorSeries {
     pub id: u32,
     pub values: Vec<PineValue>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlotCharSeries {
+    pub id: u32,
+    pub values: Vec<PineValue>,
+    pub chars: Vec<PineValue>,
+    pub colors: Vec<PineValue>,
 }
 
 trait SeriesOutput: Sized {
@@ -301,6 +313,7 @@ pub struct HistoricalRuntime<'a> {
     rsi_state: HashMap<CallSiteId, RsiState>,
     macd_state: HashMap<CallSiteId, MacdState>,
     plots: Vec<PlotSeries>,
+    plot_chars: Vec<PlotCharSeries>,
     bg_colors: Vec<ColorSeries>,
     bar_colors: Vec<ColorSeries>,
     hlines: Vec<HLineOutput>,
@@ -358,6 +371,7 @@ impl<'a> HistoricalRuntime<'a> {
             rsi_state: HashMap::new(),
             macd_state: HashMap::new(),
             plots: Vec::new(),
+            plot_chars: Vec::new(),
             bg_colors: Vec::new(),
             bar_colors: Vec::new(),
             hlines: Vec::new(),
@@ -576,6 +590,7 @@ impl<'a> HistoricalRuntime<'a> {
     pub fn result(&self) -> RuntimeResult {
         RuntimeResult {
             plots: self.plots.clone(),
+            plot_chars: self.plot_chars.clone(),
             bg_colors: self.bg_colors.clone(),
             bar_colors: self.bar_colors.clone(),
             hlines: self.hlines.clone(),
@@ -608,6 +623,20 @@ impl<'a> HistoricalRuntime<'a> {
             .plots
             .iter()
             .map(|plot| plot.values.capacity())
+            .sum::<usize>();
+        let plot_char_values = self
+            .plot_chars
+            .iter()
+            .map(|plot_char| plot_char.values.len())
+            .sum::<usize>();
+        let plot_char_capacity = self
+            .plot_chars
+            .iter()
+            .map(|plot_char| {
+                plot_char.values.capacity()
+                    + plot_char.chars.capacity()
+                    + plot_char.colors.capacity()
+            })
             .sum::<usize>();
         let bg_color_values = self
             .bg_colors
@@ -670,6 +699,9 @@ impl<'a> HistoricalRuntime<'a> {
             plots: self.plots.len(),
             plot_values,
             plot_capacity,
+            plot_chars: self.plot_chars.len(),
+            plot_char_values,
+            plot_char_capacity,
             bg_colors: self.bg_colors.len(),
             bg_color_values,
             bg_color_capacity,
@@ -904,6 +936,31 @@ impl<'a> HistoricalRuntime<'a> {
                 let value = self.eval_expr(&args[0].value)?;
                 push_series_value(&mut self.plots, self.bars, call_site_id.0, value);
                 Ok(PineValue::Plot(call_site_id.0))
+            }
+            "plotchar" => {
+                let Some(series_arg) = call_arg_expr(args, 0, "series") else {
+                    return Err(RuntimeError {
+                        message: "plotchar missing series argument".to_owned(),
+                    });
+                };
+                let value = self.eval_expr(series_arg)?;
+                let char_value = match call_arg_expr(args, 2, "char") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::String("*".to_owned()),
+                };
+                let color_value = match call_arg_expr(args, 3, "color") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::Na,
+                };
+                push_plot_char_value(
+                    &mut self.plot_chars,
+                    self.bars,
+                    call_site_id.0,
+                    value,
+                    char_value,
+                    color_value,
+                );
+                Ok(PineValue::Void)
             }
             "bgcolor" => {
                 let value = self.eval_expr(&args[0].value)?;
@@ -1568,6 +1625,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn finalize_series_outputs(&mut self) {
         finalize_series_values(&mut self.plots, self.bars);
+        finalize_plot_char_values(&mut self.plot_chars, self.bars);
         finalize_series_values(&mut self.bg_colors, self.bars);
         finalize_series_values(&mut self.bar_colors, self.bars);
     }
@@ -1748,6 +1806,13 @@ fn output_id(value: PineValue) -> Option<u32> {
     }
 }
 
+fn call_arg_expr<'a>(args: &'a [HirCallArg], index: usize, name: &str) -> Option<&'a HirExpr> {
+    args.iter()
+        .find(|arg| arg.name.as_deref() == Some(name))
+        .or_else(|| args.get(index))
+        .map(|arg| &arg.value)
+}
+
 fn push_series_value<T: SeriesOutput>(
     outputs: &mut Vec<T>,
     current_bar: usize,
@@ -1768,6 +1833,64 @@ fn push_series_value<T: SeriesOutput>(
         let mut values = vec![PineValue::Na; current_bar];
         values.push(value);
         outputs.push(T::new(id, values));
+    }
+}
+
+fn push_plot_char_value(
+    outputs: &mut Vec<PlotCharSeries>,
+    current_bar: usize,
+    id: u32,
+    value: PineValue,
+    char_value: PineValue,
+    color_value: PineValue,
+) {
+    if let Some(output) = outputs.iter_mut().find(|output| output.id == id) {
+        pad_plot_char_values(output, current_bar);
+        if output.values.len() == current_bar {
+            output.values.push(value);
+            output.chars.push(char_value);
+            output.colors.push(color_value);
+        } else {
+            if let Some(current) = output.values.last_mut() {
+                *current = value;
+            }
+            if let Some(current) = output.chars.last_mut() {
+                *current = char_value;
+            }
+            if let Some(current) = output.colors.last_mut() {
+                *current = color_value;
+            }
+        }
+    } else {
+        let mut output = PlotCharSeries {
+            id,
+            values: vec![PineValue::Na; current_bar],
+            chars: vec![PineValue::Na; current_bar],
+            colors: vec![PineValue::Na; current_bar],
+        };
+        output.values.push(value);
+        output.chars.push(char_value);
+        output.colors.push(color_value);
+        outputs.push(output);
+    }
+}
+
+fn finalize_plot_char_values(outputs: &mut [PlotCharSeries], current_bar: usize) {
+    for output in outputs {
+        pad_plot_char_values(output, current_bar);
+        if output.values.len() == current_bar {
+            output.values.push(PineValue::Na);
+            output.chars.push(PineValue::Na);
+            output.colors.push(PineValue::Na);
+        }
+    }
+}
+
+fn pad_plot_char_values(output: &mut PlotCharSeries, current_bar: usize) {
+    while output.values.len() < current_bar {
+        output.values.push(PineValue::Na);
+        output.chars.push(PineValue::Na);
+        output.colors.push(PineValue::Na);
     }
 }
 
@@ -2203,6 +2326,49 @@ plot(close)
         assert_eq!(
             result.bar_colors[0].values,
             vec![PineValue::Na, PineValue::Na, PineValue::Color(0xFF0000)]
+        );
+    }
+
+    #[test]
+    fn collects_plotchar_series() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("plotchar")
+if close > 1
+    plotchar(close > 2, char="x", color=color.green)
+plot(close)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plot_chars.len(), 1);
+        assert_eq!(
+            result.plot_chars[0].values,
+            vec![PineValue::Na, PineValue::Bool(false), PineValue::Bool(true)]
+        );
+        assert_eq!(
+            result.plot_chars[0].chars,
+            vec![
+                PineValue::Na,
+                PineValue::String("x".to_owned()),
+                PineValue::String("x".to_owned())
+            ]
+        );
+        assert_eq!(
+            result.plot_chars[0].colors,
+            vec![
+                PineValue::Na,
+                PineValue::Color(0x008000),
+                PineValue::Color(0x008000)
+            ]
         );
     }
 

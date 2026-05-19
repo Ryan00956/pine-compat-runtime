@@ -32,6 +32,7 @@ pub enum Accepts {
     Numeric,
     SeriesFloat,
     SeriesOrSimpleNumeric,
+    SeriesOrSimpleNumericOrBool,
     SimpleInt,
     ConstString,
     ConstBool,
@@ -203,6 +204,29 @@ const COLOR_OUTPUT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "title",
         accepts: Accepts::ConstString,
+        optional: true,
+    },
+];
+
+const PLOTCHAR_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "series",
+        accepts: Accepts::SeriesOrSimpleNumericOrBool,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "title",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "char",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "color",
+        accepts: Accepts::ColorCompatible,
         optional: true,
     },
 ];
@@ -554,6 +578,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "barcolor",
         phase: BuiltinPhase::Phase1Core,
         params: COLOR_OUTPUT_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "plotchar",
+        phase: BuiltinPhase::Phase1Core,
+        params: PLOTCHAR_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

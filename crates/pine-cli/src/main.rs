@@ -299,6 +299,8 @@ fn result_json(result: &RuntimeResult) -> String {
     let mut output = String::from("{");
     output.push_str("\"plots\":");
     output.push_str(&plots_json(&result.plots));
+    output.push_str(",\"plotChars\":");
+    output.push_str(&plot_chars_json(&result.plot_chars));
     output.push_str(",\"bgColors\":");
     output.push_str(&colors_json(&result.bg_colors));
     output.push_str(",\"barColors\":");
@@ -352,6 +354,9 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"plots\":{},",
             "\"plotValues\":{},",
             "\"plotCapacity\":{},",
+            "\"plotChars\":{},",
+            "\"plotCharValues\":{},",
+            "\"plotCharCapacity\":{},",
             "\"bgColors\":{},",
             "\"bgColorValues\":{},",
             "\"bgColorCapacity\":{},",
@@ -391,6 +396,9 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.plots,
         profile.plot_values,
         profile.plot_capacity,
+        profile.plot_chars,
+        profile.plot_char_values,
+        profile.plot_char_capacity,
         profile.bg_colors,
         profile.bg_color_values,
         profile.bg_color_capacity,
@@ -432,6 +440,39 @@ fn colors_json(colors: &[pine_runtime::ColorSeries]) -> String {
         output.push_str(&format!("{{\"id\":{},\"values\":[", colors.id));
         for (value_index, value) in colors.values.iter().enumerate() {
             if value_index > 0 {
+                output.push(',');
+            }
+            output.push_str(&value_json(value));
+        }
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
+fn plot_chars_json(plot_chars: &[pine_runtime::PlotCharSeries]) -> String {
+    let mut output = String::from("[");
+    for (plot_char_index, plot_char) in plot_chars.iter().enumerate() {
+        if plot_char_index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"values\":[", plot_char.id));
+        for (value_index, value) in plot_char.values.iter().enumerate() {
+            if value_index > 0 {
+                output.push(',');
+            }
+            output.push_str(&value_json(value));
+        }
+        output.push_str("],\"chars\":[");
+        for (char_index, value) in plot_char.chars.iter().enumerate() {
+            if char_index > 0 {
+                output.push(',');
+            }
+            output.push_str(&value_json(value));
+        }
+        output.push_str("],\"colors\":[");
+        for (color_index, value) in plot_char.colors.iter().enumerate() {
+            if color_index > 0 {
                 output.push(',');
             }
             output.push_str(&value_json(value));
@@ -621,6 +662,7 @@ mod tests {
     fn formats_profiled_result_json() {
         let result = RuntimeResult {
             plots: vec![],
+            plot_chars: vec![],
             bg_colors: vec![],
             bar_colors: vec![],
             hlines: vec![],
@@ -655,6 +697,9 @@ mod tests {
             plots: 0,
             plot_values: 0,
             plot_capacity: 0,
+            plot_chars: 0,
+            plot_char_values: 0,
+            plot_char_capacity: 0,
             bg_colors: 0,
             bg_color_values: 0,
             bg_color_capacity: 0,
@@ -674,5 +719,6 @@ mod tests {
         assert!(output.contains(r#""seriesValues":6"#));
         assert!(output.contains(r#""arrayValues":2"#));
         assert!(output.contains(r#""rollingWindowValues":2"#));
+        assert!(output.contains(r#""plotChars":0"#));
     }
 }

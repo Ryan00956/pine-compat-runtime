@@ -240,7 +240,8 @@ The runtime should collect:
 - fills
 - bar colors
 - background colors
-- later markers and shapes
+- plotchar marker values
+- later shapes
 
 ## Determinism
 

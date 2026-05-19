@@ -185,6 +185,7 @@ fn runtime_result_to_py(
 ) -> PyResult<Py<PyAny>> {
     let output = PyDict::new(py);
     output.set_item("plots", plots_to_py(py, &result.plots)?)?;
+    output.set_item("plotChars", plot_chars_to_py(py, &result.plot_chars)?)?;
     output.set_item("bgColors", colors_to_py(py, &result.bg_colors)?)?;
     output.set_item("barColors", colors_to_py(py, &result.bar_colors)?)?;
     output.set_item("hlines", hlines_to_py(py, &result.hlines)?)?;
@@ -210,6 +211,22 @@ fn colors_to_py(py: Python<'_>, colors: &[pine_runtime::ColorSeries]) -> PyResul
         let item = PyDict::new(py);
         item.set_item("id", colors.id)?;
         item.set_item("values", values_to_py(py, &colors.values)?)?;
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
+fn plot_chars_to_py(
+    py: Python<'_>,
+    plot_chars: &[pine_runtime::PlotCharSeries],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for plot_char in plot_chars {
+        let item = PyDict::new(py);
+        item.set_item("id", plot_char.id)?;
+        item.set_item("values", values_to_py(py, &plot_char.values)?)?;
+        item.set_item("chars", values_to_py(py, &plot_char.chars)?)?;
+        item.set_item("colors", values_to_py(py, &plot_char.colors)?)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())

@@ -182,6 +182,8 @@ fn result_json(result: &RuntimeResult) -> String {
     let mut output = String::from("{");
     output.push_str("\"plots\":");
     output.push_str(&plots_json(&result.plots));
+    output.push_str(",\"plotChars\":");
+    output.push_str(&plot_chars_json(&result.plot_chars));
     output.push_str(",\"bgColors\":");
     output.push_str(&colors_json(&result.bg_colors));
     output.push_str(",\"barColors\":");
@@ -223,6 +225,39 @@ fn colors_json(colors: &[pine_runtime::ColorSeries]) -> String {
         output.push_str(&format!("{{\"id\":{},\"values\":[", colors.id));
         for (value_index, value) in colors.values.iter().enumerate() {
             if value_index > 0 {
+                output.push(',');
+            }
+            output.push_str(&value_json(value));
+        }
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
+fn plot_chars_json(plot_chars: &[pine_runtime::PlotCharSeries]) -> String {
+    let mut output = String::from("[");
+    for (plot_char_index, plot_char) in plot_chars.iter().enumerate() {
+        if plot_char_index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"values\":[", plot_char.id));
+        for (value_index, value) in plot_char.values.iter().enumerate() {
+            if value_index > 0 {
+                output.push(',');
+            }
+            output.push_str(&value_json(value));
+        }
+        output.push_str("],\"chars\":[");
+        for (char_index, value) in plot_char.chars.iter().enumerate() {
+            if char_index > 0 {
+                output.push(',');
+            }
+            output.push_str(&value_json(value));
+        }
+        output.push_str("],\"colors\":[");
+        for (color_index, value) in plot_char.colors.iter().enumerate() {
+            if color_index > 0 {
                 output.push(',');
             }
             output.push_str(&value_json(value));
@@ -338,5 +373,6 @@ mod tests {
         .expect("script should run");
 
         assert!(output.contains("\"values\":[1,2]"));
+        assert!(output.contains("\"plotChars\":[]"));
     }
 }

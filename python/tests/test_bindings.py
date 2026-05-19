@@ -34,3 +34,14 @@ def test_run_script_compiles_and_executes():
     )
 
     assert result["plots"][0]["values"] == [2, 2, 3]
+
+
+def test_run_script_returns_plotchar_outputs():
+    result = pine_compat.run_script(
+        'indicator("markers")\nplotchar(close > 2, char="x", color=color.green)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["plotChars"][0]["values"] == [False, False, True]
+    assert result["plotChars"][0]["chars"] == ["x", "x", "x"]
+    assert result["plotChars"][0]["colors"] == [0x008000, 0x008000, 0x008000]

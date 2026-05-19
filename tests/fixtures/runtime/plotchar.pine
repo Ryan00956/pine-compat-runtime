@@ -1,0 +1,5 @@
+//@version=5
+indicator("Plotchar")
+if close > 1
+    plotchar(close > 2, char="x", color=color.green)
+plot(close)
