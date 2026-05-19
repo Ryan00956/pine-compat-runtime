@@ -173,6 +173,10 @@ pub struct RuntimeProfile {
     pub current_series_capacity: usize,
     pub var_slots: usize,
     pub var_capacity: usize,
+    pub array_slots: usize,
+    pub array_capacity: usize,
+    pub array_values: usize,
+    pub array_value_capacity: usize,
     pub call_state_slots: usize,
     pub call_state_capacity: usize,
     pub rolling_window_slots: usize,
@@ -560,6 +564,8 @@ impl<'a> HistoricalRuntime<'a> {
             .values()
             .map(|window| window.values.capacity())
             .sum::<usize>();
+        let array_values = self.array_store.values().map(Vec::len).sum::<usize>();
+        let array_value_capacity = self.array_store.values().map(Vec::capacity).sum::<usize>();
 
         RuntimeProfile {
             bars: self.bars,
@@ -572,6 +578,10 @@ impl<'a> HistoricalRuntime<'a> {
             current_series_capacity: self.current_series.capacity(),
             var_slots: self.var_store.len(),
             var_capacity: self.var_store.capacity(),
+            array_slots: self.array_store.len(),
+            array_capacity: self.array_store.capacity(),
+            array_values,
+            array_value_capacity,
             call_state_slots: self.call_state.len(),
             call_state_capacity: self.call_state.capacity(),
             rolling_window_slots: self.rolling_windows.len(),
@@ -3486,6 +3496,89 @@ plot(array.get(values, 0))
         assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
         assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn handles_float_array_edge_cases() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array edges")
+values = array.new_float()
+missing = array.get(values, 0)
+popped = array.pop(values)
+array.set(values, 10, close)
+plot(na(missing) ? 1 : 0)
+plot(na(popped) ? 1 : 0)
+plot(array.size(values))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let result =
+            run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 3);
+        assert_values_close(&result.plots[0].values, &[1.0]);
+        assert_values_close(&result.plots[1].values, &[1.0]);
+        assert_values_close(&result.plots[2].values, &[0.0]);
+    }
+
+    #[test]
+    fn rejects_negative_float_array_size() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array negative size")
+values = array.new_float(-1)
+plot(array.size(values))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected negative array size error");
+
+        assert!(
+            error
+                .message
+                .contains("array.new_float size cannot be negative"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn profiles_float_array_storage() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array profile")
+var values = array.new_float()
+array.push(values, close)
+plot(array.size(values))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let profiled = run_historical_profiled(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)])
+            .expect("profiled runtime result");
+
+        assert_eq!(profiled.profile.array_slots, 1);
+        assert_eq!(profiled.profile.array_values, 2);
+        assert!(profiled.profile.array_value_capacity >= 2);
     }
 
     #[test]

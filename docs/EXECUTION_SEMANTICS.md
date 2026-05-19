@@ -102,6 +102,11 @@ For arrays, the stored value is a runtime-owned array id. A normal
 `var` array declaration keeps the same id and backing storage across bars, so
 mutations such as `array.push` persist.
 
+Array bounds are stable in the current subset: `array.get` outside the current
+array length returns `na`, `array.set` outside the current length is ignored,
+and `array.pop` on an empty array returns `na`. A negative `array.new_float`
+size is a runtime error.
+
 ### `varip`
 
 `varip` requires precise realtime tick semantics. It is rejected until intrabar

@@ -50,7 +50,7 @@ color.* named constants	partial	common registry only	tests/fixtures/runtime/io.p
 #RRGGBB/#RRGGBBAA color literals	supported	normalized runtime color value	tests/fixtures/syntax/phase1_basic.pine
 history references	partial	constant non-negative offsets only	tests/fixtures/runtime/na.pine
 var	supported	historical persistence and local declaration-site storage	tests/fixtures/runtime/local_scope.pine;tests/fixtures/realtime/var_rollback.pine
-realtime forming rollback	partial	forming updates roll back output, var, and callsite state to confirmed bars	tests/fixtures/realtime/forming_close.pine;tests/fixtures/realtime/var_rollback.pine;tests/fixtures/realtime/conditional_ta_rollback.pine
+realtime forming rollback	partial	forming updates roll back output, var, callsite, and array state to confirmed bars	tests/fixtures/realtime/forming_close.pine;tests/fixtures/realtime/var_rollback.pine;tests/fixtures/realtime/conditional_ta_rollback.pine;tests/fixtures/realtime/array_rollback.pine
 varip	unsupported	intrabar persistence not implemented	tests/fixtures/sema/unsupported_varip.pine
 request.*	unsupported	multi-symbol and multi-timeframe data out of Phase 1	tests/fixtures/sema/unsupported_request.pine
 array.*	partial	float array creation, size, get/set, push/pop, and clear only	tests/fixtures/runtime/array.pine;tests/fixtures/sema/unsupported_array.pine

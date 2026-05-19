@@ -153,7 +153,9 @@ a fresh array whenever the declaration executes. `var` declarations preserve the
 array id and backing storage across bars. Supported operations are
 `array.new_float`, `array.push`, `array.get`, `array.set`, `array.size`,
 `array.pop`, and `array.clear`. Non-float array constructors and unsupported
-`array.*` functions are rejected.
+`array.*` functions are rejected. Out-of-range `array.get` and empty
+`array.pop` return `na`; out-of-range `array.set` is a no-op. Negative
+`array.new_float` sizes fail at runtime.
 
 ## `na`
 

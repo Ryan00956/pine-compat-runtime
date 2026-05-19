@@ -1,0 +1,6 @@
+//@version=5
+indicator("Realtime array rollback")
+var values = array.new_float()
+array.push(values, close)
+plot(array.size(values))
+plot(array.get(values, 0))

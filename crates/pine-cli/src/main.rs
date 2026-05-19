@@ -331,6 +331,10 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"currentSeriesCapacity\":{},",
             "\"varSlots\":{},",
             "\"varCapacity\":{},",
+            "\"arraySlots\":{},",
+            "\"arrayCapacity\":{},",
+            "\"arrayValues\":{},",
+            "\"arrayValueCapacity\":{},",
             "\"callStateSlots\":{},",
             "\"callStateCapacity\":{},",
             "\"rollingWindowSlots\":{},",
@@ -360,6 +364,10 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.current_series_capacity,
         profile.var_slots,
         profile.var_capacity,
+        profile.array_slots,
+        profile.array_capacity,
+        profile.array_values,
+        profile.array_value_capacity,
         profile.call_state_slots,
         profile.call_state_capacity,
         profile.rolling_window_slots,
@@ -593,6 +601,10 @@ mod tests {
             current_series_capacity: 14,
             var_slots: 1,
             var_capacity: 3,
+            array_slots: 1,
+            array_capacity: 3,
+            array_values: 2,
+            array_value_capacity: 2,
             call_state_slots: 1,
             call_state_capacity: 3,
             rolling_window_slots: 1,
@@ -617,6 +629,7 @@ mod tests {
         assert!(output.contains(r#""profile""#));
         assert!(output.contains(r#""bars":3"#));
         assert!(output.contains(r#""seriesValues":6"#));
+        assert!(output.contains(r#""arrayValues":2"#));
         assert!(output.contains(r#""rollingWindowValues":2"#));
     }
 }

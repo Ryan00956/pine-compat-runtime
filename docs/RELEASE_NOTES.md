@@ -55,8 +55,8 @@ feature-level matrix and its fixture paths.
   does not claim full Pine loop compatibility.
 - `history references`: supports constant non-negative offsets only.
 - `color.*` named constants: supports the current common registry only.
-- `realtime forming rollback`: covers output, `var`, and callsite rollback;
-  `varip` remains unsupported.
+- `realtime forming rollback`: covers output, `var`, callsite, and array
+  rollback; `varip` remains unsupported.
 
 ### Explicitly Unsupported
 
