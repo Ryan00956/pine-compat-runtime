@@ -155,7 +155,8 @@ array id and backing storage across bars. Supported operations are
 `array.pop`, and `array.clear`. Non-float array constructors and unsupported
 `array.*` functions are rejected. Out-of-range `array.get` and empty
 `array.pop` return `na`; out-of-range `array.set` is a no-op. Negative
-`array.new_float` sizes fail at runtime.
+`array.new_float` sizes fail at runtime. A float array can contain at most
+100,000 elements; creation or push operations beyond that limit fail at runtime.
 
 User-defined functions may receive float arrays and use read-only operations
 such as `array.size` and `array.get`. Array mutation inside user-defined

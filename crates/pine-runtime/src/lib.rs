@@ -8,6 +8,7 @@ use pine_ir::{
 };
 
 const MAX_WHILE_ITERATIONS: usize = 100_000;
+const MAX_ARRAY_ELEMENTS: usize = 100_000;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PineValue {
@@ -893,7 +894,15 @@ impl<'a> HistoricalRuntime<'a> {
                     message: "array.new_float size cannot be negative".to_owned(),
                 });
             }
-            size as usize
+            let size = size as usize;
+            if size > MAX_ARRAY_ELEMENTS {
+                return Err(RuntimeError {
+                    message: format!(
+                        "array.new_float size cannot exceed {MAX_ARRAY_ELEMENTS} elements"
+                    ),
+                });
+            }
+            size
         } else {
             0
         };
@@ -933,6 +942,11 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         if let Some(values) = self.array_store.get_mut(&id) {
+            if values.len() >= MAX_ARRAY_ELEMENTS {
+                return Err(RuntimeError {
+                    message: format!("array.push cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+                });
+            }
             values.push(value);
         }
         Ok(PineValue::Void)
@@ -3551,6 +3565,63 @@ plot(array.size(values))
             error
                 .message
                 .contains("array.new_float size cannot be negative"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn rejects_oversized_float_array_creation() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array oversized")
+values = array.new_float(100001)
+plot(array.size(values))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected oversized array error");
+
+        assert!(
+            error
+                .message
+                .contains("array.new_float size cannot exceed 100000 elements"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn rejects_float_array_push_past_limit() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array push limit")
+values = array.new_float(100000)
+array.push(values, close)
+plot(array.size(values))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected array push limit error");
+
+        assert!(
+            error
+                .message
+                .contains("array.push cannot exceed 100000 elements"),
             "{}",
             error.message
         );
