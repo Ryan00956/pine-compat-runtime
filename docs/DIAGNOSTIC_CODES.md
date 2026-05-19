@@ -18,6 +18,9 @@ improved over time, but codes should remain stable once published.
 - `E_PARSE_EXPECTED`: expected token was missing.
 - `E_PARSE_EXPR`: expected expression.
 - `E_PARSE_NAME`: invalid qualified name.
+- `E_PARSE_SWITCH`: invalid switch expression.
+- `E_PARSE_SWITCH_BLOCK`: statement-block switch arms are not supported.
+- `E_PARSE_WHILE_EXPR`: while expressions are not supported.
 
 ## Semantic Analysis
 

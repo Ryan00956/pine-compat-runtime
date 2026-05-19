@@ -70,10 +70,10 @@ Scope:
 - Add more branch interaction fixtures: `if` inside loops, loops inside `if`,
   `switch` inside loops, and loops inside UDFs. Initial coverage exists; keep
   adding real-script cases as gaps appear.
-- Decide whether `while` expression results should enter the supported subset
-  or stay rejected.
-- Decide whether statement-block `switch` arms should enter the supported
-  subset or stay rejected.
+- Keep `while` expression results rejected until a dedicated expression-result
+  design exists.
+- Keep statement-block `switch` arms rejected until block-arm scoping and
+  result semantics are designed.
 
 Out of scope:
 

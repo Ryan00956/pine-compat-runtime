@@ -106,7 +106,10 @@ result that reached that expression, or `na` if no iteration reaches it.
 `while` loops are statement-only in the current executable subset. Conditions
 must type-check as bool; a runtime `na` condition exits the loop like false.
 `break` and `continue` target the nearest enclosing loop. A deterministic
-iteration guard prevents runaway loops.
+iteration guard prevents runaway loops. `while` expressions are rejected.
+
+`switch` support is expression-only. Each arm must return a single expression;
+statement-block switch arms are rejected.
 
 User-defined functions support single-expression and multi-statement block
 bodies:

@@ -557,6 +557,13 @@ impl Parser {
                 self.bump();
                 self.parse_identifier_tail(name, token.span)
             }
+            TokenKind::While => {
+                self.error_here(
+                    "E_PARSE_WHILE_EXPR",
+                    "`while` expressions are not supported; use `while` as a statement",
+                );
+                None
+            }
             TokenKind::Plus | TokenKind::Minus | TokenKind::Not => {
                 self.bump();
                 let op = match token.kind {
@@ -634,6 +641,14 @@ impl Parser {
                 Some(self.parse_expr(0)?)
             };
             self.expect(TokenKind::Arrow, "expected `=>` in switch arm")?;
+            if self.at(TokenKind::Newline) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_PARSE_SWITCH_BLOCK",
+                    "statement-block switch arms are not supported; use expression arms",
+                    self.current().span,
+                ));
+                return None;
+            }
             let result = self.parse_expr(0)?;
             end = result.span;
             arms.push(SwitchArm { condition, result });
@@ -1075,6 +1090,34 @@ mod tests {
         };
         assert!(selector.is_some());
         assert_eq!(arms.len(), 3);
+    }
+
+    #[test]
+    fn rejects_while_expression() {
+        let parsed = parse("x = while close > open\n    close\nplot(x)\n");
+
+        assert!(
+            parsed
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_PARSE_WHILE_EXPR"),
+            "{:?}",
+            parsed.diagnostics
+        );
+    }
+
+    #[test]
+    fn rejects_statement_block_switch_arm() {
+        let parsed = parse("x = switch\n    close > open =>\n        high\n    => close\n");
+
+        assert!(
+            parsed
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_PARSE_SWITCH_BLOCK"),
+            "{:?}",
+            parsed.diagnostics
+        );
     }
 
     #[test]

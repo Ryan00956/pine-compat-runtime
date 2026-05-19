@@ -3375,6 +3375,21 @@ plot(y)
     }
 
     #[test]
+    fn rejects_statement_block_switch_arm() {
+        let analysis = analyze("x = switch\n    close > open =>\n        high\n    => close\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_PARSE_SWITCH_BLOCK"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
     fn accepts_expression_body_function() {
         let analysis = analyze("double(x) => x * 2\nplot(double(close))\n");
 
@@ -3721,6 +3736,21 @@ plot(y)
             analysis.diagnostics
         );
         assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_while_expression() {
+        let analysis = analyze("x = while close > open\n    close\nplot(x)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_PARSE_WHILE_EXPR"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
     }
 
     #[test]
