@@ -608,10 +608,10 @@ impl Analyzer {
             return None;
         }
         for arg in args {
-            if contains_stateful_or_side_effect_call(&arg.value) {
+            if contains_output_or_declaration_call(&arg.value) {
                 self.unsupported(
-                    "function_stateful_argument",
-                    "stateful or side-effecting calls cannot be passed as user-defined function arguments yet",
+                    "function_side_effect",
+                    "side-effecting calls cannot be passed as user-defined function arguments",
                     arg.span,
                 );
             }
@@ -979,6 +979,17 @@ impl Analyzer {
             pine_type: original.pine_type,
             series_id: self.series_id_for_type(original.pine_type),
             var_slot_id: original.var_slot_id.map(|_| self.alloc_var_slot()),
+        };
+        self.scope.add_lower_symbol(name, info);
+        info
+    }
+
+    fn fresh_temp_symbol(&mut self, name: &str, pine_type: PineType) -> SymbolInfo {
+        let info = SymbolInfo {
+            id: self.alloc_symbol(),
+            pine_type,
+            series_id: self.series_id_for_type(pine_type),
+            var_slot_id: None,
         };
         self.scope.add_lower_symbol(name, info);
         info
@@ -1427,17 +1438,38 @@ impl Analyzer {
     ) -> Option<HirExpr> {
         let function = self.functions.get(name)?.clone();
         let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
-        let mut param_exprs = HashMap::new();
-        let mut param_types = HashMap::new();
+        let mut resolved_args = vec![None; function.params.len()];
         for (arg, param_index) in args.iter().zip(arg_indices) {
-            let param = &function.params[param_index];
             let arg_expr =
                 self.lower_expr_with_params(&arg.value, outer_param_exprs, outer_param_types)?;
             let arg_type = self.type_of_expr_with_params(&arg.value, outer_param_types)?;
-            param_exprs.insert(param.clone(), arg_expr);
+            resolved_args[param_index] = Some((arg_expr, arg_type));
+        }
+
+        let mut param_exprs = HashMap::new();
+        let mut param_types = HashMap::new();
+        let mut arg_statements = Vec::new();
+        for (param, resolved_arg) in function.params.iter().zip(resolved_args) {
+            let (arg_expr, arg_type) = resolved_arg?;
+            let symbol = self.fresh_temp_symbol(&format!("{name}.{param}"), arg_type);
+            arg_statements.push(HirStmt {
+                kind: HirStmtKind::Decl {
+                    symbol: symbol.id,
+                    value: arg_expr,
+                },
+            });
+            param_exprs.insert(
+                param.clone(),
+                HirExpr {
+                    kind: HirExprKind::Symbol(symbol.id),
+                    pine_type: arg_type,
+                    series_id: symbol.series_id,
+                },
+            );
             param_types.insert(param.clone(), arg_type);
         }
-        self.lower_function_body(&function.body, &param_exprs, &param_types)
+        let body = self.lower_function_body(&function.body, &param_exprs, &param_types)?;
+        Some(prepend_block_statements(arg_statements, body))
     }
 
     fn lower_function_body(
@@ -1704,33 +1736,56 @@ fn resolve_udf_arg_indices(params: &[String], args: &[CallArg]) -> Result<Vec<us
     Ok(indices)
 }
 
-fn contains_stateful_or_side_effect_call(expr: &Expr) -> bool {
+fn prepend_block_statements(mut prefix: Vec<HirStmt>, expr: HirExpr) -> HirExpr {
+    match expr.kind {
+        HirExprKind::Block { statements, result } => {
+            prefix.extend(statements);
+            HirExpr {
+                kind: HirExprKind::Block {
+                    statements: prefix,
+                    result,
+                },
+                pine_type: expr.pine_type,
+                series_id: expr.series_id,
+            }
+        }
+        _ => HirExpr {
+            pine_type: expr.pine_type,
+            series_id: expr.series_id,
+            kind: HirExprKind::Block {
+                statements: prefix,
+                result: Box::new(expr),
+            },
+        },
+    }
+}
+
+fn contains_output_or_declaration_call(expr: &Expr) -> bool {
     match &expr.kind {
         ExprKind::Call { callee, args } => {
             let name = expr_name(callee);
-            name.as_deref().is_some_and(|name| {
-                name.starts_with("ta.") || is_output_or_declaration_builtin(name)
-            }) || args
-                .iter()
-                .any(|arg| contains_stateful_or_side_effect_call(&arg.value))
+            name.as_deref()
+                .is_some_and(is_output_or_declaration_builtin)
+                || args
+                    .iter()
+                    .any(|arg| contains_output_or_declaration_call(&arg.value))
         }
         ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } => {
-            contains_stateful_or_side_effect_call(expr)
+            contains_output_or_declaration_call(expr)
         }
         ExprKind::Binary { left, right, .. } => {
-            contains_stateful_or_side_effect_call(left)
-                || contains_stateful_or_side_effect_call(right)
+            contains_output_or_declaration_call(left) || contains_output_or_declaration_call(right)
         }
         ExprKind::Ternary {
             condition,
             then_expr,
             else_expr,
         } => {
-            contains_stateful_or_side_effect_call(condition)
-                || contains_stateful_or_side_effect_call(then_expr)
-                || contains_stateful_or_side_effect_call(else_expr)
+            contains_output_or_declaration_call(condition)
+                || contains_output_or_declaration_call(then_expr)
+                || contains_output_or_declaration_call(else_expr)
         }
-        ExprKind::Tuple(items) => items.iter().any(contains_stateful_or_side_effect_call),
+        ExprKind::Tuple(items) => items.iter().any(contains_output_or_declaration_call),
         ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => false,
     }
 }
@@ -2430,17 +2485,15 @@ plot(y)
     }
 
     #[test]
-    fn rejects_stateful_call_as_function_argument() {
+    fn accepts_stateful_call_as_function_argument() {
         let analysis = analyze("double(x) => x * 2\nplot(double(ta.sma(close, 2)))\n");
 
         assert!(
-            analysis
-                .compatibility
-                .unsupported
-                .iter()
-                .any(|feature| feature.feature == "function_stateful_argument")
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
         );
-        assert!(analysis.hir.is_none());
+        assert!(analysis.hir.is_some());
     }
 
     #[test]

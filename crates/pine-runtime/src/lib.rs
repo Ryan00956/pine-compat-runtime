@@ -2596,6 +2596,30 @@ plot(smooth2(close, 2))
     }
 
     #[test]
+    fn runs_stateful_call_as_function_argument_once() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf arg")
+duplicate(x) => x + x
+plot(duplicate(ta.sma(close, 2)))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[3.0, 5.0, 7.0]);
+    }
+
+    #[test]
     fn runs_function_with_named_arguments() {
         let source = SourceFile::new(
             "test.pine",

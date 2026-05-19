@@ -87,8 +87,9 @@ range2(hi, lo) =>
 
 Named arguments are supported for user-defined functions. Block bodies must end
 with an expression. Recursive functions, output side effects inside functions,
-global reassignment inside functions, and stateful or side-effecting calls as
-UDF arguments are rejected in the current executable subset.
+global reassignment inside functions, and side-effecting calls as UDF arguments
+are rejected in the current executable subset. UDF arguments are evaluated once
+into callsite-local temporaries.
 
 ## Initial Built-Ins
 

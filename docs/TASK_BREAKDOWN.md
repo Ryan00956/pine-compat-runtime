@@ -171,6 +171,8 @@ Status: in progress.
 - [x] Support tuple block-local declarations inside `if` branches.
 - [x] Add expression-body user-defined function execution by inlining.
 - [x] Support named arguments for user-defined functions.
+- [x] Evaluate user-defined function arguments once into callsite-local
+  temporaries.
 - [x] Add multi-statement user-defined function execution with final expression
   returns.
 - [x] Reject recursive functions and function side effects.

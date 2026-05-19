@@ -204,9 +204,10 @@ Current rules:
   built-ins.
 - Reject duplicate or unknown named UDF arguments and positional arguments after
   named arguments.
+- Evaluate arguments once into callsite-local temporaries before evaluating the
+  inlined function body.
 - Reject output side effects inside functions.
 - Reject global reassignment inside functions.
-- Reject stateful or side-effecting calls as UDF arguments until argument
-  evaluation has explicit temporary storage.
+- Reject side-effecting calls as UDF arguments.
 
 Function block bodies must end with an expression.
