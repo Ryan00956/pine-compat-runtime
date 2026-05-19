@@ -235,6 +235,17 @@ impl Parser {
 
         self.expect(TokenKind::RParen, "expected `)` after function parameters")?;
         self.expect(TokenKind::Arrow, "expected `=>` in function declaration")?;
+        if self.at(TokenKind::Newline) {
+            self.bump();
+            let block = self.parse_indented_block()?;
+            let span = block.last().map_or(start, |statement| statement.span);
+            return Some(Stmt {
+                span: start.merge(span),
+                kind: StmtKind::Unsupported {
+                    feature: "function_block".to_owned(),
+                },
+            });
+        }
         let body = self.parse_expr(0)?;
 
         Some(Stmt {
@@ -776,6 +787,18 @@ mod tests {
         };
         assert_eq!(name, "double");
         assert_eq!(params, &vec!["x".to_owned()]);
+    }
+
+    #[test]
+    fn parses_block_function_declaration_as_unsupported() {
+        let parsed = parse("double(x) =>\n    y = x * 2\n    y\nplot(close)\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        assert_eq!(parsed.program.statements.len(), 2);
+        assert!(matches!(
+            parsed.program.statements[0].kind,
+            StmtKind::Unsupported { ref feature } if feature == "function_block"
+        ));
     }
 
     #[test]

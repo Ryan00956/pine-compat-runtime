@@ -2462,6 +2462,33 @@ plot(add_bias(close))
         assert_values_close(&result.plots[0].values, &[2.5, 3.5, 4.5]);
     }
 
+    #[test]
+    fn runs_function_with_named_arguments() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf named args")
+spread(hi, lo) => hi - lo
+plot(spread(lo=low, hi=high))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 3.0, 1.0, 2.0),
+            bar_ohlc(2.0, 6.0, 3.0, 5.0),
+            bar_ohlc(5.0, 9.0, 4.0, 7.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[2.0, 3.0, 5.0]);
+    }
+
     fn bar(close: f64) -> Bar {
         bar_ohlc(close, close, close, close)
     }

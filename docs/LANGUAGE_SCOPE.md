@@ -31,7 +31,7 @@ Statements:
 - reassignment with `:=`
 - `if` statements
 - local blocks
-- expression-body user-defined functions
+- expression-body user-defined functions with positional and named arguments
 - simple `for` loops only after the expression runtime and callsite state are
   stable
 
@@ -74,11 +74,14 @@ User-defined functions are limited to single expression bodies:
 
 ```pine
 smooth(src, len) => ta.sma(src, len)
+spread(hi, lo) => hi - lo
+plot(spread(lo=low, hi=high))
 ```
 
-Recursive functions, output side effects inside functions, and stateful or
-side-effecting calls as UDF arguments are rejected in the current executable
-subset.
+Named arguments are supported for user-defined functions. Multi-statement
+function bodies, recursive functions, output side effects inside functions, and
+stateful or side-effecting calls as UDF arguments are rejected in the current
+executable subset.
 
 ## Initial Built-Ins
 

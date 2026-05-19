@@ -188,7 +188,8 @@ The lowering stage should assign callsite ids before runtime execution.
 ## User-Defined Functions
 
 Expression-body user-defined functions are supported by lowering each callsite
-as an inline expression.
+as an inline expression. Positional and named arguments are resolved to the
+declared parameter list before semantic analysis of the function body.
 
 Current rules:
 
@@ -198,6 +199,8 @@ Current rules:
 - Allocate independent callsite state for every syntactic callsite.
 - Functions called conditionally follow the same conditional callsite rules as
   built-ins.
+- Reject duplicate or unknown named UDF arguments and positional arguments after
+  named arguments.
 - Reject output side effects inside functions.
 - Reject stateful or side-effecting calls as UDF arguments until argument
   evaluation has explicit temporary storage.

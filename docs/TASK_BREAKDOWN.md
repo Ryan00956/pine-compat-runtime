@@ -170,7 +170,8 @@ Status: in progress.
 - [x] Reject block-local declarations inside `if` until local-scope semantics
   are implemented.
 - [x] Add expression-body user-defined function execution by inlining.
+- [x] Support named arguments for expression-body user-defined functions.
 - [x] Reject recursive functions and function side effects.
 - [ ] Add fixture-derived conformance metadata for block statements.
-- [ ] Add fixture-derived conformance metadata for user-defined functions.
+- [x] Add fixture-derived conformance metadata for user-defined functions.
 - [ ] Implement full local-scope declarations and shadowing rules.

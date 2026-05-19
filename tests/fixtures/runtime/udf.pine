@@ -1,5 +1,5 @@
 //@version=5
 indicator("UDF")
 smooth(src, len) => ta.sma(src, len)
-ma = smooth(close, 2)
+ma = smooth(len=2, src=close)
 plot(ma)

@@ -149,6 +149,15 @@ struct FunctionInfo {
     span: Span,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum UdfArgError {
+    UnknownName { name: String, span: Span },
+    Duplicate { name: String, span: Span },
+    PositionalAfterNamed { span: Span },
+    TooMany { span: Span },
+    Missing { param: String },
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct SymbolInfo {
     id: SymbolId,
@@ -534,26 +543,7 @@ impl Analyzer {
             ));
             return None;
         }
-        if args.len() != function.params.len() {
-            self.diagnostics.push(Diagnostic::error(
-                "E_FUNCTION_ARITY",
-                format!(
-                    "`{name}` expects {} argument(s), got {}",
-                    function.params.len(),
-                    args.len()
-                ),
-                span,
-            ));
-            return None;
-        }
         for arg in args {
-            if arg.name.is_some() {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_FUNCTION_ARG_NAME",
-                    "user-defined function calls do not support named arguments yet",
-                    arg.span,
-                ));
-            }
             if contains_stateful_or_side_effect_call(&arg.value) {
                 self.unsupported(
                     "function_stateful_argument",
@@ -562,13 +552,24 @@ impl Analyzer {
                 );
             }
         }
+        let arg_indices = match resolve_udf_arg_indices(&function.params, args) {
+            Ok(arg_indices) => arg_indices,
+            Err(error) => {
+                self.report_udf_arg_error(name, span, function.params.len(), args.len(), error);
+                return None;
+            }
+        };
 
         self.compatibility.supported.push(FeatureUse {
             feature: "function".to_owned(),
             span: function.span,
         });
         self.scope.push_scope();
-        for (param, arg_type) in function.params.iter().zip(arg_types) {
+        let mut resolved_arg_types = vec![None; function.params.len()];
+        for (arg_index, param_index) in arg_indices.iter().copied().enumerate() {
+            resolved_arg_types[param_index] = arg_types.get(arg_index).copied().flatten();
+        }
+        for (param, arg_type) in function.params.iter().zip(resolved_arg_types) {
             self.define_local_symbol(param, arg_type.unwrap_or(UNKNOWN));
         }
         self.function_stack.push(name.to_owned());
@@ -579,6 +580,53 @@ impl Analyzer {
         self.scope.pop_scope();
 
         return_type
+    }
+
+    fn report_udf_arg_error(
+        &mut self,
+        function_name: &str,
+        call_span: Span,
+        expected: usize,
+        got: usize,
+        error: UdfArgError,
+    ) {
+        match error {
+            UdfArgError::UnknownName { name, span } => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_ARG_NAME",
+                    format!("`{function_name}` has no argument named `{name}`"),
+                    span,
+                ));
+            }
+            UdfArgError::Duplicate { name, span } => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_ARG_DUPLICATE",
+                    format!("`{function_name}` argument `{name}` is provided more than once"),
+                    span,
+                ));
+            }
+            UdfArgError::PositionalAfterNamed { span } => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_ARG_ORDER",
+                    "positional arguments cannot follow named arguments in user-defined function calls",
+                    span,
+                ));
+            }
+            UdfArgError::TooMany { span } => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_ARITY",
+                    format!("`{function_name}` expects {expected} argument(s), got {got}"),
+                    span,
+                ));
+            }
+            UdfArgError::Missing { param } => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_ARITY",
+                    format!("`{function_name}` is missing argument `{param}`"),
+                    call_span,
+                ));
+            }
+        }
     }
 
     fn validate_history_offset(&mut self, offset: &Expr) {
@@ -1219,12 +1267,11 @@ impl Analyzer {
         outer_param_types: &HashMap<String, PineType>,
     ) -> Option<HirExpr> {
         let function = self.functions.get(name)?.clone();
-        if args.len() != function.params.len() {
-            return None;
-        }
+        let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
         let mut param_exprs = HashMap::new();
         let mut param_types = HashMap::new();
-        for (param, arg) in function.params.iter().zip(args) {
+        for (arg, param_index) in args.iter().zip(arg_indices) {
+            let param = &function.params[param_index];
             let arg_expr =
                 self.lower_expr_with_params(&arg.value, outer_param_exprs, outer_param_types)?;
             let arg_type = self.type_of_expr_with_params(&arg.value, outer_param_types)?;
@@ -1327,11 +1374,10 @@ impl Analyzer {
                     }
                 } else {
                     let function = self.functions.get(&name)?;
-                    if function.params.len() != args.len() {
-                        return None;
-                    }
+                    let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
                     let mut nested_param_types = HashMap::new();
-                    for (param, arg_type) in function.params.iter().zip(arg_types) {
+                    for (arg_type, param_index) in arg_types.into_iter().zip(arg_indices) {
+                        let param = &function.params[param_index];
                         nested_param_types.insert(param.clone(), arg_type?);
                     }
                     self.type_of_expr_with_params(&function.body, &nested_param_types)
@@ -1364,9 +1410,8 @@ impl Analyzer {
 fn unsupported_syntax_reason(feature: &str) -> &'static str {
     match feature {
         "import" => "library imports are not supported in Phase 1",
-        "function" => {
-            "user-defined functions are parsed for compatibility reporting but not executable yet"
-        }
+        "function" => "unsupported user-defined function syntax",
+        "function_block" => "multi-statement user-defined functions need local block semantics",
         "for" => "for loops are parsed for compatibility reporting but not executable yet",
         _ => "syntax is not supported in Phase 1",
     }
@@ -1382,6 +1427,54 @@ fn expr_name(expr: &Expr) -> Option<String> {
 
 fn is_output_or_declaration_builtin(name: &str) -> bool {
     matches!(name, "indicator" | "plot" | "hline" | "fill") || name.starts_with("input.")
+}
+
+fn resolve_udf_arg_indices(params: &[String], args: &[CallArg]) -> Result<Vec<usize>, UdfArgError> {
+    let mut used = vec![false; params.len()];
+    let mut indices = Vec::with_capacity(args.len());
+    let mut next_positional = 0;
+    let mut saw_named = false;
+
+    for arg in args {
+        if let Some(name) = &arg.name {
+            saw_named = true;
+            let Some(param_index) = params.iter().position(|param| param == name) else {
+                return Err(UdfArgError::UnknownName {
+                    name: name.clone(),
+                    span: arg.span,
+                });
+            };
+            if used[param_index] {
+                return Err(UdfArgError::Duplicate {
+                    name: name.clone(),
+                    span: arg.span,
+                });
+            }
+            used[param_index] = true;
+            indices.push(param_index);
+        } else {
+            if saw_named {
+                return Err(UdfArgError::PositionalAfterNamed { span: arg.span });
+            }
+            while next_positional < used.len() && used[next_positional] {
+                next_positional += 1;
+            }
+            if next_positional >= params.len() {
+                return Err(UdfArgError::TooMany { span: arg.span });
+            }
+            used[next_positional] = true;
+            indices.push(next_positional);
+            next_positional += 1;
+        }
+    }
+
+    if let Some(missing_index) = used.iter().position(|used| !*used) {
+        return Err(UdfArgError::Missing {
+            param: params[missing_index].clone(),
+        });
+    }
+
+    Ok(indices)
 }
 
 fn contains_stateful_or_side_effect_call(expr: &Expr) -> bool {
@@ -1961,6 +2054,71 @@ plot(y)
                 .any(|feature| feature.feature == "function")
         );
         assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_named_function_arguments() {
+        let analysis = analyze("spread(hi, lo) => hi - lo\nplot(spread(lo=low, hi=high))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_duplicate_named_function_argument() {
+        let analysis = analyze("spread(hi, lo) => hi - lo\nplot(spread(high, hi=low))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_FUNCTION_ARG_DUPLICATE")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_positional_function_argument_after_named_argument() {
+        let analysis = analyze("spread(hi, lo) => hi - lo\nplot(spread(hi=high, low))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_FUNCTION_ARG_ORDER")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_unknown_named_function_argument() {
+        let analysis = analyze("double(x) => x * 2\nplot(double(src=close))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_FUNCTION_ARG_NAME")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_block_body_function() {
+        let analysis = analyze("double(x) =>\n    y = x * 2\n    y\nplot(double(close))\n");
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "function_block")
+        );
+        assert!(analysis.hir.is_none());
     }
 
     #[test]

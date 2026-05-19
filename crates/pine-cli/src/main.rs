@@ -174,7 +174,12 @@ fn conformance_entries() -> Vec<MatrixEntry> {
         MatrixEntry {
             feature: "expression-body functions".to_owned(),
             status: "supported",
-            notes: "lowered by inlining; recursion and side effects rejected",
+            notes: "lowered by inlining; positional and named arguments supported",
+        },
+        MatrixEntry {
+            feature: "multi-statement functions".to_owned(),
+            status: "unsupported",
+            notes: "requires local block and return-value semantics",
         },
         MatrixEntry {
             feature: "block-local declarations".to_owned(),
@@ -535,6 +540,9 @@ mod tests {
         );
         assert!(entries.iter().any(|entry| {
             entry.feature == "expression-body functions" && entry.status == "supported"
+        }));
+        assert!(entries.iter().any(|entry| {
+            entry.feature == "multi-statement functions" && entry.status == "unsupported"
         }));
         assert!(entries.iter().any(|entry| {
             entry.feature == "block-local declarations" && entry.status == "unsupported"

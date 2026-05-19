@@ -84,10 +84,14 @@ callsite:
 ```pine
 smooth(src, len) => ta.sma(src, len)
 plot(smooth(close, 20))
+
+spread(hi, lo) => hi - lo
+plot(spread(lo=low, hi=high))
 ```
 
 Inlining gives stateful calls inside the function body independent callsite
-state for each syntactic UDF call. Recursive functions, output side effects
+state for each syntactic UDF call. Named arguments are resolved before
+lowering. Multi-statement functions, recursive functions, output side effects
 inside functions, and stateful or side-effecting calls as UDF arguments are
 rejected in the current executable subset.
 
