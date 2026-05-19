@@ -1299,6 +1299,39 @@ pub fn named_color(name: &str) -> Option<u32> {
         .map(|color| color.rgb)
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct NamedFloatConstant {
+    name: &'static str,
+    value: f64,
+}
+
+const NAMED_FLOAT_CONSTANTS: &[NamedFloatConstant] = &[
+    NamedFloatConstant {
+        name: "math.e",
+        value: std::f64::consts::E,
+    },
+    NamedFloatConstant {
+        name: "math.pi",
+        value: std::f64::consts::PI,
+    },
+    NamedFloatConstant {
+        name: "math.phi",
+        value: 1.618_033_988_749_895,
+    },
+    NamedFloatConstant {
+        name: "math.rphi",
+        value: 0.618_033_988_749_894_8,
+    },
+];
+
+#[must_use]
+pub fn named_float_constant(name: &str) -> Option<f64> {
+    NAMED_FLOAT_CONSTANTS
+        .iter()
+        .find(|constant| constant.name == name)
+        .map(|constant| constant.value)
+}
+
 const NAMED_STRING_CONSTANTS: &[&str] = &[
     "shape.xcross",
     "shape.cross",

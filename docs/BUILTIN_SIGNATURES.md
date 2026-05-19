@@ -195,6 +195,15 @@ single normalized `Color` representation.
 
 Phase 1 may include only the math functions required by fixtures.
 
+Supported constants:
+
+```text
+math.e -> const float
+math.pi -> const float
+math.phi -> const float
+math.rphi -> const float
+```
+
 Recommended first set:
 
 ```text
@@ -225,6 +234,7 @@ Each added math function must declare its coercion and `na` behavior.
 
 Current Phase 4 behavior:
 
+- `math.e`, `math.pi`, `math.phi`, and `math.rphi` evaluate as const floats.
 - `math.abs` preserves int/float kind and qualifier.
 - `math.avg` accepts one or more numeric args and returns their average as a float.
 - `math.floor` and `math.ceil` preserve int/float kind and qualifier; float inputs return whole-number floats.

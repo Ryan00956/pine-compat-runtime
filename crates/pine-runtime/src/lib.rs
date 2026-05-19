@@ -2687,6 +2687,9 @@ fn eval_builtin_value(name: &str) -> PineValue {
     if let Some(color) = pine_builtins::named_color(name) {
         return PineValue::Color(color);
     }
+    if let Some(value) = pine_builtins::named_float_constant(name) {
+        return PineValue::Float(value);
+    }
     pine_builtins::named_string_constant(name)
         .map(|constant| PineValue::String(constant.to_owned()))
         .unwrap_or(PineValue::Void)
@@ -3695,6 +3698,7 @@ atan_value = math.atan(close)
 sign_value = math.sign(close - 2)
 degrees_value = math.todegrees(close)
 radians_value = math.toradians(close)
+constants = math.pi + math.e + math.phi + math.rphi
 sin_value = math.sin(close)
 cos_value = math.cos(close)
 tan_value = math.tan(close)
@@ -3714,6 +3718,7 @@ plot(atan_value)
 plot(sign_value)
 plot(degrees_value)
 plot(radians_value)
+plot(constants)
 plot(sin_value)
 plot(cos_value)
 plot(tan_value)
@@ -3798,24 +3803,31 @@ plot(math.pow(-1, 0.5))
         );
         assert_values_close(
             &result.plots[15].values,
-            &[1.0_f64.sin(), 2.0_f64.sin(), 3.0_f64.sin(), 4.0_f64.sin()],
+            &[std::f64::consts::PI
+                + std::f64::consts::E
+                + 1.618_033_988_749_895
+                + 0.618_033_988_749_894_8; 4],
         );
         assert_values_close(
             &result.plots[16].values,
-            &[1.0_f64.cos(), 2.0_f64.cos(), 3.0_f64.cos(), 4.0_f64.cos()],
+            &[1.0_f64.sin(), 2.0_f64.sin(), 3.0_f64.sin(), 4.0_f64.sin()],
         );
         assert_values_close(
             &result.plots[17].values,
+            &[1.0_f64.cos(), 2.0_f64.cos(), 3.0_f64.cos(), 4.0_f64.cos()],
+        );
+        assert_values_close(
+            &result.plots[18].values,
             &[1.0_f64.tan(), 2.0_f64.tan(), 3.0_f64.tan(), 4.0_f64.tan()],
         );
-        assert_values_close(&result.plots[18].values, &[1.0, 4.0, 9.0, 16.0]);
-        assert_eq!(result.plots[19].values, vec![PineValue::Na; 4]);
+        assert_values_close(&result.plots[19].values, &[1.0, 4.0, 9.0, 16.0]);
         assert_eq!(result.plots[20].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[21].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[22].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[23].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[24].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[25].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[26].values, vec![PineValue::Na; 4]);
     }
 
     #[test]

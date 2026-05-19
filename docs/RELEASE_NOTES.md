@@ -34,6 +34,7 @@
 - Added `math.acos`, `math.asin`, and `math.atan` support for numeric values.
 - Added `math.sign`, `math.todegrees`, and `math.toradians` support for numeric values.
 - Added `math.avg` support for variadic numeric averages.
+- Added `math.e`, `math.pi`, `math.phi`, and `math.rphi` constants.
 - Tightened float array UDF boundaries: read-only array operations are allowed,
   while array mutation inside UDFs is rejected as a side effect.
 - Added a 100,000-element runtime guard for each float array.
