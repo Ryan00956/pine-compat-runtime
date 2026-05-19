@@ -44,7 +44,7 @@ ta.highest	supported	fixture-derived executable subset	tests/fixtures/runtime/ex
 ta.lowest	supported	fixture-derived executable subset	tests/fixtures/runtime/extremes.pine
 if	supported	conditional callsites advance only when their branch executes	tests/fixtures/runtime/if.pine;tests/fixtures/runtime/conditional_ta.pine
 switch	partial	expression arms with condition and selector forms	tests/fixtures/runtime/switch.pine
-for	partial	inclusive integer ranges, loop control, and loop results	tests/fixtures/runtime/block_statements.pine;tests/fixtures/sema/supported_block_statements.pine
+for	partial	inclusive integer ranges, loop control, loop results, dynamic bounds, and signed steps	tests/fixtures/runtime/block_statements.pine;tests/fixtures/runtime/for_edges.pine;tests/fixtures/sema/supported_block_statements.pine
 while	partial	statement loops with bool conditions, loop control, and iteration guard	tests/fixtures/runtime/while.pine
 array.new_float	partial	float arrays only	tests/fixtures/runtime/array.pine
 array.size	partial	float arrays only	tests/fixtures/runtime/array.pine

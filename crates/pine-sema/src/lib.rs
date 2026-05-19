@@ -3609,6 +3609,20 @@ plot(y)
     }
 
     #[test]
+    fn accepts_for_loop_with_series_bounds_and_signed_step() {
+        let analysis = analyze(
+            "sum = close > 0 ? 0 : 0\nlimit = close > 1 ? 3 : na\nfor i = 0 to limit by -2\n    sum := sum + i\nplot(sum)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_non_int_for_loop_range() {
         let analysis = analyze("for i = 0.5 to 2\n    plot(close)\n");
 

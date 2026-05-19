@@ -90,8 +90,11 @@ time their declaration site is reached, then preserve state across later
 executions.
 
 `for` loops support inclusive integer ranges with an optional explicit `by`
-step. The runtime increments when `from <= to` and decrements when `from > to`.
-The loop counter is scoped to the loop body. Step values must be non-zero ints.
+step. The runtime increments when `from <= to` and decrements when `from > to`;
+the absolute step magnitude is used, so signed step values do not override the
+range direction. If a runtime range bound or step evaluates to `na`, the loop
+body is skipped and a loop expression returns `na`. The loop counter is scoped
+to the loop body. Step values must be non-zero ints.
 `break` exits the nearest enclosing loop and `continue` skips to its next
 iteration.
 `x = for ...` and tuple assignment from `for` results are supported when the

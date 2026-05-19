@@ -4525,6 +4525,62 @@ plot(close + sum)
     }
 
     #[test]
+    fn runs_for_loop_signed_step_by_range_direction() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("for signed step")
+sum = 0
+for i = 0 to 4 by -2
+    sum := sum + i
+down = 0
+for j = 4 to 0 by -2
+    down := down + j
+plot(close + sum + down)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[13.0, 14.0, 15.0]);
+    }
+
+    #[test]
+    fn runs_for_loop_with_series_na_bounds() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("for na bounds")
+limit = close > 1 ? 3 : na
+sum = close > 0 ? 0 : 0
+for i = 0 to limit by 2
+    sum := sum + i
+value = for j = limit to 0 by 2
+    j
+plot(close + sum + nz(value))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[1.0, 5.0, 6.0]);
+    }
+
+    #[test]
     fn runs_for_loop_break_and_continue() {
         let source = SourceFile::new(
             "test.pine",
@@ -4716,6 +4772,32 @@ plot(close + x + y)
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[7.0, 8.0, 9.0]);
+    }
+
+    #[test]
+    fn runs_for_expression_that_reaches_no_result_as_na() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("for no result")
+value = for i = 0 to 2
+    if i >= 0
+        continue
+    i
+plot(nz(value) + close)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
     }
 
     #[test]
