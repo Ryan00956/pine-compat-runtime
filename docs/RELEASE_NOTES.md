@@ -17,6 +17,7 @@
   support for the executable `defval`/`title` subset.
 - Added generic `input` support for const int, float, bool, string, and color
   defaults.
+- Added `bgcolor` and `barcolor` support with bar-aligned color output series.
 - Tightened float array UDF boundaries: read-only array operations are allowed,
   while array mutation inside UDFs is rejected as a side effect.
 - Added a 100,000-element runtime guard for each float array.

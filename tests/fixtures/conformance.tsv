@@ -12,6 +12,8 @@ input.time	supported	defval/title executable subset	tests/fixtures/runtime/input
 input.symbol	supported	defval/title executable subset	tests/fixtures/runtime/inputs.pine
 input.timeframe	supported	defval/title executable subset	tests/fixtures/runtime/inputs.pine
 plot	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/if.pine
+bgcolor	supported	color series output with conditional padding	tests/fixtures/runtime/color_outputs.pine
+barcolor	supported	color series output with conditional padding	tests/fixtures/runtime/color_outputs.pine
 hline	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
 fill	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
 color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
@@ -52,7 +54,7 @@ multi-statement functions	supported	block body must end with an expression	tests
 block-local declarations	supported	normal and tuple declarations are scoped to branches	tests/fixtures/runtime/block_statements.pine;tests/fixtures/runtime/local_scope.pine;tests/fixtures/sema/supported_block_statements.pine
 local scope	supported	local declarations, shadowing, and local var storage	tests/fixtures/runtime/local_scope.pine
 recursive functions	unsupported	rejected during semantic analysis	tests/fixtures/sema/unsupported_recursive_function.pine
-function side effects	unsupported	plot, hline, fill, indicator, input calls, and array mutation inside UDFs rejected	tests/fixtures/sema/unsupported_function_side_effect.pine;tests/fixtures/sema/unsupported_array_function_side_effect.pine
+function side effects	unsupported	output, declaration, input calls, and array mutation inside UDFs rejected	tests/fixtures/sema/unsupported_function_side_effect.pine;tests/fixtures/sema/unsupported_array_function_side_effect.pine
 color.* named constants	partial	common registry only	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 #RRGGBB/#RRGGBBAA color literals	supported	normalized runtime color value	tests/fixtures/syntax/phase1_basic.pine
 history references	partial	constant non-negative offsets only	tests/fixtures/runtime/na.pine

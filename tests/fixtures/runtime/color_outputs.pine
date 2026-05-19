@@ -1,0 +1,6 @@
+//@version=5
+indicator("Color outputs")
+if close > 1
+    bgcolor(color.green)
+barcolor(close > 2 ? color.red : na)
+plot(close)

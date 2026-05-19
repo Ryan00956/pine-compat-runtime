@@ -194,6 +194,19 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const COLOR_OUTPUT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "color",
+        accepts: Accepts::ColorCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "title",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+];
+
 const HLINE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "price",
@@ -528,6 +541,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: PLOT_PARAMS,
         returns: ReturnSpec::Fixed(PLOT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "bgcolor",
+        phase: BuiltinPhase::Phase1Core,
+        params: COLOR_OUTPUT_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "barcolor",
+        phase: BuiltinPhase::Phase1Core,
+        params: COLOR_OUTPUT_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
     BuiltinSignature {

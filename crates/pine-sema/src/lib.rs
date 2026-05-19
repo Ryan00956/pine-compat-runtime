@@ -798,7 +798,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "indicator, input, plot, hline, and fill calls are not supported inside user-defined functions",
+                    "indicator, input, plot, hline, fill, bgcolor, and barcolor calls are not supported inside user-defined functions",
                     callee.span,
                 );
             }
@@ -2313,7 +2313,11 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
 }
 
 fn is_output_or_declaration_builtin(name: &str) -> bool {
-    matches!(name, "indicator" | "plot" | "hline" | "fill") || name.starts_with("input.")
+    matches!(
+        name,
+        "indicator" | "plot" | "hline" | "fill" | "bgcolor" | "barcolor"
+    ) || name == "input"
+        || name.starts_with("input.")
 }
 
 fn is_array_mutation_builtin(name: &str) -> bool {
@@ -2863,6 +2867,33 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "input")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_bgcolor_and_barcolor() {
+        let analysis =
+            analyze("bgcolor(close > open ? color.green : na)\nbarcolor(color.red)\nplot(close)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "bgcolor")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "barcolor")
         );
         assert!(analysis.hir.is_some());
     }

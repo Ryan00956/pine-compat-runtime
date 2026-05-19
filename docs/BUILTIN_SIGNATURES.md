@@ -101,8 +101,8 @@ hline(price: const-or-input float, title?: const string, color?: color-compatibl
 fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, ...)
   -> void
 
-bgcolor(color: series color) -> void
-barcolor(color: series color) -> void
+bgcolor(color: color-compatible, title?: const string, ...) -> void
+barcolor(color: color-compatible, title?: const string, ...) -> void
 ```
 
 `color-compatible` should initially accept:
@@ -112,8 +112,9 @@ barcolor(color: series color) -> void
 - series color where the target built-in supports dynamic color
 - `na` to mean no color for that bar when supported
 
-The output collector should retain plot ids and hline ids so host integrations
-can adapt the normalized result without reinterpreting the script.
+The output collector should retain plot ids, hline ids, and bar-aligned color
+series so host integrations can adapt the normalized result without
+reinterpreting the script.
 
 ## Utility
 

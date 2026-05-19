@@ -299,6 +299,10 @@ fn result_json(result: &RuntimeResult) -> String {
     let mut output = String::from("{");
     output.push_str("\"plots\":");
     output.push_str(&plots_json(&result.plots));
+    output.push_str(",\"bgColors\":");
+    output.push_str(&colors_json(&result.bg_colors));
+    output.push_str(",\"barColors\":");
+    output.push_str(&colors_json(&result.bar_colors));
     output.push_str(",\"hlines\":");
     output.push_str(&hlines_json(&result.hlines));
     output.push_str(",\"fills\":");
@@ -348,6 +352,12 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"plots\":{},",
             "\"plotValues\":{},",
             "\"plotCapacity\":{},",
+            "\"bgColors\":{},",
+            "\"bgColorValues\":{},",
+            "\"bgColorCapacity\":{},",
+            "\"barColors\":{},",
+            "\"barColorValues\":{},",
+            "\"barColorCapacity\":{},",
             "\"hlines\":{},",
             "\"hlineCapacity\":{},",
             "\"fills\":{},",
@@ -381,6 +391,12 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.plots,
         profile.plot_values,
         profile.plot_capacity,
+        profile.bg_colors,
+        profile.bg_color_values,
+        profile.bg_color_capacity,
+        profile.bar_colors,
+        profile.bar_color_values,
+        profile.bar_color_capacity,
         profile.hlines,
         profile.hline_capacity,
         profile.fills,
@@ -396,6 +412,25 @@ fn plots_json(plots: &[pine_runtime::PlotSeries]) -> String {
         }
         output.push_str(&format!("{{\"id\":{},\"values\":[", plot.id));
         for (value_index, value) in plot.values.iter().enumerate() {
+            if value_index > 0 {
+                output.push(',');
+            }
+            output.push_str(&value_json(value));
+        }
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
+fn colors_json(colors: &[pine_runtime::ColorSeries]) -> String {
+    let mut output = String::from("[");
+    for (color_index, colors) in colors.iter().enumerate() {
+        if color_index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"values\":[", colors.id));
+        for (value_index, value) in colors.values.iter().enumerate() {
             if value_index > 0 {
                 output.push(',');
             }
@@ -586,6 +621,8 @@ mod tests {
     fn formats_profiled_result_json() {
         let result = RuntimeResult {
             plots: vec![],
+            bg_colors: vec![],
+            bar_colors: vec![],
             hlines: vec![],
             fills: vec![],
             diagnostics: vec![],
@@ -618,6 +655,12 @@ mod tests {
             plots: 0,
             plot_values: 0,
             plot_capacity: 0,
+            bg_colors: 0,
+            bg_color_values: 0,
+            bg_color_capacity: 0,
+            bar_colors: 0,
+            bar_color_values: 0,
+            bar_color_capacity: 0,
             hlines: 0,
             hline_capacity: 0,
             fills: 0,
