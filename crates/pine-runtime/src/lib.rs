@@ -2391,6 +2391,77 @@ plot(macd)
         );
     }
 
+    #[test]
+    fn runs_expression_body_function() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf")
+double(x) => x * 2
+plot(double(close))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[2.0, 4.0, 6.0]);
+    }
+
+    #[test]
+    fn runs_function_with_ta_call() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf sma")
+smooth(src, len) => ta.sma(src, len)
+plot(smooth(close, 2))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[1.5, 2.5, 3.5]);
+    }
+
+    #[test]
+    fn runs_function_body_with_global_reference() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf global")
+bias = 1.5
+add_bias(x) => x + bias
+plot(add_bias(close))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[2.5, 3.5, 4.5]);
+    }
+
     fn bar(close: f64) -> Bar {
         bar_ohlc(close, close, close, close)
     }

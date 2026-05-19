@@ -51,11 +51,14 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
             ..CompatibilityReport::default()
         },
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
+        functions: HashMap::new(),
+        function_stack: Vec::new(),
         next_symbol_id: initial_symbol_count(),
         next_series_id: initial_series_count(),
         next_call_site_id: 0,
         next_var_slot_id: 0,
         block_depth: 0,
+        function_depth: 0,
     };
     analyzer.analyze_program(&parsed.program);
     analyzer.finish(&parsed.program)
@@ -129,11 +132,21 @@ struct Analyzer {
     diagnostics: Vec<Diagnostic>,
     compatibility: CompatibilityReport,
     scope: ScopeResolver,
+    functions: HashMap<String, FunctionInfo>,
+    function_stack: Vec<String>,
     next_symbol_id: u32,
     next_series_id: u32,
     next_call_site_id: u32,
     next_var_slot_id: u32,
     block_depth: u32,
+    function_depth: u32,
+}
+
+#[derive(Debug, Clone)]
+struct FunctionInfo {
+    params: Vec<String>,
+    body: Expr,
+    span: Span,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -187,6 +200,24 @@ impl ScopeResolver {
         }
     }
 
+    fn push_scope(&mut self) {
+        self.scopes.push(HashMap::new());
+    }
+
+    fn pop_scope(&mut self) {
+        if self.scopes.len() > 1 {
+            self.scopes.pop();
+        }
+    }
+
+    fn define_local(&mut self, name: &str, info: SymbolInfo) {
+        let scope = self
+            .scopes
+            .last_mut()
+            .expect("scope resolver always has a current scope");
+        scope.insert(name.to_owned(), info);
+    }
+
     fn lower_symbols(&self) -> Vec<HirSymbol> {
         let global_scope = self
             .scopes
@@ -209,8 +240,53 @@ impl ScopeResolver {
 
 impl Analyzer {
     fn analyze_program(&mut self, program: &Program) {
+        self.register_functions(program);
         for statement in &program.statements {
             self.analyze_stmt(statement);
+        }
+    }
+
+    fn register_functions(&mut self, program: &Program) {
+        for statement in &program.statements {
+            let StmtKind::Function { name, params, body } = &statement.kind else {
+                continue;
+            };
+            if self.functions.contains_key(name) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_DUPLICATE",
+                    format!("function `{name}` is already defined"),
+                    statement.span,
+                ));
+                continue;
+            }
+            if pine_builtins::is_phase_1_builtin(name)
+                || INITIAL_SYMBOLS
+                    .iter()
+                    .any(|(symbol_name, _)| symbol_name == name)
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_NAME",
+                    format!("function `{name}` conflicts with an existing symbol"),
+                    statement.span,
+                ));
+                continue;
+            }
+            if has_duplicate_param(params) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_PARAM",
+                    format!("function `{name}` has duplicate parameter names"),
+                    statement.span,
+                ));
+                continue;
+            }
+            self.functions.insert(
+                name.clone(),
+                FunctionInfo {
+                    params: params.clone(),
+                    body: body.clone(),
+                    span: statement.span,
+                },
+            );
         }
     }
 
@@ -238,6 +314,15 @@ impl Analyzer {
                     self.analyze_stmt(branch_statement);
                 }
                 self.block_depth -= 1;
+            }
+            StmtKind::Function { .. } => {
+                if self.block_depth > 0 {
+                    self.unsupported(
+                        "block_local_function",
+                        "function declarations inside if blocks are not supported",
+                        statement.span,
+                    );
+                }
             }
             StmtKind::Decl { mode, name, value } => {
                 if matches!(mode, pine_syntax::DeclMode::Varip) {
@@ -408,10 +493,92 @@ impl Analyzer {
             .map(|arg| self.analyze_expr(&arg.value))
             .collect();
 
-        let signature = pine_builtins::get_phase_1_builtin(&name)?;
+        if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
+            if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
+                self.unsupported(
+                    "function_side_effect",
+                    "indicator, input, plot, hline, and fill calls are not supported inside user-defined functions",
+                    callee.span,
+                );
+            }
 
-        self.validate_call_args(signature, args, &arg_types);
-        self.return_type(signature, &arg_types)
+            self.validate_call_args(signature, args, &arg_types);
+            return self.return_type(signature, &arg_types);
+        }
+
+        if self.functions.contains_key(&name) {
+            return self.analyze_udf_call(&name, callee.span, args, &arg_types);
+        }
+
+        self.diagnostics.push(Diagnostic::error(
+            "E_UNKNOWN_FUNCTION",
+            format!("unknown function `{name}`"),
+            callee.span,
+        ));
+        None
+    }
+
+    fn analyze_udf_call(
+        &mut self,
+        name: &str,
+        span: Span,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> Option<PineType> {
+        let function = self.functions.get(name)?.clone();
+        if self.function_stack.iter().any(|active| active == name) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_RECURSIVE_FUNCTION",
+                format!("recursive function `{name}` is not supported"),
+                span,
+            ));
+            return None;
+        }
+        if args.len() != function.params.len() {
+            self.diagnostics.push(Diagnostic::error(
+                "E_FUNCTION_ARITY",
+                format!(
+                    "`{name}` expects {} argument(s), got {}",
+                    function.params.len(),
+                    args.len()
+                ),
+                span,
+            ));
+            return None;
+        }
+        for arg in args {
+            if arg.name.is_some() {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_FUNCTION_ARG_NAME",
+                    "user-defined function calls do not support named arguments yet",
+                    arg.span,
+                ));
+            }
+            if contains_stateful_or_side_effect_call(&arg.value) {
+                self.unsupported(
+                    "function_stateful_argument",
+                    "stateful or side-effecting calls cannot be passed as user-defined function arguments yet",
+                    arg.span,
+                );
+            }
+        }
+
+        self.compatibility.supported.push(FeatureUse {
+            feature: "function".to_owned(),
+            span: function.span,
+        });
+        self.scope.push_scope();
+        for (param, arg_type) in function.params.iter().zip(arg_types) {
+            self.define_local_symbol(param, arg_type.unwrap_or(UNKNOWN));
+        }
+        self.function_stack.push(name.to_owned());
+        self.function_depth += 1;
+        let return_type = self.analyze_expr(&function.body);
+        self.function_depth -= 1;
+        self.function_stack.pop();
+        self.scope.pop_scope();
+
+        return_type
     }
 
     fn validate_history_offset(&mut self, offset: &Expr) {
@@ -645,6 +812,21 @@ impl Analyzer {
         id
     }
 
+    fn define_local_symbol(&mut self, name: &str, pine_type: PineType) -> SymbolId {
+        let id = self.alloc_symbol();
+        let series_id = self.series_id_for_type(pine_type);
+        self.scope.define_local(
+            name,
+            SymbolInfo {
+                id,
+                pine_type,
+                series_id,
+                var_slot_id: None,
+            },
+        );
+        id
+    }
+
     fn update_symbol_type(&mut self, name: &str, pine_type: PineType) {
         if let Some(mut symbol) = self.scope.resolve(name) {
             symbol.pine_type = pine_type;
@@ -865,6 +1047,9 @@ impl Analyzer {
     fn lower_program(&mut self, program: &Program) -> Option<HirProgram> {
         let mut statements = Vec::new();
         for statement in &program.statements {
+            if matches!(statement.kind, StmtKind::Function { .. }) {
+                continue;
+            }
             statements.push(self.lower_stmt(statement)?);
         }
 
@@ -914,6 +1099,7 @@ impl Analyzer {
                     .collect::<Option<_>>()?,
                 value: self.lower_expr(value)?,
             },
+            StmtKind::Function { .. } => return None,
             StmtKind::Unsupported { .. } => return None,
         };
 
@@ -921,7 +1107,22 @@ impl Analyzer {
     }
 
     fn lower_expr(&mut self, expr: &Expr) -> Option<HirExpr> {
-        let pine_type = self.type_of_expr(expr)?;
+        self.lower_expr_with_params(expr, &HashMap::new(), &HashMap::new())
+    }
+
+    fn lower_expr_with_params(
+        &mut self,
+        expr: &Expr,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        if let ExprKind::Identifier(name) = &expr.kind
+            && let Some(param_expr) = param_exprs.get(name)
+        {
+            return Some(param_expr.clone());
+        }
+
+        let pine_type = self.type_of_expr_with_params(expr, param_types)?;
         let series_id =
             if pine_type.qualifier == Qualifier::Series && pine_type.kind != ValueKind::Tuple {
                 match &expr.kind {
@@ -940,43 +1141,65 @@ impl Analyzer {
             ExprKind::QualifiedName(parts) => HirExprKind::Builtin(parts.join(".")),
             ExprKind::Unary { op, expr } => HirExprKind::Unary {
                 op: lower_unary_op(*op),
-                expr: Box::new(self.lower_expr(expr)?),
+                expr: Box::new(self.lower_expr_with_params(expr, param_exprs, param_types)?),
             },
             ExprKind::Binary { op, left, right } => HirExprKind::Binary {
                 op: lower_binary_op(*op),
-                left: Box::new(self.lower_expr(left)?),
-                right: Box::new(self.lower_expr(right)?),
+                left: Box::new(self.lower_expr_with_params(left, param_exprs, param_types)?),
+                right: Box::new(self.lower_expr_with_params(right, param_exprs, param_types)?),
             },
             ExprKind::Ternary {
                 condition,
                 then_expr,
                 else_expr,
             } => HirExprKind::Ternary {
-                condition: Box::new(self.lower_expr(condition)?),
-                then_expr: Box::new(self.lower_expr(then_expr)?),
-                else_expr: Box::new(self.lower_expr(else_expr)?),
+                condition: Box::new(self.lower_expr_with_params(
+                    condition,
+                    param_exprs,
+                    param_types,
+                )?),
+                then_expr: Box::new(self.lower_expr_with_params(
+                    then_expr,
+                    param_exprs,
+                    param_types,
+                )?),
+                else_expr: Box::new(self.lower_expr_with_params(
+                    else_expr,
+                    param_exprs,
+                    param_types,
+                )?),
             },
             ExprKind::Tuple(items) => HirExprKind::Tuple(
                 items
                     .iter()
-                    .map(|item| self.lower_expr(item))
+                    .map(|item| self.lower_expr_with_params(item, param_exprs, param_types))
                     .collect::<Option<_>>()?,
             ),
-            ExprKind::Call { callee, args } => HirExprKind::Call {
-                callee: expr_name(callee)?,
-                call_site_id: self.alloc_call_site(),
-                args: args
-                    .iter()
-                    .map(|arg| {
-                        Some(HirCallArg {
-                            name: arg.name.clone(),
-                            value: self.lower_expr(&arg.value)?,
+            ExprKind::Call { callee, args } => {
+                let name = expr_name(callee)?;
+                if self.functions.contains_key(&name) {
+                    return self.lower_udf_call(&name, args, param_exprs, param_types);
+                }
+                HirExprKind::Call {
+                    callee: name,
+                    call_site_id: self.alloc_call_site(),
+                    args: args
+                        .iter()
+                        .map(|arg| {
+                            Some(HirCallArg {
+                                name: arg.name.clone(),
+                                value: self.lower_expr_with_params(
+                                    &arg.value,
+                                    param_exprs,
+                                    param_types,
+                                )?,
+                            })
                         })
-                    })
-                    .collect::<Option<_>>()?,
-            },
+                        .collect::<Option<_>>()?,
+                }
+            }
             ExprKind::History { expr, offset } => HirExprKind::History {
-                expr: Box::new(self.lower_expr(expr)?),
+                expr: Box::new(self.lower_expr_with_params(expr, param_exprs, param_types)?),
                 offset: constant_history_offset(offset)?,
             },
         };
@@ -988,19 +1211,53 @@ impl Analyzer {
         })
     }
 
+    fn lower_udf_call(
+        &mut self,
+        name: &str,
+        args: &[CallArg],
+        outer_param_exprs: &HashMap<String, HirExpr>,
+        outer_param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        let function = self.functions.get(name)?.clone();
+        if args.len() != function.params.len() {
+            return None;
+        }
+        let mut param_exprs = HashMap::new();
+        let mut param_types = HashMap::new();
+        for (param, arg) in function.params.iter().zip(args) {
+            let arg_expr =
+                self.lower_expr_with_params(&arg.value, outer_param_exprs, outer_param_types)?;
+            let arg_type = self.type_of_expr_with_params(&arg.value, outer_param_types)?;
+            param_exprs.insert(param.clone(), arg_expr);
+            param_types.insert(param.clone(), arg_type);
+        }
+        self.lower_expr_with_params(&function.body, &param_exprs, &param_types)
+    }
+
     fn type_of_expr(&self, expr: &Expr) -> Option<PineType> {
+        self.type_of_expr_with_params(expr, &HashMap::new())
+    }
+
+    fn type_of_expr_with_params(
+        &self,
+        expr: &Expr,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<PineType> {
         match &expr.kind {
             ExprKind::Literal(literal) => Some(literal_type(literal)),
-            ExprKind::Identifier(name) => self.scope.resolve(name).map(|symbol| symbol.pine_type),
+            ExprKind::Identifier(name) => param_types
+                .get(name)
+                .copied()
+                .or_else(|| self.scope.resolve(name).map(|symbol| symbol.pine_type)),
             ExprKind::QualifiedName(_) => {
                 let name = expr_name(expr)?;
                 pine_builtins::named_color(&name)
                     .map(|_| PineType::new(Qualifier::Const, ValueKind::Color))
             }
-            ExprKind::Unary { expr, .. } => self.type_of_expr(expr),
+            ExprKind::Unary { expr, .. } => self.type_of_expr_with_params(expr, param_types),
             ExprKind::Binary { op, left, right } => {
-                let left_type = self.type_of_expr(left)?;
-                let right_type = self.type_of_expr(right)?;
+                let left_type = self.type_of_expr_with_params(left, param_types)?;
+                let right_type = self.type_of_expr_with_params(right, param_types)?;
                 match op {
                     BinaryOp::Add
                     | BinaryOp::Sub
@@ -1028,9 +1285,9 @@ impl Analyzer {
                 then_expr,
                 else_expr,
             } => {
-                let condition_type = self.type_of_expr(condition)?;
-                let then_type = self.type_of_expr(then_expr)?;
-                let else_type = self.type_of_expr(else_expr)?;
+                let condition_type = self.type_of_expr_with_params(condition, param_types)?;
+                let then_type = self.type_of_expr_with_params(then_expr, param_types)?;
+                let else_type = self.type_of_expr_with_params(else_expr, param_types)?;
                 Some(PineType::new(
                     strongest_qualifier(
                         condition_type.qualifier,
@@ -1041,35 +1298,47 @@ impl Analyzer {
             }
             ExprKind::Tuple(items) => {
                 for item in items {
-                    self.type_of_expr(item)?;
+                    self.type_of_expr_with_params(item, param_types)?;
                 }
                 Some(pine_builtins::tuple_return_type())
             }
             ExprKind::Call { callee, args } => {
-                let signature = pine_builtins::get_phase_1_builtin(&expr_name(callee)?)?;
                 let arg_types: Vec<_> = args
                     .iter()
-                    .map(|arg| self.type_of_expr(&arg.value))
+                    .map(|arg| self.type_of_expr_with_params(&arg.value, param_types))
                     .collect();
-                match signature.returns {
-                    ReturnSpec::Fixed(pine_type) => Some(pine_type),
-                    ReturnSpec::Tuple(_) => Some(pine_builtins::tuple_return_type()),
-                    ReturnSpec::SameAsArg(index) => arg_types.get(index).copied().flatten(),
-                    ReturnSpec::BoolFromArg(index) => arg_types
-                        .get(index)
-                        .copied()
-                        .flatten()
-                        .map(pine_builtins::fallback_bool_for_arg),
-                    ReturnSpec::ColorFromArg(index) => arg_types
-                        .get(index)
-                        .copied()
-                        .flatten()
-                        .map(pine_builtins::color_return_for_arg),
-                    ReturnSpec::PromotedNumeric => promoted_numeric_type(&arg_types),
+                let name = expr_name(callee)?;
+                if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
+                    match signature.returns {
+                        ReturnSpec::Fixed(pine_type) => Some(pine_type),
+                        ReturnSpec::Tuple(_) => Some(pine_builtins::tuple_return_type()),
+                        ReturnSpec::SameAsArg(index) => arg_types.get(index).copied().flatten(),
+                        ReturnSpec::BoolFromArg(index) => arg_types
+                            .get(index)
+                            .copied()
+                            .flatten()
+                            .map(pine_builtins::fallback_bool_for_arg),
+                        ReturnSpec::ColorFromArg(index) => arg_types
+                            .get(index)
+                            .copied()
+                            .flatten()
+                            .map(pine_builtins::color_return_for_arg),
+                        ReturnSpec::PromotedNumeric => promoted_numeric_type(&arg_types),
+                    }
+                } else {
+                    let function = self.functions.get(&name)?;
+                    if function.params.len() != args.len() {
+                        return None;
+                    }
+                    let mut nested_param_types = HashMap::new();
+                    for (param, arg_type) in function.params.iter().zip(arg_types) {
+                        nested_param_types.insert(param.clone(), arg_type?);
+                    }
+                    self.type_of_expr_with_params(&function.body, &nested_param_types)
                 }
             }
             ExprKind::History { expr, .. } => self
-                .type_of_expr(expr)
+                .type_of_expr_with_params(expr, param_types)
                 .map(|pine_type| PineType::new(Qualifier::Series, pine_type.kind)),
         }
     }
@@ -1109,6 +1378,50 @@ fn expr_name(expr: &Expr) -> Option<String> {
         ExprKind::QualifiedName(parts) => Some(parts.join(".")),
         _ => None,
     }
+}
+
+fn is_output_or_declaration_builtin(name: &str) -> bool {
+    matches!(name, "indicator" | "plot" | "hline" | "fill") || name.starts_with("input.")
+}
+
+fn contains_stateful_or_side_effect_call(expr: &Expr) -> bool {
+    match &expr.kind {
+        ExprKind::Call { callee, args } => {
+            let name = expr_name(callee);
+            name.as_deref().is_some_and(|name| {
+                name.starts_with("ta.") || is_output_or_declaration_builtin(name)
+            }) || args
+                .iter()
+                .any(|arg| contains_stateful_or_side_effect_call(&arg.value))
+        }
+        ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } => {
+            contains_stateful_or_side_effect_call(expr)
+        }
+        ExprKind::Binary { left, right, .. } => {
+            contains_stateful_or_side_effect_call(left)
+                || contains_stateful_or_side_effect_call(right)
+        }
+        ExprKind::Ternary {
+            condition,
+            then_expr,
+            else_expr,
+        } => {
+            contains_stateful_or_side_effect_call(condition)
+                || contains_stateful_or_side_effect_call(then_expr)
+                || contains_stateful_or_side_effect_call(else_expr)
+        }
+        ExprKind::Tuple(items) => items.iter().any(contains_stateful_or_side_effect_call),
+        ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => false,
+    }
+}
+
+fn has_duplicate_param(params: &[String]) -> bool {
+    for (index, param) in params.iter().enumerate() {
+        if params[index + 1..].iter().any(|other| other == param) {
+            return true;
+        }
+    }
+    false
 }
 
 const UNKNOWN: PineType = PineType::new(Qualifier::Series, ValueKind::Na);
@@ -1632,15 +1945,74 @@ plot(y)
     }
 
     #[test]
-    fn reports_parse_only_function_as_unsupported() {
-        let analysis = analyze("double(x) => x * 2\nplot(close)\n");
+    fn accepts_expression_body_function() {
+        let analysis = analyze("double(x) => x * 2\nplot(double(close))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "function")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_recursive_function() {
+        let analysis = analyze("loop(x) => loop(x)\nplot(loop(close))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_RECURSIVE_FUNCTION")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_wrong_function_arity() {
+        let analysis = analyze("double(x) => x * 2\nplot(double(close, open))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_FUNCTION_ARITY")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_output_call_inside_function() {
+        let analysis = analyze("draw(x) => plot(x)\ndraw(close)\n");
 
         assert!(
             analysis
                 .compatibility
                 .unsupported
                 .iter()
-                .any(|feature| feature.feature == "function")
+                .any(|feature| feature.feature == "function_side_effect")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_stateful_call_as_function_argument() {
+        let analysis = analyze("double(x) => x * 2\nplot(double(ta.sma(close, 2)))\n");
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "function_stateful_argument")
         );
         assert!(analysis.hir.is_none());
     }

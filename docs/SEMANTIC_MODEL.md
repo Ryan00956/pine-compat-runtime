@@ -187,17 +187,19 @@ The lowering stage should assign callsite ids before runtime execution.
 
 ## User-Defined Functions
 
-User-defined functions should be added only after the expression runtime,
-history references, and callsite state are correct.
+Expression-body user-defined functions are supported by lowering each callsite
+as an inline expression.
 
-Required rules before enabling UDF execution:
+Current rules:
 
 - Resolve parameters and local symbols.
 - Infer return kind and qualifier.
-- Reject unsupported recursion.
+- Reject recursion.
 - Allocate independent callsite state for every syntactic callsite.
-- Define behavior for functions called conditionally.
-- Define how tuple returns are represented in HIR and runtime values.
+- Functions called conditionally follow the same conditional callsite rules as
+  built-ins.
+- Reject output side effects inside functions.
+- Reject stateful or side-effecting calls as UDF arguments until argument
+  evaluation has explicit temporary storage.
 
-Until these rules are implemented, UDFs may be parsed and diagnosed but should
-not be accepted for execution.
+Multi-statement function bodies remain out of the executable subset.

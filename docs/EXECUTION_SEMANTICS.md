@@ -76,6 +76,21 @@ locals.
 persistence is implemented as a separate realtime state partition. It must not
 be approximated with `var`.
 
+## User-Defined Functions
+
+Expression-body user-defined functions are lowered by inlining the body at each
+callsite:
+
+```pine
+smooth(src, len) => ta.sma(src, len)
+plot(smooth(close, 20))
+```
+
+Inlining gives stateful calls inside the function body independent callsite
+state for each syntactic UDF call. Recursive functions, output side effects
+inside functions, and stateful or side-effecting calls as UDF arguments are
+rejected in the current executable subset.
+
 ## Series and History References
 
 History references use committed values:

@@ -97,7 +97,7 @@ impl Parser {
         if let TokenKind::Identifier(name) = self.current().kind.clone() {
             let start = self.current().span;
             if self.looks_like_function_decl() {
-                return Some(self.parse_unsupported_line("function"));
+                return self.parse_function_decl();
             }
 
             if self.nth_at(1, TokenKind::Eq) || mode.is_some() {
@@ -200,6 +200,46 @@ impl Parser {
                 then_branch,
                 else_branch,
             },
+        })
+    }
+
+    fn parse_function_decl(&mut self) -> Option<Stmt> {
+        let start = self.current().span;
+        let TokenKind::Identifier(name) = self.current().kind.clone() else {
+            return None;
+        };
+        self.bump();
+        self.expect(TokenKind::LParen, "expected `(` after function name")?;
+        let mut params = Vec::new();
+
+        if !self.at(TokenKind::RParen) {
+            loop {
+                match self.current().kind.clone() {
+                    TokenKind::Identifier(param) => {
+                        params.push(param);
+                        self.bump();
+                    }
+                    _ => {
+                        self.error_here("E_PARSE_FUNCTION", "expected parameter name");
+                        return None;
+                    }
+                }
+
+                if self.at(TokenKind::Comma) {
+                    self.bump();
+                    continue;
+                }
+                break;
+            }
+        }
+
+        self.expect(TokenKind::RParen, "expected `)` after function parameters")?;
+        self.expect(TokenKind::Arrow, "expected `=>` in function declaration")?;
+        let body = self.parse_expr(0)?;
+
+        Some(Stmt {
+            span: start.merge(body.span),
+            kind: StmtKind::Function { name, params, body },
         })
     }
 
@@ -726,15 +766,16 @@ mod tests {
     }
 
     #[test]
-    fn parses_function_declaration_as_unsupported_statement() {
+    fn parses_function_declaration() {
         let parsed = parse("double(x) => x * 2\nplot(close)\n");
 
         assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
         assert_eq!(parsed.program.statements.len(), 2);
-        assert!(matches!(
-            parsed.program.statements[0].kind,
-            StmtKind::Unsupported { ref feature } if feature == "function"
-        ));
+        let StmtKind::Function { name, params, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected function statement");
+        };
+        assert_eq!(name, "double");
+        assert_eq!(params, &vec!["x".to_owned()]);
     }
 
     #[test]

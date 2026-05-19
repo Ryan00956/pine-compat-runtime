@@ -1,0 +1,4 @@
+//@version=5
+indicator("Recursive Function")
+loop(x) => loop(x)
+plot(loop(close))

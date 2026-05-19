@@ -172,9 +172,24 @@ fn conformance_entries() -> Vec<MatrixEntry> {
             notes: "conditional callsites advance only when their branch executes",
         },
         MatrixEntry {
+            feature: "expression-body functions".to_owned(),
+            status: "supported",
+            notes: "lowered by inlining; recursion and side effects rejected",
+        },
+        MatrixEntry {
             feature: "block-local declarations".to_owned(),
             status: "unsupported",
             notes: "declare before if blocks and reassign inside branches",
+        },
+        MatrixEntry {
+            feature: "recursive functions".to_owned(),
+            status: "unsupported",
+            notes: "rejected during semantic analysis",
+        },
+        MatrixEntry {
+            feature: "function side effects".to_owned(),
+            status: "unsupported",
+            notes: "plot, hline, fill, indicator, and input calls inside UDFs rejected",
         },
         MatrixEntry {
             feature: "color.* named constants".to_owned(),
@@ -519,7 +534,13 @@ mod tests {
                 .any(|entry| entry.feature == "if" && entry.status == "supported")
         );
         assert!(entries.iter().any(|entry| {
+            entry.feature == "expression-body functions" && entry.status == "supported"
+        }));
+        assert!(entries.iter().any(|entry| {
             entry.feature == "block-local declarations" && entry.status == "unsupported"
+        }));
+        assert!(entries.iter().any(|entry| {
+            entry.feature == "recursive functions" && entry.status == "unsupported"
         }));
         assert!(
             entries

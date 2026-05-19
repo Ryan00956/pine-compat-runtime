@@ -31,7 +31,7 @@ Statements:
 - reassignment with `:=`
 - `if` statements
 - local blocks
-- user-defined functions, parse and diagnose before execution support
+- expression-body user-defined functions
 - simple `for` loops only after the expression runtime and callsite state are
   stable
 
@@ -53,6 +53,7 @@ Phase 1 executable subset:
 - global declarations
 - `if`/`else` blocks for expression statements, plot calls, reassignment, and
   tuple assignment to variables declared before the block
+- expression-body user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions
 - constant history offsets
 - `indicator`
@@ -68,6 +69,16 @@ keep history buffers bar-aligned.
 Block-local declarations inside `if` blocks are rejected for now. Declare the
 symbol before the block and use `:=` inside the branch when mutating outer
 state.
+
+User-defined functions are limited to single expression bodies:
+
+```pine
+smooth(src, len) => ta.sma(src, len)
+```
+
+Recursive functions, output side effects inside functions, and stateful or
+side-effecting calls as UDF arguments are rejected in the current executable
+subset.
 
 ## Initial Built-Ins
 

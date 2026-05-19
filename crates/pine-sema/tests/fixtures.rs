@@ -94,6 +94,25 @@ fn reports_unsupported_block_local_declaration_fixture() {
     );
 }
 
+#[test]
+fn reports_unsupported_recursive_function_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/unsupported_recursive_function.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_RECURSIVE_FUNCTION"),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
 fn assert_unsupported_fixture(path: &str, feature: &str, reason: &str) {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");

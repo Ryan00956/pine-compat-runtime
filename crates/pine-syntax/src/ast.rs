@@ -26,6 +26,11 @@ pub enum StmtKind {
         then_branch: Vec<Stmt>,
         else_branch: Vec<Stmt>,
     },
+    Function {
+        name: String,
+        params: Vec<String>,
+        body: Expr,
+    },
     Decl {
         mode: DeclMode,
         name: String,

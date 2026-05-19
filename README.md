@@ -84,14 +84,14 @@ source.pine + bars.csv + inputs.json
 The supported executable subset includes indicator scripts, historical
 bar-by-bar execution, constant history offsets, `if`/`else` blocks, `var`,
 `na`, `nz`, `input.*`, `plot`, `hline`, `fill`, common `ta.*` functions,
-selected `math.*` functions, named colors, `color.new`, tuple returns,
-incremental append execution, realtime forming-bar rollback, Python bindings,
-and a thin WASM binding.
+selected `math.*` functions, expression-body user-defined functions, named
+colors, `color.new`, tuple returns, incremental append execution, realtime
+forming-bar rollback, Python bindings, and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as `strategy.*`,
 `request.*`, alerts, imports, arrays, drawing objects, dynamic history offsets,
-block-local declarations inside `if`, user-defined function execution, and
-`varip` intrabar persistence.
+block-local declarations inside `if`, recursive functions, function side
+effects, and `varip` intrabar persistence.
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes; skipped bars commit `na` for series values that were not
 evaluated on that bar.

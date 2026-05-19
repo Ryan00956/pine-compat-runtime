@@ -41,8 +41,7 @@ Status: baseline complete.
 - [x] Add parser support for `if` syntax as parse-only when execution is not
   enabled.
 - [x] Add tuple expression and tuple assignment parsing.
-- [x] Add function declaration parsing as parse-only until UDF semantics are
-  implemented.
+- [x] Add expression-body function declaration parsing.
 - [x] Add simple `for` parsing as unsupported syntax.
 
 ## Phase 2: Semantic Analysis and Compatibility Gating
@@ -170,5 +169,8 @@ Status: in progress.
 - [x] Cover conditional SMA, EMA, BB, RSI, ATR, and MACD fixtures.
 - [x] Reject block-local declarations inside `if` until local-scope semantics
   are implemented.
+- [x] Add expression-body user-defined function execution by inlining.
+- [x] Reject recursive functions and function side effects.
 - [ ] Add fixture-derived conformance metadata for block statements.
+- [ ] Add fixture-derived conformance metadata for user-defined functions.
 - [ ] Implement full local-scope declarations and shadowing rules.
