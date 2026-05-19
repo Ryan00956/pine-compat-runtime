@@ -1,0 +1,25 @@
+//@version=5
+indicator("Branch loop interactions")
+repeat_until(src, limit) =>
+    i = 0
+    total = src * 0.0
+    while i < limit
+        total := total + src
+        i := i + 1
+    total
+
+sum = close > 0 ? 0.0 : 0.0
+if close > 2
+    for i = 0 to 2
+        value = switch i
+            0 => close
+            1 => high
+            => low
+        sum := sum + value
+else
+    j = 0
+    while j < 2
+        sum := sum + open
+        j := j + 1
+
+plot(sum + repeat_until(close, 2))

@@ -4565,7 +4565,7 @@ plot(close + sum + down)
             "test.pine",
             r#"indicator("for na bounds")
 limit = close > 1 ? 3 : na
-sum = close > 0 ? 0 : 0
+sum = close > 0 ? 0.0 : 0.0
 for i = 0 to limit by 2
     sum := sum + i
 value = for j = limit to 0 by 2
@@ -4871,7 +4871,7 @@ plot(close + sum)
             "test.pine",
             r#"indicator("while na condition")
 i = 0
-sum = close > 0 ? 0 : 0
+sum = close > 0 ? 0.0 : 0.0
 while close > 1 ? i < 3 : na
     sum := sum + i
     i := i + 1
@@ -4939,6 +4939,103 @@ while i < 2
     total := seen
     i := i + 1
 plot(total)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[2.0, 4.0, 6.0]);
+    }
+
+    #[test]
+    fn runs_loops_inside_if_branches() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("loops in if")
+sum = close > 0 ? 0.0 : 0.0
+if close > 1
+    for i = 0 to 2
+        sum := sum + i
+else
+    j = 0
+    while j < 2
+        sum := sum + open
+        j := j + 1
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 0.0, 1.0),
+            bar_ohlc(2.0, 3.0, 1.0, 2.0),
+            bar_ohlc(3.0, 4.0, 2.0, 3.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[3.0, 5.0, 6.0]);
+    }
+
+    #[test]
+    fn runs_switch_inside_for_loop() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("switch in for")
+sum = close > 0 ? 0.0 : 0.0
+for i = 0 to 2
+    value = switch i
+        0 => close
+        1 => high
+        => low
+    sum := sum + value
+plot(sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 3.0, 0.0, 2.0),
+            bar_ohlc(2.0, 5.0, 1.0, 4.0),
+            bar_ohlc(3.0, 7.0, 2.0, 6.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[5.0, 10.0, 15.0]);
+    }
+
+    #[test]
+    fn runs_while_loop_inside_block_body_function() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf while")
+repeat_until(src, limit) =>
+    i = 0
+    total = src * 0.0
+    while i < limit
+        total := total + src
+        i := i + 1
+    total
+plot(repeat_until(close, 2))
 "#,
         );
         let analysis = analyze_source(&source);

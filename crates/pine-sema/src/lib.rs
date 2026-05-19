@@ -3724,6 +3724,20 @@ plot(y)
     }
 
     #[test]
+    fn accepts_branch_loop_interactions() {
+        let analysis = analyze(
+            "repeat(src, limit) =>\n    i = 0\n    total = src * 0.0\n    while i < limit\n        total := total + src\n        i := i + 1\n    total\nsum = close > 0 ? 0.0 : 0.0\nif close > 1\n    for i = 0 to 2\n        value = switch i\n            0 => close\n            1 => high\n            => low\n        sum := sum + value\nelse\n    j = 0\n    while j < 2\n        sum := sum + open\n        j := j + 1\nplot(sum + repeat(close, 2))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_non_bool_while_condition() {
         let analysis = analyze("while close\n    plot(close)\n");
 

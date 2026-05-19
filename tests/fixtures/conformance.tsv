@@ -42,10 +42,10 @@ ta.crossover	supported	fixture-derived executable subset	tests/fixtures/runtime/
 ta.crossunder	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
 ta.highest	supported	fixture-derived executable subset	tests/fixtures/runtime/extremes.pine
 ta.lowest	supported	fixture-derived executable subset	tests/fixtures/runtime/extremes.pine
-if	supported	conditional callsites advance only when their branch executes	tests/fixtures/runtime/if.pine;tests/fixtures/runtime/conditional_ta.pine
-switch	partial	expression arms with condition and selector forms	tests/fixtures/runtime/switch.pine
-for	partial	inclusive integer ranges, loop control, loop results, dynamic bounds, and signed steps	tests/fixtures/runtime/block_statements.pine;tests/fixtures/runtime/for_edges.pine;tests/fixtures/sema/supported_block_statements.pine
-while	partial	statement loops with bool/na conditions, loop control, local var, nested loops, and iteration guard	tests/fixtures/runtime/while.pine;tests/fixtures/runtime/while_edges.pine
+if	supported	conditional callsites advance only when their branch executes	tests/fixtures/runtime/if.pine;tests/fixtures/runtime/conditional_ta.pine;tests/fixtures/runtime/branch_loop_interactions.pine
+switch	partial	expression arms with condition and selector forms	tests/fixtures/runtime/switch.pine;tests/fixtures/runtime/branch_loop_interactions.pine
+for	partial	inclusive integer ranges, loop control, loop results, dynamic bounds, and signed steps	tests/fixtures/runtime/block_statements.pine;tests/fixtures/runtime/for_edges.pine;tests/fixtures/runtime/branch_loop_interactions.pine;tests/fixtures/sema/supported_block_statements.pine
+while	partial	statement loops with bool/na conditions, loop control, local var, nested loops, and iteration guard	tests/fixtures/runtime/while.pine;tests/fixtures/runtime/while_edges.pine;tests/fixtures/runtime/branch_loop_interactions.pine
 array.new_float	partial	float arrays only	tests/fixtures/runtime/array.pine
 array.size	partial	float arrays only	tests/fixtures/runtime/array.pine
 array.push	partial	float arrays only	tests/fixtures/runtime/array.pine
@@ -55,7 +55,7 @@ array.pop	partial	float arrays only	tests/fixtures/runtime/array.pine
 array.clear	partial	float arrays only	tests/fixtures/runtime/array.pine
 array method calls	partial	float array size/get/set/push/pop/clear method syntax only	tests/fixtures/runtime/array_methods.pine
 expression-body functions	supported	lowered by inlining; positional and named arguments supported	tests/fixtures/runtime/udf.pine
-multi-statement functions	supported	block body must end with an expression	tests/fixtures/runtime/udf.pine
+multi-statement functions	supported	block body must end with an expression	tests/fixtures/runtime/udf.pine;tests/fixtures/runtime/branch_loop_interactions.pine
 block-local declarations	supported	normal and tuple declarations are scoped to branches	tests/fixtures/runtime/block_statements.pine;tests/fixtures/runtime/local_scope.pine;tests/fixtures/sema/supported_block_statements.pine
 local scope	supported	local declarations, shadowing, and local var storage	tests/fixtures/runtime/local_scope.pine
 recursive functions	unsupported	rejected during semantic analysis	tests/fixtures/sema/unsupported_recursive_function.pine

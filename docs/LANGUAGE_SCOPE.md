@@ -59,6 +59,8 @@ Phase 1 executable subset:
   `continue`, local `var`, nested loops, and a runtime iteration guard
 - partial `switch` expressions with condition arms, selector/case arms, and
   expression results
+- branch/loop interactions for `if` inside loops, loops inside `if`, `switch`
+  inside loops, and loops inside UDF block bodies
 - normal and tuple declarations scoped to an `if`/`else` branch
 - user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions

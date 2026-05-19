@@ -68,7 +68,8 @@ Scope:
   declarations, local `var`, and stateful calls inside loop bodies. Initial
   coverage exists; keep adding real-script cases as gaps appear.
 - Add more branch interaction fixtures: `if` inside loops, loops inside `if`,
-  `switch` inside loops, and loops inside UDFs.
+  `switch` inside loops, and loops inside UDFs. Initial coverage exists; keep
+  adding real-script cases as gaps appear.
 - Decide whether `while` expression results should enter the supported subset
   or stay rejected.
 - Decide whether statement-block `switch` arms should enter the supported
