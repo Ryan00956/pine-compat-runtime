@@ -796,6 +796,13 @@ impl Analyzer {
                     callee.span,
                 );
             }
+            if self.function_depth > 0 && is_array_mutation_builtin(&name) {
+                self.unsupported(
+                    "function_side_effect",
+                    "array mutation is not supported inside user-defined functions",
+                    callee.span,
+                );
+            }
 
             self.validate_call_args(signature, args, &arg_types);
             return self.return_type(signature, &arg_types);
@@ -2114,6 +2121,13 @@ fn is_output_or_declaration_builtin(name: &str) -> bool {
     matches!(name, "indicator" | "plot" | "hline" | "fill") || name.starts_with("input.")
 }
 
+fn is_array_mutation_builtin(name: &str) -> bool {
+    matches!(
+        name,
+        "array.push" | "array.set" | "array.pop" | "array.clear"
+    )
+}
+
 fn resolve_udf_arg_indices(params: &[String], args: &[CallArg]) -> Result<Vec<usize>, UdfArgError> {
     let mut used = vec![false; params.len()];
     let mut indices = Vec::with_capacity(args.len());
@@ -2190,11 +2204,11 @@ fn contains_output_or_declaration_call(expr: &Expr) -> bool {
     match &expr.kind {
         ExprKind::Call { callee, args } => {
             let name = expr_name(callee);
-            name.as_deref()
-                .is_some_and(is_output_or_declaration_builtin)
-                || args
-                    .iter()
-                    .any(|arg| contains_output_or_declaration_call(&arg.value))
+            name.as_deref().is_some_and(|name| {
+                is_output_or_declaration_builtin(name) || is_array_mutation_builtin(name)
+            }) || args
+                .iter()
+                .any(|arg| contains_output_or_declaration_call(&arg.value))
         }
         ExprKind::Unary { expr, .. } | ExprKind::History { expr, .. } => {
             contains_output_or_declaration_call(expr)
@@ -3284,6 +3298,56 @@ plot(y)
                 .unsupported
                 .iter()
                 .any(|feature| feature.feature == "array.new_int"),
+            "{:?}",
+            analysis.compatibility.unsupported
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn accepts_readonly_float_array_udf_parameter() {
+        let analysis = analyze(
+            "first(values) => array.get(values, 0)\nvalues = array.new_float(1, close)\nplot(first(values) + array.size(values))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_array_mutation_inside_udf() {
+        let analysis = analyze(
+            "add(values, value) =>\n    array.push(values, value)\n    array.size(values)\nvalues = array.new_float()\nplot(add(values, close))\n",
+        );
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "function_side_effect"),
+            "{:?}",
+            analysis.compatibility.unsupported
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_array_mutation_as_udf_argument() {
+        let analysis = analyze(
+            "identity(value) => value\nvalues = array.new_float(1, close)\nplot(identity(array.pop(values)))\n",
+        );
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "function_side_effect"),
             "{:?}",
             analysis.compatibility.unsupported
         );

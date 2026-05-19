@@ -107,6 +107,10 @@ array length returns `na`, `array.set` outside the current length is ignored,
 and `array.pop` on an empty array returns `na`. A negative `array.new_float`
 size is a runtime error.
 
+Read-only array operations are allowed inside inlined user-defined functions.
+Array mutation inside user-defined functions is rejected as a function
+side-effect boundary.
+
 ### `varip`
 
 `varip` requires precise realtime tick semantics. It is rejected until intrabar

@@ -3582,6 +3582,31 @@ plot(array.size(values))
     }
 
     #[test]
+    fn runs_readonly_float_array_udf_parameter() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array udf")
+first(values) => array.get(values, 0)
+var values = array.new_float()
+array.push(values, close)
+plot(first(values) + array.size(values))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[2.0, 3.0, 4.0]);
+    }
+
+    #[test]
     fn runs_condition_switch_expression() {
         let source = SourceFile::new(
             "test.pine",

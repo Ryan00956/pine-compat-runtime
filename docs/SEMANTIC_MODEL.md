@@ -157,6 +157,10 @@ array id and backing storage across bars. Supported operations are
 `array.pop` return `na`; out-of-range `array.set` is a no-op. Negative
 `array.new_float` sizes fail at runtime.
 
+User-defined functions may receive float arrays and use read-only operations
+such as `array.size` and `array.get`. Array mutation inside user-defined
+functions is rejected until function side-effect semantics are broader.
+
 ## `na`
 
 `na` behavior must be implemented deliberately. It must not be represented as

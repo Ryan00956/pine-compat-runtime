@@ -10,6 +10,8 @@
 - Added partial float array support with runtime-owned array ids,
   `array.new_float`, `array.push`, `array.get`, `array.set`, `array.size`,
   `array.pop`, and `array.clear`.
+- Tightened float array UDF boundaries: read-only array operations are allowed,
+  while array mutation inside UDFs is rejected as a side effect.
 
 ## v0.1 Baseline
 
@@ -73,8 +75,8 @@ them silently:
 - Dynamic history offsets.
 - Recursive user-defined functions.
 - User-defined function side effects, including output calls, input
-  declarations, indicator declarations, global reassignment, and passing
-  side-effecting calls as UDF arguments.
+  declarations, indicator declarations, array mutation, global reassignment,
+  and passing side-effecting calls as UDF arguments.
 
 ### Verification
 

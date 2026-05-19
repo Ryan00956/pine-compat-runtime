@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported array function side effect")
+add(values, value) =>
+    array.push(values, value)
+    array.size(values)
+values = array.new_float()
+plot(add(values, close))

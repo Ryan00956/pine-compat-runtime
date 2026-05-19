@@ -95,6 +95,15 @@ fn reports_unsupported_function_side_effect_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_function_side_effect_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_function_side_effect.pine",
+        "function_side_effect",
+        "array mutation",
+    );
+}
+
+#[test]
 fn reports_unsupported_dynamic_history_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_dynamic_history.pine",
