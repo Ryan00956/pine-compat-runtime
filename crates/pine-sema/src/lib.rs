@@ -2724,6 +2724,50 @@ plot(y)
     }
 
     #[test]
+    fn rejects_for_counter_escape() {
+        let analysis = analyze("for i = 0 to 2\n    plot(close)\nplot(i)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_UNKNOWN_SYMBOL"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_for_body_local_declaration_escape() {
+        let analysis = analyze("for i = 0 to 2\n    x = i\nplot(x)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_UNKNOWN_SYMBOL"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn accepts_nested_for_counter_shadowing() {
+        let analysis = analyze(
+            "sum = 0\nfor i = 0 to 1\n    for i = 0 to 1\n        sum := sum + i\nplot(sum)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn lowers_valid_script_to_hir() {
         let analysis = analyze(
             r#"indicator("Demo", overlay=true)

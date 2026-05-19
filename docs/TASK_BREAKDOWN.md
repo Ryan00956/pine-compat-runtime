@@ -179,6 +179,6 @@ Status: in progress.
 - [x] Support executable `for` loops for inclusive integer ranges with optional
   explicit step.
 - [x] Support `break` and `continue` inside executable `for` loops.
-- [ ] Add fixture-derived conformance metadata for block statements.
+- [x] Add fixture-derived conformance metadata for block statements.
 - [x] Add fixture-derived conformance metadata for user-defined functions.
 - [ ] Implement full local-scope declarations and shadowing rules.

@@ -104,6 +104,34 @@ fn reports_unsupported_recursive_function_fixture() {
     assert!(analysis.hir.is_none());
 }
 
+#[test]
+fn accepts_supported_block_statement_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_block_statements.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    for feature in ["if", "for"] {
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == feature),
+            "{} supported features: {:?}",
+            path.display(),
+            analysis.compatibility.supported
+        );
+    }
+    assert!(analysis.hir.is_some());
+}
+
 fn assert_unsupported_fixture(path: &str, feature: &str, reason: &str) {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");

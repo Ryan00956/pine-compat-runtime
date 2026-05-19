@@ -2805,6 +2805,36 @@ plot(close + sum)
     }
 
     #[test]
+    fn runs_nested_for_loop_control_on_nearest_loop() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("nested for control")
+sum = 0
+for outer = 0 to 1
+    for inner = 0 to 3
+        if inner == 1
+            continue
+        if inner == 3
+            break
+        sum := sum + outer + inner
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[7.0, 8.0, 9.0]);
+    }
+
+    #[test]
     fn runs_for_loop_inside_block_body_function() {
         let source = SourceFile::new(
             "test.pine",
