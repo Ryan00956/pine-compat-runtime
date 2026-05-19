@@ -203,6 +203,9 @@ math.max(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qua
 math.min(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qualifier
 math.floor(number: numeric) -> same numeric kind and qualifier
 math.ceil(number: numeric) -> same numeric kind and qualifier
+math.sqrt(number: numeric) -> float with same qualifier
+math.log(number: numeric) -> float with same qualifier
+math.pow(base: numeric, exponent: numeric) -> float with strongest qualifier
 math.round(number: numeric) -> numeric
 ```
 
@@ -212,6 +215,7 @@ Current Phase 4 behavior:
 
 - `math.abs` preserves int/float kind and qualifier.
 - `math.floor` and `math.ceil` preserve int/float kind and qualifier; float inputs return whole-number floats.
+- `math.sqrt`, `math.log`, and `math.pow` return float values and preserve or promote qualifiers from their arguments.
 - `math.round` preserves int/float kind and qualifier; float inputs round to the nearest whole float.
 - `math.max` and `math.min` require at least two numeric args and accept variadic numeric args.
 - `math.max` and `math.min` return int only when all args are int; otherwise they return float.

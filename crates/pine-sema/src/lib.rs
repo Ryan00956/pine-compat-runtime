@@ -1195,6 +1195,12 @@ impl Analyzer {
                 .flatten()
                 .map(pine_builtins::color_return_for_arg),
             ReturnSpec::PromotedNumeric => promoted_numeric_type(arg_types),
+            ReturnSpec::FloatFromArg(index) => arg_types
+                .get(index)
+                .copied()
+                .flatten()
+                .map(float_return_for_arg),
+            ReturnSpec::PromotedFloat => promoted_float_type(arg_types),
             ReturnSpec::InputFromArg(index) => arg_types
                 .get(index)
                 .copied()
@@ -2115,6 +2121,12 @@ impl Analyzer {
                             .flatten()
                             .map(pine_builtins::color_return_for_arg),
                         ReturnSpec::PromotedNumeric => promoted_numeric_type(&arg_types),
+                        ReturnSpec::FloatFromArg(index) => arg_types
+                            .get(index)
+                            .copied()
+                            .flatten()
+                            .map(float_return_for_arg),
+                        ReturnSpec::PromotedFloat => promoted_float_type(&arg_types),
                         ReturnSpec::InputFromArg(index) => arg_types
                             .get(index)
                             .copied()
@@ -2792,6 +2804,25 @@ fn promoted_numeric_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
     result
 }
 
+fn float_return_for_arg(arg_type: PineType) -> PineType {
+    PineType::new(arg_type.qualifier, ValueKind::Float)
+}
+
+fn promoted_float_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
+    let mut qualifier: Option<Qualifier> = None;
+    for arg_type in arg_types {
+        let arg_type = (*arg_type)?;
+        if !is_numeric(arg_type.kind) {
+            return None;
+        }
+        qualifier = Some(match qualifier {
+            Some(current) => strongest_qualifier(current, arg_type.qualifier),
+            None => arg_type.qualifier,
+        });
+    }
+    qualifier.map(|qualifier| PineType::new(qualifier, ValueKind::Float))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3177,6 +3208,7 @@ plot(close, color=shade)
 x = math.max(math.abs(close - 3), math.round(close / 2), 1)
 y = math.min(x, 3.5)
 z = math.floor(close / 2) + math.ceil(close / 2)
+w = math.sqrt(close) + math.log(close) + math.pow(close, 2)
 plot(y)
 "#,
         );
@@ -3213,6 +3245,27 @@ plot(y)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "math.ceil")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.sqrt")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.log")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.pow")
         );
     }
 

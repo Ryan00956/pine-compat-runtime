@@ -170,7 +170,7 @@ Candidate areas:
 
 - Additional `ta.*` functions.
 - Additional `math.*` and `str.*` helpers. Initial post-baseline math coverage
-  includes `math.floor` and `math.ceil`.
+  includes `math.floor`, `math.ceil`, `math.sqrt`, `math.log`, and `math.pow`.
 - More complete `color.*` constants and helpers.
 - More complete `input.*` parameters and host-side input override APIs.
 - More plot options, visibility controls, styles, and display parameters.

@@ -1323,6 +1323,9 @@ impl<'a> HistoricalRuntime<'a> {
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
             "math.floor" => self.eval_math_floor(args),
             "math.ceil" => self.eval_math_ceil(args),
+            "math.sqrt" => self.eval_math_unary_float(args, f64::sqrt),
+            "math.log" => self.eval_math_unary_float(args, f64::ln),
+            "math.pow" => self.eval_math_pow(args),
             "math.round" => self.eval_math_round(args),
             "ta.sma" => self.eval_sma(call_site_id, args),
             "ta.ema" => self.eval_ema(call_site_id, args),
@@ -1742,6 +1745,27 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Na => Ok(PineValue::Na),
             _ => Ok(PineValue::Na),
         }
+    }
+
+    fn eval_math_unary_float(
+        &mut self,
+        args: &[HirCallArg],
+        op: impl FnOnce(f64) -> f64,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(value) = self.eval_expr(&args[0].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        Ok(finite_float_or_na(op(value)))
+    }
+
+    fn eval_math_pow(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(base) = self.eval_expr(&args[0].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(exponent) = self.eval_expr(&args[1].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        Ok(finite_float_or_na(base.powf(exponent)))
     }
 
     fn eval_math_extreme(
@@ -2729,6 +2753,14 @@ fn values_equal(left: &PineValue, right: &PineValue) -> bool {
     }
 }
 
+fn finite_float_or_na(value: f64) -> PineValue {
+    if value.is_finite() {
+        PineValue::Float(value)
+    } else {
+        PineValue::Na
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use pine_sema::analyze_source;
@@ -3609,10 +3641,19 @@ y = math.min(x, 3.5)
 floor_value = math.floor(close / 2)
 ceil_value = math.ceil(close / 2 - 0.25)
 const_value = math.floor(2) + math.ceil(1)
+sqrt_value = math.sqrt(close)
+log_value = math.log(close)
+pow_value = math.pow(close, 2)
 plot(x)
 plot(y)
 plot(floor_value + ceil_value)
 plot(const_value)
+plot(sqrt_value)
+plot(log_value)
+plot(pow_value)
+plot(math.sqrt(-1))
+plot(math.log(0))
+plot(math.pow(-1, 0.5))
 "#,
         );
         let analysis = analyze_source(&source);
@@ -3629,6 +3670,18 @@ plot(const_value)
         assert_values_close(&result.plots[1].values, &[2.0, 1.0, 2.0, 2.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 2.0, 3.0, 4.0]);
         assert_values_close(&result.plots[3].values, &[3.0, 3.0, 3.0, 3.0]);
+        assert_values_close(
+            &result.plots[4].values,
+            &[1.0, 2.0_f64.sqrt(), 3.0_f64.sqrt(), 2.0],
+        );
+        assert_values_close(
+            &result.plots[5].values,
+            &[0.0, 2.0_f64.ln(), 3.0_f64.ln(), 4.0_f64.ln()],
+        );
+        assert_values_close(&result.plots[6].values, &[1.0, 4.0, 9.0, 16.0]);
+        assert_eq!(result.plots[7].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[8].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[9].values, vec![PineValue::Na; 4]);
     }
 
     #[test]

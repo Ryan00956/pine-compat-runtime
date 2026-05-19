@@ -51,6 +51,8 @@ pub enum ReturnSpec {
     BoolFromArg(usize),
     ColorFromArg(usize),
     PromotedNumeric,
+    FloatFromArg(usize),
+    PromotedFloat,
     InputFromArg(usize),
 }
 
@@ -531,6 +533,19 @@ const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const MATH_POW_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "base",
+        accepts: Accepts::Numeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "exponent",
+        accepts: Accepts::Numeric,
+        optional: false,
+    },
+];
+
 const NA_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "x",
     accepts: Accepts::Any,
@@ -902,6 +917,27 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: MATH_NUMBER_PARAMS,
         returns: ReturnSpec::SameAsArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "math.sqrt",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "math.log",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "math.pow",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_POW_PARAMS,
+        returns: ReturnSpec::PromotedFloat,
         variadic: false,
     },
     BuiltinSignature {
