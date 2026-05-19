@@ -357,6 +357,7 @@ impl<'a> HistoricalRuntime<'a> {
                 counter,
                 from,
                 to,
+                step,
                 body,
             } => {
                 let Some(from) = self.eval_expr(from)?.as_i64() else {
@@ -365,17 +366,35 @@ impl<'a> HistoricalRuntime<'a> {
                 let Some(to) = self.eval_expr(to)?.as_i64() else {
                     return Ok(());
                 };
-                let step = if from <= to { 1 } else { -1 };
+                let step_size = if let Some(step) = step {
+                    let Some(step) = self.eval_expr(step)?.as_i64() else {
+                        return Ok(());
+                    };
+                    if step == 0 {
+                        return Err(RuntimeError {
+                            message: "for loop step cannot be zero".to_owned(),
+                        });
+                    }
+                    step.checked_abs().ok_or_else(|| RuntimeError {
+                        message: "for loop step is out of range".to_owned(),
+                    })?
+                } else {
+                    1
+                };
+                let step = if from <= to { step_size } else { -step_size };
                 let mut value = from;
                 loop {
+                    if (step > 0 && value > to) || (step < 0 && value < to) {
+                        break;
+                    }
                     self.set_symbol_value(*counter, PineValue::Int(value));
                     for statement in body {
                         self.eval_stmt(statement)?;
                     }
-                    if value == to {
+                    let Some(next) = value.checked_add(step) else {
                         break;
-                    }
-                    value += step;
+                    };
+                    value = next;
                 }
             }
             HirStmtKind::Decl { symbol, value } => {
@@ -2657,7 +2676,7 @@ plot(select_value(high, close))
             "test.pine",
             r#"indicator("for")
 sum = 0
-for i = 0 to 2
+for i = 0 to 4 by 2
     sum := sum + i
 plot(close + sum)
 "#,
@@ -2673,7 +2692,7 @@ plot(close + sum)
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
         assert_eq!(result.plots.len(), 1);
-        assert_values_close(&result.plots[0].values, &[4.0, 5.0, 6.0]);
+        assert_values_close(&result.plots[0].values, &[7.0, 8.0, 9.0]);
     }
 
     #[test]
@@ -2682,7 +2701,7 @@ plot(close + sum)
             "test.pine",
             r#"indicator("for desc")
 sum = 0
-for i = 2 to 0
+for i = 4 to 0 by 2
     sum := sum + i
 plot(close + sum)
 "#,
@@ -2698,7 +2717,32 @@ plot(close + sum)
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
         assert_eq!(result.plots.len(), 1);
-        assert_values_close(&result.plots[0].values, &[4.0, 5.0, 6.0]);
+        assert_values_close(&result.plots[0].values, &[7.0, 8.0, 9.0]);
+    }
+
+    #[test]
+    fn runs_for_loop_step_that_overshoots_end() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("for overshoot")
+sum = 0
+for i = 0 to 5 by 2
+    sum := sum + i
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[7.0, 8.0, 9.0]);
     }
 
     #[test]

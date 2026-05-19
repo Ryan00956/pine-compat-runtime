@@ -82,6 +82,7 @@ pub enum HirStmtKind {
         counter: SymbolId,
         from: HirExpr,
         to: HirExpr,
+        step: Option<HirExpr>,
         body: Vec<HirStmt>,
     },
     Decl {

@@ -25,6 +25,7 @@ pub enum TokenKind {
     For,
     Import,
     To,
+    By,
     Var,
     Varip,
     And,
@@ -242,6 +243,7 @@ impl<'a> Lexer<'a> {
             "for" => TokenKind::For,
             "import" => TokenKind::Import,
             "to" => TokenKind::To,
+            "by" => TokenKind::By,
             "var" => TokenKind::Var,
             "varip" => TokenKind::Varip,
             "and" => TokenKind::And,
@@ -508,6 +510,25 @@ mod tests {
                 TokenKind::LBracket,
                 TokenKind::Int(1),
                 TokenKind::RBracket,
+                TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_for_range_keywords() {
+        assert_eq!(
+            kinds("for i = 0 to 10 by 2\n"),
+            vec![
+                TokenKind::For,
+                TokenKind::Identifier("i".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Int(0),
+                TokenKind::To,
+                TokenKind::Int(10),
+                TokenKind::By,
+                TokenKind::Int(2),
                 TokenKind::Newline,
                 TokenKind::Eof,
             ]

@@ -219,9 +219,18 @@ impl Parser {
         let from = self.parse_expr(0)?;
         self.expect(TokenKind::To, "expected `to` in for loop")?;
         let to = self.parse_expr(0)?;
+        let step = if self.at(TokenKind::By) {
+            self.bump();
+            Some(self.parse_expr(0)?)
+        } else {
+            None
+        };
         self.expect(TokenKind::Newline, "expected newline after `for` range")?;
         let body = self.parse_indented_block()?;
-        let span = body.last().map_or(to.span, |statement| statement.span);
+        let span = body.last().map_or(
+            step.as_ref().map_or(to.span, |step| step.span),
+            |statement| statement.span,
+        );
 
         Some(Stmt {
             span: start.merge(span),
@@ -229,6 +238,7 @@ impl Parser {
                 counter,
                 from,
                 to,
+                step,
                 body,
             },
         })
@@ -810,6 +820,7 @@ mod tests {
             counter,
             from,
             to,
+            step,
             body,
         } = &parsed.program.statements[0].kind
         else {
@@ -818,6 +829,22 @@ mod tests {
         assert_eq!(counter, "i");
         assert!(matches!(from.kind, ExprKind::Literal(Literal::Int(0))));
         assert!(matches!(to.kind, ExprKind::Literal(Literal::Int(10))));
+        assert!(step.is_none());
         assert_eq!(body.len(), 1);
+    }
+
+    #[test]
+    fn parses_for_statement_with_step() {
+        let parsed = parse("for i = 0 to 10 by 2\n    plot(close)\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        assert_eq!(parsed.program.statements.len(), 1);
+        let StmtKind::For { step, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected for statement");
+        };
+        let Some(step) = step else {
+            panic!("expected for step");
+        };
+        assert!(matches!(step.kind, ExprKind::Literal(Literal::Int(2))));
     }
 }

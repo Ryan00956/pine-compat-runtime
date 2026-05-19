@@ -49,9 +49,10 @@ The value can be committed into its series history after the bar execution.
 Normal and tuple declarations inside `if` blocks are scoped to the branch. If
 the branch is skipped, branch-local series slots commit `na` for that bar.
 
-`for i = start to end` evaluates the integer range once when the loop statement is
-reached on a bar. The range is inclusive. The runtime steps by `1` for ascending
-ranges and `-1` for descending ranges. The counter is scoped to the loop body.
+`for i = start to end` evaluates the integer range once when the loop statement
+is reached on a bar. The range is inclusive. The runtime steps by `1` for
+ascending ranges and `-1` for descending ranges unless an explicit non-zero int
+`by step` is provided. The counter is scoped to the loop body.
 
 ### Reassignment
 

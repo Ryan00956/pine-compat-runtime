@@ -30,6 +30,7 @@ pub enum StmtKind {
         counter: String,
         from: Expr,
         to: Expr,
+        step: Option<Expr>,
         body: Vec<Stmt>,
     },
     Function {

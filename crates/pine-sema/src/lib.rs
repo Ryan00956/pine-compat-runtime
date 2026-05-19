@@ -380,15 +380,21 @@ impl Analyzer {
                 counter,
                 from,
                 to,
+                step,
                 body,
             } => {
                 let from_type = self.analyze_expr(from);
                 let to_type = self.analyze_expr(to);
+                let step_type = step.as_ref().and_then(|step| self.analyze_expr(step));
                 if let Some(from_type) = from_type {
                     self.expect_int(from_type, from.span);
                 }
                 if let Some(to_type) = to_type {
                     self.expect_int(to_type, to.span);
+                }
+                if let Some((step, step_type)) = step.as_ref().zip(step_type) {
+                    self.expect_int(step_type, step.span);
+                    self.expect_non_zero_loop_step(step);
                 }
                 self.compatibility.supported.push(FeatureUse {
                     feature: "for".to_owned(),
@@ -1200,6 +1206,16 @@ impl Analyzer {
         }
     }
 
+    fn expect_non_zero_loop_step(&mut self, step: &Expr) {
+        if const_int_value(step) == Some(0) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_STEP",
+                "for loop step cannot be zero",
+                step.span,
+            ));
+        }
+    }
+
     fn merge_branch_types(
         &mut self,
         condition_type: PineType,
@@ -1355,11 +1371,18 @@ impl Analyzer {
                 counter,
                 from,
                 to,
+                step,
                 body,
             } => HirStmtKind::For {
                 counter: self.lower_decl_symbol(counter, statement.span)?.id,
                 from: self.lower_expr_with_params(from, param_exprs, param_types)?,
                 to: self.lower_expr_with_params(to, param_exprs, param_types)?,
+                step: match step {
+                    Some(step) => {
+                        Some(self.lower_expr_with_params(step, param_exprs, param_types)?)
+                    }
+                    None => None,
+                },
                 body: body
                     .iter()
                     .map(|statement| {
@@ -1739,6 +1762,21 @@ fn binding_key(name: &str, span: Span) -> BindingKey {
         span_start: span.start,
         span_end: span.end,
         name: name.to_owned(),
+    }
+}
+
+fn const_int_value(expr: &Expr) -> Option<i64> {
+    match &expr.kind {
+        ExprKind::Literal(Literal::Int(value)) => Some(*value),
+        ExprKind::Unary {
+            op: UnaryOp::Plus,
+            expr,
+        } => const_int_value(expr),
+        ExprKind::Unary {
+            op: UnaryOp::Minus,
+            expr,
+        } => const_int_value(expr).and_then(i64::checked_neg),
+        _ => None,
     }
 }
 
@@ -2578,7 +2616,7 @@ plot(y)
 
     #[test]
     fn accepts_for_loop_statement() {
-        let analysis = analyze("sum = 0\nfor i = 0 to 2\n    sum := sum + i\nplot(sum)\n");
+        let analysis = analyze("sum = 0\nfor i = 0 to 4 by 2\n    sum := sum + i\nplot(sum)\n");
 
         assert!(
             analysis.diagnostics.is_empty(),
@@ -2604,6 +2642,32 @@ plot(y)
                 .diagnostics
                 .iter()
                 .any(|diagnostic| diagnostic.code == "E_LOOP_RANGE_TYPE")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_non_int_for_loop_step() {
+        let analysis = analyze("for i = 0 to 2 by 0.5\n    plot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_LOOP_RANGE_TYPE")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_zero_for_loop_step() {
+        let analysis = analyze("for i = 0 to 2 by 0\n    plot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_LOOP_STEP")
         );
         assert!(analysis.hir.is_none());
     }

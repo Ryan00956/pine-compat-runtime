@@ -174,7 +174,7 @@ fn conformance_entries() -> Vec<MatrixEntry> {
         MatrixEntry {
             feature: "for".to_owned(),
             status: "partial",
-            notes: "inclusive integer ranges without explicit step",
+            notes: "inclusive integer ranges with optional step",
         },
         MatrixEntry {
             feature: "expression-body functions".to_owned(),
