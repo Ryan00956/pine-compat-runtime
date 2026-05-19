@@ -1321,6 +1321,8 @@ impl<'a> HistoricalRuntime<'a> {
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
+            "math.floor" => self.eval_math_floor(args),
+            "math.ceil" => self.eval_math_ceil(args),
             "math.round" => self.eval_math_round(args),
             "ta.sma" => self.eval_sma(call_site_id, args),
             "ta.ema" => self.eval_ema(call_site_id, args),
@@ -1719,6 +1721,24 @@ impl<'a> HistoricalRuntime<'a> {
         match self.eval_expr(&args[0].value)? {
             PineValue::Int(value) => Ok(PineValue::Int(value)),
             PineValue::Float(value) => Ok(PineValue::Float(value.round())),
+            PineValue::Na => Ok(PineValue::Na),
+            _ => Ok(PineValue::Na),
+        }
+    }
+
+    fn eval_math_floor(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        match self.eval_expr(&args[0].value)? {
+            PineValue::Int(value) => Ok(PineValue::Int(value)),
+            PineValue::Float(value) => Ok(PineValue::Float(value.floor())),
+            PineValue::Na => Ok(PineValue::Na),
+            _ => Ok(PineValue::Na),
+        }
+    }
+
+    fn eval_math_ceil(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        match self.eval_expr(&args[0].value)? {
+            PineValue::Int(value) => Ok(PineValue::Int(value)),
+            PineValue::Float(value) => Ok(PineValue::Float(value.ceil())),
             PineValue::Na => Ok(PineValue::Na),
             _ => Ok(PineValue::Na),
         }
@@ -3586,8 +3606,13 @@ plot(na(c) ? 0 : 1)
             r#"indicator("math")
 x = math.max(math.abs(close - 3), math.round(close / 2), 1)
 y = math.min(x, 3.5)
+floor_value = math.floor(close / 2)
+ceil_value = math.ceil(close / 2 - 0.25)
+const_value = math.floor(2) + math.ceil(1)
 plot(x)
 plot(y)
+plot(floor_value + ceil_value)
+plot(const_value)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -3602,6 +3627,8 @@ plot(y)
 
         assert_values_close(&result.plots[0].values, &[2.0, 1.0, 2.0, 2.0]);
         assert_values_close(&result.plots[1].values, &[2.0, 1.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 2.0, 3.0, 4.0]);
+        assert_values_close(&result.plots[3].values, &[3.0, 3.0, 3.0, 3.0]);
     }
 
     #[test]

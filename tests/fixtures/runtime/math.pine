@@ -2,5 +2,8 @@
 indicator("Math")
 x = math.max(math.abs(close - 3), math.round(close / 2), 1)
 y = math.min(x, 3.5)
+floor_value = math.floor(close / 2)
+ceil_value = math.ceil(close / 2 - 0.25)
 plot(x)
 plot(y)
+plot(floor_value + ceil_value)

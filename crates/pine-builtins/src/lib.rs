@@ -891,6 +891,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: true,
     },
     BuiltinSignature {
+        name: "math.floor",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "math.ceil",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "math.round",
         phase: BuiltinPhase::Phase1Core,
         params: MATH_NUMBER_PARAMS,

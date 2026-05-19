@@ -201,6 +201,8 @@ Recommended first set:
 math.abs(number: numeric) -> same numeric kind and qualifier
 math.max(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qualifier
 math.min(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qualifier
+math.floor(number: numeric) -> same numeric kind and qualifier
+math.ceil(number: numeric) -> same numeric kind and qualifier
 math.round(number: numeric) -> numeric
 ```
 
@@ -209,6 +211,7 @@ Each added math function must declare its coercion and `na` behavior.
 Current Phase 4 behavior:
 
 - `math.abs` preserves int/float kind and qualifier.
+- `math.floor` and `math.ceil` preserve int/float kind and qualifier; float inputs return whole-number floats.
 - `math.round` preserves int/float kind and qualifier; float inputs round to the nearest whole float.
 - `math.max` and `math.min` require at least two numeric args and accept variadic numeric args.
 - `math.max` and `math.min` return int only when all args are int; otherwise they return float.

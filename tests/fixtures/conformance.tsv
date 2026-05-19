@@ -25,6 +25,8 @@ color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.
 math.abs	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.max	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.min	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.floor	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.ceil	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.round	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 na	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine
 nz	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine

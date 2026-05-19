@@ -3176,6 +3176,7 @@ plot(close, color=shade)
             r#"indicator("math")
 x = math.max(math.abs(close - 3), math.round(close / 2), 1)
 y = math.min(x, 3.5)
+z = math.floor(close / 2) + math.ceil(close / 2)
 plot(y)
 "#,
         );
@@ -3198,6 +3199,20 @@ plot(y)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "math.min")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.floor")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.ceil")
         );
     }
 
