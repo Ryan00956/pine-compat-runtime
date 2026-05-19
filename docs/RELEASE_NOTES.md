@@ -21,6 +21,8 @@
 - Added basic `plotchar` support with bar-aligned values, chars, and colors.
 - Added basic `plotshape` support with bar-aligned values, style, location,
   color, text, text color, and size marker output.
+- Added basic `plotarrow` support with bar-aligned numeric values, up/down
+  colors, and height bounds.
 - Tightened float array UDF boundaries: read-only array operations are allowed,
   while array mutation inside UDFs is rejected as a side effect.
 - Added a 100,000-element runtime guard for each float array.

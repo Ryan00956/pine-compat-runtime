@@ -1,0 +1,5 @@
+//@version=5
+indicator("Plotarrow")
+if close > 1
+    plotarrow(close - 2, colorup=color.green, colordown=color.red, minheight=5, maxheight=20)
+plot(close)

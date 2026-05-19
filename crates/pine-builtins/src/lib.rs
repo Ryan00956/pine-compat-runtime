@@ -299,6 +299,64 @@ const PLOTSHAPE_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const PLOTARROW_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "series",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "title",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "colorup",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "colordown",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "offset",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "minheight",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "maxheight",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "editable",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "show_last",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "force_overlay",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+];
+
 const HLINE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "price",
@@ -660,6 +718,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "plotshape",
         phase: BuiltinPhase::Phase1Core,
         params: PLOTSHAPE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "plotarrow",
+        phase: BuiltinPhase::Phase1Core,
+        params: PLOTARROW_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

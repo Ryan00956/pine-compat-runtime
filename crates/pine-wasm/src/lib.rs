@@ -186,6 +186,8 @@ fn result_json(result: &RuntimeResult) -> String {
     output.push_str(&plot_chars_json(&result.plot_chars));
     output.push_str(",\"plotShapes\":");
     output.push_str(&plot_shapes_json(&result.plot_shapes));
+    output.push_str(",\"plotArrows\":");
+    output.push_str(&plot_arrows_json(&result.plot_arrows));
     output.push_str(",\"bgColors\":");
     output.push_str(&colors_json(&result.bg_colors));
     output.push_str(",\"barColors\":");
@@ -290,6 +292,28 @@ fn plot_shapes_json(plot_shapes: &[pine_runtime::PlotShapeSeries]) -> String {
         values_json_into(&mut output, &plot_shape.text_colors);
         output.push_str("],\"sizes\":[");
         values_json_into(&mut output, &plot_shape.sizes);
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
+fn plot_arrows_json(plot_arrows: &[pine_runtime::PlotArrowSeries]) -> String {
+    let mut output = String::from("[");
+    for (plot_arrow_index, plot_arrow) in plot_arrows.iter().enumerate() {
+        if plot_arrow_index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"values\":[", plot_arrow.id));
+        values_json_into(&mut output, &plot_arrow.values);
+        output.push_str("],\"colorUps\":[");
+        values_json_into(&mut output, &plot_arrow.color_ups);
+        output.push_str("],\"colorDowns\":[");
+        values_json_into(&mut output, &plot_arrow.color_downs);
+        output.push_str("],\"minHeights\":[");
+        values_json_into(&mut output, &plot_arrow.min_heights);
+        output.push_str("],\"maxHeights\":[");
+        values_json_into(&mut output, &plot_arrow.max_heights);
         output.push_str("]}");
     }
     output.push(']');
@@ -412,5 +436,6 @@ mod tests {
         assert!(output.contains("\"values\":[1,2]"));
         assert!(output.contains("\"plotChars\":[]"));
         assert!(output.contains("\"plotShapes\":[]"));
+        assert!(output.contains("\"plotArrows\":[]"));
     }
 }

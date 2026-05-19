@@ -798,7 +798,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "indicator, input, plot, plotchar, plotshape, hline, fill, bgcolor, and barcolor calls are not supported inside user-defined functions",
+                    "indicator, input, plot, plotchar, plotshape, plotarrow, hline, fill, bgcolor, and barcolor calls are not supported inside user-defined functions",
                     callee.span,
                 );
             }
@@ -2326,7 +2326,15 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
 fn is_output_or_declaration_builtin(name: &str) -> bool {
     matches!(
         name,
-        "indicator" | "plot" | "hline" | "fill" | "bgcolor" | "barcolor" | "plotchar" | "plotshape"
+        "indicator"
+            | "plot"
+            | "hline"
+            | "fill"
+            | "bgcolor"
+            | "barcolor"
+            | "plotchar"
+            | "plotshape"
+            | "plotarrow"
     ) || name == "input"
         || name.starts_with("input.")
 }
@@ -2957,6 +2965,27 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "shape.triangleup")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_plotarrow() {
+        let analysis = analyze(
+            "plotarrow(close - open, colorup=color.green, colordown=color.red, minheight=5, maxheight=20)\nplot(close)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "plotarrow")
         );
         assert!(analysis.hir.is_some());
     }

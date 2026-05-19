@@ -76,3 +76,16 @@ def test_run_script_returns_plotshape_outputs():
         "size.small",
         "size.small",
     ]
+
+
+def test_run_script_returns_plotarrow_outputs():
+    result = pine_compat.run_script(
+        'indicator("arrows")\nplotarrow(close - 2, colorup=color.green, colordown=color.red, minheight=5, maxheight=20)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["plotArrows"][0]["values"] == [-1.0, 0.0, 1.0]
+    assert result["plotArrows"][0]["colorUps"] == [0x008000, 0x008000, 0x008000]
+    assert result["plotArrows"][0]["colorDowns"] == [0xFF0000, 0xFF0000, 0xFF0000]
+    assert result["plotArrows"][0]["minHeights"] == [5, 5, 5]
+    assert result["plotArrows"][0]["maxHeights"] == [20, 20, 20]

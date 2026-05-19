@@ -65,7 +65,8 @@ Phase 1 executable subset:
 - constant history offsets
 - `indicator`
 - `input.*`
-- `plot`, `plotchar`, `plotshape`, `bgcolor`, `barcolor`, `hline`, and `fill`
+- `plot`, `plotchar`, `plotshape`, `plotarrow`, `bgcolor`, `barcolor`,
+  `hline`, and `fill`
 - `na`, `nz`
 - `ta.sma` and `ta.ema`
 - partial float arrays with `array.new_float`, `array.push`, `array.get`,
@@ -172,6 +173,7 @@ Plotting:
 - `plot`
 - `plotchar`
 - `plotshape`
+- `plotarrow`
 - `hline`
 - `fill`
 - `bgcolor`

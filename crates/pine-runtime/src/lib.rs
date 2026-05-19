@@ -153,6 +153,7 @@ pub struct RuntimeResult {
     pub plots: Vec<PlotSeries>,
     pub plot_chars: Vec<PlotCharSeries>,
     pub plot_shapes: Vec<PlotShapeSeries>,
+    pub plot_arrows: Vec<PlotArrowSeries>,
     pub bg_colors: Vec<ColorSeries>,
     pub bar_colors: Vec<ColorSeries>,
     pub hlines: Vec<HLineOutput>,
@@ -201,6 +202,9 @@ pub struct RuntimeProfile {
     pub plot_shapes: usize,
     pub plot_shape_values: usize,
     pub plot_shape_capacity: usize,
+    pub plot_arrows: usize,
+    pub plot_arrow_values: usize,
+    pub plot_arrow_capacity: usize,
     pub bg_colors: usize,
     pub bg_color_values: usize,
     pub bg_color_capacity: usize,
@@ -243,6 +247,16 @@ pub struct PlotShapeSeries {
     pub texts: Vec<PineValue>,
     pub text_colors: Vec<PineValue>,
     pub sizes: Vec<PineValue>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlotArrowSeries {
+    pub id: u32,
+    pub values: Vec<PineValue>,
+    pub color_ups: Vec<PineValue>,
+    pub color_downs: Vec<PineValue>,
+    pub min_heights: Vec<PineValue>,
+    pub max_heights: Vec<PineValue>,
 }
 
 trait SeriesOutput: Sized {
@@ -331,6 +345,7 @@ pub struct HistoricalRuntime<'a> {
     plots: Vec<PlotSeries>,
     plot_chars: Vec<PlotCharSeries>,
     plot_shapes: Vec<PlotShapeSeries>,
+    plot_arrows: Vec<PlotArrowSeries>,
     bg_colors: Vec<ColorSeries>,
     bar_colors: Vec<ColorSeries>,
     hlines: Vec<HLineOutput>,
@@ -390,6 +405,7 @@ impl<'a> HistoricalRuntime<'a> {
             plots: Vec::new(),
             plot_chars: Vec::new(),
             plot_shapes: Vec::new(),
+            plot_arrows: Vec::new(),
             bg_colors: Vec::new(),
             bar_colors: Vec::new(),
             hlines: Vec::new(),
@@ -610,6 +626,7 @@ impl<'a> HistoricalRuntime<'a> {
             plots: self.plots.clone(),
             plot_chars: self.plot_chars.clone(),
             plot_shapes: self.plot_shapes.clone(),
+            plot_arrows: self.plot_arrows.clone(),
             bg_colors: self.bg_colors.clone(),
             bar_colors: self.bar_colors.clone(),
             hlines: self.hlines.clone(),
@@ -673,6 +690,22 @@ impl<'a> HistoricalRuntime<'a> {
                     + plot_shape.texts.capacity()
                     + plot_shape.text_colors.capacity()
                     + plot_shape.sizes.capacity()
+            })
+            .sum::<usize>();
+        let plot_arrow_values = self
+            .plot_arrows
+            .iter()
+            .map(|plot_arrow| plot_arrow.values.len())
+            .sum::<usize>();
+        let plot_arrow_capacity = self
+            .plot_arrows
+            .iter()
+            .map(|plot_arrow| {
+                plot_arrow.values.capacity()
+                    + plot_arrow.color_ups.capacity()
+                    + plot_arrow.color_downs.capacity()
+                    + plot_arrow.min_heights.capacity()
+                    + plot_arrow.max_heights.capacity()
             })
             .sum::<usize>();
         let bg_color_values = self
@@ -742,6 +775,9 @@ impl<'a> HistoricalRuntime<'a> {
             plot_shapes: self.plot_shapes.len(),
             plot_shape_values,
             plot_shape_capacity,
+            plot_arrows: self.plot_arrows.len(),
+            plot_arrow_values,
+            plot_arrow_capacity,
             bg_colors: self.bg_colors.len(),
             bg_color_values,
             bg_color_capacity,
@@ -1045,6 +1081,43 @@ impl<'a> HistoricalRuntime<'a> {
                         text: text_value,
                         text_color: text_color_value,
                         size: size_value,
+                    },
+                );
+                Ok(PineValue::Void)
+            }
+            "plotarrow" => {
+                let Some(series_arg) = call_arg_expr(args, 0, "series") else {
+                    return Err(RuntimeError {
+                        message: "plotarrow missing series argument".to_owned(),
+                    });
+                };
+                let value = self.eval_expr(series_arg)?;
+                let color_up_value = match call_arg_expr(args, 2, "colorup") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::Color(0x008000),
+                };
+                let color_down_value = match call_arg_expr(args, 3, "colordown") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::Color(0xFF0000),
+                };
+                let min_height_value = match call_arg_expr(args, 5, "minheight") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::Int(0),
+                };
+                let max_height_value = match call_arg_expr(args, 6, "maxheight") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::Int(0),
+                };
+                push_plot_arrow_value(
+                    &mut self.plot_arrows,
+                    self.bars,
+                    call_site_id.0,
+                    PlotArrowPoint {
+                        value,
+                        color_up: color_up_value,
+                        color_down: color_down_value,
+                        min_height: min_height_value,
+                        max_height: max_height_value,
                     },
                 );
                 Ok(PineValue::Void)
@@ -1714,6 +1787,7 @@ impl<'a> HistoricalRuntime<'a> {
         finalize_series_values(&mut self.plots, self.bars);
         finalize_plot_char_values(&mut self.plot_chars, self.bars);
         finalize_plot_shape_values(&mut self.plot_shapes, self.bars);
+        finalize_plot_arrow_values(&mut self.plot_arrows, self.bars);
         finalize_series_values(&mut self.bg_colors, self.bars);
         finalize_series_values(&mut self.bar_colors, self.bars);
     }
@@ -2036,6 +2110,67 @@ fn update_plot_shape_point(output: &mut PlotShapeSeries, point: PlotShapePoint) 
     }
 }
 
+struct PlotArrowPoint {
+    value: PineValue,
+    color_up: PineValue,
+    color_down: PineValue,
+    min_height: PineValue,
+    max_height: PineValue,
+}
+
+fn push_plot_arrow_value(
+    outputs: &mut Vec<PlotArrowSeries>,
+    current_bar: usize,
+    id: u32,
+    point: PlotArrowPoint,
+) {
+    if let Some(output) = outputs.iter_mut().find(|output| output.id == id) {
+        pad_plot_arrow_values(output, current_bar);
+        if output.values.len() == current_bar {
+            push_plot_arrow_point(output, point);
+        } else {
+            update_plot_arrow_point(output, point);
+        }
+    } else {
+        let mut output = PlotArrowSeries {
+            id,
+            values: vec![PineValue::Na; current_bar],
+            color_ups: vec![PineValue::Na; current_bar],
+            color_downs: vec![PineValue::Na; current_bar],
+            min_heights: vec![PineValue::Na; current_bar],
+            max_heights: vec![PineValue::Na; current_bar],
+        };
+        push_plot_arrow_point(&mut output, point);
+        outputs.push(output);
+    }
+}
+
+fn push_plot_arrow_point(output: &mut PlotArrowSeries, point: PlotArrowPoint) {
+    output.values.push(point.value);
+    output.color_ups.push(point.color_up);
+    output.color_downs.push(point.color_down);
+    output.min_heights.push(point.min_height);
+    output.max_heights.push(point.max_height);
+}
+
+fn update_plot_arrow_point(output: &mut PlotArrowSeries, point: PlotArrowPoint) {
+    if let Some(current) = output.values.last_mut() {
+        *current = point.value;
+    }
+    if let Some(current) = output.color_ups.last_mut() {
+        *current = point.color_up;
+    }
+    if let Some(current) = output.color_downs.last_mut() {
+        *current = point.color_down;
+    }
+    if let Some(current) = output.min_heights.last_mut() {
+        *current = point.min_height;
+    }
+    if let Some(current) = output.max_heights.last_mut() {
+        *current = point.max_height;
+    }
+}
+
 fn finalize_plot_char_values(outputs: &mut [PlotCharSeries], current_bar: usize) {
     for output in outputs {
         pad_plot_char_values(output, current_bar);
@@ -2067,6 +2202,24 @@ fn finalize_plot_shape_values(outputs: &mut [PlotShapeSeries], current_bar: usiz
     }
 }
 
+fn finalize_plot_arrow_values(outputs: &mut [PlotArrowSeries], current_bar: usize) {
+    for output in outputs {
+        pad_plot_arrow_values(output, current_bar);
+        if output.values.len() == current_bar {
+            push_plot_arrow_point(
+                output,
+                PlotArrowPoint {
+                    value: PineValue::Na,
+                    color_up: PineValue::Na,
+                    color_down: PineValue::Na,
+                    min_height: PineValue::Na,
+                    max_height: PineValue::Na,
+                },
+            );
+        }
+    }
+}
+
 fn pad_plot_char_values(output: &mut PlotCharSeries, current_bar: usize) {
     while output.values.len() < current_bar {
         output.values.push(PineValue::Na);
@@ -2084,6 +2237,16 @@ fn pad_plot_shape_values(output: &mut PlotShapeSeries, current_bar: usize) {
         output.texts.push(PineValue::Na);
         output.text_colors.push(PineValue::Na);
         output.sizes.push(PineValue::Na);
+    }
+}
+
+fn pad_plot_arrow_values(output: &mut PlotArrowSeries, current_bar: usize) {
+    while output.values.len() < current_bar {
+        output.values.push(PineValue::Na);
+        output.color_ups.push(PineValue::Na);
+        output.color_downs.push(PineValue::Na);
+        output.min_heights.push(PineValue::Na);
+        output.max_heights.push(PineValue::Na);
     }
 }
 
@@ -2646,6 +2809,57 @@ plot(close)
     }
 
     #[test]
+    fn collects_plotarrow_series() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("plotarrow")
+if close > 1
+    plotarrow(close - 2, colorup=color.green, colordown=color.red, minheight=5, maxheight=20)
+plot(close)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plot_arrows.len(), 1);
+        assert_eq!(
+            result.plot_arrows[0].values,
+            vec![PineValue::Na, PineValue::Float(0.0), PineValue::Float(1.0)]
+        );
+        assert_eq!(
+            result.plot_arrows[0].color_ups,
+            vec![
+                PineValue::Na,
+                PineValue::Color(0x008000),
+                PineValue::Color(0x008000)
+            ]
+        );
+        assert_eq!(
+            result.plot_arrows[0].color_downs,
+            vec![
+                PineValue::Na,
+                PineValue::Color(0xFF0000),
+                PineValue::Color(0xFF0000)
+            ]
+        );
+        assert_eq!(
+            result.plot_arrows[0].min_heights,
+            vec![PineValue::Na, PineValue::Int(5), PineValue::Int(5)]
+        );
+        assert_eq!(
+            result.plot_arrows[0].max_heights,
+            vec![PineValue::Na, PineValue::Int(20), PineValue::Int(20)]
+        );
+    }
+
+    #[test]
     fn runs_macd_tuple_assignment() {
         let source = SourceFile::new(
             "test.pine",
@@ -2965,6 +3179,7 @@ plot(ma)
         assert_eq!(profiled.profile.plot_values, 3);
         assert!(profiled.profile.plot_capacity >= profiled.profile.plot_values);
         assert_eq!(profiled.profile.plot_shapes, 0);
+        assert_eq!(profiled.profile.plot_arrows, 0);
         assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
         assert_values_close(&profiled.result.plots[0].values[1..], &[1.5, 2.5]);
     }

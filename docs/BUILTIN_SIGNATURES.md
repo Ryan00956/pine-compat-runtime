@@ -101,6 +101,9 @@ plotchar(series: series/simple numeric-or-bool, title?: const string, char?: con
 plotshape(series: series/simple numeric-or-bool, title?: const string, style?: const string, location?: const string, color?: color-compatible, text?: const string, textcolor?: color-compatible, size?: const string, ...)
   -> void
 
+plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple int, minheight?: simple int, maxheight?: simple int, ...)
+  -> void
+
 hline(price: const-or-input float, title?: const string, color?: color-compatible, ...)
   -> hline
 
