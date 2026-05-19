@@ -134,11 +134,11 @@ x = close + open
 The declaration creates or updates the current bar value for that symbol. If the
 symbol is series-qualified, the current value is committed after bar execution.
 
-Normal block-local declarations inside `if` blocks are executable and scoped to
-their branch. The analyzer records resolved symbol bindings before lowering so
-locals do not leak into outer scopes. Tuple declarations that would create new
-block-local symbols are still rejected; tuple assignment to predeclared symbols
-is executable.
+Normal and tuple block-local declarations inside `if` blocks are executable and
+scoped to their branch. The analyzer records resolved symbol bindings before
+lowering so locals do not leak into outer scopes. Tuple declaration targets that
+resolve to an outer symbol update that symbol; otherwise they create branch-local
+symbols.
 
 ## Reassignment
 

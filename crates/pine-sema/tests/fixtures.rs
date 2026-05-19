@@ -86,15 +86,6 @@ fn reports_unsupported_alert_fixture() {
 }
 
 #[test]
-fn reports_unsupported_block_local_tuple_declaration_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_block_local_decl.pine",
-        "block_local_declaration",
-        "declarations inside if blocks",
-    );
-}
-
-#[test]
 fn reports_unsupported_recursive_function_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_recursive_function.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");

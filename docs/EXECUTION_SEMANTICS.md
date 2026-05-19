@@ -46,8 +46,8 @@ x = close + open
 
 `x` receives a new current value on every bar where the declaration executes.
 The value can be committed into its series history after the bar execution.
-Normal declarations inside `if` blocks are scoped to the branch. If the branch
-is skipped, the declaration's series slot commits `na` for that bar.
+Normal and tuple declarations inside `if` blocks are scoped to the branch. If
+the branch is skipped, branch-local series slots commit `na` for that bar.
 
 ### Reassignment
 

@@ -168,8 +168,7 @@ Status: in progress.
   only when the branch executes.
 - [x] Cover conditional SMA, EMA, BB, RSI, ATR, and MACD fixtures.
 - [x] Support normal block-local declarations inside `if` branches.
-- [x] Reject tuple block-local declarations until tuple local bindings are
-  implemented.
+- [x] Support tuple block-local declarations inside `if` branches.
 - [x] Add expression-body user-defined function execution by inlining.
 - [x] Support named arguments for expression-body user-defined functions.
 - [x] Reject recursive functions and function side effects.

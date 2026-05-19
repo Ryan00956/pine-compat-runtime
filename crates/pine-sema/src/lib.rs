@@ -444,19 +444,14 @@ impl Analyzer {
 
         if self.block_depth > 0 {
             for (name, pine_type) in names.iter().zip(element_types) {
-                let Some(target) = self.scope.resolve(name) else {
-                    self.unsupported(
-                        "block_local_declaration",
-                        "tuple declarations inside if blocks must target variables declared before the block",
-                        statement.span,
-                    );
-                    continue;
+                let symbol = if let Some(target) = self.scope.resolve(name) {
+                    self.validate_assignment(name, target.pine_type, pine_type, statement.span);
+                    self.update_symbol_type(name, pine_type);
+                    self.scope.resolve(name).unwrap_or(target)
+                } else {
+                    self.define_local_symbol(name, pine_type, None, true)
                 };
-                self.validate_assignment(name, target.pine_type, pine_type, statement.span);
-                self.update_symbol_type(name, pine_type);
-                if let Some(symbol) = self.scope.resolve(name) {
-                    self.bind_symbol(name, statement.span, symbol);
-                }
+                self.bind_symbol(name, statement.span, symbol);
             }
         } else {
             for (name, pine_type) in names.iter().zip(element_types) {
@@ -2085,15 +2080,26 @@ plot(y)
     }
 
     #[test]
-    fn rejects_if_tuple_assignment_to_unknown_symbol() {
-        let analysis = analyze("if close > open\n    [x, y] = [high, low]\n");
+    fn accepts_block_local_tuple_declaration_in_if() {
+        let analysis = analyze("if close > open\n    [x, y] = [high, low]\n    plot(x - y)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_block_local_tuple_declaration_escape() {
+        let analysis = analyze("if close > open\n    [x, y] = [high, low]\nplot(x)\n");
 
         assert!(
             analysis
-                .compatibility
-                .unsupported
+                .diagnostics
                 .iter()
-                .any(|feature| feature.feature == "block_local_declaration")
+                .any(|diagnostic| diagnostic.code == "E_UNKNOWN_SYMBOL")
         );
         assert!(analysis.hir.is_none());
     }

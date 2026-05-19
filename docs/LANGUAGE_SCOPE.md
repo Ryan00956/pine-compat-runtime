@@ -53,7 +53,7 @@ Phase 1 executable subset:
 - global declarations
 - `if`/`else` blocks for expression statements, plot calls, reassignment, and
   tuple assignment to variables declared before the block
-- normal declarations scoped to an `if`/`else` branch
+- normal and tuple declarations scoped to an `if`/`else` branch
 - expression-body user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions
 - constant history offsets
@@ -67,10 +67,10 @@ Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes. Series values not evaluated on a bar are committed as `na` to
 keep history buffers bar-aligned.
 
-Normal block-local declarations inside `if` blocks are scoped to the branch and
-do not leak outside it. Tuple declarations that create new block-local symbols
-are rejected for now; declare the tuple targets before the block when assigning
-tuple-returning calls conditionally.
+Normal and tuple block-local declarations inside `if` blocks are scoped to the
+branch and do not leak outside it. Tuple declaration targets that resolve to an
+outer variable update that variable, preserving the existing conditional tuple
+assignment behavior.
 
 User-defined functions are limited to single expression bodies:
 

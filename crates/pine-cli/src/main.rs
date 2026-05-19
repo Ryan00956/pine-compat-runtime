@@ -183,8 +183,8 @@ fn conformance_entries() -> Vec<MatrixEntry> {
         },
         MatrixEntry {
             feature: "block-local declarations".to_owned(),
-            status: "partial",
-            notes: "normal declarations are scoped to branches; tuple local declarations rejected",
+            status: "supported",
+            notes: "normal and tuple declarations are scoped to branches",
         },
         MatrixEntry {
             feature: "recursive functions".to_owned(),
@@ -545,7 +545,7 @@ mod tests {
             entry.feature == "multi-statement functions" && entry.status == "unsupported"
         }));
         assert!(entries.iter().any(|entry| {
-            entry.feature == "block-local declarations" && entry.status == "partial"
+            entry.feature == "block-local declarations" && entry.status == "supported"
         }));
         assert!(entries.iter().any(|entry| {
             entry.feature == "recursive functions" && entry.status == "unsupported"

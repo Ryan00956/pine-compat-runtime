@@ -91,8 +91,8 @@ bindings, and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as `strategy.*`,
 `request.*`, alerts, imports, arrays, drawing objects, dynamic history offsets,
-tuple block-local declarations inside `if`, multi-statement functions,
-recursive functions, function side effects, and `varip` intrabar persistence.
+multi-statement functions, recursive functions, function side effects, and
+`varip` intrabar persistence.
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes; skipped bars commit `na` for series values that were not
 evaluated on that bar.
