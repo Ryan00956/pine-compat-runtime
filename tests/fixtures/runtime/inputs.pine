@@ -1,0 +1,9 @@
+//@version=5
+indicator("Inputs")
+threshold = input.price(2.5, "Price")
+start = input.time(2, "Start")
+symbol = input.symbol("AAPL", "Symbol")
+timeframe = input.timeframe("D", "Timeframe")
+
+enabled = time >= start and symbol == "AAPL" and timeframe == "D"
+plot(enabled ? math.max(close, threshold) : 0)

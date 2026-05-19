@@ -144,6 +144,10 @@ Input namespace:
 - `input.source`
 - `input.color`
 - `input.string`
+- `input.price`
+- `input.time`
+- `input.symbol`
+- `input.timeframe`
 
 TA namespace:
 

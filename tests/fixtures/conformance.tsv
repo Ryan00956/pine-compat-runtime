@@ -6,6 +6,10 @@ input.bool	supported	fixture-derived executable subset	tests/fixtures/runtime/io
 input.source	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
 input.color	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 input.string	supported	defval/title executable subset	tests/fixtures/runtime/io.pine
+input.price	supported	defval/title executable subset	tests/fixtures/runtime/inputs.pine
+input.time	supported	defval/title executable subset	tests/fixtures/runtime/inputs.pine
+input.symbol	supported	defval/title executable subset	tests/fixtures/runtime/inputs.pine
+input.timeframe	supported	defval/title executable subset	tests/fixtures/runtime/inputs.pine
 plot	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/if.pine
 hline	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
 fill	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine

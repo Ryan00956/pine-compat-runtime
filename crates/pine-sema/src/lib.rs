@@ -2797,6 +2797,35 @@ mod tests {
     }
 
     #[test]
+    fn accepts_additional_input_variants() {
+        let analysis = analyze(
+            "threshold = input.price(2.5, \"Price\")\nstart = input.time(0, \"Start\")\nsymbol = input.symbol(\"AAPL\", \"Symbol\")\ntimeframe = input.timeframe(\"D\", \"Timeframe\")\nplot(time >= start and symbol == \"AAPL\" and timeframe == \"D\" ? math.max(close, threshold) : open)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for name in [
+            "input.price",
+            "input.time",
+            "input.symbol",
+            "input.timeframe",
+        ] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|feature| feature.feature == name),
+                "{name} should be reported as supported"
+            );
+        }
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_request_namespace() {
         let analysis = analyze("x = request.security(\"AAPL\", \"D\", close)\n");
 

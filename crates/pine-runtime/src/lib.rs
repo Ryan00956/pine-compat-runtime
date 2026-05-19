@@ -818,6 +818,7 @@ impl<'a> HistoricalRuntime<'a> {
         match callee {
             "indicator" => Ok(PineValue::Void),
             "input.int" | "input.float" | "input.bool" | "input.color" | "input.string"
+            | "input.price" | "input.time" | "input.symbol" | "input.timeframe"
             | "input.source" => self.eval_expr(&args[0].value),
             "plot" => {
                 let value = self.eval_expr(&args[0].value)?;
@@ -1983,6 +1984,58 @@ plot(mode == "Close" ? close : open)
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn runs_additional_input_variants() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("more inputs")
+threshold = input.price(2.5, "Price")
+start = input.time(2, "Start")
+symbol = input.symbol("AAPL", "Symbol")
+timeframe = input.timeframe("D", "Timeframe")
+enabled = time >= start and symbol == "AAPL" and timeframe == "D"
+plot(enabled ? math.max(close, threshold) : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            Bar {
+                time: 1,
+                open: 1.0,
+                high: 1.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 2,
+                open: 2.0,
+                high: 2.0,
+                low: 2.0,
+                close: 2.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 3,
+                open: 3.0,
+                high: 3.0,
+                low: 3.0,
+                close: 3.0,
+                volume: 1.0,
+            },
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[0.0, 2.5, 3.0]);
     }
 
     #[test]

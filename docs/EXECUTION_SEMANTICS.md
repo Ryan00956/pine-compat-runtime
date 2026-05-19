@@ -194,6 +194,7 @@ Inputs are stable across a run:
 ```pine
 length = input.int(20, "Length")
 mode = input.string("SMA", "Mode")
+start = input.time(0, "Start")
 ```
 
 The runtime should collect input metadata during compilation or a dry run, then

@@ -18,7 +18,8 @@ Phase 1 should be intentionally small:
 - OHLCV and derived built-in series
 - `indicator`
 - `input.int`, `input.float`, `input.bool`, `input.source`, `input.color`,
-  `input.string`
+  `input.string`, `input.price`, `input.time`, `input.symbol`,
+  `input.timeframe`
 - `plot`
 - `hline`
 - `fill`
@@ -71,6 +72,10 @@ input.float(defval: const float, title?: const string, ...) -> input float
 input.bool(defval: const bool, title?: const string, ...) -> input bool
 input.color(defval: const color, title?: const string, ...) -> input color
 input.string(defval: const string, title?: const string, ...) -> input string
+input.price(defval: const float, title?: const string, ...) -> input float
+input.time(defval: const int, title?: const string, ...) -> input int
+input.symbol(defval: const string, title?: const string, ...) -> input string
+input.timeframe(defval: const string, title?: const string, ...) -> input string
 input.source(defval: series float, title?: const string, ...) -> series float
 ```
 
