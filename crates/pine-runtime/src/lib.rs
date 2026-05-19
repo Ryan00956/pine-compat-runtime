@@ -574,6 +574,12 @@ impl<'a> HistoricalRuntime<'a> {
                     .map(|item| self.eval_expr(item))
                     .collect::<Result<_, _>>()?,
             ),
+            HirExprKind::Block { statements, result } => {
+                for statement in statements {
+                    self.eval_stmt(statement)?;
+                }
+                self.eval_expr(result)?
+            }
             HirExprKind::Call {
                 callee,
                 call_site_id,
@@ -2532,6 +2538,61 @@ plot(add_bias(close))
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[2.5, 3.5, 4.5]);
+    }
+
+    #[test]
+    fn runs_block_body_function() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf block")
+spread(hi, lo) =>
+    value = hi - lo
+    value * 2
+plot(spread(high, low))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 3.0, 1.0, 2.0),
+            bar_ohlc(2.0, 6.0, 3.0, 5.0),
+            bar_ohlc(5.0, 9.0, 4.0, 7.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[4.0, 6.0, 10.0]);
+    }
+
+    #[test]
+    fn runs_block_body_function_with_ta_call() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf block ta")
+smooth2(src, len) =>
+    ma = ta.sma(src, len)
+    ma * 2
+plot(smooth2(close, 2))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[3.0, 5.0, 7.0]);
     }
 
     #[test]

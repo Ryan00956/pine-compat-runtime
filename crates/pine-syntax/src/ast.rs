@@ -29,7 +29,7 @@ pub enum StmtKind {
     Function {
         name: String,
         params: Vec<String>,
-        body: Expr,
+        body: FunctionBody,
     },
     Decl {
         mode: DeclMode,
@@ -47,6 +47,12 @@ pub enum StmtKind {
     Unsupported {
         feature: String,
     },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum FunctionBody {
+    Expr(Expr),
+    Block(Vec<Stmt>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

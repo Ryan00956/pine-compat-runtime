@@ -119,6 +119,10 @@ pub enum HirExprKind {
         else_expr: Box<HirExpr>,
     },
     Tuple(Vec<HirExpr>),
+    Block {
+        statements: Vec<HirStmt>,
+        result: Box<HirExpr>,
+    },
     Call {
         callee: String,
         call_site_id: CallSiteId,

@@ -1,6 +1,6 @@
 use crate::{
-    BinaryOp, CallArg, DeclMode, Diagnostic, Expr, ExprKind, Lexed, Literal, Program, SourceFile,
-    Span, Stmt, StmtKind, Token, TokenKind, UnaryOp, VersionDecl, lex,
+    BinaryOp, CallArg, DeclMode, Diagnostic, Expr, ExprKind, FunctionBody, Lexed, Literal, Program,
+    SourceFile, Span, Stmt, StmtKind, Token, TokenKind, UnaryOp, VersionDecl, lex,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -235,21 +235,19 @@ impl Parser {
 
         self.expect(TokenKind::RParen, "expected `)` after function parameters")?;
         self.expect(TokenKind::Arrow, "expected `=>` in function declaration")?;
-        if self.at(TokenKind::Newline) {
+        let (body, span) = if self.at(TokenKind::Newline) {
             self.bump();
             let block = self.parse_indented_block()?;
             let span = block.last().map_or(start, |statement| statement.span);
-            return Some(Stmt {
-                span: start.merge(span),
-                kind: StmtKind::Unsupported {
-                    feature: "function_block".to_owned(),
-                },
-            });
-        }
-        let body = self.parse_expr(0)?;
+            (FunctionBody::Block(block), span)
+        } else {
+            let body = self.parse_expr(0)?;
+            let span = body.span;
+            (FunctionBody::Expr(body), span)
+        };
 
         Some(Stmt {
-            span: start.merge(body.span),
+            span: start.merge(span),
             kind: StmtKind::Function { name, params, body },
         })
     }
@@ -790,15 +788,18 @@ mod tests {
     }
 
     #[test]
-    fn parses_block_function_declaration_as_unsupported() {
+    fn parses_block_function_declaration() {
         let parsed = parse("double(x) =>\n    y = x * 2\n    y\nplot(close)\n");
 
         assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
         assert_eq!(parsed.program.statements.len(), 2);
-        assert!(matches!(
-            parsed.program.statements[0].kind,
-            StmtKind::Unsupported { ref feature } if feature == "function_block"
-        ));
+        let StmtKind::Function { body, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected function statement");
+        };
+        let FunctionBody::Block(statements) = body else {
+            panic!("expected block function body");
+        };
+        assert_eq!(statements.len(), 2);
     }
 
     #[test]

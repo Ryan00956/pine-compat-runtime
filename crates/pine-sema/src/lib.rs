@@ -9,8 +9,8 @@ use pine_ir::{
     VarSlotId,
 };
 use pine_syntax::{
-    BinaryOp, CallArg, Diagnostic, Expr, ExprKind, Literal, Program, Severity, SourceFile, Span,
-    Stmt, StmtKind, UnaryOp, parse_source,
+    BinaryOp, CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Literal, Program, Severity,
+    SourceFile, Span, Stmt, StmtKind, UnaryOp, parse_source,
 };
 
 const VARIP_UNSUPPORTED_REASON: &str = "varip intrabar persistence is not implemented; forming-bar rollback currently supports var state only";
@@ -52,6 +52,7 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
         },
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
         bindings: HashMap::new(),
+        lower_symbol_overrides: Vec::new(),
         functions: HashMap::new(),
         function_stack: Vec::new(),
         next_symbol_id: initial_symbol_count(),
@@ -134,6 +135,7 @@ struct Analyzer {
     compatibility: CompatibilityReport,
     scope: ScopeResolver,
     bindings: HashMap<BindingKey, SymbolInfo>,
+    lower_symbol_overrides: Vec<HashMap<SymbolId, SymbolInfo>>,
     functions: HashMap<String, FunctionInfo>,
     function_stack: Vec<String>,
     next_symbol_id: u32,
@@ -147,7 +149,7 @@ struct Analyzer {
 #[derive(Debug, Clone)]
 struct FunctionInfo {
     params: Vec<String>,
-    body: Expr,
+    body: FunctionBody,
     span: Span,
 }
 
@@ -203,6 +205,13 @@ impl ScopeResolver {
             .iter()
             .rev()
             .find_map(|scope| scope.get(name).copied())
+    }
+
+    fn resolves_to_global(&self, name: &str) -> bool {
+        self.scopes
+            .iter()
+            .rposition(|scope| scope.contains_key(name))
+            .is_some_and(|index| index == 0)
     }
 
     fn define_global(&mut self, name: &str, info: SymbolInfo) {
@@ -272,6 +281,14 @@ impl ScopeResolver {
                 var_slot_id: symbol.var_slot_id,
             })
             .collect()
+    }
+
+    fn contains_lower_symbol(&self, id: SymbolId) -> bool {
+        self.all_symbols.iter().any(|(_, symbol)| symbol.id == id)
+    }
+
+    fn add_lower_symbol(&mut self, name: &str, info: SymbolInfo) {
+        self.all_symbols.push((name.to_owned(), info));
     }
 }
 
@@ -360,10 +377,10 @@ impl Analyzer {
                 self.block_depth -= 1;
             }
             StmtKind::Function { .. } => {
-                if self.block_depth > 0 {
+                if self.block_depth > 0 || self.function_depth > 0 {
                     self.unsupported(
                         "block_local_function",
-                        "function declarations inside if blocks are not supported",
+                        "nested function declarations are not supported",
                         statement.span,
                     );
                 }
@@ -378,8 +395,13 @@ impl Analyzer {
                 } else {
                     None
                 };
-                let symbol = if self.block_depth > 0 {
-                    self.define_local_symbol(name, value_type, var_slot_id, true)
+                let symbol = if self.block_depth > 0 || self.function_depth > 0 {
+                    self.define_local_symbol(
+                        name,
+                        value_type,
+                        var_slot_id,
+                        self.function_depth == 0,
+                    )
                 } else {
                     self.define_symbol(name, value_type, var_slot_id)
                 };
@@ -392,6 +414,12 @@ impl Analyzer {
                         format!("cannot reassign unknown symbol `{name}`"),
                         statement.span,
                     ));
+                } else if self.function_depth > 0 && self.scope.resolves_to_global(name) {
+                    self.unsupported(
+                        "function_side_effect",
+                        "reassigning global variables inside user-defined functions is not supported",
+                        statement.span,
+                    );
                 }
                 let value_type = self.analyze_expr(value);
                 if let (Some(target_type), Some(value_type)) = (
@@ -442,14 +470,14 @@ impl Analyzer {
             return;
         }
 
-        if self.block_depth > 0 {
+        if self.block_depth > 0 || self.function_depth > 0 {
             for (name, pine_type) in names.iter().zip(element_types) {
                 let symbol = if let Some(target) = self.scope.resolve(name) {
                     self.validate_assignment(name, target.pine_type, pine_type, statement.span);
                     self.update_symbol_type(name, pine_type);
                     self.scope.resolve(name).unwrap_or(target)
                 } else {
-                    self.define_local_symbol(name, pine_type, None, true)
+                    self.define_local_symbol(name, pine_type, None, self.function_depth == 0)
                 };
                 self.bind_symbol(name, statement.span, symbol);
             }
@@ -610,12 +638,43 @@ impl Analyzer {
         }
         self.function_stack.push(name.to_owned());
         self.function_depth += 1;
-        let return_type = self.analyze_expr(&function.body);
+        let return_type = self.analyze_function_body(&function.body, function.span);
         self.function_depth -= 1;
         self.function_stack.pop();
         self.scope.pop_scope();
 
         return_type
+    }
+
+    fn analyze_function_body(&mut self, body: &FunctionBody, span: Span) -> Option<PineType> {
+        match body {
+            FunctionBody::Expr(expr) => self.analyze_expr(expr),
+            FunctionBody::Block(statements) => {
+                let Some((last, prefix)) = statements.split_last() else {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_FUNCTION_RETURN",
+                        "user-defined function block must end with an expression",
+                        span,
+                    ));
+                    return None;
+                };
+                for statement in prefix {
+                    self.analyze_stmt(statement);
+                }
+                match &last.kind {
+                    StmtKind::Expr(expr) => self.analyze_expr(expr),
+                    _ => {
+                        self.analyze_stmt(last);
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_FUNCTION_RETURN",
+                            "user-defined function block must end with an expression",
+                            last.span,
+                        ));
+                        None
+                    }
+                }
+            }
+        }
     }
 
     fn report_udf_arg_error(
@@ -914,6 +973,17 @@ impl Analyzer {
         info
     }
 
+    fn fresh_lower_symbol(&mut self, name: &str, original: SymbolInfo) -> SymbolInfo {
+        let info = SymbolInfo {
+            id: self.alloc_symbol(),
+            pine_type: original.pine_type,
+            series_id: self.series_id_for_type(original.pine_type),
+            var_slot_id: original.var_slot_id.map(|_| self.alloc_var_slot()),
+        };
+        self.scope.add_lower_symbol(name, info);
+        info
+    }
+
     fn update_symbol_type(&mut self, name: &str, pine_type: PineType) {
         if let Some(mut symbol) = self.scope.resolve(name) {
             symbol.pine_type = pine_type;
@@ -1158,54 +1228,91 @@ impl Analyzer {
     }
 
     fn bound_symbol(&self, name: &str, span: Span) -> Option<SymbolInfo> {
-        self.bindings.get(&binding_key(name, span)).copied()
+        let symbol = self.bindings.get(&binding_key(name, span)).copied()?;
+        self.lower_symbol_overrides
+            .iter()
+            .rev()
+            .find_map(|overrides| overrides.get(&symbol.id).copied())
+            .or(Some(symbol))
+    }
+
+    fn lower_decl_symbol(&mut self, name: &str, span: Span) -> Option<SymbolInfo> {
+        let symbol = self.bindings.get(&binding_key(name, span)).copied()?;
+        if self.lower_symbol_overrides.is_empty() || self.scope.contains_lower_symbol(symbol.id) {
+            return Some(symbol);
+        }
+        if let Some(existing) = self
+            .lower_symbol_overrides
+            .iter()
+            .rev()
+            .find_map(|overrides| overrides.get(&symbol.id).copied())
+        {
+            return Some(existing);
+        }
+        let fresh = self.fresh_lower_symbol(name, symbol);
+        self.lower_symbol_overrides
+            .last_mut()
+            .expect("override scope is active")
+            .insert(symbol.id, fresh);
+        Some(fresh)
     }
 
     fn lower_stmt(&mut self, statement: &pine_syntax::Stmt) -> Option<HirStmt> {
+        self.lower_stmt_with_params(statement, &HashMap::new(), &HashMap::new())
+    }
+
+    fn lower_stmt_with_params(
+        &mut self,
+        statement: &pine_syntax::Stmt,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirStmt> {
         let kind = match &statement.kind {
-            StmtKind::Expr(expr) => HirStmtKind::Expr(self.lower_expr(expr)?),
+            StmtKind::Expr(expr) => {
+                HirStmtKind::Expr(self.lower_expr_with_params(expr, param_exprs, param_types)?)
+            }
             StmtKind::If {
                 condition,
                 then_branch,
                 else_branch,
             } => HirStmtKind::If {
-                condition: self.lower_expr(condition)?,
+                condition: self.lower_expr_with_params(condition, param_exprs, param_types)?,
                 then_branch: then_branch
                     .iter()
-                    .map(|statement| self.lower_stmt(statement))
+                    .map(|statement| {
+                        self.lower_stmt_with_params(statement, param_exprs, param_types)
+                    })
                     .collect::<Option<_>>()?,
                 else_branch: else_branch
                     .iter()
-                    .map(|statement| self.lower_stmt(statement))
+                    .map(|statement| {
+                        self.lower_stmt_with_params(statement, param_exprs, param_types)
+                    })
                     .collect::<Option<_>>()?,
             },
             StmtKind::Decl { name, value, .. } => HirStmtKind::Decl {
-                symbol: self.bound_symbol(name, statement.span)?.id,
-                value: self.lower_expr(value)?,
+                symbol: self.lower_decl_symbol(name, statement.span)?.id,
+                value: self.lower_expr_with_params(value, param_exprs, param_types)?,
             },
             StmtKind::Reassign { name, value } => HirStmtKind::Reassign {
                 symbol: self.bound_symbol(name, statement.span)?.id,
-                value: self.lower_expr(value)?,
+                value: self.lower_expr_with_params(value, param_exprs, param_types)?,
             },
             StmtKind::TupleDecl { names, value } => HirStmtKind::TupleDecl {
                 symbols: names
                     .iter()
                     .map(|name| {
-                        self.bound_symbol(name, statement.span)
+                        self.lower_decl_symbol(name, statement.span)
                             .map(|symbol| symbol.id)
                     })
                     .collect::<Option<_>>()?,
-                value: self.lower_expr(value)?,
+                value: self.lower_expr_with_params(value, param_exprs, param_types)?,
             },
             StmtKind::Function { .. } => return None,
             StmtKind::Unsupported { .. } => return None,
         };
 
         Some(HirStmt { kind })
-    }
-
-    fn lower_expr(&mut self, expr: &Expr) -> Option<HirExpr> {
-        self.lower_expr_with_params(expr, &HashMap::new(), &HashMap::new())
     }
 
     fn lower_expr_with_params(
@@ -1330,7 +1437,47 @@ impl Analyzer {
             param_exprs.insert(param.clone(), arg_expr);
             param_types.insert(param.clone(), arg_type);
         }
-        self.lower_expr_with_params(&function.body, &param_exprs, &param_types)
+        self.lower_function_body(&function.body, &param_exprs, &param_types)
+    }
+
+    fn lower_function_body(
+        &mut self,
+        body: &FunctionBody,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        match body {
+            FunctionBody::Expr(expr) => self.lower_expr_with_params(expr, param_exprs, param_types),
+            FunctionBody::Block(statements) => {
+                let (last, prefix) = statements.split_last()?;
+                let StmtKind::Expr(result) = &last.kind else {
+                    return None;
+                };
+                self.lower_symbol_overrides.push(HashMap::new());
+                let lowered_statements = prefix
+                    .iter()
+                    .map(|statement| {
+                        self.lower_stmt_with_params(statement, param_exprs, param_types)
+                    })
+                    .collect::<Option<Vec<_>>>();
+                let result = lowered_statements.and_then(|statements| {
+                    Some((
+                        statements,
+                        self.lower_expr_with_params(result, param_exprs, param_types)?,
+                    ))
+                });
+                self.lower_symbol_overrides.pop();
+                let (statements, result) = result?;
+                Some(HirExpr {
+                    pine_type: result.pine_type,
+                    series_id: result.series_id,
+                    kind: HirExprKind::Block {
+                        statements,
+                        result: Box::new(result),
+                    },
+                })
+            }
+        }
     }
 
     fn type_of_expr(&self, expr: &Expr) -> Option<PineType> {
@@ -1436,12 +1583,29 @@ impl Analyzer {
                         let param = &function.params[param_index];
                         nested_param_types.insert(param.clone(), arg_type?);
                     }
-                    self.type_of_expr_with_params(&function.body, &nested_param_types)
+                    self.type_of_function_body_with_params(&function.body, &nested_param_types)
                 }
             }
             ExprKind::History { expr, .. } => self
                 .type_of_expr_with_params(expr, param_types)
                 .map(|pine_type| PineType::new(Qualifier::Series, pine_type.kind)),
+        }
+    }
+
+    fn type_of_function_body_with_params(
+        &self,
+        body: &FunctionBody,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<PineType> {
+        match body {
+            FunctionBody::Expr(expr) => self.type_of_expr_with_params(expr, param_types),
+            FunctionBody::Block(statements) => {
+                let last = statements.last()?;
+                let StmtKind::Expr(expr) = &last.kind else {
+                    return None;
+                };
+                self.type_of_expr_with_params(expr, param_types)
+            }
         }
     }
 
@@ -1467,7 +1631,6 @@ fn unsupported_syntax_reason(feature: &str) -> &'static str {
     match feature {
         "import" => "library imports are not supported in Phase 1",
         "function" => "unsupported user-defined function syntax",
-        "function_block" => "multi-statement user-defined functions need local block semantics",
         "for" => "for loops are parsed for compatibility reporting but not executable yet",
         _ => "syntax is not supported in Phase 1",
     }
@@ -2188,15 +2351,26 @@ plot(y)
     }
 
     #[test]
-    fn rejects_block_body_function() {
+    fn accepts_block_body_function() {
         let analysis = analyze("double(x) =>\n    y = x * 2\n    y\nplot(double(close))\n");
 
         assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_block_body_function_without_final_expression() {
+        let analysis = analyze("double(x) =>\n    y = x * 2\nplot(double(close))\n");
+
+        assert!(
             analysis
-                .compatibility
-                .unsupported
+                .diagnostics
                 .iter()
-                .any(|feature| feature.feature == "function_block")
+                .any(|diagnostic| diagnostic.code == "E_FUNCTION_RETURN")
         );
         assert!(analysis.hir.is_none());
     }
@@ -2230,6 +2404,20 @@ plot(y)
     #[test]
     fn rejects_output_call_inside_function() {
         let analysis = analyze("draw(x) => plot(x)\ndraw(close)\n");
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "function_side_effect")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_global_reassignment_inside_function() {
+        let analysis = analyze("x = close\nbump(v) =>\n    x := v\n    x\nplot(bump(high))\n");
 
         assert!(
             analysis

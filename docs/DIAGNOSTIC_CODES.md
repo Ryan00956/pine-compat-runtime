@@ -39,6 +39,8 @@ improved over time, but codes should remain stable once published.
 - `E_FUNCTION_NAME`: user-defined function name conflicts with an existing
   symbol or built-in.
 - `E_FUNCTION_PARAM`: user-defined function parameter list is invalid.
+- `E_FUNCTION_RETURN`: user-defined function block does not end with an
+  expression.
 - `E_RECURSIVE_FUNCTION`: recursive user-defined function call is not supported.
 - `E_OPERATOR_TYPE`: operator does not accept the operand types.
 - `E_TUPLE_ARITY`: tuple assignment target count does not match value count.

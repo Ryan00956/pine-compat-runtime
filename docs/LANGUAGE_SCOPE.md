@@ -31,7 +31,7 @@ Statements:
 - reassignment with `:=`
 - `if` statements
 - local blocks
-- expression-body user-defined functions with positional and named arguments
+- user-defined functions with positional and named arguments
 - simple `for` loops only after the expression runtime and callsite state are
   stable
 
@@ -54,7 +54,7 @@ Phase 1 executable subset:
 - `if`/`else` blocks for expression statements, plot calls, reassignment, and
   tuple assignment to variables declared before the block
 - normal and tuple declarations scoped to an `if`/`else` branch
-- expression-body user-defined functions lowered by inlining
+- user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions
 - constant history offsets
 - `indicator`
@@ -72,18 +72,23 @@ branch and do not leak outside it. Tuple declaration targets that resolve to an
 outer variable update that variable, preserving the existing conditional tuple
 assignment behavior.
 
-User-defined functions are limited to single expression bodies:
+User-defined functions support single-expression and multi-statement block
+bodies:
 
 ```pine
 smooth(src, len) => ta.sma(src, len)
 spread(hi, lo) => hi - lo
 plot(spread(lo=low, hi=high))
+
+range2(hi, lo) =>
+    value = hi - lo
+    value * 2
 ```
 
-Named arguments are supported for user-defined functions. Multi-statement
-function bodies, recursive functions, output side effects inside functions, and
-stateful or side-effecting calls as UDF arguments are rejected in the current
-executable subset.
+Named arguments are supported for user-defined functions. Block bodies must end
+with an expression. Recursive functions, output side effects inside functions,
+global reassignment inside functions, and stateful or side-effecting calls as
+UDF arguments are rejected in the current executable subset.
 
 ## Initial Built-Ins
 

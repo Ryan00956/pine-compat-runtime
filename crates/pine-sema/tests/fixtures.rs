@@ -104,15 +104,6 @@ fn reports_unsupported_recursive_function_fixture() {
     assert!(analysis.hir.is_none());
 }
 
-#[test]
-fn reports_unsupported_function_block_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_function_block.pine",
-        "function_block",
-        "multi-statement user-defined functions",
-    );
-}
-
 fn assert_unsupported_fixture(path: &str, feature: &str, reason: &str) {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");

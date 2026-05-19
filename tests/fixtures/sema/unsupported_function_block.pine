@@ -1,6 +1,0 @@
-//@version=5
-indicator("Function Block")
-double(x) =>
-    y = x * 2
-    y
-plot(double(close))

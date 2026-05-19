@@ -170,7 +170,9 @@ Status: in progress.
 - [x] Support normal block-local declarations inside `if` branches.
 - [x] Support tuple block-local declarations inside `if` branches.
 - [x] Add expression-body user-defined function execution by inlining.
-- [x] Support named arguments for expression-body user-defined functions.
+- [x] Support named arguments for user-defined functions.
+- [x] Add multi-statement user-defined function execution with final expression
+  returns.
 - [x] Reject recursive functions and function side effects.
 - [ ] Add fixture-derived conformance metadata for block statements.
 - [x] Add fixture-derived conformance metadata for user-defined functions.
