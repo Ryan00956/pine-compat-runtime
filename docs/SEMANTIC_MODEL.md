@@ -144,7 +144,9 @@ The first array subset supports float arrays only:
 ```pine
 var values = array.new_float()
 array.push(values, close)
+values.push(close)
 first = array.get(values, 0)
+same = values.get(0)
 count = array.size(values)
 ```
 
@@ -152,9 +154,11 @@ count = array.size(values)
 a fresh array whenever the declaration executes. `var` declarations preserve the
 array id and backing storage across bars. Supported operations are
 `array.new_float`, `array.push`, `array.get`, `array.set`, `array.size`,
-`array.pop`, and `array.clear`. Non-float array constructors and unsupported
-`array.*` functions are rejected. Out-of-range `array.get` and empty
-`array.pop` return `na`; out-of-range `array.set` is a no-op. Negative
+`array.pop`, and `array.clear`; `size/get/set/push/pop/clear` may also be
+called with method syntax on a float array receiver. Non-float array
+constructors and unsupported `array.*` functions are rejected. Out-of-range
+`array.get` and empty `array.pop` return `na`; out-of-range `array.set` is a
+no-op. Negative
 `array.new_float` sizes fail at runtime. A float array can contain at most
 100,000 elements; creation or push operations beyond that limit fail at runtime.
 

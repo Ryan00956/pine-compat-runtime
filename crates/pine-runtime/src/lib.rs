@@ -3483,6 +3483,36 @@ plot(na(missing) ? 1 : 0)
     }
 
     #[test]
+    fn runs_float_array_method_calls() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array methods")
+values = array.new_float(2, close)
+values.push(high)
+values.set(0, low)
+first = values.get(0)
+last = values.pop()
+missing = values.get(10)
+plot(first + last + values.size())
+plot(na(missing) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 2);
+        assert_values_close(&result.plots[0].values, &[4.0, 6.0, 8.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
     fn var_float_array_persists_across_bars() {
         let source = SourceFile::new(
             "test.pine",

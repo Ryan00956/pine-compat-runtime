@@ -10,6 +10,8 @@
 - Added partial float array support with runtime-owned array ids,
   `array.new_float`, `array.push`, `array.get`, `array.set`, `array.size`,
   `array.pop`, and `array.clear`.
+- Added partial array method-call syntax for float array `size`, `get`, `set`,
+  `push`, `pop`, and `clear`.
 - Tightened float array UDF boundaries: read-only array operations are allowed,
   while array mutation inside UDFs is rejected as a side effect.
 - Added a 100,000-element runtime guard for each float array.

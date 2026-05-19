@@ -1,0 +1,11 @@
+indicator("Array methods fixture")
+var persisted = array.new_float()
+fresh = array.new_float(2, close)
+
+persisted.push(close)
+fresh.push(high)
+fresh.set(0, low)
+
+plot(persisted.size())
+plot(persisted.get(0))
+plot(fresh.get(0) + fresh.pop() + fresh.size())

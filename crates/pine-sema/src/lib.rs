@@ -165,6 +165,12 @@ enum UdfArgError {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MethodResolution {
+    NotMethod,
+    Resolved(Option<PineType>),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct SymbolInfo {
     id: SymbolId,
     pine_type: PineType,
@@ -781,7 +787,6 @@ impl Analyzer {
             ));
             return None;
         };
-        self.check_feature_name(&name, callee.span);
 
         let arg_types: Vec<_> = args
             .iter()
@@ -789,6 +794,7 @@ impl Analyzer {
             .collect();
 
         if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
+            self.check_feature_name(&name, callee.span);
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
@@ -808,16 +814,85 @@ impl Analyzer {
             return self.return_type(signature, &arg_types);
         }
 
+        match self.analyze_method_call(callee, args, &arg_types) {
+            MethodResolution::Resolved(pine_type) => return pine_type,
+            MethodResolution::NotMethod => {}
+        }
+
         if self.functions.contains_key(&name) {
             return self.analyze_udf_call(&name, callee.span, args, &arg_types);
         }
 
+        self.check_feature_name(&name, callee.span);
         self.diagnostics.push(Diagnostic::error(
             "E_UNKNOWN_FUNCTION",
             format!("unknown function `{name}`"),
             callee.span,
         ));
         None
+    }
+
+    fn analyze_method_call(
+        &mut self,
+        callee: &Expr,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> MethodResolution {
+        let Some((receiver_name, method_name)) = method_call_parts(callee) else {
+            return MethodResolution::NotMethod;
+        };
+        if self.scope.resolve(receiver_name).is_none() {
+            return MethodResolution::NotMethod;
+        }
+
+        let receiver_arg = receiver_call_arg(receiver_name, callee.span);
+        let receiver_type = self.analyze_expr(&receiver_arg.value);
+        let Some(receiver_type) = receiver_type else {
+            return MethodResolution::Resolved(None);
+        };
+        if receiver_type.kind != ValueKind::FloatArray {
+            self.diagnostics.push(Diagnostic::error(
+                "E_METHOD_RECEIVER_TYPE",
+                format!(
+                    "method `{method_name}` is not supported for {:?} {:?}",
+                    receiver_type.qualifier, receiver_type.kind
+                ),
+                callee.span,
+            ));
+            return MethodResolution::Resolved(None);
+        }
+
+        let builtin_name = array_method_builtin_name(method_name);
+        let Some(signature) = builtin_name
+            .and_then(|name| pine_builtins::get_phase_1_builtin(name).map(|sig| (name, sig)))
+        else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_UNKNOWN_METHOD",
+                format!("unknown array method `{method_name}`"),
+                callee.span,
+            ));
+            return MethodResolution::Resolved(None);
+        };
+        let (builtin_name, signature) = signature;
+        self.check_feature_name(builtin_name, callee.span);
+
+        if self.function_depth > 0 && is_array_mutation_builtin(builtin_name) {
+            self.unsupported(
+                "function_side_effect",
+                "array mutation is not supported inside user-defined functions",
+                callee.span,
+            );
+        }
+
+        let mut method_args = Vec::with_capacity(args.len() + 1);
+        method_args.push(receiver_arg);
+        method_args.extend(args.iter().cloned());
+        let mut method_arg_types = Vec::with_capacity(arg_types.len() + 1);
+        method_arg_types.push(Some(receiver_type));
+        method_arg_types.extend(arg_types.iter().copied());
+
+        self.validate_call_args(signature, &method_args, &method_arg_types);
+        MethodResolution::Resolved(self.return_type(signature, &method_arg_types))
     }
 
     fn analyze_udf_call(
@@ -1763,6 +1838,44 @@ impl Analyzer {
                 if self.functions.contains_key(&name) {
                     return self.lower_udf_call(&name, args, param_exprs, param_types);
                 }
+                if pine_builtins::get_phase_1_builtin(&name).is_none()
+                    && let Some((receiver_name, method_name)) = method_call_parts(callee)
+                    && let Some(builtin_name) = array_method_builtin_name(method_name)
+                {
+                    let mut lowered_args = Vec::with_capacity(args.len() + 1);
+                    let receiver_arg = receiver_call_arg(receiver_name, callee.span);
+                    lowered_args.push(HirCallArg {
+                        name: None,
+                        value: self.lower_expr_with_params(
+                            &receiver_arg.value,
+                            param_exprs,
+                            param_types,
+                        )?,
+                    });
+                    lowered_args.extend(
+                        args.iter()
+                            .map(|arg| {
+                                Some(HirCallArg {
+                                    name: arg.name.clone(),
+                                    value: self.lower_expr_with_params(
+                                        &arg.value,
+                                        param_exprs,
+                                        param_types,
+                                    )?,
+                                })
+                            })
+                            .collect::<Option<Vec<_>>>()?,
+                    );
+                    return Some(HirExpr {
+                        pine_type,
+                        series_id,
+                        kind: HirExprKind::Call {
+                            callee: builtin_name.to_owned(),
+                            call_site_id: self.alloc_call_site(),
+                            args: lowered_args,
+                        },
+                    });
+                }
                 HirExprKind::Call {
                     callee: name,
                     call_site_id: self.alloc_call_site(),
@@ -1987,6 +2100,14 @@ impl Analyzer {
                             .map(pine_builtins::color_return_for_arg),
                         ReturnSpec::PromotedNumeric => promoted_numeric_type(&arg_types),
                     }
+                } else if let Some((receiver_name, method_name)) = method_call_parts(callee) {
+                    self.type_of_method_call_with_params(
+                        receiver_name,
+                        method_name,
+                        callee.span,
+                        &arg_types,
+                        param_types,
+                    )
                 } else {
                     let function = self.functions.get(&name)?;
                     let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
@@ -2002,6 +2123,38 @@ impl Analyzer {
                 .type_of_expr_with_params(expr, param_types)
                 .map(|pine_type| PineType::new(Qualifier::Series, pine_type.kind)),
         }
+    }
+
+    fn type_of_method_call_with_params(
+        &self,
+        receiver_name: &str,
+        method_name: &str,
+        receiver_span: Span,
+        arg_types: &[Option<PineType>],
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<PineType> {
+        let receiver_type = param_types
+            .get(receiver_name)
+            .copied()
+            .or_else(|| {
+                self.bound_symbol(receiver_name, receiver_span)
+                    .map(|symbol| symbol.pine_type)
+            })
+            .or_else(|| {
+                self.scope
+                    .resolve(receiver_name)
+                    .map(|symbol| symbol.pine_type)
+            })?;
+        if receiver_type.kind != ValueKind::FloatArray {
+            return None;
+        }
+
+        let signature =
+            pine_builtins::get_phase_1_builtin(array_method_builtin_name(method_name)?)?;
+        let mut method_arg_types = Vec::with_capacity(arg_types.len() + 1);
+        method_arg_types.push(Some(receiver_type));
+        method_arg_types.extend(arg_types.iter().copied());
+        self.return_type(signature, &method_arg_types)
     }
 
     fn type_of_switch_expr_with_params(
@@ -2117,6 +2270,38 @@ fn expr_name(expr: &Expr) -> Option<String> {
     }
 }
 
+fn method_call_parts(expr: &Expr) -> Option<(&str, &str)> {
+    match &expr.kind {
+        ExprKind::QualifiedName(parts) if parts.len() == 2 => {
+            Some((parts[0].as_str(), parts[1].as_str()))
+        }
+        _ => None,
+    }
+}
+
+fn receiver_call_arg(receiver_name: &str, span: Span) -> CallArg {
+    CallArg {
+        name: None,
+        span,
+        value: Expr {
+            kind: ExprKind::Identifier(receiver_name.to_owned()),
+            span,
+        },
+    }
+}
+
+fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
+    match method_name {
+        "size" => Some("array.size"),
+        "push" => Some("array.push"),
+        "get" => Some("array.get"),
+        "set" => Some("array.set"),
+        "pop" => Some("array.pop"),
+        "clear" => Some("array.clear"),
+        _ => None,
+    }
+}
+
 fn is_output_or_declaration_builtin(name: &str) -> bool {
     matches!(name, "indicator" | "plot" | "hline" | "fill") || name.starts_with("input.")
 }
@@ -2126,6 +2311,12 @@ fn is_array_mutation_builtin(name: &str) -> bool {
         name,
         "array.push" | "array.set" | "array.pop" | "array.clear"
     )
+}
+
+fn is_array_mutation_method_call_name(name: &str) -> bool {
+    name.rsplit_once('.')
+        .and_then(|(_, method_name)| array_method_builtin_name(method_name))
+        .is_some_and(is_array_mutation_builtin)
 }
 
 fn resolve_udf_arg_indices(params: &[String], args: &[CallArg]) -> Result<Vec<usize>, UdfArgError> {
@@ -2205,7 +2396,9 @@ fn contains_output_or_declaration_call(expr: &Expr) -> bool {
         ExprKind::Call { callee, args } => {
             let name = expr_name(callee);
             name.as_deref().is_some_and(|name| {
-                is_output_or_declaration_builtin(name) || is_array_mutation_builtin(name)
+                is_output_or_declaration_builtin(name)
+                    || is_array_mutation_builtin(name)
+                    || is_array_mutation_method_call_name(name)
             }) || args
                 .iter()
                 .any(|arg| contains_output_or_declaration_call(&arg.value))
@@ -3289,6 +3482,55 @@ plot(y)
     }
 
     #[test]
+    fn accepts_float_array_method_calls() {
+        let analysis = analyze(
+            "values = array.new_float(2, close)\nvalues.push(high)\nvalues.set(0, low)\nfirst = values.get(0)\nlast = values.pop()\nvalues.clear()\nplot(first + last + values.size())\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "array.push")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_array_method_call_on_namespace_like_variable_name() {
+        let analysis =
+            analyze("strategy = array.new_float()\nstrategy.push(close)\nplot(strategy.size())\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_unknown_float_array_method() {
+        let analysis = analyze("values = array.new_float()\nvalues.shift()\nplot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_UNKNOWN_METHOD"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
     fn rejects_unsupported_array_function() {
         let analysis = analyze("values = array.new_int(0)\nplot(close)\n");
 
@@ -3319,6 +3561,20 @@ plot(y)
     }
 
     #[test]
+    fn accepts_readonly_float_array_method_udf_parameter() {
+        let analysis = analyze(
+            "first(values) => values.get(0)\nvalues = array.new_float(1, close)\nplot(first(values) + values.size())\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_array_mutation_inside_udf() {
         let analysis = analyze(
             "add(values, value) =>\n    array.push(values, value)\n    array.size(values)\nvalues = array.new_float()\nplot(add(values, close))\n",
@@ -3337,9 +3593,45 @@ plot(y)
     }
 
     #[test]
+    fn rejects_array_method_mutation_inside_udf() {
+        let analysis = analyze(
+            "add(values, value) =>\n    values.push(value)\n    values.size()\nvalues = array.new_float()\nplot(add(values, close))\n",
+        );
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "function_side_effect"),
+            "{:?}",
+            analysis.compatibility.unsupported
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
     fn rejects_array_mutation_as_udf_argument() {
         let analysis = analyze(
             "identity(value) => value\nvalues = array.new_float(1, close)\nplot(identity(array.pop(values)))\n",
+        );
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "function_side_effect"),
+            "{:?}",
+            analysis.compatibility.unsupported
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_array_method_mutation_as_udf_argument() {
+        let analysis = analyze(
+            "identity(value) => value\nvalues = array.new_float(1, close)\nplot(identity(values.pop()))\n",
         );
 
         assert!(

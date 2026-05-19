@@ -100,7 +100,7 @@ per-bar locals.
 For arrays, the stored value is a runtime-owned array id. A normal
 `array.new_float` declaration allocates a fresh array each time it executes. A
 `var` array declaration keeps the same id and backing storage across bars, so
-mutations such as `array.push` persist.
+mutations such as `array.push` or `values.push(...)` persist.
 
 Array bounds are stable in the current subset: `array.get` outside the current
 array length returns `na`, `array.set` outside the current length is ignored,
@@ -110,6 +110,8 @@ elements; oversized creation and `array.push` beyond the limit return runtime
 errors.
 
 Read-only array operations are allowed inside inlined user-defined functions.
+The supported method-call syntax lowers to the same `array.*` runtime calls, so
+the same bounds, persistence, and UDF side-effect rules apply.
 Array mutation inside user-defined functions is rejected as a function
 side-effect boundary.
 
