@@ -1,0 +1,5 @@
+//@version=5
+indicator("Plotshape")
+if close > 1
+    plotshape(close > 2, style=shape.triangleup, location=location.belowbar, color=color.green, text="Buy", textcolor=color.white, size=size.small)
+plot(close)

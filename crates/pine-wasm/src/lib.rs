@@ -184,6 +184,8 @@ fn result_json(result: &RuntimeResult) -> String {
     output.push_str(&plots_json(&result.plots));
     output.push_str(",\"plotChars\":");
     output.push_str(&plot_chars_json(&result.plot_chars));
+    output.push_str(",\"plotShapes\":");
+    output.push_str(&plot_shapes_json(&result.plot_shapes));
     output.push_str(",\"bgColors\":");
     output.push_str(&colors_json(&result.bg_colors));
     output.push_str(",\"barColors\":");
@@ -266,6 +268,41 @@ fn plot_chars_json(plot_chars: &[pine_runtime::PlotCharSeries]) -> String {
     }
     output.push(']');
     output
+}
+
+fn plot_shapes_json(plot_shapes: &[pine_runtime::PlotShapeSeries]) -> String {
+    let mut output = String::from("[");
+    for (plot_shape_index, plot_shape) in plot_shapes.iter().enumerate() {
+        if plot_shape_index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"values\":[", plot_shape.id));
+        values_json_into(&mut output, &plot_shape.values);
+        output.push_str("],\"styles\":[");
+        values_json_into(&mut output, &plot_shape.styles);
+        output.push_str("],\"locations\":[");
+        values_json_into(&mut output, &plot_shape.locations);
+        output.push_str("],\"colors\":[");
+        values_json_into(&mut output, &plot_shape.colors);
+        output.push_str("],\"texts\":[");
+        values_json_into(&mut output, &plot_shape.texts);
+        output.push_str("],\"textColors\":[");
+        values_json_into(&mut output, &plot_shape.text_colors);
+        output.push_str("],\"sizes\":[");
+        values_json_into(&mut output, &plot_shape.sizes);
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
+fn values_json_into(output: &mut String, values: &[PineValue]) {
+    for (value_index, value) in values.iter().enumerate() {
+        if value_index > 0 {
+            output.push(',');
+        }
+        output.push_str(&value_json(value));
+    }
 }
 
 fn hlines_json(hlines: &[pine_runtime::HLineOutput]) -> String {
@@ -374,5 +411,6 @@ mod tests {
 
         assert!(output.contains("\"values\":[1,2]"));
         assert!(output.contains("\"plotChars\":[]"));
+        assert!(output.contains("\"plotShapes\":[]"));
     }
 }

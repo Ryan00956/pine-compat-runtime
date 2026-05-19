@@ -13,6 +13,7 @@ input.symbol	supported	defval/title executable subset	tests/fixtures/runtime/inp
 input.timeframe	supported	defval/title executable subset	tests/fixtures/runtime/inputs.pine
 plot	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/if.pine
 plotchar	supported	bool/numeric marker series with const char and color-compatible color	tests/fixtures/runtime/plotchar.pine
+plotshape	supported	bool/numeric marker series with style/location/text/size constants	tests/fixtures/runtime/plotshape.pine
 bgcolor	supported	color series output with conditional padding	tests/fixtures/runtime/color_outputs.pine
 barcolor	supported	color series output with conditional padding	tests/fixtures/runtime/color_outputs.pine
 hline	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine

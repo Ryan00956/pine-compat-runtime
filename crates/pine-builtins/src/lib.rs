@@ -231,6 +231,74 @@ const PLOTCHAR_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const PLOTSHAPE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "series",
+        accepts: Accepts::SeriesOrSimpleNumericOrBool,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "title",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "style",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "location",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "color",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "offset",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "textcolor",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "editable",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "size",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "show_last",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "force_overlay",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+];
+
 const HLINE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "price",
@@ -589,6 +657,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "plotshape",
+        phase: BuiltinPhase::Phase1Core,
+        params: PLOTSHAPE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "hline",
         phase: BuiltinPhase::Phase1Core,
         params: HLINE_PARAMS,
@@ -897,6 +972,42 @@ pub fn named_color(name: &str) -> Option<u32> {
         .iter()
         .find(|color| color.name == name)
         .map(|color| color.rgb)
+}
+
+const NAMED_STRING_CONSTANTS: &[&str] = &[
+    "shape.xcross",
+    "shape.cross",
+    "shape.circle",
+    "shape.triangleup",
+    "shape.triangledown",
+    "shape.flag",
+    "shape.arrowup",
+    "shape.arrowdown",
+    "shape.square",
+    "shape.diamond",
+    "shape.labelup",
+    "shape.labeldown",
+    "location.abovebar",
+    "location.belowbar",
+    "location.top",
+    "location.bottom",
+    "location.absolute",
+    "size.auto",
+    "size.tiny",
+    "size.small",
+    "size.normal",
+    "size.large",
+    "size.huge",
+    "display.all",
+    "display.none",
+];
+
+#[must_use]
+pub fn named_string_constant(name: &str) -> Option<&'static str> {
+    NAMED_STRING_CONSTANTS
+        .iter()
+        .copied()
+        .find(|constant| *constant == name)
 }
 
 #[must_use]

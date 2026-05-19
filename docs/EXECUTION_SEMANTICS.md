@@ -241,6 +241,7 @@ The runtime should collect:
 - bar colors
 - background colors
 - plotchar marker values
+- plotshape marker values
 - later shapes
 
 ## Determinism

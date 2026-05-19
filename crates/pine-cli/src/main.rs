@@ -301,6 +301,8 @@ fn result_json(result: &RuntimeResult) -> String {
     output.push_str(&plots_json(&result.plots));
     output.push_str(",\"plotChars\":");
     output.push_str(&plot_chars_json(&result.plot_chars));
+    output.push_str(",\"plotShapes\":");
+    output.push_str(&plot_shapes_json(&result.plot_shapes));
     output.push_str(",\"bgColors\":");
     output.push_str(&colors_json(&result.bg_colors));
     output.push_str(",\"barColors\":");
@@ -357,6 +359,9 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"plotChars\":{},",
             "\"plotCharValues\":{},",
             "\"plotCharCapacity\":{},",
+            "\"plotShapes\":{},",
+            "\"plotShapeValues\":{},",
+            "\"plotShapeCapacity\":{},",
             "\"bgColors\":{},",
             "\"bgColorValues\":{},",
             "\"bgColorCapacity\":{},",
@@ -399,6 +404,9 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.plot_chars,
         profile.plot_char_values,
         profile.plot_char_capacity,
+        profile.plot_shapes,
+        profile.plot_shape_values,
+        profile.plot_shape_capacity,
         profile.bg_colors,
         profile.bg_color_values,
         profile.bg_color_capacity,
@@ -481,6 +489,41 @@ fn plot_chars_json(plot_chars: &[pine_runtime::PlotCharSeries]) -> String {
     }
     output.push(']');
     output
+}
+
+fn plot_shapes_json(plot_shapes: &[pine_runtime::PlotShapeSeries]) -> String {
+    let mut output = String::from("[");
+    for (plot_shape_index, plot_shape) in plot_shapes.iter().enumerate() {
+        if plot_shape_index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"values\":[", plot_shape.id));
+        values_json_into(&mut output, &plot_shape.values);
+        output.push_str("],\"styles\":[");
+        values_json_into(&mut output, &plot_shape.styles);
+        output.push_str("],\"locations\":[");
+        values_json_into(&mut output, &plot_shape.locations);
+        output.push_str("],\"colors\":[");
+        values_json_into(&mut output, &plot_shape.colors);
+        output.push_str("],\"texts\":[");
+        values_json_into(&mut output, &plot_shape.texts);
+        output.push_str("],\"textColors\":[");
+        values_json_into(&mut output, &plot_shape.text_colors);
+        output.push_str("],\"sizes\":[");
+        values_json_into(&mut output, &plot_shape.sizes);
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
+fn values_json_into(output: &mut String, values: &[PineValue]) {
+    for (value_index, value) in values.iter().enumerate() {
+        if value_index > 0 {
+            output.push(',');
+        }
+        output.push_str(&value_json(value));
+    }
 }
 
 fn hlines_json(hlines: &[pine_runtime::HLineOutput]) -> String {
@@ -663,6 +706,7 @@ mod tests {
         let result = RuntimeResult {
             plots: vec![],
             plot_chars: vec![],
+            plot_shapes: vec![],
             bg_colors: vec![],
             bar_colors: vec![],
             hlines: vec![],
@@ -700,6 +744,9 @@ mod tests {
             plot_chars: 0,
             plot_char_values: 0,
             plot_char_capacity: 0,
+            plot_shapes: 0,
+            plot_shape_values: 0,
+            plot_shape_capacity: 0,
             bg_colors: 0,
             bg_color_values: 0,
             bg_color_capacity: 0,
@@ -720,5 +767,6 @@ mod tests {
         assert!(output.contains(r#""arrayValues":2"#));
         assert!(output.contains(r#""rollingWindowValues":2"#));
         assert!(output.contains(r#""plotChars":0"#));
+        assert!(output.contains(r#""plotShapes":0"#));
     }
 }

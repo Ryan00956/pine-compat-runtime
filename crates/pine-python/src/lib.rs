@@ -186,6 +186,7 @@ fn runtime_result_to_py(
     let output = PyDict::new(py);
     output.set_item("plots", plots_to_py(py, &result.plots)?)?;
     output.set_item("plotChars", plot_chars_to_py(py, &result.plot_chars)?)?;
+    output.set_item("plotShapes", plot_shapes_to_py(py, &result.plot_shapes)?)?;
     output.set_item("bgColors", colors_to_py(py, &result.bg_colors)?)?;
     output.set_item("barColors", colors_to_py(py, &result.bar_colors)?)?;
     output.set_item("hlines", hlines_to_py(py, &result.hlines)?)?;
@@ -227,6 +228,26 @@ fn plot_chars_to_py(
         item.set_item("values", values_to_py(py, &plot_char.values)?)?;
         item.set_item("chars", values_to_py(py, &plot_char.chars)?)?;
         item.set_item("colors", values_to_py(py, &plot_char.colors)?)?;
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
+fn plot_shapes_to_py(
+    py: Python<'_>,
+    plot_shapes: &[pine_runtime::PlotShapeSeries],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for plot_shape in plot_shapes {
+        let item = PyDict::new(py);
+        item.set_item("id", plot_shape.id)?;
+        item.set_item("values", values_to_py(py, &plot_shape.values)?)?;
+        item.set_item("styles", values_to_py(py, &plot_shape.styles)?)?;
+        item.set_item("locations", values_to_py(py, &plot_shape.locations)?)?;
+        item.set_item("colors", values_to_py(py, &plot_shape.colors)?)?;
+        item.set_item("texts", values_to_py(py, &plot_shape.texts)?)?;
+        item.set_item("textColors", values_to_py(py, &plot_shape.text_colors)?)?;
+        item.set_item("sizes", values_to_py(py, &plot_shape.sizes)?)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())

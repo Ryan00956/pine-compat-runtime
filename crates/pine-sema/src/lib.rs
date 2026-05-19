@@ -798,7 +798,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "indicator, input, plot, hline, fill, bgcolor, barcolor, and plotchar calls are not supported inside user-defined functions",
+                    "indicator, input, plot, plotchar, plotshape, hline, fill, bgcolor, and barcolor calls are not supported inside user-defined functions",
                     callee.span,
                 );
             }
@@ -1210,6 +1210,13 @@ impl Analyzer {
                 span,
             });
             return Some(PineType::new(Qualifier::Const, ValueKind::Color));
+        }
+        if pine_builtins::named_string_constant(name).is_some() {
+            self.compatibility.supported.push(FeatureUse {
+                feature: name.to_owned(),
+                span,
+            });
+            return Some(PineType::new(Qualifier::Const, ValueKind::String));
         }
 
         self.check_feature_name(name, span);
@@ -2023,6 +2030,10 @@ impl Analyzer {
                 let name = expr_name(expr)?;
                 pine_builtins::named_color(&name)
                     .map(|_| PineType::new(Qualifier::Const, ValueKind::Color))
+                    .or_else(|| {
+                        pine_builtins::named_string_constant(&name)
+                            .map(|_| PineType::new(Qualifier::Const, ValueKind::String))
+                    })
             }
             ExprKind::Unary { expr, .. } => self.type_of_expr_with_params(expr, param_types),
             ExprKind::Binary { op, left, right } => {
@@ -2315,7 +2326,7 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
 fn is_output_or_declaration_builtin(name: &str) -> bool {
     matches!(
         name,
-        "indicator" | "plot" | "hline" | "fill" | "bgcolor" | "barcolor" | "plotchar"
+        "indicator" | "plot" | "hline" | "fill" | "bgcolor" | "barcolor" | "plotchar" | "plotshape"
     ) || name == "input"
         || name.starts_with("input.")
 }
@@ -2918,6 +2929,34 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "plotchar")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_plotshape() {
+        let analysis = analyze(
+            "plotshape(close > open, style=shape.triangleup, location=location.belowbar, color=color.green, text=\"Buy\", textcolor=color.white, size=size.small)\nplot(close)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "plotshape")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "shape.triangleup")
         );
         assert!(analysis.hir.is_some());
     }

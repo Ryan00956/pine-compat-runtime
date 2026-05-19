@@ -152,6 +152,7 @@ impl SeriesStore {
 pub struct RuntimeResult {
     pub plots: Vec<PlotSeries>,
     pub plot_chars: Vec<PlotCharSeries>,
+    pub plot_shapes: Vec<PlotShapeSeries>,
     pub bg_colors: Vec<ColorSeries>,
     pub bar_colors: Vec<ColorSeries>,
     pub hlines: Vec<HLineOutput>,
@@ -197,6 +198,9 @@ pub struct RuntimeProfile {
     pub plot_chars: usize,
     pub plot_char_values: usize,
     pub plot_char_capacity: usize,
+    pub plot_shapes: usize,
+    pub plot_shape_values: usize,
+    pub plot_shape_capacity: usize,
     pub bg_colors: usize,
     pub bg_color_values: usize,
     pub bg_color_capacity: usize,
@@ -227,6 +231,18 @@ pub struct PlotCharSeries {
     pub values: Vec<PineValue>,
     pub chars: Vec<PineValue>,
     pub colors: Vec<PineValue>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlotShapeSeries {
+    pub id: u32,
+    pub values: Vec<PineValue>,
+    pub styles: Vec<PineValue>,
+    pub locations: Vec<PineValue>,
+    pub colors: Vec<PineValue>,
+    pub texts: Vec<PineValue>,
+    pub text_colors: Vec<PineValue>,
+    pub sizes: Vec<PineValue>,
 }
 
 trait SeriesOutput: Sized {
@@ -314,6 +330,7 @@ pub struct HistoricalRuntime<'a> {
     macd_state: HashMap<CallSiteId, MacdState>,
     plots: Vec<PlotSeries>,
     plot_chars: Vec<PlotCharSeries>,
+    plot_shapes: Vec<PlotShapeSeries>,
     bg_colors: Vec<ColorSeries>,
     bar_colors: Vec<ColorSeries>,
     hlines: Vec<HLineOutput>,
@@ -372,6 +389,7 @@ impl<'a> HistoricalRuntime<'a> {
             macd_state: HashMap::new(),
             plots: Vec::new(),
             plot_chars: Vec::new(),
+            plot_shapes: Vec::new(),
             bg_colors: Vec::new(),
             bar_colors: Vec::new(),
             hlines: Vec::new(),
@@ -591,6 +609,7 @@ impl<'a> HistoricalRuntime<'a> {
         RuntimeResult {
             plots: self.plots.clone(),
             plot_chars: self.plot_chars.clone(),
+            plot_shapes: self.plot_shapes.clone(),
             bg_colors: self.bg_colors.clone(),
             bar_colors: self.bar_colors.clone(),
             hlines: self.hlines.clone(),
@@ -636,6 +655,24 @@ impl<'a> HistoricalRuntime<'a> {
                 plot_char.values.capacity()
                     + plot_char.chars.capacity()
                     + plot_char.colors.capacity()
+            })
+            .sum::<usize>();
+        let plot_shape_values = self
+            .plot_shapes
+            .iter()
+            .map(|plot_shape| plot_shape.values.len())
+            .sum::<usize>();
+        let plot_shape_capacity = self
+            .plot_shapes
+            .iter()
+            .map(|plot_shape| {
+                plot_shape.values.capacity()
+                    + plot_shape.styles.capacity()
+                    + plot_shape.locations.capacity()
+                    + plot_shape.colors.capacity()
+                    + plot_shape.texts.capacity()
+                    + plot_shape.text_colors.capacity()
+                    + plot_shape.sizes.capacity()
             })
             .sum::<usize>();
         let bg_color_values = self
@@ -702,6 +739,9 @@ impl<'a> HistoricalRuntime<'a> {
             plot_chars: self.plot_chars.len(),
             plot_char_values,
             plot_char_capacity,
+            plot_shapes: self.plot_shapes.len(),
+            plot_shape_values,
+            plot_shape_capacity,
             bg_colors: self.bg_colors.len(),
             bg_color_values,
             bg_color_capacity,
@@ -959,6 +999,53 @@ impl<'a> HistoricalRuntime<'a> {
                     value,
                     char_value,
                     color_value,
+                );
+                Ok(PineValue::Void)
+            }
+            "plotshape" => {
+                let Some(series_arg) = call_arg_expr(args, 0, "series") else {
+                    return Err(RuntimeError {
+                        message: "plotshape missing series argument".to_owned(),
+                    });
+                };
+                let value = self.eval_expr(series_arg)?;
+                let style_value = match call_arg_expr(args, 2, "style") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::String("shape.xcross".to_owned()),
+                };
+                let location_value = match call_arg_expr(args, 3, "location") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::String("location.abovebar".to_owned()),
+                };
+                let color_value = match call_arg_expr(args, 4, "color") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::Na,
+                };
+                let text_value = match call_arg_expr(args, 6, "text") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::String(String::new()),
+                };
+                let text_color_value = match call_arg_expr(args, 7, "textcolor") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::Na,
+                };
+                let size_value = match call_arg_expr(args, 9, "size") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::String("size.auto".to_owned()),
+                };
+                push_plot_shape_value(
+                    &mut self.plot_shapes,
+                    self.bars,
+                    call_site_id.0,
+                    PlotShapePoint {
+                        value,
+                        style: style_value,
+                        location: location_value,
+                        color: color_value,
+                        text: text_value,
+                        text_color: text_color_value,
+                        size: size_value,
+                    },
                 );
                 Ok(PineValue::Void)
             }
@@ -1626,6 +1713,7 @@ impl<'a> HistoricalRuntime<'a> {
     fn finalize_series_outputs(&mut self) {
         finalize_series_values(&mut self.plots, self.bars);
         finalize_plot_char_values(&mut self.plot_chars, self.bars);
+        finalize_plot_shape_values(&mut self.plot_shapes, self.bars);
         finalize_series_values(&mut self.bg_colors, self.bars);
         finalize_series_values(&mut self.bar_colors, self.bars);
     }
@@ -1875,6 +1963,79 @@ fn push_plot_char_value(
     }
 }
 
+struct PlotShapePoint {
+    value: PineValue,
+    style: PineValue,
+    location: PineValue,
+    color: PineValue,
+    text: PineValue,
+    text_color: PineValue,
+    size: PineValue,
+}
+
+fn push_plot_shape_value(
+    outputs: &mut Vec<PlotShapeSeries>,
+    current_bar: usize,
+    id: u32,
+    point: PlotShapePoint,
+) {
+    if let Some(output) = outputs.iter_mut().find(|output| output.id == id) {
+        pad_plot_shape_values(output, current_bar);
+        if output.values.len() == current_bar {
+            push_plot_shape_point(output, point);
+        } else {
+            update_plot_shape_point(output, point);
+        }
+    } else {
+        let mut output = PlotShapeSeries {
+            id,
+            values: vec![PineValue::Na; current_bar],
+            styles: vec![PineValue::Na; current_bar],
+            locations: vec![PineValue::Na; current_bar],
+            colors: vec![PineValue::Na; current_bar],
+            texts: vec![PineValue::Na; current_bar],
+            text_colors: vec![PineValue::Na; current_bar],
+            sizes: vec![PineValue::Na; current_bar],
+        };
+        push_plot_shape_point(&mut output, point);
+        outputs.push(output);
+    }
+}
+
+fn push_plot_shape_point(output: &mut PlotShapeSeries, point: PlotShapePoint) {
+    output.values.push(point.value);
+    output.styles.push(point.style);
+    output.locations.push(point.location);
+    output.colors.push(point.color);
+    output.texts.push(point.text);
+    output.text_colors.push(point.text_color);
+    output.sizes.push(point.size);
+}
+
+fn update_plot_shape_point(output: &mut PlotShapeSeries, point: PlotShapePoint) {
+    if let Some(current) = output.values.last_mut() {
+        *current = point.value;
+    }
+    if let Some(current) = output.styles.last_mut() {
+        *current = point.style;
+    }
+    if let Some(current) = output.locations.last_mut() {
+        *current = point.location;
+    }
+    if let Some(current) = output.colors.last_mut() {
+        *current = point.color;
+    }
+    if let Some(current) = output.texts.last_mut() {
+        *current = point.text;
+    }
+    if let Some(current) = output.text_colors.last_mut() {
+        *current = point.text_color;
+    }
+    if let Some(current) = output.sizes.last_mut() {
+        *current = point.size;
+    }
+}
+
 fn finalize_plot_char_values(outputs: &mut [PlotCharSeries], current_bar: usize) {
     for output in outputs {
         pad_plot_char_values(output, current_bar);
@@ -1886,11 +2047,43 @@ fn finalize_plot_char_values(outputs: &mut [PlotCharSeries], current_bar: usize)
     }
 }
 
+fn finalize_plot_shape_values(outputs: &mut [PlotShapeSeries], current_bar: usize) {
+    for output in outputs {
+        pad_plot_shape_values(output, current_bar);
+        if output.values.len() == current_bar {
+            push_plot_shape_point(
+                output,
+                PlotShapePoint {
+                    value: PineValue::Na,
+                    style: PineValue::Na,
+                    location: PineValue::Na,
+                    color: PineValue::Na,
+                    text: PineValue::Na,
+                    text_color: PineValue::Na,
+                    size: PineValue::Na,
+                },
+            );
+        }
+    }
+}
+
 fn pad_plot_char_values(output: &mut PlotCharSeries, current_bar: usize) {
     while output.values.len() < current_bar {
         output.values.push(PineValue::Na);
         output.chars.push(PineValue::Na);
         output.colors.push(PineValue::Na);
+    }
+}
+
+fn pad_plot_shape_values(output: &mut PlotShapeSeries, current_bar: usize) {
+    while output.values.len() < current_bar {
+        output.values.push(PineValue::Na);
+        output.styles.push(PineValue::Na);
+        output.locations.push(PineValue::Na);
+        output.colors.push(PineValue::Na);
+        output.texts.push(PineValue::Na);
+        output.text_colors.push(PineValue::Na);
+        output.sizes.push(PineValue::Na);
     }
 }
 
@@ -1907,7 +2100,12 @@ fn finalize_series_values<T: SeriesOutput>(outputs: &mut [T], current_bar: usize
 }
 
 fn eval_builtin_value(name: &str) -> PineValue {
-    pine_builtins::named_color(name).map_or(PineValue::Void, PineValue::Color)
+    if let Some(color) = pine_builtins::named_color(name) {
+        return PineValue::Color(color);
+    }
+    pine_builtins::named_string_constant(name)
+        .map(|constant| PineValue::String(constant.to_owned()))
+        .unwrap_or(PineValue::Void)
 }
 
 fn eval_literal(literal: &HirLiteral) -> PineValue {
@@ -2373,6 +2571,81 @@ plot(close)
     }
 
     #[test]
+    fn collects_plotshape_series() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("plotshape")
+if close > 1
+    plotshape(close > 2, style=shape.triangleup, location=location.belowbar, color=color.green, text="Buy", textcolor=color.white, size=size.small)
+plot(close)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plot_shapes.len(), 1);
+        assert_eq!(
+            result.plot_shapes[0].values,
+            vec![PineValue::Na, PineValue::Bool(false), PineValue::Bool(true)]
+        );
+        assert_eq!(
+            result.plot_shapes[0].styles,
+            vec![
+                PineValue::Na,
+                PineValue::String("shape.triangleup".to_owned()),
+                PineValue::String("shape.triangleup".to_owned())
+            ]
+        );
+        assert_eq!(
+            result.plot_shapes[0].locations,
+            vec![
+                PineValue::Na,
+                PineValue::String("location.belowbar".to_owned()),
+                PineValue::String("location.belowbar".to_owned())
+            ]
+        );
+        assert_eq!(
+            result.plot_shapes[0].colors,
+            vec![
+                PineValue::Na,
+                PineValue::Color(0x008000),
+                PineValue::Color(0x008000)
+            ]
+        );
+        assert_eq!(
+            result.plot_shapes[0].texts,
+            vec![
+                PineValue::Na,
+                PineValue::String("Buy".to_owned()),
+                PineValue::String("Buy".to_owned())
+            ]
+        );
+        assert_eq!(
+            result.plot_shapes[0].text_colors,
+            vec![
+                PineValue::Na,
+                PineValue::Color(0xFFFFFF),
+                PineValue::Color(0xFFFFFF)
+            ]
+        );
+        assert_eq!(
+            result.plot_shapes[0].sizes,
+            vec![
+                PineValue::Na,
+                PineValue::String("size.small".to_owned()),
+                PineValue::String("size.small".to_owned())
+            ]
+        );
+    }
+
+    #[test]
     fn runs_macd_tuple_assignment() {
         let source = SourceFile::new(
             "test.pine",
@@ -2691,6 +2964,7 @@ plot(ma)
         assert_eq!(profiled.profile.plots, 1);
         assert_eq!(profiled.profile.plot_values, 3);
         assert!(profiled.profile.plot_capacity >= profiled.profile.plot_values);
+        assert_eq!(profiled.profile.plot_shapes, 0);
         assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
         assert_values_close(&profiled.result.plots[0].values[1..], &[1.5, 2.5]);
     }

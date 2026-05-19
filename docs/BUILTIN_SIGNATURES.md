@@ -98,6 +98,9 @@ plot(series: series float, title?: const string, color?: color-compatible, ...)
 plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, ...)
   -> void
 
+plotshape(series: series/simple numeric-or-bool, title?: const string, style?: const string, location?: const string, color?: color-compatible, text?: const string, textcolor?: color-compatible, size?: const string, ...)
+  -> void
+
 hline(price: const-or-input float, title?: const string, color?: color-compatible, ...)
   -> hline
 
