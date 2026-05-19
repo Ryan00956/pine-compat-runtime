@@ -28,6 +28,7 @@
 - Added basic `plotcandle` support with bar-aligned OHLC values plus body,
   wick, and border colors.
 - Added `color.rgb` support for numeric RGB channels and optional transparency.
+- Added optional transparency defaulting for `color.new`.
 - Added `math.floor` and `math.ceil` support for numeric values.
 - Added `math.sqrt`, `math.log`, and `math.pow` support for numeric values.
 - Added `math.sin`, `math.cos`, and `math.tan` support for numeric values.

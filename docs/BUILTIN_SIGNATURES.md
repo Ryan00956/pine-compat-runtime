@@ -182,11 +182,12 @@ Rules:
 ## Color
 
 ```text
-color.new(color: color-compatible, transp: simple int) -> same qualifier color
+color.new(color: color-compatible, transp?: simple int) -> same qualifier color
 color.rgb(red: numeric, green: numeric, blue: numeric, transp?: numeric) -> color with strongest qualifier
 ```
 
 Named colors include the common TradingView color constants used by fixtures.
+`color.new` defaults `transp` to 0 when omitted.
 
 Hex color parsing should be implemented in the syntax or semantic layer with a
 single normalized `Color` representation.

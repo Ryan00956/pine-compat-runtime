@@ -1713,7 +1713,11 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn eval_color_new(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let color = self.eval_expr(&args[0].value)?;
-        let transp = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let transp = if let Some(arg) = args.get(1) {
+            self.eval_expr(&arg.value)?.as_i64().unwrap_or(0)
+        } else {
+            0
+        };
         let PineValue::Color(color) = color else {
             return Ok(PineValue::Na);
         };
@@ -3700,9 +3704,11 @@ plot(lo)
             "test.pine",
             r#"indicator("colors")
 c = color.new(color.red, 50)
+opaque = color.new(color.blue)
 custom = color.rgb(255, 153, 0, 50)
 bgcolor(custom)
 plot(na(c) ? 0 : 1)
+plot(opaque == color.new(color.blue, 0) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -3716,6 +3722,7 @@ plot(na(c) ? 0 : 1)
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
         assert_eq!(apply_transparency(0xFF0000, 50), 0xFF000080);
         assert_eq!(
             result.bg_colors[0].values,

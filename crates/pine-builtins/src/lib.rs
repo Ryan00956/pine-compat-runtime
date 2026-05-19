@@ -512,7 +512,7 @@ const COLOR_NEW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "transp",
         accepts: Accepts::SimpleInt,
-        optional: false,
+        optional: true,
     },
 ];
 

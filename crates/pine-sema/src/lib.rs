@@ -3199,6 +3199,7 @@ mod tests {
             r#"indicator("colors")
 base = input.color(color.orange, "Base")
 shade = color.new(base, 50)
+opaque = color.new(color.blue)
 custom = color.rgb(255, 153, 0, 50)
 plot(close, color=shade)
 "#,
