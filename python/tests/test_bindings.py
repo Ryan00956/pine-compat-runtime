@@ -89,3 +89,16 @@ def test_run_script_returns_plotarrow_outputs():
     assert result["plotArrows"][0]["colorDowns"] == [0xFF0000, 0xFF0000, 0xFF0000]
     assert result["plotArrows"][0]["minHeights"] == [5, 5, 5]
     assert result["plotArrows"][0]["maxHeights"] == [20, 20, 20]
+
+
+def test_run_script_returns_plotbar_outputs():
+    result = pine_compat.run_script(
+        'indicator("bars")\nplotbar(open, high, low, close, color=color.green)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["plotBars"][0]["opens"] == [1.0, 2.0, 3.0]
+    assert result["plotBars"][0]["highs"] == [1.0, 2.0, 3.0]
+    assert result["plotBars"][0]["lows"] == [1.0, 2.0, 3.0]
+    assert result["plotBars"][0]["closes"] == [1.0, 2.0, 3.0]
+    assert result["plotBars"][0]["colors"] == [0x008000, 0x008000, 0x008000]

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Plotbar")
+if close > 1
+    plotbar(open, high, low, close, color=color.green)
+plot(close)

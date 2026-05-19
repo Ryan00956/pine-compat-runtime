@@ -104,6 +104,9 @@ plotshape(series: series/simple numeric-or-bool, title?: const string, style?: c
 plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple int, minheight?: simple int, maxheight?: simple int, ...)
   -> void
 
+plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, ...)
+  -> void
+
 hline(price: const-or-input float, title?: const string, color?: color-compatible, ...)
   -> hline
 

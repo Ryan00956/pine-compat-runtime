@@ -188,6 +188,7 @@ fn runtime_result_to_py(
     output.set_item("plotChars", plot_chars_to_py(py, &result.plot_chars)?)?;
     output.set_item("plotShapes", plot_shapes_to_py(py, &result.plot_shapes)?)?;
     output.set_item("plotArrows", plot_arrows_to_py(py, &result.plot_arrows)?)?;
+    output.set_item("plotBars", plot_bars_to_py(py, &result.plot_bars)?)?;
     output.set_item("bgColors", colors_to_py(py, &result.bg_colors)?)?;
     output.set_item("barColors", colors_to_py(py, &result.bar_colors)?)?;
     output.set_item("hlines", hlines_to_py(py, &result.hlines)?)?;
@@ -267,6 +268,24 @@ fn plot_arrows_to_py(
         item.set_item("colorDowns", values_to_py(py, &plot_arrow.color_downs)?)?;
         item.set_item("minHeights", values_to_py(py, &plot_arrow.min_heights)?)?;
         item.set_item("maxHeights", values_to_py(py, &plot_arrow.max_heights)?)?;
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
+fn plot_bars_to_py(
+    py: Python<'_>,
+    plot_bars: &[pine_runtime::PlotBarSeries],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for plot_bar in plot_bars {
+        let item = PyDict::new(py);
+        item.set_item("id", plot_bar.id)?;
+        item.set_item("opens", values_to_py(py, &plot_bar.opens)?)?;
+        item.set_item("highs", values_to_py(py, &plot_bar.highs)?)?;
+        item.set_item("lows", values_to_py(py, &plot_bar.lows)?)?;
+        item.set_item("closes", values_to_py(py, &plot_bar.closes)?)?;
+        item.set_item("colors", values_to_py(py, &plot_bar.colors)?)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())

@@ -188,6 +188,8 @@ fn result_json(result: &RuntimeResult) -> String {
     output.push_str(&plot_shapes_json(&result.plot_shapes));
     output.push_str(",\"plotArrows\":");
     output.push_str(&plot_arrows_json(&result.plot_arrows));
+    output.push_str(",\"plotBars\":");
+    output.push_str(&plot_bars_json(&result.plot_bars));
     output.push_str(",\"bgColors\":");
     output.push_str(&colors_json(&result.bg_colors));
     output.push_str(",\"barColors\":");
@@ -289,6 +291,28 @@ fn plot_arrows_json(plot_arrows: &[pine_runtime::PlotArrowSeries]) -> String {
         values_json_into(&mut output, &plot_arrow.min_heights);
         output.push_str("],\"maxHeights\":[");
         values_json_into(&mut output, &plot_arrow.max_heights);
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
+fn plot_bars_json(plot_bars: &[pine_runtime::PlotBarSeries]) -> String {
+    let mut output = String::from("[");
+    for (plot_bar_index, plot_bar) in plot_bars.iter().enumerate() {
+        if plot_bar_index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"opens\":[", plot_bar.id));
+        values_json_into(&mut output, &plot_bar.opens);
+        output.push_str("],\"highs\":[");
+        values_json_into(&mut output, &plot_bar.highs);
+        output.push_str("],\"lows\":[");
+        values_json_into(&mut output, &plot_bar.lows);
+        output.push_str("],\"closes\":[");
+        values_json_into(&mut output, &plot_bar.closes);
+        output.push_str("],\"colors\":[");
+        values_json_into(&mut output, &plot_bar.colors);
         output.push_str("]}");
     }
     output.push(']');
@@ -412,5 +436,6 @@ mod tests {
         assert!(output.contains("\"plotChars\":[]"));
         assert!(output.contains("\"plotShapes\":[]"));
         assert!(output.contains("\"plotArrows\":[]"));
+        assert!(output.contains("\"plotBars\":[]"));
     }
 }

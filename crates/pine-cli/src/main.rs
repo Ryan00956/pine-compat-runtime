@@ -305,6 +305,8 @@ fn result_json(result: &RuntimeResult) -> String {
     output.push_str(&plot_shapes_json(&result.plot_shapes));
     output.push_str(",\"plotArrows\":");
     output.push_str(&plot_arrows_json(&result.plot_arrows));
+    output.push_str(",\"plotBars\":");
+    output.push_str(&plot_bars_json(&result.plot_bars));
     output.push_str(",\"bgColors\":");
     output.push_str(&colors_json(&result.bg_colors));
     output.push_str(",\"barColors\":");
@@ -367,6 +369,9 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"plotArrows\":{},",
             "\"plotArrowValues\":{},",
             "\"plotArrowCapacity\":{},",
+            "\"plotBars\":{},",
+            "\"plotBarValues\":{},",
+            "\"plotBarCapacity\":{},",
             "\"bgColors\":{},",
             "\"bgColorValues\":{},",
             "\"bgColorCapacity\":{},",
@@ -415,6 +420,9 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.plot_arrows,
         profile.plot_arrow_values,
         profile.plot_arrow_capacity,
+        profile.plot_bars,
+        profile.plot_bar_values,
+        profile.plot_bar_capacity,
         profile.bg_colors,
         profile.bg_color_values,
         profile.bg_color_capacity,
@@ -516,6 +524,28 @@ fn plot_arrows_json(plot_arrows: &[pine_runtime::PlotArrowSeries]) -> String {
         values_json_into(&mut output, &plot_arrow.min_heights);
         output.push_str("],\"maxHeights\":[");
         values_json_into(&mut output, &plot_arrow.max_heights);
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
+fn plot_bars_json(plot_bars: &[pine_runtime::PlotBarSeries]) -> String {
+    let mut output = String::from("[");
+    for (plot_bar_index, plot_bar) in plot_bars.iter().enumerate() {
+        if plot_bar_index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"opens\":[", plot_bar.id));
+        values_json_into(&mut output, &plot_bar.opens);
+        output.push_str("],\"highs\":[");
+        values_json_into(&mut output, &plot_bar.highs);
+        output.push_str("],\"lows\":[");
+        values_json_into(&mut output, &plot_bar.lows);
+        output.push_str("],\"closes\":[");
+        values_json_into(&mut output, &plot_bar.closes);
+        output.push_str("],\"colors\":[");
+        values_json_into(&mut output, &plot_bar.colors);
         output.push_str("]}");
     }
     output.push(']');
@@ -713,6 +743,7 @@ mod tests {
             plot_chars: vec![],
             plot_shapes: vec![],
             plot_arrows: vec![],
+            plot_bars: vec![],
             bg_colors: vec![],
             bar_colors: vec![],
             hlines: vec![],
@@ -756,6 +787,9 @@ mod tests {
             plot_arrows: 0,
             plot_arrow_values: 0,
             plot_arrow_capacity: 0,
+            plot_bars: 0,
+            plot_bar_values: 0,
+            plot_bar_capacity: 0,
             bg_colors: 0,
             bg_color_values: 0,
             bg_color_capacity: 0,
@@ -778,5 +812,6 @@ mod tests {
         assert!(output.contains(r#""plotChars":0"#));
         assert!(output.contains(r#""plotShapes":0"#));
         assert!(output.contains(r#""plotArrows":0"#));
+        assert!(output.contains(r#""plotBars":0"#));
     }
 }
