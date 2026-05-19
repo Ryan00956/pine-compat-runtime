@@ -2903,6 +2903,58 @@ plot(repeat3(close))
     }
 
     #[test]
+    fn runs_udf_local_declaration_shadowing_parameter() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf shadow")
+bump(x) =>
+    x = x + 1
+    x
+plot(bump(close))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[2.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn runs_udf_loop_counter_shadowing_parameter() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf counter shadow")
+mix(x) =>
+    total = 0
+    for x = 0 to 2
+        total := total + x
+    total + x
+plot(mix(close))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[4.0, 5.0, 6.0]);
+    }
+
+    #[test]
     fn runs_for_expression_result() {
         let source = SourceFile::new(
             "test.pine",

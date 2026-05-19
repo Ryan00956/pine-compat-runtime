@@ -182,4 +182,5 @@ Status: in progress.
 - [x] Support scalar and tuple `for` expression results in declarations.
 - [x] Add fixture-derived conformance metadata for block statements.
 - [x] Add fixture-derived conformance metadata for user-defined functions.
+- [x] Preserve UDF parameter shadowing by local declarations and loop counters.
 - [ ] Implement full local-scope declarations and shadowing rules.

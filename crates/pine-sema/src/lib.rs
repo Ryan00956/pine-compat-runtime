@@ -1415,6 +1415,13 @@ impl Analyzer {
             .or(Some(symbol))
     }
 
+    fn has_lower_symbol_override(&self, symbol_id: SymbolId) -> bool {
+        self.lower_symbol_overrides
+            .iter()
+            .rev()
+            .any(|overrides| overrides.contains_key(&symbol_id))
+    }
+
     fn lower_decl_symbol(&mut self, name: &str, span: Span) -> Option<SymbolInfo> {
         let symbol = self.bindings.get(&binding_key(name, span)).copied()?;
         if self.lower_symbol_overrides.is_empty() || self.scope.contains_lower_symbol(symbol.id) {
@@ -1527,6 +1534,10 @@ impl Analyzer {
     ) -> Option<HirExpr> {
         if let ExprKind::Identifier(name) = &expr.kind
             && let Some(param_expr) = param_exprs.get(name)
+            && self
+                .bindings
+                .get(&binding_key(name, expr.span))
+                .is_none_or(|symbol| !self.has_lower_symbol_override(symbol.id))
         {
             return Some(param_expr.clone());
         }
@@ -2746,6 +2757,32 @@ plot(y)
     fn accepts_if_reassignment_inside_block_body_function() {
         let analysis = analyze(
             "select(x, y) =>\n    result = y\n    if x > y\n        result := x\n    result\nplot(select(high, low))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_function_local_declaration_shadowing_parameter() {
+        let analysis = analyze("bump(x) =>\n    x = x + 1\n    x\nplot(bump(close))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_function_loop_counter_shadowing_parameter() {
+        let analysis = analyze(
+            "mix(x) =>\n    total = 0\n    for x = 0 to 2\n        total := total + x\n    total + x\nplot(mix(close))\n",
         );
 
         assert!(

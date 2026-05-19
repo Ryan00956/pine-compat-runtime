@@ -115,9 +115,11 @@ state for each syntactic UDF call. Named arguments are resolved before
 lowering, and arguments are evaluated once into callsite-local temporaries.
 Multi-statement function bodies execute local statements and return the final
 expression. Local declarations and reassignments inside function block bodies
-are scoped to the function callsite. Recursive functions, output side effects
-inside functions, global reassignment inside functions, and side-effecting calls
-as UDF arguments are rejected in the current executable subset.
+are scoped to the function callsite. A local declaration or loop counter can
+shadow a parameter without changing references that were already resolved to
+that parameter. Recursive functions, output side effects inside functions,
+global reassignment inside functions, and side-effecting calls as UDF arguments
+are rejected in the current executable subset.
 
 ## Series and History References
 

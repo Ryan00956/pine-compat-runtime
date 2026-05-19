@@ -215,6 +215,8 @@ Current rules:
   built-ins.
 - Resolve local declarations and reassignments inside function block bodies to
   callsite-local symbols.
+- Preserve parameter shadowing when a function-local declaration or loop counter
+  uses the same name as a parameter.
 - Reject duplicate or unknown named UDF arguments and positional arguments after
   named arguments.
 - Evaluate arguments once into callsite-local temporaries before evaluating the
