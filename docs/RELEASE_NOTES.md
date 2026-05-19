@@ -5,6 +5,8 @@
 - Added partial `switch` expression support for condition arms, selector/case
   arms, expression results, default arms, and conditional stateful-call
   execution.
+- Added partial `while` statement support with bool conditions, `break`,
+  `continue`, scoped loop bodies, and a runtime iteration guard.
 
 ## v0.1 Baseline
 

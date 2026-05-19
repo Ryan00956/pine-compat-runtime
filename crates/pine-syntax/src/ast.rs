@@ -33,6 +33,10 @@ pub enum StmtKind {
         step: Option<Expr>,
         body: Vec<Stmt>,
     },
+    While {
+        condition: Expr,
+        body: Vec<Stmt>,
+    },
     Break,
     Continue,
     Function {

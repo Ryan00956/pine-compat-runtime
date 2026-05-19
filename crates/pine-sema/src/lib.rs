@@ -423,11 +423,31 @@ impl Analyzer {
                 self.loop_depth -= 1;
                 self.block_depth -= 1;
             }
+            StmtKind::While { condition, body } => {
+                let condition_type = self.analyze_expr(condition);
+                if let Some(condition_type) = condition_type {
+                    self.expect_bool(condition_type, condition.span);
+                }
+                self.compatibility.supported.push(FeatureUse {
+                    feature: "while".to_owned(),
+                    span: statement.span,
+                });
+
+                self.block_depth += 1;
+                self.loop_depth += 1;
+                self.scope.push_scope();
+                for body_statement in body {
+                    self.analyze_stmt(body_statement);
+                }
+                self.scope.pop_scope();
+                self.loop_depth -= 1;
+                self.block_depth -= 1;
+            }
             StmtKind::Break => {
                 if self.loop_depth == 0 {
                     self.diagnostics.push(Diagnostic::error(
                         "E_LOOP_CONTROL",
-                        "`break` can only be used inside a for loop",
+                        "`break` can only be used inside a loop",
                         statement.span,
                     ));
                 }
@@ -436,7 +456,7 @@ impl Analyzer {
                 if self.loop_depth == 0 {
                     self.diagnostics.push(Diagnostic::error(
                         "E_LOOP_CONTROL",
-                        "`continue` can only be used inside a for loop",
+                        "`continue` can only be used inside a loop",
                         statement.span,
                     ));
                 }
@@ -1556,6 +1576,15 @@ impl Analyzer {
                     })
                     .collect::<Option<_>>()?,
             },
+            StmtKind::While { condition, body } => HirStmtKind::While {
+                condition: self.lower_expr_with_params(condition, param_exprs, param_types)?,
+                body: body
+                    .iter()
+                    .map(|statement| {
+                        self.lower_stmt_with_params(statement, param_exprs, param_types)
+                    })
+                    .collect::<Option<_>>()?,
+            },
             StmtKind::Break => HirStmtKind::Break,
             StmtKind::Continue => HirStmtKind::Continue,
             StmtKind::Decl { name, value, .. } => HirStmtKind::Decl {
@@ -2223,7 +2252,7 @@ fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                                 statement_contains_output_or_declaration_call(statement)
                             })
                     }
-                    StmtKind::For { .. } => true,
+                    StmtKind::For { .. } | StmtKind::While { .. } => true,
                     StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
                     StmtKind::Unsupported { .. } => false,
                 })
@@ -2252,7 +2281,7 @@ fn statement_contains_output_or_declaration_call(statement: &Stmt) -> bool {
                     .iter()
                     .any(statement_contains_output_or_declaration_call)
         }
-        StmtKind::For { .. } => true,
+        StmtKind::For { .. } | StmtKind::While { .. } => true,
         StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
         StmtKind::Unsupported { .. } => false,
     }
@@ -3163,6 +3192,55 @@ plot(y)
             analysis.diagnostics
         );
         assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_while_loop_statement() {
+        let analysis =
+            analyze("i = 0\nsum = 0\nwhile i < 5\n    i := i + 1\n    sum := sum + i\nplot(sum)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "while")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_loop_control_inside_while_loop() {
+        let analysis = analyze(
+            "i = 0\nwhile i < 5\n    i := i + 1\n    if i == 2\n        continue\n    if i == 4\n        break\nplot(i)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_non_bool_while_condition() {
+        let analysis = analyze("while close\n    plot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CONDITION_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
     }
 
     #[test]

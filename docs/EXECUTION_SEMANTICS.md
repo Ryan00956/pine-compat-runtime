@@ -62,6 +62,13 @@ expression. The loop returns the last value produced by that expression. If a
 produced value remains the loop result. If no iteration reaches the expression,
 the loop result is `na`.
 
+`while condition` evaluates the condition before each iteration. A `true`
+condition executes the body, while `false` or `na` exits the loop. `break`
+exits the nearest enclosing loop. `continue` skips the remaining body statements
+and re-evaluates the condition. Runtime execution enforces a maximum iteration
+guard per while statement evaluation so non-terminating scripts fail instead of
+hanging execution.
+
 `switch` expressions evaluate arms in source order. Selector-form switches
 evaluate the selector once per bar, then compare each case expression with that
 selector value. Selector-less switches evaluate each arm condition until one is

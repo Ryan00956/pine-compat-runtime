@@ -66,6 +66,20 @@ Initial coercion rules:
 The analyzer should emit diagnostics for unsupported or ambiguous coercions
 instead of deferring them to runtime.
 
+## Loops
+
+`while` statements are statement-only in the current executable subset:
+
+```pine
+while condition
+    statement
+```
+
+The condition must be `bool`. The loop body has its own local scope, and
+`break`/`continue` use the same nearest-loop control-flow rules as `for`.
+Runtime execution enforces an iteration guard; the semantic analyzer does not
+try to prove termination.
+
 ## Operators
 
 Arithmetic operators:

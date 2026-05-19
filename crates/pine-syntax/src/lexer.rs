@@ -24,6 +24,7 @@ pub enum TokenKind {
     Dedent,
     For,
     Switch,
+    While,
     Break,
     Continue,
     Import,
@@ -245,6 +246,7 @@ impl<'a> Lexer<'a> {
             "else" => TokenKind::Else,
             "for" => TokenKind::For,
             "switch" => TokenKind::Switch,
+            "while" => TokenKind::While,
             "break" => TokenKind::Break,
             "continue" => TokenKind::Continue,
             "import" => TokenKind::Import,
@@ -536,6 +538,25 @@ mod tests {
                 TokenKind::By,
                 TokenKind::Int(2),
                 TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_while_keyword() {
+        assert_eq!(
+            kinds("while close > open\n    break\n"),
+            vec![
+                TokenKind::While,
+                TokenKind::Identifier("close".to_owned()),
+                TokenKind::Gt,
+                TokenKind::Identifier("open".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Indent,
+                TokenKind::Break,
+                TokenKind::Newline,
+                TokenKind::Dedent,
                 TokenKind::Eof,
             ]
         );

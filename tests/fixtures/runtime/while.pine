@@ -1,0 +1,13 @@
+indicator("While fixture")
+i = 0
+sum = 0
+
+while i < 6
+    i := i + 1
+    if i > 1 and i < 3
+        continue
+    if i > 4
+        break
+    sum := sum + i
+
+plot(close + sum)

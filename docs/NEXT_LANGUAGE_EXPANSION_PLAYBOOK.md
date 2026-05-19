@@ -130,6 +130,8 @@ hang the host.
 
 ### Implementation Tasks
 
+Status: implemented for statement loops; while expressions remain out of scope.
+
 - Syntax:
   - Add `while` token support.
   - Parse while statements with indented bodies.

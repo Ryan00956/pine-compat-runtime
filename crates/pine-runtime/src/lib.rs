@@ -7,6 +7,8 @@ use pine_ir::{
     HirStmtKind, HirUnaryOp, SeriesId, SymbolId, VarSlotId,
 };
 
+const MAX_WHILE_ITERATIONS: usize = 100_000;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum PineValue {
     Int(i64),
@@ -379,6 +381,9 @@ impl<'a> HistoricalRuntime<'a> {
             } => {
                 self.eval_for_loop(*counter, from, to, step.as_ref(), body, None)?;
             }
+            HirStmtKind::While { condition, body } => {
+                self.eval_while_loop(condition, body)?;
+            }
             HirStmtKind::Break => return Ok(StmtControl::Break),
             HirStmtKind::Continue => return Ok(StmtControl::Continue),
             HirStmtKind::Decl { symbol, value } => {
@@ -469,6 +474,40 @@ impl<'a> HistoricalRuntime<'a> {
             value = next;
         }
         Ok(loop_result)
+    }
+
+    fn eval_while_loop(
+        &mut self,
+        condition: &HirExpr,
+        body: &[HirStmt],
+    ) -> Result<(), RuntimeError> {
+        let mut iterations = 0_usize;
+        loop {
+            match self.eval_expr(condition)? {
+                PineValue::Bool(true) => {}
+                PineValue::Bool(false) | PineValue::Na => break,
+                _ => break,
+            }
+
+            if iterations >= MAX_WHILE_ITERATIONS {
+                return Err(RuntimeError {
+                    message: format!(
+                        "while loop exceeded maximum iteration count of {MAX_WHILE_ITERATIONS}"
+                    ),
+                });
+            }
+            iterations += 1;
+
+            for statement in body {
+                match self.eval_stmt(statement)? {
+                    StmtControl::None => {}
+                    StmtControl::Break => return Ok(()),
+                    StmtControl::Continue => break,
+                }
+            }
+        }
+
+        Ok(())
     }
 
     #[must_use]
@@ -3165,6 +3204,92 @@ plot(close + x + y)
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[7.0, 8.0, 9.0]);
+    }
+
+    #[test]
+    fn runs_while_loop_reassignment() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("while")
+i = 0
+sum = 0
+while i < 5
+    i := i + 1
+    sum := sum + i
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[16.0, 17.0, 18.0]);
+    }
+
+    #[test]
+    fn runs_while_loop_break_and_continue() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("while control")
+i = 0
+sum = 0
+while i < 6
+    i := i + 1
+    if i > 1 and i < 3
+        continue
+    if i > 4
+        break
+    sum := sum + i
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[9.0, 10.0, 11.0]);
+    }
+
+    #[test]
+    fn rejects_while_loop_that_exceeds_iteration_guard() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("while guard")
+while true
+    close
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected while guard error");
+
+        assert!(
+            error
+                .message
+                .contains("while loop exceeded maximum iteration count"),
+            "{}",
+            error.message
+        );
     }
 
     #[test]

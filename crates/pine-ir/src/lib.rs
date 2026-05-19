@@ -85,6 +85,10 @@ pub enum HirStmtKind {
         step: Option<HirExpr>,
         body: Vec<HirStmt>,
     },
+    While {
+        condition: HirExpr,
+        body: Vec<HirStmt>,
+    },
     Break,
     Continue,
     Decl {

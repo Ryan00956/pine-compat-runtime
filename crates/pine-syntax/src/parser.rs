@@ -90,6 +90,10 @@ impl Parser {
             return self.parse_for_stmt();
         }
 
+        if self.at(TokenKind::While) {
+            return self.parse_while_stmt();
+        }
+
         if self.at(TokenKind::Break) {
             let span = self.expect(TokenKind::Break, "expected `break`")?;
             return Some(Stmt {
@@ -241,6 +245,24 @@ impl Parser {
                 step: parts.step,
                 body: parts.body,
             },
+        })
+    }
+
+    fn parse_while_stmt(&mut self) -> Option<Stmt> {
+        let start = self.expect(TokenKind::While, "expected `while`")?;
+        let condition = self.parse_expr(0)?;
+        self.expect(
+            TokenKind::Newline,
+            "expected newline after `while` condition",
+        )?;
+        let body = self.parse_indented_block()?;
+        let span = body
+            .last()
+            .map_or(condition.span, |statement| statement.span);
+
+        Some(Stmt {
+            span: start.merge(span),
+            kind: StmtKind::While { condition, body },
         })
     }
 
@@ -990,6 +1012,19 @@ mod tests {
             panic!("expected for step");
         };
         assert!(matches!(step.kind, ExprKind::Literal(Literal::Int(2))));
+    }
+
+    #[test]
+    fn parses_while_statement() {
+        let parsed = parse("while close > open\n    plot(close)\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        assert_eq!(parsed.program.statements.len(), 1);
+        let StmtKind::While { condition, body } = &parsed.program.statements[0].kind else {
+            panic!("expected while statement");
+        };
+        assert!(matches!(condition.kind, ExprKind::Binary { .. }));
+        assert_eq!(body.len(), 1);
     }
 
     #[test]

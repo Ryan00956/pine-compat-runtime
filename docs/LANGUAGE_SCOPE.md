@@ -55,6 +55,8 @@ Phase 1 executable subset:
   block-local tuple declarations
 - `for i = start to end` loops over inclusive integer ranges with optional
   `by step`, `break`, `continue`, and loop result assignment
+- partial `while condition` statement loops with `break`, `continue`, and a
+  runtime iteration guard
 - partial `switch` expressions with condition arms, selector/case arms, and
   expression results
 - normal and tuple declarations scoped to an `if`/`else` branch
