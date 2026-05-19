@@ -155,6 +155,7 @@ pub struct RuntimeResult {
     pub plot_shapes: Vec<PlotShapeSeries>,
     pub plot_arrows: Vec<PlotArrowSeries>,
     pub plot_bars: Vec<PlotBarSeries>,
+    pub plot_candles: Vec<PlotCandleSeries>,
     pub bg_colors: Vec<ColorSeries>,
     pub bar_colors: Vec<ColorSeries>,
     pub hlines: Vec<HLineOutput>,
@@ -209,6 +210,9 @@ pub struct RuntimeProfile {
     pub plot_bars: usize,
     pub plot_bar_values: usize,
     pub plot_bar_capacity: usize,
+    pub plot_candles: usize,
+    pub plot_candle_values: usize,
+    pub plot_candle_capacity: usize,
     pub bg_colors: usize,
     pub bg_color_values: usize,
     pub bg_color_capacity: usize,
@@ -271,6 +275,18 @@ pub struct PlotBarSeries {
     pub lows: Vec<PineValue>,
     pub closes: Vec<PineValue>,
     pub colors: Vec<PineValue>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlotCandleSeries {
+    pub id: u32,
+    pub opens: Vec<PineValue>,
+    pub highs: Vec<PineValue>,
+    pub lows: Vec<PineValue>,
+    pub closes: Vec<PineValue>,
+    pub colors: Vec<PineValue>,
+    pub wick_colors: Vec<PineValue>,
+    pub border_colors: Vec<PineValue>,
 }
 
 trait SeriesOutput: Sized {
@@ -361,6 +377,7 @@ pub struct HistoricalRuntime<'a> {
     plot_shapes: Vec<PlotShapeSeries>,
     plot_arrows: Vec<PlotArrowSeries>,
     plot_bars: Vec<PlotBarSeries>,
+    plot_candles: Vec<PlotCandleSeries>,
     bg_colors: Vec<ColorSeries>,
     bar_colors: Vec<ColorSeries>,
     hlines: Vec<HLineOutput>,
@@ -422,6 +439,7 @@ impl<'a> HistoricalRuntime<'a> {
             plot_shapes: Vec::new(),
             plot_arrows: Vec::new(),
             plot_bars: Vec::new(),
+            plot_candles: Vec::new(),
             bg_colors: Vec::new(),
             bar_colors: Vec::new(),
             hlines: Vec::new(),
@@ -644,6 +662,7 @@ impl<'a> HistoricalRuntime<'a> {
             plot_shapes: self.plot_shapes.clone(),
             plot_arrows: self.plot_arrows.clone(),
             plot_bars: self.plot_bars.clone(),
+            plot_candles: self.plot_candles.clone(),
             bg_colors: self.bg_colors.clone(),
             bar_colors: self.bar_colors.clone(),
             hlines: self.hlines.clone(),
@@ -741,6 +760,24 @@ impl<'a> HistoricalRuntime<'a> {
                     + plot_bar.colors.capacity()
             })
             .sum::<usize>();
+        let plot_candle_values = self
+            .plot_candles
+            .iter()
+            .map(|plot_candle| plot_candle.opens.len())
+            .sum::<usize>();
+        let plot_candle_capacity = self
+            .plot_candles
+            .iter()
+            .map(|plot_candle| {
+                plot_candle.opens.capacity()
+                    + plot_candle.highs.capacity()
+                    + plot_candle.lows.capacity()
+                    + plot_candle.closes.capacity()
+                    + plot_candle.colors.capacity()
+                    + plot_candle.wick_colors.capacity()
+                    + plot_candle.border_colors.capacity()
+            })
+            .sum::<usize>();
         let bg_color_values = self
             .bg_colors
             .iter()
@@ -814,6 +851,9 @@ impl<'a> HistoricalRuntime<'a> {
             plot_bars: self.plot_bars.len(),
             plot_bar_values,
             plot_bar_capacity,
+            plot_candles: self.plot_candles.len(),
+            plot_candle_values,
+            plot_candle_capacity,
             bg_colors: self.bg_colors.len(),
             bg_color_values,
             bg_color_capacity,
@@ -1199,6 +1239,59 @@ impl<'a> HistoricalRuntime<'a> {
                         low: low_value,
                         close: close_value,
                         color: color_value,
+                    },
+                );
+                Ok(PineValue::Void)
+            }
+            "plotcandle" => {
+                let Some(open_arg) = call_arg_expr(args, 0, "open") else {
+                    return Err(RuntimeError {
+                        message: "plotcandle missing open argument".to_owned(),
+                    });
+                };
+                let Some(high_arg) = call_arg_expr(args, 1, "high") else {
+                    return Err(RuntimeError {
+                        message: "plotcandle missing high argument".to_owned(),
+                    });
+                };
+                let Some(low_arg) = call_arg_expr(args, 2, "low") else {
+                    return Err(RuntimeError {
+                        message: "plotcandle missing low argument".to_owned(),
+                    });
+                };
+                let Some(close_arg) = call_arg_expr(args, 3, "close") else {
+                    return Err(RuntimeError {
+                        message: "plotcandle missing close argument".to_owned(),
+                    });
+                };
+                let open_value = self.eval_expr(open_arg)?;
+                let high_value = self.eval_expr(high_arg)?;
+                let low_value = self.eval_expr(low_arg)?;
+                let close_value = self.eval_expr(close_arg)?;
+                let color_value = match call_arg_expr(args, 5, "color") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::Na,
+                };
+                let wick_color_value = match call_arg_expr(args, 6, "wickcolor") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::Na,
+                };
+                let border_color_value = match call_arg_expr(args, 9, "bordercolor") {
+                    Some(expr) => self.eval_expr(expr)?,
+                    None => PineValue::Na,
+                };
+                push_bar_aligned_output(
+                    &mut self.plot_candles,
+                    self.bars,
+                    call_site_id.0,
+                    PlotCandlePoint {
+                        open: open_value,
+                        high: high_value,
+                        low: low_value,
+                        close: close_value,
+                        color: color_value,
+                        wick_color: wick_color_value,
+                        border_color: border_color_value,
                     },
                 );
                 Ok(PineValue::Void)
@@ -1870,6 +1963,7 @@ impl<'a> HistoricalRuntime<'a> {
         finalize_bar_aligned_outputs(&mut self.plot_shapes, self.bars);
         finalize_bar_aligned_outputs(&mut self.plot_arrows, self.bars);
         finalize_bar_aligned_outputs(&mut self.plot_bars, self.bars);
+        finalize_bar_aligned_outputs(&mut self.plot_candles, self.bars);
         finalize_series_values(&mut self.bg_colors, self.bars);
         finalize_series_values(&mut self.bar_colors, self.bars);
     }
@@ -2402,6 +2496,91 @@ impl BarAlignedOutput for PlotBarSeries {
         self.lows.push(PineValue::Na);
         self.closes.push(PineValue::Na);
         self.colors.push(PineValue::Na);
+    }
+}
+
+struct PlotCandlePoint {
+    open: PineValue,
+    high: PineValue,
+    low: PineValue,
+    close: PineValue,
+    color: PineValue,
+    wick_color: PineValue,
+    border_color: PineValue,
+}
+
+impl BarAlignedOutput for PlotCandleSeries {
+    type Point = PlotCandlePoint;
+
+    fn id(&self) -> u32 {
+        self.id
+    }
+
+    fn new_padded(id: u32, current_bar: usize) -> Self {
+        Self {
+            id,
+            opens: vec![PineValue::Na; current_bar],
+            highs: vec![PineValue::Na; current_bar],
+            lows: vec![PineValue::Na; current_bar],
+            closes: vec![PineValue::Na; current_bar],
+            colors: vec![PineValue::Na; current_bar],
+            wick_colors: vec![PineValue::Na; current_bar],
+            border_colors: vec![PineValue::Na; current_bar],
+        }
+    }
+
+    fn len(&self) -> usize {
+        self.opens.len()
+    }
+
+    fn pad_to(&mut self, current_bar: usize) {
+        while self.opens.len() < current_bar {
+            self.push_na_point();
+        }
+    }
+
+    fn push_point(&mut self, point: Self::Point) {
+        self.opens.push(point.open);
+        self.highs.push(point.high);
+        self.lows.push(point.low);
+        self.closes.push(point.close);
+        self.colors.push(point.color);
+        self.wick_colors.push(point.wick_color);
+        self.border_colors.push(point.border_color);
+    }
+
+    fn update_point(&mut self, point: Self::Point) {
+        if let Some(current) = self.opens.last_mut() {
+            *current = point.open;
+        }
+        if let Some(current) = self.highs.last_mut() {
+            *current = point.high;
+        }
+        if let Some(current) = self.lows.last_mut() {
+            *current = point.low;
+        }
+        if let Some(current) = self.closes.last_mut() {
+            *current = point.close;
+        }
+        if let Some(current) = self.colors.last_mut() {
+            *current = point.color;
+        }
+        if let Some(current) = self.wick_colors.last_mut() {
+            *current = point.wick_color;
+        }
+        if let Some(current) = self.border_colors.last_mut() {
+            *current = point.border_color;
+        }
+    }
+
+    fn push_na_point(&mut self) {
+        self.opens.push(PineValue::Na);
+        self.highs.push(PineValue::Na);
+        self.lows.push(PineValue::Na);
+        self.closes.push(PineValue::Na);
+        self.colors.push(PineValue::Na);
+        self.wick_colors.push(PineValue::Na);
+        self.border_colors.push(PineValue::Na);
     }
 }
 
@@ -3066,6 +3245,73 @@ plot(close)
     }
 
     #[test]
+    fn collects_plotcandle_series() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("plotcandle")
+if close > 1
+    plotcandle(open, high, low, close, color=color.green, wickcolor=color.white, bordercolor=color.red)
+plot(close)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 0.0, 1.0),
+            bar_ohlc(2.0, 4.0, 1.0, 3.0),
+            bar_ohlc(4.0, 6.0, 3.0, 5.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plot_candles.len(), 1);
+        assert_eq!(
+            result.plot_candles[0].opens,
+            vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(4.0)]
+        );
+        assert_eq!(
+            result.plot_candles[0].highs,
+            vec![PineValue::Na, PineValue::Float(4.0), PineValue::Float(6.0)]
+        );
+        assert_eq!(
+            result.plot_candles[0].lows,
+            vec![PineValue::Na, PineValue::Float(1.0), PineValue::Float(3.0)]
+        );
+        assert_eq!(
+            result.plot_candles[0].closes,
+            vec![PineValue::Na, PineValue::Float(3.0), PineValue::Float(5.0)]
+        );
+        assert_eq!(
+            result.plot_candles[0].colors,
+            vec![
+                PineValue::Na,
+                PineValue::Color(0x008000),
+                PineValue::Color(0x008000)
+            ]
+        );
+        assert_eq!(
+            result.plot_candles[0].wick_colors,
+            vec![
+                PineValue::Na,
+                PineValue::Color(0xFFFFFF),
+                PineValue::Color(0xFFFFFF)
+            ]
+        );
+        assert_eq!(
+            result.plot_candles[0].border_colors,
+            vec![
+                PineValue::Na,
+                PineValue::Color(0xFF0000),
+                PineValue::Color(0xFF0000)
+            ]
+        );
+    }
+
+    #[test]
     fn runs_macd_tuple_assignment() {
         let source = SourceFile::new(
             "test.pine",
@@ -3387,6 +3633,7 @@ plot(ma)
         assert_eq!(profiled.profile.plot_shapes, 0);
         assert_eq!(profiled.profile.plot_arrows, 0);
         assert_eq!(profiled.profile.plot_bars, 0);
+        assert_eq!(profiled.profile.plot_candles, 0);
         assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
         assert_values_close(&profiled.result.plots[0].values[1..], &[1.5, 2.5]);
     }

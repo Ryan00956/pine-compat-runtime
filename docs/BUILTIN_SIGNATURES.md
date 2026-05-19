@@ -107,6 +107,9 @@ plotarrow(series: series/simple numeric, title?: const string, colorup?: color-c
 plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, ...)
   -> void
 
+plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, bordercolor?: color-compatible, ...)
+  -> void
+
 hline(price: const-or-input float, title?: const string, color?: color-compatible, ...)
   -> hline
 

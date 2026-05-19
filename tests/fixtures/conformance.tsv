@@ -16,6 +16,7 @@ plotchar	supported	bool/numeric marker series with const char and color-compatib
 plotshape	supported	bool/numeric marker series with style/location/text/size constants	tests/fixtures/runtime/plotshape.pine
 plotarrow	supported	numeric arrow marker series with up/down colors and height bounds	tests/fixtures/runtime/plotarrow.pine
 plotbar	supported	OHLC bar output with optional color	tests/fixtures/runtime/plotbar.pine
+plotcandle	supported	OHLC candle output with body, wick, and border colors	tests/fixtures/runtime/plotcandle.pine
 bgcolor	supported	color series output with conditional padding	tests/fixtures/runtime/color_outputs.pine
 barcolor	supported	color series output with conditional padding	tests/fixtures/runtime/color_outputs.pine
 hline	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine

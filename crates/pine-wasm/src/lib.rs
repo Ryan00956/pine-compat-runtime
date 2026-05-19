@@ -190,6 +190,8 @@ fn result_json(result: &RuntimeResult) -> String {
     output.push_str(&plot_arrows_json(&result.plot_arrows));
     output.push_str(",\"plotBars\":");
     output.push_str(&plot_bars_json(&result.plot_bars));
+    output.push_str(",\"plotCandles\":");
+    output.push_str(&plot_candles_json(&result.plot_candles));
     output.push_str(",\"bgColors\":");
     output.push_str(&colors_json(&result.bg_colors));
     output.push_str(",\"barColors\":");
@@ -319,6 +321,32 @@ fn plot_bars_json(plot_bars: &[pine_runtime::PlotBarSeries]) -> String {
     output
 }
 
+fn plot_candles_json(plot_candles: &[pine_runtime::PlotCandleSeries]) -> String {
+    let mut output = String::from("[");
+    for (plot_candle_index, plot_candle) in plot_candles.iter().enumerate() {
+        if plot_candle_index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"opens\":[", plot_candle.id));
+        values_json_into(&mut output, &plot_candle.opens);
+        output.push_str("],\"highs\":[");
+        values_json_into(&mut output, &plot_candle.highs);
+        output.push_str("],\"lows\":[");
+        values_json_into(&mut output, &plot_candle.lows);
+        output.push_str("],\"closes\":[");
+        values_json_into(&mut output, &plot_candle.closes);
+        output.push_str("],\"colors\":[");
+        values_json_into(&mut output, &plot_candle.colors);
+        output.push_str("],\"wickColors\":[");
+        values_json_into(&mut output, &plot_candle.wick_colors);
+        output.push_str("],\"borderColors\":[");
+        values_json_into(&mut output, &plot_candle.border_colors);
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
 fn values_json_into(output: &mut String, values: &[PineValue]) {
     for (value_index, value) in values.iter().enumerate() {
         if value_index > 0 {
@@ -437,5 +465,6 @@ mod tests {
         assert!(output.contains("\"plotShapes\":[]"));
         assert!(output.contains("\"plotArrows\":[]"));
         assert!(output.contains("\"plotBars\":[]"));
+        assert!(output.contains("\"plotCandles\":[]"));
     }
 }

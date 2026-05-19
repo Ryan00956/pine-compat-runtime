@@ -405,6 +405,64 @@ const PLOTBAR_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const PLOTCANDLE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "open",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "high",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "low",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "close",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "title",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "color",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "wickcolor",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "editable",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "show_last",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "bordercolor",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+];
+
 const HLINE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "price",
@@ -780,6 +838,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "plotbar",
         phase: BuiltinPhase::Phase1Core,
         params: PLOTBAR_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "plotcandle",
+        phase: BuiltinPhase::Phase1Core,
+        params: PLOTCANDLE_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

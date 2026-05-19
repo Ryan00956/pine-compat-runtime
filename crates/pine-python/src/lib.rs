@@ -189,6 +189,7 @@ fn runtime_result_to_py(
     output.set_item("plotShapes", plot_shapes_to_py(py, &result.plot_shapes)?)?;
     output.set_item("plotArrows", plot_arrows_to_py(py, &result.plot_arrows)?)?;
     output.set_item("plotBars", plot_bars_to_py(py, &result.plot_bars)?)?;
+    output.set_item("plotCandles", plot_candles_to_py(py, &result.plot_candles)?)?;
     output.set_item("bgColors", colors_to_py(py, &result.bg_colors)?)?;
     output.set_item("barColors", colors_to_py(py, &result.bar_colors)?)?;
     output.set_item("hlines", hlines_to_py(py, &result.hlines)?)?;
@@ -286,6 +287,29 @@ fn plot_bars_to_py(
         item.set_item("lows", values_to_py(py, &plot_bar.lows)?)?;
         item.set_item("closes", values_to_py(py, &plot_bar.closes)?)?;
         item.set_item("colors", values_to_py(py, &plot_bar.colors)?)?;
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
+fn plot_candles_to_py(
+    py: Python<'_>,
+    plot_candles: &[pine_runtime::PlotCandleSeries],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for plot_candle in plot_candles {
+        let item = PyDict::new(py);
+        item.set_item("id", plot_candle.id)?;
+        item.set_item("opens", values_to_py(py, &plot_candle.opens)?)?;
+        item.set_item("highs", values_to_py(py, &plot_candle.highs)?)?;
+        item.set_item("lows", values_to_py(py, &plot_candle.lows)?)?;
+        item.set_item("closes", values_to_py(py, &plot_candle.closes)?)?;
+        item.set_item("colors", values_to_py(py, &plot_candle.colors)?)?;
+        item.set_item("wickColors", values_to_py(py, &plot_candle.wick_colors)?)?;
+        item.set_item(
+            "borderColors",
+            values_to_py(py, &plot_candle.border_colors)?,
+        )?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())

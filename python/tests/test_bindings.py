@@ -102,3 +102,18 @@ def test_run_script_returns_plotbar_outputs():
     assert result["plotBars"][0]["lows"] == [1.0, 2.0, 3.0]
     assert result["plotBars"][0]["closes"] == [1.0, 2.0, 3.0]
     assert result["plotBars"][0]["colors"] == [0x008000, 0x008000, 0x008000]
+
+
+def test_run_script_returns_plotcandle_outputs():
+    result = pine_compat.run_script(
+        'indicator("candles")\nplotcandle(open, high, low, close, color=color.green, wickcolor=color.white, bordercolor=color.red)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["plotCandles"][0]["opens"] == [1.0, 2.0, 3.0]
+    assert result["plotCandles"][0]["highs"] == [1.0, 2.0, 3.0]
+    assert result["plotCandles"][0]["lows"] == [1.0, 2.0, 3.0]
+    assert result["plotCandles"][0]["closes"] == [1.0, 2.0, 3.0]
+    assert result["plotCandles"][0]["colors"] == [0x008000, 0x008000, 0x008000]
+    assert result["plotCandles"][0]["wickColors"] == [0xFFFFFF, 0xFFFFFF, 0xFFFFFF]
+    assert result["plotCandles"][0]["borderColors"] == [0xFF0000, 0xFF0000, 0xFF0000]

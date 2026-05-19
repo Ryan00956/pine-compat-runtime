@@ -798,7 +798,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "indicator, input, plot, plotchar, plotshape, plotarrow, plotbar, hline, fill, bgcolor, and barcolor calls are not supported inside user-defined functions",
+                    "indicator, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, and barcolor calls are not supported inside user-defined functions",
                     callee.span,
                 );
             }
@@ -2336,6 +2336,7 @@ fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "plotshape"
             | "plotarrow"
             | "plotbar"
+            | "plotcandle"
     ) || name == "input"
         || name.starts_with("input.")
 }
@@ -3006,6 +3007,27 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "plotbar")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_plotcandle() {
+        let analysis = analyze(
+            "plotcandle(open, high, low, close, color=color.green, wickcolor=color.white, bordercolor=color.red)\nplot(close)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "plotcandle")
         );
         assert!(analysis.hir.is_some());
     }

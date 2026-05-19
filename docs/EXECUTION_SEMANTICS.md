@@ -244,6 +244,7 @@ The runtime should collect:
 - plotshape marker values
 - plotarrow marker values
 - plotbar OHLC values
+- plotcandle OHLC values
 - later shapes
 
 ## Determinism

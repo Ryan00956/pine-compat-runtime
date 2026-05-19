@@ -1,0 +1,5 @@
+//@version=5
+indicator("Plotcandle")
+if close > 1
+    plotcandle(open, high, low, close, color=color.green, wickcolor=color.white, bordercolor=color.red)
+plot(close)
