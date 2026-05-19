@@ -52,7 +52,7 @@ Phase 1 executable subset:
 
 - global declarations
 - `if`/`else` blocks for expression statements, plot calls, reassignment, and
-  tuple assignment to variables declared before the block
+  block-local tuple declarations
 - `for i = start to end` loops over inclusive integer ranges with optional
   `by step`, `break`, `continue`, and loop result assignment
 - normal and tuple declarations scoped to an `if`/`else` branch
@@ -70,9 +70,9 @@ branch executes. Series values not evaluated on a bar are committed as `na` to
 keep history buffers bar-aligned.
 
 Normal and tuple block-local declarations inside `if` blocks are scoped to the
-branch and do not leak outside it. Tuple declaration targets that resolve to an
-outer variable update that variable, preserving the existing conditional tuple
-assignment behavior.
+branch and do not leak outside it. A tuple declaration in a local scope shadows
+outer variables with the same names; use reassignment syntax for scalar updates
+to existing variables.
 
 `for` loops support inclusive integer ranges with an optional explicit `by`
 step. The runtime increments when `from <= to` and decrements when `from > to`.

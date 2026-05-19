@@ -136,9 +136,9 @@ symbol is series-qualified, the current value is committed after bar execution.
 
 Normal and tuple block-local declarations inside `if` blocks are executable and
 scoped to their branch. The analyzer records resolved symbol bindings before
-lowering so locals do not leak into outer scopes. Tuple declaration targets that
-resolve to an outer symbol update that symbol; otherwise they create branch-local
-symbols.
+lowering so locals do not leak into outer scopes. Tuple declarations in local
+scopes always create local symbols, even when an outer scope already contains the
+same names.
 
 `for i = start to end` is executable for integer ranges with an optional
 explicit `by step`. The loop counter is a block-local integer symbol scoped to

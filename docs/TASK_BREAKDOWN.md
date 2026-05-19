@@ -183,4 +183,5 @@ Status: in progress.
 - [x] Add fixture-derived conformance metadata for block statements.
 - [x] Add fixture-derived conformance metadata for user-defined functions.
 - [x] Preserve UDF parameter shadowing by local declarations and loop counters.
+- [x] Preserve tuple declaration shadowing in local scopes.
 - [ ] Implement full local-scope declarations and shadowing rules.

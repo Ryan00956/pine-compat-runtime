@@ -2462,14 +2462,47 @@ else
     }
 
     #[test]
+    fn runs_block_local_tuple_declaration_shadowing_outer_symbols() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("tuple shadow")
+x = close
+y = close
+if close > open
+    [x, y] = [high, low]
+    plot(x - y)
+plot(x)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 3.0, 1.0, 2.0),
+            bar_ohlc(4.0, 5.0, 3.0, 2.0),
+            bar_ohlc(2.0, 8.0, 4.0, 6.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 2);
+        assert_values_close(&result.plots[0].values[..1], &[2.0]);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[4.0]);
+        assert_values_close(&result.plots[1].values, &[2.0, 2.0, 6.0]);
+    }
+
+    #[test]
     fn advances_conditional_tuple_builtin_only_when_branch_executes() {
         let source = SourceFile::new(
             "test.pine",
             r#"indicator("conditional bb")
-[basis, upper, lower] = [close, close, close]
 if close > open
     [basis, upper, lower] = ta.bb(close, 2, 2)
-plot(basis)
+    plot(basis)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -2489,7 +2522,8 @@ plot(basis)
 
         assert_eq!(result.plots.len(), 1);
         assert_eq!(result.plots[0].values[0], PineValue::Na);
-        assert_values_close(&result.plots[0].values[1..], &[2.0, 4.0, 7.0]);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[4.0, 7.0]);
     }
 
     #[test]
@@ -2556,10 +2590,9 @@ plot(a)
         let source = SourceFile::new(
             "test.pine",
             r#"indicator("conditional macd")
-[macd, signal, hist] = [close, close, close]
 if close > open
     [macd, signal, hist] = ta.macd(close, 2, 3, 2)
-plot(macd)
+    plot(macd)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -2578,9 +2611,14 @@ plot(macd)
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
         assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
         assert_values_close(
-            &result.plots[0].values,
-            &[0.0, 2.0, 0.666666666666667, 0.8888888888888893],
+            &[
+                result.plots[0].values[0].clone(),
+                result.plots[0].values[2].clone(),
+                result.plots[0].values[3].clone(),
+            ],
+            &[0.0, 0.666666666666667, 0.8888888888888893],
         );
     }
 

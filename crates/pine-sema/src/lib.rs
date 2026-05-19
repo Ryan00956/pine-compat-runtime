@@ -537,13 +537,8 @@ impl Analyzer {
 
         if self.block_depth > 0 || self.function_depth > 0 {
             for (name, pine_type) in names.iter().zip(element_types) {
-                let symbol = if let Some(target) = self.scope.resolve(name) {
-                    self.validate_assignment(name, target.pine_type, pine_type, statement.span);
-                    self.update_symbol_type(name, pine_type);
-                    self.scope.resolve(name).unwrap_or(target)
-                } else {
-                    self.define_local_symbol(name, pine_type, None, self.function_depth == 0)
-                };
+                let symbol =
+                    self.define_local_symbol(name, pine_type, None, self.function_depth == 0);
                 self.bind_symbol(name, statement.span, symbol);
             }
         } else {
@@ -2621,7 +2616,7 @@ plot(y)
     }
 
     #[test]
-    fn accepts_if_tuple_assignment_to_declared_symbols() {
+    fn accepts_if_tuple_declaration_shadowing_outer_symbols() {
         let analysis =
             analyze("x = close\ny = close\nif close > open\n    [x, y] = [high, low]\nplot(x)\n");
 
