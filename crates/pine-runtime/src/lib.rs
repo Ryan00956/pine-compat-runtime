@@ -1327,6 +1327,9 @@ impl<'a> HistoricalRuntime<'a> {
             "math.log" => self.eval_math_unary_float(args, f64::ln),
             "math.log10" => self.eval_math_unary_float(args, f64::log10),
             "math.exp" => self.eval_math_unary_float(args, f64::exp),
+            "math.acos" => self.eval_math_unary_float(args, f64::acos),
+            "math.asin" => self.eval_math_unary_float(args, f64::asin),
+            "math.atan" => self.eval_math_unary_float(args, f64::atan),
             "math.sin" => self.eval_math_unary_float(args, f64::sin),
             "math.cos" => self.eval_math_unary_float(args, f64::cos),
             "math.tan" => self.eval_math_unary_float(args, f64::tan),
@@ -3650,6 +3653,9 @@ sqrt_value = math.sqrt(close)
 log_value = math.log(close)
 log10_value = math.log10(close)
 exp_value = math.exp(close)
+acos_value = math.acos(close - 2)
+asin_value = math.asin(close - 2)
+atan_value = math.atan(close)
 sin_value = math.sin(close)
 cos_value = math.cos(close)
 tan_value = math.tan(close)
@@ -3662,6 +3668,9 @@ plot(sqrt_value)
 plot(log_value)
 plot(log10_value)
 plot(exp_value)
+plot(acos_value)
+plot(asin_value)
+plot(atan_value)
 plot(sin_value)
 plot(cos_value)
 plot(tan_value)
@@ -3670,6 +3679,8 @@ plot(math.sqrt(-1))
 plot(math.log(0))
 plot(math.log10(0))
 plot(math.exp(1000))
+plot(math.acos(2))
+plot(math.asin(2))
 plot(math.pow(-1, 0.5))
 "#,
         );
@@ -3704,23 +3715,44 @@ plot(math.pow(-1, 0.5))
             &[1.0_f64.exp(), 2.0_f64.exp(), 3.0_f64.exp(), 4.0_f64.exp()],
         );
         assert_values_close(
-            &result.plots[8].values,
+            &result.plots[8].values[..3],
+            &[(-1.0_f64).acos(), 0.0_f64.acos(), 1.0_f64.acos()],
+        );
+        assert_eq!(result.plots[8].values[3], PineValue::Na);
+        assert_values_close(
+            &result.plots[9].values[..3],
+            &[(-1.0_f64).asin(), 0.0_f64.asin(), 1.0_f64.asin()],
+        );
+        assert_eq!(result.plots[9].values[3], PineValue::Na);
+        assert_values_close(
+            &result.plots[10].values,
+            &[
+                1.0_f64.atan(),
+                2.0_f64.atan(),
+                3.0_f64.atan(),
+                4.0_f64.atan(),
+            ],
+        );
+        assert_values_close(
+            &result.plots[11].values,
             &[1.0_f64.sin(), 2.0_f64.sin(), 3.0_f64.sin(), 4.0_f64.sin()],
         );
         assert_values_close(
-            &result.plots[9].values,
+            &result.plots[12].values,
             &[1.0_f64.cos(), 2.0_f64.cos(), 3.0_f64.cos(), 4.0_f64.cos()],
         );
         assert_values_close(
-            &result.plots[10].values,
+            &result.plots[13].values,
             &[1.0_f64.tan(), 2.0_f64.tan(), 3.0_f64.tan(), 4.0_f64.tan()],
         );
-        assert_values_close(&result.plots[11].values, &[1.0, 4.0, 9.0, 16.0]);
-        assert_eq!(result.plots[12].values, vec![PineValue::Na; 4]);
-        assert_eq!(result.plots[13].values, vec![PineValue::Na; 4]);
-        assert_eq!(result.plots[14].values, vec![PineValue::Na; 4]);
+        assert_values_close(&result.plots[14].values, &[1.0, 4.0, 9.0, 16.0]);
         assert_eq!(result.plots[15].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[16].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[17].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[18].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[19].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[20].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[21].values, vec![PineValue::Na; 4]);
     }
 
     #[test]
