@@ -134,6 +134,11 @@ x = close + open
 The declaration creates or updates the current bar value for that symbol. If the
 symbol is series-qualified, the current value is committed after bar execution.
 
+Block-local declarations inside `if` blocks are not executable yet. The
+analyzer rejects them instead of leaking the symbol into global scope. Scripts
+that need conditional mutation should declare the symbol before the block and
+use reassignment inside the branch.
+
 ## Reassignment
 
 Reassignment updates an already resolved symbol:
@@ -196,4 +201,3 @@ Required rules before enabling UDF execution:
 
 Until these rules are implemented, UDFs may be parsed and diagnosed but should
 not be accepted for execution.
-

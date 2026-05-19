@@ -85,6 +85,15 @@ fn reports_unsupported_alert_fixture() {
     );
 }
 
+#[test]
+fn reports_unsupported_block_local_declaration_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_block_local_decl.pine",
+        "block_local_declaration",
+        "declarations inside if blocks",
+    );
+}
+
 fn assert_unsupported_fixture(path: &str, feature: &str, reason: &str) {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");

@@ -55,6 +55,7 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
         next_series_id: initial_series_count(),
         next_call_site_id: 0,
         next_var_slot_id: 0,
+        block_depth: 0,
     };
     analyzer.analyze_program(&parsed.program);
     analyzer.finish(&parsed.program)
@@ -132,6 +133,7 @@ struct Analyzer {
     next_series_id: u32,
     next_call_site_id: u32,
     next_var_slot_id: u32,
+    block_depth: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -231,15 +233,25 @@ impl Analyzer {
                     span: statement.span,
                 });
 
+                self.block_depth += 1;
                 for branch_statement in then_branch.iter().chain(else_branch) {
                     self.analyze_stmt(branch_statement);
                 }
+                self.block_depth -= 1;
             }
             StmtKind::Decl { mode, name, value } => {
                 if matches!(mode, pine_syntax::DeclMode::Varip) {
                     self.unsupported("varip", VARIP_UNSUPPORTED_REASON, statement.span);
                 }
                 let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
+                if self.block_depth > 0 {
+                    self.unsupported(
+                        "block_local_declaration",
+                        "declarations inside if blocks are not supported yet; declare the variable before the block and use reassignment",
+                        statement.span,
+                    );
+                    return;
+                }
                 let var_slot_id = if matches!(mode, pine_syntax::DeclMode::Var) {
                     Some(self.alloc_var_slot())
                 } else {
@@ -301,8 +313,23 @@ impl Analyzer {
             return;
         }
 
-        for (name, pine_type) in names.iter().zip(element_types) {
-            self.define_symbol(name, pine_type, None);
+        if self.block_depth > 0 {
+            for (name, pine_type) in names.iter().zip(element_types) {
+                let Some(target) = self.scope.resolve(name) else {
+                    self.unsupported(
+                        "block_local_declaration",
+                        "tuple declarations inside if blocks must target variables declared before the block",
+                        statement.span,
+                    );
+                    continue;
+                };
+                self.validate_assignment(name, target.pine_type, pine_type, statement.span);
+                self.update_symbol_type(name, pine_type);
+            }
+        } else {
+            for (name, pine_type) in names.iter().zip(element_types) {
+                self.define_symbol(name, pine_type, None);
+            }
         }
     }
 
@@ -1068,7 +1095,6 @@ impl Analyzer {
 fn unsupported_syntax_reason(feature: &str) -> &'static str {
     match feature {
         "import" => "library imports are not supported in Phase 1",
-        "if" => "block if syntax is parsed for compatibility reporting but not executable yet",
         "function" => {
             "user-defined functions are parsed for compatibility reporting but not executable yet"
         }
@@ -1531,6 +1557,78 @@ plot(y)
         );
         let hir = analysis.hir.expect("if statement should lower");
         assert!(matches!(hir.statements[0].kind, HirStmtKind::If { .. }));
+    }
+
+    #[test]
+    fn rejects_block_local_declaration_in_if() {
+        let analysis = analyze("if close > open\n    x = close\nplot(x)\n");
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "block_local_declaration")
+        );
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_UNKNOWN_SYMBOL")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn accepts_if_reassignment_to_declared_symbol() {
+        let analysis = analyze("x = close\nif close > open\n    x := high\nplot(x)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_if_tuple_assignment_to_declared_symbols() {
+        let analysis =
+            analyze("x = close\ny = close\nif close > open\n    [x, y] = [high, low]\nplot(x)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_if_tuple_assignment_to_unknown_symbol() {
+        let analysis = analyze("if close > open\n    [x, y] = [high, low]\n");
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "block_local_declaration")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_if_branch_assignment_type_mismatch() {
+        let analysis = analyze("x = close\nif close > open\n    x := true\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_ASSIGN_TYPE")
+        );
+        assert!(analysis.hir.is_none());
     }
 
     #[test]

@@ -51,8 +51,8 @@ Expressions:
 Phase 1 executable subset:
 
 - global declarations
-- `if`/`else` blocks for expression statements, declarations, tuple
-  declarations, and reassignment
+- `if`/`else` blocks for expression statements, plot calls, reassignment, and
+  tuple assignment to variables declared before the block
 - arithmetic, comparison, logical, and ternary expressions
 - constant history offsets
 - `indicator`
@@ -64,6 +64,10 @@ Phase 1 executable subset:
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes. Series values not evaluated on a bar are committed as `na` to
 keep history buffers bar-aligned.
+
+Block-local declarations inside `if` blocks are rejected for now. Declare the
+symbol before the block and use `:=` inside the branch when mutating outer
+state.
 
 ## Initial Built-Ins
 

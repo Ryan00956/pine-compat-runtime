@@ -168,5 +168,7 @@ Status: in progress.
 - [x] Support stateful calls inside `if` blocks with callsite state advancing
   only when the branch executes.
 - [x] Cover conditional SMA, EMA, BB, RSI, ATR, and MACD fixtures.
+- [x] Reject block-local declarations inside `if` until local-scope semantics
+  are implemented.
 - [ ] Add fixture-derived conformance metadata for block statements.
-- [ ] Expand conditional output and local-scope diagnostics.
+- [ ] Implement full local-scope declarations and shadowing rules.

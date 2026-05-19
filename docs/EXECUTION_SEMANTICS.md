@@ -47,6 +47,10 @@ x = close + open
 `x` receives a new current value on every bar where the declaration executes.
 The value can be committed into its series history after the bar execution.
 
+Declarations inside `if` blocks are rejected in the current executable subset.
+This avoids accidentally treating block-local values as global symbols before
+full local-scope semantics are implemented.
+
 ### Reassignment
 
 ```pine

@@ -21,8 +21,9 @@ realtime forming-bar rollback, and a registry-seeded compatibility matrix.
 
 The runtime still makes compatibility claims by tested feature. User-defined
 function execution, `varip` intrabar persistence, `request.*`, `strategy.*`,
-alerts, imports, arrays, drawing objects, and dynamic history offsets remain
-outside the executable subset and should produce diagnostics.
+alerts, imports, arrays, drawing objects, block-local declarations inside `if`,
+and dynamic history offsets remain outside the executable subset and should
+produce diagnostics.
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes. Skipped series values are committed as `na` so history buffers
 remain bar-aligned.

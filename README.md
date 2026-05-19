@@ -90,7 +90,8 @@ and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as `strategy.*`,
 `request.*`, alerts, imports, arrays, drawing objects, dynamic history offsets,
-user-defined function execution, and `varip` intrabar persistence.
+block-local declarations inside `if`, user-defined function execution, and
+`varip` intrabar persistence.
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes; skipped bars commit `na` for series values that were not
 evaluated on that bar.

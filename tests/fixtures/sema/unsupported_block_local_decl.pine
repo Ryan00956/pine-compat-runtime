@@ -1,0 +1,5 @@
+//@version=5
+indicator("Block Local Declaration")
+if close > open
+    x = close
+plot(x)

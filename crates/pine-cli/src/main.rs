@@ -172,6 +172,11 @@ fn conformance_entries() -> Vec<MatrixEntry> {
             notes: "conditional callsites advance only when their branch executes",
         },
         MatrixEntry {
+            feature: "block-local declarations".to_owned(),
+            status: "unsupported",
+            notes: "declare before if blocks and reassign inside branches",
+        },
+        MatrixEntry {
             feature: "color.* named constants".to_owned(),
             status: "partial",
             notes: "common registry only",
@@ -513,6 +518,9 @@ mod tests {
                 .iter()
                 .any(|entry| entry.feature == "if" && entry.status == "supported")
         );
+        assert!(entries.iter().any(|entry| {
+            entry.feature == "block-local declarations" && entry.status == "unsupported"
+        }));
         assert!(
             entries
                 .iter()
