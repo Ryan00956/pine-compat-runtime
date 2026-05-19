@@ -1028,13 +1028,15 @@ impl<'a> HistoricalRuntime<'a> {
                     Some(expr) => self.eval_expr(expr)?,
                     None => PineValue::Na,
                 };
-                push_plot_char_value(
+                push_bar_aligned_output(
                     &mut self.plot_chars,
                     self.bars,
                     call_site_id.0,
-                    value,
-                    char_value,
-                    color_value,
+                    PlotCharPoint {
+                        value,
+                        char_value,
+                        color: color_value,
+                    },
                 );
                 Ok(PineValue::Void)
             }
@@ -1069,7 +1071,7 @@ impl<'a> HistoricalRuntime<'a> {
                     Some(expr) => self.eval_expr(expr)?,
                     None => PineValue::String("size.auto".to_owned()),
                 };
-                push_plot_shape_value(
+                push_bar_aligned_output(
                     &mut self.plot_shapes,
                     self.bars,
                     call_site_id.0,
@@ -1108,7 +1110,7 @@ impl<'a> HistoricalRuntime<'a> {
                     Some(expr) => self.eval_expr(expr)?,
                     None => PineValue::Int(0),
                 };
-                push_plot_arrow_value(
+                push_bar_aligned_output(
                     &mut self.plot_arrows,
                     self.bars,
                     call_site_id.0,
@@ -1785,9 +1787,9 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn finalize_series_outputs(&mut self) {
         finalize_series_values(&mut self.plots, self.bars);
-        finalize_plot_char_values(&mut self.plot_chars, self.bars);
-        finalize_plot_shape_values(&mut self.plot_shapes, self.bars);
-        finalize_plot_arrow_values(&mut self.plot_arrows, self.bars);
+        finalize_bar_aligned_outputs(&mut self.plot_chars, self.bars);
+        finalize_bar_aligned_outputs(&mut self.plot_shapes, self.bars);
+        finalize_bar_aligned_outputs(&mut self.plot_arrows, self.bars);
         finalize_series_values(&mut self.bg_colors, self.bars);
         finalize_series_values(&mut self.bar_colors, self.bars);
     }
@@ -1998,42 +2000,101 @@ fn push_series_value<T: SeriesOutput>(
     }
 }
 
-fn push_plot_char_value(
-    outputs: &mut Vec<PlotCharSeries>,
+trait BarAlignedOutput {
+    type Point;
+
+    fn id(&self) -> u32;
+    fn new_padded(id: u32, current_bar: usize) -> Self;
+    fn len(&self) -> usize;
+    fn pad_to(&mut self, current_bar: usize);
+    fn push_point(&mut self, point: Self::Point);
+    fn update_point(&mut self, point: Self::Point);
+    fn push_na_point(&mut self);
+}
+
+fn push_bar_aligned_output<T: BarAlignedOutput>(
+    outputs: &mut Vec<T>,
     current_bar: usize,
     id: u32,
-    value: PineValue,
-    char_value: PineValue,
-    color_value: PineValue,
+    point: T::Point,
 ) {
-    if let Some(output) = outputs.iter_mut().find(|output| output.id == id) {
-        pad_plot_char_values(output, current_bar);
-        if output.values.len() == current_bar {
-            output.values.push(value);
-            output.chars.push(char_value);
-            output.colors.push(color_value);
+    if let Some(output) = outputs.iter_mut().find(|output| output.id() == id) {
+        output.pad_to(current_bar);
+        if output.len() == current_bar {
+            output.push_point(point);
         } else {
-            if let Some(current) = output.values.last_mut() {
-                *current = value;
-            }
-            if let Some(current) = output.chars.last_mut() {
-                *current = char_value;
-            }
-            if let Some(current) = output.colors.last_mut() {
-                *current = color_value;
-            }
+            output.update_point(point);
         }
     } else {
-        let mut output = PlotCharSeries {
+        let mut output = T::new_padded(id, current_bar);
+        output.push_point(point);
+        outputs.push(output);
+    }
+}
+
+fn finalize_bar_aligned_outputs<T: BarAlignedOutput>(outputs: &mut [T], current_bar: usize) {
+    for output in outputs {
+        output.pad_to(current_bar);
+        if output.len() == current_bar {
+            output.push_na_point();
+        }
+    }
+}
+
+struct PlotCharPoint {
+    value: PineValue,
+    char_value: PineValue,
+    color: PineValue,
+}
+
+impl BarAlignedOutput for PlotCharSeries {
+    type Point = PlotCharPoint;
+
+    fn id(&self) -> u32 {
+        self.id
+    }
+
+    fn new_padded(id: u32, current_bar: usize) -> Self {
+        Self {
             id,
             values: vec![PineValue::Na; current_bar],
             chars: vec![PineValue::Na; current_bar],
             colors: vec![PineValue::Na; current_bar],
-        };
-        output.values.push(value);
-        output.chars.push(char_value);
-        output.colors.push(color_value);
-        outputs.push(output);
+        }
+    }
+
+    fn len(&self) -> usize {
+        self.values.len()
+    }
+
+    fn pad_to(&mut self, current_bar: usize) {
+        while self.values.len() < current_bar {
+            self.push_na_point();
+        }
+    }
+
+    fn push_point(&mut self, point: Self::Point) {
+        self.values.push(point.value);
+        self.chars.push(point.char_value);
+        self.colors.push(point.color);
+    }
+
+    fn update_point(&mut self, point: Self::Point) {
+        if let Some(current) = self.values.last_mut() {
+            *current = point.value;
+        }
+        if let Some(current) = self.chars.last_mut() {
+            *current = point.char_value;
+        }
+        if let Some(current) = self.colors.last_mut() {
+            *current = point.color;
+        }
+    }
+
+    fn push_na_point(&mut self) {
+        self.values.push(PineValue::Na);
+        self.chars.push(PineValue::Na);
+        self.colors.push(PineValue::Na);
     }
 }
 
@@ -2047,21 +2108,15 @@ struct PlotShapePoint {
     size: PineValue,
 }
 
-fn push_plot_shape_value(
-    outputs: &mut Vec<PlotShapeSeries>,
-    current_bar: usize,
-    id: u32,
-    point: PlotShapePoint,
-) {
-    if let Some(output) = outputs.iter_mut().find(|output| output.id == id) {
-        pad_plot_shape_values(output, current_bar);
-        if output.values.len() == current_bar {
-            push_plot_shape_point(output, point);
-        } else {
-            update_plot_shape_point(output, point);
-        }
-    } else {
-        let mut output = PlotShapeSeries {
+impl BarAlignedOutput for PlotShapeSeries {
+    type Point = PlotShapePoint;
+
+    fn id(&self) -> u32 {
+        self.id
+    }
+
+    fn new_padded(id: u32, current_bar: usize) -> Self {
+        Self {
             id,
             values: vec![PineValue::Na; current_bar],
             styles: vec![PineValue::Na; current_bar],
@@ -2070,43 +2125,61 @@ fn push_plot_shape_value(
             texts: vec![PineValue::Na; current_bar],
             text_colors: vec![PineValue::Na; current_bar],
             sizes: vec![PineValue::Na; current_bar],
-        };
-        push_plot_shape_point(&mut output, point);
-        outputs.push(output);
+        }
     }
-}
 
-fn push_plot_shape_point(output: &mut PlotShapeSeries, point: PlotShapePoint) {
-    output.values.push(point.value);
-    output.styles.push(point.style);
-    output.locations.push(point.location);
-    output.colors.push(point.color);
-    output.texts.push(point.text);
-    output.text_colors.push(point.text_color);
-    output.sizes.push(point.size);
-}
+    fn len(&self) -> usize {
+        self.values.len()
+    }
 
-fn update_plot_shape_point(output: &mut PlotShapeSeries, point: PlotShapePoint) {
-    if let Some(current) = output.values.last_mut() {
-        *current = point.value;
+    fn pad_to(&mut self, current_bar: usize) {
+        while self.values.len() < current_bar {
+            self.push_na_point();
+        }
     }
-    if let Some(current) = output.styles.last_mut() {
-        *current = point.style;
+
+    fn push_point(&mut self, point: Self::Point) {
+        self.values.push(point.value);
+        self.styles.push(point.style);
+        self.locations.push(point.location);
+        self.colors.push(point.color);
+        self.texts.push(point.text);
+        self.text_colors.push(point.text_color);
+        self.sizes.push(point.size);
     }
-    if let Some(current) = output.locations.last_mut() {
-        *current = point.location;
+
+    fn update_point(&mut self, point: Self::Point) {
+        if let Some(current) = self.values.last_mut() {
+            *current = point.value;
+        }
+        if let Some(current) = self.styles.last_mut() {
+            *current = point.style;
+        }
+        if let Some(current) = self.locations.last_mut() {
+            *current = point.location;
+        }
+        if let Some(current) = self.colors.last_mut() {
+            *current = point.color;
+        }
+        if let Some(current) = self.texts.last_mut() {
+            *current = point.text;
+        }
+        if let Some(current) = self.text_colors.last_mut() {
+            *current = point.text_color;
+        }
+        if let Some(current) = self.sizes.last_mut() {
+            *current = point.size;
+        }
     }
-    if let Some(current) = output.colors.last_mut() {
-        *current = point.color;
-    }
-    if let Some(current) = output.texts.last_mut() {
-        *current = point.text;
-    }
-    if let Some(current) = output.text_colors.last_mut() {
-        *current = point.text_color;
-    }
-    if let Some(current) = output.sizes.last_mut() {
-        *current = point.size;
+
+    fn push_na_point(&mut self) {
+        self.values.push(PineValue::Na);
+        self.styles.push(PineValue::Na);
+        self.locations.push(PineValue::Na);
+        self.colors.push(PineValue::Na);
+        self.texts.push(PineValue::Na);
+        self.text_colors.push(PineValue::Na);
+        self.sizes.push(PineValue::Na);
     }
 }
 
@@ -2118,135 +2191,66 @@ struct PlotArrowPoint {
     max_height: PineValue,
 }
 
-fn push_plot_arrow_value(
-    outputs: &mut Vec<PlotArrowSeries>,
-    current_bar: usize,
-    id: u32,
-    point: PlotArrowPoint,
-) {
-    if let Some(output) = outputs.iter_mut().find(|output| output.id == id) {
-        pad_plot_arrow_values(output, current_bar);
-        if output.values.len() == current_bar {
-            push_plot_arrow_point(output, point);
-        } else {
-            update_plot_arrow_point(output, point);
-        }
-    } else {
-        let mut output = PlotArrowSeries {
+impl BarAlignedOutput for PlotArrowSeries {
+    type Point = PlotArrowPoint;
+
+    fn id(&self) -> u32 {
+        self.id
+    }
+
+    fn new_padded(id: u32, current_bar: usize) -> Self {
+        Self {
             id,
             values: vec![PineValue::Na; current_bar],
             color_ups: vec![PineValue::Na; current_bar],
             color_downs: vec![PineValue::Na; current_bar],
             min_heights: vec![PineValue::Na; current_bar],
             max_heights: vec![PineValue::Na; current_bar],
-        };
-        push_plot_arrow_point(&mut output, point);
-        outputs.push(output);
-    }
-}
-
-fn push_plot_arrow_point(output: &mut PlotArrowSeries, point: PlotArrowPoint) {
-    output.values.push(point.value);
-    output.color_ups.push(point.color_up);
-    output.color_downs.push(point.color_down);
-    output.min_heights.push(point.min_height);
-    output.max_heights.push(point.max_height);
-}
-
-fn update_plot_arrow_point(output: &mut PlotArrowSeries, point: PlotArrowPoint) {
-    if let Some(current) = output.values.last_mut() {
-        *current = point.value;
-    }
-    if let Some(current) = output.color_ups.last_mut() {
-        *current = point.color_up;
-    }
-    if let Some(current) = output.color_downs.last_mut() {
-        *current = point.color_down;
-    }
-    if let Some(current) = output.min_heights.last_mut() {
-        *current = point.min_height;
-    }
-    if let Some(current) = output.max_heights.last_mut() {
-        *current = point.max_height;
-    }
-}
-
-fn finalize_plot_char_values(outputs: &mut [PlotCharSeries], current_bar: usize) {
-    for output in outputs {
-        pad_plot_char_values(output, current_bar);
-        if output.values.len() == current_bar {
-            output.values.push(PineValue::Na);
-            output.chars.push(PineValue::Na);
-            output.colors.push(PineValue::Na);
         }
     }
-}
 
-fn finalize_plot_shape_values(outputs: &mut [PlotShapeSeries], current_bar: usize) {
-    for output in outputs {
-        pad_plot_shape_values(output, current_bar);
-        if output.values.len() == current_bar {
-            push_plot_shape_point(
-                output,
-                PlotShapePoint {
-                    value: PineValue::Na,
-                    style: PineValue::Na,
-                    location: PineValue::Na,
-                    color: PineValue::Na,
-                    text: PineValue::Na,
-                    text_color: PineValue::Na,
-                    size: PineValue::Na,
-                },
-            );
+    fn len(&self) -> usize {
+        self.values.len()
+    }
+
+    fn pad_to(&mut self, current_bar: usize) {
+        while self.values.len() < current_bar {
+            self.push_na_point();
         }
     }
-}
 
-fn finalize_plot_arrow_values(outputs: &mut [PlotArrowSeries], current_bar: usize) {
-    for output in outputs {
-        pad_plot_arrow_values(output, current_bar);
-        if output.values.len() == current_bar {
-            push_plot_arrow_point(
-                output,
-                PlotArrowPoint {
-                    value: PineValue::Na,
-                    color_up: PineValue::Na,
-                    color_down: PineValue::Na,
-                    min_height: PineValue::Na,
-                    max_height: PineValue::Na,
-                },
-            );
+    fn push_point(&mut self, point: Self::Point) {
+        self.values.push(point.value);
+        self.color_ups.push(point.color_up);
+        self.color_downs.push(point.color_down);
+        self.min_heights.push(point.min_height);
+        self.max_heights.push(point.max_height);
+    }
+
+    fn update_point(&mut self, point: Self::Point) {
+        if let Some(current) = self.values.last_mut() {
+            *current = point.value;
+        }
+        if let Some(current) = self.color_ups.last_mut() {
+            *current = point.color_up;
+        }
+        if let Some(current) = self.color_downs.last_mut() {
+            *current = point.color_down;
+        }
+        if let Some(current) = self.min_heights.last_mut() {
+            *current = point.min_height;
+        }
+        if let Some(current) = self.max_heights.last_mut() {
+            *current = point.max_height;
         }
     }
-}
 
-fn pad_plot_char_values(output: &mut PlotCharSeries, current_bar: usize) {
-    while output.values.len() < current_bar {
-        output.values.push(PineValue::Na);
-        output.chars.push(PineValue::Na);
-        output.colors.push(PineValue::Na);
-    }
-}
-
-fn pad_plot_shape_values(output: &mut PlotShapeSeries, current_bar: usize) {
-    while output.values.len() < current_bar {
-        output.values.push(PineValue::Na);
-        output.styles.push(PineValue::Na);
-        output.locations.push(PineValue::Na);
-        output.colors.push(PineValue::Na);
-        output.texts.push(PineValue::Na);
-        output.text_colors.push(PineValue::Na);
-        output.sizes.push(PineValue::Na);
-    }
-}
-
-fn pad_plot_arrow_values(output: &mut PlotArrowSeries, current_bar: usize) {
-    while output.values.len() < current_bar {
-        output.values.push(PineValue::Na);
-        output.color_ups.push(PineValue::Na);
-        output.color_downs.push(PineValue::Na);
-        output.min_heights.push(PineValue::Na);
-        output.max_heights.push(PineValue::Na);
+    fn push_na_point(&mut self) {
+        self.values.push(PineValue::Na);
+        self.color_ups.push(PineValue::Na);
+        self.color_downs.push(PineValue::Na);
+        self.min_heights.push(PineValue::Na);
+        self.max_heights.push(PineValue::Na);
     }
 }
 

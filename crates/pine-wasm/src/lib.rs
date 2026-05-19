@@ -208,12 +208,7 @@ fn plots_json(plots: &[pine_runtime::PlotSeries]) -> String {
             output.push(',');
         }
         output.push_str(&format!("{{\"id\":{},\"values\":[", plot.id));
-        for (value_index, value) in plot.values.iter().enumerate() {
-            if value_index > 0 {
-                output.push(',');
-            }
-            output.push_str(&value_json(value));
-        }
+        values_json_into(&mut output, &plot.values);
         output.push_str("]}");
     }
     output.push(']');
@@ -227,12 +222,7 @@ fn colors_json(colors: &[pine_runtime::ColorSeries]) -> String {
             output.push(',');
         }
         output.push_str(&format!("{{\"id\":{},\"values\":[", colors.id));
-        for (value_index, value) in colors.values.iter().enumerate() {
-            if value_index > 0 {
-                output.push(',');
-            }
-            output.push_str(&value_json(value));
-        }
+        values_json_into(&mut output, &colors.values);
         output.push_str("]}");
     }
     output.push(']');
@@ -246,26 +236,11 @@ fn plot_chars_json(plot_chars: &[pine_runtime::PlotCharSeries]) -> String {
             output.push(',');
         }
         output.push_str(&format!("{{\"id\":{},\"values\":[", plot_char.id));
-        for (value_index, value) in plot_char.values.iter().enumerate() {
-            if value_index > 0 {
-                output.push(',');
-            }
-            output.push_str(&value_json(value));
-        }
+        values_json_into(&mut output, &plot_char.values);
         output.push_str("],\"chars\":[");
-        for (char_index, value) in plot_char.chars.iter().enumerate() {
-            if char_index > 0 {
-                output.push(',');
-            }
-            output.push_str(&value_json(value));
-        }
+        values_json_into(&mut output, &plot_char.chars);
         output.push_str("],\"colors\":[");
-        for (color_index, value) in plot_char.colors.iter().enumerate() {
-            if color_index > 0 {
-                output.push(',');
-            }
-            output.push_str(&value_json(value));
-        }
+        values_json_into(&mut output, &plot_char.colors);
         output.push_str("]}");
     }
     output.push(']');
