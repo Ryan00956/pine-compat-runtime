@@ -3207,6 +3207,7 @@ plot(close, color=shade)
             r#"indicator("math")
 x = math.max(math.abs(close - 3), math.round(close / 2), 1)
 y = math.min(x, 3.5)
+avg_value = math.avg(open, close, high, low)
 z = math.floor(close / 2) + math.ceil(close / 2)
 w = math.sqrt(close) + math.log(close) + math.pow(close, 2)
 scale = math.log10(close) + math.exp(close)
@@ -3235,6 +3236,13 @@ plot(y)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "math.min")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.avg")
         );
         assert!(
             analysis

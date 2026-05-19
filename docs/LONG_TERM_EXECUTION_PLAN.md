@@ -172,8 +172,8 @@ Candidate areas:
 - Additional `math.*` and `str.*` helpers. Initial post-baseline math coverage
   includes `math.floor`, `math.ceil`, `math.sqrt`, `math.log`, `math.log10`,
   `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`,
-  `math.todegrees`, `math.toradians`, `math.sin`, `math.cos`, `math.tan`, and
-  `math.pow`.
+  `math.todegrees`, `math.toradians`, `math.sin`, `math.cos`, `math.tan`,
+  `math.avg`, and `math.pow`.
 - More complete `color.*` constants and helpers.
 - More complete `input.*` parameters and host-side input override APIs.
 - More plot options, visibility controls, styles, and display parameters.

@@ -533,6 +533,12 @@ const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const MATH_AVG_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "number",
+    accepts: Accepts::Numeric,
+    optional: false,
+}];
+
 const MATH_POW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "base",
@@ -903,6 +909,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: MATH_MIN_MAX_PARAMS,
         returns: ReturnSpec::PromotedNumeric,
+        variadic: true,
+    },
+    BuiltinSignature {
+        name: "math.avg",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_AVG_PARAMS,
+        returns: ReturnSpec::PromotedFloat,
         variadic: true,
     },
     BuiltinSignature {

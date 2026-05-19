@@ -1321,6 +1321,7 @@ impl<'a> HistoricalRuntime<'a> {
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
+            "math.avg" => self.eval_math_avg(args),
             "math.floor" => self.eval_math_floor(args),
             "math.ceil" => self.eval_math_ceil(args),
             "math.sqrt" => self.eval_math_unary_float(args, f64::sqrt),
@@ -1790,6 +1791,24 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         Ok(finite_float_or_na(base.powf(exponent)))
+    }
+
+    fn eval_math_avg(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let mut total = 0.0;
+        let mut count = 0.0;
+
+        for arg in args {
+            let Some(value) = self.eval_expr(&arg.value)?.as_f64() else {
+                return Ok(PineValue::Na);
+            };
+            total += value;
+            count += 1.0;
+        }
+
+        if count == 0.0 {
+            return Ok(PineValue::Na);
+        }
+        Ok(finite_float_or_na(total / count))
     }
 
     fn eval_math_extreme(
@@ -3662,6 +3681,7 @@ plot(na(c) ? 0 : 1)
             r#"indicator("math")
 x = math.max(math.abs(close - 3), math.round(close / 2), 1)
 y = math.min(x, 3.5)
+avg_value = math.avg(open, close, high, low)
 floor_value = math.floor(close / 2)
 ceil_value = math.ceil(close / 2 - 0.25)
 const_value = math.floor(2) + math.ceil(1)
@@ -3681,6 +3701,7 @@ tan_value = math.tan(close)
 pow_value = math.pow(close, 2)
 plot(x)
 plot(y)
+plot(avg_value)
 plot(floor_value + ceil_value)
 plot(const_value)
 plot(sqrt_value)
@@ -3719,35 +3740,36 @@ plot(math.pow(-1, 0.5))
         assert_values_close(&result.plots[0].values, &[2.0, 1.0, 2.0, 2.0]);
         assert_values_close(&result.plots[1].values, &[2.0, 1.0, 2.0, 2.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 2.0, 3.0, 4.0]);
-        assert_values_close(&result.plots[3].values, &[3.0, 3.0, 3.0, 3.0]);
+        assert_values_close(&result.plots[3].values, &[1.0, 2.0, 3.0, 4.0]);
+        assert_values_close(&result.plots[4].values, &[3.0, 3.0, 3.0, 3.0]);
         assert_values_close(
-            &result.plots[4].values,
+            &result.plots[5].values,
             &[1.0, 2.0_f64.sqrt(), 3.0_f64.sqrt(), 2.0],
         );
         assert_values_close(
-            &result.plots[5].values,
+            &result.plots[6].values,
             &[0.0, 2.0_f64.ln(), 3.0_f64.ln(), 4.0_f64.ln()],
         );
         assert_values_close(
-            &result.plots[6].values,
+            &result.plots[7].values,
             &[0.0, 2.0_f64.log10(), 3.0_f64.log10(), 4.0_f64.log10()],
         );
         assert_values_close(
-            &result.plots[7].values,
+            &result.plots[8].values,
             &[1.0_f64.exp(), 2.0_f64.exp(), 3.0_f64.exp(), 4.0_f64.exp()],
         );
         assert_values_close(
-            &result.plots[8].values[..3],
-            &[(-1.0_f64).acos(), 0.0_f64.acos(), 1.0_f64.acos()],
-        );
-        assert_eq!(result.plots[8].values[3], PineValue::Na);
-        assert_values_close(
             &result.plots[9].values[..3],
-            &[(-1.0_f64).asin(), 0.0_f64.asin(), 1.0_f64.asin()],
+            &[(-1.0_f64).acos(), 0.0_f64.acos(), 1.0_f64.acos()],
         );
         assert_eq!(result.plots[9].values[3], PineValue::Na);
         assert_values_close(
-            &result.plots[10].values,
+            &result.plots[10].values[..3],
+            &[(-1.0_f64).asin(), 0.0_f64.asin(), 1.0_f64.asin()],
+        );
+        assert_eq!(result.plots[10].values[3], PineValue::Na);
+        assert_values_close(
+            &result.plots[11].values,
             &[
                 1.0_f64.atan(),
                 2.0_f64.atan(),
@@ -3755,9 +3777,9 @@ plot(math.pow(-1, 0.5))
                 4.0_f64.atan(),
             ],
         );
-        assert_values_close(&result.plots[11].values, &[-1.0, 0.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[12].values, &[-1.0, 0.0, 1.0, 1.0]);
         assert_values_close(
-            &result.plots[12].values,
+            &result.plots[13].values,
             &[
                 1.0_f64.to_degrees(),
                 2.0_f64.to_degrees(),
@@ -3766,7 +3788,7 @@ plot(math.pow(-1, 0.5))
             ],
         );
         assert_values_close(
-            &result.plots[13].values,
+            &result.plots[14].values,
             &[
                 1.0_f64.to_radians(),
                 2.0_f64.to_radians(),
@@ -3775,25 +3797,25 @@ plot(math.pow(-1, 0.5))
             ],
         );
         assert_values_close(
-            &result.plots[14].values,
+            &result.plots[15].values,
             &[1.0_f64.sin(), 2.0_f64.sin(), 3.0_f64.sin(), 4.0_f64.sin()],
         );
         assert_values_close(
-            &result.plots[15].values,
+            &result.plots[16].values,
             &[1.0_f64.cos(), 2.0_f64.cos(), 3.0_f64.cos(), 4.0_f64.cos()],
         );
         assert_values_close(
-            &result.plots[16].values,
+            &result.plots[17].values,
             &[1.0_f64.tan(), 2.0_f64.tan(), 3.0_f64.tan(), 4.0_f64.tan()],
         );
-        assert_values_close(&result.plots[17].values, &[1.0, 4.0, 9.0, 16.0]);
-        assert_eq!(result.plots[18].values, vec![PineValue::Na; 4]);
+        assert_values_close(&result.plots[18].values, &[1.0, 4.0, 9.0, 16.0]);
         assert_eq!(result.plots[19].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[20].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[21].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[22].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[23].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[24].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[25].values, vec![PineValue::Na; 4]);
     }
 
     #[test]
