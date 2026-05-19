@@ -3212,6 +3212,7 @@ w = math.sqrt(close) + math.log(close) + math.pow(close, 2)
 scale = math.log10(close) + math.exp(close)
 trig = math.sin(close) + math.cos(close) + math.tan(close)
 inverse_trig = math.acos(close - 2) + math.asin(close - 2) + math.atan(close)
+angle_helpers = math.sign(close - 2) + math.todegrees(close) + math.toradians(close)
 plot(y)
 "#,
         );
@@ -3297,6 +3298,27 @@ plot(y)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "math.atan")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.sign")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.todegrees")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.toradians")
         );
         assert!(
             analysis

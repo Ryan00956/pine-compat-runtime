@@ -34,6 +34,9 @@ math.exp	supported	fixture-derived executable subset	tests/fixtures/runtime/math
 math.acos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.asin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.atan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.sign	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.todegrees	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.toradians	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.sin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.cos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.tan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
