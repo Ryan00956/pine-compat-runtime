@@ -39,6 +39,7 @@ able to integrate it through adapters.
 - [Built-In Signatures](docs/BUILTIN_SIGNATURES.md)
 - [Conformance](docs/CONFORMANCE.md)
 - [Diagnostic Codes](docs/DIAGNOSTIC_CODES.md)
+- [Release Notes](docs/RELEASE_NOTES.md)
 - [Task Breakdown](docs/TASK_BREAKDOWN.md)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
 - [Compatibility, Legal, and Branding Boundaries](docs/COMPATIBILITY_AND_LEGAL.md)

@@ -153,7 +153,7 @@ Status: in progress.
 - [x] Expand realtime fixture coverage beyond rollback and `var` behavior.
 - [x] Decide whether user-defined functions enter the executable subset or stay
   diagnostic-only for the next release.
-- [ ] Add release notes describing the supported subset and explicit
+- [x] Add release notes describing the supported subset and explicit
   unsupported boundaries.
 
 ## Next Language Expansion
