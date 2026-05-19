@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported dynamic history")
+length = input.int(1, "Length")
+plot(close[length])

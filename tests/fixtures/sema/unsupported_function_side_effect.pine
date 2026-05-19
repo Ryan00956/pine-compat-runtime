@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported function side effect")
+draw(x) => plot(x)
+draw(close)

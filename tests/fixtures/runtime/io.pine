@@ -1,0 +1,10 @@
+//@version=5
+indicator("IO", overlay=true)
+src = input.source(close, "Source")
+length = input.int(2, "Length")
+scale = input.float(1.5, "Scale")
+enabled = input.bool(true, "Enabled")
+shade = input.color(color.orange, "Shade")
+p = plot(enabled ? ta.sma(src, length) * scale : close, color=color.new(shade, 10))
+h = hline(2)
+fill(p, h)

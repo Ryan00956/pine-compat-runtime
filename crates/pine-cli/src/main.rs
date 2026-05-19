@@ -151,119 +151,43 @@ enum MatrixFormat {
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct MatrixEntry {
     feature: String,
-    status: &'static str,
-    notes: &'static str,
+    status: String,
+    notes: String,
+    fixtures: Vec<String>,
 }
 
 fn conformance_entries() -> Vec<MatrixEntry> {
-    let mut entries: Vec<_> = pine_builtins::PHASE_1_BUILTINS
-        .iter()
-        .map(|signature| MatrixEntry {
-            feature: signature.name.to_owned(),
-            status: "supported",
-            notes: "Phase 4 executable subset",
+    conformance_entries_from_tsv(include_str!("../../../tests/fixtures/conformance.tsv"))
+}
+
+fn conformance_entries_from_tsv(text: &str) -> Vec<MatrixEntry> {
+    text.lines()
+        .enumerate()
+        .filter_map(|(index, line)| {
+            let line = line.trim();
+            if line.is_empty() || index == 0 {
+                return None;
+            }
+
+            let columns: Vec<_> = line.split('\t').collect();
+            assert_eq!(
+                columns.len(),
+                4,
+                "invalid conformance metadata at line {}",
+                index + 1
+            );
+            Some(MatrixEntry {
+                feature: columns[0].to_owned(),
+                status: columns[1].to_owned(),
+                notes: columns[2].to_owned(),
+                fixtures: columns[3]
+                    .split(';')
+                    .filter(|fixture| !fixture.is_empty())
+                    .map(str::to_owned)
+                    .collect(),
+            })
         })
-        .collect();
-
-    entries.extend([
-        MatrixEntry {
-            feature: "if".to_owned(),
-            status: "supported",
-            notes: "conditional callsites advance only when their branch executes",
-        },
-        MatrixEntry {
-            feature: "for".to_owned(),
-            status: "partial",
-            notes: "inclusive integer ranges, loop control, and loop results",
-        },
-        MatrixEntry {
-            feature: "expression-body functions".to_owned(),
-            status: "supported",
-            notes: "lowered by inlining; positional and named arguments supported",
-        },
-        MatrixEntry {
-            feature: "multi-statement functions".to_owned(),
-            status: "supported",
-            notes: "block body must end with an expression",
-        },
-        MatrixEntry {
-            feature: "block-local declarations".to_owned(),
-            status: "supported",
-            notes: "normal and tuple declarations are scoped to branches",
-        },
-        MatrixEntry {
-            feature: "recursive functions".to_owned(),
-            status: "unsupported",
-            notes: "rejected during semantic analysis",
-        },
-        MatrixEntry {
-            feature: "function side effects".to_owned(),
-            status: "unsupported",
-            notes: "plot, hline, fill, indicator, and input calls inside UDFs rejected",
-        },
-        MatrixEntry {
-            feature: "color.* named constants".to_owned(),
-            status: "partial",
-            notes: "common registry only",
-        },
-        MatrixEntry {
-            feature: "#RRGGBB/#RRGGBBAA color literals".to_owned(),
-            status: "supported",
-            notes: "normalized runtime color value",
-        },
-        MatrixEntry {
-            feature: "history references".to_owned(),
-            status: "partial",
-            notes: "constant non-negative offsets only",
-        },
-        MatrixEntry {
-            feature: "var".to_owned(),
-            status: "supported",
-            notes: "historical persistence",
-        },
-        MatrixEntry {
-            feature: "varip".to_owned(),
-            status: "unsupported",
-            notes: "intrabar persistence not implemented",
-        },
-        MatrixEntry {
-            feature: "request.*".to_owned(),
-            status: "unsupported",
-            notes: "multi-symbol and multi-timeframe data out of Phase 1",
-        },
-        MatrixEntry {
-            feature: "array.*".to_owned(),
-            status: "unsupported",
-            notes: "array storage and mutation out of Phase 1",
-        },
-        MatrixEntry {
-            feature: "import".to_owned(),
-            status: "unsupported",
-            notes: "library imports out of Phase 1",
-        },
-        MatrixEntry {
-            feature: "strategy.*".to_owned(),
-            status: "unsupported",
-            notes: "broker emulation out of current scope",
-        },
-        MatrixEntry {
-            feature: "alert/alertcondition".to_owned(),
-            status: "unsupported",
-            notes: "alerts out of Phase 1",
-        },
-        MatrixEntry {
-            feature: "label/line/box/table/polyline".to_owned(),
-            status: "unsupported",
-            notes: "drawing object systems out of Phase 1",
-        },
-        MatrixEntry {
-            feature: "dynamic history offsets".to_owned(),
-            status: "unsupported",
-            notes: "Phase 1 requires static offsets",
-        },
-    ]);
-
-    entries
+        .collect()
 }
 
 fn matrix_text(entries: &[MatrixEntry]) -> String {
@@ -282,17 +206,20 @@ fn matrix_text(entries: &[MatrixEntry]) -> String {
 
     let mut output = String::new();
     output.push_str(&format!(
-        "{:<feature_width$}  {:<status_width$}  notes\n",
+        "{:<feature_width$}  {:<status_width$}  fixtures  notes\n",
         "feature", "status"
     ));
     output.push_str(&format!(
-        "{:-<feature_width$}  {:-<status_width$}  -----\n",
+        "{:-<feature_width$}  {:-<status_width$}  --------  -----\n",
         "", ""
     ));
     for entry in entries {
         output.push_str(&format!(
-            "{:<feature_width$}  {:<status_width$}  {}\n",
-            entry.feature, entry.status, entry.notes
+            "{:<feature_width$}  {:<status_width$}  {}  {}\n",
+            entry.feature,
+            entry.status,
+            entry.fixtures.join(";"),
+            entry.notes
         ));
     }
     output
@@ -304,12 +231,22 @@ fn matrix_json(entries: &[MatrixEntry]) -> String {
         if index > 0 {
             output.push(',');
         }
-        output.push_str(&format!(
-            "{{\"feature\":\"{}\",\"status\":\"{}\",\"notes\":\"{}\"}}",
-            json_escape(&entry.feature),
-            json_escape(entry.status),
-            json_escape(entry.notes)
-        ));
+        output.push_str("{\"feature\":\"");
+        output.push_str(&json_escape(&entry.feature));
+        output.push_str("\",\"status\":\"");
+        output.push_str(&json_escape(&entry.status));
+        output.push_str("\",\"notes\":\"");
+        output.push_str(&json_escape(&entry.notes));
+        output.push_str("\",\"fixtures\":[");
+        for (fixture_index, fixture) in entry.fixtures.iter().enumerate() {
+            if fixture_index > 0 {
+                output.push(',');
+            }
+            output.push('"');
+            output.push_str(&json_escape(fixture));
+            output.push('"');
+        }
+        output.push_str("]}");
     }
     output.push(']');
     output
@@ -528,16 +465,21 @@ mod tests {
     fn matrix_includes_supported_builtins_and_unsupported_features() {
         let entries = conformance_entries();
 
-        assert!(
-            entries
-                .iter()
-                .any(|entry| entry.feature == "math.max" && entry.status == "supported")
-        );
-        assert!(
-            entries
-                .iter()
-                .any(|entry| entry.feature == "ta.macd" && entry.status == "supported")
-        );
+        for signature in pine_builtins::PHASE_1_BUILTINS {
+            assert!(
+                entries.iter().any(|entry| entry.feature == signature.name
+                    && entry.status == "supported"
+                    && !entry.fixtures.is_empty()),
+                "{} should have fixture-derived metadata",
+                signature.name
+            );
+        }
+        assert!(entries.iter().any(|entry| entry.feature == "math.max"
+            && entry.status == "supported"
+            && !entry.fixtures.is_empty()));
+        assert!(entries.iter().any(|entry| entry.feature == "ta.macd"
+            && entry.status == "supported"
+            && !entry.fixtures.is_empty()));
         assert!(
             entries
                 .iter()
@@ -573,33 +515,57 @@ mod tests {
     }
 
     #[test]
+    fn conformance_metadata_references_existing_fixtures() {
+        let workspace = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        for entry in conformance_entries() {
+            assert!(
+                !entry.fixtures.is_empty(),
+                "{} should reference at least one fixture",
+                entry.feature
+            );
+            for fixture in entry.fixtures {
+                assert!(
+                    workspace.join(&fixture).exists(),
+                    "{} fixture path should exist for {}",
+                    fixture,
+                    entry.feature
+                );
+            }
+        }
+    }
+
+    #[test]
     fn formats_matrix_as_text() {
         let entries = vec![MatrixEntry {
             feature: "indicator".to_owned(),
-            status: "supported",
-            notes: "Phase 4 executable subset",
+            status: "supported".to_owned(),
+            notes: "fixture-derived executable subset".to_owned(),
+            fixtures: vec!["tests/fixtures/runtime/io.pine".to_owned()],
         }];
 
         let output = matrix_text(&entries);
 
         assert!(output.contains("feature"));
+        assert!(output.contains("fixtures"));
         assert!(output.contains("indicator"));
         assert!(output.contains("supported"));
+        assert!(output.contains("tests/fixtures/runtime/io.pine"));
     }
 
     #[test]
     fn formats_matrix_as_json() {
         let entries = vec![MatrixEntry {
             feature: "request.*".to_owned(),
-            status: "unsupported",
-            notes: "multi-symbol",
+            status: "unsupported".to_owned(),
+            notes: "multi-symbol".to_owned(),
+            fixtures: vec!["tests/fixtures/sema/unsupported_request.pine".to_owned()],
         }];
 
         let output = matrix_json(&entries);
 
         assert_eq!(
             output,
-            r#"[{"feature":"request.*","status":"unsupported","notes":"multi-symbol"}]"#
+            r#"[{"feature":"request.*","status":"unsupported","notes":"multi-symbol","fixtures":["tests/fixtures/sema/unsupported_request.pine"]}]"#
         );
     }
 

@@ -86,6 +86,24 @@ fn reports_unsupported_alert_fixture() {
 }
 
 #[test]
+fn reports_unsupported_function_side_effect_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_function_side_effect.pine",
+        "function_side_effect",
+        "inside user-defined functions",
+    );
+}
+
+#[test]
+fn reports_unsupported_dynamic_history_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_dynamic_history.pine",
+        "dynamic_history_offset",
+        "dynamic history offsets",
+    );
+}
+
+#[test]
 fn reports_unsupported_recursive_function_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_recursive_function.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");

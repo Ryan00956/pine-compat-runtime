@@ -156,7 +156,8 @@ pine-compat matrix
 pine-compat matrix --format json
 ```
 
-The generated matrix is seeded from the Phase 1 built-in registry plus the
-unsupported feature gates enforced by the semantic analyzer. As fixture metadata
-becomes richer, this command should move from registry-seeded claims to
-fixture-derived claims.
+The generated matrix is derived from `tests/fixtures/conformance.tsv`. Each row
+declares a feature, status, notes, and one or more fixture paths that back the
+claim. CLI tests verify that every matrix entry references at least one existing
+fixture. The text matrix includes the fixture paths, and the JSON matrix exposes
+them as a `fixtures` array.

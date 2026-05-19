@@ -1,0 +1,6 @@
+//@version=5
+indicator("NA")
+previous = close[1]
+fallback = nz(previous, close)
+plot(na(previous) ? close : fallback)
+plot(fallback)

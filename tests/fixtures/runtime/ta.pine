@@ -1,0 +1,6 @@
+//@version=5
+indicator("TA")
+plot(ta.ema(close, 2))
+plot(ta.rma(close, 2))
+plot(ta.rsi(close, 2))
+plot(ta.tr(true))

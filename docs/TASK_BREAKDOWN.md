@@ -148,7 +148,7 @@ Status: in progress.
 - [x] Add CI coverage for Python binding tests.
 - [x] Add CI coverage for WASM build checks.
 - [x] Document local Python binding test setup.
-- [ ] Move the compatibility matrix from registry-seeded claims to
+- [x] Move the compatibility matrix from registry-seeded claims to
   fixture-derived conformance metadata.
 - [ ] Expand realtime fixture coverage beyond rollback and `var` behavior.
 - [ ] Decide whether user-defined functions enter the executable subset or stay

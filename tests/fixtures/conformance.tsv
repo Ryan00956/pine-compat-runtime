@@ -1,0 +1,51 @@
+feature	status	notes	fixtures
+indicator	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
+input.int	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
+input.float	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
+input.bool	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
+input.source	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
+input.color	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
+plot	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/if.pine
+hline	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
+fill	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
+color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
+math.abs	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.max	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.min	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.round	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+na	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine
+nz	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine
+ta.sma	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/conditional_ta.pine;tests/fixtures/runtime/udf.pine
+ta.ema	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
+ta.rma	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
+ta.rsi	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
+ta.macd	supported	fixture-derived executable subset	tests/fixtures/runtime/macd.pine
+ta.bb	supported	fixture-derived executable subset	tests/fixtures/runtime/bb.pine
+ta.tr	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
+ta.atr	supported	fixture-derived executable subset	tests/fixtures/runtime/atr.pine
+ta.change	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
+ta.cross	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
+ta.crossover	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
+ta.crossunder	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
+ta.highest	supported	fixture-derived executable subset	tests/fixtures/runtime/extremes.pine
+ta.lowest	supported	fixture-derived executable subset	tests/fixtures/runtime/extremes.pine
+if	supported	conditional callsites advance only when their branch executes	tests/fixtures/runtime/if.pine;tests/fixtures/runtime/conditional_ta.pine
+for	partial	inclusive integer ranges, loop control, and loop results	tests/fixtures/runtime/block_statements.pine;tests/fixtures/sema/supported_block_statements.pine
+expression-body functions	supported	lowered by inlining; positional and named arguments supported	tests/fixtures/runtime/udf.pine
+multi-statement functions	supported	block body must end with an expression	tests/fixtures/runtime/udf.pine
+block-local declarations	supported	normal and tuple declarations are scoped to branches	tests/fixtures/runtime/block_statements.pine;tests/fixtures/runtime/local_scope.pine;tests/fixtures/sema/supported_block_statements.pine
+local scope	supported	local declarations, shadowing, and local var storage	tests/fixtures/runtime/local_scope.pine
+recursive functions	unsupported	rejected during semantic analysis	tests/fixtures/sema/unsupported_recursive_function.pine
+function side effects	unsupported	plot, hline, fill, indicator, and input calls inside UDFs rejected	tests/fixtures/sema/unsupported_function_side_effect.pine
+color.* named constants	partial	common registry only	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
+#RRGGBB/#RRGGBBAA color literals	supported	normalized runtime color value	tests/fixtures/syntax/phase1_basic.pine
+history references	partial	constant non-negative offsets only	tests/fixtures/runtime/na.pine
+var	supported	historical persistence and local declaration-site storage	tests/fixtures/runtime/local_scope.pine;tests/fixtures/realtime/var_rollback.pine
+varip	unsupported	intrabar persistence not implemented	tests/fixtures/sema/unsupported_varip.pine
+request.*	unsupported	multi-symbol and multi-timeframe data out of Phase 1	tests/fixtures/sema/unsupported_request.pine
+array.*	unsupported	array storage and mutation out of Phase 1	tests/fixtures/sema/unsupported_array.pine
+import	unsupported	library imports out of Phase 1	tests/fixtures/sema/unsupported_import.pine
+strategy.*	unsupported	broker emulation out of current scope	tests/fixtures/sema/unsupported_strategy.pine
+alert/alertcondition	unsupported	alerts out of Phase 1	tests/fixtures/sema/unsupported_alert.pine
+label/line/box/table/polyline	unsupported	drawing object systems out of Phase 1	tests/fixtures/sema/unsupported_drawing.pine
+dynamic history offsets	unsupported	Phase 1 requires static offsets	tests/fixtures/sema/unsupported_dynamic_history.pine

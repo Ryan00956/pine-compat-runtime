@@ -2,4 +2,7 @@
 indicator("UDF")
 smooth(src, len) => ta.sma(src, len)
 ma = smooth(len=2, src=close)
-plot(ma)
+offset(src) =>
+    shifted = src + 1
+    shifted
+plot(ma + offset(close))
