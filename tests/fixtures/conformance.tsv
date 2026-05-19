@@ -30,6 +30,7 @@ ta.crossunder	supported	fixture-derived executable subset	tests/fixtures/runtime
 ta.highest	supported	fixture-derived executable subset	tests/fixtures/runtime/extremes.pine
 ta.lowest	supported	fixture-derived executable subset	tests/fixtures/runtime/extremes.pine
 if	supported	conditional callsites advance only when their branch executes	tests/fixtures/runtime/if.pine;tests/fixtures/runtime/conditional_ta.pine
+switch	partial	expression arms with condition and selector forms	tests/fixtures/runtime/switch.pine
 for	partial	inclusive integer ranges, loop control, and loop results	tests/fixtures/runtime/block_statements.pine;tests/fixtures/sema/supported_block_statements.pine
 expression-body functions	supported	lowered by inlining; positional and named arguments supported	tests/fixtures/runtime/udf.pine
 multi-statement functions	supported	block body must end with an expression	tests/fixtures/runtime/udf.pine

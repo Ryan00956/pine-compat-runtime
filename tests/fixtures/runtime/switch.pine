@@ -1,0 +1,20 @@
+indicator("Switch fixture")
+direction = close > open ? 1 : close < open ? -1 : 0
+
+condition_value = switch
+    close > open => high
+    close < open => low
+    => close
+
+selector_value = switch direction
+    1 => high
+    -1 => low
+    => close
+
+conditional_sma = switch
+    close > open => ta.sma(close, 2)
+    => close
+
+plot(condition_value)
+plot(selector_value)
+plot(conditional_sma)

@@ -1,6 +1,6 @@
 use crate::{
     BinaryOp, CallArg, DeclMode, Diagnostic, Expr, ExprKind, FunctionBody, Lexed, Literal, Program,
-    SourceFile, Span, Stmt, StmtKind, Token, TokenKind, UnaryOp, VersionDecl, lex,
+    SourceFile, Span, Stmt, StmtKind, SwitchArm, Token, TokenKind, UnaryOp, VersionDecl, lex,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -438,7 +438,7 @@ impl Parser {
         let mut left = self.parse_prefix()?;
 
         loop {
-            if matches!(left.kind, ExprKind::For { .. }) {
+            if matches!(left.kind, ExprKind::For { .. } | ExprKind::Switch { .. }) {
                 break;
             }
             if self.at(TokenKind::LParen) {
@@ -559,6 +559,7 @@ impl Parser {
                 Some(expr)
             }
             TokenKind::For => self.parse_for_expr(),
+            TokenKind::Switch => self.parse_switch_expr(),
             TokenKind::LBracket => self.parse_tuple_expr(),
             _ => {
                 self.error_here("E_PARSE_EXPR", "expected expression");
@@ -579,6 +580,62 @@ impl Parser {
                 step: parts.step.map(Box::new),
                 body: parts.body,
             },
+        })
+    }
+
+    fn parse_switch_expr(&mut self) -> Option<Expr> {
+        let start = self.expect(TokenKind::Switch, "expected `switch`")?;
+        let selector = if self.at(TokenKind::Newline) {
+            None
+        } else {
+            Some(Box::new(self.parse_expr(0)?))
+        };
+        self.expect(TokenKind::Newline, "expected newline after `switch`")?;
+        self.expect(TokenKind::Indent, "expected indented switch arms")?;
+        let mut arms = Vec::new();
+        let mut end = selector.as_ref().map_or(start, |selector| selector.span);
+
+        loop {
+            self.skip_newlines();
+            if self.at(TokenKind::Dedent) {
+                self.bump();
+                break;
+            }
+            if self.at(TokenKind::Eof) {
+                self.error_here("E_PARSE_SWITCH", "expected dedent before end of switch");
+                break;
+            }
+
+            let condition = if self.at(TokenKind::Arrow) {
+                None
+            } else {
+                Some(self.parse_expr(0)?)
+            };
+            self.expect(TokenKind::Arrow, "expected `=>` in switch arm")?;
+            let result = self.parse_expr(0)?;
+            end = result.span;
+            arms.push(SwitchArm { condition, result });
+
+            if self.at(TokenKind::Newline) {
+                self.bump();
+            } else if !self.at(TokenKind::Dedent) && !self.at(TokenKind::Eof) {
+                self.error_here("E_PARSE_SWITCH", "expected newline after switch arm");
+                return None;
+            }
+        }
+
+        if arms.is_empty() {
+            self.diagnostics.push(Diagnostic::error(
+                "E_PARSE_SWITCH",
+                "expected at least one switch arm",
+                start,
+            ));
+            return None;
+        }
+
+        Some(Expr {
+            span: start.merge(end),
+            kind: ExprKind::Switch { selector, arms },
         })
     }
 
@@ -949,6 +1006,40 @@ mod tests {
         assert_eq!(counter, "i");
         assert_eq!(body.len(), 1);
         assert!(matches!(body[0].kind, StmtKind::Expr(_)));
+    }
+
+    #[test]
+    fn parses_condition_switch_expression_declaration() {
+        let parsed = parse(
+            "x = switch\n    close > open => high\n    close < open => low\n    => close\nplot(x)\n",
+        );
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration");
+        };
+        let ExprKind::Switch { selector, arms } = &value.kind else {
+            panic!("expected switch expression");
+        };
+        assert!(selector.is_none());
+        assert_eq!(arms.len(), 3);
+        assert!(arms[0].condition.is_some());
+        assert!(arms[2].condition.is_none());
+    }
+
+    #[test]
+    fn parses_selector_switch_expression_declaration() {
+        let parsed = parse("x = switch direction\n    1 => high\n    -1 => low\n    => close\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration");
+        };
+        let ExprKind::Switch { selector, arms } = &value.kind else {
+            panic!("expected switch expression");
+        };
+        assert!(selector.is_some());
+        assert_eq!(arms.len(), 3);
     }
 
     #[test]

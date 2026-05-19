@@ -5,12 +5,12 @@ use std::collections::HashMap;
 use pine_builtins::{Accepts, BuiltinSignature, ReturnSpec};
 use pine_ir::{
     CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirLiteral, HirProgram, HirStmt,
-    HirStmtKind, HirSymbol, HirUnaryOp, PineType, Qualifier, SeriesId, SymbolId, ValueKind,
-    VarSlotId,
+    HirStmtKind, HirSwitchArm, HirSymbol, HirUnaryOp, PineType, Qualifier, SeriesId, SymbolId,
+    ValueKind, VarSlotId,
 };
 use pine_syntax::{
     BinaryOp, CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Literal, Program, Severity,
-    SourceFile, Span, Stmt, StmtKind, UnaryOp, parse_source,
+    SourceFile, Span, Stmt, StmtKind, SwitchArm, UnaryOp, parse_source,
 };
 
 const VARIP_UNSUPPORTED_REASON: &str = "varip intrabar persistence is not implemented; forming-bar rollback currently supports var state only";
@@ -594,6 +594,9 @@ impl Analyzer {
                     _ => None,
                 }
             }
+            ExprKind::Switch { selector, arms } => {
+                self.analyze_switch_expr(selector.as_deref(), arms, expr.span)
+            }
             ExprKind::For {
                 counter,
                 from,
@@ -615,6 +618,65 @@ impl Analyzer {
                 value_type.map(|value_type| PineType::new(Qualifier::Series, value_type.kind))
             }
         }
+    }
+
+    fn analyze_switch_expr(
+        &mut self,
+        selector: Option<&Expr>,
+        arms: &[SwitchArm],
+        span: Span,
+    ) -> Option<PineType> {
+        let selector_type = selector.and_then(|selector| self.analyze_expr(selector));
+        let mut condition_qualifier = selector_type.map_or(Qualifier::Const, |ty| ty.qualifier);
+        let mut result_type = None;
+        let mut has_type_error = false;
+
+        self.compatibility.supported.push(FeatureUse {
+            feature: "switch".to_owned(),
+            span,
+        });
+
+        for arm in arms {
+            if let Some(condition) = &arm.condition {
+                let condition_type = self.analyze_expr(condition);
+                if let Some(condition_type) = condition_type {
+                    condition_qualifier =
+                        strongest_qualifier(condition_qualifier, condition_type.qualifier);
+                    if selector.is_none() {
+                        self.expect_bool(condition_type, condition.span);
+                    }
+                }
+            }
+
+            if let Some(arm_type) = self.analyze_expr(&arm.result) {
+                match merge_result_types(result_type, arm_type) {
+                    Some(merged) => result_type = Some(merged),
+                    None => {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_BRANCH_TYPE",
+                            format!(
+                                "switch arms have incompatible types {:?} and {:?}",
+                                result_type.unwrap_or(UNKNOWN).kind,
+                                arm_type.kind
+                            ),
+                            span,
+                        ));
+                        has_type_error = true;
+                    }
+                }
+            }
+        }
+
+        if has_type_error {
+            return None;
+        }
+
+        result_type.map(|pine_type| {
+            PineType::new(
+                strongest_qualifier(condition_qualifier, pine_type.qualifier),
+                pine_type.kind,
+            )
+        })
     }
 
     fn analyze_for_expr(
@@ -1586,6 +1648,36 @@ impl Analyzer {
                     param_types,
                 )?),
             },
+            ExprKind::Switch { selector, arms } => HirExprKind::Switch {
+                selector: match selector {
+                    Some(selector) => Some(Box::new(self.lower_expr_with_params(
+                        selector,
+                        param_exprs,
+                        param_types,
+                    )?)),
+                    None => None,
+                },
+                arms: arms
+                    .iter()
+                    .map(|arm| {
+                        Some(HirSwitchArm {
+                            condition: match &arm.condition {
+                                Some(condition) => Some(self.lower_expr_with_params(
+                                    condition,
+                                    param_exprs,
+                                    param_types,
+                                )?),
+                                None => None,
+                            },
+                            result: self.lower_expr_with_params(
+                                &arm.result,
+                                param_exprs,
+                                param_types,
+                            )?,
+                        })
+                    })
+                    .collect::<Option<_>>()?,
+            },
             ExprKind::For {
                 counter,
                 from,
@@ -1818,6 +1910,9 @@ impl Analyzer {
                     common_kind(then_type.kind, else_type.kind)?,
                 ))
             }
+            ExprKind::Switch { selector, arms } => {
+                self.type_of_switch_expr_with_params(selector.as_deref(), arms, param_types)
+            }
             ExprKind::For { body, .. } => {
                 let last = body.last()?;
                 let StmtKind::Expr(expr) = &last.kind else {
@@ -1869,6 +1964,37 @@ impl Analyzer {
                 .type_of_expr_with_params(expr, param_types)
                 .map(|pine_type| PineType::new(Qualifier::Series, pine_type.kind)),
         }
+    }
+
+    fn type_of_switch_expr_with_params(
+        &self,
+        selector: Option<&Expr>,
+        arms: &[SwitchArm],
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<PineType> {
+        let selector_type = match selector {
+            Some(selector) => Some(self.type_of_expr_with_params(selector, param_types)?),
+            None => None,
+        };
+        let mut condition_qualifier = selector_type.map_or(Qualifier::Const, |ty| ty.qualifier);
+        let mut result_type = None;
+
+        for arm in arms {
+            if let Some(condition) = &arm.condition {
+                let condition_type = self.type_of_expr_with_params(condition, param_types)?;
+                condition_qualifier =
+                    strongest_qualifier(condition_qualifier, condition_type.qualifier);
+            }
+            let arm_type = self.type_of_expr_with_params(&arm.result, param_types)?;
+            result_type = Some(merge_result_types(result_type, arm_type)?);
+        }
+
+        result_type.map(|pine_type| {
+            PineType::new(
+                strongest_qualifier(condition_qualifier, pine_type.qualifier),
+                pine_type.kind,
+            )
+        })
     }
 
     fn type_of_function_body_with_params(
@@ -2053,6 +2179,17 @@ fn contains_output_or_declaration_call(expr: &Expr) -> bool {
             contains_output_or_declaration_call(condition)
                 || contains_output_or_declaration_call(then_expr)
                 || contains_output_or_declaration_call(else_expr)
+        }
+        ExprKind::Switch { selector, arms } => {
+            selector
+                .as_deref()
+                .is_some_and(contains_output_or_declaration_call)
+                || arms.iter().any(|arm| {
+                    arm.condition
+                        .as_ref()
+                        .is_some_and(contains_output_or_declaration_call)
+                        || contains_output_or_declaration_call(&arm.result)
+                })
         }
         ExprKind::For {
             from,
@@ -2331,6 +2468,16 @@ fn common_kind(left: ValueKind, right: ValueKind) -> Option<ValueKind> {
         Some(left)
     } else {
         None
+    }
+}
+
+fn merge_result_types(current: Option<PineType>, next: PineType) -> Option<PineType> {
+    match current {
+        Some(current) => Some(PineType::new(
+            strongest_qualifier(current.qualifier, next.qualifier),
+            common_kind(current.kind, next.kind)?,
+        )),
+        None => Some(next),
     }
 }
 
@@ -2662,6 +2809,71 @@ plot(y)
                 .diagnostics
                 .iter()
                 .any(|diagnostic| diagnostic.code == "E_ASSIGN_TYPE")
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn accepts_condition_switch_expression() {
+        let analysis = analyze(
+            "x = switch\n    close > open => high\n    close < open => low\n    => close\nplot(x)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "switch")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_selector_switch_expression() {
+        let analysis = analyze(
+            "direction = 1\nx = switch direction\n    1 => high\n    -1 => low\n    => close\nplot(x)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_non_bool_condition_switch_arm() {
+        let analysis = analyze("x = switch\n    close => high\n    => low\nplot(x)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CONDITION_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_incompatible_switch_arm_results() {
+        let analysis = analyze("x = switch\n    close > open => high\n    => true\nplot(x)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_BRANCH_TYPE"),
+            "{:?}",
+            analysis.diagnostics
         );
         assert!(analysis.hir.is_none());
     }

@@ -102,6 +102,27 @@ The ternary result kind should be the least common compatible kind of both
 branches. Its qualifier should be the strongest qualifier among the condition
 and both branch expressions.
 
+Switch expressions:
+
+```pine
+value = switch
+    close > open => high
+    close < open => low
+    => close
+
+value = switch direction
+    1 => high
+    -1 => low
+    => close
+```
+
+The current executable subset supports expression arms only. Selector-less arm
+conditions must be `bool`. Selector-form cases are compared with equality in
+source order. Arm result kinds must have a common compatible kind, following the
+same branch merge rules as ternary expressions. The result qualifier is the
+strongest qualifier among the selector or conditions and the selected result
+expressions.
+
 ## `na`
 
 `na` behavior must be implemented deliberately. It must not be represented as

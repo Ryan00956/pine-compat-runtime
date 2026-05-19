@@ -8,7 +8,7 @@ mod source;
 
 pub use ast::{
     BinaryOp, CallArg, DeclMode, Expr, ExprKind, FunctionBody, Literal, Program, Stmt, StmtKind,
-    UnaryOp, VersionDecl,
+    SwitchArm, UnaryOp, VersionDecl,
 };
 pub use diagnostic::{Diagnostic, Severity};
 pub use lexer::{Lexed, Token, TokenKind, lex};

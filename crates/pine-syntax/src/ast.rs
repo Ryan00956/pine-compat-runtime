@@ -103,6 +103,10 @@ pub enum ExprKind {
         step: Option<Box<Expr>>,
         body: Vec<Stmt>,
     },
+    Switch {
+        selector: Option<Box<Expr>>,
+        arms: Vec<SwitchArm>,
+    },
     Tuple(Vec<Expr>),
     Call {
         callee: Box<Expr>,
@@ -112,6 +116,12 @@ pub enum ExprKind {
         expr: Box<Expr>,
         offset: Box<Expr>,
     },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SwitchArm {
+    pub condition: Option<Expr>,
+    pub result: Expr,
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -55,6 +55,8 @@ Phase 1 executable subset:
   block-local tuple declarations
 - `for i = start to end` loops over inclusive integer ranges with optional
   `by step`, `break`, `continue`, and loop result assignment
+- partial `switch` expressions with condition arms, selector/case arms, and
+  expression results
 - normal and tuple declarations scoped to an `if`/`else` branch
 - user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions
@@ -68,6 +70,11 @@ Phase 1 executable subset:
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes. Series values not evaluated on a bar are committed as `na` to
 keep history buffers bar-aligned.
+
+Stateful calls inside `switch` arms follow the same conditional callsite rule:
+only the selected arm result executes. Selector-form switches evaluate the
+selector once per bar, compare cases in source order, and return `na` when no
+arm matches and no default arm is present.
 
 Normal and tuple block-local declarations inside `if` blocks are scoped to the
 branch and do not leak outside it. A tuple declaration in a local scope shadows

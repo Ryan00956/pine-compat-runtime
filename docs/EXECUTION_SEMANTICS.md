@@ -62,6 +62,12 @@ expression. The loop returns the last value produced by that expression. If a
 produced value remains the loop result. If no iteration reaches the expression,
 the loop result is `na`.
 
+`switch` expressions evaluate arms in source order. Selector-form switches
+evaluate the selector once per bar, then compare each case expression with that
+selector value. Selector-less switches evaluate each arm condition until one is
+`true`. Only the selected result expression executes. If no arm matches and no
+default arm exists, the switch returns `na`.
+
 ### Reassignment
 
 ```pine

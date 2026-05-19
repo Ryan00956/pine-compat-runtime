@@ -57,6 +57,9 @@ block arms after expression arms are stable.
 
 ### Implementation Tasks
 
+Status: implemented for expression arms; statement-block arms remain out of
+scope for this stage.
+
 - Syntax:
   - Add `switch` token support.
   - Add AST nodes for selector-less and selector-based switch expressions.

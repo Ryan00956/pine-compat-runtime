@@ -127,6 +127,10 @@ pub enum HirExprKind {
         then_expr: Box<HirExpr>,
         else_expr: Box<HirExpr>,
     },
+    Switch {
+        selector: Option<Box<HirExpr>>,
+        arms: Vec<HirSwitchArm>,
+    },
     For {
         counter: SymbolId,
         from: Box<HirExpr>,
@@ -149,6 +153,12 @@ pub enum HirExprKind {
         expr: Box<HirExpr>,
         offset: u32,
     },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct HirSwitchArm {
+    pub condition: Option<HirExpr>,
+    pub result: HirExpr,
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -1,5 +1,11 @@
 # Release Notes
 
+## Unreleased
+
+- Added partial `switch` expression support for condition arms, selector/case
+  arms, expression results, default arms, and conditional stateful-call
+  execution.
+
 ## v0.1 Baseline
 
 This release establishes the first executable Pine-compatible indicator subset.

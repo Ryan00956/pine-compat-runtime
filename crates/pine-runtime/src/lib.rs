@@ -661,6 +661,9 @@ impl<'a> HistoricalRuntime<'a> {
                 PineValue::Bool(false) | PineValue::Na => self.eval_expr(else_expr)?,
                 _ => PineValue::Na,
             },
+            HirExprKind::Switch { selector, arms } => {
+                self.eval_switch(selector.as_deref(), arms)?
+            }
             HirExprKind::For {
                 counter,
                 from,
@@ -716,6 +719,39 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(value)
+    }
+
+    fn eval_switch(
+        &mut self,
+        selector: Option<&HirExpr>,
+        arms: &[pine_ir::HirSwitchArm],
+    ) -> Result<PineValue, RuntimeError> {
+        let selector_value = match selector {
+            Some(selector) => Some(self.eval_expr(selector)?),
+            None => None,
+        };
+
+        for arm in arms {
+            let matches = match (&selector_value, &arm.condition) {
+                (Some(selector_value), Some(case_expr)) => {
+                    let case_value = self.eval_expr(case_expr)?;
+                    matches!(
+                        eval_binary(HirBinaryOp::Eq, selector_value.clone(), case_value),
+                        PineValue::Bool(true)
+                    )
+                }
+                (None, Some(condition)) => {
+                    matches!(self.eval_expr(condition)?, PineValue::Bool(true))
+                }
+                (_, None) => true,
+            };
+
+            if matches {
+                return self.eval_expr(&arm.result);
+            }
+        }
+
+        Ok(PineValue::Na)
     }
 
     fn eval_call(
@@ -3129,6 +3165,122 @@ plot(close + x + y)
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[7.0, 8.0, 9.0]);
+    }
+
+    #[test]
+    fn runs_condition_switch_expression() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("condition switch")
+value = switch
+    close > open => high
+    close < open => low
+    => close
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 5.0, 0.0, 2.0),
+            bar_ohlc(3.0, 6.0, 1.0, 2.0),
+            bar_ohlc(2.0, 7.0, 4.0, 2.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[5.0, 1.0, 2.0]);
+    }
+
+    #[test]
+    fn runs_selector_switch_expression() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("selector switch")
+direction = close > open ? 1 : close < open ? -1 : 0
+value = switch direction
+    1 => high
+    -1 => low
+    => close
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 5.0, 0.0, 2.0),
+            bar_ohlc(3.0, 6.0, 1.0, 2.0),
+            bar_ohlc(2.0, 7.0, 4.0, 2.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[5.0, 1.0, 2.0]);
+    }
+
+    #[test]
+    fn switch_returns_na_when_no_arm_matches() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("switch no match")
+value = switch
+    close > open => high
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar_ohlc(2.0, 5.0, 1.0, 2.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values, vec![PineValue::Na]);
+    }
+
+    #[test]
+    fn advances_switch_sma_only_when_arm_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("switch conditional sma")
+value = switch
+    close > open => ta.sma(close, 2)
+    => close
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(0.0, 1.0, 0.0, 1.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(3.0, 4.0, 3.0, 4.0),
+            bar_ohlc(5.0, 6.0, 5.0, 6.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.0, 2.5, 5.0]);
     }
 
     #[test]

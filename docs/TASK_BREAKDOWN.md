@@ -190,8 +190,8 @@ Status: v0.1 expansion complete. The next stage is planned in
 
 ## Next Planned Expansion
 
-Status: planned.
+Status: in progress.
 
-- [ ] Add partial `switch` expression support.
+- [x] Add partial `switch` expression support.
 - [ ] Add partial `while` statement support with an iteration guard.
 - [ ] Design and implement partial float array support.
