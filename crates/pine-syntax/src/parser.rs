@@ -73,11 +73,11 @@ impl Parser {
         }
 
         if self.at(TokenKind::If) {
-            return Some(self.parse_unsupported_line("if"));
+            return self.parse_if_stmt();
         }
 
         if self.at(TokenKind::For) {
-            return Some(self.parse_unsupported_line("for"));
+            return Some(self.parse_unsupported_block("for"));
         }
 
         if self.at(TokenKind::LBracket) {
@@ -168,10 +168,108 @@ impl Parser {
         })
     }
 
+    fn parse_if_stmt(&mut self) -> Option<Stmt> {
+        let start = self.expect(TokenKind::If, "expected `if`")?;
+        let condition = self.parse_expr(0)?;
+        self.expect(TokenKind::Newline, "expected newline after `if` condition")?;
+        let then_branch = self.parse_indented_block()?;
+        let mut span = then_branch
+            .last()
+            .map_or(condition.span, |statement| statement.span);
+
+        let else_branch = if self.at(TokenKind::Else) {
+            self.bump();
+            if self.at(TokenKind::If) {
+                let nested_if = self.parse_if_stmt()?;
+                span = nested_if.span;
+                vec![nested_if]
+            } else {
+                self.expect(TokenKind::Newline, "expected newline after `else`")?;
+                let branch = self.parse_indented_block()?;
+                span = branch.last().map_or(span, |statement| statement.span);
+                branch
+            }
+        } else {
+            Vec::new()
+        };
+
+        Some(Stmt {
+            span: start.merge(span),
+            kind: StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            },
+        })
+    }
+
+    fn parse_indented_block(&mut self) -> Option<Vec<Stmt>> {
+        self.expect(TokenKind::Indent, "expected indented block")?;
+        let mut statements = Vec::new();
+
+        loop {
+            self.skip_newlines();
+            if self.at(TokenKind::Dedent) {
+                self.bump();
+                break;
+            }
+            if self.at(TokenKind::Eof) {
+                self.error_here("E_PARSE_BLOCK", "expected dedent before end of file");
+                break;
+            }
+
+            match self.parse_stmt() {
+                Some(statement) => statements.push(statement),
+                None => self.recover_stmt(),
+            }
+            self.skip_newlines();
+        }
+
+        if statements.is_empty() {
+            self.error_here("E_PARSE_BLOCK", "expected statement in block");
+            return None;
+        }
+
+        Some(statements)
+    }
+
     fn parse_unsupported_line(&mut self, feature: &str) -> Stmt {
         let start = self.current().span;
         self.bump();
         while !self.at(TokenKind::Newline) && !self.at(TokenKind::Eof) {
+            self.bump();
+        }
+
+        Stmt {
+            span: start.merge(self.previous().span),
+            kind: StmtKind::Unsupported {
+                feature: feature.to_owned(),
+            },
+        }
+    }
+
+    fn parse_unsupported_block(&mut self, feature: &str) -> Stmt {
+        let start = self.current().span;
+        self.bump();
+        while !self.at(TokenKind::Newline) && !self.at(TokenKind::Eof) {
+            self.bump();
+        }
+
+        if self.at(TokenKind::Newline) {
+            self.bump();
+        }
+
+        let mut depth = 0_u32;
+        if self.at(TokenKind::Indent) {
+            depth = 1;
+            self.bump();
+        }
+        while depth > 0 && !self.at(TokenKind::Eof) {
+            if self.at(TokenKind::Indent) {
+                depth += 1;
+            } else if self.at(TokenKind::Dedent) {
+                depth -= 1;
+            }
             self.bump();
         }
 
@@ -610,15 +708,21 @@ mod tests {
     }
 
     #[test]
-    fn parses_if_as_unsupported_statement() {
-        let parsed = parse("if close > open\n    plot(close)\n");
+    fn parses_if_statement() {
+        let parsed = parse("if close > open\n    plot(close)\nelse\n    plot(open)\n");
 
         assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-        assert_eq!(parsed.program.statements.len(), 2);
-        assert!(matches!(
-            parsed.program.statements[0].kind,
-            StmtKind::Unsupported { ref feature } if feature == "if"
-        ));
+        assert_eq!(parsed.program.statements.len(), 1);
+        let StmtKind::If {
+            then_branch,
+            else_branch,
+            ..
+        } = &parsed.program.statements[0].kind
+        else {
+            panic!("expected if statement");
+        };
+        assert_eq!(then_branch.len(), 1);
+        assert_eq!(else_branch.len(), 1);
     }
 
     #[test]
@@ -638,7 +742,7 @@ mod tests {
         let parsed = parse("for i = 0 to 10\n    plot(close)\n");
 
         assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
-        assert_eq!(parsed.program.statements.len(), 2);
+        assert_eq!(parsed.program.statements.len(), 1);
         assert!(matches!(
             parsed.program.statements[0].kind,
             StmtKind::Unsupported { ref feature } if feature == "for"

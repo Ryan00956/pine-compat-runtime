@@ -51,6 +51,8 @@ Expressions:
 Phase 1 executable subset:
 
 - global declarations
+- `if`/`else` blocks for expression statements, declarations, tuple
+  declarations, and reassignment
 - arithmetic, comparison, logical, and ternary expressions
 - constant history offsets
 - `indicator`
@@ -58,6 +60,9 @@ Phase 1 executable subset:
 - `plot`, `hline`, and `fill`
 - `na`, `nz`
 - `ta.sma` and `ta.ema`
+
+Current `if` support intentionally rejects `ta.*` calls inside branches until
+conditional callsite state is implemented.
 
 ## Initial Built-Ins
 

@@ -73,6 +73,11 @@ pub struct HirStmt {
 #[derive(Debug, Clone, PartialEq)]
 pub enum HirStmtKind {
     Expr(HirExpr),
+    If {
+        condition: HirExpr,
+        then_branch: Vec<HirStmt>,
+        else_branch: Vec<HirStmt>,
+    },
     Decl {
         symbol: SymbolId,
         value: HirExpr,

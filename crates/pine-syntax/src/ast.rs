@@ -21,6 +21,11 @@ pub struct Stmt {
 #[derive(Debug, Clone, PartialEq)]
 pub enum StmtKind {
     Expr(Expr),
+    If {
+        condition: Expr,
+        then_branch: Vec<Stmt>,
+        else_branch: Vec<Stmt>,
+    },
     Decl {
         mode: DeclMode,
         name: String,

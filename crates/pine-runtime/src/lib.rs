@@ -3,8 +3,8 @@
 use std::collections::{HashMap, VecDeque};
 
 use pine_ir::{
-    CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirLiteral, HirProgram, HirStmtKind,
-    HirUnaryOp, SeriesId, SymbolId, VarSlotId,
+    CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirLiteral, HirProgram, HirStmt,
+    HirStmtKind, HirUnaryOp, SeriesId, SymbolId, VarSlotId,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -325,35 +325,55 @@ impl<'a> HistoricalRuntime<'a> {
         self.set_builtin_symbols(&bar, bar_index)?;
 
         for statement in &self.program.statements {
-            match &statement.kind {
-                HirStmtKind::Expr(expr) => {
-                    self.eval_expr(expr)?;
-                }
-                HirStmtKind::Decl { symbol, value } => {
-                    let value = self.eval_decl(*symbol, value)?;
-                    self.set_symbol_value(*symbol, value);
-                }
-                HirStmtKind::Reassign { symbol, value } => {
-                    let value = self.eval_expr(value)?;
-                    if let Some(var_slot_id) = self.var_slot_for_symbol(*symbol) {
-                        self.var_store.insert(var_slot_id, value.clone());
-                    }
-                    self.set_symbol_value(*symbol, value);
-                }
-                HirStmtKind::TupleDecl { symbols, value } => {
-                    let value = self.eval_expr(value)?;
-                    let PineValue::Tuple(values) = value else {
-                        continue;
-                    };
-                    for (symbol, value) in symbols.iter().zip(values) {
-                        self.set_symbol_value(*symbol, value);
-                    }
-                }
-            }
+            self.eval_stmt(statement)?;
         }
 
         self.commit_current_series();
         self.bars += 1;
+        Ok(())
+    }
+
+    fn eval_stmt(&mut self, statement: &HirStmt) -> Result<(), RuntimeError> {
+        match &statement.kind {
+            HirStmtKind::Expr(expr) => {
+                self.eval_expr(expr)?;
+            }
+            HirStmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => {
+                let branch = match self.eval_expr(condition)? {
+                    PineValue::Bool(true) => then_branch,
+                    PineValue::Bool(false) | PineValue::Na => else_branch,
+                    _ => return Ok(()),
+                };
+                for statement in branch {
+                    self.eval_stmt(statement)?;
+                }
+            }
+            HirStmtKind::Decl { symbol, value } => {
+                let value = self.eval_decl(*symbol, value)?;
+                self.set_symbol_value(*symbol, value);
+            }
+            HirStmtKind::Reassign { symbol, value } => {
+                let value = self.eval_expr(value)?;
+                if let Some(var_slot_id) = self.var_slot_for_symbol(*symbol) {
+                    self.var_store.insert(var_slot_id, value.clone());
+                }
+                self.set_symbol_value(*symbol, value);
+            }
+            HirStmtKind::TupleDecl { symbols, value } => {
+                let value = self.eval_expr(value)?;
+                let PineValue::Tuple(values) = value else {
+                    return Ok(());
+                };
+                for (symbol, value) in symbols.iter().zip(values) {
+                    self.set_symbol_value(*symbol, value);
+                }
+            }
+        }
+
         Ok(())
     }
 
@@ -2006,6 +2026,66 @@ plot(x)
             .update(BarUpdate::confirmed(bar(4.0)))
             .expect("confirmed update");
         assert_values_close(&confirmed.plots[0].values, &[1.0, 2.0]);
+    }
+
+    #[test]
+    fn runs_if_else_reassignment_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("if")
+x = close
+if close > open
+    x := close
+else
+    x := open
+plot(x)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 5.0, 4.0, 5.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[2.0, 3.0, 5.0]);
+    }
+
+    #[test]
+    fn runs_if_reassignment_with_var_state() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("if var")
+var x = 0
+if close > open
+    x := x + 1
+plot(x)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 5.0, 4.0, 5.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[1.0, 1.0, 2.0]);
     }
 
     fn bar(close: f64) -> Bar {

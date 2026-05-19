@@ -20,6 +20,8 @@ pub enum TokenKind {
     False,
     If,
     Else,
+    Indent,
+    Dedent,
     For,
     Import,
     To,
@@ -69,6 +71,8 @@ struct Lexer<'a> {
     pos: usize,
     tokens: Vec<Token>,
     diagnostics: Vec<Diagnostic>,
+    line_start: bool,
+    indent_stack: Vec<usize>,
 }
 
 impl<'a> Lexer<'a> {
@@ -79,16 +83,29 @@ impl<'a> Lexer<'a> {
             pos: 0,
             tokens: Vec::new(),
             diagnostics: Vec::new(),
+            line_start: true,
+            indent_stack: vec![0],
         }
     }
 
     fn lex(mut self) -> Lexed {
-        while let Some(byte) = self.peek_byte() {
+        while let Some(mut byte) = self.peek_byte() {
+            if self.line_start {
+                self.handle_line_start();
+                let Some(next_byte) = self.peek_byte() else {
+                    break;
+                };
+                byte = next_byte;
+            }
+
             match byte {
                 b' ' | b'\t' | b'\r' => {
                     self.pos += 1;
                 }
-                b'\n' => self.single(TokenKind::Newline),
+                b'\n' => {
+                    self.single(TokenKind::Newline);
+                    self.line_start = true;
+                }
                 b'0'..=b'9' => self.number(),
                 b'a'..=b'z' | b'A'..=b'Z' | b'_' => self.identifier_or_keyword(),
                 b'"' => self.string(),
@@ -120,6 +137,7 @@ impl<'a> Lexer<'a> {
             }
         }
 
+        self.close_indents();
         self.tokens.push(Token {
             kind: TokenKind::Eof,
             span: Span::new(self.pos, self.pos),
@@ -142,6 +160,9 @@ impl<'a> Lexer<'a> {
     fn single(&mut self, kind: TokenKind) {
         let start = self.pos;
         self.pos += 1;
+        if !matches!(kind, TokenKind::Newline) {
+            self.line_start = false;
+        }
         self.tokens.push(Token {
             kind,
             span: Span::new(start, self.pos),
@@ -151,6 +172,7 @@ impl<'a> Lexer<'a> {
     fn double(&mut self, kind: TokenKind) {
         let start = self.pos;
         self.pos += 2;
+        self.line_start = false;
         self.tokens.push(Token {
             kind,
             span: Span::new(start, self.pos),
@@ -205,6 +227,7 @@ impl<'a> Lexer<'a> {
             kind,
             span: Span::new(start, self.pos),
         });
+        self.line_start = false;
     }
 
     fn identifier_or_keyword(&mut self) {
@@ -231,6 +254,7 @@ impl<'a> Lexer<'a> {
             kind,
             span: Span::new(start, self.pos),
         });
+        self.line_start = false;
     }
 
     fn string(&mut self) {
@@ -246,6 +270,7 @@ impl<'a> Lexer<'a> {
                         kind: TokenKind::String(value),
                         span: Span::new(start, self.pos),
                     });
+                    self.line_start = false;
                     return;
                 }
                 b'\\' => {
@@ -295,6 +320,7 @@ impl<'a> Lexer<'a> {
                 kind: TokenKind::ColorHex(raw.to_owned()),
                 span: Span::new(start, self.pos),
             });
+            self.line_start = false;
         } else {
             self.diagnostics.push(Diagnostic::error(
                 "E_LEX_COLOR",
@@ -326,6 +352,7 @@ impl<'a> Lexer<'a> {
         }
 
         self.pos = line_end;
+        self.line_start = false;
     }
 
     fn unexpected_byte(&mut self) {
@@ -345,6 +372,86 @@ impl<'a> Lexer<'a> {
     fn consume_while(&mut self, mut predicate: impl FnMut(u8) -> bool) {
         while self.peek_byte().is_some_and(&mut predicate) {
             self.pos += 1;
+        }
+    }
+
+    fn handle_line_start(&mut self) {
+        let start = self.pos;
+        let mut indent = 0_usize;
+
+        while let Some(byte) = self.peek_byte() {
+            match byte {
+                b' ' => {
+                    indent += 1;
+                    self.pos += 1;
+                }
+                b'\t' => {
+                    indent += 4;
+                    self.pos += 1;
+                }
+                b'\r' => {
+                    self.pos += 1;
+                }
+                _ => break,
+            }
+        }
+
+        if matches!(self.peek_byte(), Some(b'\n') | None) {
+            return;
+        }
+
+        if self.peek_byte() == Some(b'/') && self.peek_next() == Some(b'/') {
+            return;
+        }
+
+        let current = *self
+            .indent_stack
+            .last()
+            .expect("indent stack always contains root indent");
+        if indent > current {
+            self.indent_stack.push(indent);
+            self.tokens.push(Token {
+                kind: TokenKind::Indent,
+                span: Span::new(start, self.pos),
+            });
+        } else if indent < current {
+            while indent
+                < *self
+                    .indent_stack
+                    .last()
+                    .expect("indent stack always contains root indent")
+            {
+                self.indent_stack.pop();
+                self.tokens.push(Token {
+                    kind: TokenKind::Dedent,
+                    span: Span::new(start, self.pos),
+                });
+            }
+
+            if indent
+                != *self
+                    .indent_stack
+                    .last()
+                    .expect("indent stack always contains root indent")
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_LEX_INDENT",
+                    "inconsistent indentation",
+                    Span::new(start, self.pos),
+                ));
+            }
+        }
+
+        self.line_start = false;
+    }
+
+    fn close_indents(&mut self) {
+        while self.indent_stack.len() > 1 {
+            self.indent_stack.pop();
+            self.tokens.push(Token {
+                kind: TokenKind::Dedent,
+                span: Span::new(self.pos, self.pos),
+            });
         }
     }
 }
@@ -402,6 +509,37 @@ mod tests {
                 TokenKind::Int(1),
                 TokenKind::RBracket,
                 TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_indented_blocks() {
+        assert_eq!(
+            kinds("if close > open\n    plot(close)\nelse\n    plot(open)\n"),
+            vec![
+                TokenKind::If,
+                TokenKind::Identifier("close".to_owned()),
+                TokenKind::Gt,
+                TokenKind::Identifier("open".to_owned()),
+                TokenKind::Newline,
+                TokenKind::Indent,
+                TokenKind::Identifier("plot".to_owned()),
+                TokenKind::LParen,
+                TokenKind::Identifier("close".to_owned()),
+                TokenKind::RParen,
+                TokenKind::Newline,
+                TokenKind::Dedent,
+                TokenKind::Else,
+                TokenKind::Newline,
+                TokenKind::Indent,
+                TokenKind::Identifier("plot".to_owned()),
+                TokenKind::LParen,
+                TokenKind::Identifier("open".to_owned()),
+                TokenKind::RParen,
+                TokenKind::Newline,
+                TokenKind::Dedent,
                 TokenKind::Eof,
             ]
         );

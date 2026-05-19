@@ -81,16 +81,18 @@ source.pine + bars.csv + inputs.json
   -> result.json
 ```
 
-The supported executable subset includes global-scope indicator scripts,
-historical bar-by-bar execution, constant history offsets, `var`, `na`, `nz`,
-`input.*`, `plot`, `hline`, `fill`, common `ta.*` functions, selected `math.*`
-functions, named colors, `color.new`, tuple returns, incremental append
-execution, realtime forming-bar rollback, Python bindings, and a thin WASM
-binding.
+The supported executable subset includes indicator scripts, historical
+bar-by-bar execution, constant history offsets, `if`/`else` blocks, `var`,
+`na`, `nz`, `input.*`, `plot`, `hline`, `fill`, common `ta.*` functions,
+selected `math.*` functions, named colors, `color.new`, tuple returns,
+incremental append execution, realtime forming-bar rollback, Python bindings,
+and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as `strategy.*`,
 `request.*`, alerts, imports, arrays, drawing objects, dynamic history offsets,
 user-defined function execution, and `varip` intrabar persistence.
+`ta.*` calls inside `if` blocks are rejected until conditional callsite state is
+implemented.
 
 ## CLI
 

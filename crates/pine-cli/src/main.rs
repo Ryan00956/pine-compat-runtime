@@ -167,6 +167,11 @@ fn conformance_entries() -> Vec<MatrixEntry> {
 
     entries.extend([
         MatrixEntry {
+            feature: "if".to_owned(),
+            status: "supported",
+            notes: "block execution without ta.* calls inside branches",
+        },
+        MatrixEntry {
             feature: "color.* named constants".to_owned(),
             status: "partial",
             notes: "common registry only",
@@ -225,6 +230,11 @@ fn conformance_entries() -> Vec<MatrixEntry> {
             feature: "dynamic history offsets".to_owned(),
             status: "unsupported",
             notes: "Phase 1 requires static offsets",
+        },
+        MatrixEntry {
+            feature: "ta.* inside if blocks".to_owned(),
+            status: "unsupported",
+            notes: "conditional callsite state is not implemented",
         },
     ]);
 
@@ -502,6 +512,11 @@ mod tests {
             entries
                 .iter()
                 .any(|entry| entry.feature == "ta.macd" && entry.status == "supported")
+        );
+        assert!(
+            entries
+                .iter()
+                .any(|entry| entry.feature == "if" && entry.status == "supported")
         );
         assert!(
             entries

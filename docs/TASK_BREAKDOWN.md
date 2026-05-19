@@ -156,3 +156,15 @@ Status: in progress.
   diagnostic-only for the next release.
 - [ ] Add release notes describing the supported subset and explicit
   unsupported boundaries.
+
+## Next Language Expansion
+
+Status: in progress.
+
+- [x] Parse indentation into executable blocks.
+- [x] Lower `if`/`else` statements to HIR.
+- [x] Execute `if`/`else` branches in the historical and realtime runtimes.
+- [x] Reject `ta.*` calls inside `if` blocks until conditional callsite state
+  is implemented.
+- [ ] Add fixture-derived conformance metadata for block statements.
+- [ ] Design and implement conditional callsite state for stateful built-ins.

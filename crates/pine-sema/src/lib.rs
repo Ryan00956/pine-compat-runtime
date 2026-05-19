@@ -10,7 +10,7 @@ use pine_ir::{
 };
 use pine_syntax::{
     BinaryOp, CallArg, Diagnostic, Expr, ExprKind, Literal, Program, Severity, SourceFile, Span,
-    StmtKind, UnaryOp, parse_source,
+    Stmt, StmtKind, UnaryOp, parse_source,
 };
 
 const VARIP_UNSUPPORTED_REASON: &str = "varip intrabar persistence is not implemented; forming-bar rollback currently supports var state only";
@@ -55,6 +55,7 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
         next_series_id: initial_series_count(),
         next_call_site_id: 0,
         next_var_slot_id: 0,
+        conditional_depth: 0,
     };
     analyzer.analyze_program(&parsed.program);
     analyzer.finish(&parsed.program)
@@ -132,6 +133,7 @@ struct Analyzer {
     next_series_id: u32,
     next_call_site_id: u32,
     next_var_slot_id: u32,
+    conditional_depth: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -208,45 +210,69 @@ impl ScopeResolver {
 impl Analyzer {
     fn analyze_program(&mut self, program: &Program) {
         for statement in &program.statements {
-            match &statement.kind {
-                StmtKind::Expr(expr) => {
-                    self.analyze_expr(expr);
+            self.analyze_stmt(statement);
+        }
+    }
+
+    fn analyze_stmt(&mut self, statement: &Stmt) {
+        match &statement.kind {
+            StmtKind::Expr(expr) => {
+                self.analyze_expr(expr);
+            }
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => {
+                let condition_type = self.analyze_expr(condition);
+                if let Some(condition_type) = condition_type {
+                    self.expect_bool(condition_type, condition.span);
                 }
-                StmtKind::Decl { mode, name, value } => {
-                    if matches!(mode, pine_syntax::DeclMode::Varip) {
-                        self.unsupported("varip", VARIP_UNSUPPORTED_REASON, statement.span);
-                    }
-                    let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
-                    let var_slot_id = if matches!(mode, pine_syntax::DeclMode::Var) {
-                        Some(self.alloc_var_slot())
-                    } else {
-                        None
-                    };
-                    self.define_symbol(name, value_type, var_slot_id);
+                self.compatibility.supported.push(FeatureUse {
+                    feature: "if".to_owned(),
+                    span: statement.span,
+                });
+
+                self.conditional_depth += 1;
+                for branch_statement in then_branch.iter().chain(else_branch) {
+                    self.analyze_stmt(branch_statement);
                 }
-                StmtKind::Reassign { name, value } => {
-                    if self.scope.resolve(name).is_none() {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_UNKNOWN_SYMBOL",
-                            format!("cannot reassign unknown symbol `{name}`"),
-                            statement.span,
-                        ));
-                    }
-                    let value_type = self.analyze_expr(value);
-                    if let (Some(target_type), Some(value_type)) = (
-                        self.scope.resolve(name).map(|symbol| symbol.pine_type),
-                        value_type,
-                    ) {
-                        self.validate_assignment(name, target_type, value_type, statement.span);
-                        self.update_symbol_type(name, value_type);
-                    }
+                self.conditional_depth -= 1;
+            }
+            StmtKind::Decl { mode, name, value } => {
+                if matches!(mode, pine_syntax::DeclMode::Varip) {
+                    self.unsupported("varip", VARIP_UNSUPPORTED_REASON, statement.span);
                 }
-                StmtKind::TupleDecl { .. } => {
-                    self.analyze_tuple_decl(statement);
+                let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
+                let var_slot_id = if matches!(mode, pine_syntax::DeclMode::Var) {
+                    Some(self.alloc_var_slot())
+                } else {
+                    None
+                };
+                self.define_symbol(name, value_type, var_slot_id);
+            }
+            StmtKind::Reassign { name, value } => {
+                if self.scope.resolve(name).is_none() {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_UNKNOWN_SYMBOL",
+                        format!("cannot reassign unknown symbol `{name}`"),
+                        statement.span,
+                    ));
                 }
-                StmtKind::Unsupported { feature } => {
-                    self.unsupported(feature, unsupported_syntax_reason(feature), statement.span);
+                let value_type = self.analyze_expr(value);
+                if let (Some(target_type), Some(value_type)) = (
+                    self.scope.resolve(name).map(|symbol| symbol.pine_type),
+                    value_type,
+                ) {
+                    self.validate_assignment(name, target_type, value_type, statement.span);
+                    self.update_symbol_type(name, value_type);
                 }
+            }
+            StmtKind::TupleDecl { .. } => {
+                self.analyze_tuple_decl(statement);
+            }
+            StmtKind::Unsupported { feature } => {
+                self.unsupported(feature, unsupported_syntax_reason(feature), statement.span);
             }
         }
     }
@@ -353,6 +379,13 @@ impl Analyzer {
             return None;
         };
         self.check_feature_name(&name, callee.span);
+        if self.conditional_depth > 0 && name.starts_with("ta.") {
+            self.unsupported(
+                "conditional_ta_call",
+                "ta.* calls inside if blocks are not supported until conditional callsite state is implemented",
+                callee.span,
+            );
+        }
 
         let arg_types: Vec<_> = args
             .iter()
@@ -835,6 +868,21 @@ impl Analyzer {
     fn lower_stmt(&mut self, statement: &pine_syntax::Stmt) -> Option<HirStmt> {
         let kind = match &statement.kind {
             StmtKind::Expr(expr) => HirStmtKind::Expr(self.lower_expr(expr)?),
+            StmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => HirStmtKind::If {
+                condition: self.lower_expr(condition)?,
+                then_branch: then_branch
+                    .iter()
+                    .map(|statement| self.lower_stmt(statement))
+                    .collect::<Option<_>>()?,
+                else_branch: else_branch
+                    .iter()
+                    .map(|statement| self.lower_stmt(statement))
+                    .collect::<Option<_>>()?,
+            },
             StmtKind::Decl { name, value, .. } => HirStmtKind::Decl {
                 symbol: self.scope.resolve(name)?.id,
                 value: self.lower_expr(value)?,
@@ -1477,15 +1525,35 @@ plot(y)
     }
 
     #[test]
-    fn reports_parse_only_if_as_unsupported() {
-        let analysis = analyze("if close > open\nplot(close)\n");
+    fn lowers_if_statement_to_hir() {
+        let analysis = analyze("if close > open\n    plot(close)\nelse\n    plot(open)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "if")
+        );
+        let hir = analysis.hir.expect("if statement should lower");
+        assert!(matches!(hir.statements[0].kind, HirStmtKind::If { .. }));
+    }
+
+    #[test]
+    fn rejects_ta_calls_inside_if_blocks() {
+        let analysis = analyze("if close > open\n    x = ta.sma(close, 2)\n");
 
         assert!(
             analysis
                 .compatibility
                 .unsupported
                 .iter()
-                .any(|feature| feature.feature == "if")
+                .any(|feature| feature.feature == "conditional_ta_call")
         );
         assert!(analysis.hir.is_none());
     }

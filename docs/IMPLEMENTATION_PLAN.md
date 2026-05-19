@@ -16,13 +16,15 @@ source.pine + bars.csv
 
 The current baseline includes Rust library crates, a CLI, Python bindings,
 WASM bindings, compile caching, incremental append-bar execution, optimized
-rolling state for selected TA built-ins, realtime forming-bar rollback, and a
-registry-seeded compatibility matrix.
+rolling state for selected TA built-ins, executable `if`/`else` blocks,
+realtime forming-bar rollback, and a registry-seeded compatibility matrix.
 
 The runtime still makes compatibility claims by tested feature. User-defined
 function execution, `varip` intrabar persistence, `request.*`, `strategy.*`,
 alerts, imports, arrays, drawing objects, and dynamic history offsets remain
 outside the executable subset and should produce diagnostics.
+Stateful `ta.*` calls inside `if` blocks are also rejected until conditional
+callsite state is specified and tested.
 
 ## Phase 0: Repository Foundation
 
