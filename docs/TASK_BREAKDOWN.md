@@ -195,3 +195,19 @@ Status: in progress.
 - [x] Add partial `switch` expression support.
 - [x] Add partial `while` statement support with an iteration guard.
 - [x] Design and implement partial float array support.
+
+## Long-Term Backlog
+
+Status: planned in
+[`LONG_TERM_EXECUTION_PLAN.md`](LONG_TERM_EXECUTION_PLAN.md).
+
+- [ ] Harden loop and branch edge cases.
+- [ ] Expand collection support beyond float arrays.
+- [ ] Revisit history and qualifier semantics.
+- [ ] Add more built-in coverage.
+- [ ] Design drawing object outputs.
+- [ ] Design `request.*` and multi-timeframe data providers.
+- [ ] Design strategy runtime mode.
+- [ ] Design alerts.
+- [ ] Design `varip` intrabar persistence.
+- [ ] Design libraries, imports, user-defined types, and methods.

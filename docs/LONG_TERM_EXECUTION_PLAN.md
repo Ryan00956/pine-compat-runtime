@@ -1,0 +1,371 @@
+# Long-Term Execution Plan
+
+This document tracks the remaining compatibility work after the current
+indicator-focused baseline. It is intentionally broader than the next-stage
+playbook: use it to choose future phases, but continue to land changes through
+small, fixture-backed increments.
+
+The current rule remains unchanged: a feature is only claimed in
+`tests/fixtures/conformance.tsv` when syntax, semantic analysis, runtime
+behavior, public outputs, docs, and fixtures all agree.
+
+## Current Baseline
+
+Implemented or partially implemented:
+
+- Historical indicator execution over OHLCV bars.
+- Incremental append-bar execution.
+- Realtime forming-bar rollback for outputs, `var`, callsite state, and float
+  arrays.
+- `if`/`else`, local scopes, tuple declarations, reassignment, and local `var`
+  declaration-site storage.
+- User-defined functions with expression bodies, block bodies, positional and
+  named arguments, local declarations, loops inside functions, and independent
+  callsite state.
+- Partial `switch` expressions.
+- Partial `for` and `while` loops.
+- Constant non-negative history offsets.
+- Partial float arrays and float-array method calls.
+- A fixture-covered set of `input.*`, output calls, color helpers, math
+  helpers, and `ta.*` functions.
+- CLI, Python, and WASM surfaces for the supported runtime result model.
+
+Remaining work falls into the phases below.
+
+## Execution Rules
+
+- Add or update fixtures before or alongside implementation.
+- Keep unsupported variants diagnostic-only until their behavior is designed.
+- Prefer one feature through the full stack over several parser-only changes.
+- Preserve deterministic runtime guards for loops and mutable storage.
+- Keep public JSON, Python, and WASM output schemas synchronized.
+- Update `tests/fixtures/conformance.tsv` only after fixture coverage exists.
+- Run the full verification set before calling a phase complete.
+
+Recommended verification:
+
+```text
+cargo fmt --check
+git diff --check
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+cargo check -p pine-wasm --target wasm32-unknown-unknown
+maturin build --manifest-path crates/pine-python/Cargo.toml --out dist
+python -m pip install --force-reinstall dist/*.whl
+python -m pytest python/tests
+```
+
+## Phase A: Loop and Branch Hardening
+
+Goal: turn the current partial loop support into a more reliable Pine subset
+before adding larger runtime systems.
+
+Scope:
+
+- Broaden `for` fixtures for zero-iteration behavior, `na` loop bounds, step
+  direction edge cases, nested loops, loop counter shadowing, and loop results.
+- Broaden `while` fixtures for `na` conditions, nested loop control, local
+  declarations, local `var`, and stateful calls inside loop bodies.
+- Add more branch interaction fixtures: `if` inside loops, loops inside `if`,
+  `switch` inside loops, and loops inside UDFs.
+- Decide whether `while` expression results should enter the supported subset
+  or stay rejected.
+- Decide whether statement-block `switch` arms should enter the supported
+  subset or stay rejected.
+
+Out of scope:
+
+- Dynamic history offsets.
+- Object systems.
+- Multi-timeframe data.
+
+Acceptance criteria:
+
+- Runtime fixtures cover nested loop control and stateful calls inside loops.
+- Incremental append execution matches full historical execution for all new
+  loop fixtures.
+- Diagnostics remain stable for unsupported loop forms.
+- `for`, `while`, and `switch` conformance notes describe the exact supported
+  subset.
+
+Suggested commits:
+
+1. `Harden for loop edge cases`
+2. `Harden while loop edge cases`
+3. `Cover loop branch interactions`
+4. `Document loop compatibility boundaries`
+
+## Phase B: Collections Beyond Float Arrays
+
+Goal: expand mutable collection support without breaking the runtime-owned
+storage model.
+
+Scope:
+
+- Add typed arrays beyond float arrays: bool, int, string, color, and source
+  where practical.
+- Add common array constructors and helpers after element typing is stable.
+- Define copy/reference behavior for array values across assignments,
+  function calls, `var`, rollback, and incremental execution.
+- Expand method syntax for supported array functions.
+- Add precise diagnostics for still-unsupported array operations.
+
+Later candidates:
+
+- Matrices.
+- Maps.
+- Array sorting/searching/statistical helpers.
+- Generic collection behavior if the type system can support it cleanly.
+
+Acceptance criteria:
+
+- Each supported element type has creation, mutation, read, persistence,
+  rollback, and UDF-boundary fixtures.
+- Unsupported collection variants are rejected during semantic analysis.
+- Runtime profiles include enough collection storage information to catch
+  uncontrolled growth.
+
+Suggested commits:
+
+1. `Support typed int arrays`
+2. `Support typed bool string color arrays`
+3. `Expand array helper coverage`
+4. `Document collection semantics`
+
+## Phase C: History and Series Semantics
+
+Goal: make series behavior closer to Pine while keeping static guarantees where
+possible.
+
+Scope:
+
+- Revisit dynamic history offsets and decide whether to support a guarded
+  subset or keep them diagnostic-only.
+- Expand tests around `na`, first-bar behavior, and history inside loops and
+  UDFs.
+- Tighten qualifier propagation for const, input, simple, and series values.
+- Audit built-in signatures against actual accepted qualifier behavior.
+
+Risks:
+
+- Dynamic offsets can require deeper history retention and new runtime bounds.
+- Qualifier changes may affect many built-in signatures at once.
+
+Acceptance criteria:
+
+- Any supported dynamic-offset subset has explicit retention limits and
+  runtime errors for unsafe offsets.
+- Built-in signature docs match semantic checks.
+- Existing fixture results remain stable unless a deliberate compatibility fix
+  is documented.
+
+## Phase D: Built-In Coverage Expansion
+
+Goal: grow useful indicator compatibility through high-value built-ins before
+large platform features.
+
+Candidate areas:
+
+- Additional `ta.*` functions.
+- Additional `math.*` and `str.*` helpers.
+- More complete `color.*` constants and helpers.
+- More complete `input.*` parameters and host-side input override APIs.
+- More plot options, visibility controls, styles, and display parameters.
+
+Execution order:
+
+1. Prefer pure functions with no runtime storage.
+2. Then add stateful built-ins with explicit callsite state.
+3. Then add output parameters that affect public result schemas.
+
+Acceptance criteria:
+
+- Every new built-in has semantic signature tests and runtime fixtures.
+- Stateful built-ins behave correctly inside `if`, `switch`, loops, and UDF
+  callsites when those combinations are claimed.
+- CLI, Python, and WASM expose any new result fields consistently.
+
+## Phase E: Drawing Object Systems
+
+Goal: support Pine drawing objects as first-class runtime outputs.
+
+Object families:
+
+- `label.*`
+- `line.*`
+- `box.*`
+- `table.*`
+- `polyline.*`
+
+Required design:
+
+- Runtime object ids and lifetime rules.
+- Per-bar creation, mutation, and deletion semantics.
+- Rollback behavior for forming bars.
+- Output schema for object snapshots or event streams.
+- Limits for object counts and memory use.
+- UDF side-effect policy for object creation and mutation.
+
+Acceptance criteria:
+
+- Object creation, update, delete, rollback, and limit fixtures exist for each
+  supported family.
+- Public outputs are stable enough for downstream renderers.
+- Unsupported object families or methods produce precise diagnostics.
+
+Suggested first slice:
+
+1. Implement `label.new` plus a minimal immutable snapshot output.
+2. Add `label.set_*` mutation methods.
+3. Add deletion and object limits.
+4. Repeat the pattern for `line` after label semantics settle.
+
+## Phase F: `request.*` and Multi-Timeframe Data
+
+Goal: support external data requests only after the runtime has a clear data
+provider abstraction.
+
+Scope:
+
+- Design a host data-provider API for symbols and timeframes.
+- Define bar alignment and gap behavior.
+- Define caching and deterministic replay semantics.
+- Implement a narrow `request.security` subset first.
+- Preserve diagnostics for unsupported request variants.
+
+Risks:
+
+- Multi-timeframe alignment can change stateful-call behavior.
+- Host APIs differ across CLI, Python, WASM, and future embeddings.
+
+Acceptance criteria:
+
+- Fixtures cover higher-timeframe and lower-timeframe alignment.
+- Historical, incremental, and realtime paths agree.
+- Missing data and provider errors produce stable diagnostics or runtime
+  errors.
+
+## Phase G: Strategy Runtime
+
+Goal: add `strategy.*` only as a separate runtime mode, not as a small built-in
+extension.
+
+Scope:
+
+- Strategy declaration and settings.
+- Order placement functions.
+- Broker emulator state.
+- Position, trade, equity, commission, slippage, and pyramiding semantics.
+- Strategy output schema.
+
+Dependencies:
+
+- Stable historical execution.
+- Clear result schema versioning.
+- Dedicated strategy fixtures separate from indicator fixtures.
+
+Acceptance criteria:
+
+- Indicator and strategy runtime modes are clearly separated.
+- Order execution is deterministic and fixture-backed.
+- Public APIs expose strategy results without weakening indicator results.
+
+## Phase H: Alerts
+
+Goal: support alert surfaces after series and condition evaluation semantics
+are stable.
+
+Scope:
+
+- `alertcondition`.
+- `alert`.
+- Message templating if supported.
+- Historical evaluation versus realtime triggering policy.
+
+Acceptance criteria:
+
+- Alert outputs are represented as deterministic events.
+- Realtime forming-bar behavior is explicitly documented.
+- Unsupported alert options remain diagnostic-only.
+
+## Phase I: `varip` and Intrabar Persistence
+
+Goal: implement intrabar persistence only after realtime update semantics are
+fully specified.
+
+Scope:
+
+- `varip` declaration analysis.
+- Intrabar storage distinct from confirmed-bar `var` storage.
+- Interaction with forming-bar rollback.
+- Interaction with arrays and object ids.
+
+Acceptance criteria:
+
+- Repeated forming updates preserve `varip` state while rolling back ordinary
+  `var` state as designed.
+- Historical-only execution has a documented `varip` behavior.
+- `varip` fixtures cover scalar values, arrays, and future object ids.
+
+## Phase J: Libraries, Imports, User Types, and Methods
+
+Goal: support larger Pine programs after the core runtime model has matured.
+
+Scope:
+
+- `import`, `library`, and `export`.
+- Module resolution and host-provided library sources.
+- User-defined types.
+- Non-array methods.
+- Method dispatch and receiver typing.
+
+Risks:
+
+- This touches semantic analysis, name resolution, caching, packaging, and
+  security boundaries.
+
+Acceptance criteria:
+
+- Compile cache keys include all source dependencies.
+- Diagnostics identify the originating file and span.
+- Imported code follows the same side-effect and compatibility rules as local
+  code.
+
+## Phase K: Release and Compatibility Infrastructure
+
+Goal: keep the growing subset maintainable.
+
+Scope:
+
+- Result schema versioning for CLI, Python, and WASM.
+- More conformance fixtures sourced from real indicators.
+- Golden JSON snapshots for public output shapes.
+- Performance benchmarks for long histories and many callsites.
+- CI jobs for Python wheel build and WASM target checks.
+- Compatibility matrix reporting by feature, status, fixture, and known gaps.
+
+Acceptance criteria:
+
+- New feature work cannot accidentally widen compatibility claims without
+  conformance metadata.
+- Public output changes are intentional and documented.
+- Performance regressions are visible before release.
+
+## Backlog Priority
+
+Recommended order from the current state:
+
+1. Phase A: harden `for`, `while`, and branch interactions.
+2. Phase D: add more high-value pure and stateful built-ins.
+3. Phase B: expand collections beyond float arrays.
+4. Phase C: revisit history and qualifier semantics.
+5. Phase K: strengthen release infrastructure before large platform features.
+6. Phase E: drawing objects.
+7. Phase F: `request.*` and multi-timeframe data.
+8. Phase I: `varip`.
+9. Phase H: alerts.
+10. Phase J: libraries, user types, and methods.
+11. Phase G: strategy runtime.
+
+This order keeps the project useful for indicator execution while delaying
+features that require new host APIs, object lifetimes, or broker simulation.

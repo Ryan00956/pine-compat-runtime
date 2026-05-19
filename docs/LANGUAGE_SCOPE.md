@@ -209,6 +209,9 @@ The analyzer should reject these with clear diagnostics:
 - broker emulation and order execution
 - realtime-only `varip` semantics
 
+Longer-term work for these unsupported areas is tracked in
+[`LONG_TERM_EXECUTION_PLAN.md`](LONG_TERM_EXECUTION_PLAN.md).
+
 ## Compatibility Report
 
 The analyzer should return a machine-readable report:
