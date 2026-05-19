@@ -182,6 +182,8 @@ Rules:
 - The declaration site owns persistent storage.
 - The initializer runs only when the declaration site is first reached.
 - Later executions read the persistent value.
+- Local `var` declarations in blocks and inlined user-defined functions use
+  declaration-site storage, with independent storage per syntactic UDF callsite.
 - Reassignment writes the persistent value for subsequent bars.
 
 `var` storage is separate from ordinary per-bar local values and from committed

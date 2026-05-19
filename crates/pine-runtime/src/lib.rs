@@ -2233,6 +2233,89 @@ plot(x)
     }
 
     #[test]
+    fn runs_block_local_var_initializes_when_first_reached() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("local var")
+if close > open
+    var seen = 10
+    seen := seen + 1
+    plot(seen)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[11.0, 12.0]);
+    }
+
+    #[test]
+    fn runs_for_body_var_persists_across_iterations_and_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("for var")
+out = 0
+for i = 0 to 2
+    var count = 0
+    count := count + 1
+    out := count
+plot(out)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[3.0, 6.0, 9.0]);
+    }
+
+    #[test]
+    fn runs_udf_local_var_independently_per_callsite() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf var")
+counter() =>
+    var value = 0
+    value := value + 1
+    value
+plot(counter() + counter())
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[2.0, 4.0, 6.0]);
+    }
+
+    #[test]
     fn advances_conditional_sma_only_when_branch_executes() {
         let source = SourceFile::new(
             "test.pine",

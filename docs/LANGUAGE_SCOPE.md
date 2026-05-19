@@ -72,7 +72,9 @@ keep history buffers bar-aligned.
 Normal and tuple block-local declarations inside `if` blocks are scoped to the
 branch and do not leak outside it. A tuple declaration in a local scope shadows
 outer variables with the same names; use reassignment syntax for scalar updates
-to existing variables.
+to existing variables. `var` declarations in local blocks initialize the first
+time their declaration site is reached, then preserve state across later
+executions.
 
 `for` loops support inclusive integer ranges with an optional explicit `by`
 step. The runtime increments when `from <= to` and decrements when `from > to`.

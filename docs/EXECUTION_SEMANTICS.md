@@ -77,9 +77,12 @@ semantic analyzer must reject reassignment to unknown names.
 var x = 0
 ```
 
-`var` declarations initialize once, then preserve state across bars. The runtime
-must store this in a persistent state table separate from ordinary per-bar
-locals.
+`var` declarations initialize once, then preserve state across bars. A `var`
+inside a local block initializes the first time that declaration site is reached,
+then reuses the same persistent slot on later executions of the block. Inlined
+user-defined function bodies allocate independent persistent slots for each
+syntactic callsite. The runtime stores this state separately from ordinary
+per-bar locals.
 
 ### `varip`
 

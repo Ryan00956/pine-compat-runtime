@@ -2763,6 +2763,20 @@ plot(y)
     }
 
     #[test]
+    fn accepts_local_var_declarations_in_blocks_and_functions() {
+        let analysis = analyze(
+            "counter() =>\n    var value = 0\n    value := value + 1\n    value\nif close > open\n    var seen = 10\n    seen := seen + 1\n    plot(counter() + seen)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn accepts_function_local_declaration_shadowing_parameter() {
         let analysis = analyze("bump(x) =>\n    x = x + 1\n    x\nplot(bump(close))\n");
 
