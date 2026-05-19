@@ -158,7 +158,8 @@ Status: in progress.
 
 ## Next Language Expansion
 
-Status: in progress.
+Status: v0.1 expansion complete. The next stage is planned in
+[`NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md`](NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md).
 
 - [x] Parse indentation into executable blocks.
 - [x] Lower `if`/`else` statements to HIR.
@@ -186,3 +187,11 @@ Status: in progress.
 - [x] Preserve tuple declaration shadowing in local scopes.
 - [x] Cover local `var` declarations in blocks, loops, and UDF callsites.
 - [x] Implement full local-scope declarations and shadowing rules.
+
+## Next Planned Expansion
+
+Status: planned.
+
+- [ ] Add partial `switch` expression support.
+- [ ] Add partial `while` statement support with an iteration guard.
+- [ ] Design and implement partial float array support.
