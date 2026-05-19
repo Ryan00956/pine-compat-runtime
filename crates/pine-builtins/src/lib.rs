@@ -934,6 +934,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "math.log10",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "math.exp",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "math.sin",
         phase: BuiltinPhase::Phase1Core,
         params: MATH_NUMBER_PARAMS,

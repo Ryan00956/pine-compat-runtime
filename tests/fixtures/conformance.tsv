@@ -29,6 +29,8 @@ math.floor	supported	fixture-derived executable subset	tests/fixtures/runtime/ma
 math.ceil	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.sqrt	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.log	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.log10	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.exp	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.sin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.cos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.tan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
