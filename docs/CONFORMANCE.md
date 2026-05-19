@@ -142,7 +142,7 @@ ta.ema               supported
 ta.rsi               partial      requires rma warmup tests
 request.security     unsupported  out of Phase 1 scope
 strategy.*           unsupported  out of project scope for now
-array.*              unsupported  out of Phase 1 scope
+array.*              partial      float array fixture subset only
 import               unsupported  out of Phase 1 scope
 ```
 

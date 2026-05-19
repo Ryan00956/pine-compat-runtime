@@ -29,6 +29,7 @@ pub enum ValueKind {
     Color,
     Plot,
     HLine,
+    FloatArray,
     Tuple,
     Na,
     Void,

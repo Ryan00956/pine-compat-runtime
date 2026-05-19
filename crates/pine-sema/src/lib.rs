@@ -977,12 +977,14 @@ impl Analyzer {
     }
 
     fn check_feature_name(&mut self, name: &str, span: Span) {
-        let unsupported_reason = if name.starts_with("strategy.") {
+        let unsupported_reason = if pine_builtins::is_phase_1_builtin(name) {
+            None
+        } else if name.starts_with("strategy.") {
             Some("strategy backtesting and broker emulation are outside the current runtime scope")
         } else if name.starts_with("request.") {
             Some("multi-symbol and multi-timeframe data requests are not supported in Phase 1")
         } else if name.starts_with("array.") {
-            Some("array storage and mutation are not supported in Phase 1")
+            Some("this array function is not supported in the current partial array subset")
         } else if matches!(name, "alert" | "alertcondition") {
             Some("alerts are not supported in Phase 1")
         } else if name.starts_with("label.")
@@ -2438,6 +2440,7 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
+        Accepts::FloatArray => arg_type.kind == ValueKind::FloatArray,
     }
 }
 
@@ -3239,6 +3242,50 @@ plot(y)
                 .any(|diagnostic| diagnostic.code == "E_CONDITION_TYPE"),
             "{:?}",
             analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn accepts_float_array_operations() {
+        let analysis = analyze(
+            "values = array.new_float(2, close)\narray.push(values, high)\narray.set(values, 0, low)\nfirst = array.get(values, 0)\nlast = array.pop(values)\narray.clear(values)\nplot(first + last + array.size(values))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "array.new_float")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "array.size")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_unsupported_array_function() {
+        let analysis = analyze("values = array.new_int(0)\nplot(close)\n");
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "array.new_int"),
+            "{:?}",
+            analysis.compatibility.unsupported
         );
         assert!(analysis.hir.is_none());
     }

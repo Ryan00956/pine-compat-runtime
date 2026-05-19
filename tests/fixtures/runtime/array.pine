@@ -1,0 +1,11 @@
+indicator("Array fixture")
+var persisted = array.new_float()
+fresh = array.new_float(2, close)
+
+array.push(persisted, close)
+array.push(fresh, high)
+array.set(fresh, 0, low)
+
+plot(array.size(persisted))
+plot(array.get(persisted, 0))
+plot(array.get(fresh, 0) + array.pop(fresh) + array.size(fresh))

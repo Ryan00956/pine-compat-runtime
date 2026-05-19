@@ -449,7 +449,7 @@ fn value_json(value: &PineValue) -> String {
             output.push(']');
             output
         }
-        PineValue::Na | PineValue::Void => "null".to_owned(),
+        PineValue::Array(_) | PineValue::Na | PineValue::Void => "null".to_owned(),
     }
 }
 
@@ -466,9 +466,14 @@ mod tests {
         let entries = conformance_entries();
 
         for signature in pine_builtins::PHASE_1_BUILTINS {
+            let expected_status = if signature.name.starts_with("array.") {
+                "partial"
+            } else {
+                "supported"
+            };
             assert!(
                 entries.iter().any(|entry| entry.feature == signature.name
-                    && entry.status == "supported"
+                    && entry.status == expected_status
                     && !entry.fixtures.is_empty()),
                 "{} should have fixture-derived metadata",
                 signature.name

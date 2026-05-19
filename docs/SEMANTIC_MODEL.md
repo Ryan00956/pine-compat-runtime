@@ -137,6 +137,24 @@ same branch merge rules as ternary expressions. The result qualifier is the
 strongest qualifier among the selector or conditions and the selected result
 expressions.
 
+## Arrays
+
+The first array subset supports float arrays only:
+
+```pine
+var values = array.new_float()
+array.push(values, close)
+first = array.get(values, 0)
+count = array.size(values)
+```
+
+`array.new_float` returns a runtime-owned array id. Normal declarations allocate
+a fresh array whenever the declaration executes. `var` declarations preserve the
+array id and backing storage across bars. Supported operations are
+`array.new_float`, `array.push`, `array.get`, `array.set`, `array.size`,
+`array.pop`, and `array.clear`. Non-float array constructors and unsupported
+`array.*` functions are rejected.
+
 ## `na`
 
 `na` behavior must be implemented deliberately. It must not be represented as

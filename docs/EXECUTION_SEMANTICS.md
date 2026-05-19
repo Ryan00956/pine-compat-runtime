@@ -97,6 +97,11 @@ user-defined function bodies allocate independent persistent slots for each
 syntactic callsite. The runtime stores this state separately from ordinary
 per-bar locals.
 
+For arrays, the stored value is a runtime-owned array id. A normal
+`array.new_float` declaration allocates a fresh array each time it executes. A
+`var` array declaration keeps the same id and backing storage across bars, so
+mutations such as `array.push` persist.
+
 ### `varip`
 
 `varip` requires precise realtime tick semantics. It is rejected until intrabar

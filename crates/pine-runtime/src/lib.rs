@@ -18,6 +18,7 @@ pub enum PineValue {
     Color(u32),
     Plot(u32),
     HLine(u32),
+    Array(u32),
     Tuple(Vec<PineValue>),
     Na,
     Void,
@@ -240,6 +241,8 @@ pub struct HistoricalRuntime<'a> {
     current_symbols: HashMap<SymbolId, PineValue>,
     current_series: HashMap<SeriesId, PineValue>,
     var_store: HashMap<VarSlotId, PineValue>,
+    array_store: HashMap<u32, Vec<PineValue>>,
+    next_array_id: u32,
     call_state: HashMap<CallSiteId, PineValue>,
     rolling_windows: HashMap<CallSiteId, RollingWindowState>,
     rsi_state: HashMap<CallSiteId, RsiState>,
@@ -293,6 +296,8 @@ impl<'a> HistoricalRuntime<'a> {
             current_symbols: HashMap::new(),
             current_series: HashMap::new(),
             var_store: HashMap::new(),
+            array_store: HashMap::new(),
+            next_array_id: 0,
             call_state: HashMap::new(),
             rolling_windows: HashMap::new(),
             rsi_state: HashMap::new(),
@@ -855,10 +860,141 @@ impl<'a> HistoricalRuntime<'a> {
                     Ok(value)
                 }
             }
+            "array.new_float" => self.eval_array_new_float(args),
+            "array.size" => self.eval_array_size(args),
+            "array.push" => self.eval_array_push(args),
+            "array.get" => self.eval_array_get(args),
+            "array.set" => self.eval_array_set(args),
+            "array.pop" => self.eval_array_pop(args),
+            "array.clear" => self.eval_array_clear(args),
             _ => Err(RuntimeError {
                 message: format!("unsupported runtime call `{callee}`"),
             }),
         }
+    }
+
+    fn eval_array_new_float(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let size = if let Some(size_arg) = args.first() {
+            let Some(size) = self.eval_expr(&size_arg.value)?.as_i64() else {
+                return Ok(PineValue::Na);
+            };
+            if size < 0 {
+                return Err(RuntimeError {
+                    message: "array.new_float size cannot be negative".to_owned(),
+                });
+            }
+            size as usize
+        } else {
+            0
+        };
+
+        let initial_value = if let Some(value_arg) = args.get(1) {
+            match self.eval_expr(&value_arg.value)? {
+                PineValue::Int(value) => PineValue::Float(value as f64),
+                PineValue::Float(value) => PineValue::Float(value),
+                PineValue::Na => PineValue::Na,
+                _ => PineValue::Na,
+            }
+        } else {
+            PineValue::Na
+        };
+
+        let id = self.next_array_id;
+        self.next_array_id += 1;
+        self.array_store.insert(id, vec![initial_value; size]);
+        Ok(PineValue::Array(id))
+    }
+
+    fn eval_array_size(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Na);
+        };
+        Ok(PineValue::Int(values.len() as i64))
+    }
+
+    fn eval_array_push(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let value = self.eval_float_array_value(&args[1].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        if let Some(values) = self.array_store.get_mut(&id) {
+            values.push(value);
+        }
+        Ok(PineValue::Void)
+    }
+
+    fn eval_array_get(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let index = self.eval_expr(&args[1].value)?.as_i64();
+        let (PineValue::Array(id), Some(index)) = (id, index) else {
+            return Ok(PineValue::Na);
+        };
+        if index < 0 {
+            return Ok(PineValue::Na);
+        }
+        Ok(self
+            .array_store
+            .get(&id)
+            .and_then(|values| values.get(index as usize))
+            .cloned()
+            .unwrap_or(PineValue::Na))
+    }
+
+    fn eval_array_set(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let index = self.eval_expr(&args[1].value)?.as_i64();
+        let value = self.eval_float_array_value(&args[2].value)?;
+        let (PineValue::Array(id), Some(index)) = (id, index) else {
+            return Ok(PineValue::Void);
+        };
+        if index < 0 {
+            return Ok(PineValue::Void);
+        }
+        if let Some(slot) = self
+            .array_store
+            .get_mut(&id)
+            .and_then(|values| values.get_mut(index as usize))
+        {
+            *slot = value;
+        }
+        Ok(PineValue::Void)
+    }
+
+    fn eval_array_pop(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .array_store
+            .get_mut(&id)
+            .and_then(Vec::pop)
+            .unwrap_or(PineValue::Na))
+    }
+
+    fn eval_array_clear(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        if let Some(values) = self.array_store.get_mut(&id) {
+            values.clear();
+        }
+        Ok(PineValue::Void)
+    }
+
+    fn eval_float_array_value(&mut self, expr: &HirExpr) -> Result<PineValue, RuntimeError> {
+        Ok(match self.eval_expr(expr)? {
+            PineValue::Int(value) => PineValue::Float(value as f64),
+            PineValue::Float(value) => PineValue::Float(value),
+            PineValue::Na => PineValue::Na,
+            _ => PineValue::Na,
+        })
     }
 
     fn eval_sma(
@@ -3290,6 +3426,66 @@ while true
             "{}",
             error.message
         );
+    }
+
+    #[test]
+    fn runs_float_array_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array ops")
+values = array.new_float(2, close)
+array.push(values, high)
+array.set(values, 0, low)
+first = array.get(values, 0)
+last = array.pop(values)
+missing = array.get(values, 10)
+plot(first + last + array.size(values))
+plot(na(missing) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 2);
+        assert_values_close(&result.plots[0].values, &[4.0, 6.0, 8.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn var_float_array_persists_across_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("var array")
+var values = array.new_float()
+fresh = array.new_float()
+array.push(values, close)
+array.push(fresh, close)
+plot(array.size(values))
+plot(array.size(fresh))
+plot(array.get(values, 0))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 3);
+        assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
     }
 
     #[test]

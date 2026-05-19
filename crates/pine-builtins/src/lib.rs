@@ -38,6 +38,7 @@ pub enum Accepts {
     ConstOrInputFloat,
     ColorCompatible,
     PlotOrHLine,
+    FloatArray,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -60,6 +61,8 @@ const SERIES_FLOAT_TUPLE: PineType = PineType::new(Qualifier::Series, ValueKind:
 const PLOT: PineType = PineType::new(Qualifier::Const, ValueKind::Plot);
 const HLINE: PineType = PineType::new(Qualifier::Const, ValueKind::HLine);
 const VOID: PineType = PineType::new(Qualifier::Const, ValueKind::Void);
+const SIMPLE_INT: PineType = PineType::new(Qualifier::Simple, ValueKind::Int);
+const SIMPLE_FLOAT_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::FloatArray);
 
 const INDICATOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
@@ -341,6 +344,69 @@ const TA_BB_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_NEW_FLOAT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "size",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "initial_value",
+        accepts: Accepts::Numeric,
+        optional: true,
+    },
+];
+
+const ARRAY_SIZE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::FloatArray,
+    optional: false,
+}];
+
+const ARRAY_VALUE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::FloatArray,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "value",
+        accepts: Accepts::Numeric,
+        optional: false,
+    },
+];
+
+const ARRAY_INDEX_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::FloatArray,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "index",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
+const ARRAY_SET_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::FloatArray,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "index",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "value",
+        accepts: Accepts::Numeric,
+        optional: false,
+    },
+];
+
 const THREE_SERIES_FLOATS: &[PineType] = &[SERIES_FLOAT, SERIES_FLOAT, SERIES_FLOAT];
 
 pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
@@ -454,6 +520,55 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: NZ_PARAMS,
         returns: ReturnSpec::SameAsArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.new_float",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NEW_FLOAT_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_FLOAT_ARRAY),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.size",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_SIZE_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.push",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_VALUE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.get",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_INDEX_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.set",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_SET_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.pop",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_SIZE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.clear",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_SIZE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
     BuiltinSignature {

@@ -260,7 +260,7 @@ fn value_json(value: &PineValue) -> String {
             output.push(']');
             output
         }
-        PineValue::Na | PineValue::Void => "null".to_owned(),
+        PineValue::Array(_) | PineValue::Na | PineValue::Void => "null".to_owned(),
     }
 }
 

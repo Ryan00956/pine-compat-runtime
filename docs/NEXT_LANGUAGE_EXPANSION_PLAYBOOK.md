@@ -199,15 +199,14 @@ Initial supported functions:
 
 ### Required Design Decisions
 
-Resolve these before implementation:
+Resolved implementation choices:
 
-- Whether `PineValue::Array` stores an id into runtime-owned storage or an owned
-  vector.
-- How array identity behaves across bars.
-- How `var` arrays persist compared with non-`var` arrays.
-- Whether array mutation inside UDFs is allowed or rejected.
-- Whether array values appear in JSON output or remain runtime-internal.
-- How to prevent unbounded growth in long runs.
+- `PineValue::Array` stores an id into runtime-owned array storage.
+- Non-`var` arrays are allocated when their declaration executes on each bar.
+- `var` arrays preserve their id and backing storage across bars.
+- Array values remain runtime-internal in JSON/Python/WASM outputs.
+- The first pass supports float arrays only; unsupported `array.*` variants
+  still produce diagnostics.
 
 ### Implementation Tasks
 

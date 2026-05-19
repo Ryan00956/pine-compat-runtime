@@ -68,6 +68,8 @@ Phase 1 executable subset:
 - `plot`, `hline`, and `fill`
 - `na`, `nz`
 - `ta.sma` and `ta.ema`
+- partial float arrays with `array.new_float`, `array.push`, `array.get`,
+  `array.set`, `array.size`, `array.pop`, and `array.clear`
 
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes. Series values not evaluated on a bar are committed as `na` to
@@ -186,7 +188,7 @@ The analyzer should reject these with clear diagnostics:
 - `request.*`
 - `alert` and `alertcondition`
 - `library`, `import`, and `export`
-- arrays, matrices, and maps
+- non-float arrays, matrices, and maps
 - user-defined types
 - methods
 - label, line, box, table, polyline objects

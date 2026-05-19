@@ -93,7 +93,8 @@ Deliverables:
 Exit criteria:
 
 - Analyzer can distinguish supported scripts from scripts requiring
-  `strategy.*`, `request.*`, labels, arrays, imports, or realtime-only behavior.
+  `strategy.*`, `request.*`, labels, unsupported array variants, imports, or
+  realtime-only behavior.
 - Analyzer accepts only the Phase 1 executable subset for runtime execution.
 - Analyzer emits stable diagnostic codes for unsupported features.
 

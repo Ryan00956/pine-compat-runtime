@@ -249,7 +249,7 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
             output.append(*value)
         }
         PineValue::Tuple(values) => output.append(values_to_py(py, values)?),
-        PineValue::Na | PineValue::Void => output.append(py.None()),
+        PineValue::Array(_) | PineValue::Na | PineValue::Void => output.append(py.None()),
     }
 }
 
