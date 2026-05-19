@@ -150,7 +150,7 @@ Status: in progress.
 - [x] Document local Python binding test setup.
 - [x] Move the compatibility matrix from registry-seeded claims to
   fixture-derived conformance metadata.
-- [ ] Expand realtime fixture coverage beyond rollback and `var` behavior.
+- [x] Expand realtime fixture coverage beyond rollback and `var` behavior.
 - [ ] Decide whether user-defined functions enter the executable subset or stay
   diagnostic-only for the next release.
 - [ ] Add release notes describing the supported subset and explicit

@@ -68,6 +68,45 @@ fn var_rollback_fixture_restores_confirmed_state_between_forming_updates() {
     assert_values(&result.plots[0].values, &[1.0, 2.0, 3.0]);
 }
 
+#[test]
+fn conditional_ta_fixture_rolls_back_callsite_state_between_forming_updates() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/conditional_ta_rollback.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar_ohlc(1.0, 2.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[2.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar_ohlc(3.0, 4.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[2.0, 3.333333333333333]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[2.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar_ohlc(7.0, 8.0)))
+        .expect("second forming update should roll back callsite state");
+    assert_values(&result.plots[0].values, &[2.0, 6.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[2.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar_ohlc(4.0, 5.0)))
+        .expect("confirmed update should commit callsite state");
+    assert_values(&result.plots[0].values, &[2.0, 4.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[2.0, 4.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar_ohlc(4.0, 3.0)))
+        .expect("forming update with skipped branch should run");
+    assert_values(&result.plots[0].values, &[2.0, 4.0, 3.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[2.0, 4.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar_ohlc(7.0, 8.0)))
+        .expect("forming update should ignore skipped-branch callsite state");
+    assert_values(&result.plots[0].values, &[2.0, 4.0, 6.666666666666667]);
+}
+
 fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -84,11 +123,15 @@ fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {
 }
 
 fn bar(close: f64) -> Bar {
+    bar_ohlc(close, close)
+}
+
+fn bar_ohlc(open: f64, close: f64) -> Bar {
     Bar {
         time: 0,
-        open: close,
-        high: close,
-        low: close,
+        open,
+        high: open.max(close),
+        low: open.min(close),
         close,
         volume: 1.0,
     }

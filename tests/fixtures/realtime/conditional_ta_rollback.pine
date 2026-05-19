@@ -1,0 +1,6 @@
+//@version=5
+indicator("Realtime conditional TA rollback")
+ma = close
+if close > open
+    ma := ta.ema(close, 2)
+plot(ma)
