@@ -78,6 +78,12 @@ pub enum HirStmtKind {
         then_branch: Vec<HirStmt>,
         else_branch: Vec<HirStmt>,
     },
+    For {
+        counter: SymbolId,
+        from: HirExpr,
+        to: HirExpr,
+        body: Vec<HirStmt>,
+    },
     Decl {
         symbol: SymbolId,
         value: HirExpr,

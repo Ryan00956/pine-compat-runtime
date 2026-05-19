@@ -77,7 +77,7 @@ impl Parser {
         }
 
         if self.at(TokenKind::For) {
-            return Some(self.parse_unsupported_block("for"));
+            return self.parse_for_stmt();
         }
 
         if self.at(TokenKind::LBracket) {
@@ -203,6 +203,37 @@ impl Parser {
         })
     }
 
+    fn parse_for_stmt(&mut self) -> Option<Stmt> {
+        let start = self.expect(TokenKind::For, "expected `for`")?;
+        let counter = match self.current().kind.clone() {
+            TokenKind::Identifier(name) => {
+                self.bump();
+                name
+            }
+            _ => {
+                self.error_here("E_PARSE_FOR", "expected loop counter name");
+                return None;
+            }
+        };
+        self.expect(TokenKind::Eq, "expected `=` after loop counter")?;
+        let from = self.parse_expr(0)?;
+        self.expect(TokenKind::To, "expected `to` in for loop")?;
+        let to = self.parse_expr(0)?;
+        self.expect(TokenKind::Newline, "expected newline after `for` range")?;
+        let body = self.parse_indented_block()?;
+        let span = body.last().map_or(to.span, |statement| statement.span);
+
+        Some(Stmt {
+            span: start.merge(span),
+            kind: StmtKind::For {
+                counter,
+                from,
+                to,
+                body,
+            },
+        })
+    }
+
     fn parse_function_decl(&mut self) -> Option<Stmt> {
         let start = self.current().span;
         let TokenKind::Identifier(name) = self.current().kind.clone() else {
@@ -286,39 +317,6 @@ impl Parser {
         let start = self.current().span;
         self.bump();
         while !self.at(TokenKind::Newline) && !self.at(TokenKind::Eof) {
-            self.bump();
-        }
-
-        Stmt {
-            span: start.merge(self.previous().span),
-            kind: StmtKind::Unsupported {
-                feature: feature.to_owned(),
-            },
-        }
-    }
-
-    fn parse_unsupported_block(&mut self, feature: &str) -> Stmt {
-        let start = self.current().span;
-        self.bump();
-        while !self.at(TokenKind::Newline) && !self.at(TokenKind::Eof) {
-            self.bump();
-        }
-
-        if self.at(TokenKind::Newline) {
-            self.bump();
-        }
-
-        let mut depth = 0_u32;
-        if self.at(TokenKind::Indent) {
-            depth = 1;
-            self.bump();
-        }
-        while depth > 0 && !self.at(TokenKind::Eof) {
-            if self.at(TokenKind::Indent) {
-                depth += 1;
-            } else if self.at(TokenKind::Dedent) {
-                depth -= 1;
-            }
             self.bump();
         }
 
@@ -803,14 +801,23 @@ mod tests {
     }
 
     #[test]
-    fn parses_for_as_unsupported_statement() {
+    fn parses_for_statement() {
         let parsed = parse("for i = 0 to 10\n    plot(close)\n");
 
         assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
         assert_eq!(parsed.program.statements.len(), 1);
-        assert!(matches!(
-            parsed.program.statements[0].kind,
-            StmtKind::Unsupported { ref feature } if feature == "for"
-        ));
+        let StmtKind::For {
+            counter,
+            from,
+            to,
+            body,
+        } = &parsed.program.statements[0].kind
+        else {
+            panic!("expected for statement");
+        };
+        assert_eq!(counter, "i");
+        assert!(matches!(from.kind, ExprKind::Literal(Literal::Int(0))));
+        assert!(matches!(to.kind, ExprKind::Literal(Literal::Int(10))));
+        assert_eq!(body.len(), 1);
     }
 }

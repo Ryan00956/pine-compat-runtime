@@ -376,6 +376,43 @@ impl Analyzer {
                 self.scope.pop_scope();
                 self.block_depth -= 1;
             }
+            StmtKind::For {
+                counter,
+                from,
+                to,
+                body,
+            } => {
+                let from_type = self.analyze_expr(from);
+                let to_type = self.analyze_expr(to);
+                if let Some(from_type) = from_type {
+                    self.expect_int(from_type, from.span);
+                }
+                if let Some(to_type) = to_type {
+                    self.expect_int(to_type, to.span);
+                }
+                self.compatibility.supported.push(FeatureUse {
+                    feature: "for".to_owned(),
+                    span: statement.span,
+                });
+
+                let counter_type = PineType::new(
+                    strongest_qualifier(
+                        from_type.unwrap_or(UNKNOWN).qualifier,
+                        to_type.unwrap_or(UNKNOWN).qualifier,
+                    ),
+                    ValueKind::Int,
+                );
+                self.block_depth += 1;
+                self.scope.push_scope();
+                let counter_symbol =
+                    self.define_local_symbol(counter, counter_type, None, self.function_depth == 0);
+                self.bind_symbol(counter, statement.span, counter_symbol);
+                for body_statement in body {
+                    self.analyze_stmt(body_statement);
+                }
+                self.scope.pop_scope();
+                self.block_depth -= 1;
+            }
             StmtKind::Function { .. } => {
                 if self.block_depth > 0 || self.function_depth > 0 {
                     self.unsupported(
@@ -1150,6 +1187,19 @@ impl Analyzer {
         }
     }
 
+    fn expect_int(&mut self, pine_type: PineType, span: Span) {
+        if pine_type.kind != ValueKind::Int {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RANGE_TYPE",
+                format!(
+                    "for loop range must be int, got {:?} {:?}",
+                    pine_type.qualifier, pine_type.kind
+                ),
+                span,
+            ));
+        }
+    }
+
     fn merge_branch_types(
         &mut self,
         condition_type: PineType,
@@ -1295,6 +1345,22 @@ impl Analyzer {
                     })
                     .collect::<Option<_>>()?,
                 else_branch: else_branch
+                    .iter()
+                    .map(|statement| {
+                        self.lower_stmt_with_params(statement, param_exprs, param_types)
+                    })
+                    .collect::<Option<_>>()?,
+            },
+            StmtKind::For {
+                counter,
+                from,
+                to,
+                body,
+            } => HirStmtKind::For {
+                counter: self.lower_decl_symbol(counter, statement.span)?.id,
+                from: self.lower_expr_with_params(from, param_exprs, param_types)?,
+                to: self.lower_expr_with_params(to, param_exprs, param_types)?,
+                body: body
                     .iter()
                     .map(|statement| {
                         self.lower_stmt_with_params(statement, param_exprs, param_types)
@@ -1663,7 +1729,7 @@ fn unsupported_syntax_reason(feature: &str) -> &'static str {
     match feature {
         "import" => "library imports are not supported in Phase 1",
         "function" => "unsupported user-defined function syntax",
-        "for" => "for loops are parsed for compatibility reporting but not executable yet",
+        "for" => "unsupported for loop syntax",
         _ => "syntax is not supported in Phase 1",
     }
 }
@@ -2511,15 +2577,33 @@ plot(y)
     }
 
     #[test]
-    fn reports_parse_only_for_as_unsupported() {
-        let analysis = analyze("for i = 0 to 10\nplot(close)\n");
+    fn accepts_for_loop_statement() {
+        let analysis = analyze("sum = 0\nfor i = 0 to 2\n    sum := sum + i\nplot(sum)\n");
 
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
         assert!(
             analysis
                 .compatibility
-                .unsupported
+                .supported
                 .iter()
                 .any(|feature| feature.feature == "for")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_non_int_for_loop_range() {
+        let analysis = analyze("for i = 0.5 to 2\n    plot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_LOOP_RANGE_TYPE")
         );
         assert!(analysis.hir.is_none());
     }

@@ -172,6 +172,11 @@ fn conformance_entries() -> Vec<MatrixEntry> {
             notes: "conditional callsites advance only when their branch executes",
         },
         MatrixEntry {
+            feature: "for".to_owned(),
+            status: "partial",
+            notes: "inclusive integer ranges without explicit step",
+        },
+        MatrixEntry {
             feature: "expression-body functions".to_owned(),
             status: "supported",
             notes: "lowered by inlining; positional and named arguments supported",
@@ -537,6 +542,11 @@ mod tests {
             entries
                 .iter()
                 .any(|entry| entry.feature == "if" && entry.status == "supported")
+        );
+        assert!(
+            entries
+                .iter()
+                .any(|entry| entry.feature == "for" && entry.status == "partial")
         );
         assert!(entries.iter().any(|entry| {
             entry.feature == "expression-body functions" && entry.status == "supported"

@@ -176,6 +176,8 @@ Status: in progress.
 - [x] Add multi-statement user-defined function execution with final expression
   returns.
 - [x] Reject recursive functions and function side effects.
+- [x] Support executable `for` loops for inclusive integer ranges without
+  explicit step.
 - [ ] Add fixture-derived conformance metadata for block statements.
 - [x] Add fixture-derived conformance metadata for user-defined functions.
 - [ ] Implement full local-scope declarations and shadowing rules.

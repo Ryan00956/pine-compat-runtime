@@ -353,6 +353,31 @@ impl<'a> HistoricalRuntime<'a> {
                     self.eval_stmt(statement)?;
                 }
             }
+            HirStmtKind::For {
+                counter,
+                from,
+                to,
+                body,
+            } => {
+                let Some(from) = self.eval_expr(from)?.as_i64() else {
+                    return Ok(());
+                };
+                let Some(to) = self.eval_expr(to)?.as_i64() else {
+                    return Ok(());
+                };
+                let step = if from <= to { 1 } else { -1 };
+                let mut value = from;
+                loop {
+                    self.set_symbol_value(*counter, PineValue::Int(value));
+                    for statement in body {
+                        self.eval_stmt(statement)?;
+                    }
+                    if value == to {
+                        break;
+                    }
+                    value += step;
+                }
+            }
             HirStmtKind::Decl { symbol, value } => {
                 let value = self.eval_decl(*symbol, value)?;
                 self.set_symbol_value(*symbol, value);
@@ -2624,6 +2649,83 @@ plot(select_value(high, close))
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[3.0, 5.0, 8.0]);
+    }
+
+    #[test]
+    fn runs_for_loop_reassignment() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("for")
+sum = 0
+for i = 0 to 2
+    sum := sum + i
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[4.0, 5.0, 6.0]);
+    }
+
+    #[test]
+    fn runs_descending_for_loop_reassignment() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("for desc")
+sum = 0
+for i = 2 to 0
+    sum := sum + i
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[4.0, 5.0, 6.0]);
+    }
+
+    #[test]
+    fn runs_for_loop_inside_block_body_function() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("udf for")
+repeat3(x) =>
+    result = x * 0
+    for i = 0 to 2
+        result := result + x
+    result
+plot(repeat3(close))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[3.0, 6.0, 9.0]);
     }
 
     #[test]

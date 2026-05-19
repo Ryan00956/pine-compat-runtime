@@ -26,6 +26,12 @@ pub enum StmtKind {
         then_branch: Vec<Stmt>,
         else_branch: Vec<Stmt>,
     },
+    For {
+        counter: String,
+        from: Expr,
+        to: Expr,
+        body: Vec<Stmt>,
+    },
     Function {
         name: String,
         params: Vec<String>,

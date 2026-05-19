@@ -140,6 +140,11 @@ lowering so locals do not leak into outer scopes. Tuple declaration targets that
 resolve to an outer symbol update that symbol; otherwise they create branch-local
 symbols.
 
+`for i = start to end` is executable for integer ranges without an explicit step.
+The loop counter is a block-local integer symbol scoped to the loop body. Range
+expressions must be int-typed; series-qualified bounds are evaluated for the
+current bar when the loop statement executes.
+
 ## Reassignment
 
 Reassignment updates an already resolved symbol:
