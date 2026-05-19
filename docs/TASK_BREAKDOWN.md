@@ -1,11 +1,13 @@
 # Task Breakdown
 
 This document tracks implementation work at the level of issues or focused
-commits. Later phases should be expanded when the previous phase stabilizes.
+commits. The initial v0.1 baseline is implemented; future work should widen
+coverage through fixtures and compatibility metadata rather than broad,
+untested claims.
 
 ## Phase 0: Repository Foundation
 
-Status: started.
+Status: complete.
 
 - [x] Create Cargo workspace.
 - [x] Create initial crates.
@@ -19,7 +21,7 @@ Status: started.
 
 ## Phase 1: Syntax
 
-Status: started.
+Status: baseline complete.
 
 - [x] Add `SourceFile`.
 - [x] Add `Span` and line/column mapping.
@@ -45,7 +47,7 @@ Status: started.
 
 ## Phase 2: Semantic Analysis and Compatibility Gating
 
-Status: started.
+Status: baseline complete.
 
 - [x] Add compatibility report data model.
 - [x] Add first unsupported-feature diagnostics.
@@ -68,7 +70,7 @@ Status: started.
 
 ## Phase 3: Minimal Historical Runtime
 
-Status: started.
+Status: baseline complete.
 
 - [x] Add bar input model and CSV fixture reader.
 - [x] Add runtime value model.
@@ -89,7 +91,7 @@ Status: started.
 
 ## Phase 4: Expanded Built-Ins and Output
 
-Status: planned.
+Status: baseline complete.
 
 - [x] Define initial normalized result JSON schema in code.
 - [x] Add CLI `run`.
@@ -107,7 +109,7 @@ Status: planned.
 
 ## Phase 5: Python Binding
 
-Status: planned.
+Status: baseline complete.
 
 - [x] Add `pine-python` crate.
 - [x] Add PyO3 and maturin configuration.
@@ -119,7 +121,7 @@ Status: planned.
 
 ## Phase 6: Performance and Incremental Runtime
 
-Status: planned.
+Status: baseline complete.
 
 - [x] Add compile cache.
 - [x] Profile runtime allocations.
@@ -130,7 +132,8 @@ Status: planned.
 
 ## Phase 7: Realtime and Wider Compatibility
 
-Status: planned.
+Status: baseline complete for forming-bar rollback and explicit `varip`
+rejection.
 
 - [x] Define forming-bar model.
 - [x] Add rollback semantics.
@@ -138,3 +141,18 @@ Status: planned.
 - [x] Add repeated-update fixtures.
 - [x] Expand syntax and semantic support based on conformance gaps.
 - [x] Add optional WASM binding after the core API is stable.
+
+## Release Hardening
+
+Status: in progress.
+
+- [x] Add CI coverage for Python binding tests.
+- [x] Add CI coverage for WASM build checks.
+- [x] Document local Python binding test setup.
+- [ ] Move the compatibility matrix from registry-seeded claims to
+  fixture-derived conformance metadata.
+- [ ] Expand realtime fixture coverage beyond rollback and `var` behavior.
+- [ ] Decide whether user-defined functions enter the executable subset or stay
+  diagnostic-only for the next release.
+- [ ] Add release notes describing the supported subset and explicit
+  unsupported boundaries.

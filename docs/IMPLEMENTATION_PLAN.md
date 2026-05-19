@@ -2,6 +2,28 @@
 
 This plan favors a serious long-term foundation over quick partial execution.
 
+## v0.1 Baseline
+
+The first standalone loop is implemented:
+
+```text
+source.pine + bars.csv
+  -> parse
+  -> analyze
+  -> run
+  -> result.json
+```
+
+The current baseline includes Rust library crates, a CLI, Python bindings,
+WASM bindings, compile caching, incremental append-bar execution, optimized
+rolling state for selected TA built-ins, realtime forming-bar rollback, and a
+registry-seeded compatibility matrix.
+
+The runtime still makes compatibility claims by tested feature. User-defined
+function execution, `varip` intrabar persistence, `request.*`, `strategy.*`,
+alerts, imports, arrays, drawing objects, and dynamic history offsets remain
+outside the executable subset and should produce diagnostics.
+
 ## Phase 0: Repository Foundation
 
 Deliverables:
@@ -167,13 +189,32 @@ Deliverables:
 
 - Forming bar support.
 - Rollback model.
-- `varip` semantics.
+- Precise `varip` rejection until intrabar persistence is implemented.
 - Expanded language features.
 - Optional WASM binding.
 
 Exit criteria:
 
 - Realtime fixture tests define and verify repeated updates on the same bar.
+
+## Release Hardening
+
+Before publishing a v0.1 baseline, the CI and local verification path should
+cover every exposed entry point:
+
+```text
+cargo fmt --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+cargo check -p pine-wasm --target wasm32-unknown-unknown
+maturin build --manifest-path crates/pine-python/Cargo.toml --out dist
+python -m pip install dist/*.whl
+python -m pytest python/tests
+```
+
+The next compatibility work should focus on richer fixture metadata,
+fixture-derived matrix generation, additional realtime cases, and an explicit
+decision on whether user-defined functions enter the executable subset.
 
 ## Development Rules
 

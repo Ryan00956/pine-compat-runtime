@@ -1,7 +1,7 @@
 # Pine Compat Runtime
 
-Pine Compat Runtime is a planned clean-room, open-source runtime for a
-Pine-compatible indicator scripting subset.
+Pine Compat Runtime is a clean-room, open-source runtime for a Pine-compatible
+indicator scripting subset.
 
 The project is intentionally designed as an embeddable language runtime, not as
 an application-specific plugin. Hosts such as charting tools, research
@@ -14,7 +14,8 @@ able to integrate it through adapters.
 - Prioritize semantic correctness over early breadth.
 - Support bar-by-bar time-series execution, historical references, `na`, `var`,
   inputs, and plotting side effects.
-- Expose stable Rust, CLI, Python, and eventually WASM entry points.
+- Expose stable Rust, CLI, Python, and WASM entry points for the supported
+  subset.
 - Produce a host-neutral output model that charting applications can adapt.
 - Provide precise diagnostics and compatibility reports instead of silent
   partial execution.
@@ -42,7 +43,7 @@ able to integrate it through adapters.
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
 - [Compatibility, Legal, and Branding Boundaries](docs/COMPATIBILITY_AND_LEGAL.md)
 
-## Planned Package Layout
+## Current Package Layout
 
 ```text
 pine-compat-runtime/
@@ -62,11 +63,12 @@ pine-compat-runtime/
   docs/
 ```
 
-## First Milestone
+## Current Baseline
 
-The first milestone is a Rust CLI that can parse, analyze, and execute a small
-set of common indicator scripts over CSV OHLCV data, then emit normalized JSON
-containing series, annotations, fills, inputs, and diagnostics.
+The current baseline is a Rust CLI and embeddable runtime that can parse,
+analyze, and execute a small set of common indicator scripts over CSV OHLCV
+data, then emit normalized JSON containing series, annotations, fills, inputs,
+and diagnostics.
 
 The project should not move into host-specific integration work until this
 standalone loop is reliable:
@@ -77,6 +79,32 @@ source.pine + bars.csv + inputs.json
   -> analyze
   -> run
   -> result.json
+```
+
+The supported executable subset includes global-scope indicator scripts,
+historical bar-by-bar execution, constant history offsets, `var`, `na`, `nz`,
+`input.*`, `plot`, `hline`, `fill`, common `ta.*` functions, selected `math.*`
+functions, named colors, `color.new`, tuple returns, incremental append
+execution, realtime forming-bar rollback, Python bindings, and a thin WASM
+binding.
+
+The runtime intentionally rejects unsupported features such as `strategy.*`,
+`request.*`, alerts, imports, arrays, drawing objects, dynamic history offsets,
+user-defined function execution, and `varip` intrabar persistence.
+
+## CLI
+
+Run a script against CSV bars:
+
+```text
+cargo run -p pine-cli -- run tests/fixtures/runtime/macd.pine --bars tests/fixtures/runtime/bars.csv
+```
+
+Print the compatibility matrix:
+
+```text
+cargo run -p pine-cli -- matrix
+cargo run -p pine-cli -- matrix --format json
 ```
 
 ## Python Binding
@@ -92,10 +120,11 @@ result = program.run([
 ])
 ```
 
-Build locally with:
+Build locally in an active virtual environment with:
 
 ```text
-maturin develop
+maturin develop --manifest-path crates/pine-python/Cargo.toml
+python -m pytest python/tests
 ```
 
 ## WASM Binding
@@ -112,4 +141,24 @@ Build-check it with:
 ```text
 rustup target add wasm32-unknown-unknown
 cargo check -p pine-wasm --target wasm32-unknown-unknown
+```
+
+## Development Verification
+
+Run the core Rust and WASM checks before publishing changes:
+
+```text
+cargo fmt --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+cargo check -p pine-wasm --target wasm32-unknown-unknown
+```
+
+Python binding tests require the extension module to be installed into an
+active Python environment:
+
+```text
+python -m pip install --upgrade pip maturin pytest
+maturin develop --manifest-path crates/pine-python/Cargo.toml
+python -m pytest python/tests
 ```

@@ -19,5 +19,14 @@ Before submitting changes, run:
 cargo fmt --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
+cargo check -p pine-wasm --target wasm32-unknown-unknown
 ```
 
+Python binding changes should also be checked in an active virtual environment
+where the extension module can be installed:
+
+```bash
+python -m pip install --upgrade pip maturin pytest
+maturin develop --manifest-path crates/pine-python/Cargo.toml
+python -m pytest python/tests
+```
