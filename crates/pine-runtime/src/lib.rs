@@ -817,9 +817,8 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         match callee {
             "indicator" => Ok(PineValue::Void),
-            "input.int" | "input.float" | "input.bool" | "input.color" | "input.source" => {
-                self.eval_expr(&args[0].value)
-            }
+            "input.int" | "input.float" | "input.bool" | "input.color" | "input.string"
+            | "input.source" => self.eval_expr(&args[0].value),
             "plot" => {
                 let value = self.eval_expr(&args[0].value)?;
                 self.push_plot_value(call_site_id.0, value);
@@ -1961,6 +1960,29 @@ fill(p, h)
         assert_eq!(result.hlines[0].price, PineValue::Int(2));
         assert_eq!(result.fills[0].first_id, result.plots[0].id);
         assert_eq!(result.fills[0].second_id, result.hlines[0].id);
+    }
+
+    #[test]
+    fn runs_input_string_condition() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("input string")
+mode = input.string("Close", "Mode")
+plot(mode == "Close" ? close : open)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
     }
 
     #[test]

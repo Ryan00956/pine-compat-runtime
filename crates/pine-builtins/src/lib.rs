@@ -55,6 +55,7 @@ const INPUT_INT: PineType = PineType::new(Qualifier::Input, ValueKind::Int);
 const INPUT_FLOAT: PineType = PineType::new(Qualifier::Input, ValueKind::Float);
 const INPUT_BOOL: PineType = PineType::new(Qualifier::Input, ValueKind::Bool);
 const INPUT_COLOR: PineType = PineType::new(Qualifier::Input, ValueKind::Color);
+const INPUT_STRING: PineType = PineType::new(Qualifier::Input, ValueKind::String);
 const SERIES_FLOAT: PineType = PineType::new(Qualifier::Series, ValueKind::Float);
 const SERIES_BOOL: PineType = PineType::new(Qualifier::Series, ValueKind::Bool);
 const SERIES_FLOAT_TUPLE: PineType = PineType::new(Qualifier::Series, ValueKind::Tuple);
@@ -125,6 +126,19 @@ const INPUT_COLOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "defval",
         accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Color)),
+        optional: false,
+    },
+    BuiltinParam {
+        name: "title",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+];
+
+const INPUT_STRING_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "defval",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::String)),
         optional: false,
     },
     BuiltinParam {
@@ -450,6 +464,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: INPUT_COLOR_PARAMS,
         returns: ReturnSpec::Fixed(INPUT_COLOR),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "input.string",
+        phase: BuiltinPhase::Phase1Core,
+        params: INPUT_STRING_PARAMS,
+        returns: ReturnSpec::Fixed(INPUT_STRING),
         variadic: false,
     },
     BuiltinSignature {

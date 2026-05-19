@@ -143,6 +143,7 @@ Input namespace:
 - `input.bool`
 - `input.source`
 - `input.color`
+- `input.string`
 
 TA namespace:
 

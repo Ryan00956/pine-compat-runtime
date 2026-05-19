@@ -2776,6 +2776,27 @@ mod tests {
     }
 
     #[test]
+    fn accepts_input_string_in_conditions() {
+        let analysis = analyze(
+            "mode = input.string(\"SMA\", \"Mode\")\nplot(mode == \"SMA\" ? close : open)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "input.string")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_request_namespace() {
         let analysis = analyze("x = request.security(\"AAPL\", \"D\", close)\n");
 

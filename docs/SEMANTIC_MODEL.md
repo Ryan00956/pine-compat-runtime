@@ -44,6 +44,7 @@ Examples:
 ```pine
 1 + 2              // const int
 input.int(20) + 1  // input int
+input.string("S")  // input string
 close + 1          // series float
 ta.sma(close, 20)  // series float
 ```
