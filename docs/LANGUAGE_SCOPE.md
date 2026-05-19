@@ -55,8 +55,8 @@ Phase 1 executable subset:
   block-local tuple declarations
 - `for i = start to end` loops over inclusive integer ranges with optional
   `by step`, `break`, `continue`, and loop result assignment
-- partial `while condition` statement loops with `break`, `continue`, and a
-  runtime iteration guard
+- partial `while condition` statement loops with bool/`na` conditions, `break`,
+  `continue`, local `var`, nested loops, and a runtime iteration guard
 - partial `switch` expressions with condition arms, selector/case arms, and
   expression results
 - normal and tuple declarations scoped to an `if`/`else` branch
@@ -100,6 +100,11 @@ iteration.
 `x = for ...` and tuple assignment from `for` results are supported when the
 loop body ends with an expression. The assigned value is the latest iteration
 result that reached that expression, or `na` if no iteration reaches it.
+
+`while` loops are statement-only in the current executable subset. Conditions
+must type-check as bool; a runtime `na` condition exits the loop like false.
+`break` and `continue` target the nearest enclosing loop. A deterministic
+iteration guard prevents runaway loops.
 
 User-defined functions support single-expression and multi-statement block
 bodies:

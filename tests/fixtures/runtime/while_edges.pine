@@ -1,0 +1,23 @@
+//@version=5
+indicator("While edges")
+i = 0
+sum = close > 0 ? 0 : 0
+while close > 1 ? i < 3 : na
+    var seen = 0
+    seen := seen + 1
+    if i == 1
+        i := i + 1
+        continue
+    sum := sum + seen
+    i := i + 1
+nested = 0
+outer = 0
+while outer < 2
+    inner = 0
+    while inner < 3
+        inner := inner + 1
+        if inner == 2
+            continue
+        nested := nested + outer + inner
+    outer := outer + 1
+plot(close + sum + nested)

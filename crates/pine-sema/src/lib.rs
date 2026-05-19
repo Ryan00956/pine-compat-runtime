@@ -3710,6 +3710,20 @@ plot(y)
     }
 
     #[test]
+    fn accepts_while_loop_with_na_condition_and_local_var() {
+        let analysis = analyze(
+            "i = 0\nsum = close > 0 ? 0 : 0\nwhile close > 1 ? i < 3 : na\n    var seen = 0\n    seen := seen + 1\n    sum := sum + seen\n    i := i + 1\nplot(sum)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_non_bool_while_condition() {
         let analysis = analyze("while close\n    plot(close)\n");
 

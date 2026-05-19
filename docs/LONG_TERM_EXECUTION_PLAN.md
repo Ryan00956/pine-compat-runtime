@@ -65,7 +65,8 @@ Scope:
 - Broaden `for` fixtures for zero-iteration behavior, `na` loop bounds, step
   direction edge cases, nested loops, loop counter shadowing, and loop results.
 - Broaden `while` fixtures for `na` conditions, nested loop control, local
-  declarations, local `var`, and stateful calls inside loop bodies.
+  declarations, local `var`, and stateful calls inside loop bodies. Initial
+  coverage exists; keep adding real-script cases as gaps appear.
 - Add more branch interaction fixtures: `if` inside loops, loops inside `if`,
   `switch` inside loops, and loops inside UDFs.
 - Decide whether `while` expression results should enter the supported subset

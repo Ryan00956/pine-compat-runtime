@@ -2663,8 +2663,8 @@ fn eval_binary(op: HirBinaryOp, left: PineValue, right: PineValue) -> PineValue 
         HirBinaryOp::Mul => numeric_binary(left, right, |left, right| left * right),
         HirBinaryOp::Div => numeric_binary(left, right, |left, right| left / right),
         HirBinaryOp::Mod => numeric_binary(left, right, |left, right| left % right),
-        HirBinaryOp::Eq => PineValue::Bool(left == right),
-        HirBinaryOp::NotEq => PineValue::Bool(left != right),
+        HirBinaryOp::Eq => PineValue::Bool(values_equal(&left, &right)),
+        HirBinaryOp::NotEq => PineValue::Bool(!values_equal(&left, &right)),
         HirBinaryOp::Gt => compare_binary(left, right, |left, right| left > right),
         HirBinaryOp::Gte => compare_binary(left, right, |left, right| left >= right),
         HirBinaryOp::Lt => compare_binary(left, right, |left, right| left < right),
@@ -2699,6 +2699,13 @@ fn compare_binary(
     match (left.as_f64(), right.as_f64()) {
         (Some(left), Some(right)) => PineValue::Bool(op(left, right)),
         _ => PineValue::Na,
+    }
+}
+
+fn values_equal(left: &PineValue, right: &PineValue) -> bool {
+    match (left.as_f64(), right.as_f64()) {
+        (Some(left), Some(right)) => (left - right).abs() < f64::EPSILON,
+        _ => left == right,
     }
 }
 
@@ -4856,6 +4863,123 @@ plot(close + sum)
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[9.0, 10.0, 11.0]);
+    }
+
+    #[test]
+    fn runs_while_loop_with_na_condition() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("while na condition")
+i = 0
+sum = close > 0 ? 0 : 0
+while close > 1 ? i < 3 : na
+    sum := sum + i
+    i := i + 1
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[1.0, 5.0, 6.0]);
+    }
+
+    #[test]
+    fn runs_nested_while_loop_control_on_nearest_loop() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("nested while control")
+outer = 0
+sum = 0
+while outer < 2
+    inner = 0
+    while inner < 4
+        inner := inner + 1
+        if inner == 2
+            continue
+        if inner == 4
+            break
+        sum := sum + outer + inner
+    outer := outer + 1
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[11.0, 12.0, 13.0]);
+    }
+
+    #[test]
+    fn runs_while_body_var_persists_across_iterations_and_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("while local var")
+i = 0
+total = 0
+while i < 2
+    var seen = 0
+    seen := seen + 1
+    total := seen
+    i := i + 1
+plot(total)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[2.0, 4.0, 6.0]);
+    }
+
+    #[test]
+    fn advances_stateful_calls_inside_while_loop_body() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("while stateful")
+i = 0
+sum = close > 0 ? 0.0 : 0.0
+while i < 2
+    sum := sum + nz(ta.sma(close, 2))
+    i := i + 1
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[2.0, 5.5, 8.5]);
     }
 
     #[test]
