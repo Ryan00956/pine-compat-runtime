@@ -17,8 +17,8 @@ Phase 1 should be intentionally small:
 
 - OHLCV and derived built-in series
 - `indicator`
-- `input.int`, `input.float`, `input.bool`, `input.source`, `input.color`,
-  `input.string`, `input.price`, `input.time`, `input.symbol`,
+- `input`, `input.int`, `input.float`, `input.bool`, `input.source`,
+  `input.color`, `input.string`, `input.price`, `input.time`, `input.symbol`,
   `input.timeframe`
 - `plot`
 - `hline`
@@ -67,6 +67,7 @@ Only metadata arguments needed by the output model should be accepted in Phase
 ## Inputs
 
 ```text
+input(defval: const int/float/bool/string/color, title?: const string, ...) -> input defval kind
 input.int(defval: const int, title?: const string, ...) -> input int
 input.float(defval: const float, title?: const string, ...) -> input float
 input.bool(defval: const bool, title?: const string, ...) -> input bool

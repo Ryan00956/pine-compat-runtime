@@ -817,9 +817,9 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         match callee {
             "indicator" => Ok(PineValue::Void),
-            "input.int" | "input.float" | "input.bool" | "input.color" | "input.string"
-            | "input.price" | "input.time" | "input.symbol" | "input.timeframe"
-            | "input.source" => self.eval_expr(&args[0].value),
+            "input" | "input.int" | "input.float" | "input.bool" | "input.color"
+            | "input.string" | "input.price" | "input.time" | "input.symbol"
+            | "input.timeframe" | "input.source" => self.eval_expr(&args[0].value),
             "plot" => {
                 let value = self.eval_expr(&args[0].value)?;
                 self.push_plot_value(call_site_id.0, value);
@@ -2036,6 +2036,34 @@ plot(enabled ? math.max(close, threshold) : 0)
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[0.0, 2.5, 3.0]);
+    }
+
+    #[test]
+    fn runs_generic_input_variants() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("generic input")
+length = input(2, "Length")
+scale = input(1.5, "Scale")
+enabled = input(true, "Enabled")
+mode = input("SMA", "Mode")
+shade = input(color.orange, "Shade")
+plot(enabled and mode == "SMA" ? ta.sma(close, length) * scale : open, color=color.new(shade, 10))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.25, 3.75]);
     }
 
     #[test]

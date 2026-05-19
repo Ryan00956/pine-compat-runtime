@@ -1,0 +1,9 @@
+//@version=5
+indicator("Generic input")
+length = input(2, "Length")
+scale = input(1.5, "Scale")
+enabled = input(true, "Enabled")
+mode = input("SMA", "Mode")
+shade = input(color.orange, "Shade")
+
+plot(enabled and mode == "SMA" ? ta.sma(close, length) * scale : open, color=color.new(shade, 10))

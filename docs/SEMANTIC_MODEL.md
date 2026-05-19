@@ -43,6 +43,7 @@ Examples:
 
 ```pine
 1 + 2              // const int
+input(20)          // input int
 input.int(20) + 1  // input int
 input.string("S")  // input string
 input.time(0)      // input int

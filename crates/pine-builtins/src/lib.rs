@@ -39,6 +39,7 @@ pub enum Accepts {
     ColorCompatible,
     PlotOrHLine,
     FloatArray,
+    InputDefval,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -49,6 +50,7 @@ pub enum ReturnSpec {
     BoolFromArg(usize),
     ColorFromArg(usize),
     PromotedNumeric,
+    InputFromArg(usize),
 }
 
 const INPUT_INT: PineType = PineType::new(Qualifier::Input, ValueKind::Int);
@@ -79,6 +81,19 @@ const INDICATOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "overlay",
         accepts: Accepts::ConstBool,
+        optional: true,
+    },
+];
+
+const INPUT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "defval",
+        accepts: Accepts::InputDefval,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "title",
+        accepts: Accepts::ConstString,
         optional: true,
     },
 ];
@@ -429,6 +444,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: INDICATOR_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "input",
+        phase: BuiltinPhase::Phase1Core,
+        params: INPUT_PARAMS,
+        returns: ReturnSpec::InputFromArg(0),
         variadic: false,
     },
     BuiltinSignature {
@@ -827,6 +849,21 @@ pub fn fallback_bool_for_arg(arg_type: PineType) -> PineType {
 #[must_use]
 pub fn color_return_for_arg(arg_type: PineType) -> PineType {
     PineType::new(arg_type.qualifier, ValueKind::Color)
+}
+
+#[must_use]
+pub fn input_return_for_arg(arg_type: PineType) -> Option<PineType> {
+    if arg_type.qualifier != Qualifier::Const {
+        return None;
+    }
+    match arg_type.kind {
+        ValueKind::Int
+        | ValueKind::Float
+        | ValueKind::Bool
+        | ValueKind::String
+        | ValueKind::Color => Some(PineType::new(Qualifier::Input, arg_type.kind)),
+        _ => None,
+    }
 }
 
 #[must_use]

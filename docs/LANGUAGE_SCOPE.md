@@ -138,6 +138,7 @@ Global values:
 
 Input namespace:
 
+- `input`
 - `input.int`
 - `input.float`
 - `input.bool`

@@ -192,6 +192,7 @@ Rules:
 Inputs are stable across a run:
 
 ```pine
+generic = input(20, "Length")
 length = input.int(20, "Length")
 mode = input.string("SMA", "Mode")
 start = input.time(0, "Start")

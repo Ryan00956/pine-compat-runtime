@@ -1195,6 +1195,11 @@ impl Analyzer {
                 .flatten()
                 .map(pine_builtins::color_return_for_arg),
             ReturnSpec::PromotedNumeric => promoted_numeric_type(arg_types),
+            ReturnSpec::InputFromArg(index) => arg_types
+                .get(index)
+                .copied()
+                .flatten()
+                .and_then(pine_builtins::input_return_for_arg),
         }
     }
 
@@ -2099,6 +2104,11 @@ impl Analyzer {
                             .flatten()
                             .map(pine_builtins::color_return_for_arg),
                         ReturnSpec::PromotedNumeric => promoted_numeric_type(&arg_types),
+                        ReturnSpec::InputFromArg(index) => arg_types
+                            .get(index)
+                            .copied()
+                            .flatten()
+                            .and_then(pine_builtins::input_return_for_arg),
                     }
                 } else if let Some((receiver_name, method_name)) = method_call_parts(callee) {
                     self.type_of_method_call_with_params(
@@ -2648,6 +2658,17 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
         }
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
         Accepts::FloatArray => arg_type.kind == ValueKind::FloatArray,
+        Accepts::InputDefval => {
+            arg_type.qualifier == Qualifier::Const
+                && matches!(
+                    arg_type.kind,
+                    ValueKind::Int
+                        | ValueKind::Float
+                        | ValueKind::Bool
+                        | ValueKind::String
+                        | ValueKind::Color
+                )
+        }
     }
 }
 
@@ -2822,6 +2843,27 @@ mod tests {
                 "{name} should be reported as supported"
             );
         }
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_generic_input_variants() {
+        let analysis = analyze(
+            "length = input(2, \"Length\")\nscale = input(1.5, \"Scale\")\nenabled = input(true, \"Enabled\")\nmode = input(\"SMA\", \"Mode\")\nshade = input(color.orange, \"Shade\")\nplot(enabled and mode == \"SMA\" ? ta.sma(close, length) * scale : open, color=color.new(shade, 10))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "input")
+        );
         assert!(analysis.hir.is_some());
     }
 
