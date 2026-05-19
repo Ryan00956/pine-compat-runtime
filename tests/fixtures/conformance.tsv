@@ -22,6 +22,7 @@ barcolor	supported	color series output with conditional padding	tests/fixtures/r
 hline	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
 fill	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
 color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
+color.rgb	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
 math.abs	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.max	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.min	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine

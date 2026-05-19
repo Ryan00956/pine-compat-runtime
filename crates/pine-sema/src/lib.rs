@@ -1194,6 +1194,7 @@ impl Analyzer {
                 .copied()
                 .flatten()
                 .map(pine_builtins::color_return_for_arg),
+            ReturnSpec::PromotedColor => promoted_color_type(arg_types),
             ReturnSpec::PromotedNumeric => promoted_numeric_type(arg_types),
             ReturnSpec::FloatFromArg(index) => arg_types
                 .get(index)
@@ -2132,6 +2133,7 @@ impl Analyzer {
                             .copied()
                             .flatten()
                             .map(pine_builtins::color_return_for_arg),
+                        ReturnSpec::PromotedColor => promoted_color_type(&arg_types),
                         ReturnSpec::PromotedNumeric => promoted_numeric_type(&arg_types),
                         ReturnSpec::FloatFromArg(index) => arg_types
                             .get(index)
@@ -2836,6 +2838,18 @@ fn promoted_float_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
     qualifier.map(|qualifier| PineType::new(qualifier, ValueKind::Float))
 }
 
+fn promoted_color_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
+    let mut qualifier: Option<Qualifier> = None;
+    for arg_type in arg_types {
+        let arg_type = (*arg_type)?;
+        qualifier = Some(match qualifier {
+            Some(current) => strongest_qualifier(current, arg_type.qualifier),
+            None => arg_type.qualifier,
+        });
+    }
+    qualifier.map(|qualifier| PineType::new(qualifier, ValueKind::Color))
+}
+
 fn round_return_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
     let number_type = arg_types.first().copied().flatten()?;
     if arg_types.len() > 1 {
@@ -3185,6 +3199,7 @@ mod tests {
             r#"indicator("colors")
 base = input.color(color.orange, "Base")
 shade = color.new(base, 50)
+custom = color.rgb(255, 153, 0, 50)
 plot(close, color=shade)
 "#,
         );
@@ -3200,6 +3215,13 @@ plot(close, color=shade)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "color.new")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "color.rgb")
         );
         assert!(
             analysis

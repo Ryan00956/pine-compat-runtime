@@ -50,6 +50,7 @@ pub enum ReturnSpec {
     SameAsArg(usize),
     BoolFromArg(usize),
     ColorFromArg(usize),
+    PromotedColor,
     PromotedNumeric,
     FloatFromArg(usize),
     PromotedFloat,
@@ -515,6 +516,29 @@ const COLOR_NEW_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const COLOR_RGB_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "red",
+        accepts: Accepts::Numeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "green",
+        accepts: Accepts::Numeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "blue",
+        accepts: Accepts::Numeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "transp",
+        accepts: Accepts::Numeric,
+        optional: true,
+    },
+];
+
 const MATH_NUMBER_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "number",
     accepts: Accepts::Numeric,
@@ -902,6 +926,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: COLOR_NEW_PARAMS,
         returns: ReturnSpec::ColorFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "color.rgb",
+        phase: BuiltinPhase::Phase1Core,
+        params: COLOR_RGB_PARAMS,
+        returns: ReturnSpec::PromotedColor,
         variadic: false,
     },
     BuiltinSignature {

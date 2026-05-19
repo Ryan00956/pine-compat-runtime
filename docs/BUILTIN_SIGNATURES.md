@@ -183,10 +183,10 @@ Rules:
 
 ```text
 color.new(color: color-compatible, transp: simple int) -> same qualifier color
+color.rgb(red: numeric, green: numeric, blue: numeric, transp?: numeric) -> color with strongest qualifier
 ```
 
-Initial named colors should include only the common names needed by fixtures.
-Unsupported named colors should be diagnostics until the registry is complete.
+Named colors include the common TradingView color constants used by fixtures.
 
 Hex color parsing should be implemented in the syntax or semantic layer with a
 single normalized `Color` representation.

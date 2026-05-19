@@ -2,4 +2,6 @@
 indicator("Colors")
 base = input.color(color.orange, "Base")
 shade = color.new(base, 50)
+custom = color.rgb(255, 153, 0, 50)
+bgcolor(custom)
 plot(close, color=shade)

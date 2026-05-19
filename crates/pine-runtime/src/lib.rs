@@ -1318,6 +1318,7 @@ impl<'a> HistoricalRuntime<'a> {
                 Ok(PineValue::Void)
             }
             "color.new" => self.eval_color_new(args),
+            "color.rgb" => self.eval_color_rgb(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -1717,6 +1718,28 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
+        Ok(PineValue::Color(apply_transparency(color, transp)))
+    }
+
+    fn eval_color_rgb(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(red) = self.eval_expr(&args[0].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(green) = self.eval_expr(&args[1].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(blue) = self.eval_expr(&args[2].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let transp = if let Some(arg) = args.get(3) {
+            let Some(transp) = self.eval_expr(&arg.value)?.as_f64() else {
+                return Ok(PineValue::Na);
+            };
+            transp.round() as i64
+        } else {
+            0
+        };
+        let color = (color_channel(red) << 16) | (color_channel(green) << 8) | color_channel(blue);
         Ok(PineValue::Color(apply_transparency(color, transp)))
     }
 
@@ -2729,6 +2752,10 @@ fn apply_transparency(color: u32, transp: i64) -> u32 {
     (rgb << 8) | alpha
 }
 
+fn color_channel(value: f64) -> u32 {
+    value.round().clamp(0.0, 255.0) as u32
+}
+
 fn math_extreme(left: f64, right: f64, mode: MathExtreme) -> f64 {
     match mode {
         MathExtreme::Max => left.max(right),
@@ -3673,6 +3700,8 @@ plot(lo)
             "test.pine",
             r#"indicator("colors")
 c = color.new(color.red, 50)
+custom = color.rgb(255, 153, 0, 50)
+bgcolor(custom)
 plot(na(c) ? 0 : 1)
 "#,
         );
@@ -3688,6 +3717,10 @@ plot(na(c) ? 0 : 1)
 
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
         assert_eq!(apply_transparency(0xFF0000, 50), 0xFF000080);
+        assert_eq!(
+            result.bg_colors[0].values,
+            vec![PineValue::Color(0xFF990080), PineValue::Color(0xFF990080)]
+        );
     }
 
     #[test]
