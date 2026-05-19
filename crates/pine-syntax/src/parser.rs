@@ -80,6 +80,22 @@ impl Parser {
             return self.parse_for_stmt();
         }
 
+        if self.at(TokenKind::Break) {
+            let span = self.expect(TokenKind::Break, "expected `break`")?;
+            return Some(Stmt {
+                span,
+                kind: StmtKind::Break,
+            });
+        }
+
+        if self.at(TokenKind::Continue) {
+            let span = self.expect(TokenKind::Continue, "expected `continue`")?;
+            return Some(Stmt {
+                span,
+                kind: StmtKind::Continue,
+            });
+        }
+
         if self.at(TokenKind::LBracket) {
             return self.parse_tuple_decl();
         }
@@ -846,5 +862,20 @@ mod tests {
             panic!("expected for step");
         };
         assert!(matches!(step.kind, ExprKind::Literal(Literal::Int(2))));
+    }
+
+    #[test]
+    fn parses_loop_control_statements() {
+        let parsed = parse("for i = 0 to 10\n    if i == 2\n        break\n    continue\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::For { body, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected for statement");
+        };
+        let StmtKind::If { then_branch, .. } = &body[0].kind else {
+            panic!("expected if statement");
+        };
+        assert!(matches!(then_branch[0].kind, StmtKind::Break));
+        assert!(matches!(body[1].kind, StmtKind::Continue));
     }
 }

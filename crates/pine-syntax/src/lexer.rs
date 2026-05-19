@@ -23,6 +23,8 @@ pub enum TokenKind {
     Indent,
     Dedent,
     For,
+    Break,
+    Continue,
     Import,
     To,
     By,
@@ -241,6 +243,8 @@ impl<'a> Lexer<'a> {
             "if" => TokenKind::If,
             "else" => TokenKind::Else,
             "for" => TokenKind::For,
+            "break" => TokenKind::Break,
+            "continue" => TokenKind::Continue,
             "import" => TokenKind::Import,
             "to" => TokenKind::To,
             "by" => TokenKind::By,
@@ -529,6 +533,20 @@ mod tests {
                 TokenKind::Int(10),
                 TokenKind::By,
                 TokenKind::Int(2),
+                TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_loop_control_keywords() {
+        assert_eq!(
+            kinds("break\ncontinue\n"),
+            vec![
+                TokenKind::Break,
+                TokenKind::Newline,
+                TokenKind::Continue,
                 TokenKind::Newline,
                 TokenKind::Eof,
             ]

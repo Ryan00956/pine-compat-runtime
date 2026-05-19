@@ -274,6 +274,13 @@ struct RollingWindowState {
     na_count: usize,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StmtControl {
+    None,
+    Break,
+    Continue,
+}
+
 impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn new(program: &'a HirProgram) -> Self {
@@ -325,7 +332,14 @@ impl<'a> HistoricalRuntime<'a> {
         self.set_builtin_symbols(&bar, bar_index)?;
 
         for statement in &self.program.statements {
-            self.eval_stmt(statement)?;
+            match self.eval_stmt(statement)? {
+                StmtControl::None => {}
+                StmtControl::Break | StmtControl::Continue => {
+                    return Err(RuntimeError {
+                        message: "loop control escaped its enclosing loop".to_owned(),
+                    });
+                }
+            }
         }
 
         self.finalize_plot_values();
@@ -334,7 +348,7 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(())
     }
 
-    fn eval_stmt(&mut self, statement: &HirStmt) -> Result<(), RuntimeError> {
+    fn eval_stmt(&mut self, statement: &HirStmt) -> Result<StmtControl, RuntimeError> {
         match &statement.kind {
             HirStmtKind::Expr(expr) => {
                 self.eval_expr(expr)?;
@@ -347,10 +361,13 @@ impl<'a> HistoricalRuntime<'a> {
                 let branch = match self.eval_expr(condition)? {
                     PineValue::Bool(true) => then_branch,
                     PineValue::Bool(false) | PineValue::Na => else_branch,
-                    _ => return Ok(()),
+                    _ => return Ok(StmtControl::None),
                 };
                 for statement in branch {
-                    self.eval_stmt(statement)?;
+                    match self.eval_stmt(statement)? {
+                        StmtControl::None => {}
+                        control => return Ok(control),
+                    }
                 }
             }
             HirStmtKind::For {
@@ -361,14 +378,14 @@ impl<'a> HistoricalRuntime<'a> {
                 body,
             } => {
                 let Some(from) = self.eval_expr(from)?.as_i64() else {
-                    return Ok(());
+                    return Ok(StmtControl::None);
                 };
                 let Some(to) = self.eval_expr(to)?.as_i64() else {
-                    return Ok(());
+                    return Ok(StmtControl::None);
                 };
                 let step_size = if let Some(step) = step {
                     let Some(step) = self.eval_expr(step)?.as_i64() else {
-                        return Ok(());
+                        return Ok(StmtControl::None);
                     };
                     if step == 0 {
                         return Err(RuntimeError {
@@ -389,7 +406,11 @@ impl<'a> HistoricalRuntime<'a> {
                     }
                     self.set_symbol_value(*counter, PineValue::Int(value));
                     for statement in body {
-                        self.eval_stmt(statement)?;
+                        match self.eval_stmt(statement)? {
+                            StmtControl::None => {}
+                            StmtControl::Break => return Ok(StmtControl::None),
+                            StmtControl::Continue => break,
+                        }
                     }
                     let Some(next) = value.checked_add(step) else {
                         break;
@@ -397,6 +418,8 @@ impl<'a> HistoricalRuntime<'a> {
                     value = next;
                 }
             }
+            HirStmtKind::Break => return Ok(StmtControl::Break),
+            HirStmtKind::Continue => return Ok(StmtControl::Continue),
             HirStmtKind::Decl { symbol, value } => {
                 let value = self.eval_decl(*symbol, value)?;
                 self.set_symbol_value(*symbol, value);
@@ -411,7 +434,7 @@ impl<'a> HistoricalRuntime<'a> {
             HirStmtKind::TupleDecl { symbols, value } => {
                 let value = self.eval_expr(value)?;
                 let PineValue::Tuple(values) = value else {
-                    return Ok(());
+                    return Ok(StmtControl::None);
                 };
                 for (symbol, value) in symbols.iter().zip(values) {
                     self.set_symbol_value(*symbol, value);
@@ -419,7 +442,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
 
-        Ok(())
+        Ok(StmtControl::None)
     }
 
     #[must_use]
@@ -620,7 +643,14 @@ impl<'a> HistoricalRuntime<'a> {
             ),
             HirExprKind::Block { statements, result } => {
                 for statement in statements {
-                    self.eval_stmt(statement)?;
+                    match self.eval_stmt(statement)? {
+                        StmtControl::None => {}
+                        StmtControl::Break | StmtControl::Continue => {
+                            return Err(RuntimeError {
+                                message: "loop control escaped its enclosing loop".to_owned(),
+                            });
+                        }
+                    }
                 }
                 self.eval_expr(result)?
             }
@@ -2743,6 +2773,35 @@ plot(close + sum)
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[7.0, 8.0, 9.0]);
+    }
+
+    #[test]
+    fn runs_for_loop_break_and_continue() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("for control")
+sum = 0
+for i = 0 to 5
+    if i == 2
+        continue
+    if i == 4
+        break
+    sum := sum + i
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[5.0, 6.0, 7.0]);
     }
 
     #[test]

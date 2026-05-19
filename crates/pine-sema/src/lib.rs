@@ -61,6 +61,7 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
         next_var_slot_id: 0,
         block_depth: 0,
         function_depth: 0,
+        loop_depth: 0,
     };
     analyzer.analyze_program(&parsed.program);
     analyzer.finish(&parsed.program)
@@ -144,6 +145,7 @@ struct Analyzer {
     next_var_slot_id: u32,
     block_depth: u32,
     function_depth: u32,
+    loop_depth: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -409,6 +411,7 @@ impl Analyzer {
                     ValueKind::Int,
                 );
                 self.block_depth += 1;
+                self.loop_depth += 1;
                 self.scope.push_scope();
                 let counter_symbol =
                     self.define_local_symbol(counter, counter_type, None, self.function_depth == 0);
@@ -417,7 +420,26 @@ impl Analyzer {
                     self.analyze_stmt(body_statement);
                 }
                 self.scope.pop_scope();
+                self.loop_depth -= 1;
                 self.block_depth -= 1;
+            }
+            StmtKind::Break => {
+                if self.loop_depth == 0 {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_LOOP_CONTROL",
+                        "`break` can only be used inside a for loop",
+                        statement.span,
+                    ));
+                }
+            }
+            StmtKind::Continue => {
+                if self.loop_depth == 0 {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_LOOP_CONTROL",
+                        "`continue` can only be used inside a for loop",
+                        statement.span,
+                    ));
+                }
             }
             StmtKind::Function { .. } => {
                 if self.block_depth > 0 || self.function_depth > 0 {
@@ -1390,6 +1412,8 @@ impl Analyzer {
                     })
                     .collect::<Option<_>>()?,
             },
+            StmtKind::Break => HirStmtKind::Break,
+            StmtKind::Continue => HirStmtKind::Continue,
             StmtKind::Decl { name, value, .. } => HirStmtKind::Decl {
                 symbol: self.lower_decl_symbol(name, statement.span)?.id,
                 value: self.lower_expr_with_params(value, param_exprs, param_types)?,
@@ -2669,6 +2693,33 @@ plot(y)
                 .iter()
                 .any(|diagnostic| diagnostic.code == "E_LOOP_STEP")
         );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn accepts_loop_control_inside_for_loop() {
+        let analysis = analyze(
+            "sum = 0\nfor i = 0 to 5\n    if i == 2\n        continue\n    if i == 4\n        break\n    sum := sum + i\nplot(sum)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_loop_control_outside_for_loop() {
+        let analysis = analyze("break\ncontinue\n");
+
+        let loop_control_errors = analysis
+            .diagnostics
+            .iter()
+            .filter(|diagnostic| diagnostic.code == "E_LOOP_CONTROL")
+            .count();
+        assert_eq!(loop_control_errors, 2, "{:?}", analysis.diagnostics);
         assert!(analysis.hir.is_none());
     }
 

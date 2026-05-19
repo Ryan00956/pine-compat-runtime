@@ -145,6 +145,8 @@ explicit `by step`. The loop counter is a block-local integer symbol scoped to
 the loop body. Range and step expressions must be int-typed, and literal zero
 steps are rejected; series-qualified bounds are evaluated for the current bar
 when the loop statement executes.
+`break` and `continue` are valid only inside a loop and target the nearest
+enclosing loop.
 
 ## Reassignment
 
