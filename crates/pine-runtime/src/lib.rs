@@ -328,6 +328,7 @@ impl<'a> HistoricalRuntime<'a> {
             self.eval_stmt(statement)?;
         }
 
+        self.finalize_plot_values();
         self.commit_current_series();
         self.bars += 1;
         Ok(())
@@ -530,7 +531,12 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn commit_current_series(&mut self) {
-        for (series_id, value) in self.current_series.drain() {
+        for raw_series_id in 0..self.program.next_series_id {
+            let series_id = SeriesId(raw_series_id);
+            let value = self
+                .current_series
+                .remove(&series_id)
+                .unwrap_or(PineValue::Na);
             self.series_store.commit(series_id, value);
         }
     }
@@ -1116,12 +1122,29 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn push_plot_value(&mut self, id: u32, value: PineValue) {
         if let Some(plot) = self.plots.iter_mut().find(|plot| plot.id == id) {
-            plot.values.push(value);
+            while plot.values.len() < self.bars {
+                plot.values.push(PineValue::Na);
+            }
+            if plot.values.len() == self.bars {
+                plot.values.push(value);
+            } else if let Some(current) = plot.values.last_mut() {
+                *current = value;
+            }
         } else {
-            self.plots.push(PlotSeries {
-                id,
-                values: vec![value],
-            });
+            let mut values = vec![PineValue::Na; self.bars];
+            values.push(value);
+            self.plots.push(PlotSeries { id, values });
+        }
+    }
+
+    fn finalize_plot_values(&mut self) {
+        for plot in &mut self.plots {
+            while plot.values.len() < self.bars {
+                plot.values.push(PineValue::Na);
+            }
+            if plot.values.len() == self.bars {
+                plot.values.push(PineValue::Na);
+            }
         }
     }
 
@@ -2086,6 +2109,286 @@ plot(x)
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0, 2.0]);
+    }
+
+    #[test]
+    fn advances_conditional_sma_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional sma")
+ma = close
+if close > open
+    ma := ta.sma(close, 2)
+plot(ma)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+            bar_ohlc(5.0, 8.0, 5.0, 8.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.0, 4.0, 7.0]);
+    }
+
+    #[test]
+    fn advances_conditional_ema_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional ema")
+e = close
+if close > open
+    e := ta.ema(close, 2)
+plot(e)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+            bar_ohlc(5.0, 8.0, 5.0, 8.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(
+            &result.plots[0].values,
+            &[2.0, 2.0, 4.666666666666667, 6.888888888888889],
+        );
+    }
+
+    #[test]
+    fn pads_conditional_plot_with_na_when_branch_is_skipped() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional plot")
+if close > open
+    plot(close)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(
+            result.plots[0].values,
+            vec![PineValue::Float(2.0), PineValue::Na, PineValue::Float(6.0)]
+        );
+    }
+
+    #[test]
+    fn runs_else_if_branches() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("else if")
+x = close
+if close > 6
+    x := 10.0
+else if close > 3
+    x := 5.0
+else
+    x := 1.0
+plot(x)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(2.0), bar(4.0), bar(8.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[1.0, 5.0, 10.0]);
+    }
+
+    #[test]
+    fn runs_nested_if_branches() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("nested if")
+x = close
+if close > open
+    if high > close
+        x := high
+    else
+        x := close
+else
+    x := open
+plot(x)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 3.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[3.0, 3.0, 6.0]);
+    }
+
+    #[test]
+    fn advances_conditional_tuple_builtin_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional bb")
+[basis, upper, lower] = [close, close, close]
+if close > open
+    [basis, upper, lower] = ta.bb(close, 2, 2)
+plot(basis)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+            bar_ohlc(5.0, 8.0, 5.0, 8.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.0, 4.0, 7.0]);
+    }
+
+    #[test]
+    fn advances_conditional_rsi_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional rsi")
+r = close
+if close > open
+    r := ta.rsi(close, 2)
+plot(r)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.0, 100.0]);
+    }
+
+    #[test]
+    fn advances_conditional_atr_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional atr")
+a = close
+if close > open
+    a := ta.atr(2)
+plot(a)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[1.0, 2.0, 2.5]);
+    }
+
+    #[test]
+    fn advances_conditional_macd_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional macd")
+[macd, signal, hist] = [close, close, close]
+if close > open
+    [macd, signal, hist] = ta.macd(close, 2, 3, 2)
+plot(macd)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+            bar_ohlc(5.0, 8.0, 5.0, 8.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(
+            &result.plots[0].values,
+            &[0.0, 2.0, 0.666666666666667, 0.8888888888888893],
+        );
     }
 
     fn bar(close: f64) -> Bar {

@@ -164,7 +164,9 @@ Status: in progress.
 - [x] Parse indentation into executable blocks.
 - [x] Lower `if`/`else` statements to HIR.
 - [x] Execute `if`/`else` branches in the historical and realtime runtimes.
-- [x] Reject `ta.*` calls inside `if` blocks until conditional callsite state
-  is implemented.
+- [x] Keep skipped conditional series bar-aligned by committing `na`.
+- [x] Support stateful calls inside `if` blocks with callsite state advancing
+  only when the branch executes.
+- [x] Cover conditional SMA, EMA, BB, RSI, ATR, and MACD fixtures.
 - [ ] Add fixture-derived conformance metadata for block statements.
-- [ ] Design and implement conditional callsite state for stateful built-ins.
+- [ ] Expand conditional output and local-scope diagnostics.

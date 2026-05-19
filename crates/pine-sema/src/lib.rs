@@ -55,7 +55,6 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
         next_series_id: initial_series_count(),
         next_call_site_id: 0,
         next_var_slot_id: 0,
-        conditional_depth: 0,
     };
     analyzer.analyze_program(&parsed.program);
     analyzer.finish(&parsed.program)
@@ -133,7 +132,6 @@ struct Analyzer {
     next_series_id: u32,
     next_call_site_id: u32,
     next_var_slot_id: u32,
-    conditional_depth: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -233,11 +231,9 @@ impl Analyzer {
                     span: statement.span,
                 });
 
-                self.conditional_depth += 1;
                 for branch_statement in then_branch.iter().chain(else_branch) {
                     self.analyze_stmt(branch_statement);
                 }
-                self.conditional_depth -= 1;
             }
             StmtKind::Decl { mode, name, value } => {
                 if matches!(mode, pine_syntax::DeclMode::Varip) {
@@ -379,13 +375,6 @@ impl Analyzer {
             return None;
         };
         self.check_feature_name(&name, callee.span);
-        if self.conditional_depth > 0 && name.starts_with("ta.") {
-            self.unsupported(
-                "conditional_ta_call",
-                "ta.* calls inside if blocks are not supported until conditional callsite state is implemented",
-                callee.span,
-            );
-        }
 
         let arg_types: Vec<_> = args
             .iter()
@@ -1542,20 +1531,6 @@ plot(y)
         );
         let hir = analysis.hir.expect("if statement should lower");
         assert!(matches!(hir.statements[0].kind, HirStmtKind::If { .. }));
-    }
-
-    #[test]
-    fn rejects_ta_calls_inside_if_blocks() {
-        let analysis = analyze("if close > open\n    x = ta.sma(close, 2)\n");
-
-        assert!(
-            analysis
-                .compatibility
-                .unsupported
-                .iter()
-                .any(|feature| feature.feature == "conditional_ta_call")
-        );
-        assert!(analysis.hir.is_none());
     }
 
     #[test]

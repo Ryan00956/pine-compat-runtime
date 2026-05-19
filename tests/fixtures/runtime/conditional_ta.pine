@@ -1,5 +1,6 @@
 //@version=5
 indicator("Conditional TA")
+ma = close
 if close > open
-    ma = ta.sma(close, 3)
-plot(close)
+    ma := ta.sma(close, 2)
+plot(ma)

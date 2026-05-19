@@ -23,8 +23,9 @@ The runtime still makes compatibility claims by tested feature. User-defined
 function execution, `varip` intrabar persistence, `request.*`, `strategy.*`,
 alerts, imports, arrays, drawing objects, and dynamic history offsets remain
 outside the executable subset and should produce diagnostics.
-Stateful `ta.*` calls inside `if` blocks are also rejected until conditional
-callsite state is specified and tested.
+Stateful calls inside `if` blocks advance their callsite state only when the
+branch executes. Skipped series values are committed as `na` so history buffers
+remain bar-aligned.
 
 ## Phase 0: Repository Foundation
 

@@ -169,7 +169,7 @@ fn conformance_entries() -> Vec<MatrixEntry> {
         MatrixEntry {
             feature: "if".to_owned(),
             status: "supported",
-            notes: "block execution without ta.* calls inside branches",
+            notes: "conditional callsites advance only when their branch executes",
         },
         MatrixEntry {
             feature: "color.* named constants".to_owned(),
@@ -230,11 +230,6 @@ fn conformance_entries() -> Vec<MatrixEntry> {
             feature: "dynamic history offsets".to_owned(),
             status: "unsupported",
             notes: "Phase 1 requires static offsets",
-        },
-        MatrixEntry {
-            feature: "ta.* inside if blocks".to_owned(),
-            status: "unsupported",
-            notes: "conditional callsite state is not implemented",
         },
     ]);
 

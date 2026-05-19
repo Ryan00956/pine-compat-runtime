@@ -85,15 +85,6 @@ fn reports_unsupported_alert_fixture() {
     );
 }
 
-#[test]
-fn reports_unsupported_conditional_ta_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_conditional_ta.pine",
-        "conditional_ta_call",
-        "conditional callsite state",
-    );
-}
-
 fn assert_unsupported_fixture(path: &str, feature: &str, reason: &str) {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");

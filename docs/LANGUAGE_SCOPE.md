@@ -61,8 +61,9 @@ Phase 1 executable subset:
 - `na`, `nz`
 - `ta.sma` and `ta.ema`
 
-Current `if` support intentionally rejects `ta.*` calls inside branches until
-conditional callsite state is implemented.
+Stateful calls inside `if` blocks advance their callsite state only when the
+branch executes. Series values not evaluated on a bar are committed as `na` to
+keep history buffers bar-aligned.
 
 ## Initial Built-Ins
 
