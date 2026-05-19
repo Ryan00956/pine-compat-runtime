@@ -53,6 +53,7 @@ pub enum ReturnSpec {
     PromotedNumeric,
     FloatFromArg(usize),
     PromotedFloat,
+    Round,
     InputFromArg(usize),
 }
 
@@ -552,6 +553,19 @@ const MATH_POW_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const MATH_ROUND_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "number",
+        accepts: Accepts::Numeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "precision",
+        accepts: Accepts::Kind(ValueKind::Int),
+        optional: true,
+    },
+];
+
 const NA_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "x",
     accepts: Accepts::Any,
@@ -1033,8 +1047,8 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "math.round",
         phase: BuiltinPhase::Phase1Core,
-        params: MATH_NUMBER_PARAMS,
-        returns: ReturnSpec::SameAsArg(0),
+        params: MATH_ROUND_PARAMS,
+        returns: ReturnSpec::Round,
         variadic: false,
     },
     BuiltinSignature {

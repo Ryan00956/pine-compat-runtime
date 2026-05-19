@@ -228,6 +228,7 @@ math.cos(number: numeric) -> float with same qualifier
 math.tan(number: numeric) -> float with same qualifier
 math.pow(base: numeric, exponent: numeric) -> float with strongest qualifier
 math.round(number: numeric) -> numeric
+math.round(number: numeric, precision: int) -> float with same qualifier
 ```
 
 Each added math function must declare its coercion and `na` behavior.
@@ -239,7 +240,7 @@ Current Phase 4 behavior:
 - `math.avg` accepts one or more numeric args and returns their average as a float.
 - `math.floor` and `math.ceil` preserve int/float kind and qualifier; float inputs return whole-number floats.
 - `math.sqrt`, `math.log`, `math.log10`, `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`, `math.todegrees`, `math.toradians`, `math.sin`, `math.cos`, `math.tan`, and `math.pow` return float values and preserve or promote qualifiers from their arguments.
-- `math.round` preserves int/float kind and qualifier; float inputs round to the nearest whole float.
+- `math.round` preserves int/float kind and qualifier when `precision` is omitted; with `precision`, it returns a float rounded to that many decimal places.
 - `math.max` and `math.min` require at least two numeric args and accept variadic numeric args.
 - `math.max` and `math.min` return int only when all args are int; otherwise they return float.
 - All selected math functions return `na` if any required numeric input is `na`.

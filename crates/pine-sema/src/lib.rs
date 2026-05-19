@@ -1201,6 +1201,7 @@ impl Analyzer {
                 .flatten()
                 .map(float_return_for_arg),
             ReturnSpec::PromotedFloat => promoted_float_type(arg_types),
+            ReturnSpec::Round => round_return_type(arg_types),
             ReturnSpec::InputFromArg(index) => arg_types
                 .get(index)
                 .copied()
@@ -2138,6 +2139,7 @@ impl Analyzer {
                             .flatten()
                             .map(float_return_for_arg),
                         ReturnSpec::PromotedFloat => promoted_float_type(&arg_types),
+                        ReturnSpec::Round => round_return_type(&arg_types),
                         ReturnSpec::InputFromArg(index) => arg_types
                             .get(index)
                             .copied()
@@ -2834,6 +2836,15 @@ fn promoted_float_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
     qualifier.map(|qualifier| PineType::new(qualifier, ValueKind::Float))
 }
 
+fn round_return_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
+    let number_type = arg_types.first().copied().flatten()?;
+    if arg_types.len() > 1 {
+        Some(PineType::new(number_type.qualifier, ValueKind::Float))
+    } else {
+        Some(number_type)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3219,6 +3230,7 @@ plot(close, color=shade)
 x = math.max(math.abs(close - 3), math.round(close / 2), 1)
 y = math.min(x, 3.5)
 avg_value = math.avg(open, close, high, low)
+rounded_precision = math.round(close / 3, 2)
 z = math.floor(close / 2) + math.ceil(close / 2)
 w = math.sqrt(close) + math.log(close) + math.pow(close, 2)
 scale = math.log10(close) + math.exp(close)
@@ -3255,6 +3267,13 @@ plot(y)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "math.avg")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.round")
         );
         assert!(
             analysis
