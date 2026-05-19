@@ -56,6 +56,12 @@ ascending ranges and `-1` for descending ranges unless an explicit non-zero int
 `break` exits the nearest enclosing loop. `continue` skips the rest of the
 current iteration and advances to the next loop counter value.
 
+When a `for` loop is used as a declaration value, the loop body must end with an
+expression. The loop returns the last value produced by that expression. If a
+`continue` skips the expression or a `break` exits before it, the previous
+produced value remains the loop result. If no iteration reaches the expression,
+the loop result is `na`.
+
 ### Reassignment
 
 ```pine

@@ -11,4 +11,10 @@ for i = 0 to 5 by 2
     if i == 4
         break
     sum := sum + i
-plot(sum)
+last = for j = 0 to 5
+    if j == 2
+        continue
+    if j == 4
+        break
+    j * 2
+plot(sum + last)

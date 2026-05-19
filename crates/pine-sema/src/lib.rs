@@ -599,6 +599,13 @@ impl Analyzer {
                     _ => None,
                 }
             }
+            ExprKind::For {
+                counter,
+                from,
+                to,
+                step,
+                body,
+            } => self.analyze_for_expr(counter, from, to, step.as_deref(), body, expr.span),
             ExprKind::Tuple(items) => {
                 for item in items {
                     self.analyze_expr(item);
@@ -613,6 +620,79 @@ impl Analyzer {
                 value_type.map(|value_type| PineType::new(Qualifier::Series, value_type.kind))
             }
         }
+    }
+
+    fn analyze_for_expr(
+        &mut self,
+        counter: &str,
+        from: &Expr,
+        to: &Expr,
+        step: Option<&Expr>,
+        body: &[Stmt],
+        span: Span,
+    ) -> Option<PineType> {
+        let from_type = self.analyze_expr(from);
+        let to_type = self.analyze_expr(to);
+        let step_type = step.and_then(|step| self.analyze_expr(step));
+        if let Some(from_type) = from_type {
+            self.expect_int(from_type, from.span);
+        }
+        if let Some(to_type) = to_type {
+            self.expect_int(to_type, to.span);
+        }
+        if let Some((step, step_type)) = step.zip(step_type) {
+            self.expect_int(step_type, step.span);
+            self.expect_non_zero_loop_step(step);
+        }
+
+        self.compatibility.supported.push(FeatureUse {
+            feature: "for".to_owned(),
+            span,
+        });
+
+        let counter_type = PineType::new(
+            strongest_qualifier(
+                from_type.unwrap_or(UNKNOWN).qualifier,
+                to_type.unwrap_or(UNKNOWN).qualifier,
+            ),
+            ValueKind::Int,
+        );
+        self.block_depth += 1;
+        self.loop_depth += 1;
+        self.scope.push_scope();
+        let counter_symbol =
+            self.define_local_symbol(counter, counter_type, None, self.function_depth == 0);
+        self.bind_symbol(counter, span, counter_symbol);
+
+        let return_type = if let Some((last, prefix)) = body.split_last() {
+            for statement in prefix {
+                self.analyze_stmt(statement);
+            }
+            match &last.kind {
+                StmtKind::Expr(expr) => self.analyze_expr(expr),
+                _ => {
+                    self.analyze_stmt(last);
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_LOOP_RETURN",
+                        "for expression body must end with an expression",
+                        last.span,
+                    ));
+                    None
+                }
+            }
+        } else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_LOOP_RETURN",
+                "for expression body must end with an expression",
+                span,
+            ));
+            None
+        };
+
+        self.scope.pop_scope();
+        self.loop_depth -= 1;
+        self.block_depth -= 1;
+        return_type
     }
 
     fn analyze_call(&mut self, callee: &Expr, args: &[CallArg]) -> Option<PineType> {
@@ -1500,6 +1580,42 @@ impl Analyzer {
                     param_types,
                 )?),
             },
+            ExprKind::For {
+                counter,
+                from,
+                to,
+                step,
+                body,
+            } => {
+                let (last, prefix) = body.split_last()?;
+                let StmtKind::Expr(result) = &last.kind else {
+                    return None;
+                };
+                HirExprKind::For {
+                    counter: self.lower_decl_symbol(counter, expr.span)?.id,
+                    from: Box::new(self.lower_expr_with_params(from, param_exprs, param_types)?),
+                    to: Box::new(self.lower_expr_with_params(to, param_exprs, param_types)?),
+                    step: match step {
+                        Some(step) => Some(Box::new(self.lower_expr_with_params(
+                            step,
+                            param_exprs,
+                            param_types,
+                        )?)),
+                        None => None,
+                    },
+                    statements: prefix
+                        .iter()
+                        .map(|statement| {
+                            self.lower_stmt_with_params(statement, param_exprs, param_types)
+                        })
+                        .collect::<Option<_>>()?,
+                    result: Box::new(self.lower_expr_with_params(
+                        result,
+                        param_exprs,
+                        param_types,
+                    )?),
+                }
+            }
             ExprKind::Tuple(items) => HirExprKind::Tuple(
                 items
                     .iter()
@@ -1592,7 +1708,12 @@ impl Analyzer {
         param_types: &HashMap<String, PineType>,
     ) -> Option<HirExpr> {
         match body {
-            FunctionBody::Expr(expr) => self.lower_expr_with_params(expr, param_exprs, param_types),
+            FunctionBody::Expr(expr) => {
+                self.lower_symbol_overrides.push(HashMap::new());
+                let result = self.lower_expr_with_params(expr, param_exprs, param_types);
+                self.lower_symbol_overrides.pop();
+                result
+            }
             FunctionBody::Block(statements) => {
                 let (last, prefix) = statements.split_last()?;
                 let StmtKind::Expr(result) = &last.kind else {
@@ -1690,6 +1811,13 @@ impl Analyzer {
                     ),
                     common_kind(then_type.kind, else_type.kind)?,
                 ))
+            }
+            ExprKind::For { body, .. } => {
+                let last = body.last()?;
+                let StmtKind::Expr(expr) = &last.kind else {
+                    return None;
+                };
+                self.type_of_expr_with_params(expr, param_types)
             }
             ExprKind::Tuple(items) => {
                 for item in items {
@@ -1913,8 +2041,70 @@ fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                 || contains_output_or_declaration_call(then_expr)
                 || contains_output_or_declaration_call(else_expr)
         }
+        ExprKind::For {
+            from,
+            to,
+            step,
+            body,
+            ..
+        } => {
+            contains_output_or_declaration_call(from)
+                || contains_output_or_declaration_call(to)
+                || step
+                    .as_deref()
+                    .is_some_and(contains_output_or_declaration_call)
+                || body.iter().any(|statement| match &statement.kind {
+                    StmtKind::Expr(expr) => contains_output_or_declaration_call(expr),
+                    StmtKind::Decl { value, .. }
+                    | StmtKind::Reassign { value, .. }
+                    | StmtKind::TupleDecl { value, .. } => {
+                        contains_output_or_declaration_call(value)
+                    }
+                    StmtKind::If {
+                        condition,
+                        then_branch,
+                        else_branch,
+                    } => {
+                        contains_output_or_declaration_call(condition)
+                            || then_branch.iter().any(|statement| {
+                                statement_contains_output_or_declaration_call(statement)
+                            })
+                            || else_branch.iter().any(|statement| {
+                                statement_contains_output_or_declaration_call(statement)
+                            })
+                    }
+                    StmtKind::For { .. } => true,
+                    StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
+                    StmtKind::Unsupported { .. } => false,
+                })
+        }
         ExprKind::Tuple(items) => items.iter().any(contains_output_or_declaration_call),
         ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => false,
+    }
+}
+
+fn statement_contains_output_or_declaration_call(statement: &Stmt) -> bool {
+    match &statement.kind {
+        StmtKind::Expr(expr) => contains_output_or_declaration_call(expr),
+        StmtKind::Decl { value, .. }
+        | StmtKind::Reassign { value, .. }
+        | StmtKind::TupleDecl { value, .. } => contains_output_or_declaration_call(value),
+        StmtKind::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => {
+            contains_output_or_declaration_call(condition)
+                || then_branch
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+                || else_branch
+                    .iter()
+                    .any(statement_contains_output_or_declaration_call)
+        }
+        StmtKind::For { .. } => true,
+        StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
+        StmtKind::Unsupported { .. } => false,
     }
 }
 
@@ -2765,6 +2955,33 @@ plot(y)
             analysis.diagnostics
         );
         assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_for_expression_result() {
+        let analysis = analyze("x = for i = 0 to 2\n    i * 2\nplot(x)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_for_expression_without_final_expression() {
+        let analysis = analyze("x = for i = 0 to 2\n    y = i\nplot(x)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_LOOP_RETURN"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
     }
 
     #[test]

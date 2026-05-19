@@ -54,7 +54,7 @@ Phase 1 executable subset:
 - `if`/`else` blocks for expression statements, plot calls, reassignment, and
   tuple assignment to variables declared before the block
 - `for i = start to end` loops over inclusive integer ranges with optional
-  `by step`, `break`, and `continue`
+  `by step`, `break`, `continue`, and scalar loop result assignment
 - normal and tuple declarations scoped to an `if`/`else` branch
 - user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions
@@ -79,6 +79,9 @@ step. The runtime increments when `from <= to` and decrements when `from > to`.
 The loop counter is scoped to the loop body. Step values must be non-zero ints.
 `break` exits the nearest enclosing loop and `continue` skips to its next
 iteration.
+`x = for ...` is supported when the loop body ends with an expression. The
+assigned value is the latest iteration result that reached that expression, or
+`na` if no iteration reaches it.
 
 User-defined functions support single-expression and multi-statement block
 bodies:

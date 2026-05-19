@@ -377,46 +377,7 @@ impl<'a> HistoricalRuntime<'a> {
                 step,
                 body,
             } => {
-                let Some(from) = self.eval_expr(from)?.as_i64() else {
-                    return Ok(StmtControl::None);
-                };
-                let Some(to) = self.eval_expr(to)?.as_i64() else {
-                    return Ok(StmtControl::None);
-                };
-                let step_size = if let Some(step) = step {
-                    let Some(step) = self.eval_expr(step)?.as_i64() else {
-                        return Ok(StmtControl::None);
-                    };
-                    if step == 0 {
-                        return Err(RuntimeError {
-                            message: "for loop step cannot be zero".to_owned(),
-                        });
-                    }
-                    step.checked_abs().ok_or_else(|| RuntimeError {
-                        message: "for loop step is out of range".to_owned(),
-                    })?
-                } else {
-                    1
-                };
-                let step = if from <= to { step_size } else { -step_size };
-                let mut value = from;
-                loop {
-                    if (step > 0 && value > to) || (step < 0 && value < to) {
-                        break;
-                    }
-                    self.set_symbol_value(*counter, PineValue::Int(value));
-                    for statement in body {
-                        match self.eval_stmt(statement)? {
-                            StmtControl::None => {}
-                            StmtControl::Break => return Ok(StmtControl::None),
-                            StmtControl::Continue => break,
-                        }
-                    }
-                    let Some(next) = value.checked_add(step) else {
-                        break;
-                    };
-                    value = next;
-                }
+                self.eval_for_loop(*counter, from, to, step.as_ref(), body, None)?;
             }
             HirStmtKind::Break => return Ok(StmtControl::Break),
             HirStmtKind::Continue => return Ok(StmtControl::Continue),
@@ -443,6 +404,71 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(StmtControl::None)
+    }
+
+    fn eval_for_loop(
+        &mut self,
+        counter: SymbolId,
+        from: &HirExpr,
+        to: &HirExpr,
+        step: Option<&HirExpr>,
+        body: &[HirStmt],
+        result: Option<&HirExpr>,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(from) = self.eval_expr(from)?.as_i64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(to) = self.eval_expr(to)?.as_i64() else {
+            return Ok(PineValue::Na);
+        };
+        let step_size = if let Some(step) = step {
+            let Some(step) = self.eval_expr(step)?.as_i64() else {
+                return Ok(PineValue::Na);
+            };
+            if step == 0 {
+                return Err(RuntimeError {
+                    message: "for loop step cannot be zero".to_owned(),
+                });
+            }
+            step.checked_abs().ok_or_else(|| RuntimeError {
+                message: "for loop step is out of range".to_owned(),
+            })?
+        } else {
+            1
+        };
+        let step = if from <= to { step_size } else { -step_size };
+        let mut value = from;
+        let mut loop_result = PineValue::Na;
+        loop {
+            if (step > 0 && value > to) || (step < 0 && value < to) {
+                break;
+            }
+            self.set_symbol_value(counter, PineValue::Int(value));
+            let mut control = StmtControl::None;
+            for statement in body {
+                match self.eval_stmt(statement)? {
+                    StmtControl::None => {}
+                    next_control => {
+                        control = next_control;
+                        break;
+                    }
+                }
+            }
+            match control {
+                StmtControl::None => {
+                    if let Some(result) = result {
+                        loop_result = self.eval_expr(result)?;
+                    }
+                }
+                StmtControl::Break => break,
+                StmtControl::Continue => {}
+            }
+            let Some(next) = value.checked_add(step) else {
+                break;
+            };
+            value = next;
+        }
+        Ok(loop_result)
     }
 
     #[must_use]
@@ -635,6 +661,21 @@ impl<'a> HistoricalRuntime<'a> {
                 PineValue::Bool(false) | PineValue::Na => self.eval_expr(else_expr)?,
                 _ => PineValue::Na,
             },
+            HirExprKind::For {
+                counter,
+                from,
+                to,
+                step,
+                statements,
+                result,
+            } => self.eval_for_loop(
+                *counter,
+                from,
+                to,
+                step.as_deref(),
+                statements,
+                Some(result),
+            )?,
             HirExprKind::Tuple(items) => PineValue::Tuple(
                 items
                     .iter()
@@ -2859,6 +2900,34 @@ plot(repeat3(close))
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[3.0, 6.0, 9.0]);
+    }
+
+    #[test]
+    fn runs_for_expression_result() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("for expression")
+value = for i = 0 to 5
+    if i == 2
+        continue
+    if i == 4
+        break
+    i * 2
+plot(close + value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[7.0, 8.0, 9.0]);
     }
 
     #[test]

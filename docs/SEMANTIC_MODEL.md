@@ -147,6 +147,9 @@ steps are rejected; series-qualified bounds are evaluated for the current bar
 when the loop statement executes.
 `break` and `continue` are valid only inside a loop and target the nearest
 enclosing loop.
+Loop expressions are supported for scalar declaration values when the body ends
+with an expression. The expression determines the loop result type; bodies that
+do not end with an expression are rejected with `E_LOOP_RETURN`.
 
 ## Reassignment
 

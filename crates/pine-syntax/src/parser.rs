@@ -20,6 +20,16 @@ struct Parser {
     diagnostics: Vec<Diagnostic>,
 }
 
+struct ForParts {
+    start: Span,
+    counter: String,
+    from: Expr,
+    to: Expr,
+    step: Option<Expr>,
+    body: Vec<Stmt>,
+    span: Span,
+}
+
 impl Parser {
     fn new(lexed: Lexed) -> Self {
         Self {
@@ -220,6 +230,21 @@ impl Parser {
     }
 
     fn parse_for_stmt(&mut self) -> Option<Stmt> {
+        let parts = self.parse_for_parts()?;
+
+        Some(Stmt {
+            span: parts.start.merge(parts.span),
+            kind: StmtKind::For {
+                counter: parts.counter,
+                from: parts.from,
+                to: parts.to,
+                step: parts.step,
+                body: parts.body,
+            },
+        })
+    }
+
+    fn parse_for_parts(&mut self) -> Option<ForParts> {
         let start = self.expect(TokenKind::For, "expected `for`")?;
         let counter = match self.current().kind.clone() {
             TokenKind::Identifier(name) => {
@@ -248,15 +273,14 @@ impl Parser {
             |statement| statement.span,
         );
 
-        Some(Stmt {
-            span: start.merge(span),
-            kind: StmtKind::For {
-                counter,
-                from,
-                to,
-                step,
-                body,
-            },
+        Some(ForParts {
+            start,
+            counter,
+            from,
+            to,
+            step,
+            body,
+            span,
         })
     }
 
@@ -503,12 +527,28 @@ impl Parser {
                 self.expect(TokenKind::RParen, "expected `)`")?;
                 Some(expr)
             }
+            TokenKind::For => self.parse_for_expr(),
             TokenKind::LBracket => self.parse_tuple_expr(),
             _ => {
                 self.error_here("E_PARSE_EXPR", "expected expression");
                 None
             }
         }
+    }
+
+    fn parse_for_expr(&mut self) -> Option<Expr> {
+        let parts = self.parse_for_parts()?;
+
+        Some(Expr {
+            span: parts.start.merge(parts.span),
+            kind: ExprKind::For {
+                counter: parts.counter,
+                from: Box::new(parts.from),
+                to: Box::new(parts.to),
+                step: parts.step.map(Box::new),
+                body: parts.body,
+            },
+        })
     }
 
     fn parse_tuple_expr(&mut self) -> Option<Expr> {
@@ -862,6 +902,22 @@ mod tests {
             panic!("expected for step");
         };
         assert!(matches!(step.kind, ExprKind::Literal(Literal::Int(2))));
+    }
+
+    #[test]
+    fn parses_for_expression_declaration() {
+        let parsed = parse("x = for i = 0 to 2\n    i * 2\nplot(x)\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration");
+        };
+        let ExprKind::For { counter, body, .. } = &value.kind else {
+            panic!("expected for expression");
+        };
+        assert_eq!(counter, "i");
+        assert_eq!(body.len(), 1);
+        assert!(matches!(body[0].kind, StmtKind::Expr(_)));
     }
 
     #[test]

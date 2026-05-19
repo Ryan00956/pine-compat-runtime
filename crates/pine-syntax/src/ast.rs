@@ -96,6 +96,13 @@ pub enum ExprKind {
         then_expr: Box<Expr>,
         else_expr: Box<Expr>,
     },
+    For {
+        counter: String,
+        from: Box<Expr>,
+        to: Box<Expr>,
+        step: Option<Box<Expr>>,
+        body: Vec<Stmt>,
+    },
     Tuple(Vec<Expr>),
     Call {
         callee: Box<Expr>,

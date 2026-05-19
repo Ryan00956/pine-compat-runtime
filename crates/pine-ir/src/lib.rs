@@ -127,6 +127,14 @@ pub enum HirExprKind {
         then_expr: Box<HirExpr>,
         else_expr: Box<HirExpr>,
     },
+    For {
+        counter: SymbolId,
+        from: Box<HirExpr>,
+        to: Box<HirExpr>,
+        step: Option<Box<HirExpr>>,
+        statements: Vec<HirStmt>,
+        result: Box<HirExpr>,
+    },
     Tuple(Vec<HirExpr>),
     Block {
         statements: Vec<HirStmt>,
