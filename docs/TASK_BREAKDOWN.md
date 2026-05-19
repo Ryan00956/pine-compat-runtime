@@ -151,7 +151,7 @@ Status: in progress.
 - [x] Move the compatibility matrix from registry-seeded claims to
   fixture-derived conformance metadata.
 - [x] Expand realtime fixture coverage beyond rollback and `var` behavior.
-- [ ] Decide whether user-defined functions enter the executable subset or stay
+- [x] Decide whether user-defined functions enter the executable subset or stay
   diagnostic-only for the next release.
 - [ ] Add release notes describing the supported subset and explicit
   unsupported boundaries.

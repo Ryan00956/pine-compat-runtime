@@ -17,7 +17,7 @@ source.pine + bars.csv
 The current baseline includes Rust library crates, a CLI, Python bindings,
 WASM bindings, compile caching, incremental append-bar execution, optimized
 rolling state for selected TA built-ins, executable `if`/`else` blocks,
-user-defined functions, realtime forming-bar rollback, and a registry-seeded
+user-defined functions, realtime forming-bar rollback, and a fixture-derived
 compatibility matrix.
 
 The runtime still makes compatibility claims by tested feature. Recursive
@@ -27,6 +27,23 @@ offsets remain outside the executable subset and should produce diagnostics.
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes. Skipped series values are committed as `na` so history buffers
 remain bar-aligned.
+
+## v0.1 User-Defined Function Decision
+
+User-defined functions are in the v0.1 executable subset, with explicit
+boundaries:
+
+- Single-expression and multi-statement block bodies are supported.
+- Positional and named arguments are supported and evaluated once into
+  callsite-local temporaries.
+- Each syntactic UDF callsite owns independent state for inlined stateful calls
+  and local `var` declarations.
+- Parameter shadowing by local declarations and loop counters is supported.
+- Recursive functions are rejected.
+- Output side effects, input declarations, global reassignment, and
+  side-effecting calls passed as arguments are rejected.
+
+This makes UDFs a supported release feature rather than diagnostic-only syntax.
 
 ## Phase 0: Repository Foundation
 
@@ -216,9 +233,8 @@ python -m pip install dist/*.whl
 python -m pytest python/tests
 ```
 
-The next compatibility work should focus on richer fixture metadata,
-fixture-derived matrix generation, additional realtime cases, and an explicit
-decision on whether user-defined functions enter the executable subset.
+The remaining release-hardening work should focus on release notes that describe
+the supported subset and explicit unsupported boundaries.
 
 ## Development Rules
 

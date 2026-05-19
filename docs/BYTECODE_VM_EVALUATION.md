@@ -31,7 +31,8 @@ Specific blockers:
 
 - no MIR layer exists yet
 - control-flow semantics are still intentionally narrow
-- user-defined functions are not implemented
+- user-defined function and loop lowering now have enough semantics that a MIR
+  layer should precede any bytecode implementation
 - input override semantics are not finalized
 - realtime `varip` semantics are not implemented
 - profiling currently identifies storage shape, not instruction dispatch as a
