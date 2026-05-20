@@ -40,6 +40,7 @@ pub enum Accepts {
     ColorCompatible,
     StringCompatible,
     StringConvertible,
+    ValueWhenSource,
     IntCompatible,
     BoolCompatible,
     PlotOrHLine,
@@ -68,6 +69,7 @@ pub enum ReturnSpec {
     ArrayFromArgs,
     IntFromArg(usize),
     FloatFromArg(usize),
+    SeriesFromArg(usize),
     PromotedFloat,
     Round,
     InputFromArg(usize),
@@ -843,6 +845,24 @@ const TA_CONDITION_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     accepts: Accepts::BoolCompatible,
     optional: false,
 }];
+
+const TA_VALUEWHEN_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "condition",
+        accepts: Accepts::BoolCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::ValueWhenSource,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "occurrence",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
 
 const TA_SOURCE_OPTIONAL_LENGTH_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
@@ -2215,6 +2235,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TA_CONDITION_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.valuewhen",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_VALUEWHEN_PARAMS,
+        returns: ReturnSpec::SeriesFromArg(1),
         variadic: false,
     },
     BuiltinSignature {

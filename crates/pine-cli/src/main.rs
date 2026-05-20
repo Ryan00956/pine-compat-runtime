@@ -358,6 +358,10 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"arrayValueCapacity\":{},",
             "\"callStateSlots\":{},",
             "\"callStateCapacity\":{},",
+            "\"valuewhenStateSlots\":{},",
+            "\"valuewhenStateCapacity\":{},",
+            "\"valuewhenStateValues\":{},",
+            "\"valuewhenStateValueCapacity\":{},",
             "\"rollingWindowSlots\":{},",
             "\"rollingWindowCapacity\":{},",
             "\"rollingWindowValues\":{},",
@@ -417,6 +421,10 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.array_value_capacity,
         profile.call_state_slots,
         profile.call_state_capacity,
+        profile.valuewhen_state_slots,
+        profile.valuewhen_state_capacity,
+        profile.valuewhen_state_values,
+        profile.valuewhen_state_value_capacity,
         profile.rolling_window_slots,
         profile.rolling_window_capacity,
         profile.rolling_window_values,
@@ -831,6 +839,10 @@ mod tests {
             array_value_capacity: 2,
             call_state_slots: 1,
             call_state_capacity: 3,
+            valuewhen_state_slots: 1,
+            valuewhen_state_capacity: 3,
+            valuewhen_state_values: 2,
+            valuewhen_state_value_capacity: 2,
             rolling_window_slots: 1,
             rolling_window_capacity: 3,
             rolling_window_values: 2,
@@ -880,6 +892,7 @@ mod tests {
         assert!(output.contains(r#""historyMaxBarsBack":null"#));
         assert!(output.contains(r#""historyHasDynamicOffsets":true"#));
         assert!(output.contains(r#""arrayValues":2"#));
+        assert!(output.contains(r#""valuewhenStateValues":2"#));
         assert!(output.contains(r#""rollingWindowValues":2"#));
         assert!(output.contains(r#""plotChars":0"#));
         assert!(output.contains(r#""plotShapes":0"#));

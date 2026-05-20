@@ -1381,6 +1381,11 @@ impl Analyzer {
                 .copied()
                 .flatten()
                 .map(float_return_for_arg),
+            ReturnSpec::SeriesFromArg(index) => arg_types
+                .get(index)
+                .copied()
+                .flatten()
+                .and_then(series_return_for_arg),
             ReturnSpec::PromotedFloat => promoted_float_type(arg_types),
             ReturnSpec::Round => round_return_type(arg_types),
             ReturnSpec::InputFromArg(index) => arg_types
@@ -2356,6 +2361,11 @@ impl Analyzer {
                             .copied()
                             .flatten()
                             .map(float_return_for_arg),
+                        ReturnSpec::SeriesFromArg(index) => arg_types
+                            .get(index)
+                            .copied()
+                            .flatten()
+                            .and_then(series_return_for_arg),
                         ReturnSpec::PromotedFloat => promoted_float_type(&arg_types),
                         ReturnSpec::Round => round_return_type(&arg_types),
                         ReturnSpec::InputFromArg(index) => arg_types
@@ -3342,6 +3352,16 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
                     | ValueKind::Na
             ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::ValueWhenSource => {
+            matches!(
+                arg_type.kind,
+                ValueKind::Int
+                    | ValueKind::Float
+                    | ValueKind::Bool
+                    | ValueKind::Color
+                    | ValueKind::Na
+            ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::IntCompatible => {
             matches!(arg_type.kind, ValueKind::Int | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
@@ -3470,6 +3490,15 @@ fn float_return_for_arg(arg_type: PineType) -> PineType {
 
 fn int_return_for_arg(arg_type: PineType) -> PineType {
     PineType::new(arg_type.qualifier, ValueKind::Int)
+}
+
+fn series_return_for_arg(arg_type: PineType) -> Option<PineType> {
+    match arg_type.kind {
+        ValueKind::Int | ValueKind::Float | ValueKind::Bool | ValueKind::Color | ValueKind::Na => {
+            Some(PineType::new(Qualifier::Series, arg_type.kind))
+        }
+        _ => None,
+    }
 }
 
 fn promoted_float_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
@@ -3805,6 +3834,26 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.barssince")
+        );
+    }
+
+    #[test]
+    fn accepts_ta_valuewhen() {
+        let analysis = analyze(
+            "price = ta.valuewhen(close > open, close, 0)\nflag = ta.valuewhen(close > open, close > high, 1)\nshade = ta.valuewhen(close > open, color.red, 0)\nplot(price + (flag ? 1 : 0) + (shade == color.red ? 1 : 0))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.valuewhen")
         );
     }
 

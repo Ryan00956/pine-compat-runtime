@@ -228,6 +228,10 @@ pub struct RuntimeProfile {
     pub array_value_capacity: usize,
     pub call_state_slots: usize,
     pub call_state_capacity: usize,
+    pub valuewhen_state_slots: usize,
+    pub valuewhen_state_capacity: usize,
+    pub valuewhen_state_values: usize,
+    pub valuewhen_state_value_capacity: usize,
     pub rolling_window_slots: usize,
     pub rolling_window_capacity: usize,
     pub rolling_window_values: usize,
@@ -419,6 +423,7 @@ pub struct HistoricalRuntime<'a> {
     array_kinds: HashMap<u32, ArrayElementKind>,
     next_array_id: u32,
     call_state: HashMap<CallSiteId, PineValue>,
+    valuewhen_state: HashMap<CallSiteId, VecDeque<PineValue>>,
     rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
     rsi_state: HashMap<CallSiteId, RsiState>,
     macd_state: HashMap<CallSiteId, MacdState>,
@@ -636,6 +641,7 @@ impl<'a> HistoricalRuntime<'a> {
             array_kinds: HashMap::new(),
             next_array_id: 0,
             call_state: HashMap::new(),
+            valuewhen_state: HashMap::new(),
             rolling_windows: HashMap::new(),
             rsi_state: HashMap::new(),
             macd_state: HashMap::new(),
@@ -1013,6 +1019,16 @@ impl<'a> HistoricalRuntime<'a> {
             .values()
             .map(|window| window.values.capacity())
             .sum::<usize>();
+        let valuewhen_state_values = self
+            .valuewhen_state
+            .values()
+            .map(VecDeque::len)
+            .sum::<usize>();
+        let valuewhen_state_value_capacity = self
+            .valuewhen_state
+            .values()
+            .map(VecDeque::capacity)
+            .sum::<usize>();
         let array_values = self.array_store.values().map(Vec::len).sum::<usize>();
         let array_value_capacity = self.array_store.values().map(Vec::capacity).sum::<usize>();
 
@@ -1038,6 +1054,10 @@ impl<'a> HistoricalRuntime<'a> {
             array_value_capacity,
             call_state_slots: self.call_state.len(),
             call_state_capacity: self.call_state.capacity(),
+            valuewhen_state_slots: self.valuewhen_state.len(),
+            valuewhen_state_capacity: self.valuewhen_state.capacity(),
+            valuewhen_state_values,
+            valuewhen_state_value_capacity,
             rolling_window_slots: self.rolling_windows.len(),
             rolling_window_capacity: self.rolling_windows.capacity(),
             rolling_window_values,
@@ -1684,6 +1704,7 @@ impl<'a> HistoricalRuntime<'a> {
                 self.eval_rising_falling(call_site_id, args, RisingFallingMode::Falling)
             }
             "ta.barssince" => self.eval_barssince(call_site_id, args),
+            "ta.valuewhen" => self.eval_valuewhen(call_site_id, args),
             "ta.cross" => self.eval_cross(args, CrossMode::Any),
             "ta.crossover" => self.eval_cross(args, CrossMode::Over),
             "ta.crossunder" => self.eval_cross(args, CrossMode::Under),
@@ -3363,6 +3384,32 @@ impl<'a> HistoricalRuntime<'a> {
             self.call_state.insert(call_site_id, value.clone());
         }
         Ok(value)
+    }
+
+    fn eval_valuewhen(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let condition = self.eval_expr(&args[0].value)?;
+        let source = self.eval_expr(&args[1].value)?;
+        let occurrence = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(-1);
+        if occurrence < 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let occurrence = occurrence as usize;
+        if occurrence >= MAX_SERIES_HISTORY_VALUES {
+            return Ok(PineValue::Na);
+        }
+
+        let values = self.valuewhen_state.entry(call_site_id).or_default();
+        if matches!(condition, PineValue::Bool(true)) {
+            values.push_front(source);
+            values.truncate(occurrence + 1);
+        }
+
+        Ok(values.get(occurrence).cloned().unwrap_or(PineValue::Na))
     }
 
     fn eval_window_extreme(
@@ -6486,6 +6533,45 @@ plot(value)
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_eq!(result.plots[0].values[1], PineValue::Na);
         assert_values_close(&result.plots[0].values[2..], &[0.0, 1.0, 0.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_valuewhen_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("valuewhen")
+last_close = ta.valuewhen(close > 2, close, 0)
+previous_index = ta.valuewhen(close > 2, bar_index, 1)
+last_flag = ta.valuewhen(close > 2, close > open, 0)
+plot(last_close)
+plot(previous_index)
+plot(na(last_flag) ? 0 : last_flag ? 1 : -1)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 1.0, 1.0, 1.0),
+            bar_ohlc(2.0, 3.0, 2.0, 3.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(5.0, 5.0, 4.0, 4.0),
+            bar_ohlc(1.0, 1.0, 1.0, 1.0),
+            bar_ohlc(4.0, 5.0, 4.0, 5.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[3.0, 3.0, 4.0, 4.0, 5.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_eq!(result.plots[1].values[2], PineValue::Na);
+        assert_values_close(&result.plots[1].values[3..], &[1.0, 1.0, 3.0]);
+        assert_values_close(&result.plots[2].values, &[0.0, 1.0, 1.0, -1.0, -1.0, 1.0]);
     }
 
     #[test]

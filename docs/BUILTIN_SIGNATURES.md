@@ -332,6 +332,7 @@ ta.roc(source: series float, length: simple int) -> series float
 ta.rising(source: series float, length: simple int) -> series bool
 ta.falling(source: series float, length: simple int) -> series bool
 ta.barssince(condition: series bool) -> series int
+ta.valuewhen(condition: series bool, source: series int/float/bool/color, occurrence: simple int) -> series source-kind
 ta.cross(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossover(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossunder(source1: series/simple numeric, source2: series/simple numeric) -> series bool
@@ -365,6 +366,8 @@ Rules:
   ready-window values and return `false` while that window is not ready.
 - `ta.barssince` returns `0` on true conditions, increments after the last true
   condition, and returns `na` before the first true condition.
+- `ta.valuewhen` returns the `source` value from the nth most recent true
+  condition, where `occurrence = 0` is the most recent match.
 - `ta.highestbars`/`ta.lowestbars` currently support the two-argument form and
   return the offset to the most recent matching extreme in the ready window.
 - Stateful TA functions require callsite ids.
