@@ -156,9 +156,9 @@ boundary is recorded in `docs/HISTORY_SERIES_AUDIT.md`; qualifier findings are
 recorded in `docs/QUALIFIER_AUDIT.md`; built-in signature notes were tightened
 in `docs/BUILTIN_SIGNATURES.md`. Series-qualified integer history offsets are
 now supported with runtime guards. Runtime profiles expose max series depth and
-committed series history has a hard runtime cap. HIR lowering records
-program-wide and per-series history requirements, and runtime retention trims
-static-only scripts to those requirements.
+history retention mode, and committed series history has a hard runtime cap. HIR
+lowering records program-wide and per-series history requirements, and runtime
+retention trims static-only scripts to those requirements.
 
 Scope:
 
@@ -191,6 +191,7 @@ Suggested commits:
 5. `Infer history retention requirements`
 6. `Trim static history retention`
 7. `Support series history offsets`
+8. `Expose history retention profile`
 
 ## Phase D: Built-In Coverage Expansion
 

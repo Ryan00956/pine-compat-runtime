@@ -50,6 +50,7 @@ Series integer offsets are supported as a guarded dynamic subset:
 - out-of-range offsets return `na`
 - scripts with any dynamic offset keep full committed series history up to the
   configured runtime cap
+- runtime profiles expose the retention mode and HIR history requirement fields
 
 Static-only scripts still use HIR metadata to trim retention.
 

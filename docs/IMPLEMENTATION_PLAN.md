@@ -172,11 +172,12 @@ pine-compat run script.pine --bars bars.csv --profile
 ```
 
 The profile reports allocation-sensitive storage lengths, capacities, and max
-depth for series buffers, plot values, and runtime state maps. It is a portable
-storage profile, not a process-wide allocator hook. Static-only history is
-trimmed to HIR-inferred per-series retention requirements. Dynamic history
-offsets keep full committed series history up to a runtime cap so they cannot
-grow storage without bound.
+depth for series buffers, plot values, and runtime state maps. It also reports
+history retention mode, maximum static offset, and dynamic-offset presence. It
+is a portable storage profile, not a process-wide allocator hook. Static-only
+history is trimmed to HIR-inferred per-series retention requirements. Dynamic
+history offsets keep full committed series history up to a runtime cap so they
+cannot grow storage without bound.
 
 Rolling TA state is optimized for `ta.sma`, `ta.bb`, `ta.highest`, and
 `ta.lowest`. These functions now maintain per-callsite rolling windows instead

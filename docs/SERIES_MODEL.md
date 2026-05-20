@@ -156,9 +156,10 @@ callsite.
 
 The runtime commits values into per-series history buffers only when the HIR
 history metadata says a later bar can read them. It reports `seriesValues`,
-`seriesCapacity`, and `maxSeriesDepth` in the storage profile. A runtime cap
-prevents unbounded series history growth; hitting it fails execution with a
-runtime error instead of silently truncating history.
+`seriesCapacity`, `maxSeriesDepth`, `historyRetentionMode`,
+`historyMaxConstantOffset`, and `historyHasDynamicOffsets` in the storage
+profile. A runtime cap prevents unbounded series history growth; hitting it
+fails execution with a runtime error instead of silently truncating history.
 
 HIR lowering records static history metadata:
 
@@ -172,7 +173,8 @@ HIR lowering records static history metadata:
 When no dynamic offsets exist, the runtime trims each series buffer to that
 series' maximum constant offset and stores no committed history for series that
 are never history-indexed. When any dynamic offset exists, retention remains
-conservative and keeps full committed series history up to the runtime cap.
+conservative and keeps full committed series history up to the runtime cap. The
+profile reports these modes as `staticTrimmed` and `dynamicFull`.
 
 Later phases should add:
 

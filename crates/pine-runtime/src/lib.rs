@@ -212,6 +212,9 @@ pub struct RuntimeProfile {
     pub series_values: usize,
     pub series_capacity: usize,
     pub max_series_depth: usize,
+    pub history_retention_mode: HistoryRetentionMode,
+    pub history_max_constant_offset: u32,
+    pub history_has_dynamic_offsets: bool,
     pub symbol_slots: usize,
     pub symbol_capacity: usize,
     pub current_series_slots: usize,
@@ -260,6 +263,12 @@ pub struct RuntimeProfile {
     pub hline_capacity: usize,
     pub fills: usize,
     pub fill_capacity: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HistoryRetentionMode {
+    StaticTrimmed,
+    DynamicFull,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -456,6 +465,14 @@ impl SeriesRetention {
         self.static_depths
             .as_ref()
             .map(|depths| depths.get(&series_id).copied().unwrap_or(0))
+    }
+
+    fn mode(&self) -> HistoryRetentionMode {
+        if self.static_depths.is_some() {
+            HistoryRetentionMode::StaticTrimmed
+        } else {
+            HistoryRetentionMode::DynamicFull
+        }
     }
 }
 
@@ -978,6 +995,9 @@ impl<'a> HistoricalRuntime<'a> {
             series_values,
             series_capacity,
             max_series_depth: self.series_store.max_depth(),
+            history_retention_mode: self.series_retention.mode(),
+            history_max_constant_offset: self.program.history.max_constant_offset,
+            history_has_dynamic_offsets: self.program.history.has_dynamic_offsets,
             symbol_slots: self.current_symbols.len(),
             symbol_capacity: self.current_symbols.capacity(),
             current_series_slots: self.current_series.len(),
@@ -6532,6 +6552,12 @@ plot(ma)
         assert_eq!(profiled.profile.series_values, 0);
         assert!(profiled.profile.series_capacity >= profiled.profile.series_values);
         assert_eq!(profiled.profile.max_series_depth, 0);
+        assert_eq!(
+            profiled.profile.history_retention_mode,
+            HistoryRetentionMode::StaticTrimmed
+        );
+        assert_eq!(profiled.profile.history_max_constant_offset, 0);
+        assert!(!profiled.profile.history_has_dynamic_offsets);
         assert_eq!(profiled.profile.rolling_window_slots, 1);
         assert_eq!(profiled.profile.rolling_window_values, 2);
         assert!(
@@ -6574,6 +6600,12 @@ plot(close[2])
         assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
         assert_eq!(profiled.profile.max_series_depth, 2);
         assert_eq!(profiled.profile.series_values, 2);
+        assert_eq!(
+            profiled.profile.history_retention_mode,
+            HistoryRetentionMode::StaticTrimmed
+        );
+        assert_eq!(profiled.profile.history_max_constant_offset, 2);
+        assert!(!profiled.profile.history_has_dynamic_offsets);
     }
 
     #[test]
@@ -6601,6 +6633,12 @@ plot(close[length])
         assert_values_close(&profiled.result.plots[0].values[1..], &[1.0, 2.0, 3.0]);
         assert_eq!(profiled.profile.max_series_depth, 4);
         assert!(profiled.profile.series_values >= 4);
+        assert_eq!(
+            profiled.profile.history_retention_mode,
+            HistoryRetentionMode::DynamicFull
+        );
+        assert_eq!(profiled.profile.history_max_constant_offset, 0);
+        assert!(profiled.profile.history_has_dynamic_offsets);
     }
 
     #[test]

@@ -1,6 +1,8 @@
 use std::{env, fs, process::ExitCode};
 
-use pine_runtime::{Bar, PineValue, RuntimeProfile, RuntimeResult, run_historical};
+use pine_runtime::{
+    Bar, HistoryRetentionMode, PineValue, RuntimeProfile, RuntimeResult, run_historical,
+};
 use pine_sema::analyze_source;
 use pine_syntax::{SourceFile, parse_source};
 
@@ -340,6 +342,9 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"seriesValues\":{},",
             "\"seriesCapacity\":{},",
             "\"maxSeriesDepth\":{},",
+            "\"historyRetentionMode\":\"{}\",",
+            "\"historyMaxConstantOffset\":{},",
+            "\"historyHasDynamicOffsets\":{},",
             "\"symbolSlots\":{},",
             "\"symbolCapacity\":{},",
             "\"currentSeriesSlots\":{},",
@@ -395,6 +400,9 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.series_values,
         profile.series_capacity,
         profile.max_series_depth,
+        history_retention_mode_json(profile.history_retention_mode),
+        profile.history_max_constant_offset,
+        profile.history_has_dynamic_offsets,
         profile.symbol_slots,
         profile.symbol_capacity,
         profile.current_series_slots,
@@ -444,6 +452,13 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.fills,
         profile.fill_capacity
     )
+}
+
+fn history_retention_mode_json(mode: HistoryRetentionMode) -> &'static str {
+    match mode {
+        HistoryRetentionMode::StaticTrimmed => "staticTrimmed",
+        HistoryRetentionMode::DynamicFull => "dynamicFull",
+    }
 }
 
 fn plots_json(plots: &[pine_runtime::PlotSeries]) -> String {
@@ -793,6 +808,9 @@ mod tests {
             series_values: 6,
             series_capacity: 8,
             max_series_depth: 3,
+            history_retention_mode: HistoryRetentionMode::DynamicFull,
+            history_max_constant_offset: 2,
+            history_has_dynamic_offsets: true,
             symbol_slots: 10,
             symbol_capacity: 14,
             current_series_slots: 0,
@@ -849,6 +867,9 @@ mod tests {
         assert!(output.contains(r#""bars":3"#));
         assert!(output.contains(r#""seriesValues":6"#));
         assert!(output.contains(r#""maxSeriesDepth":3"#));
+        assert!(output.contains(r#""historyRetentionMode":"dynamicFull""#));
+        assert!(output.contains(r#""historyMaxConstantOffset":2"#));
+        assert!(output.contains(r#""historyHasDynamicOffsets":true"#));
         assert!(output.contains(r#""arrayValues":2"#));
         assert!(output.contains(r#""rollingWindowValues":2"#));
         assert!(output.contains(r#""plotChars":0"#));
