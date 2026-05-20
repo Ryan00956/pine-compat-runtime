@@ -174,8 +174,8 @@ the array id and backing storage across bars. Supported operations are
 `array.pop`, `array.shift`, `array.unshift`, `array.first`, `array.last`, and
 `array.copy`, `array.includes`, `array.indexof`, `array.lastindexof`,
 `array.min`, `array.max`, `array.sum`, `array.avg`, `array.sort`,
-`array.reverse`, and `array.clear`;
-`size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/reverse/clear`
+`array.reverse`, `array.join`, and `array.clear`;
+`size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/reverse/join/clear`
 may also be called with method syntax on a supported array receiver. Numeric
 `min/max/sum/avg/sort` helpers may also be called with method syntax on float
 and int arrays. Float arrays accept int or float values and store them as
@@ -190,7 +190,10 @@ present. Numeric helpers `array.min`, `array.max`, `array.sum`, and `array.avg`
 are limited to float and int arrays; they ignore `na` elements and return `na`
 when no numeric element is present. `array.sort` is currently limited to float
 and int arrays, sorts ascending in place, and leaves `na` values at the end.
-`array.reverse` reverses any supported typed array in place. Out-of-range
+`array.reverse` reverses any supported typed array in place. `array.join`
+converts supported array elements to string with the default numeric format,
+uses `,` as the default separator, and returns an empty string for empty arrays.
+Color elements render as normalized integer color values. Out-of-range
 `array.get`, empty `array.pop`, empty `array.shift`, and `array.first`/`array.last` on empty arrays
 return `na`; out-of-range `array.set` is a no-op. Negative array sizes fail at
 runtime. Each array can contain at most 100,000 elements; creation, push, or

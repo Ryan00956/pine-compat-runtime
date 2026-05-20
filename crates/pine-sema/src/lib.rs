@@ -2457,6 +2457,7 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "avg" => Some("array.avg"),
         "sort" => Some("array.sort"),
         "reverse" => Some("array.reverse"),
+        "join" => Some("array.join"),
         "clear" => Some("array.clear"),
         _ => None,
     }
@@ -4730,6 +4731,29 @@ plot(y)
     }
 
     #[test]
+    fn accepts_array_join_operations() {
+        let analysis = analyze(
+            "values = array.new_string()\nvalues.push(\"a\")\nvalues.push(\"b\")\ntext = array.join(values, \"|\")\nints = array.new_int()\nints.push(1)\nints.push(2)\nplot(text == \"a|b\" and ints.join() == \"1,2\" ? 1 : 0)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == "array.join"),
+            "{:?}",
+            analysis.compatibility.supported
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_float_value_for_int_array_mutation() {
         let analysis =
             analyze("values = array.new_int()\narray.push(values, close)\nplot(close)\n");
@@ -4811,6 +4835,21 @@ plot(y)
     fn rejects_string_array_sort() {
         let analysis =
             analyze("values = array.new_string()\nvalues.push(\"b\")\narray.sort(values)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_numeric_separator_for_array_join() {
+        let analysis = analyze("values = array.new_string()\nplot(array.join(values, close))\n");
 
         assert!(
             analysis

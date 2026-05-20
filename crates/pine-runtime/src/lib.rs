@@ -1457,6 +1457,7 @@ impl<'a> HistoricalRuntime<'a> {
             "array.avg" => self.eval_array_numeric(args, ArrayNumericMode::Avg),
             "array.sort" => self.eval_array_sort(args),
             "array.reverse" => self.eval_array_reverse(args),
+            "array.join" => self.eval_array_join(args),
             "array.clear" => self.eval_array_clear(args),
             _ => Err(RuntimeError {
                 message: format!("unsupported runtime call `{callee}`"),
@@ -1878,6 +1879,36 @@ impl<'a> HistoricalRuntime<'a> {
             values.reverse();
         }
         Ok(PineValue::Void)
+    }
+
+    fn eval_array_join(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            if let Some(separator) = args.get(1) {
+                let _ = self.eval_expr(&separator.value)?;
+            }
+            return Ok(PineValue::Na);
+        };
+        let separator = if let Some(separator) = args.get(1) {
+            match self.eval_expr(&separator.value)? {
+                PineValue::String(separator) => separator,
+                PineValue::Na => ",".to_owned(),
+                _ => return Ok(PineValue::Na),
+            }
+        } else {
+            ",".to_owned()
+        };
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Na);
+        };
+        let mut result = String::new();
+        for (index, value) in values.iter().enumerate() {
+            if index > 0 {
+                result.push_str(&separator);
+            }
+            result.push_str(&stringify_array_join_element(value));
+        }
+        self.string_value_or_error(result, "array.join")
     }
 
     fn eval_array_clear(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -3676,6 +3707,18 @@ fn stringify_array_element(value: &PineValue, format: &str) -> String {
         PineValue::Float(value) => format_number(*value, format),
         PineValue::Bool(value) => value.to_string(),
         PineValue::String(value) => value.clone(),
+        PineValue::Na => "NaN".to_owned(),
+        _ => "NaN".to_owned(),
+    }
+}
+
+fn stringify_array_join_element(value: &PineValue) -> String {
+    match value {
+        PineValue::Int(value) => format_number(*value as f64, "#.########"),
+        PineValue::Float(value) => format_number(*value, "#.########"),
+        PineValue::Bool(value) => value.to_string(),
+        PineValue::String(value) => value.clone(),
+        PineValue::Color(value) => value.to_string(),
         PineValue::Na => "NaN".to_owned(),
         _ => "NaN".to_owned(),
     }
@@ -7524,6 +7567,85 @@ plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
         assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_array_join_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array join")
+ints = array.new_int()
+ints.push(1)
+ints.push(2)
+plot(array.join(ints, "|") == "1|2" ? 1 : 0)
+
+floats = array.new_float()
+floats.push(1.25)
+floats.push(2.5)
+plot(floats.join() == "1.25,2.5" ? 1 : 0)
+
+flags = array.new_bool()
+flags.push(false)
+flags.push(true)
+plot(array.join(flags, "/") == "false/true" ? 1 : 0)
+
+words = array.new_string()
+words.push("a")
+words.push("b")
+plot(words.join("-") == "a-b" ? 1 : 0)
+
+colors = array.new_color()
+colors.push(color.red)
+colors.push(color.green)
+plot(colors.join("|") == "16711680|32768" ? 1 : 0)
+
+empty = array.new_string()
+plot(array.join(empty, "|") == "" ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 6);
+        for plot in &result.plots {
+            assert_values_close(&plot.values, &[1.0, 1.0]);
+        }
+    }
+
+    #[test]
+    fn rejects_oversized_array_join_result() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array join limit")
+values = array.new_string(410)
+array.set(values, 0, str.repeat("x", 100))
+plot(str.length(array.join(values, str.repeat("y", 100))))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected array.join limit error");
+
+        assert!(
+            error
+                .message
+                .contains("array.join result cannot exceed 40960 characters"),
+            "{}",
+            error.message
+        );
     }
 
     #[test]

@@ -195,6 +195,7 @@ array.sum(id: float-array|int-array) -> series element
 array.avg(id: float-array|int-array) -> series float
 array.sort(id: float-array|int-array) -> void
 array.reverse(id: float-array|int-array|bool-array|string-array|color-array) -> void
+array.join(id: float-array|int-array|bool-array|string-array|color-array, separator?: string-compatible) -> series string
 array.clear(id: float-array|int-array|bool-array|string-array|color-array) -> void
 ```
 
@@ -207,9 +208,11 @@ may also be called with method syntax on a supported array receiver. Numeric
 array `min/max/sum/avg` helpers may also be called with method syntax on float
 and int array receivers. `array.sort` currently supports float and int arrays
 only and sorts ascending with `na` values last. `array.reverse` supports every
-supported typed array. Array assignment passes the runtime array id by
-reference; use `array.copy` to allocate an independent array with the same
-current element values.
+supported typed array. `array.join` supports every supported typed array,
+defaults the separator to `,`, uses the default numeric string format, and
+renders colors as their normalized integer color values. Array assignment passes
+the runtime array id by reference; use `array.copy` to allocate an independent
+array with the same current element values.
 
 ## TA Built-Ins
 

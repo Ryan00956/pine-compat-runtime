@@ -77,6 +77,7 @@ const INPUT_COLOR: PineType = PineType::new(Qualifier::Input, ValueKind::Color);
 const INPUT_STRING: PineType = PineType::new(Qualifier::Input, ValueKind::String);
 const SERIES_FLOAT: PineType = PineType::new(Qualifier::Series, ValueKind::Float);
 const SERIES_BOOL: PineType = PineType::new(Qualifier::Series, ValueKind::Bool);
+const SERIES_STRING: PineType = PineType::new(Qualifier::Series, ValueKind::String);
 const SERIES_FLOAT_TUPLE: PineType = PineType::new(Qualifier::Series, ValueKind::Tuple);
 const PLOT: PineType = PineType::new(Qualifier::Const, ValueKind::Plot);
 const HLINE: PineType = PineType::new(Qualifier::Const, ValueKind::HLine);
@@ -966,6 +967,19 @@ const ARRAY_NUMERIC_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const ARRAY_JOIN_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::Array,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "separator",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+];
+
 const ARRAY_VALUE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1697,6 +1711,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_SIZE_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.join",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_JOIN_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_STRING),
         variadic: false,
     },
     BuiltinSignature {

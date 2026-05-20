@@ -119,9 +119,13 @@ present. Numeric helpers on int/float arrays skip `na` elements; if every
 element is `na` or the array is empty, `array.min`, `array.max`, `array.sum`,
 and `array.avg` return `na`. `array.sort` orders int/float arrays ascending and
 places `na` values after numeric values. `array.reverse` reverses any supported
-typed array in place. A negative array size is a runtime error. Runtime
-execution limits each supported array to 100,000 elements; oversized creation,
-`array.push`, and `array.unshift` beyond the limit return runtime errors.
+typed array in place. `array.join` converts supported array elements to string
+with the default numeric format, uses `,` as the default separator, and returns
+an empty string for empty arrays. Color elements render as normalized integer
+color values. Joined results over 40,960 characters are runtime errors. A
+negative array size is a runtime error. Runtime execution limits each supported
+array to 100,000 elements; oversized creation, `array.push`, and
+`array.unshift` beyond the limit return runtime errors.
 
 Read-only array operations are allowed inside inlined user-defined functions.
 The supported method-call syntax lowers to the same `array.*` runtime calls, so
