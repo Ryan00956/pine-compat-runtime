@@ -1925,6 +1925,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "array.standardize",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_FLOAT_ARRAY),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "array.variance",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_VARIANCE_PARAMS,

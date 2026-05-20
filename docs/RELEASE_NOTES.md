@@ -33,8 +33,8 @@
 - Added numeric array statistics helpers `array.min`, `array.max`,
   `array.sum`, `array.avg`, `array.range`, `array.median`, `array.mode`,
   `array.percentile_nearest_rank`, `array.percentile_linear_interpolation`,
-  `array.percentrank`, `array.variance`, and `array.stdev`, plus same-kind
-  `array.abs`, for float and int arrays.
+  `array.percentrank`, `array.standardize`, `array.variance`, and
+  `array.stdev`, plus same-kind `array.abs`, for float and int arrays.
 - Added array ordering helpers: numeric `array.sort` for ascending sort with
   `na` values last, and `array.reverse` for all supported typed arrays.
 - Added `array.join` support for supported typed arrays with optional string

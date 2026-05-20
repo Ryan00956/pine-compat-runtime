@@ -1536,6 +1536,7 @@ impl<'a> HistoricalRuntime<'a> {
                 self.eval_array_percentile(args, ArrayPercentileMode::LinearInterpolation)
             }
             "array.percentrank" => self.eval_array_percentrank(args),
+            "array.standardize" => self.eval_array_standardize(args),
             "array.variance" => self.eval_array_variance(args, ArrayVarianceMode::Variance),
             "array.stdev" => self.eval_array_variance(args, ArrayVarianceMode::Stdev),
             "array.sort" => self.eval_array_sort(args),
@@ -2369,6 +2370,55 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(
             count as f64 / numeric_values.len() as f64 * 100.0,
         ))
+    }
+
+    fn eval_array_standardize(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
+            return Ok(PineValue::Na);
+        }
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Na);
+        };
+
+        let numeric_values: Vec<_> = values.iter().filter_map(PineValue::as_f64).collect();
+        let count = numeric_values.len();
+        if count == 0 {
+            return Ok(self.new_array_from_values(ArrayElementKind::Float, Vec::new()));
+        }
+
+        let mean = numeric_values.iter().sum::<f64>() / count as f64;
+        let variance = numeric_values
+            .iter()
+            .map(|value| {
+                let diff = value - mean;
+                diff * diff
+            })
+            .sum::<f64>()
+            / count as f64;
+        let stdev = variance.sqrt();
+
+        let values = values
+            .iter()
+            .map(|value| {
+                let Some(value) = value.as_f64() else {
+                    return PineValue::Na;
+                };
+                if stdev == 0.0 || !stdev.is_finite() {
+                    PineValue::Na
+                } else {
+                    finite_float_or_na((value - mean) / stdev)
+                }
+            })
+            .collect();
+
+        Ok(self.new_array_from_values(ArrayElementKind::Float, values))
     }
 
     fn eval_array_variance(
@@ -8273,9 +8323,21 @@ float_abs = array.abs(float_signs)
 plot(float_abs.get(0))
 plot(na(float_abs.get(1)) ? 1 : 0)
 
+standard_values = array.from(2, 4, 4, 4, 5, 5, 7, 9)
+standardized = standard_values.standardize()
+plot(standardized.get(0))
+plot(standardized.get(7))
+plot(standard_values.get(0))
+standard_with_na = array.from(close, na, high)
+standardized_with_na = array.standardize(standard_with_na)
+plot(standardized_with_na.size())
+plot(na(standardized_with_na.get(1)) ? 1 : 0)
+
 empty = array.new_float()
 only_na = array.new_int(2)
-plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) and na(array.mode(ints)) and na(array.percentile_nearest_rank(empty, 50)) and na(array.percentile_linear_interpolation(ints, 150)) and na(array.percentrank(empty, 0)) and na(array.variance(empty)) and na(only_na.stdev()) ? 1 : 0)
+empty_standardized = array.standardize(empty)
+only_na_standardized = only_na.standardize()
+plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) and na(array.mode(ints)) and na(array.percentile_nearest_rank(empty, 50)) and na(array.percentile_linear_interpolation(ints, 150)) and na(array.percentrank(empty, 0)) and empty_standardized.size() == 0 and only_na_standardized.size() == 0 and na(array.variance(empty)) and na(only_na.stdev()) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -8288,7 +8350,7 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
         let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 27);
+        assert_eq!(result.plots.len(), 32);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[5.0, 5.0]);
         assert_values_close(&result.plots[2].values, &[8.0, 8.0]);
@@ -8315,7 +8377,12 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
         assert_values_close(&result.plots[23].values, &[-2.0, -2.0]);
         assert_values_close(&result.plots[24].values, &[2.0, 3.0]);
         assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
-        assert_values_close(&result.plots[26].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[26].values, &[-1.5, -1.5]);
+        assert_values_close(&result.plots[27].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[28].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[29].values, &[3.0, 3.0]);
+        assert_values_close(&result.plots[30].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[31].values, &[1.0, 1.0]);
     }
 
     #[test]

@@ -133,8 +133,11 @@ and does not mutate the source array.
 smallest value among tied most-frequent values and returns `na` when all
 remaining values occur only once. Percentile helpers operate on non-`na` values
 sorted ascending. Percentages outside `0..=100`, empty/all-`na` arrays, and
-invalid `array.percentrank` indexes return `na`. `array.variance` and
-`array.stdev` use a
+invalid `array.percentrank` indexes return `na`.
+`array.standardize` returns a new float array using non-`na` values to compute
+mean and population standard deviation. Empty/all-`na` arrays return an empty
+array; otherwise `na` element positions are preserved.
+`array.variance` and `array.stdev` use a
 biased population estimate by default; with `biased=false`, they use the
 sample denominator and return `na` when fewer than two numeric values remain.
 `array.sort` orders int/float arrays ascending and places `na` values after
