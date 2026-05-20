@@ -1418,6 +1418,13 @@ impl Analyzer {
             });
             return Some(PineType::new(Qualifier::Const, ValueKind::String));
         }
+        if let Some(pine_type) = pine_builtins::builtin_series_value_type(name) {
+            self.compatibility.supported.push(FeatureUse {
+                feature: name.to_owned(),
+                span,
+            });
+            return Some(pine_type);
+        }
 
         self.check_feature_name(name, span);
         if name.starts_with("color.") {
@@ -2254,6 +2261,7 @@ impl Analyzer {
                         pine_builtins::named_string_constant(&name)
                             .map(|_| PineType::new(Qualifier::Const, ValueKind::String))
                     })
+                    .or_else(|| pine_builtins::builtin_series_value_type(&name))
             }
             ExprKind::Unary { expr, .. } => self.type_of_expr_with_params(expr, param_types),
             ExprKind::Binary { op, left, right } => {
@@ -3872,6 +3880,24 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.cum")
+        );
+    }
+
+    #[test]
+    fn accepts_ta_obv() {
+        let analysis = analyze("plot(ta.obv)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.obv")
         );
     }
 

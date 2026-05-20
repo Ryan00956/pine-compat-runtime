@@ -427,6 +427,9 @@ pub struct HistoricalRuntime<'a> {
     rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
     rsi_state: HashMap<CallSiteId, RsiState>,
     macd_state: HashMap<CallSiteId, MacdState>,
+    obv_previous_close: Option<f64>,
+    obv_state: PineValue,
+    obv_current: PineValue,
     plots: Vec<PlotSeries>,
     plot_chars: Vec<PlotCharSeries>,
     plot_shapes: Vec<PlotShapeSeries>,
@@ -645,6 +648,9 @@ impl<'a> HistoricalRuntime<'a> {
             rolling_windows: HashMap::new(),
             rsi_state: HashMap::new(),
             macd_state: HashMap::new(),
+            obv_previous_close: None,
+            obv_state: PineValue::Na,
+            obv_current: PineValue::Na,
             plots: Vec::new(),
             plot_chars: Vec::new(),
             plot_shapes: Vec::new(),
@@ -1099,6 +1105,7 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn set_builtin_symbols(&mut self, bar: &Bar, bar_index: usize) -> Result<(), RuntimeError> {
         let datetime = utc_datetime_from_millis(bar.time)?;
+        self.obv_current = self.next_obv(bar);
         let builtins = [
             ("open", PineValue::Float(bar.open)),
             ("high", PineValue::Float(bar.high)),
@@ -1140,6 +1147,34 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(())
+    }
+
+    fn next_obv(&mut self, bar: &Bar) -> PineValue {
+        let Some(previous_close) = self.obv_previous_close else {
+            self.obv_previous_close = Some(bar.close);
+            self.obv_state = PineValue::Na;
+            return PineValue::Na;
+        };
+        self.obv_previous_close = Some(bar.close);
+        let signed_volume = match bar.close.partial_cmp(&previous_close) {
+            Some(Ordering::Greater) => bar.volume,
+            Some(Ordering::Less) => -bar.volume,
+            Some(Ordering::Equal) => 0.0,
+            None => {
+                self.obv_state = PineValue::Na;
+                return PineValue::Na;
+            }
+        };
+        let value = self.obv_state.as_f64().unwrap_or(0.0) + signed_volume;
+        self.obv_state = PineValue::Float(value);
+        self.obv_state.clone()
+    }
+
+    fn eval_builtin_value(&self, name: &str) -> PineValue {
+        if name == "ta.obv" {
+            return self.obv_current.clone();
+        }
+        eval_static_builtin_value(name)
     }
 
     fn eval_decl(&mut self, symbol: SymbolId, value: &HirExpr) -> Result<PineValue, RuntimeError> {
@@ -1225,7 +1260,7 @@ impl<'a> HistoricalRuntime<'a> {
                 .get(symbol)
                 .cloned()
                 .unwrap_or(PineValue::Na),
-            HirExprKind::Builtin(name) => eval_builtin_value(name),
+            HirExprKind::Builtin(name) => self.eval_builtin_value(name),
             HirExprKind::Unary { op, expr } => {
                 let value = self.eval_expr(expr)?;
                 eval_unary(*op, value)
@@ -4973,7 +5008,7 @@ fn finalize_series_values<T: SeriesOutput>(outputs: &mut [T], current_bar: usize
     }
 }
 
-fn eval_builtin_value(name: &str) -> PineValue {
+fn eval_static_builtin_value(name: &str) -> PineValue {
     if let Some(color) = pine_builtins::named_color(name) {
         return PineValue::Color(color);
     }
@@ -6355,6 +6390,34 @@ plot(reset_after_na)
         assert_values_close(&result.plots[2].values[..2], &[1.0, 3.0]);
         assert_eq!(result.plots[2].values[2], PineValue::Na);
         assert_values_close(&result.plots[2].values[3..], &[4.0, 9.0]);
+    }
+
+    #[test]
+    fn runs_obv_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("obv")
+plot(ta.obv)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_volume(1.0, 10.0),
+            bar_volume(3.0, 20.0),
+            bar_volume(3.0, 30.0),
+            bar_volume(2.0, 40.0),
+            bar_volume(5.0, 50.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[20.0, 20.0, -20.0, 30.0]);
     }
 
     #[test]

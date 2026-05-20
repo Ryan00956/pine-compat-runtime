@@ -2440,6 +2440,17 @@ pub fn named_float_constant(name: &str) -> Option<f64> {
         .map(|constant| constant.value)
 }
 
+const BUILTIN_SERIES_VALUES: &[(&str, PineType)] =
+    &[("ta.obv", PineType::new(Qualifier::Series, ValueKind::Float))];
+
+#[must_use]
+pub fn builtin_series_value_type(name: &str) -> Option<PineType> {
+    BUILTIN_SERIES_VALUES
+        .iter()
+        .find(|(value_name, _)| *value_name == name)
+        .map(|(_, pine_type)| *pine_type)
+}
+
 const NAMED_STRING_CONSTANTS: &[&str] = &[
     "shape.xcross",
     "shape.cross",
