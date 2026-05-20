@@ -326,6 +326,7 @@ ta.wma(source: series float, length: simple int) -> series float
 ta.hma(source: series float, length: simple int) -> series float
 ta.cum(source: series/simple numeric) -> series float
 ta.obv -> series float
+ta.pvt -> series float
 ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
 ta.change(source: series float, length?: simple int) -> series float
@@ -365,6 +366,8 @@ Rules:
   step to the next available source value.
 - `ta.obv` is a built-in series variable equivalent to
   `ta.cum(math.sign(ta.change(close)) * volume)`.
+- `ta.pvt` is a built-in series variable equivalent to
+  `ta.cum((ta.change(close) / close[1]) * volume)`.
 - `ta.mom` returns `source - source[length]` and records the required source
   history depth.
 - `ta.roc` returns `100 * (source - source[length]) / source[length]` and

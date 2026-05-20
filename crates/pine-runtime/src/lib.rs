@@ -430,6 +430,8 @@ pub struct HistoricalRuntime<'a> {
     obv_previous_close: Option<f64>,
     obv_state: PineValue,
     obv_current: PineValue,
+    pvt_state: PineValue,
+    pvt_current: PineValue,
     plots: Vec<PlotSeries>,
     plot_chars: Vec<PlotCharSeries>,
     plot_shapes: Vec<PlotShapeSeries>,
@@ -651,6 +653,8 @@ impl<'a> HistoricalRuntime<'a> {
             obv_previous_close: None,
             obv_state: PineValue::Na,
             obv_current: PineValue::Na,
+            pvt_state: PineValue::Na,
+            pvt_current: PineValue::Na,
             plots: Vec::new(),
             plot_chars: Vec::new(),
             plot_shapes: Vec::new(),
@@ -1105,7 +1109,10 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn set_builtin_symbols(&mut self, bar: &Bar, bar_index: usize) -> Result<(), RuntimeError> {
         let datetime = utc_datetime_from_millis(bar.time)?;
-        self.obv_current = self.next_obv(bar);
+        let previous_close = self.obv_previous_close;
+        self.obv_current = self.next_obv(bar, previous_close);
+        self.pvt_current = self.next_pvt(bar, previous_close);
+        self.obv_previous_close = Some(bar.close);
         let builtins = [
             ("open", PineValue::Float(bar.open)),
             ("high", PineValue::Float(bar.high)),
@@ -1149,13 +1156,11 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(())
     }
 
-    fn next_obv(&mut self, bar: &Bar) -> PineValue {
-        let Some(previous_close) = self.obv_previous_close else {
-            self.obv_previous_close = Some(bar.close);
+    fn next_obv(&mut self, bar: &Bar, previous_close: Option<f64>) -> PineValue {
+        let Some(previous_close) = previous_close else {
             self.obv_state = PineValue::Na;
             return PineValue::Na;
         };
-        self.obv_previous_close = Some(bar.close);
         let signed_volume = match bar.close.partial_cmp(&previous_close) {
             Some(Ordering::Greater) => bar.volume,
             Some(Ordering::Less) => -bar.volume,
@@ -1170,9 +1175,33 @@ impl<'a> HistoricalRuntime<'a> {
         self.obv_state.clone()
     }
 
+    fn next_pvt(&mut self, bar: &Bar, previous_close: Option<f64>) -> PineValue {
+        let Some(previous_close) = previous_close else {
+            self.pvt_state = PineValue::Na;
+            return PineValue::Na;
+        };
+        if previous_close == 0.0 {
+            self.pvt_state = PineValue::Na;
+            return PineValue::Na;
+        }
+
+        let increment = ((bar.close - previous_close) / previous_close) * bar.volume;
+        if !increment.is_finite() {
+            self.pvt_state = PineValue::Na;
+            return PineValue::Na;
+        }
+
+        let value = self.pvt_state.as_f64().unwrap_or(0.0) + increment;
+        self.pvt_state = finite_float_or_na(value);
+        self.pvt_state.clone()
+    }
+
     fn eval_builtin_value(&self, name: &str) -> PineValue {
         if name == "ta.obv" {
             return self.obv_current.clone();
+        }
+        if name == "ta.pvt" {
+            return self.pvt_current.clone();
         }
         eval_static_builtin_value(name)
     }
@@ -6418,6 +6447,34 @@ plot(ta.obv)
 
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_values_close(&result.plots[0].values[1..], &[20.0, 20.0, -20.0, 30.0]);
+    }
+
+    #[test]
+    fn runs_pvt_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("pvt")
+plot(ta.pvt)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_volume(10.0, 100.0),
+            bar_volume(12.0, 50.0),
+            bar_volume(6.0, 30.0),
+            bar_volume(6.0, 20.0),
+            bar_volume(9.0, 10.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[10.0, -5.0, -5.0, 0.0]);
     }
 
     #[test]

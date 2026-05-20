@@ -3885,7 +3885,7 @@ mod tests {
 
     #[test]
     fn accepts_ta_obv() {
-        let analysis = analyze("plot(ta.obv)\n");
+        let analysis = analyze("plot(ta.obv + ta.pvt)\n");
 
         assert!(
             analysis.diagnostics.is_empty(),
@@ -3898,6 +3898,13 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.obv")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.pvt")
         );
     }
 
