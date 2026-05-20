@@ -12,6 +12,8 @@
   `array.pop`, and `array.clear`.
 - Added partial int array support through `array.new_int` and the existing
   size/get/set/push/pop/clear operations.
+- Added partial bool array support through `array.new_bool` and the existing
+  size/get/set/push/pop/clear operations.
 - Added partial array method-call syntax for supported array `size`, `get`,
   `set`, `push`, `pop`, and `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.

@@ -173,18 +173,19 @@ language null helper.
 ```text
 array.new_float(size?: simple int, initial_value?: numeric) -> simple float-array
 array.new_int(size?: simple int, initial_value?: int-compatible) -> simple int-array
-array.size(id: float-array|int-array) -> simple int
-array.push(id: float-array|int-array, value: element-compatible) -> void
-array.get(id: float-array|int-array, index: simple int) -> series element
-array.set(id: float-array|int-array, index: simple int, value: element-compatible) -> void
-array.pop(id: float-array|int-array) -> series element
-array.clear(id: float-array|int-array) -> void
+array.new_bool(size?: simple int, initial_value?: bool-compatible) -> simple bool-array
+array.size(id: float-array|int-array|bool-array) -> simple int
+array.push(id: float-array|int-array|bool-array, value: element-compatible) -> void
+array.get(id: float-array|int-array|bool-array, index: simple int) -> series element
+array.set(id: float-array|int-array|bool-array, index: simple int, value: element-compatible) -> void
+array.pop(id: float-array|int-array|bool-array) -> series element
+array.clear(id: float-array|int-array|bool-array) -> void
 ```
 
-The supported typed-array subset covers float and int arrays. Float arrays
-accept int or float values and store them as floats. Int arrays accept int
-values. `size/get/set/push/pop/clear` may also be called with method syntax on
-a supported array receiver.
+The supported typed-array subset covers float, int, and bool arrays. Float
+arrays accept int or float values and store them as floats. Int arrays accept
+int values. Bool arrays accept bool values. `size/get/set/push/pop/clear` may
+also be called with method syntax on a supported array receiver.
 
 ## TA Built-Ins
 

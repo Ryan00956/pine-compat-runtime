@@ -178,7 +178,7 @@ and storage lifetime rules.
 ### Initial Scope
 
 The implemented initial subset started with float arrays and now also includes
-int arrays:
+int and bool arrays:
 
 ```pine
 var values = array.new_float()
@@ -189,12 +189,16 @@ plot(count)
 
 var counts = array.new_int()
 counts.push(bar_index)
+
+var flags = array.new_bool()
+flags.push(close > open)
 ```
 
 Initial supported functions:
 
 - `array.new_float`
 - `array.new_int`
+- `array.new_bool`
 - `array.push`
 - `array.get`
 - `array.set`
@@ -210,8 +214,8 @@ Resolved implementation choices:
 - Non-`var` arrays are allocated when their declaration executes on each bar.
 - `var` arrays preserve their id and backing storage across bars.
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
-- The current pass supports float and int arrays only; unsupported `array.*`
-  variants still produce diagnostics.
+- The current pass supports float, int, and bool arrays only; unsupported
+  `array.*` variants still produce diagnostics.
 
 ### Implementation Tasks
 

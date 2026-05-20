@@ -98,10 +98,10 @@ syntactic callsite. The runtime stores this state separately from ordinary
 per-bar locals.
 
 For arrays, the stored value is a runtime-owned array id. A normal
-`array.new_float` or `array.new_int` declaration allocates a fresh array each
-time it executes. A `var` array declaration keeps the same id and backing
-storage across bars, so mutations such as `array.push` or `values.push(...)`
-persist.
+`array.new_float`, `array.new_int`, or `array.new_bool` declaration allocates a
+fresh array each time it executes. A `var` array declaration keeps the same id
+and backing storage across bars, so mutations such as `array.push` or
+`values.push(...)` persist.
 
 Array bounds are stable in the current subset: `array.get` outside the current
 array length returns `na`, `array.set` outside the current length is ignored,

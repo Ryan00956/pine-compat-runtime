@@ -1165,23 +1165,39 @@ impl Analyzer {
         let Some(array_type) = arg_types.first().copied().flatten() else {
             return;
         };
-        if array_type.kind != ValueKind::IntArray {
-            return;
-        }
         let Some(value_type) = arg_types.get(value_index).copied().flatten() else {
             return;
         };
-        if !matches!(value_type.kind, ValueKind::Int | ValueKind::Na) {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARG_TYPE",
-                format!(
-                    "`{}` argument `value` does not accept {:?} {:?} for int arrays",
-                    signature.name, value_type.qualifier, value_type.kind
-                ),
-                args.get(value_index)
-                    .map_or(Span::default(), |arg| arg.span),
-            ));
-        }
+        let expected = match array_type.kind {
+            ValueKind::FloatArray
+                if matches!(
+                    value_type.kind,
+                    ValueKind::Int | ValueKind::Float | ValueKind::Na
+                ) =>
+            {
+                return;
+            }
+            ValueKind::IntArray if matches!(value_type.kind, ValueKind::Int | ValueKind::Na) => {
+                return;
+            }
+            ValueKind::BoolArray if matches!(value_type.kind, ValueKind::Bool | ValueKind::Na) => {
+                return;
+            }
+            ValueKind::FloatArray => "float arrays",
+            ValueKind::IntArray => "int arrays",
+            ValueKind::BoolArray => "bool arrays",
+            _ => return,
+        };
+
+        self.diagnostics.push(Diagnostic::error(
+            "E_CALL_ARG_TYPE",
+            format!(
+                "`{}` argument `value` does not accept {:?} {:?} for {expected}",
+                signature.name, value_type.qualifier, value_type.kind,
+            ),
+            args.get(value_index)
+                .map_or(Span::default(), |arg| arg.span),
+        ));
     }
 
     fn resolve_param<'a>(
@@ -2805,6 +2821,10 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             matches!(arg_type.kind, ValueKind::Int | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::BoolCompatible => {
+            matches!(arg_type.kind, ValueKind::Bool | ValueKind::Na)
+                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
         Accepts::Array => is_array_kind(arg_type.kind),
         Accepts::InputDefval => {
@@ -2993,13 +3013,17 @@ fn array_element_return_type(arg_types: &[Option<PineType>], index: usize) -> Op
     let kind = match array_type.kind {
         ValueKind::FloatArray => ValueKind::Float,
         ValueKind::IntArray => ValueKind::Int,
+        ValueKind::BoolArray => ValueKind::Bool,
         _ => return None,
     };
     Some(PineType::new(Qualifier::Series, kind))
 }
 
 fn is_array_kind(kind: ValueKind) -> bool {
-    matches!(kind, ValueKind::FloatArray | ValueKind::IntArray)
+    matches!(
+        kind,
+        ValueKind::FloatArray | ValueKind::IntArray | ValueKind::BoolArray
+    )
 }
 
 #[cfg(test)]
@@ -4402,9 +4426,60 @@ plot(y)
     }
 
     #[test]
+    fn accepts_bool_array_operations() {
+        let analysis = analyze(
+            "values = array.new_bool(2, close > open)\narray.push(values, true)\narray.set(values, 0, false)\nfirst = array.get(values, 0)\nlast = array.pop(values)\narray.clear(values)\nplot((first or last) ? 1 : array.size(values))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "array.new_bool")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_bool_array_method_calls() {
+        let analysis = analyze(
+            "values = array.new_bool(2, close > open)\nvalues.push(true)\nvalues.set(0, false)\nfirst = values.get(0)\nlast = values.pop()\nvalues.clear()\nplot((first or last) ? 1 : values.size())\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_float_value_for_int_array_mutation() {
         let analysis =
             analyze("values = array.new_int()\narray.push(values, close)\nplot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_numeric_value_for_bool_array_mutation() {
+        let analysis =
+            analyze("values = array.new_bool()\narray.push(values, close)\nplot(close)\n");
 
         assert!(
             analysis
@@ -4447,14 +4522,14 @@ plot(y)
 
     #[test]
     fn rejects_unsupported_array_function() {
-        let analysis = analyze("values = array.new_bool(0)\nplot(close)\n");
+        let analysis = analyze("values = array.new_string(0)\nplot(close)\n");
 
         assert!(
             analysis
                 .compatibility
                 .unsupported
                 .iter()
-                .any(|feature| feature.feature == "array.new_bool"),
+                .any(|feature| feature.feature == "array.new_string"),
             "{:?}",
             analysis.compatibility.unsupported
         );
@@ -4479,6 +4554,20 @@ plot(y)
     fn accepts_readonly_int_array_udf_parameter() {
         let analysis = analyze(
             "first(values) => array.get(values, 0)\nvalues = array.new_int(1, bar_index)\nplot(first(values) + array.size(values))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_readonly_bool_array_udf_parameter() {
+        let analysis = analyze(
+            "first(values) => array.get(values, 0)\nvalues = array.new_bool(1, true)\nplot(first(values) ? array.size(values) : 0)\n",
         );
 
         assert!(

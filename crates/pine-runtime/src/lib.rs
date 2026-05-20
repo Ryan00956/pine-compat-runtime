@@ -426,6 +426,7 @@ enum StmtControl {
 enum ArrayElementKind {
     Float,
     Int,
+    Bool,
 }
 
 impl<'a> HistoricalRuntime<'a> {
@@ -1417,6 +1418,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
             "array.new_float" => self.eval_array_new_float(args),
             "array.new_int" => self.eval_array_new_int(args),
+            "array.new_bool" => self.eval_array_new_bool(args),
             "array.size" => self.eval_array_size(args),
             "array.push" => self.eval_array_push(args),
             "array.get" => self.eval_array_get(args),
@@ -1455,6 +1457,20 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(self.new_array(ArrayElementKind::Int, size, initial_value))
+    }
+
+    fn eval_array_new_bool(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(size) = self.eval_array_new_size(args, "array.new_bool")? else {
+            return Ok(PineValue::Na);
+        };
+
+        let initial_value = if let Some(value_arg) = args.get(1) {
+            self.eval_array_value(&value_arg.value, ArrayElementKind::Bool)?
+        } else {
+            PineValue::Na
+        };
+
+        Ok(self.new_array(ArrayElementKind::Bool, size, initial_value))
     }
 
     fn eval_array_new_size(
@@ -1606,6 +1622,7 @@ impl<'a> HistoricalRuntime<'a> {
             (ArrayElementKind::Float, PineValue::Int(value)) => PineValue::Float(value as f64),
             (ArrayElementKind::Float, PineValue::Float(value)) => PineValue::Float(value),
             (ArrayElementKind::Int, PineValue::Int(value)) => PineValue::Int(value),
+            (ArrayElementKind::Bool, PineValue::Bool(value)) => PineValue::Bool(value),
             (_, PineValue::Na) => PineValue::Na,
             _ => PineValue::Na,
         })
@@ -6767,6 +6784,66 @@ plot(na(missing) ? 1 : 0)
     }
 
     #[test]
+    fn runs_bool_array_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bool array ops")
+values = array.new_bool(2, close > open)
+array.push(values, true)
+array.set(values, 0, false)
+first = array.get(values, 0)
+last = array.pop(values)
+missing = array.get(values, 10)
+plot((first or last) ? array.size(values) : 0)
+plot(na(missing) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 2);
+        assert_values_close(&result.plots[0].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_bool_array_method_calls() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bool array methods")
+values = array.new_bool(2, close > open)
+values.push(true)
+values.set(0, false)
+first = values.get(0)
+last = values.pop()
+missing = values.get(10)
+plot((first or last) ? values.size() : 0)
+plot(na(missing) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 2);
+        assert_values_close(&result.plots[0].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
     fn var_float_array_persists_across_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -6970,6 +7047,31 @@ first(values) => array.get(values, 0)
 var values = array.new_int()
 array.push(values, bar_index)
 plot(first(values) + array.size(values))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn runs_readonly_bool_array_udf_parameter() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bool array udf")
+first(values) => array.get(values, 0)
+var values = array.new_bool()
+array.push(values, bar_index == 0)
+plot(first(values) ? array.size(values) : 0)
 "#,
         );
         let analysis = analyze_source(&source);

@@ -41,6 +41,7 @@ pub enum Accepts {
     StringCompatible,
     StringConvertible,
     IntCompatible,
+    BoolCompatible,
     PlotOrHLine,
     Array,
     InputDefval,
@@ -81,6 +82,7 @@ const VOID: PineType = PineType::new(Qualifier::Const, ValueKind::Void);
 const SIMPLE_INT: PineType = PineType::new(Qualifier::Simple, ValueKind::Int);
 const SIMPLE_FLOAT_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::FloatArray);
 const SIMPLE_INT_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::IntArray);
+const SIMPLE_BOOL_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::BoolArray);
 
 const INDICATOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
@@ -909,6 +911,19 @@ const ARRAY_NEW_INT_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_NEW_BOOL_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "size",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "initial_value",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+];
+
 const ARRAY_SIZE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "id",
     accepts: Accepts::Array,
@@ -923,7 +938,7 @@ const ARRAY_VALUE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "value",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::Any,
         optional: false,
     },
 ];
@@ -954,7 +969,7 @@ const ARRAY_SET_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "value",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::Any,
         optional: false,
     },
 ];
@@ -1492,6 +1507,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_NEW_INT_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_INT_ARRAY),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.new_bool",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NEW_BOOL_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_BOOL_ARRAY),
         variadic: false,
     },
     BuiltinSignature {
