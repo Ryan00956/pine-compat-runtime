@@ -98,13 +98,14 @@ while	partial	statement loops with bool/na conditions, loop control, local var, 
 array.new_float	partial	float arrays only	tests/fixtures/runtime/array.pine
 array.new_int	partial	int arrays only	tests/fixtures/runtime/array.pine
 array.new_bool	partial	bool arrays only	tests/fixtures/runtime/array.pine
-array.size	partial	float/int/bool arrays only	tests/fixtures/runtime/array.pine
-array.push	partial	float/int/bool arrays only	tests/fixtures/runtime/array.pine
-array.get	partial	float/int/bool arrays only	tests/fixtures/runtime/array.pine
-array.set	partial	float/int/bool arrays only	tests/fixtures/runtime/array.pine
-array.pop	partial	float/int/bool arrays only	tests/fixtures/runtime/array.pine
-array.clear	partial	float/int/bool arrays only	tests/fixtures/runtime/array.pine
-array method calls	partial	float/int/bool array size/get/set/push/pop/clear method syntax only	tests/fixtures/runtime/array_methods.pine
+array.new_string	partial	string arrays only	tests/fixtures/runtime/array.pine
+array.size	partial	float/int/bool/string arrays only	tests/fixtures/runtime/array.pine
+array.push	partial	float/int/bool/string arrays only	tests/fixtures/runtime/array.pine
+array.get	partial	float/int/bool/string arrays only	tests/fixtures/runtime/array.pine
+array.set	partial	float/int/bool/string arrays only	tests/fixtures/runtime/array.pine
+array.pop	partial	float/int/bool/string arrays only	tests/fixtures/runtime/array.pine
+array.clear	partial	float/int/bool/string arrays only	tests/fixtures/runtime/array.pine
+array method calls	partial	float/int/bool/string array size/get/set/push/pop/clear method syntax only	tests/fixtures/runtime/array_methods.pine
 expression-body functions	supported	lowered by inlining; positional and named arguments supported	tests/fixtures/runtime/udf.pine
 multi-statement functions	supported	block body must end with an expression	tests/fixtures/runtime/udf.pine;tests/fixtures/runtime/branch_loop_interactions.pine
 block-local declarations	supported	normal and tuple declarations are scoped to branches	tests/fixtures/runtime/block_statements.pine;tests/fixtures/runtime/local_scope.pine;tests/fixtures/sema/supported_block_statements.pine
@@ -118,7 +119,7 @@ var	supported	historical persistence and local declaration-site storage	tests/fi
 realtime forming rollback	partial	forming updates roll back output, var, callsite, and array state to confirmed bars	tests/fixtures/realtime/forming_close.pine;tests/fixtures/realtime/var_rollback.pine;tests/fixtures/realtime/conditional_ta_rollback.pine;tests/fixtures/realtime/array_rollback.pine
 varip	unsupported	intrabar persistence not implemented	tests/fixtures/sema/unsupported_varip.pine
 request.*	unsupported	multi-symbol and multi-timeframe data out of Phase 1	tests/fixtures/sema/unsupported_request.pine
-array.*	partial	float/int/bool array creation, size, get/set, push/pop, clear, and method-call syntax only	tests/fixtures/runtime/array.pine;tests/fixtures/runtime/array_methods.pine;tests/fixtures/sema/unsupported_array.pine
+array.*	partial	float/int/bool/string array creation, size, get/set, push/pop, clear, and method-call syntax only	tests/fixtures/runtime/array.pine;tests/fixtures/runtime/array_methods.pine;tests/fixtures/sema/unsupported_array.pine
 import	unsupported	library imports out of Phase 1	tests/fixtures/sema/unsupported_import.pine
 strategy.*	unsupported	broker emulation out of current scope	tests/fixtures/sema/unsupported_strategy.pine
 alert/alertcondition	unsupported	alerts out of Phase 1	tests/fixtures/sema/unsupported_alert.pine

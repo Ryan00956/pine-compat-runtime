@@ -25,7 +25,7 @@ Implemented or partially implemented:
 - Partial `switch` expressions.
 - Partial `for` and `while` loops.
 - Constant non-negative history offsets.
-- Partial float/int/bool arrays and supported array method calls.
+- Partial float/int/bool/string arrays and supported array method calls.
 - A fixture-covered set of `input.*`, output calls, color helpers, math
   helpers, and `ta.*` functions.
 - CLI, Python, and WASM surfaces for the supported runtime result model.
@@ -104,7 +104,7 @@ storage model.
 
 Scope:
 
-- Add typed arrays beyond the current float/int/bool subset: string, color, and
+- Add typed arrays beyond the current float/int/bool/string subset: color and
   source where practical.
 - Add common array constructors and helpers after element typing is stable.
 - Define copy/reference behavior for array values across assignments,
@@ -129,7 +129,7 @@ Acceptance criteria:
 
 Suggested commits:
 
-1. `Support typed string color arrays`
+1. `Support typed color arrays`
 2. `Expand array helper coverage`
 3. `Document collection semantics`
 

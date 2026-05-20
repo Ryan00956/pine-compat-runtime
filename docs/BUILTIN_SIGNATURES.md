@@ -174,18 +174,20 @@ language null helper.
 array.new_float(size?: simple int, initial_value?: numeric) -> simple float-array
 array.new_int(size?: simple int, initial_value?: int-compatible) -> simple int-array
 array.new_bool(size?: simple int, initial_value?: bool-compatible) -> simple bool-array
-array.size(id: float-array|int-array|bool-array) -> simple int
-array.push(id: float-array|int-array|bool-array, value: element-compatible) -> void
-array.get(id: float-array|int-array|bool-array, index: simple int) -> series element
-array.set(id: float-array|int-array|bool-array, index: simple int, value: element-compatible) -> void
-array.pop(id: float-array|int-array|bool-array) -> series element
-array.clear(id: float-array|int-array|bool-array) -> void
+array.new_string(size?: simple int, initial_value?: string-compatible) -> simple string-array
+array.size(id: float-array|int-array|bool-array|string-array) -> simple int
+array.push(id: float-array|int-array|bool-array|string-array, value: element-compatible) -> void
+array.get(id: float-array|int-array|bool-array|string-array, index: simple int) -> series element
+array.set(id: float-array|int-array|bool-array|string-array, index: simple int, value: element-compatible) -> void
+array.pop(id: float-array|int-array|bool-array|string-array) -> series element
+array.clear(id: float-array|int-array|bool-array|string-array) -> void
 ```
 
-The supported typed-array subset covers float, int, and bool arrays. Float
-arrays accept int or float values and store them as floats. Int arrays accept
-int values. Bool arrays accept bool values. `size/get/set/push/pop/clear` may
-also be called with method syntax on a supported array receiver.
+The supported typed-array subset covers float, int, bool, and string arrays.
+Float arrays accept int or float values and store them as floats. Int arrays
+accept int values. Bool arrays accept bool values. String arrays accept string
+values. `size/get/set/push/pop/clear` may also be called with method syntax on
+a supported array receiver.
 
 ## TA Built-Ins
 
@@ -261,9 +263,9 @@ str.replace(source: string-compatible, target: string-compatible, replacement: s
 str.replace_all(source: string-compatible, target: string-compatible, replacement: string-compatible)
   -> string with strongest qualifier
 str.tonumber(string: string-compatible) -> float with same qualifier
-str.tostring(value: int|float|bool|string|float-array|na, format?: string-compatible)
+str.tostring(value: int|float|bool|string|supported-array|na, format?: string-compatible)
   -> string with strongest qualifier
-str.format(formatString: string-compatible, arg0?: int|float|bool|string|float-array|na, ...)
+str.format(formatString: string-compatible, arg0?: int|float|bool|string|supported-array|na, ...)
   -> string with strongest qualifier
 str.match(source: string-compatible, regex: string-compatible)
   -> string with strongest qualifier
@@ -289,10 +291,11 @@ targets replace zero-width character boundaries. Replacement results over
 `str.tonumber` accepts strings containing ASCII digits, an optional leading
 sign, and at most one decimal point. It returns `na` for invalid formats,
 `na` inputs, and non-finite parsed results.
-`str.tostring` supports scalar int, float, bool, string, `na`, and float array
-values. Numeric formatting supports the default `#.########`, `format.mintick`
-as the default format, `format.percent` as `#.##%`, and fixture-covered custom
-patterns using `#`, `0`, `.`, `,`, and trailing `%` tokens.
+`str.tostring` supports scalar int, float, bool, string, `na`, and supported
+array values. Numeric formatting supports the default `#.########`,
+`format.mintick` as the default format, `format.percent` as `#.##%`, and
+fixture-covered custom patterns using `#`, `0`, `.`, `,`, and trailing `%`
+tokens.
 `str.format` supports indexed placeholders such as `{0}` and numeric
 placeholders such as `{0,number,#.00}`. Missing placeholder indexes remain
 literal text. Unmatched braces are runtime errors. Quote handling inside format

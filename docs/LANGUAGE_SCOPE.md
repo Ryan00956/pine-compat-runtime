@@ -71,10 +71,11 @@ Phase 1 executable subset:
   `bgcolor`, `barcolor`, `hline`, and `fill`
 - `na`, `nz`
 - `ta.sma` and `ta.ema`
-- partial float, int, and bool arrays with `array.new_float`, `array.new_int`,
-  `array.new_bool`, `array.push`, `array.get`, `array.set`, `array.size`,
-  `array.pop`, `array.clear`, and equivalent method-call syntax such as
-  `values.push(close)` and `values.get(0)`
+- partial float, int, bool, and string arrays with `array.new_float`,
+  `array.new_int`, `array.new_bool`, `array.new_string`, `array.push`,
+  `array.get`, `array.set`, `array.size`, `array.pop`, `array.clear`, and
+  equivalent method-call syntax such as `values.push(close)` and
+  `values.get(0)`
 
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes. Series values not evaluated on a bar are committed as `na` to
