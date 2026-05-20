@@ -1,6 +1,6 @@
 //! Host-independent intermediate representation scaffolding.
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SeriesId(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -59,6 +59,21 @@ pub struct HirProgram {
     pub next_series_id: u32,
     pub next_call_site_id: u32,
     pub next_var_slot_id: u32,
+    pub history: HirHistoryRequirements,
+    pub series_history: Vec<HirSeriesHistoryRequirement>,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct HirHistoryRequirements {
+    pub max_constant_offset: u32,
+    pub has_dynamic_offsets: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HirSeriesHistoryRequirement {
+    pub series_id: SeriesId,
+    pub max_constant_offset: u32,
+    pub has_dynamic_offsets: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

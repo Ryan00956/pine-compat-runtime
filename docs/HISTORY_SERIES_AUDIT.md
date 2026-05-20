@@ -19,6 +19,8 @@ rules.
 - Series-qualified identifiers keep stable series ids.
 - Series-qualified non-identifier expressions that are lowered with history
   receive compiler-generated series ids.
+- Lowering records HIR history metadata: program-wide `max_constant_offset`,
+  whether dynamic offsets exist, and per-series history requirements.
 - Constant history is fixture-covered for built-in series, expression history,
   branch bodies, loop bodies, and user-defined function parameters.
 - Dynamic const/input/simple history is fixture-covered for built-in series and
@@ -60,8 +62,8 @@ committed series values exceed the configured runtime cap.
    Current findings are in `docs/QUALIFIER_AUDIT.md`.
 3. Audit built-in signatures that currently accept broader qualifiers than the
    compatibility docs claim.
-4. Add static-depth inference for constant offsets so future runtimes can
-   retain less than full-history when dynamic offsets are absent.
+4. Use HIR history metadata to retain less than full-history for scripts without
+   dynamic offsets.
 5. Design whether any `series int` offset subset can be supported with
    max-bars-back style retention, runtime diagnostics, and memory limits.
 

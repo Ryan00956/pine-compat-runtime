@@ -155,7 +155,8 @@ boundary is recorded in `docs/HISTORY_SERIES_AUDIT.md`; qualifier findings are
 recorded in `docs/QUALIFIER_AUDIT.md`; built-in signature notes were tightened
 in `docs/BUILTIN_SIGNATURES.md`. Series-qualified history offsets remain
 diagnostic-only. Runtime profiles now expose max series depth and committed
-series history has a hard runtime cap.
+series history has a hard runtime cap. HIR lowering now records program-wide
+and per-series history requirements for future retention trimming.
 
 Scope:
 
@@ -185,6 +186,7 @@ Suggested commits:
 2. `Audit qualifier propagation`
 3. `Design dynamic history offset support`
 4. `Implement guarded dynamic history offsets`
+5. `Infer history retention requirements`
 
 ## Phase D: Built-In Coverage Expansion
 

@@ -160,9 +160,15 @@ series id per confirmed bar and reports `seriesValues`, `seriesCapacity`, and
 history growth; hitting it fails execution with a runtime error instead of
 silently truncating history.
 
+HIR lowering records static history metadata:
+
+- program-wide maximum constant history offset
+- whether any supported dynamic offset exists
+- per-series maximum constant history offset
+- per-series dynamic-offset presence
+
 Later phases should add:
 
-- static history-depth inference for constant offsets
 - narrower retention bounds for scripts without dynamic offsets
 - optional `max_bars_back` handling
 - configurable memory limits and diagnostics for excessive history

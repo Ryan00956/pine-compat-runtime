@@ -1,12 +1,13 @@
 //! Semantic analysis and compatibility gating scaffolding.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use pine_builtins::{Accepts, BuiltinSignature, ReturnSpec};
 use pine_ir::{
-    CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirHistoryOffset, HirLiteral,
-    HirProgram, HirStmt, HirStmtKind, HirSwitchArm, HirSymbol, HirUnaryOp, PineType, Qualifier,
-    SeriesId, SymbolId, ValueKind, VarSlotId,
+    CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirHistoryOffset,
+    HirHistoryRequirements, HirLiteral, HirProgram, HirSeriesHistoryRequirement, HirStmt,
+    HirStmtKind, HirSwitchArm, HirSymbol, HirUnaryOp, PineType, Qualifier, SeriesId, SymbolId,
+    ValueKind, VarSlotId,
 };
 use pine_syntax::{
     BinaryOp, CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Literal, Program, Severity,
@@ -1729,12 +1730,15 @@ impl Analyzer {
             statements.push(self.lower_stmt(statement)?);
         }
 
+        let history = infer_history_requirements(&statements);
         Some(HirProgram {
             symbols: self.lower_symbols(),
             statements,
             next_series_id: self.next_series_id,
             next_call_site_id: self.next_call_site_id,
             next_var_slot_id: self.next_var_slot_id,
+            history: history.program,
+            series_history: history.series,
         })
     }
 
@@ -2683,6 +2687,171 @@ fn prepend_block_statements(mut prefix: Vec<HirStmt>, expr: HirExpr) -> HirExpr 
     }
 }
 
+#[derive(Debug, Default)]
+struct InferredHistoryRequirements {
+    program: HirHistoryRequirements,
+    series: Vec<HirSeriesHistoryRequirement>,
+}
+
+#[derive(Debug, Default)]
+struct HistoryRequirementCollector {
+    program: HirHistoryRequirements,
+    series: BTreeMap<SeriesId, HirHistoryRequirements>,
+}
+
+fn infer_history_requirements(statements: &[HirStmt]) -> InferredHistoryRequirements {
+    let mut collector = HistoryRequirementCollector::default();
+    for statement in statements {
+        collector.visit_stmt(statement);
+    }
+    InferredHistoryRequirements {
+        program: collector.program,
+        series: collector
+            .series
+            .into_iter()
+            .map(|(series_id, requirements)| HirSeriesHistoryRequirement {
+                series_id,
+                max_constant_offset: requirements.max_constant_offset,
+                has_dynamic_offsets: requirements.has_dynamic_offsets,
+            })
+            .collect(),
+    }
+}
+
+impl HistoryRequirementCollector {
+    fn visit_stmt(&mut self, statement: &HirStmt) {
+        match &statement.kind {
+            HirStmtKind::Expr(expr)
+            | HirStmtKind::Decl { value: expr, .. }
+            | HirStmtKind::Reassign { value: expr, .. }
+            | HirStmtKind::TupleDecl { value: expr, .. } => self.visit_expr(expr),
+            HirStmtKind::If {
+                condition,
+                then_branch,
+                else_branch,
+            } => {
+                self.visit_expr(condition);
+                self.visit_stmts(then_branch);
+                self.visit_stmts(else_branch);
+            }
+            HirStmtKind::For {
+                from,
+                to,
+                step,
+                body,
+                ..
+            } => {
+                self.visit_expr(from);
+                self.visit_expr(to);
+                if let Some(step) = step {
+                    self.visit_expr(step);
+                }
+                self.visit_stmts(body);
+            }
+            HirStmtKind::While { condition, body } => {
+                self.visit_expr(condition);
+                self.visit_stmts(body);
+            }
+            HirStmtKind::Break | HirStmtKind::Continue => {}
+        }
+    }
+
+    fn visit_stmts(&mut self, statements: &[HirStmt]) {
+        for statement in statements {
+            self.visit_stmt(statement);
+        }
+    }
+
+    fn visit_expr(&mut self, expr: &HirExpr) {
+        match &expr.kind {
+            HirExprKind::Literal(_) | HirExprKind::Symbol(_) | HirExprKind::Builtin(_) => {}
+            HirExprKind::Unary { expr, .. } => self.visit_expr(expr),
+            HirExprKind::Binary { left, right, .. } => {
+                self.visit_expr(left);
+                self.visit_expr(right);
+            }
+            HirExprKind::Ternary {
+                condition,
+                then_expr,
+                else_expr,
+            } => {
+                self.visit_expr(condition);
+                self.visit_expr(then_expr);
+                self.visit_expr(else_expr);
+            }
+            HirExprKind::Switch { selector, arms } => {
+                if let Some(selector) = selector {
+                    self.visit_expr(selector);
+                }
+                for arm in arms {
+                    if let Some(condition) = &arm.condition {
+                        self.visit_expr(condition);
+                    }
+                    self.visit_expr(&arm.result);
+                }
+            }
+            HirExprKind::For {
+                from,
+                to,
+                step,
+                statements,
+                result,
+                ..
+            } => {
+                self.visit_expr(from);
+                self.visit_expr(to);
+                if let Some(step) = step {
+                    self.visit_expr(step);
+                }
+                self.visit_stmts(statements);
+                self.visit_expr(result);
+            }
+            HirExprKind::Tuple(items) => {
+                for item in items {
+                    self.visit_expr(item);
+                }
+            }
+            HirExprKind::Block { statements, result } => {
+                self.visit_stmts(statements);
+                self.visit_expr(result);
+            }
+            HirExprKind::Call { args, .. } => {
+                for arg in args {
+                    self.visit_expr(&arg.value);
+                }
+            }
+            HirExprKind::History { expr, offset } => {
+                self.record_history(expr.series_id, offset);
+                self.visit_expr(expr);
+                if let HirHistoryOffset::Dynamic(offset) = offset {
+                    self.visit_expr(offset);
+                }
+            }
+        }
+    }
+
+    fn record_history(&mut self, series_id: Option<SeriesId>, offset: &HirHistoryOffset) {
+        match offset {
+            HirHistoryOffset::Constant(offset) => {
+                self.program.max_constant_offset = self.program.max_constant_offset.max(*offset);
+                if let Some(series_id) = series_id {
+                    let requirement = self.series.entry(series_id).or_default();
+                    requirement.max_constant_offset = requirement.max_constant_offset.max(*offset);
+                }
+            }
+            HirHistoryOffset::Dynamic(_) => {
+                self.program.has_dynamic_offsets = true;
+                if let Some(series_id) = series_id {
+                    self.series
+                        .entry(series_id)
+                        .or_default()
+                        .has_dynamic_offsets = true;
+                }
+            }
+        }
+    }
+}
+
 fn contains_output_or_declaration_call(expr: &Expr) -> bool {
     match &expr.kind {
         ExprKind::Call { callee, args } => {
@@ -3513,6 +3682,35 @@ mod tests {
         );
         assert!(analysis.compatibility.unsupported.is_empty());
         assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn infers_history_requirements() {
+        let analysis =
+            analyze("len = input.int(1, \"Length\")\nplot(close[3])\nplot((close + open)[len])\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.expect("HIR");
+        assert_eq!(hir.history.max_constant_offset, 3);
+        assert!(hir.history.has_dynamic_offsets);
+        assert!(
+            hir.series_history
+                .iter()
+                .any(|requirement| requirement.max_constant_offset == 3),
+            "{:?}",
+            hir.series_history
+        );
+        assert!(
+            hir.series_history
+                .iter()
+                .any(|requirement| requirement.has_dynamic_offsets),
+            "{:?}",
+            hir.series_history
+        );
     }
 
     #[test]
