@@ -206,7 +206,7 @@ large platform features.
 Candidate areas:
 
 - Additional `ta.*` functions. Initial Phase D coverage includes `ta.stdev`
-  with default biased and optional sample standard deviation modes.
+  and `ta.variance` with default biased and optional sample window modes.
 - Additional `math.*` and `str.*` helpers. Initial post-baseline math coverage
   includes `math.floor`, `math.ceil`, `math.sqrt`, `math.log`, `math.log10`,
   `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`,

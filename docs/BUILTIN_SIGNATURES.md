@@ -318,6 +318,7 @@ ta.macd(source: series float, fastlen: simple int, slowlen: simple int, siglen: 
 ta.bb(source: series float, length: simple int, mult: numeric)
   -> tuple(series float, series float, series float)
 ta.stdev(source: series float, length: simple int, biased?: bool-compatible) -> series float
+ta.variance(source: series float, length: simple int, biased?: bool-compatible) -> series float
 ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
 ta.change(source: series float, length?: simple int) -> series float
@@ -334,6 +335,8 @@ Rules:
 - `ta.bb` currently accepts any numeric qualifier for `mult`.
 - `ta.stdev` defaults `biased` to `true`; `false` uses sample standard
   deviation and returns `na` for windows shorter than two values.
+- `ta.variance` uses the same `biased` default and sample/population window
+  rules as `ta.stdev`.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.

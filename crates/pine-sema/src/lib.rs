@@ -3636,8 +3636,8 @@ mod tests {
     }
 
     #[test]
-    fn accepts_ta_stdev_optional_biased_arg() {
-        let analysis = analyze("plot(ta.stdev(close, 3, false))\n");
+    fn accepts_ta_variance_and_stdev_optional_biased_arg() {
+        let analysis = analyze("plot(ta.stdev(close, 3, false) + ta.variance(close, 3, true))\n");
 
         assert!(
             analysis.diagnostics.is_empty(),
@@ -3650,6 +3650,13 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.stdev")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.variance")
         );
     }
 

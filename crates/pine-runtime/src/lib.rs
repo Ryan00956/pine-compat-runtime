@@ -1657,6 +1657,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.macd" => self.eval_macd(call_site_id, args),
             "ta.bb" => self.eval_bb(call_site_id, args),
             "ta.stdev" => self.eval_stdev(call_site_id, args),
+            "ta.variance" => self.eval_variance(call_site_id, args),
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.change" => self.eval_change(args),
@@ -2928,6 +2929,25 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
+        match self.eval_window_variance(call_site_id, args)? {
+            PineValue::Float(value) => Ok(finite_float_or_na(value.sqrt())),
+            value => Ok(value),
+        }
+    }
+
+    fn eval_variance(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_window_variance(call_site_id, args)
+    }
+
+    fn eval_window_variance(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
         let source = self.eval_expr(&args[0].value)?;
         let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
         let biased = if let Some(arg) = args.get(2) {
@@ -2945,7 +2965,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        Ok(finite_float_or_na(window.variance(length, biased).sqrt()))
+        Ok(finite_float_or_na(window.variance(length, biased)))
     }
 
     fn eval_tr(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -6048,6 +6068,38 @@ plot(sample)
         assert_eq!(result.plots[1].values[0], PineValue::Na);
         assert_eq!(result.plots[1].values[1], PineValue::Na);
         assert_values_close(&result.plots[1].values[2..], &[1.0, 1.5275252316519468]);
+    }
+
+    #[test]
+    fn runs_variance_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("variance")
+biased = ta.variance(close, 3)
+sample = ta.variance(close, 3, false)
+plot(biased)
+plot(sample)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(5.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[2..],
+            &[0.6666666666666666, 1.5555555555555556],
+        );
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_values_close(&result.plots[1].values[2..], &[1.0, 2.3333333333333335]);
     }
 
     #[test]

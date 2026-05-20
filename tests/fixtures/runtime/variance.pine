@@ -1,0 +1,6 @@
+//@version=5
+indicator("Variance")
+variance = ta.variance(close, 3)
+sample = ta.variance(close, 3, false)
+plot(variance)
+plot(sample)
