@@ -78,7 +78,6 @@ It needs an explicit qualifier policy:
    variants for every kind.
 3. Keep `close[length]` rejected even when `length` is `input int` until the
    runtime has explicit retention and invalid-offset behavior.
-4. Audit built-in docs against the code acceptors before broadening dynamic
-   history, because built-in length parameters already rely on `SimpleInt`
-   semantics.
-
+4. Keep `docs/BUILTIN_SIGNATURES.md` aligned with code acceptors before
+   broadening dynamic history, because built-in length parameters already rely
+   on `SimpleInt` semantics.

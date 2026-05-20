@@ -152,7 +152,8 @@ possible.
 
 Status: started. The current static-offset boundary and next implementation
 sequence are recorded in `docs/HISTORY_SERIES_AUDIT.md`; qualifier findings are
-recorded in `docs/QUALIFIER_AUDIT.md`.
+recorded in `docs/QUALIFIER_AUDIT.md`; built-in signature notes were tightened
+in `docs/BUILTIN_SIGNATURES.md`.
 
 Scope:
 

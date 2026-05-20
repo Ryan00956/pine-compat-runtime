@@ -11,6 +11,20 @@ name(arg_name: qualifier kind, ...) -> qualifier kind
 
 `series<T>` means a series-qualified value of kind `T`.
 
+## Phase C Qualifier Audit Notes
+
+These signatures describe the currently implemented semantic surface, not the
+full Pine surface. In this document:
+
+- `series/simple numeric` means numeric values at any implemented qualifier up
+  to `series`, including `const` and `input`.
+- `simple int` means `const`, `input`, or `simple` integers, and rejects
+  `series int`.
+- `const` parameters require literal/named-constant style values after current
+  semantic analysis.
+- History offsets are stricter than `simple int` parameters: only non-negative
+  integer literals are accepted until Phase C defines retention rules.
+
 ## Phase 1 Core
 
 Phase 1 should be intentionally small:
@@ -116,7 +130,7 @@ Rules:
 ## Plotting
 
 ```text
-plot(series: series float, title?: const string, color?: color-compatible, ...)
+plot(series: series/simple numeric, title?: const string, color?: color-compatible, ...)
   -> plot
 
 plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, ...)
@@ -299,14 +313,14 @@ ta.rma(source: series float, length: simple int) -> series float
 ta.rsi(source: series float, length: simple int) -> series float
 ta.macd(source: series float, fastlen: simple int, slowlen: simple int, siglen: simple int)
   -> tuple(series float, series float, series float)
-ta.bb(source: series float, length: simple int, mult: simple float)
+ta.bb(source: series float, length: simple int, mult: numeric)
   -> tuple(series float, series float, series float)
 ta.atr(length: simple int) -> series float
-ta.tr(handle_na?: simple bool) -> series float
+ta.tr(handle_na?: const bool) -> series float
 ta.change(source: series float, length?: simple int) -> series float
-ta.cross(source1: series float, source2: series float) -> series bool
-ta.crossover(source1: series float, source2: series float) -> series bool
-ta.crossunder(source1: series float, source2: series float) -> series bool
+ta.cross(source1: series/simple numeric, source2: series/simple numeric) -> series bool
+ta.crossover(source1: series/simple numeric, source2: series/simple numeric) -> series bool
+ta.crossunder(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.highest(source: series float, length: simple int) -> series float
 ta.lowest(source: series float, length: simple int) -> series float
 ```
@@ -314,6 +328,7 @@ ta.lowest(source: series float, length: simple int) -> series float
 Rules:
 
 - `length` should initially be `simple int`; reject `series int` lengths.
+- `ta.bb` currently accepts any numeric qualifier for `mult`.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.
