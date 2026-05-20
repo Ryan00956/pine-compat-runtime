@@ -210,7 +210,8 @@ Candidate areas:
   `ta.range`, `ta.dev`, `ta.vwma`, `ta.wma`, and `ta.hma` over ready rolling
   windows, `ta.mom`/`ta.roc` over explicit source history, and
   `ta.rising`/`ta.falling` trend-window checks. It also includes two-argument
-  `ta.highestbars`/`ta.lowestbars` rolling extreme offsets.
+  `ta.highestbars`/`ta.lowestbars` rolling extreme offsets and `ta.barssince`
+  condition counters.
 - Additional `math.*` and `str.*` helpers. Initial post-baseline math coverage
   includes `math.floor`, `math.ceil`, `math.sqrt`, `math.log`, `math.log10`,
   `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`,

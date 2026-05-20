@@ -3791,6 +3791,24 @@ mod tests {
     }
 
     #[test]
+    fn accepts_ta_barssince() {
+        let analysis = analyze("plot(ta.barssince(close > open))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.barssince")
+        );
+    }
+
+    #[test]
     fn accepts_input_string_in_conditions() {
         let analysis = analyze(
             "mode = input.string(\"SMA\", \"Mode\")\nplot(mode == \"SMA\" ? close : open)\n",

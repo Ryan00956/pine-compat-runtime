@@ -838,6 +838,12 @@ const TA_SOURCE_LENGTH_BIASED_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_CONDITION_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "condition",
+    accepts: Accepts::BoolCompatible,
+    optional: false,
+}];
+
 const TA_SOURCE_OPTIONAL_LENGTH_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
@@ -2202,6 +2208,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_LENGTH_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_BOOL),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.barssince",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_CONDITION_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
         variadic: false,
     },
     BuiltinSignature {

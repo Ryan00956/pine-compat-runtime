@@ -1,0 +1,4 @@
+//@version=5
+indicator("Bars Since")
+value = ta.barssince(close > open)
+plot(value)

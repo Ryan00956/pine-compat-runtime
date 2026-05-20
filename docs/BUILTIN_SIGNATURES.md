@@ -331,6 +331,7 @@ ta.mom(source: series float, length: simple int) -> series float
 ta.roc(source: series float, length: simple int) -> series float
 ta.rising(source: series float, length: simple int) -> series bool
 ta.falling(source: series float, length: simple int) -> series bool
+ta.barssince(condition: series bool) -> series int
 ta.cross(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossover(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossunder(source1: series/simple numeric, source2: series/simple numeric) -> series bool
@@ -362,6 +363,8 @@ Rules:
   returns `na` when the historical denominator is zero.
 - `ta.rising`/`ta.falling` compare the current source against the previous
   ready-window values and return `false` while that window is not ready.
+- `ta.barssince` returns `0` on true conditions, increments after the last true
+  condition, and returns `na` before the first true condition.
 - `ta.highestbars`/`ta.lowestbars` currently support the two-argument form and
   return the offset to the most recent matching extreme in the ready window.
 - Stateful TA functions require callsite ids.

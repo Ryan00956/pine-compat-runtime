@@ -1683,6 +1683,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.falling" => {
                 self.eval_rising_falling(call_site_id, args, RisingFallingMode::Falling)
             }
+            "ta.barssince" => self.eval_barssince(call_site_id, args),
             "ta.cross" => self.eval_cross(args, CrossMode::Any),
             "ta.crossover" => self.eval_cross(args, CrossMode::Over),
             "ta.crossunder" => self.eval_cross(args, CrossMode::Under),
@@ -3338,6 +3339,30 @@ impl<'a> HistoricalRuntime<'a> {
             CrossMode::Over => crossed_over,
             CrossMode::Under => crossed_under,
         }))
+    }
+
+    fn eval_barssince(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let condition = self.eval_expr(&args[0].value)?;
+        let value = if matches!(condition, PineValue::Bool(true)) {
+            PineValue::Int(0)
+        } else if let Some(previous) = self
+            .call_state
+            .get(&call_site_id)
+            .and_then(PineValue::as_i64)
+        {
+            PineValue::Int(previous + 1)
+        } else {
+            PineValue::Na
+        };
+
+        if matches!(value, PineValue::Int(_)) {
+            self.call_state.insert(call_site_id, value.clone());
+        }
+        Ok(value)
     }
 
     fn eval_window_extreme(
@@ -6437,6 +6462,30 @@ plot(down ? 1 : 0)
             &result.plots[1].values,
             &[0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
         );
+    }
+
+    #[test]
+    fn runs_barssince_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("barssince")
+value = ta.barssince(close > 2)
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(2.0), bar(4.0), bar(1.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[0.0, 1.0, 0.0, 1.0]);
     }
 
     #[test]
