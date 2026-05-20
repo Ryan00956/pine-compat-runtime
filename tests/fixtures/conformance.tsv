@@ -120,6 +120,7 @@ array.lastindexof	partial	float/int/bool/string/color arrays only; returns -1 wh
 array.binary_search	partial	float/int arrays only; ascending sorted arrays expected; returns -1 when not found	tests/fixtures/runtime/array_search.pine
 array.binary_search_leftmost	partial	float/int arrays only; ascending sorted arrays expected	tests/fixtures/runtime/array_search.pine
 array.binary_search_rightmost	partial	float/int arrays only; ascending sorted arrays expected	tests/fixtures/runtime/array_search.pine
+array.abs	partial	float/int arrays only; returns new same-kind array	tests/fixtures/runtime/array_statistics.pine
 array.min	partial	float/int arrays only	tests/fixtures/runtime/array_statistics.pine
 array.max	partial	float/int arrays only	tests/fixtures/runtime/array_statistics.pine
 array.sum	partial	float/int arrays only	tests/fixtures/runtime/array_statistics.pine

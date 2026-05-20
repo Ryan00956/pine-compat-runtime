@@ -229,6 +229,7 @@ Initial supported functions:
 - `array.binary_search`
 - `array.binary_search_leftmost`
 - `array.binary_search_rightmost`
+- `array.abs`
 - `array.min`
 - `array.max`
 - `array.sum`

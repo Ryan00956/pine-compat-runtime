@@ -127,6 +127,8 @@ arrays. Numeric helpers on int/float arrays skip `na` elements; if every
 element is `na` or the array is empty, `array.min`, `array.max`, `array.sum`,
 `array.avg`, `array.range`, `array.median`, `array.mode`, `array.variance`,
 and `array.stdev` return `na`. `array.range` returns max minus min.
+`array.abs` returns a new same-kind int/float array, preserves `na` elements,
+and does not mutate the source array.
 `array.median` returns the median of non-`na` values. `array.mode` returns the
 smallest value among tied most-frequent values and returns `na` when all
 remaining values occur only once. Percentile helpers operate on non-`na` values

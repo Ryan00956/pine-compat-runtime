@@ -179,14 +179,14 @@ Supported operations are
 `array.fill`, `array.first`, `array.last`, and `array.copy`, `array.slice`,
 `array.concat`, `array.includes`, `array.indexof`, `array.lastindexof`,
 `array.binary_search`, `array.binary_search_leftmost`,
-`array.binary_search_rightmost`, `array.min`, `array.max`, `array.sum`,
-`array.avg`, `array.range`, `array.median`, `array.mode`, `array.variance`,
-`array.stdev`, `array.percentile_nearest_rank`,
+`array.binary_search_rightmost`, `array.abs`, `array.min`, `array.max`,
+`array.sum`, `array.avg`, `array.range`, `array.median`, `array.mode`,
+`array.variance`, `array.stdev`, `array.percentile_nearest_rank`,
 `array.percentile_linear_interpolation`, `array.percentrank`, `array.sort`,
 `array.reverse`, `array.join`, and `array.clear`;
 `size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/reverse/join/clear`
 may also be called with method syntax on a supported array receiver. Numeric
-`binary_search/binary_search_leftmost/binary_search_rightmost/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/variance/stdev/sort`
+`binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/variance/stdev/sort`
 helpers may also be called with method syntax on float and int arrays. Float
 arrays accept int or float values and store them as
 floats. Int arrays accept int values. Bool arrays accept bool values. String
@@ -208,10 +208,12 @@ present. Numeric binary search helpers are limited to float and int arrays and
 expect the current array contents to be sorted ascending. `array.binary_search`
 returns `-1` when the value is not found; leftmost/rightmost return the nearest
 existing insertion-side index and return `-1` for empty arrays. Numeric helpers
-`array.min`, `array.max`, `array.sum`, `array.avg`, `array.range`,
+`array.abs`, `array.min`, `array.max`, `array.sum`, `array.avg`, `array.range`,
 `array.median`, `array.mode`, `array.variance`, and `array.stdev` are limited
-to float and int arrays; they ignore `na` elements and return `na` when no
-numeric element is present. `array.range` returns max minus min. `array.mode`
+to float and int arrays. `array.abs` allocates a new same-kind array, preserves
+`na`, and leaves the source array unchanged. The remaining helpers ignore `na`
+elements and return `na` when no numeric element is present. `array.range`
+returns max minus min. `array.mode`
 returns the smallest value among tied most-frequent values and returns `na`
 when all remaining values occur only once. Percentile helpers operate on
 non-`na` values sorted ascending. Percentages outside `0..=100`,

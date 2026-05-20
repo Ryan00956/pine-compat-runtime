@@ -2522,6 +2522,7 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "binary_search" => Some("array.binary_search"),
         "binary_search_leftmost" => Some("array.binary_search_leftmost"),
         "binary_search_rightmost" => Some("array.binary_search_rightmost"),
+        "abs" => Some("array.abs"),
         "min" => Some("array.min"),
         "max" => Some("array.max"),
         "sum" => Some("array.sum"),
@@ -4878,7 +4879,7 @@ plot(y)
     #[test]
     fn accepts_numeric_array_statistics() {
         let analysis = analyze(
-            "ints = array.new_int()\narray.push(ints, 1)\narray.push(ints, 3)\narray.push(ints, 3)\nfloats = array.new_float()\nfloats.push(close)\nfloats.push(high)\nplot(array.min(ints) + array.max(ints) + array.sum(ints) + ints.range() + ints.median() + array.mode(ints) + ints.percentile_nearest_rank(50) + array.percentile_linear_interpolation(ints, 75) + array.percentrank(ints, 1) + ints.variance(false) + array.avg(floats) + floats.max() + array.range(floats) + array.stdev(floats))\n",
+            "ints = array.new_int()\narray.push(ints, 1)\narray.push(ints, 3)\narray.push(ints, 3)\nabs_ints = ints.abs()\nfloats = array.new_float()\nfloats.push(close)\nfloats.push(high)\nplot(array.min(ints) + array.max(ints) + array.sum(ints) + ints.range() + ints.median() + array.mode(ints) + ints.percentile_nearest_rank(50) + array.percentile_linear_interpolation(ints, 75) + array.percentrank(ints, 1) + ints.variance(false) + array.avg(floats) + floats.max() + array.range(floats) + array.stdev(floats) + array.sum(abs_ints))\n",
         );
 
         assert!(
@@ -4899,6 +4900,7 @@ plot(y)
             "array.percentrank",
             "array.variance",
             "array.stdev",
+            "array.abs",
         ] {
             assert!(
                 analysis

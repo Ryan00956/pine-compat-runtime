@@ -1521,6 +1521,7 @@ impl<'a> HistoricalRuntime<'a> {
             "array.binary_search_rightmost" => {
                 self.eval_array_binary_search(args, ArrayBinarySearchMode::Rightmost)
             }
+            "array.abs" => self.eval_array_abs(args),
             "array.min" => self.eval_array_numeric(args, ArrayNumericMode::Min),
             "array.max" => self.eval_array_numeric(args, ArrayNumericMode::Max),
             "array.sum" => self.eval_array_numeric(args, ArrayNumericMode::Sum),
@@ -2241,6 +2242,42 @@ impl<'a> HistoricalRuntime<'a> {
                 Ok(array_numeric_result(kind, best_value))
             }
         }
+    }
+
+    fn eval_array_abs(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
+            return Ok(PineValue::Na);
+        }
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Na);
+        };
+
+        let values = values
+            .iter()
+            .map(|value| match (kind, value) {
+                (_, PineValue::Na) => PineValue::Na,
+                (ArrayElementKind::Int, PineValue::Int(value)) => value
+                    .checked_abs()
+                    .map(PineValue::Int)
+                    .unwrap_or(PineValue::Na),
+                (ArrayElementKind::Float, PineValue::Float(value)) => {
+                    finite_float_or_na(value.abs())
+                }
+                (ArrayElementKind::Float, PineValue::Int(value)) => {
+                    finite_float_or_na((*value as f64).abs())
+                }
+                _ => PineValue::Na,
+            })
+            .collect();
+
+        Ok(self.new_array_from_values(kind, values))
     }
 
     fn eval_array_percentile(
@@ -8225,6 +8262,17 @@ plot(floats.percentrank(1))
 plot(array.variance(floats))
 plot(floats.stdev(false))
 
+signs = array.from(-2, 0, 3)
+absolutes = signs.abs()
+plot(absolutes.get(0) + absolutes.get(1) + absolutes.get(2))
+plot(signs.get(0))
+float_signs = array.new_float()
+float_signs.push(-close)
+float_signs.push(na)
+float_abs = array.abs(float_signs)
+plot(float_abs.get(0))
+plot(na(float_abs.get(1)) ? 1 : 0)
+
 empty = array.new_float()
 only_na = array.new_int(2)
 plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) and na(array.mode(ints)) and na(array.percentile_nearest_rank(empty, 50)) and na(array.percentile_linear_interpolation(ints, 150)) and na(array.percentrank(empty, 0)) and na(array.variance(empty)) and na(only_na.stdev()) ? 1 : 0)
@@ -8240,7 +8288,7 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
         let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 23);
+        assert_eq!(result.plots.len(), 27);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[5.0, 5.0]);
         assert_values_close(&result.plots[2].values, &[8.0, 8.0]);
@@ -8263,7 +8311,11 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
         assert_values_close(&result.plots[19].values, &[100.0, 100.0]);
         assert_values_close(&result.plots[20].values, &[1.0, 2.25]);
         assert_values_close(&result.plots[21].values, &[2.0_f64.sqrt(), 4.5_f64.sqrt()]);
-        assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[22].values, &[5.0, 5.0]);
+        assert_values_close(&result.plots[23].values, &[-2.0, -2.0]);
+        assert_values_close(&result.plots[24].values, &[2.0, 3.0]);
+        assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[26].values, &[1.0, 1.0]);
     }
 
     #[test]
