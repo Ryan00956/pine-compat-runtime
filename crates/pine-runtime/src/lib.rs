@@ -2540,17 +2540,33 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn eval_array_sort(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let id = self.eval_expr(&args[0].value)?;
+        let descending = match args.get(1) {
+            Some(order) => match self.eval_expr(&order.value)? {
+                PineValue::String(order) if order == "order.descending" => true,
+                PineValue::String(order) if order == "order.ascending" => false,
+                PineValue::String(order) => {
+                    return Err(RuntimeError {
+                        message: format!("unsupported array.sort order `{order}`"),
+                    });
+                }
+                _ => false,
+            },
+            None => false,
+        };
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Void);
         };
         let Some(kind) = self.array_kinds.get(&id).copied() else {
             return Ok(PineValue::Void);
         };
-        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
+        if !matches!(
+            kind,
+            ArrayElementKind::Float | ArrayElementKind::Int | ArrayElementKind::String
+        ) {
             return Ok(PineValue::Void);
         }
         if let Some(values) = self.array_store.get_mut(&id) {
-            values.sort_by(compare_array_numeric_values);
+            values.sort_by(|left, right| compare_array_sort_values(kind, left, right, descending));
         }
         Ok(PineValue::Void)
     }
@@ -4828,6 +4844,38 @@ fn compare_array_numeric_values(left: &PineValue, right: &PineValue) -> Ordering
         (Some(_), None) => Ordering::Less,
         (None, Some(_)) => Ordering::Greater,
         (None, None) => Ordering::Equal,
+    }
+}
+
+fn compare_array_sort_values(
+    kind: ArrayElementKind,
+    left: &PineValue,
+    right: &PineValue,
+    descending: bool,
+) -> Ordering {
+    let left_is_na = matches!(left, PineValue::Na);
+    let right_is_na = matches!(right, PineValue::Na);
+    match (left_is_na, right_is_na) {
+        (true, true) => return Ordering::Equal,
+        (true, false) => return Ordering::Greater,
+        (false, true) => return Ordering::Less,
+        (false, false) => {}
+    }
+
+    let ordering = match kind {
+        ArrayElementKind::Float | ArrayElementKind::Int => {
+            compare_array_numeric_values(left, right)
+        }
+        ArrayElementKind::String => match (left, right) {
+            (PineValue::String(left), PineValue::String(right)) => left.cmp(right),
+            _ => Ordering::Equal,
+        },
+        _ => Ordering::Equal,
+    };
+    if descending {
+        ordering.reverse()
+    } else {
+        ordering
     }
 }
 
@@ -8588,6 +8636,9 @@ array.push(ints, 1)
 array.push(ints, 2)
 array.sort(ints)
 plot(ints.get(0) * 100 + ints.get(1) * 10 + ints.get(2))
+desc_ints = array.from(1, 3, 2)
+desc_ints.sort(order.descending)
+plot(desc_ints.get(0) * 100 + desc_ints.get(1) * 10 + desc_ints.get(2))
 ints.reverse()
 plot(ints.get(0) * 100 + ints.get(1) * 10 + ints.get(2))
 unsorted_ints = array.from(30, 10, 20)
@@ -8610,10 +8661,13 @@ float_indices = array.sort_indices(float_indices_source)
 plot(float_indices.get(0) * 100 + float_indices.get(1) * 10 + float_indices.get(2))
 
 words = array.new_string()
-words.push("a")
 words.push("b")
-words.reverse()
-plot(words.get(0) == "b" and words.get(1) == "a" ? 1 : 0)
+words.push("a")
+words.push("c")
+array.sort(words)
+plot(words.get(0) == "a" and words.get(1) == "b" and words.get(2) == "c" ? 1 : 0)
+words.sort(order.descending)
+plot(words.get(0) == "c" and words.get(1) == "b" and words.get(2) == "a" ? 1 : 0)
 
 colors = array.new_color()
 colors.push(color.red)
@@ -8632,16 +8686,18 @@ plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
         let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 9);
+        assert_eq!(result.plots.len(), 11);
         assert_values_close(&result.plots[0].values, &[123.0, 123.0]);
         assert_values_close(&result.plots[1].values, &[321.0, 321.0]);
-        assert_values_close(&result.plots[2].values, &[120.0, 120.0]);
-        assert_values_close(&result.plots[3].values, &[3120.0, 3120.0]);
-        assert_values_close(&result.plots[4].values, &[6.0, 9.0]);
-        assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
-        assert_values_close(&result.plots[6].values, &[210.0, 210.0]);
-        assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[321.0, 321.0]);
+        assert_values_close(&result.plots[3].values, &[120.0, 120.0]);
+        assert_values_close(&result.plots[4].values, &[3120.0, 3120.0]);
+        assert_values_close(&result.plots[5].values, &[6.0, 9.0]);
+        assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[7].values, &[210.0, 210.0]);
         assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
     }
 
     #[test]

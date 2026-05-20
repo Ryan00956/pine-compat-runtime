@@ -46,6 +46,7 @@ pub enum Accepts {
     Array,
     NumericArray,
     NumericOrBoolArray,
+    NumericOrStringArray,
     InputDefval,
 }
 
@@ -980,6 +981,19 @@ const ARRAY_TRUTHY_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     accepts: Accepts::NumericOrBoolArray,
     optional: false,
 }];
+
+const ARRAY_SORT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::NumericOrStringArray,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "order",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+];
 
 const ARRAY_VARIANCE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
@@ -1994,7 +2008,7 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "array.sort",
         phase: BuiltinPhase::Phase1Core,
-        params: ARRAY_NUMERIC_PARAMS,
+        params: ARRAY_SORT_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
@@ -2286,6 +2300,8 @@ const NAMED_STRING_CONSTANTS: &[&str] = &[
     "display.none",
     "format.mintick",
     "format.percent",
+    "order.ascending",
+    "order.descending",
 ];
 
 #[must_use]

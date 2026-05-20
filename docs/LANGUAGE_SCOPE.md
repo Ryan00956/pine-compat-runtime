@@ -82,7 +82,7 @@ Phase 1 executable subset:
   `array.avg`, `array.range`, `array.median`, `array.mode`,
   `array.percentile_nearest_rank`, `array.percentile_linear_interpolation`,
   `array.percentrank`, `array.covariance`, `array.standardize`,
-  `array.variance`, `array.stdev`, numeric `array.sort`,
+  `array.variance`, `array.stdev`, numeric/string `array.sort`,
   `array.sort_indices`, `array.reverse`, `array.join`, and equivalent
   method-call syntax such as
   `values.push(close)` and `values.get(0)`
