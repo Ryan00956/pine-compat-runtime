@@ -84,6 +84,7 @@ const SIMPLE_FLOAT_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind:
 const SIMPLE_INT_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::IntArray);
 const SIMPLE_BOOL_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::BoolArray);
 const SIMPLE_STRING_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::StringArray);
+const SIMPLE_COLOR_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::ColorArray);
 
 const INDICATOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
@@ -938,6 +939,19 @@ const ARRAY_NEW_STRING_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_NEW_COLOR_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "size",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "initial_value",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+];
+
 const ARRAY_SIZE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "id",
     accepts: Accepts::Array,
@@ -1535,6 +1549,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_NEW_STRING_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_STRING_ARRAY),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.new_color",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NEW_COLOR_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_COLOR_ARRAY),
         variadic: false,
     },
     BuiltinSignature {

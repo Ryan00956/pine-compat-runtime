@@ -178,7 +178,7 @@ and storage lifetime rules.
 ### Initial Scope
 
 The implemented initial subset started with float arrays and now also includes
-int, bool, and string arrays:
+int, bool, string, and color arrays:
 
 ```pine
 var values = array.new_float()
@@ -195,6 +195,9 @@ flags.push(close > open)
 
 var names = array.new_string()
 names.push("seed")
+
+var shades = array.new_color()
+shades.push(color.red)
 ```
 
 Initial supported functions:
@@ -203,6 +206,7 @@ Initial supported functions:
 - `array.new_int`
 - `array.new_bool`
 - `array.new_string`
+- `array.new_color`
 - `array.push`
 - `array.get`
 - `array.set`
@@ -218,7 +222,7 @@ Resolved implementation choices:
 - Non-`var` arrays are allocated when their declaration executes on each bar.
 - `var` arrays preserve their id and backing storage across bars.
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
-- The current pass supports float, int, bool, and string arrays only;
+- The current pass supports float, int, bool, string, and color arrays only;
   unsupported `array.*` variants still produce diagnostics.
 
 ### Implementation Tasks

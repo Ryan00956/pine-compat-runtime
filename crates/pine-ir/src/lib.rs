@@ -33,6 +33,7 @@ pub enum ValueKind {
     IntArray,
     BoolArray,
     StringArray,
+    ColorArray,
     Tuple,
     Na,
     Void,

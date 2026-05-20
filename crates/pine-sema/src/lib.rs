@@ -1188,10 +1188,16 @@ impl Analyzer {
             {
                 return;
             }
+            ValueKind::ColorArray
+                if matches!(value_type.kind, ValueKind::Color | ValueKind::Na) =>
+            {
+                return;
+            }
             ValueKind::FloatArray => "float arrays",
             ValueKind::IntArray => "int arrays",
             ValueKind::BoolArray => "bool arrays",
             ValueKind::StringArray => "string arrays",
+            ValueKind::ColorArray => "color arrays",
             _ => return,
         };
 
@@ -3024,6 +3030,7 @@ fn array_element_return_type(arg_types: &[Option<PineType>], index: usize) -> Op
         ValueKind::IntArray => ValueKind::Int,
         ValueKind::BoolArray => ValueKind::Bool,
         ValueKind::StringArray => ValueKind::String,
+        ValueKind::ColorArray => ValueKind::Color,
         _ => return None,
     };
     Some(PineType::new(Qualifier::Series, kind))
@@ -3032,7 +3039,11 @@ fn array_element_return_type(arg_types: &[Option<PineType>], index: usize) -> Op
 fn is_array_kind(kind: ValueKind) -> bool {
     matches!(
         kind,
-        ValueKind::FloatArray | ValueKind::IntArray | ValueKind::BoolArray | ValueKind::StringArray
+        ValueKind::FloatArray
+            | ValueKind::IntArray
+            | ValueKind::BoolArray
+            | ValueKind::StringArray
+            | ValueKind::ColorArray
     )
 }
 
@@ -4506,6 +4517,41 @@ plot(y)
     }
 
     #[test]
+    fn accepts_color_array_operations() {
+        let analysis = analyze(
+            "values = array.new_color(2, color.red)\narray.push(values, color.green)\narray.set(values, 0, color.blue)\nfirst = array.get(values, 0)\nlast = array.pop(values)\narray.clear(values)\nplot(first == color.blue and last == color.green ? array.size(values) : 0)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "array.new_color")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_color_array_method_calls() {
+        let analysis = analyze(
+            "values = array.new_color(2, color.red)\nvalues.push(color.green)\nvalues.set(0, color.blue)\nfirst = values.get(0)\nlast = values.pop()\nvalues.clear()\nplot(first == color.blue and last == color.green ? values.size() : 0)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_float_value_for_int_array_mutation() {
         let analysis =
             analyze("values = array.new_int()\narray.push(values, close)\nplot(close)\n");
@@ -4554,6 +4600,22 @@ plot(y)
     }
 
     #[test]
+    fn rejects_numeric_value_for_color_array_mutation() {
+        let analysis =
+            analyze("values = array.new_color()\narray.push(values, close)\nplot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
     fn accepts_array_method_call_on_namespace_like_variable_name() {
         let analysis =
             analyze("strategy = array.new_float()\nstrategy.push(close)\nplot(strategy.size())\n");
@@ -4583,14 +4645,14 @@ plot(y)
 
     #[test]
     fn rejects_unsupported_array_function() {
-        let analysis = analyze("values = array.new_color(0)\nplot(close)\n");
+        let analysis = analyze("values = array.new_line(0)\nplot(close)\n");
 
         assert!(
             analysis
                 .compatibility
                 .unsupported
                 .iter()
-                .any(|feature| feature.feature == "array.new_color"),
+                .any(|feature| feature.feature == "array.new_line"),
             "{:?}",
             analysis.compatibility.unsupported
         );
@@ -4643,6 +4705,20 @@ plot(y)
     fn accepts_readonly_string_array_udf_parameter() {
         let analysis = analyze(
             "first(values) => array.get(values, 0)\nvalues = array.new_string(1, \"seed\")\nplot(first(values) == \"seed\" ? array.size(values) : 0)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_readonly_color_array_udf_parameter() {
+        let analysis = analyze(
+            "first(values) => array.get(values, 0)\nvalues = array.new_color(1, color.red)\nplot(first(values) == color.red ? array.size(values) : 0)\n",
         );
 
         assert!(

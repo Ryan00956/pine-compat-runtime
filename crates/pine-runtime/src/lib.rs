@@ -428,6 +428,7 @@ enum ArrayElementKind {
     Int,
     Bool,
     String,
+    Color,
 }
 
 impl<'a> HistoricalRuntime<'a> {
@@ -1421,6 +1422,7 @@ impl<'a> HistoricalRuntime<'a> {
             "array.new_int" => self.eval_array_new_int(args),
             "array.new_bool" => self.eval_array_new_bool(args),
             "array.new_string" => self.eval_array_new_string(args),
+            "array.new_color" => self.eval_array_new_color(args),
             "array.size" => self.eval_array_size(args),
             "array.push" => self.eval_array_push(args),
             "array.get" => self.eval_array_get(args),
@@ -1487,6 +1489,20 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(self.new_array(ArrayElementKind::String, size, initial_value))
+    }
+
+    fn eval_array_new_color(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(size) = self.eval_array_new_size(args, "array.new_color")? else {
+            return Ok(PineValue::Na);
+        };
+
+        let initial_value = if let Some(value_arg) = args.get(1) {
+            self.eval_array_value(&value_arg.value, ArrayElementKind::Color)?
+        } else {
+            PineValue::Na
+        };
+
+        Ok(self.new_array(ArrayElementKind::Color, size, initial_value))
     }
 
     fn eval_array_new_size(
@@ -1640,6 +1656,7 @@ impl<'a> HistoricalRuntime<'a> {
             (ArrayElementKind::Int, PineValue::Int(value)) => PineValue::Int(value),
             (ArrayElementKind::Bool, PineValue::Bool(value)) => PineValue::Bool(value),
             (ArrayElementKind::String, PineValue::String(value)) => PineValue::String(value),
+            (ArrayElementKind::Color, PineValue::Color(value)) => PineValue::Color(value),
             (_, PineValue::Na) => PineValue::Na,
             _ => PineValue::Na,
         })
@@ -6927,6 +6944,70 @@ plot(text == "Values [head, seed]" ? 1 : 0)
     }
 
     #[test]
+    fn runs_color_array_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("color array ops")
+values = array.new_color(2, color.red)
+array.push(values, color.green)
+array.set(values, 0, color.blue)
+first = array.get(values, 0)
+last = array.pop(values)
+missing = array.get(values, 10)
+plot(first == color.blue and last == color.green ? array.size(values) : 0)
+plot(na(missing) ? 1 : 0)
+plot(color.b(first) + color.g(last))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 3);
+        assert_values_close(&result.plots[0].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[383.0, 383.0, 383.0]);
+    }
+
+    #[test]
+    fn runs_color_array_method_calls() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("color array methods")
+values = array.new_color(2, color.red)
+values.push(color.green)
+values.set(0, color.blue)
+first = values.get(0)
+last = values.pop()
+missing = values.get(10)
+plot(first == color.blue and last == color.green ? values.size() : 0)
+plot(na(missing) ? 1 : 0)
+plot(color.b(first) + color.g(last))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 3);
+        assert_values_close(&result.plots[0].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[383.0, 383.0, 383.0]);
+    }
+
+    #[test]
     fn var_float_array_persists_across_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -7180,6 +7261,31 @@ first(values) => array.get(values, 0)
 var values = array.new_string()
 array.push(values, "seed")
 plot(first(values) == "seed" ? array.size(values) : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn runs_readonly_color_array_udf_parameter() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("color array udf")
+first(values) => array.get(values, 0)
+var values = array.new_color()
+array.push(values, color.red)
+plot(first(values) == color.red ? array.size(values) : 0)
 "#,
         );
         let analysis = analyze_source(&source);

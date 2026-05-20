@@ -122,6 +122,8 @@ fn array_rollback_fixture_restores_confirmed_store_between_forming_updates() {
     assert_values(&result.plots[5].values, &[1.0]);
     assert_values(&result.plots[6].values, &[1.0]);
     assert_values(&result.plots[7].values, &[1.0]);
+    assert_values(&result.plots[8].values, &[1.0]);
+    assert_values(&result.plots[9].values, &[1.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(2.0)))
@@ -134,6 +136,8 @@ fn array_rollback_fixture_restores_confirmed_store_between_forming_updates() {
     assert_values(&result.plots[5].values, &[1.0, 1.0]);
     assert_values(&result.plots[6].values, &[1.0, 2.0]);
     assert_values(&result.plots[7].values, &[1.0, 1.0]);
+    assert_values(&result.plots[8].values, &[1.0, 2.0]);
+    assert_values(&result.plots[9].values, &[1.0, 1.0]);
     assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
 
     let result = runtime
@@ -147,6 +151,8 @@ fn array_rollback_fixture_restores_confirmed_store_between_forming_updates() {
     assert_values(&result.plots[5].values, &[1.0, 1.0]);
     assert_values(&result.plots[6].values, &[1.0, 2.0]);
     assert_values(&result.plots[7].values, &[1.0, 1.0]);
+    assert_values(&result.plots[8].values, &[1.0, 2.0]);
+    assert_values(&result.plots[9].values, &[1.0, 1.0]);
     assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
 
     let result = runtime
@@ -156,6 +162,7 @@ fn array_rollback_fixture_restores_confirmed_store_between_forming_updates() {
     assert_values(&result.plots[2].values, &[1.0, 2.0]);
     assert_values(&result.plots[4].values, &[1.0, 2.0]);
     assert_values(&result.plots[6].values, &[1.0, 2.0]);
+    assert_values(&result.plots[8].values, &[1.0, 2.0]);
 
     let result = runtime
         .update(BarUpdate::forming(bar(5.0)))
@@ -164,6 +171,7 @@ fn array_rollback_fixture_restores_confirmed_store_between_forming_updates() {
     assert_values(&result.plots[2].values, &[1.0, 2.0, 3.0]);
     assert_values(&result.plots[4].values, &[1.0, 2.0, 3.0]);
     assert_values(&result.plots[6].values, &[1.0, 2.0, 3.0]);
+    assert_values(&result.plots[8].values, &[1.0, 2.0, 3.0]);
 }
 
 fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {

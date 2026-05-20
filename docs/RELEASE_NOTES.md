@@ -16,6 +16,8 @@
   size/get/set/push/pop/clear operations.
 - Added partial string array support through `array.new_string` and the
   existing size/get/set/push/pop/clear operations.
+- Added partial color array support through `array.new_color` and the existing
+  size/get/set/push/pop/clear operations.
 - Added partial array method-call syntax for supported array `size`, `get`,
   `set`, `push`, `pop`, and `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.

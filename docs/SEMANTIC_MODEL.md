@@ -142,7 +142,7 @@ expressions.
 
 ## Arrays
 
-The current array subset supports float, int, bool, and string arrays:
+The current array subset supports float, int, bool, string, and color arrays:
 
 ```pine
 var values = array.new_float()
@@ -160,19 +160,23 @@ flags.push(close > open)
 
 var names = array.new_string()
 names.push("seed")
+
+var shades = array.new_color()
+shades.push(color.red)
 ```
 
-`array.new_float`, `array.new_int`, `array.new_bool`, and `array.new_string`
-return runtime-owned array ids. Normal declarations allocate a fresh array
-whenever the declaration executes. `var` declarations preserve the array id and
-backing storage across bars. Supported operations are `array.new_float`,
-`array.new_int`, `array.new_bool`, `array.new_string`, `array.push`,
-`array.get`, `array.set`, `array.size`, `array.pop`, and `array.clear`;
+`array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`, and
+`array.new_color` return runtime-owned array ids. Normal declarations allocate
+a fresh array whenever the declaration executes. `var` declarations preserve
+the array id and backing storage across bars. Supported operations are
+`array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
+`array.new_color`, `array.push`, `array.get`, `array.set`, `array.size`,
+`array.pop`, and `array.clear`;
 `size/get/set/push/pop/clear` may also be called with method syntax on a
 supported array receiver. Float arrays accept int or float values and store
 them as floats. Int arrays accept int values. Bool arrays accept bool values.
-String arrays accept string values. Other array constructors and unsupported
-`array.*` functions are rejected. Out-of-range `array.get` and empty
+String arrays accept string values. Color arrays accept color values. Other
+array constructors and unsupported `array.*` functions are rejected. Out-of-range `array.get` and empty
 `array.pop` return `na`; out-of-range `array.set` is a no-op. Negative array
 sizes fail at runtime. Each array can contain at most 100,000 elements;
 creation or push operations beyond that limit fail at runtime.
