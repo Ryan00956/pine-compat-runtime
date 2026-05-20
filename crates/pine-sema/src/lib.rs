@@ -1195,6 +1195,7 @@ impl Analyzer {
                 .flatten()
                 .map(pine_builtins::color_return_for_arg),
             ReturnSpec::PromotedColor => promoted_color_type(arg_types),
+            ReturnSpec::PromotedBool => promoted_bool_type(arg_types),
             ReturnSpec::PromotedNumeric => promoted_numeric_type(arg_types),
             ReturnSpec::IntFromArg(index) => arg_types
                 .get(index)
@@ -2139,6 +2140,7 @@ impl Analyzer {
                             .flatten()
                             .map(pine_builtins::color_return_for_arg),
                         ReturnSpec::PromotedColor => promoted_color_type(&arg_types),
+                        ReturnSpec::PromotedBool => promoted_bool_type(&arg_types),
                         ReturnSpec::PromotedNumeric => promoted_numeric_type(&arg_types),
                         ReturnSpec::IntFromArg(index) => arg_types
                             .get(index)
@@ -2868,6 +2870,18 @@ fn promoted_color_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
     qualifier.map(|qualifier| PineType::new(qualifier, ValueKind::Color))
 }
 
+fn promoted_bool_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
+    let mut qualifier: Option<Qualifier> = None;
+    for arg_type in arg_types {
+        let arg_type = (*arg_type)?;
+        qualifier = Some(match qualifier {
+            Some(current) => strongest_qualifier(current, arg_type.qualifier),
+            None => arg_type.qualifier,
+        });
+    }
+    qualifier.map(|qualifier| PineType::new(qualifier, ValueKind::Bool))
+}
+
 fn round_return_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
     let number_type = arg_types.first().copied().flatten()?;
     if arg_types.len() > 1 {
@@ -3302,8 +3316,13 @@ upper = str.upper(mode)
 lower = str.lower(upper)
 length = str.length(upper)
 missing = str.length(na)
+matched = str.contains(upper, "M") and str.startswith(upper, "S") and str.endswith(upper, "A")
+empty_match = str.contains(upper, "") and str.startswith(upper, "") and str.endswith(upper, "")
+missing_match = str.contains(na, "S")
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
+plot(matched and empty_match ? 1 : 0)
+plot(na(missing_match) ? 1 : 0)
 "#,
         );
 
@@ -3312,7 +3331,14 @@ plot(na(missing) ? 1 : 0)
             "{:?}",
             analysis.diagnostics
         );
-        for feature in ["str.upper", "str.lower", "str.length"] {
+        for feature in [
+            "str.upper",
+            "str.lower",
+            "str.length",
+            "str.contains",
+            "str.startswith",
+            "str.endswith",
+        ] {
             assert!(
                 analysis
                     .compatibility

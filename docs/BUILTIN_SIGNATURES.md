@@ -204,10 +204,15 @@ single normalized `Color` representation.
 str.length(string: string-compatible) -> int with same qualifier
 str.upper(string: string-compatible) -> string with same qualifier
 str.lower(string: string-compatible) -> string with same qualifier
+str.contains(source: string-compatible, str: string-compatible) -> bool with strongest qualifier
+str.startswith(source: string-compatible, str: string-compatible) -> bool with strongest qualifier
+str.endswith(source: string-compatible, str: string-compatible) -> bool with strongest qualifier
 ```
 
-`str.length`, `str.upper`, and `str.lower` return `na` for `na` inputs.
+Supported `str.*` helpers return `na` for `na` inputs.
 `str.length` counts Unicode scalar values.
+`str.contains`, `str.startswith`, and `str.endswith` return `true` for empty
+substring arguments.
 
 ## Math
 

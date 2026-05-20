@@ -1326,6 +1326,9 @@ impl<'a> HistoricalRuntime<'a> {
             "str.length" => self.eval_str_length(args),
             "str.upper" => self.eval_str_case(args, StringCase::Upper),
             "str.lower" => self.eval_str_case(args, StringCase::Lower),
+            "str.contains" => self.eval_str_match(args, StringMatch::Contains),
+            "str.startswith" => self.eval_str_match(args, StringMatch::StartsWith),
+            "str.endswith" => self.eval_str_match(args, StringMatch::EndsWith),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -1788,6 +1791,26 @@ impl<'a> HistoricalRuntime<'a> {
             StringCase::Lower => value.to_lowercase(),
         };
         Ok(PineValue::String(value))
+    }
+
+    fn eval_str_match(
+        &mut self,
+        args: &[HirCallArg],
+        string_match: StringMatch,
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(source) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::String(pattern) = self.eval_expr(&args[1].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        let matched = match string_match {
+            StringMatch::Contains => source.contains(&pattern),
+            StringMatch::StartsWith => source.starts_with(&pattern),
+            StringMatch::EndsWith => source.ends_with(&pattern),
+        };
+        Ok(PineValue::Bool(matched))
     }
 
     fn eval_math_abs(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -2832,6 +2855,13 @@ enum StringCase {
     Lower,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StringMatch {
+    Contains,
+    StartsWith,
+    EndsWith,
+}
+
 fn math_extreme(left: f64, right: f64, mode: MathExtreme) -> f64 {
     match mode {
         MathExtreme::Max => left.max(right),
@@ -3815,8 +3845,13 @@ upper = str.upper(mode)
 lower = str.lower(upper)
 length = str.length(upper)
 missing = str.length(na)
+matched = str.contains(upper, "M") and str.startswith(upper, "S") and str.endswith(upper, "A")
+empty_match = str.contains(upper, "") and str.startswith(upper, "") and str.endswith(upper, "")
+missing_match = str.contains(na, "S")
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
+plot(matched and empty_match ? 1 : 0)
+plot(na(missing_match) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -3831,6 +3866,8 @@ plot(na(missing) ? 1 : 0)
 
         assert_values_close(&result.plots[0].values, &[3.0, 3.0]);
         assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
     }
 
     #[test]
