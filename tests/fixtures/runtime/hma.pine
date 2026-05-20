@@ -1,0 +1,4 @@
+//@version=5
+indicator("HMA")
+value = ta.hma(close, 4)
+plot(value)

@@ -182,9 +182,10 @@ the indicator-level `max_bars_back` bound when provided, so they cannot grow
 storage without bound.
 
 Rolling TA state is optimized for `ta.sma`, `ta.bb`, `ta.stdev`,
-`ta.variance`, `ta.range`, `ta.dev`, `ta.vwma`, `ta.wma`, `ta.highest`, and
-`ta.lowest`. These functions now maintain per-callsite rolling windows instead
-of allocating a fresh window from committed history on every bar.
+`ta.variance`, `ta.range`, `ta.dev`, `ta.vwma`, `ta.wma`, `ta.hma`,
+`ta.highest`, and `ta.lowest`. These functions now maintain per-callsite
+rolling windows instead of allocating a fresh window from committed history on
+every bar.
 
 Append-bar execution is exposed by `pine-runtime::HistoricalRuntime`:
 

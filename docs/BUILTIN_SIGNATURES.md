@@ -323,6 +323,7 @@ ta.range(source: series float, length: simple int) -> series float
 ta.dev(source: series float, length: simple int) -> series float
 ta.vwma(source: series float, length: simple int) -> series float
 ta.wma(source: series float, length: simple int) -> series float
+ta.hma(source: series float, length: simple int) -> series float
 ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
 ta.change(source: series float, length?: simple int) -> series float
@@ -347,6 +348,8 @@ Rules:
   window and returns `na` when the volume sum is zero.
 - `ta.wma` returns a weighted mean where the oldest ready-window value has
   weight `1` and the current value has weight `length`.
+- `ta.hma` composes `ta.wma`-style windows as
+  `wma(2 * wma(source, length / 2) - wma(source, length), round(sqrt(length)))`.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.

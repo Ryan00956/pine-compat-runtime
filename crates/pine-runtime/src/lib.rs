@@ -524,6 +524,9 @@ enum RollingWindowKey {
     Single(CallSiteId),
     VwmaWeighted(CallSiteId),
     VwmaVolume(CallSiteId),
+    HmaHalf(CallSiteId),
+    HmaFull(CallSiteId),
+    HmaSmooth(CallSiteId),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1669,6 +1672,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.dev" => self.eval_dev(call_site_id, args),
             "ta.vwma" => self.eval_vwma(call_site_id, args),
             "ta.wma" => self.eval_wma(call_site_id, args),
+            "ta.hma" => self.eval_hma(call_site_id, args),
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.change" => self.eval_change(args),
@@ -3078,6 +3082,54 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(finite_float_or_na(window.weighted_mean(length)))
+    }
+
+    fn eval_hma(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let half_length = (length / 2).max(1);
+        let smooth_length = (length as f64).sqrt().round().max(1.0) as usize;
+        let source = source.as_f64();
+
+        self.update_rolling_window_key(
+            RollingWindowKey::HmaHalf(call_site_id),
+            source,
+            half_length,
+        );
+        self.update_rolling_window_key(RollingWindowKey::HmaFull(call_site_id), source, length);
+
+        let half = self
+            .rolling_windows
+            .get(&RollingWindowKey::HmaHalf(call_site_id));
+        let full = self
+            .rolling_windows
+            .get(&RollingWindowKey::HmaFull(call_site_id));
+        let diff = match (half, full) {
+            (Some(half), Some(full)) if half.is_ready(half_length) && full.is_ready(length) => {
+                Some(2.0 * half.weighted_mean(half_length) - full.weighted_mean(length))
+            }
+            _ => None,
+        };
+
+        let smooth = self.update_rolling_window_key(
+            RollingWindowKey::HmaSmooth(call_site_id),
+            diff,
+            smooth_length,
+        );
+        if !smooth.is_ready(smooth_length) {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(smooth.weighted_mean(smooth_length)))
     }
 
     fn eval_window_variance(
@@ -6383,6 +6435,35 @@ plot(value)
         assert_values_close(
             &result.plots[0].values[2..],
             &[2.8333333333333335, 5.166666666666667],
+        );
+    }
+
+    #[test]
+    fn runs_hma_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("hma")
+value = ta.hma(close, 4)
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(4.0), bar(7.0), bar(11.0), bar(16.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_eq!(result.plots[0].values[2], PineValue::Na);
+        assert_eq!(result.plots[0].values[3], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[4..],
+            &[10.38888888888889, 15.38888888888889],
         );
     }
 

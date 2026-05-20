@@ -89,6 +89,7 @@ ta.range	supported	fixture-derived executable subset	tests/fixtures/runtime/rang
 ta.dev	supported	fixture-derived executable subset	tests/fixtures/runtime/dev.pine
 ta.vwma	supported	fixture-derived executable subset	tests/fixtures/runtime/vwma.pine
 ta.wma	supported	fixture-derived executable subset	tests/fixtures/runtime/wma.pine
+ta.hma	supported	fixture-derived executable subset	tests/fixtures/runtime/hma.pine
 ta.tr	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
 ta.atr	supported	fixture-derived executable subset	tests/fixtures/runtime/atr.pine
 ta.change	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
