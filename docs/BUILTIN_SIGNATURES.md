@@ -40,11 +40,21 @@ low       -> series float
 close     -> series float
 volume    -> series float
 time      -> series int
+year      -> series int
+month     -> series int
+dayofmonth -> series int
+hour      -> series int
+minute    -> series int
+second    -> series int
 hl2       -> series float
 hlc3      -> series float
 ohlc4     -> series float
 bar_index -> series int
 ```
+
+`year`, `month`, `dayofmonth`, `hour`, `minute`, and `second` currently expose
+UTC calendar components derived from each bar's `time`. Full exchange-timezone
+calendar semantics are not claimed until symbol timezone metadata exists.
 
 Derived values:
 

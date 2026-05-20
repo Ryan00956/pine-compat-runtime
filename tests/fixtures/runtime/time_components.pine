@@ -1,0 +1,8 @@
+//@version=5
+indicator("Time components")
+plot(year)
+plot(month)
+plot(dayofmonth)
+plot(hour)
+plot(minute)
+plot(second)

@@ -871,6 +871,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn set_builtin_symbols(&mut self, bar: &Bar, bar_index: usize) -> Result<(), RuntimeError> {
+        let datetime = utc_datetime_from_millis(bar.time)?;
         let builtins = [
             ("open", PineValue::Float(bar.open)),
             ("high", PineValue::Float(bar.high)),
@@ -878,6 +879,12 @@ impl<'a> HistoricalRuntime<'a> {
             ("close", PineValue::Float(bar.close)),
             ("volume", PineValue::Float(bar.volume)),
             ("time", PineValue::Int(bar.time)),
+            ("year", PineValue::Int(datetime.year() as i64)),
+            ("month", PineValue::Int(datetime.month() as i64)),
+            ("dayofmonth", PineValue::Int(datetime.day() as i64)),
+            ("hour", PineValue::Int(datetime.hour() as i64)),
+            ("minute", PineValue::Int(datetime.minute() as i64)),
+            ("second", PineValue::Int(datetime.second() as i64)),
             ("hl2", PineValue::Float((bar.high + bar.low) / 2.0)),
             (
                 "hlc3",
@@ -2054,11 +2061,9 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("str.format_time unsupported timezone `{timezone}`"),
             });
         }
-        let Some(datetime) = Utc.timestamp_millis_opt(timestamp).single() else {
-            return Err(RuntimeError {
-                message: format!("str.format_time timestamp is out of range: {timestamp}"),
-            });
-        };
+        let datetime = utc_datetime_from_millis(timestamp).map_err(|_| RuntimeError {
+            message: format!("str.format_time timestamp is out of range: {timestamp}"),
+        })?;
 
         let result = format_utc_datetime(datetime, &format);
         self.string_value_or_error(result, "str.format_time")
@@ -3314,6 +3319,14 @@ fn is_supported_utc_timezone(timezone: &str) -> bool {
         timezone,
         "UTC" | "Etc/UTC" | "GMT" | "Z" | "+0000" | "+00:00"
     )
+}
+
+fn utc_datetime_from_millis(timestamp: i64) -> Result<DateTime<Utc>, RuntimeError> {
+    Utc.timestamp_millis_opt(timestamp)
+        .single()
+        .ok_or_else(|| RuntimeError {
+            message: format!("timestamp is out of range: {timestamp}"),
+        })
 }
 
 fn format_utc_datetime(datetime: DateTime<Utc>, format: &str) -> String {
@@ -4593,6 +4606,54 @@ plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_tim
         assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_utc_time_component_variables() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("time components")
+plot(year)
+plot(month)
+plot(dayofmonth)
+plot(hour)
+plot(minute)
+plot(second)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            Bar {
+                time: 1_609_459_200_000,
+                open: 1.0,
+                high: 1.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 100.0,
+            },
+            Bar {
+                time: 1_612_235_045_000,
+                open: 2.0,
+                high: 2.0,
+                low: 2.0,
+                close: 2.0,
+                volume: 100.0,
+            },
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values, &[2021.0, 2021.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 2.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 2.0]);
+        assert_values_close(&result.plots[3].values, &[0.0, 3.0]);
+        assert_values_close(&result.plots[4].values, &[0.0, 4.0]);
+        assert_values_close(&result.plots[5].values, &[0.0, 5.0]);
     }
 
     #[test]
