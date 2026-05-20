@@ -172,8 +172,8 @@ the array id and backing storage across bars. Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
 `array.new_color`, `array.push`, `array.get`, `array.set`, `array.size`,
 `array.pop`, `array.shift`, `array.unshift`, `array.first`, `array.last`, and
-`array.copy`, `array.includes`, `array.indexof`, `array.lastindexof`, and
-`array.clear`;
+`array.copy`, `array.includes`, `array.indexof`, `array.lastindexof`,
+`array.min`, `array.max`, `array.sum`, `array.avg`, and `array.clear`;
 `size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/clear`
 may also be called with method syntax on a supported array receiver. Float
 arrays accept int or float values and store them as floats. Int arrays accept
@@ -183,11 +183,13 @@ Color arrays accept color values. Other array constructors and unsupported
 the runtime array id by reference. `array.copy` allocates a new array id with
 the same current element values, so later mutations do not affect the source.
 `array.indexof` and `array.lastindexof` return `-1` when the value is not
-present. Out-of-range `array.get`, empty `array.pop`, empty `array.shift`, and
-`array.first`/`array.last` on empty arrays return `na`; out-of-range
-`array.set` is a no-op. Negative array sizes fail at runtime. Each array can
-contain at most 100,000 elements; creation, push, or unshift operations beyond
-that limit fail at runtime.
+present. Numeric helpers `array.min`, `array.max`, `array.sum`, and `array.avg`
+are limited to float and int arrays; they ignore `na` elements and return `na`
+when no numeric element is present. Out-of-range `array.get`, empty
+`array.pop`, empty `array.shift`, and `array.first`/`array.last` on empty arrays
+return `na`; out-of-range `array.set` is a no-op. Negative array sizes fail at
+runtime. Each array can contain at most 100,000 elements; creation, push, or
+unshift operations beyond that limit fail at runtime.
 
 User-defined functions may receive supported arrays and use read-only
 operations such as `array.size` and `array.get`. Array mutation inside

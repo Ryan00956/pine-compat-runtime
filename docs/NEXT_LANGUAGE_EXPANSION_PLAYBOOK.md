@@ -220,6 +220,10 @@ Initial supported functions:
 - `array.includes`
 - `array.indexof`
 - `array.lastindexof`
+- `array.min`
+- `array.max`
+- `array.sum`
+- `array.avg`
 - `array.clear`
 
 ### Required Design Decisions
@@ -232,7 +236,8 @@ Resolved implementation choices:
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
 - The current pass supports float, int, bool, string, and color arrays with
   size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/clear
-  only; unsupported `array.*` variants still produce diagnostics.
+  plus numeric min/max/sum/avg only; unsupported `array.*` variants still
+  produce diagnostics.
 - Array assignment and UDF argument binding pass the runtime array id by
   reference. `array.copy` is the explicit boundary for creating an independent
   array id with copied element values.

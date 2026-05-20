@@ -437,6 +437,14 @@ enum ArraySearchMode {
     Last,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ArrayNumericMode {
+    Min,
+    Max,
+    Sum,
+    Avg,
+}
+
 impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn new(program: &'a HirProgram) -> Self {
@@ -1442,6 +1450,10 @@ impl<'a> HistoricalRuntime<'a> {
             "array.includes" => self.eval_array_includes(args),
             "array.indexof" => self.eval_array_indexof(args),
             "array.lastindexof" => self.eval_array_lastindexof(args),
+            "array.min" => self.eval_array_numeric(args, ArrayNumericMode::Min),
+            "array.max" => self.eval_array_numeric(args, ArrayNumericMode::Max),
+            "array.sum" => self.eval_array_numeric(args, ArrayNumericMode::Sum),
+            "array.avg" => self.eval_array_numeric(args, ArrayNumericMode::Avg),
             "array.clear" => self.eval_array_clear(args),
             _ => Err(RuntimeError {
                 message: format!("unsupported runtime call `{callee}`"),
@@ -1781,6 +1793,60 @@ impl<'a> HistoricalRuntime<'a> {
             ArraySearchMode::Last => values.iter().rposition(|item| values_equal(item, &value)),
         };
         Ok(index)
+    }
+
+    fn eval_array_numeric(
+        &mut self,
+        args: &[HirCallArg],
+        mode: ArrayNumericMode,
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
+            return Ok(PineValue::Na);
+        }
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Na);
+        };
+
+        match mode {
+            ArrayNumericMode::Min | ArrayNumericMode::Max => {
+                let mut current: Option<f64> = None;
+                for value in values.iter().filter_map(PineValue::as_f64) {
+                    current = Some(match (mode, current) {
+                        (_, None) => value,
+                        (ArrayNumericMode::Min, Some(current)) => current.min(value),
+                        (ArrayNumericMode::Max, Some(current)) => current.max(value),
+                        _ => unreachable!("only min/max modes are handled here"),
+                    });
+                }
+                let Some(current) = current else {
+                    return Ok(PineValue::Na);
+                };
+                Ok(array_numeric_result(kind, current))
+            }
+            ArrayNumericMode::Sum | ArrayNumericMode::Avg => {
+                let mut total = 0.0;
+                let mut count = 0_usize;
+                for value in values.iter().filter_map(PineValue::as_f64) {
+                    total += value;
+                    count += 1;
+                }
+                if count == 0 {
+                    return Ok(PineValue::Na);
+                }
+                if matches!(mode, ArrayNumericMode::Avg) {
+                    Ok(finite_float_or_na(total / count as f64))
+                } else {
+                    Ok(array_numeric_result(kind, total))
+                }
+            }
+        }
     }
 
     fn eval_array_clear(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -3921,6 +3987,14 @@ fn values_equal(left: &PineValue, right: &PineValue) -> bool {
     match (left.as_f64(), right.as_f64()) {
         (Some(left), Some(right)) => (left - right).abs() < f64::EPSILON,
         _ => left == right,
+    }
+}
+
+fn array_numeric_result(kind: ArrayElementKind, value: f64) -> PineValue {
+    match kind {
+        ArrayElementKind::Int => PineValue::Int(value as i64),
+        ArrayElementKind::Float => finite_float_or_na(value),
+        _ => PineValue::Na,
     }
 }
 
@@ -7306,6 +7380,56 @@ plot(colors.includes(color.green) ? colors.indexof(color.green) : 0)
         assert_values_close(&result.plots[3].values, &[-1.0, -1.0, -1.0]);
         assert_values_close(&result.plots[4].values, &[2.0, 2.0, 2.0]);
         assert_values_close(&result.plots[5].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_numeric_array_statistics() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array statistics")
+ints = array.new_int()
+array.push(ints, 2)
+array.push(ints, 5)
+array.push(ints, 1)
+plot(array.min(ints))
+plot(array.max(ints))
+plot(array.sum(ints))
+plot(array.avg(ints))
+
+floats = array.new_float()
+floats.push(close)
+floats.push(high)
+floats.push(na)
+plot(floats.min())
+plot(floats.max())
+plot(floats.sum())
+plot(floats.avg())
+
+empty = array.new_float()
+only_na = array.new_int(2)
+plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 9);
+        assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[1].values, &[5.0, 5.0]);
+        assert_values_close(&result.plots[2].values, &[8.0, 8.0]);
+        assert_values_close(&result.plots[3].values, &[8.0 / 3.0, 8.0 / 3.0]);
+        assert_values_close(&result.plots[4].values, &[2.0, 3.0]);
+        assert_values_close(&result.plots[5].values, &[4.0, 6.0]);
+        assert_values_close(&result.plots[6].values, &[6.0, 9.0]);
+        assert_values_close(&result.plots[7].values, &[3.0, 4.5]);
+        assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
     }
 
     #[test]

@@ -44,6 +44,7 @@ pub enum Accepts {
     BoolCompatible,
     PlotOrHLine,
     Array,
+    NumericArray,
     InputDefval,
 }
 
@@ -61,6 +62,7 @@ pub enum ReturnSpec {
     FloatFromStringArg(usize),
     PromotedNumeric,
     ArrayElement(usize),
+    ArrayNumeric(usize),
     IntFromArg(usize),
     FloatFromArg(usize),
     PromotedFloat,
@@ -958,6 +960,12 @@ const ARRAY_SIZE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const ARRAY_NUMERIC_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::NumericArray,
+    optional: false,
+}];
+
 const ARRAY_VALUE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1647,6 +1655,34 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_VALUE_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.min",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_PARAMS,
+        returns: ReturnSpec::ArrayNumeric(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.max",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_PARAMS,
+        returns: ReturnSpec::ArrayNumeric(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.sum",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_PARAMS,
+        returns: ReturnSpec::ArrayNumeric(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.avg",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {

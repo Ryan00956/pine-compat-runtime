@@ -24,9 +24,12 @@
   snapshots while plain array assignment remains id/reference-based.
 - Added array search helpers `array.includes`, `array.indexof`, and
   `array.lastindexof` across supported typed arrays.
+- Added numeric array statistics helpers `array.min`, `array.max`,
+  `array.sum`, and `array.avg` for float and int arrays.
 - Added partial array method-call syntax for supported array `size`, `get`,
   `set`, `push`, `pop`, `shift`, `unshift`, `first`, `last`, `copy`,
-  `includes`, `indexof`, `lastindexof`, and `clear`.
+  `includes`, `indexof`, `lastindexof`, numeric `min`, `max`, `sum`, `avg`,
+  and `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.
 - Added `input.price`, `input.time`, `input.symbol`, and `input.timeframe`
   support for the executable `defval`/`title` subset.

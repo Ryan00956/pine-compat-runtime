@@ -189,6 +189,10 @@ array.copy(id: float-array|int-array|bool-array|string-array|color-array) -> sam
 array.includes(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> series bool
 array.indexof(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> simple int
 array.lastindexof(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> simple int
+array.min(id: float-array|int-array) -> series element
+array.max(id: float-array|int-array) -> series element
+array.sum(id: float-array|int-array) -> series element
+array.avg(id: float-array|int-array) -> series float
 array.clear(id: float-array|int-array|bool-array|string-array|color-array) -> void
 ```
 
@@ -197,9 +201,11 @@ arrays. Float arrays accept int or float values and store them as floats. Int
 arrays accept int values. Bool arrays accept bool values. String arrays accept
 string values. Color arrays accept color values.
 `size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/clear`
-may also be called with method syntax on a supported array receiver. Array
-assignment passes the runtime array id by reference; use `array.copy` to
-allocate an independent array with the same current element values.
+may also be called with method syntax on a supported array receiver. Numeric
+array `min/max/sum/avg` helpers may also be called with method syntax on float
+and int array receivers. Array assignment passes the runtime array id by
+reference; use `array.copy` to allocate an independent array with the same
+current element values.
 
 ## TA Built-Ins
 

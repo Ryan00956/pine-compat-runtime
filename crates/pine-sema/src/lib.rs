@@ -1269,6 +1269,7 @@ impl Analyzer {
                 .map(float_return_for_arg),
             ReturnSpec::PromotedNumeric => promoted_numeric_type(arg_types),
             ReturnSpec::ArrayElement(index) => array_element_return_type(arg_types, index),
+            ReturnSpec::ArrayNumeric(index) => array_numeric_return_type(arg_types, index),
             ReturnSpec::IntFromArg(index) => arg_types
                 .get(index)
                 .copied()
@@ -2224,6 +2225,9 @@ impl Analyzer {
                         ReturnSpec::ArrayElement(index) => {
                             array_element_return_type(&arg_types, index)
                         }
+                        ReturnSpec::ArrayNumeric(index) => {
+                            array_numeric_return_type(&arg_types, index)
+                        }
                         ReturnSpec::IntFromArg(index) => arg_types
                             .get(index)
                             .copied()
@@ -2447,6 +2451,10 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "includes" => Some("array.includes"),
         "indexof" => Some("array.indexof"),
         "lastindexof" => Some("array.lastindexof"),
+        "min" => Some("array.min"),
+        "max" => Some("array.max"),
+        "sum" => Some("array.sum"),
+        "avg" => Some("array.avg"),
         "clear" => Some("array.clear"),
         _ => None,
     }
@@ -2851,6 +2859,7 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
         }
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
         Accepts::Array => is_array_kind(arg_type.kind),
+        Accepts::NumericArray => is_numeric_array_kind(arg_type.kind),
         Accepts::InputDefval => {
             arg_type.qualifier == Qualifier::Const
                 && matches!(
@@ -3045,6 +3054,16 @@ fn array_element_return_type(arg_types: &[Option<PineType>], index: usize) -> Op
     Some(PineType::new(Qualifier::Series, kind))
 }
 
+fn array_numeric_return_type(arg_types: &[Option<PineType>], index: usize) -> Option<PineType> {
+    let array_type = arg_types.get(index).copied().flatten()?;
+    let kind = match array_type.kind {
+        ValueKind::FloatArray => ValueKind::Float,
+        ValueKind::IntArray => ValueKind::Int,
+        _ => return None,
+    };
+    Some(PineType::new(Qualifier::Series, kind))
+}
+
 fn is_array_kind(kind: ValueKind) -> bool {
     matches!(
         kind,
@@ -3054,6 +3073,10 @@ fn is_array_kind(kind: ValueKind) -> bool {
             | ValueKind::StringArray
             | ValueKind::ColorArray
     )
+}
+
+fn is_numeric_array_kind(kind: ValueKind) -> bool {
+    matches!(kind, ValueKind::FloatArray | ValueKind::IntArray)
 }
 
 #[cfg(test)]
@@ -4648,6 +4671,31 @@ plot(y)
     }
 
     #[test]
+    fn accepts_numeric_array_statistics() {
+        let analysis = analyze(
+            "ints = array.new_int()\narray.push(ints, 1)\narray.push(ints, 3)\nfloats = array.new_float()\nfloats.push(close)\nfloats.push(high)\nplot(array.min(ints) + array.max(ints) + array.sum(ints) + array.avg(floats) + floats.max())\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for feature in ["array.min", "array.max", "array.sum", "array.avg"] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|supported| supported.feature == feature),
+                "{feature} missing from supported features: {:?}",
+                analysis.compatibility.supported
+            );
+        }
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_float_value_for_int_array_mutation() {
         let analysis =
             analyze("values = array.new_int()\narray.push(values, close)\nplot(close)\n");
@@ -4698,6 +4746,21 @@ plot(y)
     #[test]
     fn rejects_numeric_value_for_bool_array_search() {
         let analysis = analyze("values = array.new_bool()\nplot(array.indexof(values, close))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_bool_array_statistics() {
+        let analysis = analyze("values = array.new_bool()\nplot(array.sum(values))\n");
 
         assert!(
             analysis
