@@ -13,6 +13,7 @@ use regex::Regex;
 const MAX_WHILE_ITERATIONS: usize = 100_000;
 const MAX_ARRAY_ELEMENTS: usize = 100_000;
 const MAX_STRING_CHARS: usize = 40_960;
+const MAX_SERIES_HISTORY_VALUES: usize = 1_000_000;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PineValue {
@@ -136,6 +137,16 @@ impl SeriesStore {
     }
 
     #[must_use]
+    pub fn values_len(&self) -> usize {
+        self.buffers.values().map(Vec::len).sum()
+    }
+
+    #[must_use]
+    pub fn max_depth(&self) -> usize {
+        self.buffers.values().map(Vec::len).max().unwrap_or(0)
+    }
+
+    #[must_use]
     pub fn read(&self, series_id: SeriesId, offset: usize) -> PineValue {
         if offset == 0 {
             return PineValue::Na;
@@ -179,6 +190,7 @@ pub struct RuntimeProfile {
     pub series_buffers: usize,
     pub series_values: usize,
     pub series_capacity: usize,
+    pub max_series_depth: usize,
     pub symbol_slots: usize,
     pub symbol_capacity: usize,
     pub current_series_slots: usize,
@@ -579,7 +591,7 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         self.finalize_series_outputs();
-        self.commit_current_series();
+        self.commit_current_series()?;
         self.bars += 1;
         Ok(())
     }
@@ -906,6 +918,7 @@ impl<'a> HistoricalRuntime<'a> {
             series_buffers,
             series_values,
             series_capacity,
+            max_series_depth: self.series_store.max_depth(),
             symbol_slots: self.current_symbols.len(),
             symbol_capacity: self.current_symbols.capacity(),
             current_series_slots: self.current_series.len(),
@@ -1039,7 +1052,20 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
-    fn commit_current_series(&mut self) {
+    fn commit_current_series(&mut self) -> Result<(), RuntimeError> {
+        let next_values = self.program.next_series_id as usize;
+        if series_history_would_exceed_limit(
+            self.series_store.values_len(),
+            next_values,
+            MAX_SERIES_HISTORY_VALUES,
+        ) {
+            return Err(RuntimeError {
+                message: format!(
+                    "series history limit exceeded: at most {MAX_SERIES_HISTORY_VALUES} committed values are retained"
+                ),
+            });
+        }
+
         for raw_series_id in 0..self.program.next_series_id {
             let series_id = SeriesId(raw_series_id);
             let value = self
@@ -1048,6 +1074,7 @@ impl<'a> HistoricalRuntime<'a> {
                 .unwrap_or(PineValue::Na);
             self.series_store.commit(series_id, value);
         }
+        Ok(())
     }
 
     fn eval_expr(&mut self, expr: &HirExpr) -> Result<PineValue, RuntimeError> {
@@ -4984,6 +5011,14 @@ fn finite_float_or_na(value: f64) -> PineValue {
     }
 }
 
+fn series_history_would_exceed_limit(
+    current_values: usize,
+    next_values: usize,
+    max_values: usize,
+) -> bool {
+    current_values > max_values || next_values > max_values.saturating_sub(current_values)
+}
+
 #[cfg(test)]
 mod tests {
     use pine_sema::analyze_source;
@@ -6420,6 +6455,7 @@ plot(ma)
         assert!(profiled.profile.series_buffers >= 10);
         assert!(profiled.profile.series_values >= 30);
         assert!(profiled.profile.series_capacity >= profiled.profile.series_values);
+        assert_eq!(profiled.profile.max_series_depth, 3);
         assert_eq!(profiled.profile.rolling_window_slots, 1);
         assert_eq!(profiled.profile.rolling_window_values, 2);
         assert!(
@@ -6435,6 +6471,13 @@ plot(ma)
         assert_eq!(profiled.profile.plot_candles, 0);
         assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
         assert_values_close(&profiled.result.plots[0].values[1..], &[1.5, 2.5]);
+    }
+
+    #[test]
+    fn guards_series_history_value_limit() {
+        assert!(!series_history_would_exceed_limit(9, 1, 10));
+        assert!(series_history_would_exceed_limit(10, 1, 10));
+        assert!(series_history_would_exceed_limit(usize::MAX, 1, usize::MAX));
     }
 
     #[test]

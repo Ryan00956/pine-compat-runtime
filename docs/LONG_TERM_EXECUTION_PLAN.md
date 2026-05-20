@@ -154,7 +154,8 @@ Status: in progress. The current static and const/input/simple dynamic history
 boundary is recorded in `docs/HISTORY_SERIES_AUDIT.md`; qualifier findings are
 recorded in `docs/QUALIFIER_AUDIT.md`; built-in signature notes were tightened
 in `docs/BUILTIN_SIGNATURES.md`. Series-qualified history offsets remain
-diagnostic-only.
+diagnostic-only. Runtime profiles now expose max series depth and committed
+series history has a hard runtime cap.
 
 Scope:
 
@@ -172,8 +173,8 @@ Risks:
 
 Acceptance criteria:
 
-- Any supported dynamic-offset subset has explicit retention limits and
-  runtime errors for unsafe offsets.
+- Any supported dynamic-offset subset has explicit retention limits/profile
+  fields and runtime errors for unsafe offsets.
 - Built-in signature docs match semantic checks.
 - Existing fixture results remain stable unless a deliberate compatibility fix
   is documented.

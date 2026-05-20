@@ -154,14 +154,18 @@ callsite.
 
 ## Buffer Sizing
 
-Phase 1 can use growable buffers for correctness.
+Phase 1 uses growable buffers for correctness. The runtime commits one value per
+series id per confirmed bar and reports `seriesValues`, `seriesCapacity`, and
+`maxSeriesDepth` in the storage profile. A runtime cap prevents unbounded series
+history growth; hitting it fails execution with a runtime error instead of
+silently truncating history.
 
 Later phases should add:
 
 - static history-depth inference for constant offsets
-- retention bounds for supported dynamic offsets
+- narrower retention bounds for scripts without dynamic offsets
 - optional `max_bars_back` handling
-- memory limits and diagnostics for excessive history
+- configurable memory limits and diagnostics for excessive history
 
 ## Realtime Preview
 

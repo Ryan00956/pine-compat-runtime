@@ -339,6 +339,7 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"seriesBuffers\":{},",
             "\"seriesValues\":{},",
             "\"seriesCapacity\":{},",
+            "\"maxSeriesDepth\":{},",
             "\"symbolSlots\":{},",
             "\"symbolCapacity\":{},",
             "\"currentSeriesSlots\":{},",
@@ -393,6 +394,7 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.series_buffers,
         profile.series_values,
         profile.series_capacity,
+        profile.max_series_depth,
         profile.symbol_slots,
         profile.symbol_capacity,
         profile.current_series_slots,
@@ -790,6 +792,7 @@ mod tests {
             series_buffers: 2,
             series_values: 6,
             series_capacity: 8,
+            max_series_depth: 3,
             symbol_slots: 10,
             symbol_capacity: 14,
             current_series_slots: 0,
@@ -845,6 +848,7 @@ mod tests {
         assert!(output.contains(r#""profile""#));
         assert!(output.contains(r#""bars":3"#));
         assert!(output.contains(r#""seriesValues":6"#));
+        assert!(output.contains(r#""maxSeriesDepth":3"#));
         assert!(output.contains(r#""arrayValues":2"#));
         assert!(output.contains(r#""rollingWindowValues":2"#));
         assert!(output.contains(r#""plotChars":0"#));

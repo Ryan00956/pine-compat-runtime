@@ -49,7 +49,9 @@ Series offsets are more than a parser change. Supporting them safely requires:
 Until those rules are implemented together, accepting series offsets would make
 scripts appear supported while silently returning unstable or under-retained
 history. The current dynamic subset is limited to `const int`, `input int`,
-and `simple int` offset expressions with growable retention.
+and `simple int` offset expressions with growable retention. The runtime keeps
+all committed values needed by the current execution model and fails once total
+committed series values exceed the configured runtime cap.
 
 ## Phase C Implementation Sequence
 
@@ -58,8 +60,8 @@ and `simple int` offset expressions with growable retention.
    Current findings are in `docs/QUALIFIER_AUDIT.md`.
 3. Audit built-in signatures that currently accept broader qualifiers than the
    compatibility docs claim.
-4. Add static-depth and retention documentation for the accepted
-   const/input/simple dynamic-offset subset.
+4. Add static-depth inference for constant offsets so future runtimes can
+   retain less than full-history when dynamic offsets are absent.
 5. Design whether any `series int` offset subset can be supported with
    max-bars-back style retention, runtime diagnostics, and memory limits.
 
