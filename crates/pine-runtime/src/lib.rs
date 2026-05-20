@@ -1267,6 +1267,18 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Int(_) => Err(RuntimeError {
                 message: "history offset must be non-negative".to_owned(),
             }),
+            PineValue::Float(value) if value >= 0.0 && value.fract() == 0.0 => {
+                if value > usize::MAX as f64 {
+                    Err(RuntimeError {
+                        message: "history offset is too large".to_owned(),
+                    })
+                } else {
+                    Ok(Some(value as usize))
+                }
+            }
+            PineValue::Float(value) if value < 0.0 => Err(RuntimeError {
+                message: "history offset must be non-negative".to_owned(),
+            }),
             PineValue::Na => Ok(None),
             _ => Err(RuntimeError {
                 message: "history offset must be an int".to_owned(),
@@ -9649,6 +9661,53 @@ plot(close[offset])
         assert_eq!(result.plots.len(), 1);
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_values_close(&result.plots[0].values[1..], &[1.0, 2.0]);
+    }
+
+    #[test]
+    fn runs_series_history_offset() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("series history")
+offset = bar_index == 0 ? 0 : 1
+plot(close[offset])
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+        let profiled =
+            run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(profiled.result.plots.len(), 1);
+        assert_values_close(&profiled.result.plots[0].values, &[1.0, 1.0, 2.0, 3.0]);
+        assert_eq!(profiled.profile.max_series_depth, 4);
+    }
+
+    #[test]
+    fn series_history_offset_out_of_range_returns_na() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("series history out of range")
+plot(close[bar_index + 1])
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values, vec![PineValue::Na; 3]);
     }
 
     #[test]

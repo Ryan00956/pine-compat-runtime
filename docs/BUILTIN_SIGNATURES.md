@@ -22,8 +22,8 @@ full Pine surface. In this document:
   `series int`.
 - `const` parameters require literal/named-constant style values after current
   semantic analysis.
-- History offsets accept non-negative integer literals plus `const int`,
-  `input int`, and `simple int` expressions; `series int` offsets remain
+- History offsets accept non-negative integer literals plus integer expressions
+  at any implemented qualifier, including `series int`; non-integer offsets are
   rejected.
 
 ## Phase 1 Core

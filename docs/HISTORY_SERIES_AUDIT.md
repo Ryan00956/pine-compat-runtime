@@ -7,12 +7,11 @@ rules.
 ## Current Supported Subset
 
 - History references use `expr[offset]` syntax.
-- The offset must be an integer literal greater than or equal to zero, or a
-  `const int`, `input int`, or `simple int` expression.
+- The offset must be an integer literal greater than or equal to zero, or an
+  integer expression at any implemented qualifier, including `series int`.
 - `expr[0]` evaluates `expr` on the current bar.
 - `expr[n]` for `n > 0` reads the committed value from `n` bars ago.
-- dynamic offsets are accepted when the offset expression is `const int`,
-  `input int`, or `simple int`.
+- dynamic offsets are accepted when the offset expression is an integer.
 - Out-of-range history reads return `na`.
 - Dynamic offsets that evaluate to `na` return `na`.
 - Dynamic offsets that evaluate to a negative integer fail at runtime.
@@ -28,37 +27,31 @@ rules.
   implementations of `ta.tr`, `ta.atr`, `ta.change`, and `ta.cross*`.
 - Constant history is fixture-covered for built-in series, expression history,
   branch bodies, loop bodies, and user-defined function parameters.
-- Dynamic const/input/simple history is fixture-covered for built-in series and
-  expression history.
+- Dynamic integer history is fixture-covered for built-in series, expression
+  history, and series-qualified offsets.
 
 ## Current Rejections
 
-- Series-qualified history offsets such as `close[bar_index]` are rejected with
-  `dynamic_history_offset`.
 - Negative literal offsets such as `close[-1]` are rejected with
   `negative_history_offset`.
-- Dynamic history remains unsupported when the offset source is a loop counter,
-  a series value, or a user-defined function parameter bound to a series value.
+- Non-integer dynamic offsets such as `close[close]` are rejected with
+  `dynamic_history_offset`.
 - Array, object, map, matrix, and drawing-object history snapshots are not
   designed.
 - `max_bars_back` inference and declarations are not implemented.
 
-## Why Series Offsets Stay Rejected
+## Series Offset Policy
 
-Series offsets are more than a parser change. Supporting them safely requires:
+Series integer offsets are supported as a guarded dynamic subset:
 
-- retention bounds for every series that can be dynamically indexed
-- runtime handling for negative, `na`, fractional, or very large offsets
-- qualifier rules that distinguish const, input, simple, and series integers
-- stable behavior inside branches, loops, and user-defined functions
-- matching full-history, incremental append, and realtime rollback behavior
+- the offset expression is evaluated on the current bar
+- `na` offsets return `na`
+- negative offsets fail at runtime
+- out-of-range offsets return `na`
+- scripts with any dynamic offset keep full committed series history up to the
+  configured runtime cap
 
-Until those rules are implemented together, accepting series offsets would make
-scripts appear supported while silently returning unstable or under-retained
-history. The current dynamic subset is limited to `const int`, `input int`,
-and `simple int` offset expressions. Dynamic-offset scripts keep full committed
-series history up to the configured runtime cap; static-only scripts use HIR
-metadata to trim retention.
+Static-only scripts still use HIR metadata to trim retention.
 
 ## Phase C Implementation Sequence
 
@@ -67,8 +60,8 @@ metadata to trim retention.
    Current findings are in `docs/QUALIFIER_AUDIT.md`.
 3. Audit built-in signatures that currently accept broader qualifiers than the
    compatibility docs claim.
-4. Design whether any `series int` offset subset can be supported with
-   max-bars-back style retention, runtime diagnostics, and memory limits.
+4. Add optional `max_bars_back` declarations or tighter runtime diagnostics for
+   scripts that depend on dynamic history.
 
 ## Acceptance Criteria For Expanding History
 

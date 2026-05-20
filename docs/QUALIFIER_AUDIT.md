@@ -57,25 +57,23 @@ Important current rules:
 
 ## Impact On Dynamic History
 
-The next dynamic-offset decision should not use "is this an integer?" alone.
-It needs an explicit qualifier policy:
+Dynamic history offsets now use an explicit integer-kind policy:
 
 - `const int`: supported; non-negative literals lower to a constant offset,
   while other const int expressions are evaluated by the runtime guard.
-- `input int`: supported with growable retention and runtime validation.
-- `simple int`: supported with growable retention and runtime validation.
-- `series int`: remains rejected until max-bars-back style retention,
-  runtime validation, and memory limits exist.
+- `input int`: supported with runtime validation.
+- `simple int`: supported with runtime validation.
+- `series int`: supported with runtime validation and conservative full-history
+  retention up to the runtime cap.
+- non-integer offsets remain rejected.
 
 ## Recommended Next Steps
 
-1. Add retention and memory-limit design for accepted const/input/simple
-   dynamic offsets.
+1. Add optional `max_bars_back` handling or more explicit diagnostics/profile
+   fields for scripts that depend on dynamic offsets.
 2. Add a precise helper for qualifier-bound argument acceptance so built-in
    signatures can say "at most input" or "at most simple" without bespoke enum
    variants for every kind.
-3. Keep `close[bar_index]` and other `series int` offsets rejected until the
-   runtime has explicit max-bars-back behavior.
-4. Keep `docs/BUILTIN_SIGNATURES.md` aligned with code acceptors before
+3. Keep `docs/BUILTIN_SIGNATURES.md` aligned with code acceptors before
    broadening dynamic history, because built-in length parameters already rely
    on `SimpleInt` semantics.

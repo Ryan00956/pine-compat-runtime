@@ -24,7 +24,8 @@ Implemented or partially implemented:
   callsite state.
 - Partial `switch` expressions.
 - Partial `for` and `while` loops.
-- Constant non-negative history offsets.
+- Constant non-negative history offsets and guarded dynamic integer offsets,
+  including `series int`.
 - Partial float/int/bool/string/color arrays, reference assignment,
   `array.from`, `array.copy`, negative indexes for
   `array.get`/`array.set`/`array.insert`/`array.remove`, `array.slice`,
@@ -86,7 +87,7 @@ Scope:
 
 Out of scope:
 
-- Dynamic history offsets.
+- `max_bars_back` declarations.
 - Object systems.
 - Multi-timeframe data.
 
@@ -150,19 +151,19 @@ Suggested commits:
 Goal: make series behavior closer to Pine while keeping static guarantees where
 possible.
 
-Status: in progress. The current static and const/input/simple dynamic history
+Status: in progress. The current static and integer dynamic history
 boundary is recorded in `docs/HISTORY_SERIES_AUDIT.md`; qualifier findings are
 recorded in `docs/QUALIFIER_AUDIT.md`; built-in signature notes were tightened
-in `docs/BUILTIN_SIGNATURES.md`. Series-qualified history offsets remain
-diagnostic-only. Runtime profiles now expose max series depth and committed
-series history has a hard runtime cap. HIR lowering now records program-wide
-and per-series history requirements, and runtime retention trims static-only
-scripts to those requirements.
+in `docs/BUILTIN_SIGNATURES.md`. Series-qualified integer history offsets are
+now supported with runtime guards. Runtime profiles expose max series depth and
+committed series history has a hard runtime cap. HIR lowering records
+program-wide and per-series history requirements, and runtime retention trims
+static-only scripts to those requirements.
 
 Scope:
 
-- Revisit series-qualified dynamic history offsets and decide whether to support
-  a guarded subset or keep them diagnostic-only.
+- Add optional `max_bars_back` handling or clearer diagnostics/profile fields
+  for scripts that depend on dynamic history.
 - Expand tests around `na`, first-bar behavior, and history inside loops and
   UDFs.
 - Tighten qualifier propagation for const, input, simple, and series values.
@@ -189,6 +190,7 @@ Suggested commits:
 4. `Implement guarded dynamic history offsets`
 5. `Infer history retention requirements`
 6. `Trim static history retention`
+7. `Support series history offsets`
 
 ## Phase D: Built-In Coverage Expansion
 

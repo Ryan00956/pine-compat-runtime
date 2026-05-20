@@ -64,7 +64,7 @@ Phase 1 executable subset:
 - normal and tuple declarations scoped to an `if`/`else` branch
 - user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions
-- constant history offsets
+- constant history offsets and guarded dynamic integer history offsets
 - `indicator`
 - `input.*`
 - `plot`, `plotchar`, `plotshape`, `plotarrow`, `plotbar`, `plotcandle`,

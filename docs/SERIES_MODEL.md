@@ -86,10 +86,10 @@ Initial rules:
 - `offset > 0` reads committed history.
 - out-of-range history returns `na`.
 - negative offsets are rejected.
-- dynamic offsets are accepted for `const int`, `input int`, and `simple int`
-  expressions.
-- series-qualified dynamic offsets are rejected until max-bars-back style
-  retention and memory limits are designed.
+- dynamic offsets are accepted for integer expressions at any implemented
+  qualifier, including `series int`.
+- scripts with any dynamic offset use conservative full-history retention up to
+  the runtime cap.
 
 The lowering stage should determine whether `expr` needs a compiler-generated
 series id. For example:

@@ -1044,21 +1044,19 @@ impl Analyzer {
         let Some(offset_type) = offset_type else {
             self.unsupported(
                 "dynamic_history_offset",
-                "dynamic history offsets require an input or simple int in the current supported subset",
+                "dynamic history offsets require an integer expression in the current supported subset",
                 offset.span,
             );
             return;
         };
 
-        if offset_type.kind == ValueKind::Int
-            && qualifier_at_most(offset_type.qualifier, Qualifier::Simple)
-        {
+        if offset_type.kind == ValueKind::Int {
             return;
         }
 
         self.unsupported(
             "dynamic_history_offset",
-            "dynamic history offsets require an input or simple int in the current supported subset",
+            "dynamic history offsets require an integer expression in the current supported subset",
             offset.span,
         );
     }
@@ -3730,7 +3728,7 @@ mod tests {
     }
 
     #[test]
-    fn rejects_dynamic_history_offset() {
+    fn rejects_unknown_history_offset() {
         let analysis = analyze("x = close[len]\n");
 
         assert_eq!(analysis.compatibility.unsupported.len(), 1);
@@ -3738,6 +3736,18 @@ mod tests {
             analysis.compatibility.unsupported[0].feature,
             "dynamic_history_offset"
         );
+    }
+
+    #[test]
+    fn rejects_non_int_history_offset() {
+        let analysis = analyze("x = close[close]\n");
+
+        assert_eq!(analysis.compatibility.unsupported.len(), 1);
+        assert_eq!(
+            analysis.compatibility.unsupported[0].feature,
+            "dynamic_history_offset"
+        );
+        assert!(analysis.hir.is_none());
     }
 
     #[test]
@@ -3813,15 +3823,17 @@ mod tests {
     }
 
     #[test]
-    fn rejects_series_history_offset() {
+    fn accepts_series_history_offset() {
         let analysis = analyze("x = close[bar_index]\n");
 
-        assert_eq!(analysis.compatibility.unsupported.len(), 1);
-        assert_eq!(
-            analysis.compatibility.unsupported[0].feature,
-            "dynamic_history_offset"
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
         );
-        assert!(analysis.hir.is_none());
+        assert!(analysis.compatibility.unsupported.is_empty());
+        let hir = analysis.hir.expect("HIR");
+        assert!(hir.history.has_dynamic_offsets);
     }
 
     #[test]

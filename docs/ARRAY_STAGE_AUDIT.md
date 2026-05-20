@@ -155,8 +155,8 @@ Maps and matrices:
 
 History and snapshots:
 
-- Dynamic history offsets remain unsupported.
-- Array history behavior and historical array snapshots have not been designed.
+- Scalar dynamic integer history offsets are supported, but array history
+  behavior and historical array snapshots have not been designed.
 - Any future support must define storage retention and aliasing rules.
 
 Slice semantics:

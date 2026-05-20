@@ -1,0 +1,5 @@
+//@version=5
+indicator("Series history offset")
+offset = bar_index == 0 ? 0 : 1
+plot(close[offset])
+plot(close[bar_index + 1])

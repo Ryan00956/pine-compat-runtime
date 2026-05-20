@@ -153,7 +153,7 @@ recursive functions	unsupported	rejected during semantic analysis	tests/fixtures
 function side effects	unsupported	output, declaration, input calls, and array mutation inside UDFs rejected	tests/fixtures/sema/unsupported_function_side_effect.pine;tests/fixtures/sema/unsupported_array_function_side_effect.pine
 color.* named constants	partial	common registry only	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 #RRGGBB/#RRGGBBAA color literals	supported	normalized runtime color value	tests/fixtures/syntax/phase1_basic.pine
-history references	partial	constant non-negative offsets and const/input/simple int dynamic offsets; covers built-in series, expression history, branches, loops, and UDF parameters	tests/fixtures/runtime/na.pine;tests/fixtures/runtime/history_edges.pine;tests/fixtures/runtime/dynamic_history.pine
+history references	partial	constant non-negative offsets and dynamic integer offsets including series int; covers built-in series, expression history, branches, loops, and UDF parameters	tests/fixtures/runtime/na.pine;tests/fixtures/runtime/history_edges.pine;tests/fixtures/runtime/dynamic_history.pine;tests/fixtures/runtime/series_history_offset.pine
 var	supported	historical persistence and local declaration-site storage	tests/fixtures/runtime/local_scope.pine;tests/fixtures/realtime/var_rollback.pine
 realtime forming rollback	partial	forming updates roll back output, var, callsite, and array state to confirmed bars	tests/fixtures/realtime/forming_close.pine;tests/fixtures/realtime/var_rollback.pine;tests/fixtures/realtime/conditional_ta_rollback.pine;tests/fixtures/realtime/array_rollback.pine
 varip	unsupported	intrabar persistence not implemented	tests/fixtures/sema/unsupported_varip.pine
@@ -163,5 +163,6 @@ import	unsupported	library imports out of Phase 1	tests/fixtures/sema/unsupporte
 strategy.*	unsupported	broker emulation out of current scope	tests/fixtures/sema/unsupported_strategy.pine
 alert/alertcondition	unsupported	alerts out of Phase 1	tests/fixtures/sema/unsupported_alert.pine
 label/line/box/table/polyline	unsupported	drawing object systems out of Phase 1	tests/fixtures/sema/unsupported_drawing.pine
-series history offsets	unsupported	dynamic offsets must be const/input/simple int; series int offsets are rejected	tests/fixtures/sema/unsupported_dynamic_history.pine
+series history offsets	partial	series int offsets are evaluated at runtime with full-history retention up to the runtime cap	tests/fixtures/runtime/series_history_offset.pine
+non-int history offsets	unsupported	dynamic offsets must evaluate from an integer expression	tests/fixtures/sema/unsupported_dynamic_history.pine
 negative history offsets	unsupported	history offsets must be non-negative	tests/fixtures/sema/unsupported_negative_history.pine

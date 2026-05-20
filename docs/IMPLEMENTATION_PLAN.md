@@ -117,8 +117,8 @@ Exit criteria:
 - Runtime executes global-scope indicator scripts over historical OHLCV
   fixtures.
 - Results are deterministic and snapshot tested.
-- Constant history offsets, `var`, `na`, `nz`, `plot`, `hline`, `fill`,
-  `ta.sma`, and `ta.ema` are covered by fixtures.
+- Constant and guarded dynamic integer history offsets, `var`, `na`, `nz`,
+  `plot`, `hline`, `fill`, `ta.sma`, and `ta.ema` are covered by fixtures.
 
 ## Phase 4: Expanded Built-Ins and Output
 
