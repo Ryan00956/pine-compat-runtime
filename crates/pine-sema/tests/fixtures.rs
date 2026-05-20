@@ -113,6 +113,15 @@ fn reports_unsupported_dynamic_history_fixture() {
 }
 
 #[test]
+fn reports_unsupported_negative_history_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_negative_history.pine",
+        "negative_history_offset",
+        "non-negative",
+    );
+}
+
+#[test]
 fn reports_unsupported_recursive_function_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_recursive_function.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");

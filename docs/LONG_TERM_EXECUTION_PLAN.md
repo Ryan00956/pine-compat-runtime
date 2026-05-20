@@ -150,6 +150,9 @@ Suggested commits:
 Goal: make series behavior closer to Pine while keeping static guarantees where
 possible.
 
+Status: started. The current static-offset boundary and next implementation
+sequence are recorded in `docs/HISTORY_SERIES_AUDIT.md`.
+
 Scope:
 
 - Revisit dynamic history offsets and decide whether to support a guarded
@@ -171,6 +174,13 @@ Acceptance criteria:
 - Built-in signature docs match semantic checks.
 - Existing fixture results remain stable unless a deliberate compatibility fix
   is documented.
+
+Suggested commits:
+
+1. `Document history series audit`
+2. `Audit qualifier propagation`
+3. `Design dynamic history offset support`
+4. `Implement guarded dynamic history offsets`
 
 ## Phase D: Built-In Coverage Expansion
 

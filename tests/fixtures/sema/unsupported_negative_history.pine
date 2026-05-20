@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported negative history")
+plot(close[-1])
+

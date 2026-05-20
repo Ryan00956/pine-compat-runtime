@@ -1037,14 +1037,14 @@ impl Analyzer {
             } if matches!(expr.kind, ExprKind::Literal(Literal::Int(_))) => {
                 self.unsupported(
                     "negative_history_offset",
-                    "history offsets must be non-negative in Phase 1",
+                    "history offsets must be non-negative in the current supported subset",
                     offset.span,
                 );
             }
             _ => {
                 self.unsupported(
                     "dynamic_history_offset",
-                    "dynamic history offsets are not supported in Phase 1",
+                    "dynamic history offsets are not supported in the current supported subset",
                     offset.span,
                 );
             }
@@ -3478,6 +3478,17 @@ mod tests {
         assert_eq!(
             analysis.compatibility.unsupported[0].feature,
             "dynamic_history_offset"
+        );
+    }
+
+    #[test]
+    fn rejects_negative_history_offset() {
+        let analysis = analyze("x = close[-1]\n");
+
+        assert_eq!(analysis.compatibility.unsupported.len(), 1);
+        assert_eq!(
+            analysis.compatibility.unsupported[0].feature,
+            "negative_history_offset"
         );
     }
 

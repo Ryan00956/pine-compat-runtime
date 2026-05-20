@@ -86,7 +86,8 @@ Initial rules:
 - `offset > 0` reads committed history.
 - out-of-range history returns `na`.
 - negative offsets are rejected.
-- dynamic offsets are rejected in Phase 1 unless explicitly enabled.
+- dynamic offsets are rejected until Phase C defines retention and qualifier
+  rules.
 
 The lowering stage should determine whether `expr` needs a compiler-generated
 series id. For example:
@@ -97,6 +98,9 @@ ta.sma(close, 20)[1]
 ```
 
 Both expressions need stable storage if accepted.
+
+The current implementation boundary is tracked in
+`docs/HISTORY_SERIES_AUDIT.md`.
 
 ## Callsite State
 
@@ -168,4 +172,3 @@ Realtime execution adds a second layer:
 
 Historical execution should be completed first. Realtime-only features must be
 rejected or explicitly marked approximate until rollback semantics are tested.
-
