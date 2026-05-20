@@ -1730,9 +1730,10 @@ impl Analyzer {
             statements.push(self.lower_stmt(statement)?);
         }
 
-        let history = infer_history_requirements(&statements);
+        let symbols = self.lower_symbols();
+        let history = infer_history_requirements(&statements, &symbols);
         Some(HirProgram {
-            symbols: self.lower_symbols(),
+            symbols,
             statements,
             next_series_id: self.next_series_id,
             next_call_site_id: self.next_call_site_id,
@@ -2697,10 +2698,24 @@ struct InferredHistoryRequirements {
 struct HistoryRequirementCollector {
     program: HirHistoryRequirements,
     series: BTreeMap<SeriesId, HirHistoryRequirements>,
+    builtin_series: HashMap<String, SeriesId>,
 }
 
-fn infer_history_requirements(statements: &[HirStmt]) -> InferredHistoryRequirements {
-    let mut collector = HistoryRequirementCollector::default();
+fn infer_history_requirements(
+    statements: &[HirStmt],
+    symbols: &[HirSymbol],
+) -> InferredHistoryRequirements {
+    let mut collector = HistoryRequirementCollector {
+        builtin_series: symbols
+            .iter()
+            .filter_map(|symbol| {
+                symbol
+                    .series_id
+                    .map(|series_id| (symbol.name.clone(), series_id))
+            })
+            .collect(),
+        ..HistoryRequirementCollector::default()
+    };
     for statement in statements {
         collector.visit_stmt(statement);
     }
@@ -2815,10 +2830,11 @@ impl HistoryRequirementCollector {
                 self.visit_stmts(statements);
                 self.visit_expr(result);
             }
-            HirExprKind::Call { args, .. } => {
+            HirExprKind::Call { callee, args, .. } => {
                 for arg in args {
                     self.visit_expr(&arg.value);
                 }
+                self.record_call_history(callee, args);
             }
             HirExprKind::History { expr, offset } => {
                 self.record_history(expr.series_id, offset);
@@ -2833,22 +2849,75 @@ impl HistoryRequirementCollector {
     fn record_history(&mut self, series_id: Option<SeriesId>, offset: &HirHistoryOffset) {
         match offset {
             HirHistoryOffset::Constant(offset) => {
-                self.program.max_constant_offset = self.program.max_constant_offset.max(*offset);
-                if let Some(series_id) = series_id {
-                    let requirement = self.series.entry(series_id).or_default();
-                    requirement.max_constant_offset = requirement.max_constant_offset.max(*offset);
-                }
+                self.record_constant_history(series_id, *offset);
             }
             HirHistoryOffset::Dynamic(_) => {
-                self.program.has_dynamic_offsets = true;
-                if let Some(series_id) = series_id {
-                    self.series
-                        .entry(series_id)
-                        .or_default()
-                        .has_dynamic_offsets = true;
-                }
+                self.record_dynamic_history(series_id);
             }
         }
+    }
+
+    fn record_call_history(&mut self, callee: &str, args: &[HirCallArg]) {
+        match callee {
+            "ta.tr" | "ta.atr" => self.record_builtin_history("close", 1),
+            "ta.change" => self.record_change_history(args),
+            "ta.cross" | "ta.crossover" | "ta.crossunder" => self.record_cross_history(args),
+            _ => {}
+        }
+    }
+
+    fn record_change_history(&mut self, args: &[HirCallArg]) {
+        let series_id = args.first().and_then(|arg| arg.value.series_id);
+        match args.get(1).and_then(|arg| constant_hir_int(&arg.value)) {
+            Some(length) if length > 0 => self.record_constant_history(series_id, length as u32),
+            Some(_) => {}
+            None if args.len() > 1 => self.record_dynamic_history(series_id),
+            None => self.record_constant_history(series_id, 1),
+        }
+    }
+
+    fn record_cross_history(&mut self, args: &[HirCallArg]) {
+        for arg in args.iter().take(2) {
+            self.record_constant_history(arg.value.series_id, 1);
+        }
+    }
+
+    fn record_builtin_history(&mut self, name: &str, offset: u32) {
+        let series_id = self.builtin_series.get(name).copied();
+        self.record_constant_history(series_id, offset);
+    }
+
+    fn record_constant_history(&mut self, series_id: Option<SeriesId>, offset: u32) {
+        self.program.max_constant_offset = self.program.max_constant_offset.max(offset);
+        if let Some(series_id) = series_id {
+            let requirement = self.series.entry(series_id).or_default();
+            requirement.max_constant_offset = requirement.max_constant_offset.max(offset);
+        }
+    }
+
+    fn record_dynamic_history(&mut self, series_id: Option<SeriesId>) {
+        self.program.has_dynamic_offsets = true;
+        if let Some(series_id) = series_id {
+            self.series
+                .entry(series_id)
+                .or_default()
+                .has_dynamic_offsets = true;
+        }
+    }
+}
+
+fn constant_hir_int(expr: &HirExpr) -> Option<i64> {
+    match &expr.kind {
+        HirExprKind::Literal(HirLiteral::Int(value)) => Some(*value),
+        HirExprKind::Unary {
+            op: HirUnaryOp::Plus,
+            expr,
+        } => constant_hir_int(expr),
+        HirExprKind::Unary {
+            op: HirUnaryOp::Minus,
+            expr,
+        } => constant_hir_int(expr).and_then(i64::checked_neg),
+        _ => None,
     }
 }
 
@@ -3701,6 +3770,36 @@ mod tests {
             hir.series_history
                 .iter()
                 .any(|requirement| requirement.max_constant_offset == 3),
+            "{:?}",
+            hir.series_history
+        );
+        assert!(
+            hir.series_history
+                .iter()
+                .any(|requirement| requirement.has_dynamic_offsets),
+            "{:?}",
+            hir.series_history
+        );
+    }
+
+    #[test]
+    fn infers_implicit_builtin_history_requirements() {
+        let analysis = analyze(
+            "len = input.int(1, \"Length\")\nplot(ta.tr())\nplot(ta.change(open, 2))\nplot(ta.change(close, len))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.expect("HIR");
+        assert_eq!(hir.history.max_constant_offset, 2);
+        assert!(hir.history.has_dynamic_offsets);
+        assert!(
+            hir.series_history
+                .iter()
+                .any(|requirement| requirement.max_constant_offset == 2),
             "{:?}",
             hir.series_history
         );

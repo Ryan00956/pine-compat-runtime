@@ -154,11 +154,11 @@ callsite.
 
 ## Buffer Sizing
 
-Phase 1 uses growable buffers for correctness. The runtime commits one value per
-series id per confirmed bar and reports `seriesValues`, `seriesCapacity`, and
-`maxSeriesDepth` in the storage profile. A runtime cap prevents unbounded series
-history growth; hitting it fails execution with a runtime error instead of
-silently truncating history.
+The runtime commits values into per-series history buffers only when the HIR
+history metadata says a later bar can read them. It reports `seriesValues`,
+`seriesCapacity`, and `maxSeriesDepth` in the storage profile. A runtime cap
+prevents unbounded series history growth; hitting it fails execution with a
+runtime error instead of silently truncating history.
 
 HIR lowering records static history metadata:
 
@@ -166,10 +166,16 @@ HIR lowering records static history metadata:
 - whether any supported dynamic offset exists
 - per-series maximum constant history offset
 - per-series dynamic-offset presence
+- implicit one-bar requirements for `ta.tr`, `ta.atr`, and `ta.cross*`
+- implicit `ta.change` requirements based on its length argument when constant
+
+When no dynamic offsets exist, the runtime trims each series buffer to that
+series' maximum constant offset and stores no committed history for series that
+are never history-indexed. When any dynamic offset exists, retention remains
+conservative and keeps full committed series history up to the runtime cap.
 
 Later phases should add:
 
-- narrower retention bounds for scripts without dynamic offsets
 - optional `max_bars_back` handling
 - configurable memory limits and diagnostics for excessive history
 

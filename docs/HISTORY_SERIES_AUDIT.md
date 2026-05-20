@@ -21,6 +21,11 @@ rules.
   receive compiler-generated series ids.
 - Lowering records HIR history metadata: program-wide `max_constant_offset`,
   whether dynamic offsets exist, and per-series history requirements.
+- Runtime retention uses that metadata for scripts without dynamic offsets:
+  each series keeps only the maximum constant offset it needs, and unindexed
+  series keep no committed history.
+- The metadata includes implicit history reads used by current runtime
+  implementations of `ta.tr`, `ta.atr`, `ta.change`, and `ta.cross*`.
 - Constant history is fixture-covered for built-in series, expression history,
   branch bodies, loop bodies, and user-defined function parameters.
 - Dynamic const/input/simple history is fixture-covered for built-in series and
@@ -51,9 +56,9 @@ Series offsets are more than a parser change. Supporting them safely requires:
 Until those rules are implemented together, accepting series offsets would make
 scripts appear supported while silently returning unstable or under-retained
 history. The current dynamic subset is limited to `const int`, `input int`,
-and `simple int` offset expressions with growable retention. The runtime keeps
-all committed values needed by the current execution model and fails once total
-committed series values exceed the configured runtime cap.
+and `simple int` offset expressions. Dynamic-offset scripts keep full committed
+series history up to the configured runtime cap; static-only scripts use HIR
+metadata to trim retention.
 
 ## Phase C Implementation Sequence
 
@@ -62,9 +67,7 @@ committed series values exceed the configured runtime cap.
    Current findings are in `docs/QUALIFIER_AUDIT.md`.
 3. Audit built-in signatures that currently accept broader qualifiers than the
    compatibility docs claim.
-4. Use HIR history metadata to retain less than full-history for scripts without
-   dynamic offsets.
-5. Design whether any `series int` offset subset can be supported with
+4. Design whether any `series int` offset subset can be supported with
    max-bars-back style retention, runtime diagnostics, and memory limits.
 
 ## Acceptance Criteria For Expanding History

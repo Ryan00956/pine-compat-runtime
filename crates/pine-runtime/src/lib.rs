@@ -132,8 +132,17 @@ impl SeriesStore {
         self.current_bar
     }
 
-    pub fn commit(&mut self, series_id: SeriesId, value: PineValue) {
-        self.buffers.entry(series_id).or_default().push(value);
+    pub fn commit(&mut self, series_id: SeriesId, value: PineValue, max_depth: Option<usize>) {
+        if matches!(max_depth, Some(0)) {
+            self.buffers.remove(&series_id);
+            return;
+        }
+
+        let buffer = self.buffers.entry(series_id).or_default();
+        buffer.push(value);
+        if let Some(max_depth) = max_depth {
+            trim_series_buffer(buffer, max_depth);
+        }
     }
 
     #[must_use]
@@ -144,6 +153,11 @@ impl SeriesStore {
     #[must_use]
     pub fn max_depth(&self) -> usize {
         self.buffers.values().map(Vec::len).max().unwrap_or(0)
+    }
+
+    #[must_use]
+    pub fn len(&self, series_id: SeriesId) -> usize {
+        self.buffers.get(&series_id).map(Vec::len).unwrap_or(0)
     }
 
     #[must_use]
@@ -160,6 +174,13 @@ impl SeriesStore {
         }
 
         buffer[buffer.len() - offset].clone()
+    }
+}
+
+fn trim_series_buffer(buffer: &mut Vec<PineValue>, max_depth: usize) {
+    if buffer.len() > max_depth {
+        let excess = buffer.len() - max_depth;
+        buffer.drain(0..excess);
     }
 }
 
@@ -379,6 +400,7 @@ pub struct HistoricalRuntime<'a> {
     program: &'a HirProgram,
     bars: usize,
     series_store: SeriesStore,
+    series_retention: SeriesRetention,
     current_symbols: HashMap<SymbolId, PineValue>,
     current_series: HashMap<SeriesId, PineValue>,
     var_store: HashMap<VarSlotId, PineValue>,
@@ -399,6 +421,42 @@ pub struct HistoricalRuntime<'a> {
     bar_colors: Vec<ColorSeries>,
     hlines: Vec<HLineOutput>,
     fills: Vec<FillOutput>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct SeriesRetention {
+    static_depths: Option<HashMap<SeriesId, usize>>,
+}
+
+impl SeriesRetention {
+    fn from_program(program: &HirProgram) -> Self {
+        if program.history.has_dynamic_offsets {
+            return Self {
+                static_depths: None,
+            };
+        }
+
+        Self {
+            static_depths: Some(
+                program
+                    .series_history
+                    .iter()
+                    .map(|requirement| {
+                        (
+                            requirement.series_id,
+                            requirement.max_constant_offset as usize,
+                        )
+                    })
+                    .collect(),
+            ),
+        }
+    }
+
+    fn max_depth_for(&self, series_id: SeriesId) -> Option<usize> {
+        self.static_depths
+            .as_ref()
+            .map(|depths| depths.get(&series_id).copied().unwrap_or(0))
+    }
 }
 
 pub struct RealtimeRuntime<'a> {
@@ -526,6 +584,7 @@ impl<'a> HistoricalRuntime<'a> {
             program,
             bars: 0,
             series_store: SeriesStore::new(),
+            series_retention: SeriesRetention::from_program(program),
             current_symbols: HashMap::new(),
             current_series: HashMap::new(),
             var_store: HashMap::new(),
@@ -1053,12 +1112,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn commit_current_series(&mut self) -> Result<(), RuntimeError> {
-        let next_values = self.program.next_series_id as usize;
-        if series_history_would_exceed_limit(
-            self.series_store.values_len(),
-            next_values,
-            MAX_SERIES_HISTORY_VALUES,
-        ) {
+        if self.projected_series_values_after_commit() > MAX_SERIES_HISTORY_VALUES {
             return Err(RuntimeError {
                 message: format!(
                     "series history limit exceeded: at most {MAX_SERIES_HISTORY_VALUES} committed values are retained"
@@ -1072,9 +1126,27 @@ impl<'a> HistoricalRuntime<'a> {
                 .current_series
                 .remove(&series_id)
                 .unwrap_or(PineValue::Na);
-            self.series_store.commit(series_id, value);
+            self.series_store.commit(
+                series_id,
+                value,
+                self.series_retention.max_depth_for(series_id),
+            );
         }
         Ok(())
+    }
+
+    fn projected_series_values_after_commit(&self) -> usize {
+        let mut total = 0usize;
+        for raw_series_id in 0..self.program.next_series_id {
+            let series_id = SeriesId(raw_series_id);
+            let next_len = self.series_store.len(series_id).saturating_add(1);
+            let retained_len = self
+                .series_retention
+                .max_depth_for(series_id)
+                .map_or(next_len, |max_depth| next_len.min(max_depth));
+            total = total.saturating_add(retained_len);
+        }
+        total
     }
 
     fn eval_expr(&mut self, expr: &HirExpr) -> Result<PineValue, RuntimeError> {
@@ -5011,14 +5083,6 @@ fn finite_float_or_na(value: f64) -> PineValue {
     }
 }
 
-fn series_history_would_exceed_limit(
-    current_values: usize,
-    next_values: usize,
-    max_values: usize,
-) -> bool {
-    current_values > max_values || next_values > max_values.saturating_sub(current_values)
-}
-
 #[cfg(test)]
 mod tests {
     use pine_sema::analyze_source;
@@ -6452,10 +6516,10 @@ plot(ma)
             run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
         assert_eq!(profiled.profile.bars, 3);
-        assert!(profiled.profile.series_buffers >= 10);
-        assert!(profiled.profile.series_values >= 30);
+        assert_eq!(profiled.profile.series_buffers, 0);
+        assert_eq!(profiled.profile.series_values, 0);
         assert!(profiled.profile.series_capacity >= profiled.profile.series_values);
-        assert_eq!(profiled.profile.max_series_depth, 3);
+        assert_eq!(profiled.profile.max_series_depth, 0);
         assert_eq!(profiled.profile.rolling_window_slots, 1);
         assert_eq!(profiled.profile.rolling_window_values, 2);
         assert!(
@@ -6474,10 +6538,57 @@ plot(ma)
     }
 
     #[test]
-    fn guards_series_history_value_limit() {
-        assert!(!series_history_would_exceed_limit(9, 1, 10));
-        assert!(series_history_would_exceed_limit(10, 1, 10));
-        assert!(series_history_would_exceed_limit(usize::MAX, 1, usize::MAX));
+    fn trims_constant_history_to_required_depth() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("static history")
+plot(close[2])
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+        let profiled =
+            run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(profiled.result.plots.len(), 1);
+        assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+        assert_eq!(profiled.result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&profiled.result.plots[0].values[2..], &[1.0, 2.0]);
+        assert_eq!(profiled.profile.max_series_depth, 2);
+        assert_eq!(profiled.profile.series_values, 2);
+    }
+
+    #[test]
+    fn keeps_full_history_when_dynamic_offsets_exist() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("dynamic history retention")
+length = input.int(1, "Length")
+plot(close[length])
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+        let profiled =
+            run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(profiled.result.plots.len(), 1);
+        assert_eq!(profiled.result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&profiled.result.plots[0].values[1..], &[1.0, 2.0, 3.0]);
+        assert_eq!(profiled.profile.max_series_depth, 4);
+        assert!(profiled.profile.series_values >= 4);
     }
 
     #[test]
