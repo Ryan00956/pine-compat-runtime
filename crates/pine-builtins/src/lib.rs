@@ -594,6 +594,24 @@ const STR_SUBSTRING_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const STR_REPEAT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "repeat",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "separator",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+];
+
 const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "a",
@@ -1065,6 +1083,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "str.substring",
         phase: BuiltinPhase::Phase1Core,
         params: STR_SUBSTRING_PARAMS,
+        returns: ReturnSpec::PromotedString,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.trim",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_TEXT_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.repeat",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_REPEAT_PARAMS,
         returns: ReturnSpec::PromotedString,
         variadic: false,
     },

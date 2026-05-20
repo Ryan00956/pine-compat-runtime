@@ -9,6 +9,7 @@ use pine_ir::{
 
 const MAX_WHILE_ITERATIONS: usize = 100_000;
 const MAX_ARRAY_ELEMENTS: usize = 100_000;
+const MAX_STRING_CHARS: usize = 40_960;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PineValue {
@@ -1331,6 +1332,8 @@ impl<'a> HistoricalRuntime<'a> {
             "str.endswith" => self.eval_str_match(args, StringMatch::EndsWith),
             "str.pos" => self.eval_str_pos(args),
             "str.substring" => self.eval_str_substring(args),
+            "str.trim" => self.eval_str_trim(args),
+            "str.repeat" => self.eval_str_repeat(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -1863,17 +1866,78 @@ impl<'a> HistoricalRuntime<'a> {
         ))
     }
 
+    fn eval_str_trim(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(value) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        Ok(PineValue::String(
+            value
+                .trim_matches(|ch: char| ch.is_ascii_whitespace())
+                .to_owned(),
+        ))
+    }
+
+    fn eval_str_repeat(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(source) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let Some(repeat) = self.eval_string_index(&args[1].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let separator = if let Some(arg) = args.get(2) {
+            let PineValue::String(separator) = self.eval_expr(&arg.value)? else {
+                return Ok(PineValue::Na);
+            };
+            separator
+        } else {
+            String::new()
+        };
+        if repeat < 0 {
+            return Err(RuntimeError {
+                message: format!("str.repeat count cannot be negative: {repeat}"),
+            });
+        }
+
+        let repeat = repeat as usize;
+        let result_chars = repeat
+            .saturating_mul(source.chars().count())
+            .saturating_add(
+                repeat
+                    .saturating_sub(1)
+                    .saturating_mul(separator.chars().count()),
+            );
+        if result_chars > MAX_STRING_CHARS {
+            return Err(RuntimeError {
+                message: format!("str.repeat result cannot exceed {MAX_STRING_CHARS} characters"),
+            });
+        }
+
+        let mut result = String::new();
+        for index in 0..repeat {
+            if index > 0 {
+                result.push_str(&separator);
+            }
+            result.push_str(&source);
+        }
+        Ok(PineValue::String(result))
+    }
+
+    fn eval_string_index(&mut self, expr: &HirExpr) -> Result<Option<i64>, RuntimeError> {
+        Ok(match self.eval_expr(expr)? {
+            PineValue::Int(value) => Some(value),
+            PineValue::Float(value) if value.is_finite() => Some(value as i64),
+            PineValue::Na => None,
+            _ => None,
+        })
+    }
+
     fn eval_optional_string_index(
         &mut self,
         expr: &HirExpr,
         default: i64,
     ) -> Result<i64, RuntimeError> {
-        Ok(match self.eval_expr(expr)? {
-            PineValue::Int(value) => value,
-            PineValue::Float(value) if value.is_finite() => value as i64,
-            PineValue::Na => default,
-            _ => default,
-        })
+        Ok(self.eval_string_index(expr)?.unwrap_or(default))
     }
 
     fn eval_math_abs(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -3919,6 +3983,10 @@ slice = str.substring(upper, mid, mid + 1)
 tail = str.substring(upper, mid)
 wide = str.substring(upper, 1, 99)
 na_begin = str.substring(upper, na, 1)
+trimmed = str.trim(" \tSMA\n")
+repeated = str.repeat("ab", 2, "-")
+empty_repeat = str.repeat("ab", 0)
+missing_repeat = str.repeat("ab", na)
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
@@ -3926,6 +3994,8 @@ plot(na(missing_match) ? 1 : 0)
 plot(mid + empty_pos + na_pos)
 plot(na(missing_pos) ? 1 : 0)
 plot(slice == "M" and tail == "MA" and wide == "MA" and na_begin == "S" ? 1 : 0)
+plot(trimmed == upper and repeated == "ab-ab" and empty_repeat == "" ? 1 : 0)
+plot(na(missing_repeat) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -3945,6 +4015,8 @@ plot(slice == "M" and tail == "MA" and wide == "MA" and na_begin == "S" ? 1 : 0)
         assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
     }
 
     #[test]
@@ -3969,6 +4041,60 @@ plot(str.length(str.substring("SMA", 2, 1)))
             error
                 .message
                 .contains("str.substring end_pos 1 is less than begin_pos 2"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_string_repeat_counts() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bad repeat")
+plot(str.length(str.repeat("x", -1)))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected negative repeat error");
+
+        assert!(
+            error
+                .message
+                .contains("str.repeat count cannot be negative: -1"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn rejects_oversized_string_repeat_result() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("huge repeat")
+plot(str.length(str.repeat("x", 40961)))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected oversized repeat error");
+
+        assert!(
+            error
+                .message
+                .contains("str.repeat result cannot exceed 40960 characters"),
             "{}",
             error.message
         );

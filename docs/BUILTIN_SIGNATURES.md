@@ -210,6 +210,9 @@ str.endswith(source: string-compatible, str: string-compatible) -> bool with str
 str.pos(source: string-compatible, str: string-compatible) -> int with strongest qualifier
 str.substring(source: string-compatible, begin_pos: int-compatible, end_pos?: int-compatible)
   -> string with strongest qualifier
+str.trim(string: string-compatible) -> string with same qualifier
+str.repeat(source: string-compatible, repeat: int-compatible, separator?: string-compatible)
+  -> string with strongest qualifier
 ```
 
 Supported `str.*` helpers return `na` for `na` inputs.
@@ -220,6 +223,9 @@ substring arguments.
 substring arguments. `str.substring` treats `na` `begin_pos` as 0 and omitted,
 `na`, or too-large `end_pos` as the string length; invalid ranges are runtime
 errors.
+`str.trim` removes leading and trailing ASCII whitespace only. `str.repeat`
+defaults `separator` to an empty string, returns an empty string for repeat 0,
+and errors for negative counts or results over 40,960 characters.
 
 ## Math
 

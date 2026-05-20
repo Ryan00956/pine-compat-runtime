@@ -33,6 +33,7 @@
 - Added `str.length`, `str.upper`, and `str.lower` string helpers.
 - Added `str.contains`, `str.startswith`, and `str.endswith` string predicates.
 - Added `str.pos` and `str.substring` string extraction helpers.
+- Added `str.trim` and `str.repeat` string modification helpers.
 - Added `math.floor` and `math.ceil` support for numeric values.
 - Added `math.sqrt`, `math.log`, and `math.pow` support for numeric values.
 - Added `math.sin`, `math.cos`, and `math.tan` support for numeric values.
