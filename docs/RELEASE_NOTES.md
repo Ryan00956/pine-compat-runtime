@@ -26,10 +26,12 @@
   `array.lastindexof` across supported typed arrays.
 - Added numeric array statistics helpers `array.min`, `array.max`,
   `array.sum`, and `array.avg` for float and int arrays.
+- Added array ordering helpers: numeric `array.sort` for ascending sort with
+  `na` values last, and `array.reverse` for all supported typed arrays.
 - Added partial array method-call syntax for supported array `size`, `get`,
   `set`, `push`, `pop`, `shift`, `unshift`, `first`, `last`, `copy`,
   `includes`, `indexof`, `lastindexof`, numeric `min`, `max`, `sum`, `avg`,
-  and `clear`.
+  `sort`, `reverse`, and `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.
 - Added `input.price`, `input.time`, `input.symbol`, and `input.timeframe`
   support for the executable `defval`/`title` subset.

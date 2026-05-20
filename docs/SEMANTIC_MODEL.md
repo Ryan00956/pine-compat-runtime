@@ -173,20 +173,25 @@ the array id and backing storage across bars. Supported operations are
 `array.new_color`, `array.push`, `array.get`, `array.set`, `array.size`,
 `array.pop`, `array.shift`, `array.unshift`, `array.first`, `array.last`, and
 `array.copy`, `array.includes`, `array.indexof`, `array.lastindexof`,
-`array.min`, `array.max`, `array.sum`, `array.avg`, and `array.clear`;
-`size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/clear`
-may also be called with method syntax on a supported array receiver. Float
-arrays accept int or float values and store them as floats. Int arrays accept
-int values. Bool arrays accept bool values. String arrays accept string values.
-Color arrays accept color values. Other array constructors and unsupported
-`array.*` functions are rejected. Array assignment and UDF argument binding pass
-the runtime array id by reference. `array.copy` allocates a new array id with
-the same current element values, so later mutations do not affect the source.
+`array.min`, `array.max`, `array.sum`, `array.avg`, `array.sort`,
+`array.reverse`, and `array.clear`;
+`size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/reverse/clear`
+may also be called with method syntax on a supported array receiver. Numeric
+`min/max/sum/avg/sort` helpers may also be called with method syntax on float
+and int arrays. Float arrays accept int or float values and store them as
+floats. Int arrays accept int values. Bool arrays accept bool values. String
+arrays accept string values. Color arrays accept color values. Other array
+constructors and unsupported `array.*` functions are rejected. Array assignment
+and UDF argument binding pass the runtime array id by reference. `array.copy`
+allocates a new array id with the same current element values, so later
+mutations do not affect the source.
 `array.indexof` and `array.lastindexof` return `-1` when the value is not
 present. Numeric helpers `array.min`, `array.max`, `array.sum`, and `array.avg`
 are limited to float and int arrays; they ignore `na` elements and return `na`
-when no numeric element is present. Out-of-range `array.get`, empty
-`array.pop`, empty `array.shift`, and `array.first`/`array.last` on empty arrays
+when no numeric element is present. `array.sort` is currently limited to float
+and int arrays, sorts ascending in place, and leaves `na` values at the end.
+`array.reverse` reverses any supported typed array in place. Out-of-range
+`array.get`, empty `array.pop`, empty `array.shift`, and `array.first`/`array.last` on empty arrays
 return `na`; out-of-range `array.set` is a no-op. Negative array sizes fail at
 runtime. Each array can contain at most 100,000 elements; creation, push, or
 unshift operations beyond that limit fail at runtime.

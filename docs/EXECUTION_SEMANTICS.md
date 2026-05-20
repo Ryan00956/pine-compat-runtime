@@ -117,14 +117,16 @@ and `array.pop` or `array.shift` on an empty array returns `na`.
 `array.indexof` and `array.lastindexof` return `-1` when no matching value is
 present. Numeric helpers on int/float arrays skip `na` elements; if every
 element is `na` or the array is empty, `array.min`, `array.max`, `array.sum`,
-and `array.avg` return `na`. A negative array size is a runtime error. Runtime
+and `array.avg` return `na`. `array.sort` orders int/float arrays ascending and
+places `na` values after numeric values. `array.reverse` reverses any supported
+typed array in place. A negative array size is a runtime error. Runtime
 execution limits each supported array to 100,000 elements; oversized creation,
 `array.push`, and `array.unshift` beyond the limit return runtime errors.
 
 Read-only array operations are allowed inside inlined user-defined functions.
 The supported method-call syntax lowers to the same `array.*` runtime calls, so
 the same bounds, persistence, and UDF side-effect rules apply.
-Array mutation, including push/pop/shift/unshift/set/clear, inside
+Array mutation, including push/pop/shift/unshift/set/sort/reverse/clear, inside
 user-defined functions is rejected as a function side-effect boundary.
 
 ### `varip`

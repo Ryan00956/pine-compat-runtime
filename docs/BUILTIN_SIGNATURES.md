@@ -193,6 +193,8 @@ array.min(id: float-array|int-array) -> series element
 array.max(id: float-array|int-array) -> series element
 array.sum(id: float-array|int-array) -> series element
 array.avg(id: float-array|int-array) -> series float
+array.sort(id: float-array|int-array) -> void
+array.reverse(id: float-array|int-array|bool-array|string-array|color-array) -> void
 array.clear(id: float-array|int-array|bool-array|string-array|color-array) -> void
 ```
 
@@ -203,7 +205,9 @@ string values. Color arrays accept color values.
 `size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/clear`
 may also be called with method syntax on a supported array receiver. Numeric
 array `min/max/sum/avg` helpers may also be called with method syntax on float
-and int array receivers. Array assignment passes the runtime array id by
+and int array receivers. `array.sort` currently supports float and int arrays
+only and sorts ascending with `na` values last. `array.reverse` supports every
+supported typed array. Array assignment passes the runtime array id by
 reference; use `array.copy` to allocate an independent array with the same
 current element values.
 

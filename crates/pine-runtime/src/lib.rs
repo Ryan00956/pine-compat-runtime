@@ -1,5 +1,6 @@
 //! Historical runtime scaffolding.
 
+use std::cmp::Ordering;
 use std::collections::{HashMap, VecDeque};
 
 use chrono::{DateTime, Datelike, TimeZone, Timelike, Utc};
@@ -1454,6 +1455,8 @@ impl<'a> HistoricalRuntime<'a> {
             "array.max" => self.eval_array_numeric(args, ArrayNumericMode::Max),
             "array.sum" => self.eval_array_numeric(args, ArrayNumericMode::Sum),
             "array.avg" => self.eval_array_numeric(args, ArrayNumericMode::Avg),
+            "array.sort" => self.eval_array_sort(args),
+            "array.reverse" => self.eval_array_reverse(args),
             "array.clear" => self.eval_array_clear(args),
             _ => Err(RuntimeError {
                 message: format!("unsupported runtime call `{callee}`"),
@@ -1847,6 +1850,34 @@ impl<'a> HistoricalRuntime<'a> {
                 }
             }
         }
+    }
+
+    fn eval_array_sort(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Void);
+        };
+        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
+            return Ok(PineValue::Void);
+        }
+        if let Some(values) = self.array_store.get_mut(&id) {
+            values.sort_by(compare_array_numeric_values);
+        }
+        Ok(PineValue::Void)
+    }
+
+    fn eval_array_reverse(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        if let Some(values) = self.array_store.get_mut(&id) {
+            values.reverse();
+        }
+        Ok(PineValue::Void)
     }
 
     fn eval_array_clear(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -3995,6 +4026,15 @@ fn array_numeric_result(kind: ArrayElementKind, value: f64) -> PineValue {
         ArrayElementKind::Int => PineValue::Int(value as i64),
         ArrayElementKind::Float => finite_float_or_na(value),
         _ => PineValue::Na,
+    }
+}
+
+fn compare_array_numeric_values(left: &PineValue, right: &PineValue) -> Ordering {
+    match (left.as_f64(), right.as_f64()) {
+        (Some(left), Some(right)) => left.partial_cmp(&right).unwrap_or(Ordering::Equal),
+        (Some(_), None) => Ordering::Less,
+        (None, Some(_)) => Ordering::Greater,
+        (None, None) => Ordering::Equal,
     }
 }
 
@@ -7430,6 +7470,60 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
         assert_values_close(&result.plots[6].values, &[6.0, 9.0]);
         assert_values_close(&result.plots[7].values, &[3.0, 4.5]);
         assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_array_ordering_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array ordering")
+ints = array.new_int()
+array.push(ints, 3)
+array.push(ints, 1)
+array.push(ints, 2)
+array.sort(ints)
+plot(ints.get(0) * 100 + ints.get(1) * 10 + ints.get(2))
+ints.reverse()
+plot(ints.get(0) * 100 + ints.get(1) * 10 + ints.get(2))
+
+floats = array.new_float()
+floats.push(na)
+floats.push(high)
+floats.push(close)
+floats.sort()
+plot(floats.get(0) + floats.get(1))
+plot(na(floats.get(2)) ? 1 : 0)
+
+words = array.new_string()
+words.push("a")
+words.push("b")
+words.reverse()
+plot(words.get(0) == "b" and words.get(1) == "a" ? 1 : 0)
+
+colors = array.new_color()
+colors.push(color.red)
+colors.push(color.green)
+colors.reverse()
+plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 6);
+        assert_values_close(&result.plots[0].values, &[123.0, 123.0]);
+        assert_values_close(&result.plots[1].values, &[321.0, 321.0]);
+        assert_values_close(&result.plots[2].values, &[6.0, 9.0]);
+        assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
     }
 
     #[test]

@@ -1686,6 +1686,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "array.sort",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.reverse",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_SIZE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "array.clear",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_SIZE_PARAMS,

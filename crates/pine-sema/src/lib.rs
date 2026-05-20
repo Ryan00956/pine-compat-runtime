@@ -2455,6 +2455,8 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "max" => Some("array.max"),
         "sum" => Some("array.sum"),
         "avg" => Some("array.avg"),
+        "sort" => Some("array.sort"),
+        "reverse" => Some("array.reverse"),
         "clear" => Some("array.clear"),
         _ => None,
     }
@@ -2481,7 +2483,14 @@ fn is_output_or_declaration_builtin(name: &str) -> bool {
 fn is_array_mutation_builtin(name: &str) -> bool {
     matches!(
         name,
-        "array.push" | "array.set" | "array.pop" | "array.shift" | "array.unshift" | "array.clear"
+        "array.push"
+            | "array.set"
+            | "array.pop"
+            | "array.shift"
+            | "array.unshift"
+            | "array.clear"
+            | "array.sort"
+            | "array.reverse"
     )
 }
 
@@ -4696,6 +4705,31 @@ plot(y)
     }
 
     #[test]
+    fn accepts_array_ordering_operations() {
+        let analysis = analyze(
+            "values = array.new_int()\narray.push(values, 3)\narray.push(values, 1)\narray.sort(values)\nvalues.reverse()\nplot(values.get(0) + values.get(1))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for feature in ["array.sort", "array.reverse"] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|supported| supported.feature == feature),
+                "{feature} missing from supported features: {:?}",
+                analysis.compatibility.supported
+            );
+        }
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_float_value_for_int_array_mutation() {
         let analysis =
             analyze("values = array.new_int()\narray.push(values, close)\nplot(close)\n");
@@ -4774,6 +4808,22 @@ plot(y)
     }
 
     #[test]
+    fn rejects_string_array_sort() {
+        let analysis =
+            analyze("values = array.new_string()\nvalues.push(\"b\")\narray.sort(values)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
     fn rejects_numeric_value_for_string_array_mutation() {
         let analysis =
             analyze("values = array.new_string()\narray.push(values, close)\nplot(close)\n");
@@ -4838,6 +4888,24 @@ plot(y)
     fn rejects_array_helper_mutation_inside_udf() {
         let analysis = analyze(
             "add(values, value) =>\n    values.unshift(value)\n    values.shift()\nvalues = array.new_float()\nplot(add(values, close))\n",
+        );
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "function_side_effect"),
+            "{:?}",
+            analysis.compatibility.unsupported
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_array_ordering_mutation_inside_udf() {
+        let analysis = analyze(
+            "order(values) =>\n    values.sort()\n    values.reverse()\n    values.size()\nvalues = array.new_float()\nplot(order(values))\n",
         );
 
         assert!(
