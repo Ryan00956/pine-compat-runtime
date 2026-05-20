@@ -115,6 +115,8 @@ array length returns `na`, `array.set` outside the current length is ignored,
 `array.insert` outside `0..=size` is ignored, `array.remove` outside the
 current length returns `na`, and `array.pop` or `array.shift` on an empty array
 returns `na`. `array.first` and `array.last` also return `na` for empty arrays.
+`array.fill` replaces all elements by default, or a half-open `[index_from,
+index_to)` window when bounds are supplied; invalid ranges are ignored.
 `array.indexof` and `array.lastindexof` return `-1` when no matching value is
 present. Numeric helpers on int/float arrays skip `na` elements; if every
 element is `na` or the array is empty, `array.min`, `array.max`, `array.sum`,

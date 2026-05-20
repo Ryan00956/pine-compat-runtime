@@ -1,0 +1,26 @@
+indicator("Array fill fixture")
+ints = array.new_int(4, 1)
+array.fill(ints, 9, 1, 3)
+plot(ints.get(0) * 1000 + ints.get(1) * 100 + ints.get(2) * 10 + ints.get(3))
+ints.fill(2)
+plot(ints.get(0) + ints.get(3))
+
+floats = array.new_float(3, close)
+floats.fill(high, 0, 2)
+plot(floats.get(0) + floats.get(1) + floats.get(2))
+
+words = array.new_string(3, "a")
+words.fill("b", 1, 3)
+plot(words.join("|") == "a|b|b" ? 1 : 0)
+
+colors = array.new_color(2, color.red)
+colors.fill(color.green)
+plot(colors.get(0) == color.green and colors.get(1) == color.green ? 1 : 0)
+
+flags = array.new_bool(2, false)
+array.fill(flags, true, 0, 1)
+plot(flags.get(0) and not flags.get(1) ? 1 : 0)
+
+array.fill(flags, false, -1, 1)
+array.fill(flags, false, 0, 3)
+plot(flags.get(0) and not flags.get(1) ? 1 : 0)

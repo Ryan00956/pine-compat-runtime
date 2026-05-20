@@ -22,6 +22,8 @@
   and `array.unshift` across supported typed arrays.
 - Added `array.insert` and `array.remove` support for supported typed arrays,
   including method-call syntax and array element limit checks.
+- Added `array.fill` support for supported typed arrays, including optional
+  half-open range bounds and method-call syntax.
 - Added `array.copy` support for explicitly creating independent typed-array
   snapshots while plain array assignment remains id/reference-based.
 - Added array search helpers `array.includes`, `array.indexof`, and
@@ -36,8 +38,9 @@
   including method-call syntax and array element limit checks.
 - Added partial array method-call syntax for supported array `size`, `get`,
   `set`, `insert`, `push`, `pop`, `remove`, `shift`, `unshift`, `first`,
-  `last`, `copy`, `slice`, `concat`, `includes`, `indexof`, `lastindexof`,
-  numeric `min`, `max`, `sum`, `avg`, `sort`, `reverse`, `join`, and `clear`.
+  `last`, `fill`, `copy`, `slice`, `concat`, `includes`, `indexof`,
+  `lastindexof`, numeric `min`, `max`, `sum`, `avg`, `sort`, `reverse`,
+  `join`, and `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.
 - Added `input.price`, `input.time`, `input.symbol`, and `input.timeframe`
   support for the executable `defval`/`title` subset.

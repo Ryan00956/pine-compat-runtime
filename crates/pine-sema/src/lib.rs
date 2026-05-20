@@ -1159,7 +1159,7 @@ impl Analyzer {
         arg_types: &[Option<PineType>],
     ) {
         let value_index = match signature.name {
-            "array.push" | "array.unshift" | "array.includes" | "array.indexof"
+            "array.push" | "array.unshift" | "array.fill" | "array.includes" | "array.indexof"
             | "array.lastindexof" => 1,
             "array.set" | "array.insert" => 2,
             _ => return,
@@ -2480,6 +2480,7 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "remove" => Some("array.remove"),
         "shift" => Some("array.shift"),
         "unshift" => Some("array.unshift"),
+        "fill" => Some("array.fill"),
         "first" => Some("array.first"),
         "last" => Some("array.last"),
         "copy" => Some("array.copy"),
@@ -2528,6 +2529,7 @@ fn is_array_mutation_builtin(name: &str) -> bool {
             | "array.remove"
             | "array.shift"
             | "array.unshift"
+            | "array.fill"
             | "array.clear"
             | "array.sort"
             | "array.reverse"
@@ -4684,6 +4686,29 @@ plot(y)
     }
 
     #[test]
+    fn accepts_array_fill_operations() {
+        let analysis = analyze(
+            "values = array.new_string(3, \"a\")\narray.fill(values, \"b\", 1, 3)\nints = array.new_int(2, 1)\nints.fill(2)\nplot(values.get(1) == \"b\" and ints.get(0) == 2 ? 1 : 0)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == "array.fill"),
+            "{:?}",
+            analysis.compatibility.supported
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn accepts_array_helper_method_calls() {
         let analysis = analyze(
             "values = array.new_string()\nvalues.unshift(\"tail\")\nvalues.unshift(\"head\")\nfirst = values.first()\nlast = values.last()\nshifted = values.shift()\nplot(first == \"head\" and last == \"tail\" and shifted == \"head\" ? values.size() : 0)\n",
@@ -4908,6 +4933,22 @@ plot(y)
     }
 
     #[test]
+    fn rejects_numeric_value_for_bool_array_fill() {
+        let analysis =
+            analyze("values = array.new_bool(2)\narray.fill(values, close)\nplot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
     fn rejects_numeric_value_for_bool_array_search() {
         let analysis = analyze("values = array.new_bool()\nplot(array.indexof(values, close))\n");
 
@@ -5048,7 +5089,7 @@ plot(y)
 
     #[test]
     fn rejects_unknown_float_array_method() {
-        let analysis = analyze("values = array.new_float()\nvalues.fill(close)\nplot(close)\n");
+        let analysis = analyze("values = array.new_float()\nvalues.range(close)\nplot(close)\n");
 
         assert!(
             analysis

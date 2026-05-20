@@ -1024,6 +1024,29 @@ const ARRAY_VALUE_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_FILL_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::Array,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "value",
+        accepts: Accepts::Any,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "index_from",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "index_to",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+];
+
 const ARRAY_INDEX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1671,6 +1694,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "array.unshift",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_VALUE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.fill",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_FILL_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

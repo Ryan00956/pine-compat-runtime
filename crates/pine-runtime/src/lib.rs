@@ -1447,6 +1447,7 @@ impl<'a> HistoricalRuntime<'a> {
             "array.remove" => self.eval_array_remove(args),
             "array.shift" => self.eval_array_shift(args),
             "array.unshift" => self.eval_array_unshift(args),
+            "array.fill" => self.eval_array_fill(args),
             "array.first" => self.eval_array_first(args),
             "array.last" => self.eval_array_last(args),
             "array.copy" => self.eval_array_copy(args),
@@ -1768,6 +1769,61 @@ impl<'a> HistoricalRuntime<'a> {
                 });
             }
             values.insert(0, value);
+        }
+        Ok(PineValue::Void)
+    }
+
+    fn eval_array_fill(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            let _ = self.eval_expr(&args[1].value)?;
+            if let Some(index_from) = args.get(2) {
+                let _ = self.eval_expr(&index_from.value)?;
+            }
+            if let Some(index_to) = args.get(3) {
+                let _ = self.eval_expr(&index_to.value)?;
+            }
+            return Ok(PineValue::Void);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            let _ = self.eval_expr(&args[1].value)?;
+            if let Some(index_from) = args.get(2) {
+                let _ = self.eval_expr(&index_from.value)?;
+            }
+            if let Some(index_to) = args.get(3) {
+                let _ = self.eval_expr(&index_to.value)?;
+            }
+            return Ok(PineValue::Void);
+        };
+        let value = self.eval_array_value(&args[1].value, kind)?;
+        let index_from = if let Some(index_from) = args.get(2) {
+            self.eval_expr(&index_from.value)?.as_i64()
+        } else {
+            Some(0)
+        };
+        let Some(index_from) = index_from else {
+            return Ok(PineValue::Void);
+        };
+        let index_to = if let Some(index_to) = args.get(3) {
+            self.eval_expr(&index_to.value)?.as_i64()
+        } else {
+            self.array_store.get(&id).map(|values| values.len() as i64)
+        };
+        let Some(index_to) = index_to else {
+            return Ok(PineValue::Void);
+        };
+        if index_from < 0 || index_to < 0 || index_from > index_to {
+            return Ok(PineValue::Void);
+        }
+        let index_from = index_from as usize;
+        let index_to = index_to as usize;
+        if let Some(values) = self.array_store.get_mut(&id) {
+            if index_to > values.len() {
+                return Ok(PineValue::Void);
+            }
+            for item in &mut values[index_from..index_to] {
+                *item = value.clone();
+            }
         }
         Ok(PineValue::Void)
     }
@@ -7549,6 +7605,58 @@ plot(flags.size())
         assert_values_close(&result.plots[4].values, &[0.0, 0.0]);
         assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[6].values, &[0.0, 0.0]);
+    }
+
+    #[test]
+    fn runs_array_fill_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array fill")
+ints = array.new_int(4, 1)
+array.fill(ints, 9, 1, 3)
+plot(ints.get(0) * 1000 + ints.get(1) * 100 + ints.get(2) * 10 + ints.get(3))
+ints.fill(2)
+plot(ints.get(0) + ints.get(3))
+
+floats = array.new_float(3, close)
+floats.fill(high, 0, 2)
+plot(floats.get(0) + floats.get(1) + floats.get(2))
+
+words = array.new_string(3, "a")
+words.fill("b", 1, 3)
+plot(words.join("|") == "a|b|b" ? 1 : 0)
+
+colors = array.new_color(2, color.red)
+colors.fill(color.green)
+plot(colors.get(0) == color.green and colors.get(1) == color.green ? 1 : 0)
+
+flags = array.new_bool(2, false)
+array.fill(flags, true, 0, 1)
+plot(flags.get(0) and not flags.get(1) ? 1 : 0)
+
+array.fill(flags, false, -1, 1)
+array.fill(flags, false, 0, 3)
+plot(flags.get(0) and not flags.get(1) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 7);
+        assert_values_close(&result.plots[0].values, &[1991.0, 1991.0]);
+        assert_values_close(&result.plots[1].values, &[4.0, 4.0]);
+        assert_values_close(&result.plots[2].values, &[10.0, 15.0]);
+        assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
     }
 
     #[test]
