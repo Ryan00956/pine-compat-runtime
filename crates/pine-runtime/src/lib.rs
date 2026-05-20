@@ -1541,6 +1541,7 @@ impl<'a> HistoricalRuntime<'a> {
             "array.variance" => self.eval_array_variance(args, ArrayVarianceMode::Variance),
             "array.stdev" => self.eval_array_variance(args, ArrayVarianceMode::Stdev),
             "array.sort" => self.eval_array_sort(args),
+            "array.sort_indices" => self.eval_array_sort_indices(args),
             "array.reverse" => self.eval_array_reverse(args),
             "array.join" => self.eval_array_join(args),
             "array.clear" => self.eval_array_clear(args),
@@ -2516,6 +2517,34 @@ impl<'a> HistoricalRuntime<'a> {
             values.sort_by(compare_array_numeric_values);
         }
         Ok(PineValue::Void)
+    }
+
+    fn eval_array_sort_indices(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
+            return Ok(PineValue::Na);
+        }
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Na);
+        };
+
+        let mut indices = (0..values.len()).collect::<Vec<_>>();
+        indices.sort_by(|left, right| {
+            compare_array_numeric_values(&values[*left], &values[*right])
+                .then_with(|| left.cmp(right))
+        });
+        let values = indices
+            .into_iter()
+            .map(|index| PineValue::Int(index as i64))
+            .collect();
+
+        Ok(self.new_array_from_values(ArrayElementKind::Int, values))
     }
 
     fn eval_array_reverse(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -8491,6 +8520,10 @@ array.sort(ints)
 plot(ints.get(0) * 100 + ints.get(1) * 10 + ints.get(2))
 ints.reverse()
 plot(ints.get(0) * 100 + ints.get(1) * 10 + ints.get(2))
+unsorted_ints = array.from(30, 10, 20)
+sorted_int_indices = unsorted_ints.sort_indices()
+plot(sorted_int_indices.get(0) * 100 + sorted_int_indices.get(1) * 10 + sorted_int_indices.get(2))
+plot(unsorted_ints.get(0) * 100 + unsorted_ints.get(1) * 10 + unsorted_ints.get(2))
 
 floats = array.new_float()
 floats.push(na)
@@ -8499,6 +8532,12 @@ floats.push(close)
 floats.sort()
 plot(floats.get(0) + floats.get(1))
 plot(na(floats.get(2)) ? 1 : 0)
+float_indices_source = array.new_float()
+float_indices_source.push(na)
+float_indices_source.push(high)
+float_indices_source.push(close)
+float_indices = array.sort_indices(float_indices_source)
+plot(float_indices.get(0) * 100 + float_indices.get(1) * 10 + float_indices.get(2))
 
 words = array.new_string()
 words.push("a")
@@ -8523,13 +8562,16 @@ plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
         let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 6);
+        assert_eq!(result.plots.len(), 9);
         assert_values_close(&result.plots[0].values, &[123.0, 123.0]);
         assert_values_close(&result.plots[1].values, &[321.0, 321.0]);
-        assert_values_close(&result.plots[2].values, &[6.0, 9.0]);
-        assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
-        assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[120.0, 120.0]);
+        assert_values_close(&result.plots[3].values, &[3120.0, 3120.0]);
+        assert_values_close(&result.plots[4].values, &[6.0, 9.0]);
         assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[6].values, &[210.0, 210.0]);
+        assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
     }
 
     #[test]

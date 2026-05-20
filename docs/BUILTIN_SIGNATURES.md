@@ -214,6 +214,7 @@ array.standardize(id: float-array|int-array) -> float-array
 array.variance(id: float-array|int-array, biased?: bool-compatible) -> series float
 array.stdev(id: float-array|int-array, biased?: bool-compatible) -> series float
 array.sort(id: float-array|int-array) -> void
+array.sort_indices(id: float-array|int-array) -> int-array
 array.reverse(id: float-array|int-array|bool-array|string-array|color-array) -> void
 array.join(id: float-array|int-array|bool-array|string-array|color-array, separator?: string-compatible) -> series string
 array.clear(id: float-array|int-array|bool-array|string-array|color-array) -> void
@@ -262,7 +263,10 @@ array for empty/all-`na` arrays.
 `array.variance` and `array.stdev` ignore `na` elements and use a biased
 population estimate by default; pass `false` for an unbiased sample estimate.
 `array.sort` currently supports float and int arrays only and sorts ascending
-with `na` values last. `array.reverse` supports every supported typed array.
+with `na` values last. `array.sort_indices` supports the same numeric subset
+and returns a new int array containing original indexes in ascending sorted
+order without modifying the source array. `array.reverse` supports every
+supported typed array.
 `array.join` supports every supported typed array, defaults the
 separator to `,`, uses the default numeric string format, and renders colors as
 their normalized integer color values. Array assignment passes the runtime array

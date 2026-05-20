@@ -30,8 +30,8 @@ Implemented or partially implemented:
   `array.get`/`array.set`/`array.insert`/`array.remove`, `array.slice`,
   `array.concat`, `array.fill`, search/binary search helpers, numeric
   abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev
-  helpers, queue/end helpers, ordering helpers, `array.join`, and supported
-  array method calls.
+  helpers, queue/end helpers, ordering helpers including `array.sort_indices`,
+  `array.join`, and supported array method calls.
 - A fixture-covered set of `input.*`, output calls, color helpers, math
   helpers, and `ta.*` functions.
 - CLI, Python, and WASM surfaces for the supported runtime result model.

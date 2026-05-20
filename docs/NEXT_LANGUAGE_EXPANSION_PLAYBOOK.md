@@ -245,6 +245,7 @@ Initial supported functions:
 - `array.variance`
 - `array.stdev`
 - `array.sort`
+- `array.sort_indices`
 - `array.reverse`
 - `array.join`
 - `array.clear`
@@ -259,7 +260,7 @@ Resolved implementation choices:
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
 - The current pass supports float, int, bool, string, and color arrays with
   array.from inference and size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/clear,
-  negative indexes for get/set/insert/remove, plus numeric binary search/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev/sort,
+  negative indexes for get/set/insert/remove, plus numeric binary search/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev/sort/sort_indices,
   all-supported-array reverse, and all-supported-array join only; unsupported
   `array.*` variants still produce diagnostics.
 - Array assignment and UDF argument binding pass the runtime array id by

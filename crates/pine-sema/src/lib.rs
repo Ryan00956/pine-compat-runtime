@@ -2538,6 +2538,7 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "variance" => Some("array.variance"),
         "stdev" => Some("array.stdev"),
         "sort" => Some("array.sort"),
+        "sort_indices" => Some("array.sort_indices"),
         "reverse" => Some("array.reverse"),
         "join" => Some("array.join"),
         "clear" => Some("array.clear"),
@@ -4922,7 +4923,7 @@ plot(y)
     #[test]
     fn accepts_array_ordering_operations() {
         let analysis = analyze(
-            "values = array.new_int()\narray.push(values, 3)\narray.push(values, 1)\narray.sort(values)\nvalues.reverse()\nplot(values.get(0) + values.get(1))\n",
+            "values = array.new_int()\narray.push(values, 3)\narray.push(values, 1)\nindices = values.sort_indices()\narray.sort(values)\nvalues.reverse()\nplot(values.get(0) + values.get(1) + indices.get(0))\n",
         );
 
         assert!(
@@ -4930,7 +4931,7 @@ plot(y)
             "{:?}",
             analysis.diagnostics
         );
-        for feature in ["array.sort", "array.reverse"] {
+        for feature in ["array.sort", "array.sort_indices", "array.reverse"] {
             assert!(
                 analysis
                     .compatibility

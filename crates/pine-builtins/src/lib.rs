@@ -1978,6 +1978,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "array.sort_indices",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_INT_ARRAY),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "array.reverse",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_SIZE_PARAMS,

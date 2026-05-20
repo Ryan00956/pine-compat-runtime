@@ -183,11 +183,11 @@ Supported operations are
 `array.sum`, `array.avg`, `array.range`, `array.median`, `array.mode`,
 `array.variance`, `array.stdev`, `array.percentile_nearest_rank`,
 `array.percentile_linear_interpolation`, `array.percentrank`,
-`array.covariance`, `array.standardize`, `array.sort`, `array.reverse`,
-`array.join`, and `array.clear`;
+`array.covariance`, `array.standardize`, `array.sort`, `array.sort_indices`,
+`array.reverse`, `array.join`, and `array.clear`;
 `size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/reverse/join/clear`
 may also be called with method syntax on a supported array receiver. Numeric
-`binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev/sort`
+`binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev/sort/sort_indices`
 helpers may also be called with method syntax on float and int arrays. Float
 arrays accept int or float values and store them as
 floats. Int arrays accept int values. Bool arrays accept bool values. String
@@ -234,7 +234,9 @@ accept an optional `biased` bool argument that defaults to `true`; passing
 `false` uses the sample denominator and returns `na` when fewer than two
 numeric values remain.
 `array.sort` is currently limited to float and int arrays, sorts ascending in
-place, and leaves `na` values at the end.
+place, and leaves `na` values at the end. `array.sort_indices` supports the
+same numeric subset, returns a new int array of original indexes in ascending
+sorted order, and leaves the source array unchanged.
 `array.reverse` reverses any supported typed array in place. `array.join`
 converts supported array elements to string with the default numeric format,
 uses `,` as the default separator, and returns an empty string for empty arrays.
