@@ -198,6 +198,17 @@ Named colors include the common TradingView color constants used by fixtures.
 Hex color parsing should be implemented in the syntax or semantic layer with a
 single normalized `Color` representation.
 
+## String
+
+```text
+str.length(string: string-compatible) -> int with same qualifier
+str.upper(string: string-compatible) -> string with same qualifier
+str.lower(string: string-compatible) -> string with same qualifier
+```
+
+`str.length`, `str.upper`, and `str.lower` return `na` for `na` inputs.
+`str.length` counts Unicode scalar values.
+
 ## Math
 
 Phase 1 may include only the math functions required by fixtures.

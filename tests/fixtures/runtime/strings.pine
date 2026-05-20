@@ -1,0 +1,9 @@
+//@version=5
+indicator("Strings")
+mode = input.string("sma", "Mode")
+upper = str.upper(mode)
+lower = str.lower(upper)
+length = str.length(upper)
+missing = str.length(na)
+plot(upper == "SMA" and lower == "sma" ? length : 0)
+plot(na(missing) ? 1 : 0)

@@ -38,6 +38,7 @@ pub enum Accepts {
     ConstBool,
     ConstOrInputFloat,
     ColorCompatible,
+    StringCompatible,
     PlotOrHLine,
     FloatArray,
     InputDefval,
@@ -52,6 +53,7 @@ pub enum ReturnSpec {
     ColorFromArg(usize),
     PromotedColor,
     PromotedNumeric,
+    IntFromArg(usize),
     FloatFromArg(usize),
     PromotedFloat,
     Round,
@@ -551,6 +553,12 @@ const MATH_NUMBER_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const STR_TEXT_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "string",
+    accepts: Accepts::StringCompatible,
+    optional: false,
+}];
+
 const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "a",
@@ -967,6 +975,27 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: COLOR_COMPONENT_PARAMS,
         returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.length",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_TEXT_PARAMS,
+        returns: ReturnSpec::IntFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.upper",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_TEXT_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.lower",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_TEXT_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
         variadic: false,
     },
     BuiltinSignature {

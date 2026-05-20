@@ -1196,6 +1196,11 @@ impl Analyzer {
                 .map(pine_builtins::color_return_for_arg),
             ReturnSpec::PromotedColor => promoted_color_type(arg_types),
             ReturnSpec::PromotedNumeric => promoted_numeric_type(arg_types),
+            ReturnSpec::IntFromArg(index) => arg_types
+                .get(index)
+                .copied()
+                .flatten()
+                .map(int_return_for_arg),
             ReturnSpec::FloatFromArg(index) => arg_types
                 .get(index)
                 .copied()
@@ -2135,6 +2140,11 @@ impl Analyzer {
                             .map(pine_builtins::color_return_for_arg),
                         ReturnSpec::PromotedColor => promoted_color_type(&arg_types),
                         ReturnSpec::PromotedNumeric => promoted_numeric_type(&arg_types),
+                        ReturnSpec::IntFromArg(index) => arg_types
+                            .get(index)
+                            .copied()
+                            .flatten()
+                            .map(int_return_for_arg),
                         ReturnSpec::FloatFromArg(index) => arg_types
                             .get(index)
                             .copied()
@@ -2712,6 +2722,10 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             matches!(arg_type.kind, ValueKind::Color | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::StringCompatible => {
+            matches!(arg_type.kind, ValueKind::String | ValueKind::Na)
+                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
         Accepts::FloatArray => arg_type.kind == ValueKind::FloatArray,
         Accepts::InputDefval => {
@@ -2821,6 +2835,10 @@ fn promoted_numeric_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
 
 fn float_return_for_arg(arg_type: PineType) -> PineType {
     PineType::new(arg_type.qualifier, ValueKind::Float)
+}
+
+fn int_return_for_arg(arg_type: PineType) -> PineType {
+    PineType::new(arg_type.qualifier, ValueKind::Int)
 }
 
 fn promoted_float_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
@@ -3273,6 +3291,37 @@ plot(close, color=shade)
                 .any(|diagnostic| diagnostic.code == "E_UNKNOWN_COLOR")
         );
         assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn accepts_string_helpers() {
+        let analysis = analyze(
+            r#"indicator("strings")
+mode = input.string("sma", "Mode")
+upper = str.upper(mode)
+lower = str.lower(upper)
+length = str.length(upper)
+missing = str.length(na)
+plot(upper == "SMA" and lower == "sma" ? length : 0)
+plot(na(missing) ? 1 : 0)
+"#,
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for feature in ["str.upper", "str.lower", "str.length"] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|supported| supported.feature == feature),
+                "{feature} not reported as supported"
+            );
+        }
     }
 
     #[test]

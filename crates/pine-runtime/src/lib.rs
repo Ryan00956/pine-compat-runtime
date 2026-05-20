@@ -1323,6 +1323,9 @@ impl<'a> HistoricalRuntime<'a> {
             "color.g" => self.eval_color_component(args, ColorComponent::Green),
             "color.b" => self.eval_color_component(args, ColorComponent::Blue),
             "color.t" => self.eval_color_component(args, ColorComponent::Transparency),
+            "str.length" => self.eval_str_length(args),
+            "str.upper" => self.eval_str_case(args, StringCase::Upper),
+            "str.lower" => self.eval_str_case(args, StringCase::Lower),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -1761,6 +1764,30 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(PineValue::Float(color_component(color, component)))
+    }
+
+    fn eval_str_length(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(value) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        Ok(PineValue::Int(value.chars().count() as i64))
+    }
+
+    fn eval_str_case(
+        &mut self,
+        args: &[HirCallArg],
+        string_case: StringCase,
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(value) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        let value = match string_case {
+            StringCase::Upper => value.to_uppercase(),
+            StringCase::Lower => value.to_lowercase(),
+        };
+        Ok(PineValue::String(value))
     }
 
     fn eval_math_abs(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -2799,6 +2826,12 @@ fn color_component(color: u32, component: ColorComponent) -> f64 {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StringCase {
+    Upper,
+    Lower,
+}
+
 fn math_extreme(left: f64, right: f64, mode: MathExtreme) -> f64 {
     match mode {
         MathExtreme::Max => left.max(right),
@@ -3770,6 +3803,34 @@ plot(channels)
             result.bg_colors[0].values,
             vec![PineValue::Color(0xFF990080), PineValue::Color(0xFF990080)]
         );
+    }
+
+    #[test]
+    fn runs_string_helpers() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("strings")
+mode = input.string("sma", "Mode")
+upper = str.upper(mode)
+lower = str.lower(upper)
+length = str.length(upper)
+missing = str.length(na)
+plot(upper == "SMA" and lower == "sma" ? length : 0)
+plot(na(missing) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values, &[3.0, 3.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
     }
 
     #[test]
