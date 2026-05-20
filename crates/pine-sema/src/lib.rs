@@ -4741,7 +4741,7 @@ plot(y)
     #[test]
     fn accepts_array_insert_remove_operations() {
         let analysis = analyze(
-            "values = array.new_int()\nvalues.push(1)\narray.insert(values, 1, 2)\nremoved = values.remove(0)\nplot(removed + values.get(0))\n",
+            "values = array.new_int()\nvalues.push(1)\narray.insert(values, 1, 2)\nvalues.insert(-1, 3)\nremoved = values.remove(-2)\nplot(removed + values.get(-1))\n",
         );
 
         assert!(

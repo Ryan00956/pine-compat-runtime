@@ -112,11 +112,13 @@ runtime store before executing a forming update, so array mutations and copies
 made during a forming update do not leak into the confirmed store until a
 confirmed update is committed.
 
-Array bounds are stable in the current subset: `array.get` outside the current
-array length returns `na`, `array.set` outside the current length is ignored,
-`array.insert` outside `0..=size` is ignored, `array.remove` outside the
-current length returns `na`, and `array.pop` or `array.shift` on an empty array
-returns `na`. `array.first` and `array.last` also return `na` for empty arrays.
+Array bounds are stable in the current subset: `array.get`, `array.set`,
+`array.insert`, and `array.remove` support negative indexes from the array end.
+Indexes outside the current length make `array.get` and `array.remove` return
+`na`, while `array.set` and `array.insert` ignore invalid indexes. Positive
+`array.insert` at `size` appends; greater-than-size insert indexes are ignored.
+`array.pop` or `array.shift` on an empty array returns `na`. `array.first` and
+`array.last` also return `na` for empty arrays.
 `array.fill` replaces all elements by default, or a half-open `[index_from,
 index_to)` window when bounds are supplied; invalid ranges are ignored.
 `array.indexof` and `array.lastindexof` return `-1` when no matching value is

@@ -1741,13 +1741,12 @@ impl<'a> HistoricalRuntime<'a> {
         let (PineValue::Array(id), Some(index)) = (id, index) else {
             return Ok(PineValue::Na);
         };
-        if index < 0 {
-            return Ok(PineValue::Na);
-        }
         Ok(self
             .array_store
             .get(&id)
-            .and_then(|values| values.get(index as usize))
+            .and_then(|values| {
+                normalize_array_index(index, values.len()).and_then(|index| values.get(index))
+            })
             .cloned()
             .unwrap_or(PineValue::Na))
     }
@@ -1764,14 +1763,9 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         let value = self.eval_array_value(&args[2].value, kind)?;
-        if index < 0 {
-            return Ok(PineValue::Void);
-        }
-        if let Some(slot) = self
-            .array_store
-            .get_mut(&id)
-            .and_then(|values| values.get_mut(index as usize))
-        {
+        if let Some(slot) = self.array_store.get_mut(&id).and_then(|values| {
+            normalize_array_index(index, values.len()).and_then(|index| values.get_mut(index))
+        }) {
             *slot = value;
         }
         Ok(PineValue::Void)
@@ -1789,14 +1783,10 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         let value = self.eval_array_value(&args[2].value, kind)?;
-        if index < 0 {
-            return Ok(PineValue::Void);
-        }
         if let Some(values) = self.array_store.get_mut(&id) {
-            let index = index as usize;
-            if index > values.len() {
+            let Some(index) = normalize_array_insert_index(index, values.len()) else {
                 return Ok(PineValue::Void);
-            }
+            };
             if values.len() >= MAX_ARRAY_ELEMENTS {
                 return Err(RuntimeError {
                     message: format!("array.insert cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
@@ -1825,19 +1815,11 @@ impl<'a> HistoricalRuntime<'a> {
         let (PineValue::Array(id), Some(index)) = (id, index) else {
             return Ok(PineValue::Na);
         };
-        if index < 0 {
-            return Ok(PineValue::Na);
-        }
         Ok(self
             .array_store
             .get_mut(&id)
             .and_then(|values| {
-                let index = index as usize;
-                if index < values.len() {
-                    Some(values.remove(index))
-                } else {
-                    None
-                }
+                normalize_array_index(index, values.len()).map(|index| values.remove(index))
             })
             .unwrap_or(PineValue::Na))
     }
@@ -4727,6 +4709,34 @@ fn values_equal(left: &PineValue, right: &PineValue) -> bool {
     match (left.as_f64(), right.as_f64()) {
         (Some(left), Some(right)) => (left - right).abs() < f64::EPSILON,
         _ => left == right,
+    }
+}
+
+fn normalize_array_index(index: i64, len: usize) -> Option<usize> {
+    let len = i64::try_from(len).ok()?;
+    let index = if index < 0 {
+        len.checked_add(index)?
+    } else {
+        index
+    };
+    if (0..len).contains(&index) {
+        Some(index as usize)
+    } else {
+        None
+    }
+}
+
+fn normalize_array_insert_index(index: i64, len: usize) -> Option<usize> {
+    let len = i64::try_from(len).ok()?;
+    let index = if index < 0 {
+        len.checked_add(index)?
+    } else {
+        index
+    };
+    if (0..=len).contains(&index) {
+        Some(index as usize)
+    } else {
+        None
     }
 }
 
@@ -8108,6 +8118,17 @@ plot(flags.remove(0) ? flags.size() : 99)
 plot(na(array.remove(flags, 0)) ? 1 : 0)
 array.insert(flags, 3, false)
 plot(flags.size())
+
+negative = array.from(10, 20, 30)
+plot(negative.get(-1) + negative.get(-3))
+negative.set(-2, 99)
+plot(negative.get(1))
+negative.insert(-1, 25)
+plot(negative.get(2) * 100 + negative.get(-1))
+negative_head = negative.remove(-4)
+negative_tail = negative.remove(-1)
+plot(negative_head + negative_tail + negative.size())
+plot(na(negative.get(-3)) and na(negative.remove(-3)) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -8120,7 +8141,7 @@ plot(flags.size())
         let bars = vec![bar(1.0), bar(2.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 7);
+        assert_eq!(result.plots.len(), 12);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[23.0, 23.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
@@ -8128,6 +8149,11 @@ plot(flags.size())
         assert_values_close(&result.plots[4].values, &[0.0, 0.0]);
         assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[6].values, &[0.0, 0.0]);
+        assert_values_close(&result.plots[7].values, &[40.0, 40.0]);
+        assert_values_close(&result.plots[8].values, &[99.0, 99.0]);
+        assert_values_close(&result.plots[9].values, &[2530.0, 2530.0]);
+        assert_values_close(&result.plots[10].values, &[42.0, 42.0]);
+        assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
     }
 
     #[test]

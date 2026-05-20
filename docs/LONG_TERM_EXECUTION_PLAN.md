@@ -26,7 +26,8 @@ Implemented or partially implemented:
 - Partial `for` and `while` loops.
 - Constant non-negative history offsets.
 - Partial float/int/bool/string/color arrays, reference assignment,
-  `array.from`, `array.copy`, `array.insert`, `array.remove`, `array.slice`,
+  `array.from`, `array.copy`, negative indexes for
+  `array.get`/`array.set`/`array.insert`/`array.remove`, `array.slice`,
   `array.concat`, `array.fill`, search/binary search helpers, numeric
   abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev
   helpers, queue/end helpers, ordering helpers, `array.join`, and supported

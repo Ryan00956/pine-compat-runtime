@@ -24,6 +24,8 @@
   and `array.unshift` across supported typed arrays.
 - Added `array.insert` and `array.remove` support for supported typed arrays,
   including method-call syntax and array element limit checks.
+- Added negative indexing support for `array.get`, `array.set`,
+  `array.insert`, and `array.remove`.
 - Added `array.fill` support for supported typed arrays, including optional
   half-open range bounds and method-call syntax.
 - Added `array.copy` support for explicitly creating independent typed-array

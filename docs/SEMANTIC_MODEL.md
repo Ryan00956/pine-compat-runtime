@@ -199,9 +199,11 @@ mutations do not affect the source. `array.slice` allocates a same-kind array
 containing the half-open `[index_from, index_to)` window; invalid bounds return
 `na` at runtime. `array.concat` requires two arrays of the same kind, appends
 the second array's current values to the first array in place, and returns the
-first array id. `array.insert` inserts before a valid index and is a no-op for
-negative or greater-than-size indexes. `array.remove` removes and returns a
-valid indexed element, or returns `na` when the index is invalid. `array.fill`
+first array id. `array.get`, `array.set`, `array.insert`, and `array.remove`
+support negative indexes from the array end. `array.insert` inserts before a
+valid index, appends when the positive index equals the current size, and is a
+no-op for invalid indexes. `array.remove` removes and returns a valid indexed
+element, or returns `na` when the index is invalid. `array.fill`
 replaces all elements by default or a half-open `[index_from, index_to)` window
 when bounds are supplied; invalid ranges are no-ops.
 `array.indexof` and `array.lastindexof` return `-1` when the value is not

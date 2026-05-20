@@ -228,13 +228,15 @@ allows `na` in otherwise typed arrays, and promotes mixed int/float arguments
 to a float array.
 `size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/clear`
 may also be called with method syntax on a supported array receiver.
-`array.insert` inserts a compatible value before the requested index; negative
-or greater-than-size indexes are no-ops. `array.remove` removes and returns an
-element, or returns `na` for an invalid index. `array.fill` fills the whole
-array by default or the half-open `[index_from, index_to)` window when bounds
-are supplied; invalid ranges are no-ops. `array.slice` allocates a same-kind
-array containing the half-open `[index_from, index_to)` window; invalid bounds
-return `na` at runtime. `array.concat` requires two arrays of the same kind,
+`array.get`, `array.set`, `array.insert`, and `array.remove` support negative
+indexes from the array end. `array.insert` inserts a compatible value before
+the requested index; greater-than-size or otherwise invalid indexes are no-ops.
+`array.remove` removes and returns an element, or returns `na` for an invalid
+index. `array.fill` fills the whole array by default or the half-open
+`[index_from, index_to)` window when bounds are supplied; invalid ranges are
+no-ops. `array.slice` allocates a same-kind array containing the half-open
+`[index_from, index_to)` window; invalid bounds return `na` at runtime.
+`array.concat` requires two arrays of the same kind,
 appends `id2` values to `id` in place, and returns `id`. Numeric array
 `binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev`
 helpers may also be called with method syntax on float and int array receivers.

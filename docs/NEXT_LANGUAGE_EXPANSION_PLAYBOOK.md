@@ -258,8 +258,8 @@ Resolved implementation choices:
 - `var` arrays preserve their id and backing storage across bars.
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
 - The current pass supports float, int, bool, string, and color arrays with
-  array.from inference and size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/clear
-  plus numeric binary search/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/variance/stdev/sort,
+  array.from inference and size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/clear,
+  negative indexes for get/set/insert/remove, plus numeric binary search/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev/sort,
   all-supported-array reverse, and all-supported-array join only; unsupported
   `array.*` variants still produce diagnostics.
 - Array assignment and UDF argument binding pass the runtime array id by
