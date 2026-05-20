@@ -1428,6 +1428,10 @@ impl<'a> HistoricalRuntime<'a> {
             "array.get" => self.eval_array_get(args),
             "array.set" => self.eval_array_set(args),
             "array.pop" => self.eval_array_pop(args),
+            "array.shift" => self.eval_array_shift(args),
+            "array.unshift" => self.eval_array_unshift(args),
+            "array.first" => self.eval_array_first(args),
+            "array.last" => self.eval_array_last(args),
             "array.clear" => self.eval_array_clear(args),
             _ => Err(RuntimeError {
                 message: format!("unsupported runtime call `{callee}`"),
@@ -1630,6 +1634,72 @@ impl<'a> HistoricalRuntime<'a> {
             .array_store
             .get_mut(&id)
             .and_then(Vec::pop)
+            .unwrap_or(PineValue::Na))
+    }
+
+    fn eval_array_shift(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .array_store
+            .get_mut(&id)
+            .and_then(|values| {
+                if values.is_empty() {
+                    None
+                } else {
+                    Some(values.remove(0))
+                }
+            })
+            .unwrap_or(PineValue::Na))
+    }
+
+    fn eval_array_unshift(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            let _ = self.eval_expr(&args[1].value)?;
+            return Ok(PineValue::Void);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            let _ = self.eval_expr(&args[1].value)?;
+            return Ok(PineValue::Void);
+        };
+        let value = self.eval_array_value(&args[1].value, kind)?;
+        if let Some(values) = self.array_store.get_mut(&id) {
+            if values.len() >= MAX_ARRAY_ELEMENTS {
+                return Err(RuntimeError {
+                    message: format!("array.unshift cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+                });
+            }
+            values.insert(0, value);
+        }
+        Ok(PineValue::Void)
+    }
+
+    fn eval_array_first(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .array_store
+            .get(&id)
+            .and_then(|values| values.first())
+            .cloned()
+            .unwrap_or(PineValue::Na))
+    }
+
+    fn eval_array_last(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self
+            .array_store
+            .get(&id)
+            .and_then(|values| values.last())
+            .cloned()
             .unwrap_or(PineValue::Na))
     }
 
@@ -7008,6 +7078,73 @@ plot(color.b(first) + color.g(last))
     }
 
     #[test]
+    fn runs_array_helper_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array helpers")
+values = array.new_int()
+array.unshift(values, 2)
+array.unshift(values, 1)
+first = array.first(values)
+last = array.last(values)
+shifted = array.shift(values)
+empty = array.new_string()
+plot(first + last + shifted + array.size(values))
+plot(na(array.first(empty)) and na(array.last(empty)) and na(array.shift(empty)) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 2);
+        assert_values_close(&result.plots[0].values, &[5.0, 5.0, 5.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_array_helper_method_calls() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array helper methods")
+values = array.new_string()
+values.unshift("tail")
+values.unshift("head")
+first = values.first()
+last = values.last()
+shifted = values.shift()
+colors = array.new_color()
+colors.unshift(color.green)
+colors.unshift(color.red)
+color_first = colors.first()
+color_last = colors.last()
+color_shifted = colors.shift()
+plot(first == "head" and last == "tail" and shifted == "head" ? values.size() : 0)
+plot(color_first == color.red and color_last == color.green and color_shifted == color.red ? colors.size() : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 2);
+        assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
     fn var_float_array_persists_across_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -7147,6 +7284,35 @@ plot(array.size(values))
             error
                 .message
                 .contains("array.push cannot exceed 100000 elements"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn rejects_float_array_unshift_past_limit() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array unshift limit")
+values = array.new_float(100000)
+array.unshift(values, close)
+plot(array.size(values))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected array unshift limit error");
+
+        assert!(
+            error
+                .message
+                .contains("array.unshift cannot exceed 100000 elements"),
             "{}",
             error.message
         );

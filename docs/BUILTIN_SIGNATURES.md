@@ -181,14 +181,19 @@ array.push(id: float-array|int-array|bool-array|string-array|color-array, value:
 array.get(id: float-array|int-array|bool-array|string-array|color-array, index: simple int) -> series element
 array.set(id: float-array|int-array|bool-array|string-array|color-array, index: simple int, value: element-compatible) -> void
 array.pop(id: float-array|int-array|bool-array|string-array|color-array) -> series element
+array.shift(id: float-array|int-array|bool-array|string-array|color-array) -> series element
+array.unshift(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> void
+array.first(id: float-array|int-array|bool-array|string-array|color-array) -> series element
+array.last(id: float-array|int-array|bool-array|string-array|color-array) -> series element
 array.clear(id: float-array|int-array|bool-array|string-array|color-array) -> void
 ```
 
 The supported typed-array subset covers float, int, bool, string, and color
 arrays. Float arrays accept int or float values and store them as floats. Int
 arrays accept int values. Bool arrays accept bool values. String arrays accept
-string values. Color arrays accept color values. `size/get/set/push/pop/clear`
-may also be called with method syntax on a supported array receiver.
+string values. Color arrays accept color values.
+`size/get/set/push/pop/shift/unshift/first/last/clear` may also be called with
+method syntax on a supported array receiver.
 
 ## TA Built-Ins
 

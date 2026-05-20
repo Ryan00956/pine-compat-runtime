@@ -18,8 +18,10 @@
   existing size/get/set/push/pop/clear operations.
 - Added partial color array support through `array.new_color` and the existing
   size/get/set/push/pop/clear operations.
+- Added array helper support for `array.first`, `array.last`, `array.shift`,
+  and `array.unshift` across supported typed arrays.
 - Added partial array method-call syntax for supported array `size`, `get`,
-  `set`, `push`, `pop`, and `clear`.
+  `set`, `push`, `pop`, `shift`, `unshift`, `first`, `last`, and `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.
 - Added `input.price`, `input.time`, `input.symbol`, and `input.timeframe`
   support for the executable `defval`/`title` subset.

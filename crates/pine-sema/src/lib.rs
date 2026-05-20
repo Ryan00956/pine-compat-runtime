@@ -1159,6 +1159,7 @@ impl Analyzer {
     ) {
         let value_index = match signature.name {
             "array.push" => 1,
+            "array.unshift" => 1,
             "array.set" => 2,
             _ => return,
         };
@@ -2438,6 +2439,10 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "get" => Some("array.get"),
         "set" => Some("array.set"),
         "pop" => Some("array.pop"),
+        "shift" => Some("array.shift"),
+        "unshift" => Some("array.unshift"),
+        "first" => Some("array.first"),
+        "last" => Some("array.last"),
         "clear" => Some("array.clear"),
         _ => None,
     }
@@ -2464,7 +2469,7 @@ fn is_output_or_declaration_builtin(name: &str) -> bool {
 fn is_array_mutation_builtin(name: &str) -> bool {
     matches!(
         name,
-        "array.push" | "array.set" | "array.pop" | "array.clear"
+        "array.push" | "array.set" | "array.pop" | "array.shift" | "array.unshift" | "array.clear"
     )
 }
 
@@ -4552,6 +4557,45 @@ plot(y)
     }
 
     #[test]
+    fn accepts_array_helper_operations() {
+        let analysis = analyze(
+            "values = array.new_int()\narray.unshift(values, 2)\narray.unshift(values, 1)\nfirst = array.first(values)\nlast = array.last(values)\nshifted = array.shift(values)\nplot(first + last + shifted + array.size(values))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for feature in ["array.unshift", "array.first", "array.last", "array.shift"] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|supported| supported.feature == feature),
+                "{feature} missing from supported features: {:?}",
+                analysis.compatibility.supported
+            );
+        }
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_array_helper_method_calls() {
+        let analysis = analyze(
+            "values = array.new_string()\nvalues.unshift(\"tail\")\nvalues.unshift(\"head\")\nfirst = values.first()\nlast = values.last()\nshifted = values.shift()\nplot(first == \"head\" and last == \"tail\" and shifted == \"head\" ? values.size() : 0)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_float_value_for_int_array_mutation() {
         let analysis =
             analyze("values = array.new_int()\narray.push(values, close)\nplot(close)\n");
@@ -4571,6 +4615,22 @@ plot(y)
     fn rejects_numeric_value_for_bool_array_mutation() {
         let analysis =
             analyze("values = array.new_bool()\narray.push(values, close)\nplot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_numeric_value_for_bool_array_unshift() {
+        let analysis =
+            analyze("values = array.new_bool()\narray.unshift(values, close)\nplot(close)\n");
 
         assert!(
             analysis
@@ -4630,7 +4690,8 @@ plot(y)
 
     #[test]
     fn rejects_unknown_float_array_method() {
-        let analysis = analyze("values = array.new_float()\nvalues.shift()\nplot(close)\n");
+        let analysis =
+            analyze("values = array.new_float()\nvalues.insert(0, close)\nplot(close)\n");
 
         assert!(
             analysis
@@ -4639,6 +4700,24 @@ plot(y)
                 .any(|diagnostic| diagnostic.code == "E_UNKNOWN_METHOD"),
             "{:?}",
             analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_array_helper_mutation_inside_udf() {
+        let analysis = analyze(
+            "add(values, value) =>\n    values.unshift(value)\n    values.shift()\nvalues = array.new_float()\nplot(add(values, close))\n",
+        );
+
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|feature| feature.feature == "function_side_effect"),
+            "{:?}",
+            analysis.compatibility.unsupported
         );
         assert!(analysis.hir.is_none());
     }

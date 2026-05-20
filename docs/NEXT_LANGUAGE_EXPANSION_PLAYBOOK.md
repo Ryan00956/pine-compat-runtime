@@ -212,6 +212,10 @@ Initial supported functions:
 - `array.set`
 - `array.size`
 - `array.pop`
+- `array.shift`
+- `array.unshift`
+- `array.first`
+- `array.last`
 - `array.clear`
 
 ### Required Design Decisions
@@ -222,8 +226,9 @@ Resolved implementation choices:
 - Non-`var` arrays are allocated when their declaration executes on each bar.
 - `var` arrays preserve their id and backing storage across bars.
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
-- The current pass supports float, int, bool, string, and color arrays only;
-  unsupported `array.*` variants still produce diagnostics.
+- The current pass supports float, int, bool, string, and color arrays with
+  size/get/set/push/pop/shift/unshift/first/last/clear only; unsupported
+  `array.*` variants still produce diagnostics.
 
 ### Implementation Tasks
 
