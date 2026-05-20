@@ -47,6 +47,7 @@ history.
 
 1. Harden the current static-offset boundary with fixtures.
 2. Audit qualifier propagation for const, input, simple, and series values.
+   Current findings are in `docs/QUALIFIER_AUDIT.md`.
 3. Audit built-in signatures that currently accept broader qualifiers than the
    compatibility docs claim.
 4. Decide whether the first dynamic-offset slice is:
@@ -65,4 +66,3 @@ history.
 - Incremental append execution matches full historical execution.
 - Realtime rollback keeps history, `var`, callsite state, and outputs
   consistent for confirmed bars and forming-bar updates.
-

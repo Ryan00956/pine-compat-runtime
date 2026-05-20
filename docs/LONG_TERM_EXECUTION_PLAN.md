@@ -151,7 +151,8 @@ Goal: make series behavior closer to Pine while keeping static guarantees where
 possible.
 
 Status: started. The current static-offset boundary and next implementation
-sequence are recorded in `docs/HISTORY_SERIES_AUDIT.md`.
+sequence are recorded in `docs/HISTORY_SERIES_AUDIT.md`; qualifier findings are
+recorded in `docs/QUALIFIER_AUDIT.md`.
 
 Scope:
 

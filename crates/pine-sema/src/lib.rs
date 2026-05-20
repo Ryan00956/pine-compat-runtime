@@ -3482,6 +3482,17 @@ mod tests {
     }
 
     #[test]
+    fn rejects_input_history_offset_until_dynamic_design() {
+        let analysis = analyze("len = input.int(1, \"Length\")\nx = close[len]\n");
+
+        assert_eq!(analysis.compatibility.unsupported.len(), 1);
+        assert_eq!(
+            analysis.compatibility.unsupported[0].feature,
+            "dynamic_history_offset"
+        );
+    }
+
+    #[test]
     fn rejects_negative_history_offset() {
         let analysis = analyze("x = close[-1]\n");
 
@@ -3502,6 +3513,34 @@ mod tests {
             analysis.diagnostics
         );
         assert!(analysis.compatibility.unsupported.is_empty());
+    }
+
+    #[test]
+    fn simple_int_params_accept_input_int_expressions() {
+        let analysis =
+            analyze("length = input.int(2, \"Length\") + 1\nplot(ta.sma(close, length))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.compatibility.unsupported.is_empty());
+    }
+
+    #[test]
+    fn simple_int_params_reject_series_int() {
+        let analysis = analyze("plot(ta.sma(close, bar_index))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
     }
 
     #[test]
