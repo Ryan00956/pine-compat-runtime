@@ -18,6 +18,8 @@
   existing size/get/set/push/pop/clear operations.
 - Added partial color array support through `array.new_color` and the existing
   size/get/set/push/pop/clear operations.
+- Added `array.from` support for inferred float/int/bool/string/color typed
+  arrays.
 - Added array helper support for `array.first`, `array.last`, `array.shift`,
   and `array.unshift` across supported typed arrays.
 - Added `array.insert` and `array.remove` support for supported typed arrays,

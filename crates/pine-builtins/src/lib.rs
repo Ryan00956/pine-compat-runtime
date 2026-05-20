@@ -63,6 +63,7 @@ pub enum ReturnSpec {
     PromotedNumeric,
     ArrayElement(usize),
     ArrayNumeric(usize),
+    ArrayFromArgs,
     IntFromArg(usize),
     FloatFromArg(usize),
     PromotedFloat,
@@ -955,6 +956,12 @@ const ARRAY_NEW_COLOR_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_FROM_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "value",
+    accepts: Accepts::Any,
+    optional: false,
+}];
+
 const ARRAY_SIZE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "id",
     accepts: Accepts::Array,
@@ -1633,6 +1640,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         params: ARRAY_NEW_COLOR_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_COLOR_ARRAY),
         variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.from",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_FROM_PARAMS,
+        returns: ReturnSpec::ArrayFromArgs,
+        variadic: true,
     },
     BuiltinSignature {
         name: "array.size",

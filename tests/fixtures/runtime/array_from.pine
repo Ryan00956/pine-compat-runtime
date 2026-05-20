@@ -1,0 +1,19 @@
+indicator("Array from fixture")
+ints = array.from(1, 2, 3)
+plot(ints.size())
+plot(ints.sum())
+ints.push(4)
+plot(ints.last())
+
+floats = array.from(1, close, na)
+plot(floats.get(0) + floats.get(1))
+plot(na(floats.get(2)) ? 1 : 0)
+
+flags = array.from(true, false)
+plot(flags.get(0) and not flags.get(1) ? 1 : 0)
+
+words = array.from("a", "b")
+plot(words.join("|") == "a|b" ? 1 : 0)
+
+colors = array.from(color.red, color.green)
+plot(colors.get(0) == color.red and colors.get(1) == color.green ? 1 : 0)

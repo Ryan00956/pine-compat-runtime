@@ -1150,6 +1150,7 @@ impl Analyzer {
 
         self.validate_array_value_args(signature, args, arg_types);
         self.validate_array_concat_args(signature, args, arg_types);
+        self.validate_array_from_args(signature, args, arg_types);
     }
 
     fn validate_array_value_args(
@@ -1246,6 +1247,26 @@ impl Analyzer {
         ));
     }
 
+    fn validate_array_from_args(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) {
+        if signature.name != "array.from" {
+            return;
+        }
+        if array_from_return_type(arg_types).is_some() {
+            return;
+        }
+
+        self.diagnostics.push(Diagnostic::error(
+            "E_CALL_ARG_TYPE",
+            "`array.from` arguments must infer one supported array element kind",
+            args.first().map_or(Span::default(), |arg| arg.span),
+        ));
+    }
+
     fn resolve_param<'a>(
         &mut self,
         signature: &'a BuiltinSignature,
@@ -1303,6 +1324,7 @@ impl Analyzer {
             ReturnSpec::PromotedNumeric => promoted_numeric_type(arg_types),
             ReturnSpec::ArrayElement(index) => array_element_return_type(arg_types, index),
             ReturnSpec::ArrayNumeric(index) => array_numeric_return_type(arg_types, index),
+            ReturnSpec::ArrayFromArgs => array_from_return_type(arg_types),
             ReturnSpec::IntFromArg(index) => arg_types
                 .get(index)
                 .copied()
@@ -2261,6 +2283,7 @@ impl Analyzer {
                         ReturnSpec::ArrayNumeric(index) => {
                             array_numeric_return_type(&arg_types, index)
                         }
+                        ReturnSpec::ArrayFromArgs => array_from_return_type(&arg_types),
                         ReturnSpec::IntFromArg(index) => arg_types
                             .get(index)
                             .copied()
@@ -3114,6 +3137,40 @@ fn array_numeric_return_type(arg_types: &[Option<PineType>], index: usize) -> Op
         _ => return None,
     };
     Some(PineType::new(Qualifier::Series, kind))
+}
+
+fn array_from_return_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
+    let mut inferred_kind: Option<ValueKind> = None;
+    for arg_type in arg_types {
+        let arg_type = (*arg_type)?;
+        let next_kind = match arg_type.kind {
+            ValueKind::Na => continue,
+            ValueKind::Int => ValueKind::IntArray,
+            ValueKind::Float => ValueKind::FloatArray,
+            ValueKind::Bool => ValueKind::BoolArray,
+            ValueKind::String => ValueKind::StringArray,
+            ValueKind::Color => ValueKind::ColorArray,
+            _ => return None,
+        };
+        inferred_kind = Some(match (inferred_kind, next_kind) {
+            (None, kind) => kind,
+            (Some(ValueKind::IntArray), ValueKind::FloatArray)
+            | (Some(ValueKind::FloatArray), ValueKind::IntArray)
+            | (Some(ValueKind::FloatArray), ValueKind::FloatArray)
+            | (Some(ValueKind::IntArray), ValueKind::IntArray) => {
+                if matches!(next_kind, ValueKind::FloatArray)
+                    || matches!(inferred_kind, Some(ValueKind::FloatArray))
+                {
+                    ValueKind::FloatArray
+                } else {
+                    ValueKind::IntArray
+                }
+            }
+            (Some(current), kind) if current == kind => current,
+            _ => return None,
+        });
+    }
+    inferred_kind.map(|kind| PineType::new(Qualifier::Simple, kind))
 }
 
 fn is_array_kind(kind: ValueKind) -> bool {
@@ -4709,6 +4766,29 @@ plot(y)
     }
 
     #[test]
+    fn accepts_array_from_operations() {
+        let analysis = analyze(
+            "ints = array.from(1, 2, 3)\nfloats = array.from(1, close, na)\nflags = array.from(true, false)\nwords = array.from(\"a\", \"b\")\ncolors = array.from(color.red, color.green)\nplot(ints.sum() + floats.avg() + (flags.get(0) ? 1 : 0) + (words.join(\"|\") == \"a|b\" ? 1 : 0) + (colors.get(0) == color.red ? 1 : 0))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == "array.from"),
+            "{:?}",
+            analysis.compatibility.supported
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn accepts_array_helper_method_calls() {
         let analysis = analyze(
             "values = array.new_string()\nvalues.unshift(\"tail\")\nvalues.unshift(\"head\")\nfirst = values.first()\nlast = values.last()\nshifted = values.shift()\nplot(first == \"head\" and last == \"tail\" and shifted == \"head\" ? values.size() : 0)\n",
@@ -4936,6 +5016,36 @@ plot(y)
     fn rejects_numeric_value_for_bool_array_fill() {
         let analysis =
             analyze("values = array.new_bool(2)\narray.fill(values, close)\nplot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_mixed_array_from_element_kinds() {
+        let analysis = analyze("values = array.from(1, \"two\")\nplot(array.size(values))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_untyped_na_array_from() {
+        let analysis = analyze("values = array.from(na, na)\nplot(array.size(values))\n");
 
         assert!(
             analysis

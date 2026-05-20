@@ -207,6 +207,7 @@ Initial supported functions:
 - `array.new_bool`
 - `array.new_string`
 - `array.new_color`
+- `array.from`
 - `array.push`
 - `array.get`
 - `array.set`
@@ -243,7 +244,7 @@ Resolved implementation choices:
 - `var` arrays preserve their id and backing storage across bars.
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
 - The current pass supports float, int, bool, string, and color arrays with
-  size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/clear
+  array.from inference and size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/clear
   plus numeric min/max/sum/avg/sort, all-supported-array reverse, and
   all-supported-array join only; unsupported `array.*` variants still produce
   diagnostics.

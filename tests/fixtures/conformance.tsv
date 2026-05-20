@@ -100,6 +100,7 @@ array.new_int	partial	int arrays only	tests/fixtures/runtime/array.pine
 array.new_bool	partial	bool arrays only	tests/fixtures/runtime/array.pine
 array.new_string	partial	string arrays only	tests/fixtures/runtime/array.pine
 array.new_color	partial	color arrays only	tests/fixtures/runtime/array.pine
+array.from	partial	float/int/bool/string/color inferred arrays only; at least one typed value required	tests/fixtures/runtime/array_from.pine
 array.size	partial	float/int/bool/string/color arrays only	tests/fixtures/runtime/array.pine
 array.push	partial	float/int/bool/string/color arrays only	tests/fixtures/runtime/array.pine
 array.get	partial	float/int/bool/string/color arrays only	tests/fixtures/runtime/array.pine
@@ -140,7 +141,7 @@ var	supported	historical persistence and local declaration-site storage	tests/fi
 realtime forming rollback	partial	forming updates roll back output, var, callsite, and array state to confirmed bars	tests/fixtures/realtime/forming_close.pine;tests/fixtures/realtime/var_rollback.pine;tests/fixtures/realtime/conditional_ta_rollback.pine;tests/fixtures/realtime/array_rollback.pine
 varip	unsupported	intrabar persistence not implemented	tests/fixtures/sema/unsupported_varip.pine
 request.*	unsupported	multi-symbol and multi-timeframe data out of Phase 1	tests/fixtures/sema/unsupported_request.pine
-array.*	partial	float/int/bool/string/color array creation, size, get/set/insert, push/pop/remove/shift/unshift, fill, first/last, copy, slice/concat, includes/indexof/lastindexof, numeric min/max/sum/avg/sort, reverse, join, clear, and method-call syntax only	tests/fixtures/runtime/array.pine;tests/fixtures/runtime/array_methods.pine;tests/fixtures/runtime/array_helpers.pine;tests/fixtures/runtime/array_insert_remove.pine;tests/fixtures/runtime/array_fill.pine;tests/fixtures/runtime/array_references.pine;tests/fixtures/runtime/array_search.pine;tests/fixtures/runtime/array_statistics.pine;tests/fixtures/runtime/array_ordering.pine;tests/fixtures/runtime/array_join.pine;tests/fixtures/runtime/array_slice_concat.pine;tests/fixtures/sema/unsupported_array.pine
+array.*	partial	float/int/bool/string/color array creation, array.from inference, size, get/set/insert, push/pop/remove/shift/unshift, fill, first/last, copy, slice/concat, includes/indexof/lastindexof, numeric min/max/sum/avg/sort, reverse, join, clear, and method-call syntax only	tests/fixtures/runtime/array.pine;tests/fixtures/runtime/array_from.pine;tests/fixtures/runtime/array_methods.pine;tests/fixtures/runtime/array_helpers.pine;tests/fixtures/runtime/array_insert_remove.pine;tests/fixtures/runtime/array_fill.pine;tests/fixtures/runtime/array_references.pine;tests/fixtures/runtime/array_search.pine;tests/fixtures/runtime/array_statistics.pine;tests/fixtures/runtime/array_ordering.pine;tests/fixtures/runtime/array_join.pine;tests/fixtures/runtime/array_slice_concat.pine;tests/fixtures/sema/unsupported_array.pine
 import	unsupported	library imports out of Phase 1	tests/fixtures/sema/unsupported_import.pine
 strategy.*	unsupported	broker emulation out of current scope	tests/fixtures/sema/unsupported_strategy.pine
 alert/alertcondition	unsupported	alerts out of Phase 1	tests/fixtures/sema/unsupported_alert.pine

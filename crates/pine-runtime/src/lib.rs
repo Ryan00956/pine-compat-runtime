@@ -446,6 +446,39 @@ enum ArrayNumericMode {
     Avg,
 }
 
+fn infer_array_from_kind(values: &[PineValue]) -> Option<ArrayElementKind> {
+    let mut inferred_kind: Option<ArrayElementKind> = None;
+    for value in values {
+        let next_kind = match value {
+            PineValue::Na => continue,
+            PineValue::Int(_) => ArrayElementKind::Int,
+            PineValue::Float(_) => ArrayElementKind::Float,
+            PineValue::Bool(_) => ArrayElementKind::Bool,
+            PineValue::String(_) => ArrayElementKind::String,
+            PineValue::Color(_) => ArrayElementKind::Color,
+            _ => return None,
+        };
+        inferred_kind = Some(match (inferred_kind, next_kind) {
+            (None, kind) => kind,
+            (Some(ArrayElementKind::Int), ArrayElementKind::Float)
+            | (Some(ArrayElementKind::Float), ArrayElementKind::Int)
+            | (Some(ArrayElementKind::Float), ArrayElementKind::Float)
+            | (Some(ArrayElementKind::Int), ArrayElementKind::Int) => {
+                if matches!(next_kind, ArrayElementKind::Float)
+                    || matches!(inferred_kind, Some(ArrayElementKind::Float))
+                {
+                    ArrayElementKind::Float
+                } else {
+                    ArrayElementKind::Int
+                }
+            }
+            (Some(current), kind) if current == kind => current,
+            _ => return None,
+        });
+    }
+    inferred_kind
+}
+
 impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn new(program: &'a HirProgram) -> Self {
@@ -1438,6 +1471,7 @@ impl<'a> HistoricalRuntime<'a> {
             "array.new_bool" => self.eval_array_new_bool(args),
             "array.new_string" => self.eval_array_new_string(args),
             "array.new_color" => self.eval_array_new_color(args),
+            "array.from" => self.eval_array_from(args),
             "array.size" => self.eval_array_size(args),
             "array.push" => self.eval_array_push(args),
             "array.get" => self.eval_array_get(args),
@@ -1538,6 +1572,35 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(self.new_array(ArrayElementKind::Color, size, initial_value))
+    }
+
+    fn eval_array_from(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        if args.len() > MAX_ARRAY_ELEMENTS {
+            return Err(RuntimeError {
+                message: format!("array.from cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+            });
+        }
+
+        let mut values = Vec::with_capacity(args.len());
+        for arg in args {
+            values.push(self.eval_expr(&arg.value)?);
+        }
+
+        let Some(kind) = infer_array_from_kind(&values) else {
+            return Ok(PineValue::Na);
+        };
+        for value in &mut values {
+            if matches!(kind, ArrayElementKind::Float) {
+                let int_value = match value {
+                    PineValue::Int(int_value) => Some(*int_value),
+                    _ => None,
+                };
+                if let Some(int_value) = int_value {
+                    *value = PineValue::Float(int_value as f64);
+                }
+            }
+        }
+        Ok(self.new_array_from_values(kind, values))
     }
 
     fn eval_array_new_size(
@@ -7657,6 +7720,52 @@ plot(flags.get(0) and not flags.get(1) ? 1 : 0)
         assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_array_from_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array from")
+ints = array.from(1, 2, 3)
+plot(ints.size())
+plot(ints.sum())
+ints.push(4)
+plot(ints.last())
+
+floats = array.from(1, close, na)
+plot(floats.get(0) + floats.get(1))
+plot(na(floats.get(2)) ? 1 : 0)
+
+flags = array.from(true, false)
+plot(flags.get(0) and not flags.get(1) ? 1 : 0)
+
+words = array.from("a", "b")
+plot(words.join("|") == "a|b" ? 1 : 0)
+
+colors = array.from(color.red, color.green)
+plot(colors.get(0) == color.red and colors.get(1) == color.green ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 8);
+        assert_values_close(&result.plots[0].values, &[3.0, 3.0]);
+        assert_values_close(&result.plots[1].values, &[6.0, 6.0]);
+        assert_values_close(&result.plots[2].values, &[4.0, 4.0]);
+        assert_values_close(&result.plots[3].values, &[3.0, 4.0]);
+        assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
     }
 
     #[test]

@@ -99,9 +99,11 @@ per-bar locals.
 
 For arrays, the stored value is a runtime-owned array id. A normal
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`, or
-`array.new_color` declaration allocates a fresh array each time it executes. A
-`var` array declaration keeps the same id and backing storage across bars, so
-mutations such as `array.push` or `values.push(...)` persist.
+`array.new_color` declaration allocates a fresh array each time it executes.
+`array.from` also allocates a fresh inferred typed array and requires at least
+one non-`na` supported typed value. A `var` array declaration keeps the same id
+and backing storage across bars, so mutations such as `array.push` or
+`values.push(...)` persist.
 Assigning an array to another variable copies the id, not the backing values;
 mutating either name mutates the same runtime-owned array. `array.copy` and
 `values.copy()` allocate a new array id initialized with the source array's

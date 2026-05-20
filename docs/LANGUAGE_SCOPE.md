@@ -73,7 +73,7 @@ Phase 1 executable subset:
 - `ta.sma` and `ta.ema`
 - partial float, int, bool, string, and color arrays with `array.new_float`,
   `array.new_int`, `array.new_bool`, `array.new_string`, `array.new_color`,
-  `array.push`, `array.get`, `array.set`, `array.size`, `array.pop`,
+  `array.from`, `array.push`, `array.get`, `array.set`, `array.size`, `array.pop`,
   `array.insert`, `array.remove`, `array.shift`, `array.unshift`,
   `array.fill`, `array.first`, `array.last`, `array.copy`, `array.slice`,
   `array.concat`, `array.includes`,

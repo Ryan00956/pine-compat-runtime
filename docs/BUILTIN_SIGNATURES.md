@@ -176,6 +176,7 @@ array.new_int(size?: simple int, initial_value?: int-compatible) -> simple int-a
 array.new_bool(size?: simple int, initial_value?: bool-compatible) -> simple bool-array
 array.new_string(size?: simple int, initial_value?: string-compatible) -> simple string-array
 array.new_color(size?: simple int, initial_value?: color-compatible) -> simple color-array
+array.from(value, ...) -> simple inferred-array
 array.size(id: float-array|int-array|bool-array|string-array|color-array) -> simple int
 array.push(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> void
 array.get(id: float-array|int-array|bool-array|string-array|color-array, index: simple int) -> series element
@@ -207,7 +208,10 @@ array.clear(id: float-array|int-array|bool-array|string-array|color-array) -> vo
 The supported typed-array subset covers float, int, bool, string, and color
 arrays. Float arrays accept int or float values and store them as floats. Int
 arrays accept int values. Bool arrays accept bool values. String arrays accept
-string values. Color arrays accept color values.
+string values. Color arrays accept color values. `array.from` infers the array
+kind from its arguments, requires at least one non-`na` supported typed value,
+allows `na` in otherwise typed arrays, and promotes mixed int/float arguments
+to a float array.
 `size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/clear`
 may also be called with method syntax on a supported array receiver.
 `array.insert` inserts a compatible value before the requested index; negative

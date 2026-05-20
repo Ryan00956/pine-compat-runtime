@@ -166,11 +166,15 @@ shades.push(color.red)
 ```
 
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`, and
-`array.new_color` return runtime-owned array ids. Normal declarations allocate
-a fresh array whenever the declaration executes. `var` declarations preserve
-the array id and backing storage across bars. Supported operations are
+`array.new_color` return runtime-owned array ids. `array.from` allocates a
+runtime-owned array id with an element kind inferred from its arguments; at
+least one non-`na` supported typed value is required, `na` may be mixed into an
+otherwise typed array, and mixed int/float arguments produce a float array.
+Normal declarations allocate a fresh array whenever the declaration executes.
+`var` declarations preserve the array id and backing storage across bars.
+Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
-`array.new_color`, `array.push`, `array.get`, `array.set`, `array.size`,
+`array.new_color`, `array.from`, `array.push`, `array.get`, `array.set`, `array.size`,
 `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`,
 `array.fill`, `array.first`, `array.last`, and `array.copy`, `array.slice`,
 `array.concat`, `array.includes`, `array.indexof`, `array.lastindexof`,
