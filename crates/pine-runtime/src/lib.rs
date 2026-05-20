@@ -1687,6 +1687,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.rsi" => self.eval_rsi(call_site_id, args),
             "ta.macd" => self.eval_macd(call_site_id, args),
             "ta.bb" => self.eval_bb(call_site_id, args),
+            "ta.cum" => self.eval_cum(call_site_id, args),
             "ta.stdev" => self.eval_stdev(call_site_id, args),
             "ta.variance" => self.eval_variance(call_site_id, args),
             "ta.range" => self.eval_range(call_site_id, args),
@@ -2972,6 +2973,28 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Float(basis + dev),
             PineValue::Float(basis - dev),
         ]))
+    }
+
+    fn eval_cum(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let Some(source) = source.as_f64() else {
+            self.call_state.insert(call_site_id, PineValue::Na);
+            return Ok(PineValue::Na);
+        };
+
+        let value = self
+            .call_state
+            .get(&call_site_id)
+            .and_then(PineValue::as_f64)
+            .unwrap_or(0.0)
+            + source;
+        let value = PineValue::Float(value);
+        self.call_state.insert(call_site_id, value.clone());
+        Ok(value)
     }
 
     fn eval_stdev(
@@ -6302,6 +6325,36 @@ plot(lower)
             &result.plots[2].values[2..],
             &[0.36700683814454793, 1.367006838144548],
         );
+    }
+
+    #[test]
+    fn runs_cum_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("cum")
+value = ta.cum(close)
+index_sum = ta.cum(bar_index)
+reset_after_na = ta.cum(bar_index == 2 ? na : close)
+plot(value)
+plot(index_sum)
+plot(reset_after_na)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0), bar(5.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values, &[1.0, 3.0, 6.0, 10.0, 15.0]);
+        assert_values_close(&result.plots[1].values, &[0.0, 1.0, 3.0, 6.0, 10.0]);
+        assert_values_close(&result.plots[2].values[..2], &[1.0, 3.0]);
+        assert_eq!(result.plots[2].values[2], PineValue::Na);
+        assert_values_close(&result.plots[2].values[3..], &[4.0, 9.0]);
     }
 
     #[test]

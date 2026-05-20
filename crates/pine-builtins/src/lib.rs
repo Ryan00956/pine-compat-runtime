@@ -822,6 +822,12 @@ const TA_SOURCE_LENGTH_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_SOURCE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "source",
+    accepts: Accepts::SeriesOrSimpleNumeric,
+    optional: false,
+}];
+
 const TA_SOURCE_LENGTH_BIASED_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
@@ -2130,6 +2136,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TA_BB_PARAMS,
         returns: ReturnSpec::Tuple(THREE_SERIES_FLOATS),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.cum",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {

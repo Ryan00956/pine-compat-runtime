@@ -324,6 +324,7 @@ ta.dev(source: series float, length: simple int) -> series float
 ta.vwma(source: series float, length: simple int) -> series float
 ta.wma(source: series float, length: simple int) -> series float
 ta.hma(source: series float, length: simple int) -> series float
+ta.cum(source: series/simple numeric) -> series float
 ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
 ta.change(source: series float, length?: simple int) -> series float
@@ -358,6 +359,9 @@ Rules:
   weight `1` and the current value has weight `length`.
 - `ta.hma` composes `ta.wma`-style windows as
   `wma(2 * wma(source, length / 2) - wma(source, length), round(sqrt(length)))`.
+- `ta.cum` returns the cumulative sum of numeric source values from the start of
+  execution; a current `na` source returns `na` and resets the next cumulative
+  step to the next available source value.
 - `ta.mom` returns `source - source[length]` and records the required source
   history depth.
 - `ta.roc` returns `100 * (source - source[length]) / source[length]` and

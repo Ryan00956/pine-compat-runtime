@@ -1,0 +1,6 @@
+//@version=5
+indicator("Cum")
+value = ta.cum(close)
+index_sum = ta.cum(bar_index)
+plot(value)
+plot(index_sum)

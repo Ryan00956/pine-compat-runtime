@@ -105,6 +105,7 @@
 - Added `ta.wma` support for linearly weighted moving averages.
 - Added `ta.hma` support for Hull moving averages composed from internal WMA
   windows.
+- Added `ta.cum` support for cumulative numeric source sums.
 - Added `ta.mom` support for source momentum over explicit history lengths.
 - Added `ta.roc` support for rate-of-change percentages over explicit history
   lengths.
