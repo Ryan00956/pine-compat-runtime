@@ -1198,6 +1198,11 @@ impl Analyzer {
             ReturnSpec::PromotedBool => promoted_bool_type(arg_types),
             ReturnSpec::PromotedInt => promoted_int_type(arg_types),
             ReturnSpec::PromotedString => promoted_string_type(arg_types),
+            ReturnSpec::FloatFromStringArg(index) => arg_types
+                .get(index)
+                .copied()
+                .flatten()
+                .map(float_return_for_arg),
             ReturnSpec::PromotedNumeric => promoted_numeric_type(arg_types),
             ReturnSpec::IntFromArg(index) => arg_types
                 .get(index)
@@ -2145,6 +2150,11 @@ impl Analyzer {
                         ReturnSpec::PromotedBool => promoted_bool_type(&arg_types),
                         ReturnSpec::PromotedInt => promoted_int_type(&arg_types),
                         ReturnSpec::PromotedString => promoted_string_type(&arg_types),
+                        ReturnSpec::FloatFromStringArg(index) => arg_types
+                            .get(index)
+                            .copied()
+                            .flatten()
+                            .map(float_return_for_arg),
                         ReturnSpec::PromotedNumeric => promoted_numeric_type(&arg_types),
                         ReturnSpec::IntFromArg(index) => arg_types
                             .get(index)
@@ -3366,6 +3376,11 @@ replace_all = str.replace_all("hello", "l", "1")
 replace_boundary = str.replace("ab", "", ".", 1)
 replace_all_boundaries = str.replace_all("ab", "", ".")
 missing_replace = str.replace(na, "x", "y")
+number = str.tonumber("1234.50")
+signed_number = str.tonumber("-.5")
+invalid_number = str.tonumber("$1,234.50")
+exponent_number = str.tonumber("1e3")
+missing_number = str.tonumber(na)
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
@@ -3378,6 +3393,8 @@ plot(na(missing_repeat) ? 1 : 0)
 plot(replace_first == "he1lo" and replace_second == "hel1o" and replace_missing == "hello" ? 1 : 0)
 plot(replace_all == "he11o" and replace_boundary == "a.b" and replace_all_boundaries == ".a.b." ? 1 : 0)
 plot(na(missing_replace) ? 1 : 0)
+plot(number == 1234.5 and signed_number == -0.5 ? 1 : 0)
+plot(na(invalid_number) and na(exponent_number) and na(missing_number) ? 1 : 0)
 "#,
         );
 
@@ -3399,6 +3416,7 @@ plot(na(missing_replace) ? 1 : 0)
             "str.repeat",
             "str.replace",
             "str.replace_all",
+            "str.tonumber",
         ] {
             assert!(
                 analysis

@@ -217,6 +217,7 @@ str.replace(source: string-compatible, target: string-compatible, replacement: s
   -> string with strongest qualifier
 str.replace_all(source: string-compatible, target: string-compatible, replacement: string-compatible)
   -> string with strongest qualifier
+str.tonumber(string: string-compatible) -> float with same qualifier
 ```
 
 Supported `str.*` helpers return `na` for `na` inputs.
@@ -234,6 +235,9 @@ and errors for negative counts or results over 40,960 characters.
 to 0. `str.replace_all` replaces all non-overlapping occurrences. Empty
 targets replace zero-width character boundaries. Replacement results over
 40,960 characters are runtime errors.
+`str.tonumber` accepts strings containing ASCII digits, an optional leading
+sign, and at most one decimal point. It returns `na` for invalid formats,
+`na` inputs, and non-finite parsed results.
 
 ## Math
 

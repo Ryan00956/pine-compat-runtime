@@ -35,6 +35,7 @@
 - Added `str.pos` and `str.substring` string extraction helpers.
 - Added `str.trim` and `str.repeat` string modification helpers.
 - Added `str.replace` and `str.replace_all` string replacement helpers.
+- Added `str.tonumber` numeric string parsing.
 - Added `math.floor` and `math.ceil` support for numeric values.
 - Added `math.sqrt`, `math.log`, and `math.pow` support for numeric values.
 - Added `math.sin`, `math.cos`, and `math.tan` support for numeric values.

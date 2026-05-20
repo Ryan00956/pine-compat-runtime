@@ -1336,6 +1336,7 @@ impl<'a> HistoricalRuntime<'a> {
             "str.repeat" => self.eval_str_repeat(args),
             "str.replace" => self.eval_str_replace(args),
             "str.replace_all" => self.eval_str_replace_all(args),
+            "str.tonumber" => self.eval_str_tonumber(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -1956,6 +1957,20 @@ impl<'a> HistoricalRuntime<'a> {
             source.replace(&target, &replacement)
         };
         self.string_value_or_error(result, "str.replace_all")
+    }
+
+    fn eval_str_tonumber(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(value) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        if !is_pine_numeric_string(&value) {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(value
+            .parse::<f64>()
+            .ok()
+            .map_or(PineValue::Na, finite_float_or_na))
     }
 
     fn eval_replace_strings(
@@ -3086,6 +3101,22 @@ fn replace_all_zero_width_boundaries(source: &str, replacement: &str) -> String 
     result
 }
 
+fn is_pine_numeric_string(value: &str) -> bool {
+    let unsigned = value.strip_prefix(['+', '-']).unwrap_or(value);
+    let mut saw_digit = false;
+    let mut saw_decimal = false;
+    for ch in unsigned.chars() {
+        if ch.is_ascii_digit() {
+            saw_digit = true;
+        } else if ch == '.' && !saw_decimal {
+            saw_decimal = true;
+        } else {
+            return false;
+        }
+    }
+    saw_digit
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum StringCase {
     Upper,
@@ -4104,6 +4135,11 @@ replace_all = str.replace_all("hello", "l", "1")
 replace_boundary = str.replace("ab", "", ".", 1)
 replace_all_boundaries = str.replace_all("ab", "", ".")
 missing_replace = str.replace(na, "x", "y")
+number = str.tonumber("1234.50")
+signed_number = str.tonumber("-.5")
+invalid_number = str.tonumber("$1,234.50")
+exponent_number = str.tonumber("1e3")
+missing_number = str.tonumber(na)
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
@@ -4116,6 +4152,8 @@ plot(na(missing_repeat) ? 1 : 0)
 plot(replace_first == "he1lo" and replace_second == "hel1o" and replace_missing == "hello" ? 1 : 0)
 plot(replace_all == "he11o" and replace_boundary == "a.b" and replace_all_boundaries == ".a.b." ? 1 : 0)
 plot(na(missing_replace) ? 1 : 0)
+plot(number == 1234.5 and signed_number == -0.5 ? 1 : 0)
+plot(na(invalid_number) and na(exponent_number) and na(missing_number) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -4140,6 +4178,8 @@ plot(na(missing_replace) ? 1 : 0)
         assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
     }
 
     #[test]

@@ -56,6 +56,7 @@ pub enum ReturnSpec {
     PromotedBool,
     PromotedInt,
     PromotedString,
+    FloatFromStringArg(usize),
     PromotedNumeric,
     IntFromArg(usize),
     FloatFromArg(usize),
@@ -1153,6 +1154,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: STR_REPLACE_ALL_PARAMS,
         returns: ReturnSpec::PromotedString,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.tonumber",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_TEXT_PARAMS,
+        returns: ReturnSpec::FloatFromStringArg(0),
         variadic: false,
     },
     BuiltinSignature {
