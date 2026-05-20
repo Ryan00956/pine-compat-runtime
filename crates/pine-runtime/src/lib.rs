@@ -1676,6 +1676,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.change" => self.eval_change(args),
+            "ta.mom" => self.eval_mom(args),
             "ta.cross" => self.eval_cross(args, CrossMode::Any),
             "ta.crossover" => self.eval_cross(args, CrossMode::Over),
             "ta.crossunder" => self.eval_cross(args, CrossMode::Under),
@@ -3200,6 +3201,27 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             1
         };
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let Some(current) = current.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(series_id) = args[0].value.series_id else {
+            return Ok(PineValue::Na);
+        };
+        let previous = self.series_store.read(series_id, length as usize);
+        let Some(previous) = previous.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+
+        Ok(PineValue::Float(current - previous))
+    }
+
+    fn eval_mom(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let current = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -6204,6 +6226,30 @@ plot(c2)
         assert_eq!(result.plots[1].values[0], PineValue::Na);
         assert_eq!(result.plots[1].values[1], PineValue::Na);
         assert_values_close(&result.plots[1].values[2..], &[5.0, 7.0]);
+    }
+
+    #[test]
+    fn runs_mom_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("mom")
+value = ta.mom(close, 2)
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(3.0), bar(6.0), bar(10.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[5.0, 7.0]);
     }
 
     #[test]

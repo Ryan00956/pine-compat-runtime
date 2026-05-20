@@ -93,6 +93,7 @@ ta.hma	supported	fixture-derived executable subset	tests/fixtures/runtime/hma.pi
 ta.tr	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
 ta.atr	supported	fixture-derived executable subset	tests/fixtures/runtime/atr.pine
 ta.change	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
+ta.mom	supported	fixture-derived executable subset	tests/fixtures/runtime/mom.pine
 ta.cross	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
 ta.crossover	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
 ta.crossunder	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine

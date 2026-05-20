@@ -2985,19 +2985,29 @@ impl HistoryRequirementCollector {
     fn record_call_history(&mut self, callee: &str, args: &[HirCallArg]) {
         match callee {
             "ta.tr" | "ta.atr" => self.record_builtin_history("close", 1),
-            "ta.change" => self.record_change_history(args),
+            "ta.change" => self.record_optional_length_history(args),
+            "ta.mom" => self.record_required_length_history(args),
             "ta.cross" | "ta.crossover" | "ta.crossunder" => self.record_cross_history(args),
             _ => {}
         }
     }
 
-    fn record_change_history(&mut self, args: &[HirCallArg]) {
+    fn record_optional_length_history(&mut self, args: &[HirCallArg]) {
         let series_id = args.first().and_then(|arg| arg.value.series_id);
         match args.get(1).and_then(|arg| constant_hir_int(&arg.value)) {
             Some(length) if length > 0 => self.record_constant_history(series_id, length as u32),
             Some(_) => {}
             None if args.len() > 1 => self.record_dynamic_history(series_id),
             None => self.record_constant_history(series_id, 1),
+        }
+    }
+
+    fn record_required_length_history(&mut self, args: &[HirCallArg]) {
+        let series_id = args.first().and_then(|arg| arg.value.series_id);
+        match args.get(1).and_then(|arg| constant_hir_int(&arg.value)) {
+            Some(length) if length > 0 => self.record_constant_history(series_id, length as u32),
+            Some(_) => {}
+            None => self.record_dynamic_history(series_id),
         }
     }
 
@@ -3694,6 +3704,32 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.hma")
+        );
+    }
+
+    #[test]
+    fn accepts_ta_momentum_history_calls() {
+        let analysis = analyze("plot(ta.mom(close, 2))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.mom")
+        );
+        let hir = analysis.hir.expect("HIR");
+        assert_eq!(hir.history.max_constant_offset, 2);
+        assert!(!hir.history.has_dynamic_offsets);
+        assert!(
+            hir.series_history
+                .iter()
+                .any(|requirement| requirement.max_constant_offset == 2)
         );
     }
 

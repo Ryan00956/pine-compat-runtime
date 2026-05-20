@@ -1,0 +1,4 @@
+//@version=5
+indicator("Momentum")
+value = ta.mom(close, 2)
+plot(value)
