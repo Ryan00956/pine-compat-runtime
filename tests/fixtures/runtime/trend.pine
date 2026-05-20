@@ -1,0 +1,6 @@
+//@version=5
+indicator("Trend")
+up = ta.rising(close, 2)
+down = ta.falling(close, 2)
+plot(up ? 1 : 0)
+plot(down ? 1 : 0)

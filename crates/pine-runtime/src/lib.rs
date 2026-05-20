@@ -527,6 +527,7 @@ enum RollingWindowKey {
     HmaHalf(CallSiteId),
     HmaFull(CallSiteId),
     HmaSmooth(CallSiteId),
+    RisingFalling(CallSiteId),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1678,6 +1679,10 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.change" => self.eval_change(args),
             "ta.mom" => self.eval_mom(args),
             "ta.roc" => self.eval_roc(args),
+            "ta.rising" => self.eval_rising_falling(call_site_id, args, RisingFallingMode::Rising),
+            "ta.falling" => {
+                self.eval_rising_falling(call_site_id, args, RisingFallingMode::Falling)
+            }
             "ta.cross" => self.eval_cross(args, CrossMode::Any),
             "ta.crossover" => self.eval_cross(args, CrossMode::Over),
             "ta.crossunder" => self.eval_cross(args, CrossMode::Under),
@@ -3263,6 +3268,33 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(Some((current, previous)))
     }
 
+    fn eval_rising_falling(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+        mode: RisingFallingMode,
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Bool(false));
+        }
+
+        let length = length as usize;
+        let current = source.as_f64();
+        let key = RollingWindowKey::RisingFalling(call_site_id);
+        let value = if let Some(current) = current {
+            self.rolling_windows
+                .get(&key)
+                .is_some_and(|window| window.is_ready(length) && window.trend(current, mode))
+        } else {
+            false
+        };
+        self.update_rolling_window_key(key, current, length);
+
+        Ok(PineValue::Bool(value))
+    }
+
     fn eval_cross(
         &mut self,
         args: &[HirCallArg],
@@ -4206,6 +4238,12 @@ enum WindowExtreme {
     Lowest,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum RisingFallingMode {
+    Rising,
+    Falling,
+}
+
 impl RollingWindowState {
     fn push(&mut self, value: Option<f64>, length: usize) {
         while self.values.len() >= length {
@@ -4295,6 +4333,13 @@ impl RollingWindowState {
             .sum::<f64>();
         let denominator = length * (length + 1) / 2;
         weighted_sum / denominator as f64
+    }
+
+    fn trend(&self, current: f64, mode: RisingFallingMode) -> bool {
+        self.values.iter().flatten().all(|value| match mode {
+            RisingFallingMode::Rising => current > *value,
+            RisingFallingMode::Falling => current < *value,
+        })
     }
 }
 
@@ -6308,6 +6353,45 @@ plot(zero)
         assert_eq!(result.plots[1].values[1], PineValue::Na);
         assert_eq!(result.plots[1].values[2], PineValue::Na);
         assert_values_close(&result.plots[1].values[3..], &[200.0]);
+    }
+
+    #[test]
+    fn runs_rising_falling_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("trend")
+up = ta.rising(close, 2)
+down = ta.falling(close, 2)
+plot(up ? 1 : 0)
+plot(down ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar(1.0),
+            bar(2.0),
+            bar(3.0),
+            bar(2.0),
+            bar(1.0),
+            bar(2.0),
+            bar(4.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(
+            &result.plots[0].values,
+            &[0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+        );
+        assert_values_close(
+            &result.plots[1].values,
+            &[0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        );
     }
 
     #[test]

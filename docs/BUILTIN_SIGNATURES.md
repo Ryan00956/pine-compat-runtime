@@ -329,6 +329,8 @@ ta.tr(handle_na?: const bool) -> series float
 ta.change(source: series float, length?: simple int) -> series float
 ta.mom(source: series float, length: simple int) -> series float
 ta.roc(source: series float, length: simple int) -> series float
+ta.rising(source: series float, length: simple int) -> series bool
+ta.falling(source: series float, length: simple int) -> series bool
 ta.cross(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossover(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossunder(source1: series/simple numeric, source2: series/simple numeric) -> series bool
@@ -356,6 +358,8 @@ Rules:
   history depth.
 - `ta.roc` returns `100 * (source - source[length]) / source[length]` and
   returns `na` when the historical denominator is zero.
+- `ta.rising`/`ta.falling` compare the current source against the previous
+  ready-window values and return `false` while that window is not ready.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.

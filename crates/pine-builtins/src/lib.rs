@@ -2190,6 +2190,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "ta.rising",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_BOOL),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.falling",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_BOOL),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "ta.cross",
         phase: BuiltinPhase::Phase1Core,
         params: TA_TWO_SOURCE_PARAMS,
