@@ -186,6 +186,9 @@ array.unshift(id: float-array|int-array|bool-array|string-array|color-array, val
 array.first(id: float-array|int-array|bool-array|string-array|color-array) -> series element
 array.last(id: float-array|int-array|bool-array|string-array|color-array) -> series element
 array.copy(id: float-array|int-array|bool-array|string-array|color-array) -> same array kind
+array.includes(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> series bool
+array.indexof(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> simple int
+array.lastindexof(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> simple int
 array.clear(id: float-array|int-array|bool-array|string-array|color-array) -> void
 ```
 
@@ -193,10 +196,10 @@ The supported typed-array subset covers float, int, bool, string, and color
 arrays. Float arrays accept int or float values and store them as floats. Int
 arrays accept int values. Bool arrays accept bool values. String arrays accept
 string values. Color arrays accept color values.
-`size/get/set/push/pop/shift/unshift/first/last/copy/clear` may also be called
-with method syntax on a supported array receiver. Array assignment passes the
-runtime array id by reference; use `array.copy` to allocate an independent array
-with the same current element values.
+`size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/clear`
+may also be called with method syntax on a supported array receiver. Array
+assignment passes the runtime array id by reference; use `array.copy` to
+allocate an independent array with the same current element values.
 
 ## TA Built-Ins
 

@@ -431,6 +431,12 @@ enum ArrayElementKind {
     Color,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ArraySearchMode {
+    First,
+    Last,
+}
+
 impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn new(program: &'a HirProgram) -> Self {
@@ -1433,6 +1439,9 @@ impl<'a> HistoricalRuntime<'a> {
             "array.first" => self.eval_array_first(args),
             "array.last" => self.eval_array_last(args),
             "array.copy" => self.eval_array_copy(args),
+            "array.includes" => self.eval_array_includes(args),
+            "array.indexof" => self.eval_array_indexof(args),
+            "array.lastindexof" => self.eval_array_lastindexof(args),
             "array.clear" => self.eval_array_clear(args),
             _ => Err(RuntimeError {
                 message: format!("unsupported runtime call `{callee}`"),
@@ -1728,6 +1737,50 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         Ok(self.new_array_from_values(kind, values))
+    }
+
+    fn eval_array_includes(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let index = self.eval_array_search(args, ArraySearchMode::First)?;
+        Ok(PineValue::Bool(index.is_some()))
+    }
+
+    fn eval_array_indexof(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let index = self
+            .eval_array_search(args, ArraySearchMode::First)?
+            .map_or(-1, |index| index as i64);
+        Ok(PineValue::Int(index))
+    }
+
+    fn eval_array_lastindexof(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let index = self
+            .eval_array_search(args, ArraySearchMode::Last)?
+            .map_or(-1, |index| index as i64);
+        Ok(PineValue::Int(index))
+    }
+
+    fn eval_array_search(
+        &mut self,
+        args: &[HirCallArg],
+        mode: ArraySearchMode,
+    ) -> Result<Option<usize>, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            let _ = self.eval_expr(&args[1].value)?;
+            return Ok(None);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            let _ = self.eval_expr(&args[1].value)?;
+            return Ok(None);
+        };
+        let value = self.eval_array_value(&args[1].value, kind)?;
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(None);
+        };
+        let index = match mode {
+            ArraySearchMode::First => values.iter().position(|item| values_equal(item, &value)),
+            ArraySearchMode::Last => values.iter().rposition(|item| values_equal(item, &value)),
+        };
+        Ok(index)
     }
 
     fn eval_array_clear(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -7208,6 +7261,51 @@ plot(method_copy.get(0))
         assert_values_close(&result.plots[3].values, &[2.0, 2.0, 2.0]);
         assert_values_close(&result.plots[4].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[5].values, &[3.0, 3.0, 3.0]);
+    }
+
+    #[test]
+    fn runs_array_search_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array search")
+numbers = array.new_int()
+array.push(numbers, 2)
+array.push(numbers, 3)
+array.push(numbers, 2)
+plot(array.includes(numbers, 2) ? 1 : 0)
+plot(array.indexof(numbers, 2))
+plot(array.lastindexof(numbers, 2))
+plot(numbers.indexof(9))
+
+words = array.new_string()
+words.push("a")
+words.push("b")
+words.push("a")
+plot(words.includes("b") ? words.lastindexof("a") : 0)
+
+colors = array.new_color()
+colors.push(color.red)
+colors.push(color.green)
+plot(colors.includes(color.green) ? colors.indexof(color.green) : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 6);
+        assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[2].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[3].values, &[-1.0, -1.0, -1.0]);
+        assert_values_close(&result.plots[4].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[5].values, &[1.0, 1.0, 1.0]);
     }
 
     #[test]

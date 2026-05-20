@@ -75,8 +75,9 @@ Phase 1 executable subset:
   `array.new_int`, `array.new_bool`, `array.new_string`, `array.new_color`,
   `array.push`, `array.get`, `array.set`, `array.size`, `array.pop`,
   `array.shift`, `array.unshift`, `array.first`, `array.last`,
-  `array.copy`, `array.clear`, and equivalent method-call syntax such as
-  `values.push(close)` and `values.get(0)`
+  `array.copy`, `array.includes`, `array.indexof`, `array.lastindexof`,
+  `array.clear`, and equivalent method-call syntax such as `values.push(close)`
+  and `values.get(0)`
 
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes. Series values not evaluated on a bar are committed as `na` to

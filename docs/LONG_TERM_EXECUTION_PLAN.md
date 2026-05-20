@@ -26,7 +26,8 @@ Implemented or partially implemented:
 - Partial `for` and `while` loops.
 - Constant non-negative history offsets.
 - Partial float/int/bool/string/color arrays, reference assignment,
-  `array.copy`, queue/end helpers, and supported array method calls.
+  `array.copy`, search helpers, queue/end helpers, and supported array method
+  calls.
 - A fixture-covered set of `input.*`, output calls, color helpers, math
   helpers, and `ta.*` functions.
 - CLI, Python, and WASM surfaces for the supported runtime result model.
@@ -131,7 +132,7 @@ Acceptance criteria:
 Suggested commits:
 
 1. `Document collection semantics`
-2. `Expand array search helpers`
+2. `Expand array statistical helpers`
 
 ## Phase C: History and Series Semantics
 

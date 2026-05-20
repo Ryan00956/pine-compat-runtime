@@ -113,10 +113,11 @@ confirmed update is committed.
 Array bounds are stable in the current subset: `array.get` outside the current
 array length returns `na`, `array.set` outside the current length is ignored,
 and `array.pop` or `array.shift` on an empty array returns `na`.
-`array.first` and `array.last` also return `na` for empty arrays. A negative
-array size is a runtime error. Runtime execution limits each supported array to
-100,000 elements; oversized creation, `array.push`, and `array.unshift` beyond
-the limit return runtime errors.
+`array.first` and `array.last` also return `na` for empty arrays.
+`array.indexof` and `array.lastindexof` return `-1` when no matching value is
+present. A negative array size is a runtime error. Runtime execution limits each
+supported array to 100,000 elements; oversized creation, `array.push`, and
+`array.unshift` beyond the limit return runtime errors.
 
 Read-only array operations are allowed inside inlined user-defined functions.
 The supported method-call syntax lowers to the same `array.*` runtime calls, so

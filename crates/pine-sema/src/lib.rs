@@ -1158,8 +1158,8 @@ impl Analyzer {
         arg_types: &[Option<PineType>],
     ) {
         let value_index = match signature.name {
-            "array.push" => 1,
-            "array.unshift" => 1,
+            "array.push" | "array.unshift" | "array.includes" | "array.indexof"
+            | "array.lastindexof" => 1,
             "array.set" => 2,
             _ => return,
         };
@@ -2444,6 +2444,9 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "first" => Some("array.first"),
         "last" => Some("array.last"),
         "copy" => Some("array.copy"),
+        "includes" => Some("array.includes"),
+        "indexof" => Some("array.indexof"),
+        "lastindexof" => Some("array.lastindexof"),
         "clear" => Some("array.clear"),
         _ => None,
     }
@@ -4620,6 +4623,31 @@ plot(y)
     }
 
     #[test]
+    fn accepts_array_search_operations() {
+        let analysis = analyze(
+            "values = array.new_string()\narray.push(values, \"a\")\narray.push(values, \"b\")\narray.push(values, \"a\")\nhas_a = array.includes(values, \"a\")\nfirst = array.indexof(values, \"a\")\nlast = array.lastindexof(values, \"a\")\nmissing = values.indexof(\"z\")\nplot(has_a and values.includes(\"b\") ? first + last + missing : 0)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for feature in ["array.includes", "array.indexof", "array.lastindexof"] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|supported| supported.feature == feature),
+                "{feature} missing from supported features: {:?}",
+                analysis.compatibility.supported
+            );
+        }
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_float_value_for_int_array_mutation() {
         let analysis =
             analyze("values = array.new_int()\narray.push(values, close)\nplot(close)\n");
@@ -4655,6 +4683,21 @@ plot(y)
     fn rejects_numeric_value_for_bool_array_unshift() {
         let analysis =
             analyze("values = array.new_bool()\narray.unshift(values, close)\nplot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_numeric_value_for_bool_array_search() {
+        let analysis = analyze("values = array.new_bool()\nplot(array.indexof(values, close))\n");
 
         assert!(
             analysis
