@@ -1622,6 +1622,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "array.copy",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_SIZE_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "array.clear",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_SIZE_PARAMS,

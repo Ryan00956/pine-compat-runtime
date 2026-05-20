@@ -75,7 +75,7 @@ Phase 1 executable subset:
   `array.new_int`, `array.new_bool`, `array.new_string`, `array.new_color`,
   `array.push`, `array.get`, `array.set`, `array.size`, `array.pop`,
   `array.shift`, `array.unshift`, `array.first`, `array.last`,
-  `array.clear`, and equivalent method-call syntax such as
+  `array.copy`, `array.clear`, and equivalent method-call syntax such as
   `values.push(close)` and `values.get(0)`
 
 Stateful calls inside `if` blocks advance their callsite state only when the

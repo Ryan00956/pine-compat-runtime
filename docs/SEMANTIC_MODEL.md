@@ -172,16 +172,19 @@ the array id and backing storage across bars. Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
 `array.new_color`, `array.push`, `array.get`, `array.set`, `array.size`,
 `array.pop`, `array.shift`, `array.unshift`, `array.first`, `array.last`, and
-`array.clear`; `size/get/set/push/pop/shift/unshift/first/last/clear` may also
-be called with method syntax on a supported array receiver. Float arrays accept
-int or float values and store them as floats. Int arrays accept int values. Bool
-arrays accept bool values. String arrays accept string values. Color arrays
-accept color values. Other array constructors and unsupported `array.*`
-functions are rejected. Out-of-range `array.get`, empty `array.pop`, empty
-`array.shift`, and `array.first`/`array.last` on empty arrays return `na`;
-out-of-range `array.set` is a no-op. Negative array sizes fail at runtime. Each
-array can contain at most 100,000 elements; creation, push, or unshift
-operations beyond that limit fail at runtime.
+`array.copy`, and `array.clear`;
+`size/get/set/push/pop/shift/unshift/first/last/copy/clear` may also be called
+with method syntax on a supported array receiver. Float arrays accept int or
+float values and store them as floats. Int arrays accept int values. Bool arrays
+accept bool values. String arrays accept string values. Color arrays accept
+color values. Other array constructors and unsupported `array.*` functions are
+rejected. Array assignment and UDF argument binding pass the runtime array id by
+reference. `array.copy` allocates a new array id with the same current element
+values, so later mutations do not affect the source. Out-of-range `array.get`,
+empty `array.pop`, empty `array.shift`, and `array.first`/`array.last` on empty
+arrays return `na`; out-of-range `array.set` is a no-op. Negative array sizes
+fail at runtime. Each array can contain at most 100,000 elements; creation,
+push, or unshift operations beyond that limit fail at runtime.
 
 User-defined functions may receive supported arrays and use read-only
 operations such as `array.size` and `array.get`. Array mutation inside

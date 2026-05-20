@@ -216,6 +216,7 @@ Initial supported functions:
 - `array.unshift`
 - `array.first`
 - `array.last`
+- `array.copy`
 - `array.clear`
 
 ### Required Design Decisions
@@ -227,8 +228,11 @@ Resolved implementation choices:
 - `var` arrays preserve their id and backing storage across bars.
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
 - The current pass supports float, int, bool, string, and color arrays with
-  size/get/set/push/pop/shift/unshift/first/last/clear only; unsupported
+  size/get/set/push/pop/shift/unshift/first/last/copy/clear only; unsupported
   `array.*` variants still produce diagnostics.
+- Array assignment and UDF argument binding pass the runtime array id by
+  reference. `array.copy` is the explicit boundary for creating an independent
+  array id with copied element values.
 
 ### Implementation Tasks
 

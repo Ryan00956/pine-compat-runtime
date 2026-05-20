@@ -20,8 +20,11 @@
   size/get/set/push/pop/clear operations.
 - Added array helper support for `array.first`, `array.last`, `array.shift`,
   and `array.unshift` across supported typed arrays.
+- Added `array.copy` support for explicitly creating independent typed-array
+  snapshots while plain array assignment remains id/reference-based.
 - Added partial array method-call syntax for supported array `size`, `get`,
-  `set`, `push`, `pop`, `shift`, `unshift`, `first`, `last`, and `clear`.
+  `set`, `push`, `pop`, `shift`, `unshift`, `first`, `last`, `copy`, and
+  `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.
 - Added `input.price`, `input.time`, `input.symbol`, and `input.timeframe`
   support for the executable `defval`/`title` subset.

@@ -102,6 +102,13 @@ For arrays, the stored value is a runtime-owned array id. A normal
 `array.new_color` declaration allocates a fresh array each time it executes. A
 `var` array declaration keeps the same id and backing storage across bars, so
 mutations such as `array.push` or `values.push(...)` persist.
+Assigning an array to another variable copies the id, not the backing values;
+mutating either name mutates the same runtime-owned array. `array.copy` and
+`values.copy()` allocate a new array id initialized with the source array's
+current element values. Realtime forming-bar rollback clones the confirmed
+runtime store before executing a forming update, so array mutations and copies
+made during a forming update do not leak into the confirmed store until a
+confirmed update is committed.
 
 Array bounds are stable in the current subset: `array.get` outside the current
 array length returns `na`, `array.set` outside the current length is ignored,

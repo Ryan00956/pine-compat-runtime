@@ -1432,6 +1432,7 @@ impl<'a> HistoricalRuntime<'a> {
             "array.unshift" => self.eval_array_unshift(args),
             "array.first" => self.eval_array_first(args),
             "array.last" => self.eval_array_last(args),
+            "array.copy" => self.eval_array_copy(args),
             "array.clear" => self.eval_array_clear(args),
             _ => Err(RuntimeError {
                 message: format!("unsupported runtime call `{callee}`"),
@@ -1546,6 +1547,18 @@ impl<'a> HistoricalRuntime<'a> {
         let id = self.next_array_id;
         self.next_array_id += 1;
         self.array_store.insert(id, vec![initial_value; size]);
+        self.array_kinds.insert(id, kind);
+        PineValue::Array(id)
+    }
+
+    fn new_array_from_values(
+        &mut self,
+        kind: ArrayElementKind,
+        values: Vec<PineValue>,
+    ) -> PineValue {
+        let id = self.next_array_id;
+        self.next_array_id += 1;
+        self.array_store.insert(id, values);
         self.array_kinds.insert(id, kind);
         PineValue::Array(id)
     }
@@ -1701,6 +1714,20 @@ impl<'a> HistoricalRuntime<'a> {
             .and_then(|values| values.last())
             .cloned()
             .unwrap_or(PineValue::Na))
+    }
+
+    fn eval_array_copy(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(values) = self.array_store.get(&id).cloned() else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self.new_array_from_values(kind, values))
     }
 
     fn eval_array_clear(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -7142,6 +7169,45 @@ plot(color_first == color.red and color_last == color.green and color_shifted ==
         assert_eq!(result.plots.len(), 2);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_array_reference_and_copy_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array references")
+source = array.new_int()
+alias = source
+copy = array.copy(source)
+method_copy = source.copy()
+array.push(alias, 1)
+array.push(copy, 2)
+method_copy.push(3)
+plot(array.size(source))
+plot(array.get(source, 0))
+plot(array.size(copy))
+plot(array.get(copy, 0))
+plot(method_copy.size())
+plot(method_copy.get(0))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 6);
+        assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[3].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[4].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[5].values, &[3.0, 3.0, 3.0]);
     }
 
     #[test]

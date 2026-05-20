@@ -1,0 +1,36 @@
+indicator("Array references fixture")
+numbers = array.new_int()
+alias = numbers
+copied = array.copy(numbers)
+method_copied = numbers.copy()
+
+array.push(alias, 1)
+array.push(copied, 2)
+method_copied.push(3)
+
+plot(array.size(numbers))
+plot(array.get(numbers, 0))
+plot(array.size(copied))
+plot(array.get(copied, 0))
+plot(method_copied.size())
+plot(method_copied.get(0))
+
+floats = array.new_float(1, close)
+float_copy = floats.copy()
+float_copy.set(0, high)
+plot(floats.get(0) + float_copy.get(0))
+
+flags = array.new_bool(1, true)
+flag_copy = array.copy(flags)
+flag_copy.set(0, false)
+plot(flags.get(0) and not flag_copy.get(0) ? 1 : 0)
+
+names = array.new_string(1, "source")
+name_copy = names.copy()
+name_copy.set(0, "copy")
+plot(names.get(0) == "source" and name_copy.get(0) == "copy" ? 1 : 0)
+
+colors = array.new_color(1, color.red)
+color_copy = array.copy(colors)
+color_copy.set(0, color.green)
+plot(colors.get(0) == color.red and color_copy.get(0) == color.green ? 1 : 0)

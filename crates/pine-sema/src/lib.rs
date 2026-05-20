@@ -2443,6 +2443,7 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "unshift" => Some("array.unshift"),
         "first" => Some("array.first"),
         "last" => Some("array.last"),
+        "copy" => Some("array.copy"),
         "clear" => Some("array.clear"),
         _ => None,
     }
@@ -4591,6 +4592,29 @@ plot(y)
             analysis.diagnostics.is_empty(),
             "{:?}",
             analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_array_copy_operations() {
+        let analysis = analyze(
+            "source = array.new_int()\nalias = source\ncopy = array.copy(source)\nmethod_copy = source.copy()\narray.push(alias, 1)\narray.push(copy, 2)\nmethod_copy.push(3)\nplot(array.size(source) + array.size(copy) + method_copy.size())\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "array.copy"),
+            "{:?}",
+            analysis.compatibility.supported
         );
         assert!(analysis.hir.is_some());
     }
