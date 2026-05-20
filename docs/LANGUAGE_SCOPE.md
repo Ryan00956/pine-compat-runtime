@@ -77,8 +77,9 @@ Phase 1 executable subset:
   `array.insert`, `array.remove`, `array.shift`, `array.unshift`,
   `array.fill`, `array.first`, `array.last`, `array.copy`, `array.slice`,
   `array.concat`, `array.includes`,
-  `array.indexof`, `array.lastindexof`, `array.clear`, numeric `array.min`,
-  `array.max`, `array.sum`, `array.avg`, numeric `array.sort`,
+  `array.indexof`, `array.lastindexof`, numeric `array.binary_search*`,
+  `array.clear`, numeric `array.min`, `array.max`, `array.sum`,
+  `array.avg`, `array.range`, numeric `array.sort`,
   `array.reverse`, `array.join`, and equivalent method-call syntax such as
   `values.push(close)` and `values.get(0)`
 

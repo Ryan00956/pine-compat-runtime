@@ -28,8 +28,8 @@
   half-open range bounds and method-call syntax.
 - Added `array.copy` support for explicitly creating independent typed-array
   snapshots while plain array assignment remains id/reference-based.
-- Added array search helpers `array.includes`, `array.indexof`, and
-  `array.lastindexof` across supported typed arrays.
+- Added array search helpers `array.includes`, `array.indexof`,
+  `array.lastindexof`, and numeric `array.binary_search*` variants.
 - Added numeric array statistics helpers `array.min`, `array.max`,
   `array.sum`, `array.avg`, and `array.range` for float and int arrays.
 - Added array ordering helpers: numeric `array.sort` for ascending sort with
@@ -41,8 +41,8 @@
 - Added partial array method-call syntax for supported array `size`, `get`,
   `set`, `insert`, `push`, `pop`, `remove`, `shift`, `unshift`, `first`,
   `last`, `fill`, `copy`, `slice`, `concat`, `includes`, `indexof`,
-  `lastindexof`, numeric `min`, `max`, `sum`, `avg`, `range`, `sort`, `reverse`,
-  `join`, and `clear`.
+  `lastindexof`, numeric `binary_search*`, `min`, `max`, `sum`, `avg`, `range`,
+  `sort`, `reverse`, `join`, and `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.
 - Added `input.price`, `input.time`, `input.symbol`, and `input.timeframe`
   support for the executable `defval`/`title` subset.

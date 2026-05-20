@@ -1031,6 +1031,19 @@ const ARRAY_VALUE_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_NUMERIC_VALUE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::NumericArray,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "value",
+        accepts: Accepts::Any,
+        optional: false,
+    },
+];
+
 const ARRAY_FILL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1771,6 +1784,27 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "array.lastindexof",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_VALUE_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.binary_search",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_VALUE_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.binary_search_leftmost",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_VALUE_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.binary_search_rightmost",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_VALUE_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_INT),
         variadic: false,
     },

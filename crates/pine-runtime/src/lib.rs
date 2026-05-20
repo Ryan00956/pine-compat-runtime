@@ -439,6 +439,13 @@ enum ArraySearchMode {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ArrayBinarySearchMode {
+    Exact,
+    Leftmost,
+    Rightmost,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ArrayNumericMode {
     Min,
     Max,
@@ -1491,6 +1498,15 @@ impl<'a> HistoricalRuntime<'a> {
             "array.includes" => self.eval_array_includes(args),
             "array.indexof" => self.eval_array_indexof(args),
             "array.lastindexof" => self.eval_array_lastindexof(args),
+            "array.binary_search" => {
+                self.eval_array_binary_search(args, ArrayBinarySearchMode::Exact)
+            }
+            "array.binary_search_leftmost" => {
+                self.eval_array_binary_search(args, ArrayBinarySearchMode::Leftmost)
+            }
+            "array.binary_search_rightmost" => {
+                self.eval_array_binary_search(args, ArrayBinarySearchMode::Rightmost)
+            }
             "array.min" => self.eval_array_numeric(args, ArrayNumericMode::Min),
             "array.max" => self.eval_array_numeric(args, ArrayNumericMode::Max),
             "array.sum" => self.eval_array_numeric(args, ArrayNumericMode::Sum),
@@ -2033,6 +2049,57 @@ impl<'a> HistoricalRuntime<'a> {
             ArraySearchMode::Last => values.iter().rposition(|item| values_equal(item, &value)),
         };
         Ok(index)
+    }
+
+    fn eval_array_binary_search(
+        &mut self,
+        args: &[HirCallArg],
+        mode: ArrayBinarySearchMode,
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            let _ = self.eval_expr(&args[1].value)?;
+            return Ok(PineValue::Int(-1));
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            let _ = self.eval_expr(&args[1].value)?;
+            return Ok(PineValue::Int(-1));
+        };
+        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
+            let _ = self.eval_expr(&args[1].value)?;
+            return Ok(PineValue::Int(-1));
+        }
+        let value = self.eval_array_value(&args[1].value, kind)?;
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Int(-1));
+        };
+        if values.is_empty() {
+            return Ok(PineValue::Int(-1));
+        }
+
+        let lower = array_numeric_lower_bound(values, &value);
+        let exact_match =
+            lower < values.len() && compare_array_numeric_values(&values[lower], &value).is_eq();
+        let index = match mode {
+            ArrayBinarySearchMode::Exact => exact_match.then_some(lower),
+            ArrayBinarySearchMode::Leftmost => {
+                if exact_match || lower == 0 {
+                    Some(lower.min(values.len() - 1))
+                } else {
+                    Some(lower - 1)
+                }
+            }
+            ArrayBinarySearchMode::Rightmost => {
+                if exact_match {
+                    Some(array_numeric_upper_bound(values, &value) - 1)
+                } else {
+                    Some(lower.min(values.len() - 1))
+                }
+            }
+        }
+        .map_or(-1, |index| index as i64);
+
+        Ok(PineValue::Int(index))
     }
 
     fn eval_array_numeric(
@@ -4327,6 +4394,34 @@ fn compare_array_numeric_values(left: &PineValue, right: &PineValue) -> Ordering
         (None, Some(_)) => Ordering::Greater,
         (None, None) => Ordering::Equal,
     }
+}
+
+fn array_numeric_lower_bound(values: &[PineValue], target: &PineValue) -> usize {
+    let mut left = 0;
+    let mut right = values.len();
+    while left < right {
+        let mid = left + (right - left) / 2;
+        if compare_array_numeric_values(&values[mid], target).is_lt() {
+            left = mid + 1;
+        } else {
+            right = mid;
+        }
+    }
+    left
+}
+
+fn array_numeric_upper_bound(values: &[PineValue], target: &PineValue) -> usize {
+    let mut left = 0;
+    let mut right = values.len();
+    while left < right {
+        let mid = left + (right - left) / 2;
+        if compare_array_numeric_values(&values[mid], target).is_le() {
+            left = mid + 1;
+        } else {
+            right = mid;
+        }
+    }
+    left
 }
 
 fn finite_float_or_na(value: f64) -> PineValue {
@@ -7834,6 +7929,13 @@ plot(array.includes(numbers, 2) ? 1 : 0)
 plot(array.indexof(numbers, 2))
 plot(array.lastindexof(numbers, 2))
 plot(numbers.indexof(9))
+array.sort(numbers)
+plot(array.binary_search(numbers, 2))
+plot(numbers.binary_search(9))
+plot(array.binary_search_leftmost(numbers, 4))
+plot(array.binary_search_rightmost(numbers, 4))
+plot(numbers.binary_search_leftmost(2))
+plot(numbers.binary_search_rightmost(2))
 
 words = array.new_string()
 words.push("a")
@@ -7857,13 +7959,19 @@ plot(colors.includes(color.green) ? colors.indexof(color.green) : 0)
         let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 6);
+        assert_eq!(result.plots.len(), 12);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0]);
         assert_values_close(&result.plots[2].values, &[2.0, 2.0, 2.0]);
         assert_values_close(&result.plots[3].values, &[-1.0, -1.0, -1.0]);
-        assert_values_close(&result.plots[4].values, &[2.0, 2.0, 2.0]);
-        assert_values_close(&result.plots[5].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[4].values, &[0.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[5].values, &[-1.0, -1.0, -1.0]);
+        assert_values_close(&result.plots[6].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[7].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[8].values, &[0.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[9].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[10].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[11].values, &[1.0, 1.0, 1.0]);
     }
 
     #[test]

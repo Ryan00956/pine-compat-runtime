@@ -195,6 +195,9 @@ array.concat(id: float-array|int-array|bool-array|string-array|color-array, id2:
 array.includes(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> series bool
 array.indexof(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> simple int
 array.lastindexof(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> simple int
+array.binary_search(id: float-array|int-array, value: element-compatible) -> simple int
+array.binary_search_leftmost(id: float-array|int-array, value: element-compatible) -> simple int
+array.binary_search_rightmost(id: float-array|int-array, value: element-compatible) -> simple int
 array.min(id: float-array|int-array) -> series element
 array.max(id: float-array|int-array) -> series element
 array.sum(id: float-array|int-array) -> series element
@@ -223,11 +226,15 @@ are supplied; invalid ranges are no-ops. `array.slice` allocates a same-kind
 array containing the half-open `[index_from, index_to)` window; invalid bounds
 return `na` at runtime. `array.concat` requires two arrays of the same kind,
 appends `id2` values to `id` in place, and returns `id`. Numeric array
-`min/max/sum/avg/range` helpers may also be called with method syntax on float
-and int array receivers. `array.range` returns max minus min while ignoring
-`na` elements. `array.sort` currently supports float and int arrays only and
-sorts ascending with `na` values last. `array.reverse` supports every supported
-typed array. `array.join` supports every supported typed array, defaults the
+`binary_search/binary_search_leftmost/binary_search_rightmost/min/max/sum/avg/range`
+helpers may also be called with method syntax on float and int array receivers.
+Binary search helpers expect the current array contents to be sorted ascending;
+`array.binary_search` returns `-1` when not found, while leftmost/rightmost
+return the nearest existing insertion-side index and return `-1` for empty
+arrays. `array.range` returns max minus min while ignoring `na` elements.
+`array.sort` currently supports float and int arrays only and sorts ascending
+with `na` values last. `array.reverse` supports every supported typed array.
+`array.join` supports every supported typed array, defaults the
 separator to `,`, uses the default numeric string format, and renders colors as
 their normalized integer color values. Array assignment passes the runtime array
 id by reference; use `array.copy` to allocate an independent array with the same

@@ -1160,8 +1160,15 @@ impl Analyzer {
         arg_types: &[Option<PineType>],
     ) {
         let value_index = match signature.name {
-            "array.push" | "array.unshift" | "array.fill" | "array.includes" | "array.indexof"
-            | "array.lastindexof" => 1,
+            "array.push"
+            | "array.unshift"
+            | "array.fill"
+            | "array.includes"
+            | "array.indexof"
+            | "array.lastindexof"
+            | "array.binary_search"
+            | "array.binary_search_leftmost"
+            | "array.binary_search_rightmost" => 1,
             "array.set" | "array.insert" => 2,
             _ => return,
         };
@@ -2512,6 +2519,9 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "includes" => Some("array.includes"),
         "indexof" => Some("array.indexof"),
         "lastindexof" => Some("array.lastindexof"),
+        "binary_search" => Some("array.binary_search"),
+        "binary_search_leftmost" => Some("array.binary_search_leftmost"),
+        "binary_search_rightmost" => Some("array.binary_search_rightmost"),
         "min" => Some("array.min"),
         "max" => Some("array.max"),
         "sum" => Some("array.sum"),
@@ -4829,7 +4839,7 @@ plot(y)
     #[test]
     fn accepts_array_search_operations() {
         let analysis = analyze(
-            "values = array.new_string()\narray.push(values, \"a\")\narray.push(values, \"b\")\narray.push(values, \"a\")\nhas_a = array.includes(values, \"a\")\nfirst = array.indexof(values, \"a\")\nlast = array.lastindexof(values, \"a\")\nmissing = values.indexof(\"z\")\nplot(has_a and values.includes(\"b\") ? first + last + missing : 0)\n",
+            "values = array.new_string()\narray.push(values, \"a\")\narray.push(values, \"b\")\narray.push(values, \"a\")\nhas_a = array.includes(values, \"a\")\nfirst = array.indexof(values, \"a\")\nlast = array.lastindexof(values, \"a\")\nmissing = values.indexof(\"z\")\nnums = array.from(1, 2, 2, 4)\nfound = array.binary_search(nums, 2)\nleft = nums.binary_search_leftmost(3)\nright = nums.binary_search_rightmost(3)\nplot(has_a and values.includes(\"b\") ? first + last + missing + found + left + right : 0)\n",
         );
 
         assert!(
@@ -4837,7 +4847,14 @@ plot(y)
             "{:?}",
             analysis.diagnostics
         );
-        for feature in ["array.includes", "array.indexof", "array.lastindexof"] {
+        for feature in [
+            "array.includes",
+            "array.indexof",
+            "array.lastindexof",
+            "array.binary_search",
+            "array.binary_search_leftmost",
+            "array.binary_search_rightmost",
+        ] {
             assert!(
                 analysis
                     .compatibility
@@ -5068,6 +5085,36 @@ plot(y)
     #[test]
     fn rejects_numeric_value_for_bool_array_search() {
         let analysis = analyze("values = array.new_bool()\nplot(array.indexof(values, close))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_bool_array_binary_search() {
+        let analysis = analyze("values = array.new_bool()\nplot(array.binary_search(values, 1))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_float_value_for_int_array_binary_search() {
+        let analysis = analyze("values = array.new_int()\nplot(values.binary_search(close))\n");
 
         assert!(
             analysis
