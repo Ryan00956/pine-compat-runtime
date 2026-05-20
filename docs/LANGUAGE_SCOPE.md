@@ -74,8 +74,9 @@ Phase 1 executable subset:
 - partial float, int, bool, string, and color arrays with `array.new_float`,
   `array.new_int`, `array.new_bool`, `array.new_string`, `array.new_color`,
   `array.push`, `array.get`, `array.set`, `array.size`, `array.pop`,
-  `array.shift`, `array.unshift`, `array.first`, `array.last`,
-  `array.copy`, `array.slice`, `array.concat`, `array.includes`,
+  `array.insert`, `array.remove`, `array.shift`, `array.unshift`,
+  `array.first`, `array.last`, `array.copy`, `array.slice`, `array.concat`,
+  `array.includes`,
   `array.indexof`, `array.lastindexof`, `array.clear`, numeric `array.min`,
   `array.max`, `array.sum`, `array.avg`, numeric `array.sort`,
   `array.reverse`, `array.join`, and equivalent method-call syntax such as

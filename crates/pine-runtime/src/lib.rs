@@ -1442,7 +1442,9 @@ impl<'a> HistoricalRuntime<'a> {
             "array.push" => self.eval_array_push(args),
             "array.get" => self.eval_array_get(args),
             "array.set" => self.eval_array_set(args),
+            "array.insert" => self.eval_array_insert(args),
             "array.pop" => self.eval_array_pop(args),
+            "array.remove" => self.eval_array_remove(args),
             "array.shift" => self.eval_array_shift(args),
             "array.unshift" => self.eval_array_unshift(args),
             "array.first" => self.eval_array_first(args),
@@ -1665,6 +1667,36 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    fn eval_array_insert(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let index = self.eval_expr(&args[1].value)?.as_i64();
+        let (PineValue::Array(id), Some(index)) = (id, index) else {
+            let _ = self.eval_expr(&args[2].value)?;
+            return Ok(PineValue::Void);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            let _ = self.eval_expr(&args[2].value)?;
+            return Ok(PineValue::Void);
+        };
+        let value = self.eval_array_value(&args[2].value, kind)?;
+        if index < 0 {
+            return Ok(PineValue::Void);
+        }
+        if let Some(values) = self.array_store.get_mut(&id) {
+            let index = index as usize;
+            if index > values.len() {
+                return Ok(PineValue::Void);
+            }
+            if values.len() >= MAX_ARRAY_ELEMENTS {
+                return Err(RuntimeError {
+                    message: format!("array.insert cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+                });
+            }
+            values.insert(index, value);
+        }
+        Ok(PineValue::Void)
+    }
+
     fn eval_array_pop(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let id = self.eval_expr(&args[0].value)?;
         let PineValue::Array(id) = id else {
@@ -1674,6 +1706,29 @@ impl<'a> HistoricalRuntime<'a> {
             .array_store
             .get_mut(&id)
             .and_then(Vec::pop)
+            .unwrap_or(PineValue::Na))
+    }
+
+    fn eval_array_remove(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let index = self.eval_expr(&args[1].value)?.as_i64();
+        let (PineValue::Array(id), Some(index)) = (id, index) else {
+            return Ok(PineValue::Na);
+        };
+        if index < 0 {
+            return Ok(PineValue::Na);
+        }
+        Ok(self
+            .array_store
+            .get_mut(&id)
+            .and_then(|values| {
+                let index = index as usize;
+                if index < values.len() {
+                    Some(values.remove(index))
+                } else {
+                    None
+                }
+            })
             .unwrap_or(PineValue::Na))
     }
 
@@ -7442,6 +7497,61 @@ plot(color_first == color.red and color_last == color.green and color_shifted ==
     }
 
     #[test]
+    fn runs_array_insert_remove_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array insert remove")
+ints = array.new_int()
+ints.push(1)
+ints.push(3)
+array.insert(ints, 1, 2)
+removed = ints.remove(0)
+plot(removed)
+plot(ints.get(0) * 10 + ints.get(1))
+
+words = array.new_string()
+words.push("a")
+words.push("c")
+words.insert(1, "b")
+word_removed = array.remove(words, 2)
+plot(word_removed == "c" and words.join("|") == "a|b" ? 1 : 0)
+
+colors = array.new_color()
+colors.push(color.red)
+colors.insert(1, color.green)
+color_removed = colors.remove(0)
+plot(color_removed == color.red and colors.get(0) == color.green ? 1 : 0)
+
+flags = array.new_bool()
+flags.insert(0, true)
+plot(flags.remove(0) ? flags.size() : 99)
+
+plot(na(array.remove(flags, 0)) ? 1 : 0)
+array.insert(flags, 3, false)
+plot(flags.size())
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 7);
+        assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[1].values, &[23.0, 23.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[4].values, &[0.0, 0.0]);
+        assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[6].values, &[0.0, 0.0]);
+    }
+
+    #[test]
     fn runs_array_reference_and_copy_operations() {
         let source = SourceFile::new(
             "test.pine",
@@ -7822,6 +7932,35 @@ plot(array.size(left))
             error
                 .message
                 .contains("array.concat cannot exceed 100000 elements"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn rejects_oversized_array_insert_result() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array insert limit")
+values = array.new_int(100000, 1)
+array.insert(values, 0, 2)
+plot(array.size(values))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected array.insert limit error");
+
+        assert!(
+            error
+                .message
+                .contains("array.insert cannot exceed 100000 elements"),
             "{}",
             error.message
         );

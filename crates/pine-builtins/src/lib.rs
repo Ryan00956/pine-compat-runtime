@@ -1640,9 +1640,23 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "array.insert",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_SET_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "array.pop",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_SIZE_PARAMS,
+        returns: ReturnSpec::ArrayElement(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.remove",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_INDEX_PARAMS,
         returns: ReturnSpec::ArrayElement(0),
         variadic: false,
     },

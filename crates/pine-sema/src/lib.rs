@@ -1161,7 +1161,7 @@ impl Analyzer {
         let value_index = match signature.name {
             "array.push" | "array.unshift" | "array.includes" | "array.indexof"
             | "array.lastindexof" => 1,
-            "array.set" => 2,
+            "array.set" | "array.insert" => 2,
             _ => return,
         };
         let Some(array_type) = arg_types.first().copied().flatten() else {
@@ -2475,7 +2475,9 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "push" => Some("array.push"),
         "get" => Some("array.get"),
         "set" => Some("array.set"),
+        "insert" => Some("array.insert"),
         "pop" => Some("array.pop"),
+        "remove" => Some("array.remove"),
         "shift" => Some("array.shift"),
         "unshift" => Some("array.unshift"),
         "first" => Some("array.first"),
@@ -2521,7 +2523,9 @@ fn is_array_mutation_builtin(name: &str) -> bool {
         name,
         "array.push"
             | "array.set"
+            | "array.insert"
             | "array.pop"
+            | "array.remove"
             | "array.shift"
             | "array.unshift"
             | "array.clear"
@@ -4655,6 +4659,31 @@ plot(y)
     }
 
     #[test]
+    fn accepts_array_insert_remove_operations() {
+        let analysis = analyze(
+            "values = array.new_int()\nvalues.push(1)\narray.insert(values, 1, 2)\nremoved = values.remove(0)\nplot(removed + values.get(0))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for feature in ["array.insert", "array.remove"] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|supported| supported.feature == feature),
+                "{feature} missing from supported features: {:?}",
+                analysis.compatibility.supported
+            );
+        }
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn accepts_array_helper_method_calls() {
         let analysis = analyze(
             "values = array.new_string()\nvalues.unshift(\"tail\")\nvalues.unshift(\"head\")\nfirst = values.first()\nlast = values.last()\nshifted = values.shift()\nplot(first == \"head\" and last == \"tail\" and shifted == \"head\" ? values.size() : 0)\n",
@@ -4863,6 +4892,22 @@ plot(y)
     }
 
     #[test]
+    fn rejects_numeric_value_for_bool_array_insert() {
+        let analysis =
+            analyze("values = array.new_bool()\narray.insert(values, 0, close)\nplot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
     fn rejects_numeric_value_for_bool_array_search() {
         let analysis = analyze("values = array.new_bool()\nplot(array.indexof(values, close))\n");
 
@@ -5003,8 +5048,7 @@ plot(y)
 
     #[test]
     fn rejects_unknown_float_array_method() {
-        let analysis =
-            analyze("values = array.new_float()\nvalues.insert(0, close)\nplot(close)\n");
+        let analysis = analyze("values = array.new_float()\nvalues.fill(close)\nplot(close)\n");
 
         assert!(
             analysis

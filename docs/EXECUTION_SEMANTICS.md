@@ -112,8 +112,9 @@ confirmed update is committed.
 
 Array bounds are stable in the current subset: `array.get` outside the current
 array length returns `na`, `array.set` outside the current length is ignored,
-and `array.pop` or `array.shift` on an empty array returns `na`.
-`array.first` and `array.last` also return `na` for empty arrays.
+`array.insert` outside `0..=size` is ignored, `array.remove` outside the
+current length returns `na`, and `array.pop` or `array.shift` on an empty array
+returns `na`. `array.first` and `array.last` also return `na` for empty arrays.
 `array.indexof` and `array.lastindexof` return `-1` when no matching value is
 present. Numeric helpers on int/float arrays skip `na` elements; if every
 element is `na` or the array is empty, `array.min`, `array.max`, `array.sum`,
@@ -128,8 +129,8 @@ index_to)` window; negative, reversed, or out-of-range bounds return `na`.
 `array.concat` appends the second same-kind array to the first array in place
 and returns the first array id. A negative array size is a runtime error.
 Runtime execution limits each supported array to 100,000 elements; oversized
-creation, `array.push`, `array.unshift`, and `array.concat` beyond the limit
-return runtime errors.
+creation, `array.push`, `array.unshift`, `array.insert`, and `array.concat`
+beyond the limit return runtime errors.
 
 Read-only array operations are allowed inside inlined user-defined functions.
 The supported method-call syntax lowers to the same `array.*` runtime calls, so
