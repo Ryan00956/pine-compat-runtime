@@ -106,6 +106,8 @@
 - Added `ta.hma` support for Hull moving averages composed from internal WMA
   windows.
 - Added `ta.mom` support for source momentum over explicit history lengths.
+- Added `ta.roc` support for rate-of-change percentages over explicit history
+  lengths.
 - Tightened float array UDF boundaries: read-only array operations are allowed,
   while array mutation inside UDFs is rejected as a side effect.
 - Added a 100,000-element runtime guard for each float array.

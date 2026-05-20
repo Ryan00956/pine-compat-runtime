@@ -1,0 +1,4 @@
+//@version=5
+indicator("Rate of Change")
+value = ta.roc(close, 2)
+plot(value)

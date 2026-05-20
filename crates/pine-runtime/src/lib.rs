@@ -1677,6 +1677,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.change" => self.eval_change(args),
             "ta.mom" => self.eval_mom(args),
+            "ta.roc" => self.eval_roc(args),
             "ta.cross" => self.eval_cross(args, CrossMode::Any),
             "ta.crossover" => self.eval_cross(args, CrossMode::Over),
             "ta.crossunder" => self.eval_cross(args, CrossMode::Under),
@@ -3220,24 +3221,46 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn eval_mom(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
-        let current = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
-        if length <= 0 {
-            return Ok(PineValue::Na);
-        }
-
-        let Some(current) = current.as_f64() else {
-            return Ok(PineValue::Na);
-        };
-        let Some(series_id) = args[0].value.series_id else {
-            return Ok(PineValue::Na);
-        };
-        let previous = self.series_store.read(series_id, length as usize);
-        let Some(previous) = previous.as_f64() else {
+        let Some((current, previous)) = self.current_and_previous(args)? else {
             return Ok(PineValue::Na);
         };
 
         Ok(PineValue::Float(current - previous))
+    }
+
+    fn eval_roc(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some((current, previous)) = self.current_and_previous(args)? else {
+            return Ok(PineValue::Na);
+        };
+        if previous == 0.0 {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(100.0 * (current - previous) / previous))
+    }
+
+    fn current_and_previous(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<Option<(f64, f64)>, RuntimeError> {
+        let current = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(None);
+        }
+
+        let Some(current) = current.as_f64() else {
+            return Ok(None);
+        };
+        let Some(series_id) = args[0].value.series_id else {
+            return Ok(None);
+        };
+        let previous = self.series_store.read(series_id, length as usize);
+        let Some(previous) = previous.as_f64() else {
+            return Ok(None);
+        };
+
+        Ok(Some((current, previous)))
     }
 
     fn eval_cross(
@@ -6250,6 +6273,41 @@ plot(value)
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_eq!(result.plots[0].values[1], PineValue::Na);
         assert_values_close(&result.plots[0].values[2..], &[5.0, 7.0]);
+    }
+
+    #[test]
+    fn runs_roc_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("roc")
+value = ta.roc(close, 2)
+zero = ta.roc(open, 2)
+plot(value)
+plot(zero)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(0.0, 1.0, 0.0, 10.0),
+            bar_ohlc(1.0, 1.0, 1.0, 15.0),
+            bar_ohlc(2.0, 2.0, 2.0, 20.0),
+            bar_ohlc(3.0, 3.0, 3.0, 30.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[100.0, 100.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_eq!(result.plots[1].values[2], PineValue::Na);
+        assert_values_close(&result.plots[1].values[3..], &[200.0]);
     }
 
     #[test]

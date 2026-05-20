@@ -208,7 +208,7 @@ Candidate areas:
 - Additional `ta.*` functions. Initial Phase D coverage includes `ta.stdev`
   and `ta.variance` with default biased and optional sample window modes, plus
   `ta.range`, `ta.dev`, `ta.vwma`, `ta.wma`, and `ta.hma` over ready rolling
-  windows, and `ta.mom` over explicit source history.
+  windows, and `ta.mom`/`ta.roc` over explicit source history.
 - Additional `math.*` and `str.*` helpers. Initial post-baseline math coverage
   includes `math.floor`, `math.ceil`, `math.sqrt`, `math.log`, `math.log10`,
   `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`,

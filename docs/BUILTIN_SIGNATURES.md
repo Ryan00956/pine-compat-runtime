@@ -328,6 +328,7 @@ ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
 ta.change(source: series float, length?: simple int) -> series float
 ta.mom(source: series float, length: simple int) -> series float
+ta.roc(source: series float, length: simple int) -> series float
 ta.cross(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossover(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossunder(source1: series/simple numeric, source2: series/simple numeric) -> series bool
@@ -353,6 +354,8 @@ Rules:
   `wma(2 * wma(source, length / 2) - wma(source, length), round(sqrt(length)))`.
 - `ta.mom` returns `source - source[length]` and records the required source
   history depth.
+- `ta.roc` returns `100 * (source - source[length]) / source[length]` and
+  returns `na` when the historical denominator is zero.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.

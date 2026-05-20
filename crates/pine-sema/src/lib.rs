@@ -2986,7 +2986,7 @@ impl HistoryRequirementCollector {
         match callee {
             "ta.tr" | "ta.atr" => self.record_builtin_history("close", 1),
             "ta.change" => self.record_optional_length_history(args),
-            "ta.mom" => self.record_required_length_history(args),
+            "ta.mom" | "ta.roc" => self.record_required_length_history(args),
             "ta.cross" | "ta.crossover" | "ta.crossunder" => self.record_cross_history(args),
             _ => {}
         }
@@ -3709,7 +3709,7 @@ mod tests {
 
     #[test]
     fn accepts_ta_momentum_history_calls() {
-        let analysis = analyze("plot(ta.mom(close, 2))\n");
+        let analysis = analyze("plot(ta.mom(close, 2) + ta.roc(open, 2))\n");
 
         assert!(
             analysis.diagnostics.is_empty(),
@@ -3722,6 +3722,13 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.mom")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.roc")
         );
         let hir = analysis.hir.expect("HIR");
         assert_eq!(hir.history.max_constant_offset, 2);
