@@ -199,6 +199,7 @@ array.min(id: float-array|int-array) -> series element
 array.max(id: float-array|int-array) -> series element
 array.sum(id: float-array|int-array) -> series element
 array.avg(id: float-array|int-array) -> series float
+array.range(id: float-array|int-array) -> series element
 array.sort(id: float-array|int-array) -> void
 array.reverse(id: float-array|int-array|bool-array|string-array|color-array) -> void
 array.join(id: float-array|int-array|bool-array|string-array|color-array, separator?: string-compatible) -> series string
@@ -222,8 +223,9 @@ are supplied; invalid ranges are no-ops. `array.slice` allocates a same-kind
 array containing the half-open `[index_from, index_to)` window; invalid bounds
 return `na` at runtime. `array.concat` requires two arrays of the same kind,
 appends `id2` values to `id` in place, and returns `id`. Numeric array
-`min/max/sum/avg` helpers may also be called with method syntax on float and int
-array receivers. `array.sort` currently supports float and int arrays only and
+`min/max/sum/avg/range` helpers may also be called with method syntax on float
+and int array receivers. `array.range` returns max minus min while ignoring
+`na` elements. `array.sort` currently supports float and int arrays only and
 sorts ascending with `na` values last. `array.reverse` supports every supported
 typed array. `array.join` supports every supported typed array, defaults the
 separator to `,`, uses the default numeric string format, and renders colors as

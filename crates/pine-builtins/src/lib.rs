@@ -1803,6 +1803,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "array.range",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_PARAMS,
+        returns: ReturnSpec::ArrayNumeric(0),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "array.sort",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_NUMERIC_PARAMS,

@@ -122,8 +122,8 @@ index_to)` window when bounds are supplied; invalid ranges are ignored.
 `array.indexof` and `array.lastindexof` return `-1` when no matching value is
 present. Numeric helpers on int/float arrays skip `na` elements; if every
 element is `na` or the array is empty, `array.min`, `array.max`, `array.sum`,
-and `array.avg` return `na`. `array.sort` orders int/float arrays ascending and
-places `na` values after numeric values. `array.reverse` reverses any supported
+`array.avg`, and `array.range` return `na`. `array.range` returns max minus
+min. `array.sort` orders int/float arrays ascending and places `na` values after numeric values. `array.reverse` reverses any supported
 typed array in place. `array.join` converts supported array elements to string
 with the default numeric format, uses `,` as the default separator, and returns
 an empty string for empty arrays. Color elements render as normalized integer

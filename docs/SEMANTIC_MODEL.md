@@ -178,11 +178,11 @@ Supported operations are
 `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`,
 `array.fill`, `array.first`, `array.last`, and `array.copy`, `array.slice`,
 `array.concat`, `array.includes`, `array.indexof`, `array.lastindexof`,
-`array.min`, `array.max`, `array.sum`, `array.avg`, `array.sort`,
+`array.min`, `array.max`, `array.sum`, `array.avg`, `array.range`, `array.sort`,
 `array.reverse`, `array.join`, and `array.clear`;
 `size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/reverse/join/clear`
 may also be called with method syntax on a supported array receiver. Numeric
-`min/max/sum/avg/sort` helpers may also be called with method syntax on float
+`min/max/sum/avg/range/sort` helpers may also be called with method syntax on float
 and int arrays. Float arrays accept int or float values and store them as
 floats. Int arrays accept int values. Bool arrays accept bool values. String
 arrays accept string values. Color arrays accept color values. Other array
@@ -199,10 +199,11 @@ valid indexed element, or returns `na` when the index is invalid. `array.fill`
 replaces all elements by default or a half-open `[index_from, index_to)` window
 when bounds are supplied; invalid ranges are no-ops.
 `array.indexof` and `array.lastindexof` return `-1` when the value is not
-present. Numeric helpers `array.min`, `array.max`, `array.sum`, and `array.avg`
-are limited to float and int arrays; they ignore `na` elements and return `na`
-when no numeric element is present. `array.sort` is currently limited to float
-and int arrays, sorts ascending in place, and leaves `na` values at the end.
+present. Numeric helpers `array.min`, `array.max`, `array.sum`, `array.avg`,
+and `array.range` are limited to float and int arrays; they ignore `na`
+elements and return `na` when no numeric element is present. `array.range`
+returns max minus min. `array.sort` is currently limited to float and int
+arrays, sorts ascending in place, and leaves `na` values at the end.
 `array.reverse` reverses any supported typed array in place. `array.join`
 converts supported array elements to string with the default numeric format,
 uses `,` as the default separator, and returns an empty string for empty arrays.

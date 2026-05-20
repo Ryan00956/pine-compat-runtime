@@ -31,7 +31,7 @@
 - Added array search helpers `array.includes`, `array.indexof`, and
   `array.lastindexof` across supported typed arrays.
 - Added numeric array statistics helpers `array.min`, `array.max`,
-  `array.sum`, and `array.avg` for float and int arrays.
+  `array.sum`, `array.avg`, and `array.range` for float and int arrays.
 - Added array ordering helpers: numeric `array.sort` for ascending sort with
   `na` values last, and `array.reverse` for all supported typed arrays.
 - Added `array.join` support for supported typed arrays with optional string
@@ -41,7 +41,7 @@
 - Added partial array method-call syntax for supported array `size`, `get`,
   `set`, `insert`, `push`, `pop`, `remove`, `shift`, `unshift`, `first`,
   `last`, `fill`, `copy`, `slice`, `concat`, `includes`, `indexof`,
-  `lastindexof`, numeric `min`, `max`, `sum`, `avg`, `sort`, `reverse`,
+  `lastindexof`, numeric `min`, `max`, `sum`, `avg`, `range`, `sort`, `reverse`,
   `join`, and `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.
 - Added `input.price`, `input.time`, `input.symbol`, and `input.timeframe`

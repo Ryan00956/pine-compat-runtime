@@ -230,6 +230,7 @@ Initial supported functions:
 - `array.max`
 - `array.sum`
 - `array.avg`
+- `array.range`
 - `array.sort`
 - `array.reverse`
 - `array.join`
@@ -245,7 +246,7 @@ Resolved implementation choices:
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
 - The current pass supports float, int, bool, string, and color arrays with
   array.from inference and size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/clear
-  plus numeric min/max/sum/avg/sort, all-supported-array reverse, and
+  plus numeric min/max/sum/avg/range/sort, all-supported-array reverse, and
   all-supported-array join only; unsupported `array.*` variants still produce
   diagnostics.
 - Array assignment and UDF argument binding pass the runtime array id by

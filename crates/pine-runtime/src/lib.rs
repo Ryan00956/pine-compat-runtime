@@ -444,6 +444,7 @@ enum ArrayNumericMode {
     Max,
     Sum,
     Avg,
+    Range,
 }
 
 fn infer_array_from_kind(values: &[PineValue]) -> Option<ArrayElementKind> {
@@ -1494,6 +1495,7 @@ impl<'a> HistoricalRuntime<'a> {
             "array.max" => self.eval_array_numeric(args, ArrayNumericMode::Max),
             "array.sum" => self.eval_array_numeric(args, ArrayNumericMode::Sum),
             "array.avg" => self.eval_array_numeric(args, ArrayNumericMode::Avg),
+            "array.range" => self.eval_array_numeric(args, ArrayNumericMode::Range),
             "array.sort" => self.eval_array_sort(args),
             "array.reverse" => self.eval_array_reverse(args),
             "array.join" => self.eval_array_join(args),
@@ -2067,6 +2069,18 @@ impl<'a> HistoricalRuntime<'a> {
                     return Ok(PineValue::Na);
                 };
                 Ok(array_numeric_result(kind, current))
+            }
+            ArrayNumericMode::Range => {
+                let mut min: Option<f64> = None;
+                let mut max: Option<f64> = None;
+                for value in values.iter().filter_map(PineValue::as_f64) {
+                    min = Some(min.map_or(value, |current| current.min(value)));
+                    max = Some(max.map_or(value, |current| current.max(value)));
+                }
+                let (Some(min), Some(max)) = (min, max) else {
+                    return Ok(PineValue::Na);
+                };
+                Ok(array_numeric_result(kind, max - min))
             }
             ArrayNumericMode::Sum | ArrayNumericMode::Avg => {
                 let mut total = 0.0;
@@ -7865,6 +7879,7 @@ plot(array.min(ints))
 plot(array.max(ints))
 plot(array.sum(ints))
 plot(array.avg(ints))
+plot(array.range(ints))
 
 floats = array.new_float()
 floats.push(close)
@@ -7874,10 +7889,11 @@ plot(floats.min())
 plot(floats.max())
 plot(floats.sum())
 plot(floats.avg())
+plot(floats.range())
 
 empty = array.new_float()
 only_na = array.new_int(2)
-plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) ? 1 : 0)
+plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -7890,16 +7906,18 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
         let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 9);
+        assert_eq!(result.plots.len(), 11);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[5.0, 5.0]);
         assert_values_close(&result.plots[2].values, &[8.0, 8.0]);
         assert_values_close(&result.plots[3].values, &[8.0 / 3.0, 8.0 / 3.0]);
-        assert_values_close(&result.plots[4].values, &[2.0, 3.0]);
-        assert_values_close(&result.plots[5].values, &[4.0, 6.0]);
-        assert_values_close(&result.plots[6].values, &[6.0, 9.0]);
-        assert_values_close(&result.plots[7].values, &[3.0, 4.5]);
-        assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[4].values, &[4.0, 4.0]);
+        assert_values_close(&result.plots[5].values, &[2.0, 3.0]);
+        assert_values_close(&result.plots[6].values, &[4.0, 6.0]);
+        assert_values_close(&result.plots[7].values, &[6.0, 9.0]);
+        assert_values_close(&result.plots[8].values, &[3.0, 4.5]);
+        assert_values_close(&result.plots[9].values, &[2.0, 3.0]);
+        assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
     }
 
     #[test]
