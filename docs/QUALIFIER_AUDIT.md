@@ -51,8 +51,8 @@ Important current rules:
   assigned by semantic analysis.
 - Built-in signature docs use descriptive Pine-like terms, while code uses a
   smaller set of coarse acceptors.
-- History offsets accept non-negative integer literals plus `const int`,
-  `input int`, and `simple int` dynamic offset expressions.
+- History offsets accept non-negative integer literals plus integer expressions
+  at any implemented qualifier, including `series int`.
 - Series-qualified array ids and array history snapshots are not designed.
 
 ## Impact On Dynamic History
@@ -67,13 +67,17 @@ Dynamic history offsets now use an explicit integer-kind policy:
   retention up to the runtime cap.
 - non-integer offsets remain rejected.
 
-## Recommended Next Steps
+## Phase C Closeout
 
-1. Add more explicit diagnostics/profile fields for scripts that depend on
-   dynamic offsets beyond the indicator-level `max_bars_back` bound.
-2. Add a precise helper for qualifier-bound argument acceptance so built-in
+The history-offset qualifier policy is implemented and fixture-covered for
+const, input, simple, and series integers. Remaining qualifier work is not a
+blocker for Phase C history support:
+
+1. Add a precise helper for qualifier-bound argument acceptance so built-in
    signatures can say "at most input" or "at most simple" without bespoke enum
    variants for every kind.
-3. Keep `docs/BUILTIN_SIGNATURES.md` aligned with code acceptors before
-   broadening dynamic history, because built-in length parameters already rely
-   on `SimpleInt` semantics.
+2. Keep `docs/BUILTIN_SIGNATURES.md` aligned with code acceptors as new
+   built-ins are added, because built-in length parameters already rely on
+   `SimpleInt` semantics.
+3. Revisit scalar `simple` inference if later built-ins require stricter Pine
+   qualifier behavior than the current subset.

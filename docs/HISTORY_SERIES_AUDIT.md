@@ -1,8 +1,9 @@
 # History and Series Audit
 
-This document starts Phase C from `docs/LONG_TERM_EXECUTION_PLAN.md`. It records
-the current implementation boundary before changing dynamic history or qualifier
-rules.
+This document records the Phase C boundary from
+`docs/LONG_TERM_EXECUTION_PLAN.md`. Phase C now has a guarded dynamic integer
+history subset, static retention inference, runtime retention profiles, and
+indicator-level `max_bars_back` support.
 
 ## Current Supported Subset
 
@@ -57,15 +58,29 @@ Series integer offsets are supported as a guarded dynamic subset:
 
 Static-only scripts still use HIR metadata to trim retention.
 
-## Phase C Implementation Sequence
+## Phase C Closeout
 
-1. Harden the current static-offset boundary with fixtures.
-2. Audit qualifier propagation for const, input, simple, and series values.
-   Current findings are in `docs/QUALIFIER_AUDIT.md`.
-3. Audit built-in signatures that currently accept broader qualifiers than the
-   compatibility docs claim.
-4. Add tighter runtime diagnostics or per-variable `max_bars_back` handling for
-   scripts that depend on dynamic history.
+Completed:
+
+- Hardened constant history coverage.
+- Audited qualifier propagation for const, input, simple, and series values.
+  Current findings are in `docs/QUALIFIER_AUDIT.md`.
+- Audited and tightened built-in signature docs for implemented qualifier
+  behavior.
+- Implemented guarded dynamic integer history, including `series int` offsets.
+- Added HIR history requirement metadata and runtime static retention trimming.
+- Added indicator-level `max_bars_back` bounds for dynamic history retention.
+- Added profile fields for retention mode, static depth, dynamic-offset
+  presence, and `max_bars_back`.
+- Added fixture coverage for historical, incremental, and realtime rollback
+  paths.
+
+Deferred:
+
+- Per-variable `max_bars_back` declarations and inference.
+- Array, object, map, matrix, and drawing-object history snapshots.
+- More precise diagnostics when a dynamic offset asks for history beyond an
+  explicit retention bound.
 
 ## Acceptance Criteria For Expanding History
 

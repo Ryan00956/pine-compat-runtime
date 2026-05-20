@@ -151,28 +151,30 @@ Suggested commits:
 Goal: make series behavior closer to Pine while keeping static guarantees where
 possible.
 
-Status: in progress. The current static and integer dynamic history
-boundary is recorded in `docs/HISTORY_SERIES_AUDIT.md`; qualifier findings are
-recorded in `docs/QUALIFIER_AUDIT.md`; built-in signature notes were tightened
-in `docs/BUILTIN_SIGNATURES.md`. Series-qualified integer history offsets are
-now supported with runtime guards. Runtime profiles expose max series depth and
+Status: substantially complete for the current executable subset. The static
+and integer dynamic history boundary is recorded in
+`docs/HISTORY_SERIES_AUDIT.md`; qualifier findings are recorded in
+`docs/QUALIFIER_AUDIT.md`; built-in signature notes were tightened in
+`docs/BUILTIN_SIGNATURES.md`. Series-qualified integer history offsets are
+supported with runtime guards. Runtime profiles expose max series depth and
 history retention mode, and committed series history has a hard runtime cap. HIR
-lowering records program-wide and per-series history requirements, and runtime
-retention trims static-only scripts to those requirements.
+lowering records program-wide and per-series history requirements, runtime
+retention trims static-only scripts to those requirements, and
+`indicator(..., max_bars_back=N)` bounds dynamic retention.
 
-Scope:
+Remaining follow-up:
 
 - Add clearer diagnostics/profile fields or per-variable `max_bars_back`
   handling for scripts that depend on dynamic history.
 - Continue expanding tests around `na`, first-bar behavior, and interactions
   with more built-ins as needed.
-- Tighten qualifier propagation for const, input, simple, and series values.
-- Audit built-in signatures against actual accepted qualifier behavior.
+- Revisit scalar `simple` inference and qualifier-bound helper APIs if Phase D
+  built-ins need stricter qualifier semantics.
 
-Risks:
+Residual risks:
 
 - Dynamic offsets can require deeper history retention and new runtime bounds.
-- Qualifier changes may affect many built-in signatures at once.
+- Future qualifier changes may affect many built-in signatures at once.
 
 Acceptance criteria:
 
@@ -194,6 +196,7 @@ Suggested commits:
 8. `Expose history retention profile`
 9. `Support indicator max bars back`
 10. `Cover dynamic history scopes`
+11. `Close Phase C audit`
 
 ## Phase D: Built-In Coverage Expansion
 

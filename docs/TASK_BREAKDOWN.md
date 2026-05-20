@@ -59,7 +59,7 @@ Status: baseline complete.
 - [x] Add qualifier promotion rules.
 - [x] Add builtin signature validation.
 - [x] Add constant-history-offset validation.
-- [x] Add dynamic-history-offset rejection.
+- [x] Add guarded dynamic-history-offset support.
 - [x] Add `varip` rejection fixture.
 - [x] Add first `request.*` unsupported fixture.
 - [x] Add `strategy.*`, drawing object, array, import, and alert
@@ -203,7 +203,8 @@ Status: planned in
 
 - [ ] Harden loop and branch edge cases.
 - [ ] Expand collection support beyond float arrays.
-- [ ] Revisit history and qualifier semantics.
+- [x] Revisit history and qualifier semantics for the current executable subset.
+- [ ] Add per-variable `max_bars_back` and deeper history diagnostics.
 - [ ] Add more built-in coverage.
 - [ ] Design drawing object outputs.
 - [ ] Design `request.*` and multi-timeframe data providers.
