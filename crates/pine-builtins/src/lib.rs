@@ -1857,6 +1857,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "array.median",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_PARAMS,
+        returns: ReturnSpec::ArrayNumeric(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.mode",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NUMERIC_PARAMS,
+        returns: ReturnSpec::ArrayNumeric(0),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "array.variance",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_VARIANCE_PARAMS,

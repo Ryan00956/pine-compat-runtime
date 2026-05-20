@@ -31,8 +31,8 @@
 - Added array search helpers `array.includes`, `array.indexof`,
   `array.lastindexof`, and numeric `array.binary_search*` variants.
 - Added numeric array statistics helpers `array.min`, `array.max`,
-  `array.sum`, `array.avg`, `array.range`, `array.variance`, and
-  `array.stdev` for float and int arrays.
+  `array.sum`, `array.avg`, `array.range`, `array.median`, `array.mode`,
+  `array.variance`, and `array.stdev` for float and int arrays.
 - Added array ordering helpers: numeric `array.sort` for ascending sort with
   `na` values last, and `array.reverse` for all supported typed arrays.
 - Added `array.join` support for supported typed arrays with optional string
@@ -43,7 +43,8 @@
   `set`, `insert`, `push`, `pop`, `remove`, `shift`, `unshift`, `first`,
   `last`, `fill`, `copy`, `slice`, `concat`, `includes`, `indexof`,
   `lastindexof`, numeric `binary_search*`, `min`, `max`, `sum`, `avg`, `range`,
-  `variance`, `stdev`, `sort`, `reverse`, `join`, and `clear`.
+  `median`, `mode`, `variance`, `stdev`, `sort`, `reverse`, `join`, and
+  `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.
 - Added `input.price`, `input.time`, `input.symbol`, and `input.timeframe`
   support for the executable `defval`/`title` subset.

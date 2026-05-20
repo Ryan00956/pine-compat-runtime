@@ -452,6 +452,8 @@ enum ArrayNumericMode {
     Sum,
     Avg,
     Range,
+    Median,
+    Mode,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1518,6 +1520,8 @@ impl<'a> HistoricalRuntime<'a> {
             "array.sum" => self.eval_array_numeric(args, ArrayNumericMode::Sum),
             "array.avg" => self.eval_array_numeric(args, ArrayNumericMode::Avg),
             "array.range" => self.eval_array_numeric(args, ArrayNumericMode::Range),
+            "array.median" => self.eval_array_numeric(args, ArrayNumericMode::Median),
+            "array.mode" => self.eval_array_numeric(args, ArrayNumericMode::Mode),
             "array.variance" => self.eval_array_variance(args, ArrayVarianceMode::Variance),
             "array.stdev" => self.eval_array_variance(args, ArrayVarianceMode::Stdev),
             "array.sort" => self.eval_array_sort(args),
@@ -2172,6 +2176,56 @@ impl<'a> HistoricalRuntime<'a> {
                 } else {
                     Ok(array_numeric_result(kind, total))
                 }
+            }
+            ArrayNumericMode::Median => {
+                let mut numeric_values: Vec<_> =
+                    values.iter().filter_map(PineValue::as_f64).collect();
+                if numeric_values.is_empty() {
+                    return Ok(PineValue::Na);
+                }
+                numeric_values
+                    .sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
+                let middle = numeric_values.len() / 2;
+                let median = if numeric_values.len() % 2 == 0 {
+                    (numeric_values[middle - 1] + numeric_values[middle]) / 2.0
+                } else {
+                    numeric_values[middle]
+                };
+                Ok(array_numeric_result(kind, median))
+            }
+            ArrayNumericMode::Mode => {
+                let mut numeric_values: Vec<_> =
+                    values.iter().filter_map(PineValue::as_f64).collect();
+                if numeric_values.is_empty() {
+                    return Ok(PineValue::Na);
+                }
+                numeric_values
+                    .sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
+
+                let mut best_value = numeric_values[0];
+                let mut best_count = 0_usize;
+                let mut current_value = numeric_values[0];
+                let mut current_count = 0_usize;
+                for value in numeric_values {
+                    if (value - current_value).abs() < f64::EPSILON {
+                        current_count += 1;
+                    } else {
+                        if current_count > best_count {
+                            best_value = current_value;
+                            best_count = current_count;
+                        }
+                        current_value = value;
+                        current_count = 1;
+                    }
+                }
+                if current_count > best_count {
+                    best_value = current_value;
+                    best_count = current_count;
+                }
+                if best_count < 2 {
+                    return Ok(PineValue::Na);
+                }
+                Ok(array_numeric_result(kind, best_value))
             }
         }
     }
@@ -8043,7 +8097,10 @@ plot(array.max(ints))
 plot(array.sum(ints))
 plot(array.avg(ints))
 plot(array.range(ints))
+plot(array.median(ints))
 plot(array.variance(ints, false))
+mode_ints = array.from(1, 3, 3, 2, 2)
+plot(mode_ints.mode())
 
 floats = array.new_float()
 floats.push(close)
@@ -8054,12 +8111,13 @@ plot(floats.max())
 plot(floats.sum())
 plot(floats.avg())
 plot(floats.range())
+plot(floats.median())
 plot(array.variance(floats))
 plot(floats.stdev(false))
 
 empty = array.new_float()
 only_na = array.new_int(2)
-plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) and na(array.variance(empty)) and na(only_na.stdev()) ? 1 : 0)
+plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) and na(array.mode(ints)) and na(array.variance(empty)) and na(only_na.stdev()) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -8072,21 +8130,24 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
         let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 14);
+        assert_eq!(result.plots.len(), 17);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[5.0, 5.0]);
         assert_values_close(&result.plots[2].values, &[8.0, 8.0]);
         assert_values_close(&result.plots[3].values, &[8.0 / 3.0, 8.0 / 3.0]);
         assert_values_close(&result.plots[4].values, &[4.0, 4.0]);
-        assert_values_close(&result.plots[5].values, &[13.0 / 3.0, 13.0 / 3.0]);
-        assert_values_close(&result.plots[6].values, &[2.0, 3.0]);
-        assert_values_close(&result.plots[7].values, &[4.0, 6.0]);
-        assert_values_close(&result.plots[8].values, &[6.0, 9.0]);
-        assert_values_close(&result.plots[9].values, &[3.0, 4.5]);
-        assert_values_close(&result.plots[10].values, &[2.0, 3.0]);
-        assert_values_close(&result.plots[11].values, &[1.0, 2.25]);
-        assert_values_close(&result.plots[12].values, &[2.0_f64.sqrt(), 4.5_f64.sqrt()]);
-        assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[5].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[6].values, &[13.0 / 3.0, 13.0 / 3.0]);
+        assert_values_close(&result.plots[7].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[8].values, &[2.0, 3.0]);
+        assert_values_close(&result.plots[9].values, &[4.0, 6.0]);
+        assert_values_close(&result.plots[10].values, &[6.0, 9.0]);
+        assert_values_close(&result.plots[11].values, &[3.0, 4.5]);
+        assert_values_close(&result.plots[12].values, &[2.0, 3.0]);
+        assert_values_close(&result.plots[13].values, &[3.0, 4.5]);
+        assert_values_close(&result.plots[14].values, &[1.0, 2.25]);
+        assert_values_close(&result.plots[15].values, &[2.0_f64.sqrt(), 4.5_f64.sqrt()]);
+        assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
     }
 
     #[test]

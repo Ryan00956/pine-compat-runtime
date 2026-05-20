@@ -125,8 +125,11 @@ present. Numeric binary search helpers expect int/float arrays sorted ascending;
 return the nearest existing insertion-side index and return `-1` for empty
 arrays. Numeric helpers on int/float arrays skip `na` elements; if every
 element is `na` or the array is empty, `array.min`, `array.max`, `array.sum`,
-`array.avg`, `array.range`, `array.variance`, and `array.stdev` return `na`.
-`array.range` returns max minus min. `array.variance` and `array.stdev` use a
+`array.avg`, `array.range`, `array.median`, `array.mode`, `array.variance`,
+and `array.stdev` return `na`. `array.range` returns max minus min.
+`array.median` returns the median of non-`na` values. `array.mode` returns the
+smallest value among tied most-frequent values and returns `na` when all
+remaining values occur only once. `array.variance` and `array.stdev` use a
 biased population estimate by default; with `biased=false`, they use the
 sample denominator and return `na` when fewer than two numeric values remain.
 `array.sort` orders int/float arrays ascending and places `na` values after
