@@ -1668,6 +1668,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.range" => self.eval_range(call_site_id, args),
             "ta.dev" => self.eval_dev(call_site_id, args),
             "ta.vwma" => self.eval_vwma(call_site_id, args),
+            "ta.wma" => self.eval_wma(call_site_id, args),
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.change" => self.eval_change(args),
@@ -3059,6 +3060,26 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(weighted.sum / volumes.sum))
     }
 
+    fn eval_wma(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(window.weighted_mean(length)))
+    }
+
     fn eval_window_variance(
         &mut self,
         call_site_id: CallSiteId,
@@ -4165,6 +4186,18 @@ impl RollingWindowState {
             .map(|value| (*value - mean).abs())
             .sum::<f64>()
             / length as f64
+    }
+
+    fn weighted_mean(&self, length: usize) -> f64 {
+        let weighted_sum = self
+            .values
+            .iter()
+            .flatten()
+            .enumerate()
+            .map(|(index, value)| *value * (index + 1) as f64)
+            .sum::<f64>();
+        let denominator = length * (length + 1) / 2;
+        weighted_sum / denominator as f64
     }
 }
 
@@ -6323,6 +6356,33 @@ plot(value)
         assert_values_close(
             &result.plots[0].values[2..],
             &[3.6666666666666665, 5.444444444444445],
+        );
+    }
+
+    #[test]
+    fn runs_wma_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("wma")
+value = ta.wma(close, 3)
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(4.0), bar(7.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[2..],
+            &[2.8333333333333335, 5.166666666666667],
         );
     }
 

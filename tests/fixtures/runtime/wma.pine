@@ -1,0 +1,4 @@
+//@version=5
+indicator("WMA")
+value = ta.wma(close, 3)
+plot(value)
