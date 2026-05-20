@@ -668,6 +668,19 @@ const STR_TOSTRING_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const STR_FORMAT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "formatString",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "arg",
+        accepts: Accepts::StringConvertible,
+        optional: true,
+    },
+];
+
 const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "a",
@@ -1183,6 +1196,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         params: STR_TOSTRING_PARAMS,
         returns: ReturnSpec::PromotedString,
         variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.format",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_FORMAT_PARAMS,
+        returns: ReturnSpec::PromotedString,
+        variadic: true,
     },
     BuiltinSignature {
         name: "math.abs",

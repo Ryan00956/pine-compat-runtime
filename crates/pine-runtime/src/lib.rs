@@ -1338,6 +1338,7 @@ impl<'a> HistoricalRuntime<'a> {
             "str.replace_all" => self.eval_str_replace_all(args),
             "str.tonumber" => self.eval_str_tonumber(args),
             "str.tostring" => self.eval_str_tostring(args),
+            "str.format" => self.eval_str_format(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -1987,6 +1988,19 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let result = self.stringify_value(&value, &format);
         self.string_value_or_error(result, "str.tostring")
+    }
+
+    fn eval_str_format(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(format_string) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let mut values = Vec::with_capacity(args.len().saturating_sub(1));
+        for arg in &args[1..] {
+            values.push(self.eval_expr(&arg.value)?);
+        }
+
+        let result = format_string_placeholders(&format_string, &values, self)?;
+        self.string_value_or_error(result, "str.format")
     }
 
     fn stringify_value(&self, value: &PineValue, format: &str) -> String {
@@ -3172,6 +3186,68 @@ fn stringify_array_element(value: &PineValue, format: &str) -> String {
     }
 }
 
+fn format_string_placeholders(
+    format_string: &str,
+    values: &[PineValue],
+    runtime: &HistoricalRuntime<'_>,
+) -> Result<String, RuntimeError> {
+    let mut result = String::new();
+    let mut chars = format_string.char_indices().peekable();
+    while let Some((byte_index, ch)) = chars.next() {
+        match ch {
+            '{' => {
+                let start = byte_index + ch.len_utf8();
+                let Some((end, _)) = chars.find(|(_, next)| *next == '}') else {
+                    return Err(RuntimeError {
+                        message: "str.format has unmatched `{`".to_owned(),
+                    });
+                };
+                let placeholder = &format_string[start..end];
+                if let Some(formatted) = format_placeholder(placeholder, values, runtime) {
+                    result.push_str(&formatted);
+                } else {
+                    result.push('{');
+                    result.push_str(placeholder);
+                    result.push('}');
+                }
+            }
+            '}' => {
+                return Err(RuntimeError {
+                    message: "str.format has unmatched `}`".to_owned(),
+                });
+            }
+            _ => result.push(ch),
+        }
+    }
+    Ok(result)
+}
+
+fn format_placeholder(
+    placeholder: &str,
+    values: &[PineValue],
+    runtime: &HistoricalRuntime<'_>,
+) -> Option<String> {
+    let mut parts = placeholder.splitn(3, ',').map(str::trim);
+    let index = parts.next()?.parse::<usize>().ok()?;
+    let value = values.get(index)?;
+    let Some(modifier) = parts.next() else {
+        return Some(runtime.stringify_value(value, "#,###.###"));
+    };
+
+    if modifier != "number" {
+        return Some(runtime.stringify_value(value, "#,###.###"));
+    }
+
+    let format = match parts.next().map(str::trim) {
+        Some("integer") => "#",
+        Some("percent") => "#.##%",
+        Some("currency") => "#,###.00",
+        Some(format) if !format.is_empty() => format,
+        _ => "#,###.###",
+    };
+    Some(runtime.stringify_value(value, format))
+}
+
 fn format_number(value: f64, format: &str) -> String {
     if !value.is_finite() {
         return "NaN".to_owned();
@@ -4279,6 +4355,10 @@ values = array.new_float(3)
 array.set(values, 0, 1.2)
 array.set(values, 1, 2.6)
 text_array = str.tostring(values, "#")
+formatted = str.format("A={0}, B={1}, A2={0}", text_int, text_float)
+formatted_missing = str.format("Missing {2}", text_int)
+formatted_number = str.format("Rounded {0,number,#.00} Percent {1,number,percent}", 1.2, 0.0345)
+formatted_array = str.format("Values {0}", values)
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
@@ -4297,6 +4377,9 @@ plot(text_int == "42" and text_float == "1.25" and text_round0 == "1" and text_r
 plot(text_zeros == "1.2500" and text_percent == "12.34%" ? 1 : 0)
 plot(text_bool == "true" and text_string == "ok" and text_na == "NaN" ? 1 : 0)
 plot(text_array == "[1, 3, NaN]" ? 1 : 0)
+plot(formatted == "A=42, B=1.25, A2=42" and formatted_missing == "Missing {2}" ? 1 : 0)
+plot(formatted_number == "Rounded 1.20 Percent 3.45%" ? 1 : 0)
+plot(formatted_array == "Values [1.2, 2.6, NaN]" ? 1 : 0)
 "##,
         );
         let analysis = analyze_source(&source);
@@ -4327,6 +4410,34 @@ plot(text_array == "[1, 3, NaN]" ? 1 : 0)
         assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
+    }
+
+    #[test]
+    fn rejects_unbalanced_str_format_placeholders() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bad format")
+plot(str.length(str.format("Value {0", close)))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected str.format placeholder error");
+
+        assert!(
+            error.message.contains("str.format has unmatched `{`"),
+            "{}",
+            error.message
+        );
     }
 
     #[test]

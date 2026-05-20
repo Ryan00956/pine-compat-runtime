@@ -3405,6 +3405,10 @@ values = array.new_float(3)
 array.set(values, 0, 1.2)
 array.set(values, 1, 2.6)
 text_array = str.tostring(values, "#")
+formatted = str.format("A={0}, B={1}, A2={0}", text_int, text_float)
+formatted_missing = str.format("Missing {2}", text_int)
+formatted_number = str.format("Rounded {0,number,#.00} Percent {1,number,percent}", 1.2, 0.0345)
+formatted_array = str.format("Values {0}", values)
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
@@ -3423,6 +3427,9 @@ plot(text_int == "42" and text_float == "1.25" and text_round0 == "1" and text_r
 plot(text_zeros == "1.2500" and text_percent == "12.34%" ? 1 : 0)
 plot(text_bool == "true" and text_string == "ok" and text_na == "NaN" ? 1 : 0)
 plot(text_array == "[1, 3, NaN]" ? 1 : 0)
+plot(formatted == "A=42, B=1.25, A2=42" and formatted_missing == "Missing {2}" ? 1 : 0)
+plot(formatted_number == "Rounded 1.20 Percent 3.45%" ? 1 : 0)
+plot(formatted_array == "Values [1.2, 2.6, NaN]" ? 1 : 0)
 "##,
         );
 
@@ -3446,6 +3453,7 @@ plot(text_array == "[1, 3, NaN]" ? 1 : 0)
             "str.replace_all",
             "str.tonumber",
             "str.tostring",
+            "str.format",
         ] {
             assert!(
                 analysis
