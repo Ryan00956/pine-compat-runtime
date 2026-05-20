@@ -2,6 +2,7 @@
 
 use std::collections::{HashMap, VecDeque};
 
+use chrono::{DateTime, Datelike, TimeZone, Timelike, Utc};
 use pine_ir::{
     CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirLiteral, HirProgram, HirStmt,
     HirStmtKind, HirUnaryOp, SeriesId, SymbolId, VarSlotId,
@@ -1341,6 +1342,7 @@ impl<'a> HistoricalRuntime<'a> {
             "str.tostring" => self.eval_str_tostring(args),
             "str.format" => self.eval_str_format(args),
             "str.match" => self.eval_str_match_regex(args),
+            "str.format_time" => self.eval_str_format_time(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -2021,6 +2023,45 @@ impl<'a> HistoricalRuntime<'a> {
                 .find(&source)
                 .map_or_else(String::new, |matched| matched.as_str().to_owned()),
         ))
+    }
+
+    fn eval_str_format_time(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let timestamp = match self.eval_expr(&args[0].value)? {
+            PineValue::Int(value) => value,
+            PineValue::Na => return Ok(PineValue::Na),
+            _ => return Ok(PineValue::Na),
+        };
+        let format = if let Some(arg) = args.get(1) {
+            match self.eval_expr(&arg.value)? {
+                PineValue::String(format) => format,
+                PineValue::Na => "yyyy-MM-dd'T'HH:mm:ssZ".to_owned(),
+                _ => return Ok(PineValue::Na),
+            }
+        } else {
+            "yyyy-MM-dd'T'HH:mm:ssZ".to_owned()
+        };
+        let timezone = if let Some(arg) = args.get(2) {
+            match self.eval_expr(&arg.value)? {
+                PineValue::String(timezone) => timezone,
+                PineValue::Na => "UTC".to_owned(),
+                _ => return Ok(PineValue::Na),
+            }
+        } else {
+            "UTC".to_owned()
+        };
+        if !is_supported_utc_timezone(&timezone) {
+            return Err(RuntimeError {
+                message: format!("str.format_time unsupported timezone `{timezone}`"),
+            });
+        }
+        let Some(datetime) = Utc.timestamp_millis_opt(timestamp).single() else {
+            return Err(RuntimeError {
+                message: format!("str.format_time timestamp is out of range: {timestamp}"),
+            });
+        };
+
+        let result = format_utc_datetime(datetime, &format);
+        self.string_value_or_error(result, "str.format_time")
     }
 
     fn stringify_value(&self, value: &PineValue, format: &str) -> String {
@@ -3268,6 +3309,109 @@ fn format_placeholder(
     Some(runtime.stringify_value(value, format))
 }
 
+fn is_supported_utc_timezone(timezone: &str) -> bool {
+    matches!(
+        timezone,
+        "UTC" | "Etc/UTC" | "GMT" | "Z" | "+0000" | "+00:00"
+    )
+}
+
+fn format_utc_datetime(datetime: DateTime<Utc>, format: &str) -> String {
+    let mut result = String::new();
+    let mut chars = format.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch == '\'' {
+            for literal in chars.by_ref() {
+                if literal == '\'' {
+                    break;
+                }
+                result.push(literal);
+            }
+            continue;
+        }
+
+        let count = consume_same_chars(&mut chars, ch) + 1;
+        match ch {
+            'y' | 'Y' => {
+                if count == 2 {
+                    result.push_str(&format!("{:02}", datetime.year().rem_euclid(100)));
+                } else {
+                    result.push_str(&format!("{:04}", datetime.year()));
+                }
+            }
+            'M' => result.push_str(&format_month(datetime.month(), count)),
+            'd' => push_padded_or_plain(&mut result, datetime.day(), count),
+            'H' => push_padded_or_plain(&mut result, datetime.hour(), count),
+            'h' => {
+                let hour = match datetime.hour() % 12 {
+                    0 => 12,
+                    hour => hour,
+                };
+                push_padded_or_plain(&mut result, hour, count);
+            }
+            'm' => push_padded_or_plain(&mut result, datetime.minute(), count),
+            's' => push_padded_or_plain(&mut result, datetime.second(), count),
+            'S' => result.push_str(&format_millis(datetime.timestamp_subsec_millis(), count)),
+            'a' => result.push_str(if datetime.hour() < 12 { "AM" } else { "PM" }),
+            'Z' => result.push_str("+0000"),
+            other => {
+                for _ in 0..count {
+                    result.push(other);
+                }
+            }
+        }
+    }
+    result
+}
+
+fn consume_same_chars(chars: &mut std::iter::Peekable<std::str::Chars<'_>>, ch: char) -> usize {
+    let mut count = 0;
+    while chars.peek().copied() == Some(ch) {
+        chars.next();
+        count += 1;
+    }
+    count
+}
+
+fn push_padded_or_plain(result: &mut String, value: u32, width: usize) {
+    if width >= 2 {
+        result.push_str(&format!("{value:0width$}"));
+    } else {
+        result.push_str(&value.to_string());
+    }
+}
+
+fn format_month(month: u32, width: usize) -> String {
+    const SHORT: [&str; 12] = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    const LONG: [&str; 12] = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+    ];
+    match width {
+        1 => month.to_string(),
+        2 => format!("{month:02}"),
+        3 => SHORT[(month - 1) as usize].to_owned(),
+        _ => LONG[(month - 1) as usize].to_owned(),
+    }
+}
+
+fn format_millis(millis: u32, width: usize) -> String {
+    let value = format!("{millis:03}");
+    value[..width.min(3)].to_owned()
+}
+
 fn format_number(value: f64, format: &str) -> String {
     if !value.is_finite() {
         return "NaN".to_owned();
@@ -4383,6 +4527,10 @@ match_prefix = str.match("NASDAQ:AAPL", "^(?:BATS|NASDAQ|NYSE|AMEX):")
 match_suffix = str.match("NASDAQ:AAPL", "AAPL$")
 match_missing = str.match("NASDAQ:AAPL", "^NYSE:")
 missing_match_regex = str.match(na, ".+")
+formatted_time_default = str.format_time(1609459200000)
+formatted_time_date = str.format_time(1609459200000, "yyyy-MM-dd")
+formatted_time_text = str.format_time(1609459200000, "HH:mm:ss 'on' MMM dd, yyyy", "UTC")
+missing_format_time = str.format_time(na)
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
@@ -4406,6 +4554,8 @@ plot(formatted_number == "Rounded 1.20 Percent 3.45%" ? 1 : 0)
 plot(formatted_array == "Values [1.2, 2.6, NaN]" ? 1 : 0)
 plot(match_prefix == "NASDAQ:" and match_suffix == "AAPL" and match_missing == "" ? 1 : 0)
 plot(na(missing_match_regex) ? 1 : 0)
+plot(formatted_time_default == "2021-01-01T00:00:00+0000" and formatted_time_date == "2021-01-01" ? 1 : 0)
+plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_time) ? 1 : 0)
 "##,
         );
         let analysis = analyze_source(&source);
@@ -4441,6 +4591,8 @@ plot(na(missing_match_regex) ? 1 : 0)
         assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
     }
 
     #[test]
@@ -4488,6 +4640,33 @@ plot(str.length(str.match("abc", "(")))
 
         assert!(
             error.message.contains("str.match invalid regex"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn rejects_unsupported_str_format_time_timezone() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bad time")
+plot(str.length(str.format_time(1609459200000, "yyyy-MM-dd", "America/New_York")))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected str.format_time timezone error");
+
+        assert!(
+            error
+                .message
+                .contains("str.format_time unsupported timezone `America/New_York`"),
             "{}",
             error.message
         );

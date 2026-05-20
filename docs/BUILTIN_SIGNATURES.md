@@ -224,6 +224,8 @@ str.format(formatString: string-compatible, arg0?: int|float|bool|string|float-a
   -> string with strongest qualifier
 str.match(source: string-compatible, regex: string-compatible)
   -> string with strongest qualifier
+str.format_time(time: int-compatible, format?: string-compatible, timezone?: string-compatible)
+  -> string with strongest qualifier
 ```
 
 Supported `str.*` helpers return `na` for `na` inputs.
@@ -256,6 +258,12 @@ not yet claimed.
 `str.match` uses Rust regex syntax for the fixture-covered subset. It returns
 the first matched substring, an empty string when there is no match, `na` for
 `na` inputs, and a runtime error for invalid regex patterns.
+`str.format_time` supports UNIX timestamps in milliseconds and a UTC-only
+timezone subset (`UTC`, `Etc/UTC`, `GMT`, `Z`, `+0000`, `+00:00`). Omitted or
+`na` `format` defaults to `yyyy-MM-dd'T'HH:mm:ssZ`. Supported tokens include
+`y`/`Y`, `M`, `d`, `H`, `h`, `m`, `s`, `S`, `a`, `Z`, and single-quoted
+literals. Other time zones are runtime errors until exchange/IANA timezone
+support is designed.
 
 ## Math
 

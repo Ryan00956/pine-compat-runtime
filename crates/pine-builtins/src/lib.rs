@@ -694,6 +694,24 @@ const STR_FORMAT_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const STR_FORMAT_TIME_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "time",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "format",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "timezone",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+];
+
 const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "a",
@@ -1221,6 +1239,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "str.match",
         phase: BuiltinPhase::Phase1Core,
         params: STR_SOURCE_REGEX_PARAMS,
+        returns: ReturnSpec::PromotedString,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.format_time",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_FORMAT_TIME_PARAMS,
         returns: ReturnSpec::PromotedString,
         variadic: false,
     },

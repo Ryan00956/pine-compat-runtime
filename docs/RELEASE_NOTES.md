@@ -39,6 +39,7 @@
 - Added `str.tostring` scalar and float-array string conversion.
 - Added `str.format` indexed placeholder string formatting.
 - Added `str.match` regex substring matching.
+- Added a UTC subset of `str.format_time` timestamp formatting.
 - Added `math.floor` and `math.ceil` support for numeric values.
 - Added `math.sqrt`, `math.log`, and `math.pow` support for numeric values.
 - Added `math.sin`, `math.cos`, and `math.tan` support for numeric values.
