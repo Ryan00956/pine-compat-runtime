@@ -86,8 +86,10 @@ Initial rules:
 - `offset > 0` reads committed history.
 - out-of-range history returns `na`.
 - negative offsets are rejected.
-- dynamic offsets are rejected until Phase C defines retention and qualifier
-  rules.
+- dynamic offsets are accepted for `const int`, `input int`, and `simple int`
+  expressions.
+- series-qualified dynamic offsets are rejected until max-bars-back style
+  retention and memory limits are designed.
 
 The lowering stage should determine whether `expr` needs a compiler-generated
 series id. For example:
@@ -157,7 +159,7 @@ Phase 1 can use growable buffers for correctness.
 Later phases should add:
 
 - static history-depth inference for constant offsets
-- a runtime guard for unsupported dynamic offsets
+- retention bounds for supported dynamic offsets
 - optional `max_bars_back` handling
 - memory limits and diagnostics for excessive history
 

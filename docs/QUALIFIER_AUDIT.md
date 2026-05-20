@@ -51,8 +51,8 @@ Important current rules:
   assigned by semantic analysis.
 - Built-in signature docs use descriptive Pine-like terms, while code uses a
   smaller set of coarse acceptors.
-- Dynamic history offsets are still rejected before qualifier-based retention
-  decisions are made.
+- History offsets accept non-negative integer literals plus `const int`,
+  `input int`, and `simple int` dynamic offset expressions.
 - Series-qualified array ids and array history snapshots are not designed.
 
 ## Impact On Dynamic History
@@ -60,24 +60,22 @@ Important current rules:
 The next dynamic-offset decision should not use "is this an integer?" alone.
 It needs an explicit qualifier policy:
 
-- `const int`: already supported when written as an integer literal; named const
-  folding is not implemented for history offsets.
-- `input int`: viable first guarded subset if retention can be bounded from the
-  configured input value.
-- `simple int`: viable only after scalar simple inference and retention bounds
-  are documented.
-- `series int`: should remain rejected until max-bars-back style retention,
+- `const int`: supported; non-negative literals lower to a constant offset,
+  while other const int expressions are evaluated by the runtime guard.
+- `input int`: supported with growable retention and runtime validation.
+- `simple int`: supported with growable retention and runtime validation.
+- `series int`: remains rejected until max-bars-back style retention,
   runtime validation, and memory limits exist.
 
 ## Recommended Next Steps
 
-1. Replace the current history-offset literal-only lowering with a designed
-   offset representation only after deciding the accepted qualifier subset.
+1. Add retention and memory-limit design for accepted const/input/simple
+   dynamic offsets.
 2. Add a precise helper for qualifier-bound argument acceptance so built-in
    signatures can say "at most input" or "at most simple" without bespoke enum
    variants for every kind.
-3. Keep `close[length]` rejected even when `length` is `input int` until the
-   runtime has explicit retention and invalid-offset behavior.
+3. Keep `close[bar_index]` and other `series int` offsets rejected until the
+   runtime has explicit max-bars-back behavior.
 4. Keep `docs/BUILTIN_SIGNATURES.md` aligned with code acceptors before
    broadening dynamic history, because built-in length parameters already rely
    on `SimpleInt` semantics.

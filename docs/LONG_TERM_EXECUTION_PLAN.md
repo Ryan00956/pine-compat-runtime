@@ -150,15 +150,16 @@ Suggested commits:
 Goal: make series behavior closer to Pine while keeping static guarantees where
 possible.
 
-Status: started. The current static-offset boundary and next implementation
-sequence are recorded in `docs/HISTORY_SERIES_AUDIT.md`; qualifier findings are
+Status: in progress. The current static and const/input/simple dynamic history
+boundary is recorded in `docs/HISTORY_SERIES_AUDIT.md`; qualifier findings are
 recorded in `docs/QUALIFIER_AUDIT.md`; built-in signature notes were tightened
-in `docs/BUILTIN_SIGNATURES.md`.
+in `docs/BUILTIN_SIGNATURES.md`. Series-qualified history offsets remain
+diagnostic-only.
 
 Scope:
 
-- Revisit dynamic history offsets and decide whether to support a guarded
-  subset or keep them diagnostic-only.
+- Revisit series-qualified dynamic history offsets and decide whether to support
+  a guarded subset or keep them diagnostic-only.
 - Expand tests around `na`, first-bar behavior, and history inside loops and
   UDFs.
 - Tighten qualifier propagation for const, input, simple, and series values.

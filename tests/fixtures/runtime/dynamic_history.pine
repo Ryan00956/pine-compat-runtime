@@ -1,0 +1,12 @@
+//@version=5
+indicator("Dynamic history")
+
+length = input.int(1, "Length")
+
+var values = array.new_int()
+array.push(values, 1)
+simple_length = math.min(array.size(values), 1)
+
+plot(close[length])
+plot((close + open)[length])
+plot(close[simple_length])

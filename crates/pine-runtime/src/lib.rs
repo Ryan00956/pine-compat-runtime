@@ -5,8 +5,8 @@ use std::collections::{HashMap, VecDeque};
 
 use chrono::{DateTime, Datelike, TimeZone, Timelike, Utc};
 use pine_ir::{
-    CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirLiteral, HirProgram, HirStmt,
-    HirStmtKind, HirUnaryOp, SeriesId, SymbolId, VarSlotId,
+    CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirHistoryOffset, HirLiteral,
+    HirProgram, HirStmt, HirStmtKind, HirUnaryOp, SeriesId, SymbolId, VarSlotId,
 };
 use regex::Regex;
 
@@ -1119,15 +1119,7 @@ impl<'a> HistoricalRuntime<'a> {
                 call_site_id,
                 args,
             } => self.eval_call(callee, *call_site_id, args)?,
-            HirExprKind::History { expr, offset } => {
-                if *offset == 0 {
-                    self.eval_expr(expr)?
-                } else if let Some(series_id) = expr.series_id {
-                    self.series_store.read(series_id, *offset as usize)
-                } else {
-                    PineValue::Na
-                }
-            }
+            HirExprKind::History { expr, offset } => self.eval_history(expr, offset)?,
         };
 
         if let Some(series_id) = expr.series_id {
@@ -1135,6 +1127,52 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(value)
+    }
+
+    fn eval_history(
+        &mut self,
+        expr: &HirExpr,
+        offset: &HirHistoryOffset,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(offset) = self.eval_history_offset(offset)? else {
+            return Ok(PineValue::Na);
+        };
+
+        if offset == 0 {
+            return self.eval_expr(expr);
+        }
+
+        self.eval_expr(expr)?;
+        if let Some(series_id) = expr.series_id {
+            Ok(self.series_store.read(series_id, offset))
+        } else {
+            Ok(PineValue::Na)
+        }
+    }
+
+    fn eval_history_offset(
+        &mut self,
+        offset: &HirHistoryOffset,
+    ) -> Result<Option<usize>, RuntimeError> {
+        let value = match offset {
+            HirHistoryOffset::Constant(offset) => return Ok(Some(*offset as usize)),
+            HirHistoryOffset::Dynamic(expr) => self.eval_expr(expr)?,
+        };
+
+        match value {
+            PineValue::Int(value) if value >= 0 => {
+                usize::try_from(value).map(Some).map_err(|_| RuntimeError {
+                    message: "history offset is too large".to_owned(),
+                })
+            }
+            PineValue::Int(_) => Err(RuntimeError {
+                message: "history offset must be non-negative".to_owned(),
+            }),
+            PineValue::Na => Ok(None),
+            _ => Err(RuntimeError {
+                message: "history offset must be an int".to_owned(),
+            }),
+        }
     }
 
     fn eval_switch(
@@ -9379,6 +9417,106 @@ plot(value)
 
         assert_eq!(result.plots.len(), 1);
         assert_eq!(result.plots[0].values, vec![PineValue::Na]);
+    }
+
+    #[test]
+    fn stores_expression_history_before_reading_previous_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("expression history")
+plot((close + open)[1])
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 4.0, 3.0, 4.0),
+            bar_ohlc(5.0, 6.0, 5.0, 6.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[3.0, 7.0]);
+    }
+
+    #[test]
+    fn runs_input_history_offset() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("input history")
+length = input.int(2, "Length")
+plot(close[length])
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[1.0, 2.0]);
+    }
+
+    #[test]
+    fn runs_simple_history_offset() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("simple history")
+var values = array.new_int()
+array.push(values, 1)
+offset = math.min(array.size(values), 1)
+plot(close[offset])
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[1.0, 2.0]);
+    }
+
+    #[test]
+    fn rejects_negative_dynamic_history_offset_at_runtime() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("negative dynamic history")
+values = array.new_int()
+offset = array.indexof(values, 1)
+plot(close[offset])
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("runtime should reject negative dynamic history offset");
+        assert!(error.message.contains("non-negative"), "{}", error.message);
     }
 
     #[test]

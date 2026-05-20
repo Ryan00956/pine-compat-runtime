@@ -4,9 +4,9 @@ use std::collections::HashMap;
 
 use pine_builtins::{Accepts, BuiltinSignature, ReturnSpec};
 use pine_ir::{
-    CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirLiteral, HirProgram, HirStmt,
-    HirStmtKind, HirSwitchArm, HirSymbol, HirUnaryOp, PineType, Qualifier, SeriesId, SymbolId,
-    ValueKind, VarSlotId,
+    CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirHistoryOffset, HirLiteral,
+    HirProgram, HirStmt, HirStmtKind, HirSwitchArm, HirSymbol, HirUnaryOp, PineType, Qualifier,
+    SeriesId, SymbolId, ValueKind, VarSlotId,
 };
 use pine_syntax::{
     BinaryOp, CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Literal, Program, Severity,
@@ -639,8 +639,8 @@ impl Analyzer {
             ExprKind::Call { callee, args } => self.analyze_call(callee, args),
             ExprKind::History { expr, offset } => {
                 let value_type = self.analyze_expr(expr);
-                self.analyze_expr(offset);
-                self.validate_history_offset(offset);
+                let offset_type = self.analyze_expr(offset);
+                self.validate_history_offset(offset, offset_type);
                 value_type.map(|value_type| PineType::new(Qualifier::Series, value_type.kind))
             }
         }
@@ -1028,27 +1028,38 @@ impl Analyzer {
         }
     }
 
-    fn validate_history_offset(&mut self, offset: &Expr) {
-        match &offset.kind {
-            ExprKind::Literal(Literal::Int(value)) if *value >= 0 => {}
-            ExprKind::Unary {
-                op: UnaryOp::Minus,
-                expr,
-            } if matches!(expr.kind, ExprKind::Literal(Literal::Int(_))) => {
+    fn validate_history_offset(&mut self, offset: &Expr, offset_type: Option<PineType>) {
+        if let Some(value) = const_int_value(offset) {
+            if value < 0 {
                 self.unsupported(
                     "negative_history_offset",
                     "history offsets must be non-negative in the current supported subset",
                     offset.span,
                 );
             }
-            _ => {
-                self.unsupported(
-                    "dynamic_history_offset",
-                    "dynamic history offsets are not supported in the current supported subset",
-                    offset.span,
-                );
-            }
+            return;
         }
+
+        let Some(offset_type) = offset_type else {
+            self.unsupported(
+                "dynamic_history_offset",
+                "dynamic history offsets require an input or simple int in the current supported subset",
+                offset.span,
+            );
+            return;
+        };
+
+        if offset_type.kind == ValueKind::Int
+            && qualifier_at_most(offset_type.qualifier, Qualifier::Simple)
+        {
+            return;
+        }
+
+        self.unsupported(
+            "dynamic_history_offset",
+            "dynamic history offsets require an input or simple int in the current supported subset",
+            offset.span,
+        );
     }
 
     fn check_feature_expr(&mut self, expr: &Expr) {
@@ -2062,10 +2073,20 @@ impl Analyzer {
                         .collect::<Option<_>>()?,
                 }
             }
-            ExprKind::History { expr, offset } => HirExprKind::History {
-                expr: Box::new(self.lower_expr_with_params(expr, param_exprs, param_types)?),
-                offset: constant_history_offset(offset)?,
-            },
+            ExprKind::History { expr, offset } => {
+                let offset = match constant_history_offset(offset) {
+                    Some(offset) => HirHistoryOffset::Constant(offset),
+                    None => HirHistoryOffset::Dynamic(Box::new(self.lower_expr_with_params(
+                        offset,
+                        param_exprs,
+                        param_types,
+                    )?)),
+                };
+                HirExprKind::History {
+                    expr: Box::new(self.lower_expr_with_params(expr, param_exprs, param_types)?),
+                    offset,
+                }
+            }
         };
 
         Some(HirExpr {
@@ -3482,14 +3503,28 @@ mod tests {
     }
 
     #[test]
-    fn rejects_input_history_offset_until_dynamic_design() {
+    fn accepts_input_history_offset() {
         let analysis = analyze("len = input.int(1, \"Length\")\nx = close[len]\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.compatibility.unsupported.is_empty());
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_series_history_offset() {
+        let analysis = analyze("x = close[bar_index]\n");
 
         assert_eq!(analysis.compatibility.unsupported.len(), 1);
         assert_eq!(
             analysis.compatibility.unsupported[0].feature,
             "dynamic_history_offset"
         );
+        assert!(analysis.hir.is_none());
     }
 
     #[test]

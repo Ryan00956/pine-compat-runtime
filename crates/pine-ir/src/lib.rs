@@ -160,8 +160,14 @@ pub enum HirExprKind {
     },
     History {
         expr: Box<HirExpr>,
-        offset: u32,
+        offset: HirHistoryOffset,
     },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum HirHistoryOffset {
+    Constant(u32),
+    Dynamic(Box<HirExpr>),
 }
 
 #[derive(Debug, Clone, PartialEq)]

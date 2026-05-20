@@ -1,4 +1,4 @@
 //@version=5
 indicator("Unsupported dynamic history")
-length = input.int(1, "Length")
+length = bar_index
 plot(close[length])

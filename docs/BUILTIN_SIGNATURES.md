@@ -22,8 +22,9 @@ full Pine surface. In this document:
   `series int`.
 - `const` parameters require literal/named-constant style values after current
   semantic analysis.
-- History offsets are stricter than `simple int` parameters: only non-negative
-  integer literals are accepted until Phase C defines retention rules.
+- History offsets accept non-negative integer literals plus `const int`,
+  `input int`, and `simple int` expressions; `series int` offsets remain
+  rejected.
 
 ## Phase 1 Core
 

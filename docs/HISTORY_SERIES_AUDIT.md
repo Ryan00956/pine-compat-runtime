@@ -7,31 +7,38 @@ rules.
 ## Current Supported Subset
 
 - History references use `expr[offset]` syntax.
-- The offset must be an integer literal greater than or equal to zero.
+- The offset must be an integer literal greater than or equal to zero, or a
+  `const int`, `input int`, or `simple int` expression.
 - `expr[0]` evaluates `expr` on the current bar.
 - `expr[n]` for `n > 0` reads the committed value from `n` bars ago.
+- dynamic offsets are accepted when the offset expression is `const int`,
+  `input int`, or `simple int`.
 - Out-of-range history reads return `na`.
+- Dynamic offsets that evaluate to `na` return `na`.
+- Dynamic offsets that evaluate to a negative integer fail at runtime.
 - Series-qualified identifiers keep stable series ids.
 - Series-qualified non-identifier expressions that are lowered with history
   receive compiler-generated series ids.
 - Constant history is fixture-covered for built-in series, expression history,
   branch bodies, loop bodies, and user-defined function parameters.
+- Dynamic const/input/simple history is fixture-covered for built-in series and
+  expression history.
 
 ## Current Rejections
 
-- Dynamic history offsets such as `close[length]` are rejected with
+- Series-qualified history offsets such as `close[bar_index]` are rejected with
   `dynamic_history_offset`.
 - Negative literal offsets such as `close[-1]` are rejected with
   `negative_history_offset`.
-- Dynamic history remains unsupported even when the offset source is an input,
-  a simple variable, a loop counter, or a user-defined function parameter.
+- Dynamic history remains unsupported when the offset source is a loop counter,
+  a series value, or a user-defined function parameter bound to a series value.
 - Array, object, map, matrix, and drawing-object history snapshots are not
   designed.
 - `max_bars_back` inference and declarations are not implemented.
 
-## Why Dynamic Offsets Stay Rejected
+## Why Series Offsets Stay Rejected
 
-Dynamic offsets are more than a parser change. Supporting them safely requires:
+Series offsets are more than a parser change. Supporting them safely requires:
 
 - retention bounds for every series that can be dynamically indexed
 - runtime handling for negative, `na`, fractional, or very large offsets
@@ -39,9 +46,10 @@ Dynamic offsets are more than a parser change. Supporting them safely requires:
 - stable behavior inside branches, loops, and user-defined functions
 - matching full-history, incremental append, and realtime rollback behavior
 
-Until those rules are implemented together, accepting dynamic offsets would make
+Until those rules are implemented together, accepting series offsets would make
 scripts appear supported while silently returning unstable or under-retained
-history.
+history. The current dynamic subset is limited to `const int`, `input int`,
+and `simple int` offset expressions with growable retention.
 
 ## Phase C Implementation Sequence
 
@@ -50,18 +58,15 @@ history.
    Current findings are in `docs/QUALIFIER_AUDIT.md`.
 3. Audit built-in signatures that currently accept broader qualifiers than the
    compatibility docs claim.
-4. Decide whether the first dynamic-offset slice is:
-   - still diagnostic-only, or
-   - a guarded subset for input/simple integer offsets with explicit retention
-     limits.
-5. If a guarded subset is chosen, add HIR/runtime support for dynamic offsets,
-   runtime diagnostics for invalid offsets, and full/incremental/realtime
-   fixtures before updating conformance.
+4. Add static-depth and retention documentation for the accepted
+   const/input/simple dynamic-offset subset.
+5. Design whether any `series int` offset subset can be supported with
+   max-bars-back style retention, runtime diagnostics, and memory limits.
 
 ## Acceptance Criteria For Expanding History
 
 - The supported subset is represented in `tests/fixtures/conformance.tsv`.
-- Every newly accepted offset form has semantic and runtime fixture coverage.
+- Every accepted offset form has semantic and runtime fixture coverage.
 - Unsupported variants fail during semantic analysis with stable diagnostics.
 - Incremental append execution matches full historical execution.
 - Realtime rollback keeps history, `var`, callsite state, and outputs

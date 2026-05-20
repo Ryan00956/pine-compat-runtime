@@ -108,7 +108,7 @@ fn reports_unsupported_dynamic_history_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_dynamic_history.pine",
         "dynamic_history_offset",
-        "dynamic history offsets",
+        "input or simple int",
     );
 }
 
