@@ -1,0 +1,4 @@
+//@version=5
+indicator("Dev")
+value = ta.dev(close, 3)
+plot(value)

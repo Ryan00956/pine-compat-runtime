@@ -1659,6 +1659,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.stdev" => self.eval_stdev(call_site_id, args),
             "ta.variance" => self.eval_variance(call_site_id, args),
             "ta.range" => self.eval_range(call_site_id, args),
+            "ta.dev" => self.eval_dev(call_site_id, args),
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.change" => self.eval_change(args),
@@ -2964,6 +2965,26 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(window.range().map_or(PineValue::Na, PineValue::Float))
     }
 
+    fn eval_dev(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(window.mean_absolute_deviation(length)))
+    }
+
     fn eval_window_variance(
         &mut self,
         call_site_id: CallSiteId,
@@ -4051,6 +4072,16 @@ impl RollingWindowState {
         let highest = self.extreme(WindowExtreme::Highest)?;
         let lowest = self.extreme(WindowExtreme::Lowest)?;
         Some(highest - lowest)
+    }
+
+    fn mean_absolute_deviation(&self, length: usize) -> f64 {
+        let mean = self.mean(length);
+        self.values
+            .iter()
+            .flatten()
+            .map(|value| (*value - mean).abs())
+            .sum::<f64>()
+            / length as f64
     }
 }
 
@@ -6151,6 +6182,33 @@ plot(value)
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_eq!(result.plots[0].values[1], PineValue::Na);
         assert_values_close(&result.plots[0].values[2..], &[2.0, 3.0]);
+    }
+
+    #[test]
+    fn runs_dev_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("dev")
+value = ta.dev(close, 3)
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(4.0), bar(7.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[2..],
+            &[1.1111111111111112, 1.7777777777777777],
+        );
     }
 
     #[test]

@@ -100,6 +100,7 @@
 - Added `ta.variance` support with the same biased/sample window modes as
   `ta.stdev`.
 - Added `ta.range` support for rolling highest-minus-lowest values.
+- Added `ta.dev` support for rolling average absolute deviation.
 - Tightened float array UDF boundaries: read-only array operations are allowed,
   while array mutation inside UDFs is rejected as a side effect.
 - Added a 100,000-element runtime guard for each float array.
