@@ -30,8 +30,11 @@ Implemented or partially implemented:
   `array.get`/`array.set`/`array.insert`/`array.remove`, `array.slice`,
   `array.concat`, `array.fill`, search/binary search helpers, truth helpers,
   numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev
-  helpers, queue/end helpers, ordering helpers including `array.sort_indices`,
-  `array.join`, and supported array method calls.
+  helpers, queue/end helpers, numeric/string ordering helpers including
+  `array.sort_indices`, `array.join`, and supported array method calls. The
+  current scalar array pass is closed in `docs/ARRAY_STAGE_AUDIT.md`; `array.*`
+  remains partial because generic, object, UDT, matrix/map, history, and Pine
+  shallow-slice semantics are still out of scope.
 - A fixture-covered set of `input.*`, output calls, color helpers, math
   helpers, and `ta.*` functions.
 - CLI, Python, and WASM surfaces for the supported runtime result model.
@@ -107,6 +110,10 @@ Suggested commits:
 
 Goal: expand mutable collection support without breaking the runtime-owned
 storage model.
+
+Status: the scalar typed-array subset is fixture-backed and should be treated
+as closed for now. Use `docs/ARRAY_STAGE_AUDIT.md` before selecting any further
+array work.
 
 Scope:
 

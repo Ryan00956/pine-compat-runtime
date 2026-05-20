@@ -161,3 +161,8 @@ declares a feature, status, notes, and one or more fixture paths that back the
 claim. CLI tests verify that every matrix entry references at least one existing
 fixture. The text matrix includes the fixture paths, and the JSON matrix exposes
 them as a `fixtures` array.
+
+The current scalar typed-array subset is summarized in
+`docs/ARRAY_STAGE_AUDIT.md`. Keep `array.*` marked `partial` until the deferred
+generic, object, UDT, map/matrix, history, and slice-aliasing semantics are
+designed and fixture-backed.

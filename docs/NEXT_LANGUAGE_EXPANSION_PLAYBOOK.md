@@ -175,6 +175,10 @@ Status: implemented for statement loops; while expressions remain out of scope.
 Arrays are a larger stage because they introduce mutable reference-like values
 and storage lifetime rules.
 
+Status: closed for the current scalar typed-array subset. See
+`docs/ARRAY_STAGE_AUDIT.md` for the supported surface, known compatibility
+gaps, and future backlog.
+
 ### Initial Scope
 
 The implemented initial subset started with float arrays and now also includes
@@ -272,15 +276,24 @@ Resolved implementation choices:
 
 ### Implementation Tasks
 
-- Add array types to HIR and semantic type checks.
-- Add runtime array store with explicit ids.
-- Implement selected `array.*` built-ins.
-- Add diagnostics for unsupported array element kinds and unsupported array
+- [x] Add array types to HIR and semantic type checks.
+- [x] Add runtime array store with explicit ids.
+- [x] Implement selected `array.*` built-ins.
+- [x] Add diagnostics for unsupported array element kinds and unsupported array
   functions.
-- Add fixtures for `var` array persistence, non-`var` per-bar allocation,
+- [x] Add fixtures for `var` array persistence, non-`var` per-bar allocation,
   mutation order, out-of-range reads, and UDF boundaries.
-- Move `array.*` from unsupported to partial in conformance metadata only after
+- [x] Move `array.*` from unsupported to partial in conformance metadata only after
   fixture coverage exists.
+
+Remaining array work is deferred rather than part of this stage:
+
+- Pine-compatible shallow `array.slice` window semantics.
+- Generic `array.new<type>()` syntax and type checking.
+- Object, drawing, UDT, matrix, and map arrays.
+- Array history snapshots and dynamic history offsets.
+- `for...in` array iteration.
+- UDT `sort_field` support for `array.sort` and `array.sort_indices`.
 
 ### Suggested Commits
 
@@ -291,9 +304,9 @@ Resolved implementation choices:
 
 ### Acceptance Criteria
 
-- Array fixtures pass historical and incremental execution.
-- Unsupported array variants still produce diagnostics.
-- Matrix marks `array.*` as `partial`, not broadly supported.
+- [x] Array fixtures pass historical and incremental execution.
+- [x] Unsupported array variants still produce diagnostics.
+- [x] Matrix marks `array.*` as `partial`, not broadly supported.
 
 ## Later Stages
 
