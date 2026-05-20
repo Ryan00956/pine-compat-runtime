@@ -180,11 +180,11 @@ Supported operations are
 `array.concat`, `array.includes`, `array.indexof`, `array.lastindexof`,
 `array.binary_search`, `array.binary_search_leftmost`,
 `array.binary_search_rightmost`, `array.min`, `array.max`, `array.sum`,
-`array.avg`, `array.range`, `array.sort`, `array.reverse`, `array.join`, and
-`array.clear`;
+`array.avg`, `array.range`, `array.variance`, `array.stdev`, `array.sort`,
+`array.reverse`, `array.join`, and `array.clear`;
 `size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/reverse/join/clear`
 may also be called with method syntax on a supported array receiver. Numeric
-`binary_search/binary_search_leftmost/binary_search_rightmost/min/max/sum/avg/range/sort`
+`binary_search/binary_search_leftmost/binary_search_rightmost/min/max/sum/avg/range/variance/stdev/sort`
 helpers may also be called with method syntax on float and int arrays. Float
 arrays accept int or float values and store them as
 floats. Int arrays accept int values. Bool arrays accept bool values. String
@@ -206,9 +206,13 @@ present. Numeric binary search helpers are limited to float and int arrays and
 expect the current array contents to be sorted ascending. `array.binary_search`
 returns `-1` when the value is not found; leftmost/rightmost return the nearest
 existing insertion-side index and return `-1` for empty arrays. Numeric helpers
-`array.min`, `array.max`, `array.sum`, `array.avg`, and `array.range` are
-limited to float and int arrays; they ignore `na` elements and return `na` when
-no numeric element is present. `array.range` returns max minus min.
+`array.min`, `array.max`, `array.sum`, `array.avg`, `array.range`,
+`array.variance`, and `array.stdev` are limited to float and int arrays; they
+ignore `na` elements and return `na` when no numeric element is present.
+`array.range` returns max minus min. `array.variance` and `array.stdev` accept
+an optional `biased` bool argument that defaults to `true`; passing `false`
+uses the sample denominator and returns `na` when fewer than two numeric values
+remain.
 `array.sort` is currently limited to float and int arrays, sorts ascending in
 place, and leaves `na` values at the end.
 `array.reverse` reverses any supported typed array in place. `array.join`

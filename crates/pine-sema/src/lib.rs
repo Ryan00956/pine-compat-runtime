@@ -2527,6 +2527,8 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "sum" => Some("array.sum"),
         "avg" => Some("array.avg"),
         "range" => Some("array.range"),
+        "variance" => Some("array.variance"),
+        "stdev" => Some("array.stdev"),
         "sort" => Some("array.sort"),
         "reverse" => Some("array.reverse"),
         "join" => Some("array.join"),
@@ -4871,7 +4873,7 @@ plot(y)
     #[test]
     fn accepts_numeric_array_statistics() {
         let analysis = analyze(
-            "ints = array.new_int()\narray.push(ints, 1)\narray.push(ints, 3)\nfloats = array.new_float()\nfloats.push(close)\nfloats.push(high)\nplot(array.min(ints) + array.max(ints) + array.sum(ints) + ints.range() + array.avg(floats) + floats.max() + array.range(floats))\n",
+            "ints = array.new_int()\narray.push(ints, 1)\narray.push(ints, 3)\nfloats = array.new_float()\nfloats.push(close)\nfloats.push(high)\nplot(array.min(ints) + array.max(ints) + array.sum(ints) + ints.range() + ints.variance(false) + array.avg(floats) + floats.max() + array.range(floats) + array.stdev(floats))\n",
         );
 
         assert!(
@@ -4885,6 +4887,8 @@ plot(y)
             "array.sum",
             "array.avg",
             "array.range",
+            "array.variance",
+            "array.stdev",
         ] {
             assert!(
                 analysis
@@ -5129,7 +5133,7 @@ plot(y)
 
     #[test]
     fn rejects_bool_array_statistics() {
-        let analysis = analyze("values = array.new_bool()\nplot(array.range(values))\n");
+        let analysis = analyze("values = array.new_bool()\nplot(array.stdev(values))\n");
 
         assert!(
             analysis

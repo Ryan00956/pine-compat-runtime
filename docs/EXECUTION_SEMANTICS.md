@@ -125,10 +125,13 @@ present. Numeric binary search helpers expect int/float arrays sorted ascending;
 return the nearest existing insertion-side index and return `-1` for empty
 arrays. Numeric helpers on int/float arrays skip `na` elements; if every
 element is `na` or the array is empty, `array.min`, `array.max`, `array.sum`,
-`array.avg`, and `array.range` return `na`. `array.range` returns max minus
-min. `array.sort` orders int/float arrays ascending and places `na` values
-after numeric values. `array.reverse` reverses any supported typed array in
-place. `array.join` converts supported array elements to string
+`array.avg`, `array.range`, `array.variance`, and `array.stdev` return `na`.
+`array.range` returns max minus min. `array.variance` and `array.stdev` use a
+biased population estimate by default; with `biased=false`, they use the
+sample denominator and return `na` when fewer than two numeric values remain.
+`array.sort` orders int/float arrays ascending and places `na` values after
+numeric values. `array.reverse` reverses any supported typed array in place.
+`array.join` converts supported array elements to string
 with the default numeric format, uses `,` as the default separator, and returns
 an empty string for empty arrays. Color elements render as normalized integer
 color values. Joined results over 40,960 characters are runtime errors.

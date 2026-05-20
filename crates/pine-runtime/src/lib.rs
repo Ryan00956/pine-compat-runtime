@@ -454,6 +454,12 @@ enum ArrayNumericMode {
     Range,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ArrayVarianceMode {
+    Variance,
+    Stdev,
+}
+
 fn infer_array_from_kind(values: &[PineValue]) -> Option<ArrayElementKind> {
     let mut inferred_kind: Option<ArrayElementKind> = None;
     for value in values {
@@ -1512,6 +1518,8 @@ impl<'a> HistoricalRuntime<'a> {
             "array.sum" => self.eval_array_numeric(args, ArrayNumericMode::Sum),
             "array.avg" => self.eval_array_numeric(args, ArrayNumericMode::Avg),
             "array.range" => self.eval_array_numeric(args, ArrayNumericMode::Range),
+            "array.variance" => self.eval_array_variance(args, ArrayVarianceMode::Variance),
+            "array.stdev" => self.eval_array_variance(args, ArrayVarianceMode::Stdev),
             "array.sort" => self.eval_array_sort(args),
             "array.reverse" => self.eval_array_reverse(args),
             "array.join" => self.eval_array_join(args),
@@ -2166,6 +2174,53 @@ impl<'a> HistoricalRuntime<'a> {
                 }
             }
         }
+    }
+
+    fn eval_array_variance(
+        &mut self,
+        args: &[HirCallArg],
+        mode: ArrayVarianceMode,
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let biased = match args.get(1) {
+            Some(arg) => matches!(self.eval_expr(&arg.value)?, PineValue::Bool(true)),
+            None => true,
+        };
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
+            return Ok(PineValue::Na);
+        }
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Na);
+        };
+
+        let numeric_values: Vec<_> = values.iter().filter_map(PineValue::as_f64).collect();
+        let count = numeric_values.len();
+        if count == 0 || (!biased && count < 2) {
+            return Ok(PineValue::Na);
+        }
+
+        let mean = numeric_values.iter().sum::<f64>() / count as f64;
+        let squared_diff_sum = numeric_values
+            .iter()
+            .map(|value| {
+                let diff = value - mean;
+                diff * diff
+            })
+            .sum::<f64>();
+        let denominator = if biased { count } else { count - 1 };
+        let variance = squared_diff_sum / denominator as f64;
+        let result = match mode {
+            ArrayVarianceMode::Variance => variance,
+            ArrayVarianceMode::Stdev => variance.sqrt(),
+        };
+
+        Ok(finite_float_or_na(result))
     }
 
     fn eval_array_sort(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -7988,6 +8043,7 @@ plot(array.max(ints))
 plot(array.sum(ints))
 plot(array.avg(ints))
 plot(array.range(ints))
+plot(array.variance(ints, false))
 
 floats = array.new_float()
 floats.push(close)
@@ -7998,10 +8054,12 @@ plot(floats.max())
 plot(floats.sum())
 plot(floats.avg())
 plot(floats.range())
+plot(array.variance(floats))
+plot(floats.stdev(false))
 
 empty = array.new_float()
 only_na = array.new_int(2)
-plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) ? 1 : 0)
+plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) and na(array.variance(empty)) and na(only_na.stdev()) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -8014,18 +8072,21 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
         let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 11);
+        assert_eq!(result.plots.len(), 14);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[5.0, 5.0]);
         assert_values_close(&result.plots[2].values, &[8.0, 8.0]);
         assert_values_close(&result.plots[3].values, &[8.0 / 3.0, 8.0 / 3.0]);
         assert_values_close(&result.plots[4].values, &[4.0, 4.0]);
-        assert_values_close(&result.plots[5].values, &[2.0, 3.0]);
-        assert_values_close(&result.plots[6].values, &[4.0, 6.0]);
-        assert_values_close(&result.plots[7].values, &[6.0, 9.0]);
-        assert_values_close(&result.plots[8].values, &[3.0, 4.5]);
-        assert_values_close(&result.plots[9].values, &[2.0, 3.0]);
-        assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[5].values, &[13.0 / 3.0, 13.0 / 3.0]);
+        assert_values_close(&result.plots[6].values, &[2.0, 3.0]);
+        assert_values_close(&result.plots[7].values, &[4.0, 6.0]);
+        assert_values_close(&result.plots[8].values, &[6.0, 9.0]);
+        assert_values_close(&result.plots[9].values, &[3.0, 4.5]);
+        assert_values_close(&result.plots[10].values, &[2.0, 3.0]);
+        assert_values_close(&result.plots[11].values, &[1.0, 2.25]);
+        assert_values_close(&result.plots[12].values, &[2.0_f64.sqrt(), 4.5_f64.sqrt()]);
+        assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
     }
 
     #[test]

@@ -974,6 +974,19 @@ const ARRAY_NUMERIC_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const ARRAY_VARIANCE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::NumericArray,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "biased",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+];
+
 const ARRAY_JOIN_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1841,6 +1854,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_NUMERIC_PARAMS,
         returns: ReturnSpec::ArrayNumeric(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.variance",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_VARIANCE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.stdev",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_VARIANCE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {
