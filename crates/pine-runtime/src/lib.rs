@@ -1688,6 +1688,12 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.crossunder" => self.eval_cross(args, CrossMode::Under),
             "ta.highest" => self.eval_window_extreme(call_site_id, args, WindowExtreme::Highest),
             "ta.lowest" => self.eval_window_extreme(call_site_id, args, WindowExtreme::Lowest),
+            "ta.highestbars" => {
+                self.eval_window_extreme_offset(call_site_id, args, WindowExtreme::Highest)
+            }
+            "ta.lowestbars" => {
+                self.eval_window_extreme_offset(call_site_id, args, WindowExtreme::Lowest)
+            }
             "na" => {
                 let value = self.eval_expr(&args[0].value)?;
                 Ok(PineValue::Bool(value.is_na()))
@@ -3356,6 +3362,29 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Float(value))
     }
 
+    fn eval_window_extreme_offset(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+        mode: WindowExtreme,
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(window
+            .extreme_offset(mode)
+            .map_or(PineValue::Na, |offset| PineValue::Int(offset as i64)))
+    }
+
     fn update_rolling_window(
         &mut self,
         call_site_id: CallSiteId,
@@ -4311,6 +4340,22 @@ impl RollingWindowState {
         let highest = self.extreme(WindowExtreme::Highest)?;
         let lowest = self.extreme(WindowExtreme::Lowest)?;
         Some(highest - lowest)
+    }
+
+    fn extreme_offset(&self, mode: WindowExtreme) -> Option<usize> {
+        self.values
+            .iter()
+            .flatten()
+            .copied()
+            .enumerate()
+            .reduce(|current, value| {
+                let better = match mode {
+                    WindowExtreme::Highest => value.1 >= current.1,
+                    WindowExtreme::Lowest => value.1 <= current.1,
+                };
+                if better { value } else { current }
+            })
+            .map(|(index, _)| self.values.len().saturating_sub(1 + index))
     }
 
     fn mean_absolute_deviation(&self, length: usize) -> f64 {
@@ -6450,6 +6495,35 @@ plot(lo)
         assert_eq!(result.plots[1].values[0], PineValue::Na);
         assert_eq!(result.plots[1].values[1], PineValue::Na);
         assert_values_close(&result.plots[1].values[2..], &[1.0, 2.0]);
+    }
+
+    #[test]
+    fn runs_highestbars_lowestbars_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("extreme bars")
+hi = ta.highestbars(close, 3)
+lo = ta.lowestbars(close, 3)
+plot(hi)
+plot(lo)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(3.0), bar(2.0), bar(5.0), bar(5.0), bar(4.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[1.0, 0.0, 0.0, 1.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_values_close(&result.plots[1].values[2..], &[2.0, 1.0, 2.0, 0.0]);
     }
 
     #[test]

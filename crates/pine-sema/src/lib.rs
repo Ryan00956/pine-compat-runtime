@@ -3766,6 +3766,31 @@ mod tests {
     }
 
     #[test]
+    fn accepts_ta_extreme_bar_offsets() {
+        let analysis = analyze("plot(ta.highestbars(close, 3) + ta.lowestbars(open, 3))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.highestbars")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.lowestbars")
+        );
+    }
+
+    #[test]
     fn accepts_input_string_in_conditions() {
         let analysis = analyze(
             "mode = input.string(\"SMA\", \"Mode\")\nplot(mode == \"SMA\" ? close : open)\n",

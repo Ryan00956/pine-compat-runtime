@@ -79,6 +79,7 @@ const INPUT_BOOL: PineType = PineType::new(Qualifier::Input, ValueKind::Bool);
 const INPUT_COLOR: PineType = PineType::new(Qualifier::Input, ValueKind::Color);
 const INPUT_STRING: PineType = PineType::new(Qualifier::Input, ValueKind::String);
 const SERIES_FLOAT: PineType = PineType::new(Qualifier::Series, ValueKind::Float);
+const SERIES_INT: PineType = PineType::new(Qualifier::Series, ValueKind::Int);
 const SERIES_BOOL: PineType = PineType::new(Qualifier::Series, ValueKind::Bool);
 const SERIES_STRING: PineType = PineType::new(Qualifier::Series, ValueKind::String);
 const SERIES_FLOAT_TUPLE: PineType = PineType::new(Qualifier::Series, ValueKind::Tuple);
@@ -2236,6 +2237,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_LENGTH_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.highestbars",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.lowestbars",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
         variadic: false,
     },
 ];

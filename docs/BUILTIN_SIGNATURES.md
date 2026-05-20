@@ -336,6 +336,8 @@ ta.crossover(source1: series/simple numeric, source2: series/simple numeric) -> 
 ta.crossunder(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.highest(source: series float, length: simple int) -> series float
 ta.lowest(source: series float, length: simple int) -> series float
+ta.highestbars(source: series float, length: simple int) -> series int
+ta.lowestbars(source: series float, length: simple int) -> series int
 ```
 
 Rules:
@@ -360,6 +362,8 @@ Rules:
   returns `na` when the historical denominator is zero.
 - `ta.rising`/`ta.falling` compare the current source against the previous
   ready-window values and return `false` while that window is not ready.
+- `ta.highestbars`/`ta.lowestbars` currently support the two-argument form and
+  return the offset to the most recent matching extreme in the ready window.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.
