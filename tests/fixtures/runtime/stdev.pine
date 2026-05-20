@@ -1,0 +1,6 @@
+//@version=5
+indicator("Stdev")
+stdev = ta.stdev(close, 3)
+sample = ta.stdev(close, 3, false)
+plot(stdev)
+plot(sample)

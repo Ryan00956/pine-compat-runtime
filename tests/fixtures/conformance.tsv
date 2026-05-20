@@ -83,6 +83,7 @@ ta.rma	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pin
 ta.rsi	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
 ta.macd	supported	fixture-derived executable subset	tests/fixtures/runtime/macd.pine
 ta.bb	supported	fixture-derived executable subset	tests/fixtures/runtime/bb.pine
+ta.stdev	supported	fixture-derived executable subset	tests/fixtures/runtime/stdev.pine
 ta.tr	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
 ta.atr	supported	fixture-derived executable subset	tests/fixtures/runtime/atr.pine
 ta.change	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine

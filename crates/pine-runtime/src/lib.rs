@@ -1656,6 +1656,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.rsi" => self.eval_rsi(call_site_id, args),
             "ta.macd" => self.eval_macd(call_site_id, args),
             "ta.bb" => self.eval_bb(call_site_id, args),
+            "ta.stdev" => self.eval_stdev(call_site_id, args),
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.change" => self.eval_change(args),
@@ -2912,7 +2913,7 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         let basis = window.mean(length);
-        let variance = window.variance(length);
+        let variance = window.variance(length, true);
         let dev = mult * variance.sqrt();
 
         Ok(PineValue::Tuple(vec![
@@ -2920,6 +2921,31 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Float(basis + dev),
             PineValue::Float(basis - dev),
         ]))
+    }
+
+    fn eval_stdev(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let biased = if let Some(arg) = args.get(2) {
+            matches!(self.eval_expr(&arg.value)?, PineValue::Bool(true))
+        } else {
+            true
+        };
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) || (!biased && length < 2) {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(window.variance(length, biased).sqrt()))
     }
 
     fn eval_tr(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -3951,9 +3977,22 @@ impl RollingWindowState {
         self.sum / length as f64
     }
 
-    fn variance(&self, length: usize) -> f64 {
+    fn variance(&self, length: usize, biased: bool) -> f64 {
+        if !biased && length < 2 {
+            return f64::NAN;
+        }
         let mean = self.mean(length);
-        (self.sum_squares / length as f64 - mean * mean).max(0.0)
+        let squared_diff_sum = self
+            .values
+            .iter()
+            .flatten()
+            .map(|value| {
+                let diff = *value - mean;
+                diff * diff
+            })
+            .sum::<f64>();
+        let denominator = if biased { length } else { length - 1 };
+        (squared_diff_sum / denominator as f64).max(0.0)
     }
 
     fn extreme(&self, mode: WindowExtreme) -> Option<f64> {
@@ -5977,6 +6016,38 @@ plot(lo)
         assert_eq!(result.plots[1].values[0], PineValue::Na);
         assert_eq!(result.plots[1].values[1], PineValue::Na);
         assert_values_close(&result.plots[1].values[2..], &[1.0, 2.0]);
+    }
+
+    #[test]
+    fn runs_stdev_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("stdev")
+biased = ta.stdev(close, 3)
+sample = ta.stdev(close, 3, false)
+plot(biased)
+plot(sample)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(5.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[2..],
+            &[0.816496580927726, 1.247219128924647],
+        );
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_values_close(&result.plots[1].values[2..], &[1.0, 1.5275252316519468]);
     }
 
     #[test]

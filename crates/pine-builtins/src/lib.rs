@@ -819,6 +819,24 @@ const TA_SOURCE_LENGTH_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_STDEV_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesFloat,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "length",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "biased",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+];
+
 const TA_SOURCE_OPTIONAL_LENGTH_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
@@ -2085,6 +2103,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TA_BB_PARAMS,
         returns: ReturnSpec::Tuple(THREE_SERIES_FLOATS),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.stdev",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_STDEV_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {

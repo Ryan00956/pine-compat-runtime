@@ -124,7 +124,8 @@ Stateful built-ins include, at minimum:
 - `ta.rma`
 - `ta.rsi`
 - `ta.atr`
-- rolling highest/lowest implementations if optimized incrementally
+- rolling window functions such as `ta.sma`, `ta.bb`, `ta.stdev`,
+  `ta.highest`, and `ta.lowest`
 
 The initial implementation may compute some built-ins from committed history for
 simplicity, but the public behavior must match the callsite-state model.
