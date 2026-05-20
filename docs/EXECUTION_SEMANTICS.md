@@ -98,14 +98,15 @@ syntactic callsite. The runtime stores this state separately from ordinary
 per-bar locals.
 
 For arrays, the stored value is a runtime-owned array id. A normal
-`array.new_float` declaration allocates a fresh array each time it executes. A
-`var` array declaration keeps the same id and backing storage across bars, so
-mutations such as `array.push` or `values.push(...)` persist.
+`array.new_float` or `array.new_int` declaration allocates a fresh array each
+time it executes. A `var` array declaration keeps the same id and backing
+storage across bars, so mutations such as `array.push` or `values.push(...)`
+persist.
 
 Array bounds are stable in the current subset: `array.get` outside the current
 array length returns `na`, `array.set` outside the current length is ignored,
-and `array.pop` on an empty array returns `na`. A negative `array.new_float`
-size is a runtime error. Runtime execution limits each float array to 100,000
+and `array.pop` on an empty array returns `na`. A negative array size is a
+runtime error. Runtime execution limits each supported array to 100,000
 elements; oversized creation and `array.push` beyond the limit return runtime
 errors.
 

@@ -142,7 +142,7 @@ expressions.
 
 ## Arrays
 
-The first array subset supports float arrays only:
+The current array subset supports float and int arrays:
 
 ```pine
 var values = array.new_float()
@@ -151,23 +151,28 @@ values.push(close)
 first = array.get(values, 0)
 same = values.get(0)
 count = array.size(values)
+
+var counts = array.new_int()
+counts.push(bar_index)
 ```
 
-`array.new_float` returns a runtime-owned array id. Normal declarations allocate
-a fresh array whenever the declaration executes. `var` declarations preserve the
-array id and backing storage across bars. Supported operations are
-`array.new_float`, `array.push`, `array.get`, `array.set`, `array.size`,
-`array.pop`, and `array.clear`; `size/get/set/push/pop/clear` may also be
-called with method syntax on a float array receiver. Non-float array
-constructors and unsupported `array.*` functions are rejected. Out-of-range
-`array.get` and empty `array.pop` return `na`; out-of-range `array.set` is a
-no-op. Negative
-`array.new_float` sizes fail at runtime. A float array can contain at most
-100,000 elements; creation or push operations beyond that limit fail at runtime.
+`array.new_float` and `array.new_int` return runtime-owned array ids. Normal
+declarations allocate a fresh array whenever the declaration executes. `var`
+declarations preserve the array id and backing storage across bars. Supported
+operations are `array.new_float`, `array.new_int`, `array.push`, `array.get`,
+`array.set`, `array.size`, `array.pop`, and `array.clear`;
+`size/get/set/push/pop/clear` may also be called with method syntax on a
+supported array receiver. Float arrays accept int or float values and store
+them as floats. Int arrays accept int values. Other array constructors and
+unsupported `array.*` functions are rejected. Out-of-range `array.get` and
+empty `array.pop` return `na`; out-of-range `array.set` is a no-op. Negative
+array sizes fail at runtime. Each array can contain at most 100,000 elements;
+creation or push operations beyond that limit fail at runtime.
 
-User-defined functions may receive float arrays and use read-only operations
-such as `array.size` and `array.get`. Array mutation inside user-defined
-functions is rejected until function side-effect semantics are broader.
+User-defined functions may receive supported arrays and use read-only
+operations such as `array.size` and `array.get`. Array mutation inside
+user-defined functions is rejected until function side-effect semantics are
+broader.
 
 ## `na`
 

@@ -370,6 +370,7 @@ pub struct HistoricalRuntime<'a> {
     current_series: HashMap<SeriesId, PineValue>,
     var_store: HashMap<VarSlotId, PineValue>,
     array_store: HashMap<u32, Vec<PineValue>>,
+    array_kinds: HashMap<u32, ArrayElementKind>,
     next_array_id: u32,
     call_state: HashMap<CallSiteId, PineValue>,
     rolling_windows: HashMap<CallSiteId, RollingWindowState>,
@@ -421,6 +422,12 @@ enum StmtControl {
     Continue,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ArrayElementKind {
+    Float,
+    Int,
+}
+
 impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn new(program: &'a HirProgram) -> Self {
@@ -432,6 +439,7 @@ impl<'a> HistoricalRuntime<'a> {
             current_series: HashMap::new(),
             var_store: HashMap::new(),
             array_store: HashMap::new(),
+            array_kinds: HashMap::new(),
             next_array_id: 0,
             call_state: HashMap::new(),
             rolling_windows: HashMap::new(),
@@ -1408,6 +1416,7 @@ impl<'a> HistoricalRuntime<'a> {
                 }
             }
             "array.new_float" => self.eval_array_new_float(args),
+            "array.new_int" => self.eval_array_new_int(args),
             "array.size" => self.eval_array_size(args),
             "array.push" => self.eval_array_push(args),
             "array.get" => self.eval_array_get(args),
@@ -1421,43 +1430,72 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn eval_array_new_float(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
-        let size = if let Some(size_arg) = args.first() {
+        let Some(size) = self.eval_array_new_size(args, "array.new_float")? else {
+            return Ok(PineValue::Na);
+        };
+
+        let initial_value = if let Some(value_arg) = args.get(1) {
+            self.eval_array_value(&value_arg.value, ArrayElementKind::Float)?
+        } else {
+            PineValue::Na
+        };
+
+        Ok(self.new_array(ArrayElementKind::Float, size, initial_value))
+    }
+
+    fn eval_array_new_int(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(size) = self.eval_array_new_size(args, "array.new_int")? else {
+            return Ok(PineValue::Na);
+        };
+
+        let initial_value = if let Some(value_arg) = args.get(1) {
+            self.eval_array_value(&value_arg.value, ArrayElementKind::Int)?
+        } else {
+            PineValue::Na
+        };
+
+        Ok(self.new_array(ArrayElementKind::Int, size, initial_value))
+    }
+
+    fn eval_array_new_size(
+        &mut self,
+        args: &[HirCallArg],
+        function_name: &str,
+    ) -> Result<Option<usize>, RuntimeError> {
+        if let Some(size_arg) = args.first() {
             let Some(size) = self.eval_expr(&size_arg.value)?.as_i64() else {
-                return Ok(PineValue::Na);
+                return Ok(None);
             };
             if size < 0 {
                 return Err(RuntimeError {
-                    message: "array.new_float size cannot be negative".to_owned(),
+                    message: format!("{function_name} size cannot be negative"),
                 });
             }
             let size = size as usize;
             if size > MAX_ARRAY_ELEMENTS {
                 return Err(RuntimeError {
                     message: format!(
-                        "array.new_float size cannot exceed {MAX_ARRAY_ELEMENTS} elements"
+                        "{function_name} size cannot exceed {MAX_ARRAY_ELEMENTS} elements"
                     ),
                 });
             }
-            size
+            Ok(Some(size))
         } else {
-            0
-        };
+            Ok(Some(0))
+        }
+    }
 
-        let initial_value = if let Some(value_arg) = args.get(1) {
-            match self.eval_expr(&value_arg.value)? {
-                PineValue::Int(value) => PineValue::Float(value as f64),
-                PineValue::Float(value) => PineValue::Float(value),
-                PineValue::Na => PineValue::Na,
-                _ => PineValue::Na,
-            }
-        } else {
-            PineValue::Na
-        };
-
+    fn new_array(
+        &mut self,
+        kind: ArrayElementKind,
+        size: usize,
+        initial_value: PineValue,
+    ) -> PineValue {
         let id = self.next_array_id;
         self.next_array_id += 1;
         self.array_store.insert(id, vec![initial_value; size]);
-        Ok(PineValue::Array(id))
+        self.array_kinds.insert(id, kind);
+        PineValue::Array(id)
     }
 
     fn eval_array_size(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -1473,10 +1511,15 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn eval_array_push(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let id = self.eval_expr(&args[0].value)?;
-        let value = self.eval_float_array_value(&args[1].value)?;
         let PineValue::Array(id) = id else {
+            let _ = self.eval_expr(&args[1].value)?;
             return Ok(PineValue::Void);
         };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            let _ = self.eval_expr(&args[1].value)?;
+            return Ok(PineValue::Void);
+        };
+        let value = self.eval_array_value(&args[1].value, kind)?;
         if let Some(values) = self.array_store.get_mut(&id) {
             if values.len() >= MAX_ARRAY_ELEMENTS {
                 return Err(RuntimeError {
@@ -1508,10 +1551,15 @@ impl<'a> HistoricalRuntime<'a> {
     fn eval_array_set(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let id = self.eval_expr(&args[0].value)?;
         let index = self.eval_expr(&args[1].value)?.as_i64();
-        let value = self.eval_float_array_value(&args[2].value)?;
         let (PineValue::Array(id), Some(index)) = (id, index) else {
+            let _ = self.eval_expr(&args[2].value)?;
             return Ok(PineValue::Void);
         };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            let _ = self.eval_expr(&args[2].value)?;
+            return Ok(PineValue::Void);
+        };
+        let value = self.eval_array_value(&args[2].value, kind)?;
         if index < 0 {
             return Ok(PineValue::Void);
         }
@@ -1548,11 +1596,17 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
-    fn eval_float_array_value(&mut self, expr: &HirExpr) -> Result<PineValue, RuntimeError> {
-        Ok(match self.eval_expr(expr)? {
-            PineValue::Int(value) => PineValue::Float(value as f64),
-            PineValue::Float(value) => PineValue::Float(value),
-            PineValue::Na => PineValue::Na,
+    fn eval_array_value(
+        &mut self,
+        expr: &HirExpr,
+        kind: ArrayElementKind,
+    ) -> Result<PineValue, RuntimeError> {
+        let value = self.eval_expr(expr)?;
+        Ok(match (kind, value) {
+            (ArrayElementKind::Float, PineValue::Int(value)) => PineValue::Float(value as f64),
+            (ArrayElementKind::Float, PineValue::Float(value)) => PineValue::Float(value),
+            (ArrayElementKind::Int, PineValue::Int(value)) => PineValue::Int(value),
+            (_, PineValue::Na) => PineValue::Na,
             _ => PineValue::Na,
         })
     }
@@ -6653,6 +6707,66 @@ plot(na(missing) ? 1 : 0)
     }
 
     #[test]
+    fn runs_int_array_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("int array ops")
+values = array.new_int(2, bar_index)
+array.push(values, 10)
+array.set(values, 0, 3)
+first = array.get(values, 0)
+last = array.pop(values)
+missing = array.get(values, 10)
+plot(first + last + array.size(values))
+plot(na(missing) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 2);
+        assert_values_close(&result.plots[0].values, &[15.0, 15.0, 15.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_int_array_method_calls() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("int array methods")
+values = array.new_int(2, bar_index)
+values.push(10)
+values.set(0, 3)
+first = values.get(0)
+last = values.pop()
+missing = values.get(10)
+plot(first + last + values.size())
+plot(na(missing) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 2);
+        assert_values_close(&result.plots[0].values, &[15.0, 15.0, 15.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
     fn var_float_array_persists_across_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -6845,6 +6959,31 @@ plot(first(values) + array.size(values))
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[2.0, 3.0, 4.0]);
+    }
+
+    #[test]
+    fn runs_readonly_int_array_udf_parameter() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("int array udf")
+first(values) => array.get(values, 0)
+var values = array.new_int()
+array.push(values, bar_index)
+plot(first(values) + array.size(values))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
     }
 
     #[test]

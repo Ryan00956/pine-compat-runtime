@@ -850,7 +850,7 @@ impl Analyzer {
         let Some(receiver_type) = receiver_type else {
             return MethodResolution::Resolved(None);
         };
-        if receiver_type.kind != ValueKind::FloatArray {
+        if !is_array_kind(receiver_type.kind) {
             self.diagnostics.push(Diagnostic::error(
                 "E_METHOD_RECEIVER_TYPE",
                 format!(
@@ -1147,6 +1147,41 @@ impl Analyzer {
                 ));
             }
         }
+
+        self.validate_array_value_args(signature, args, arg_types);
+    }
+
+    fn validate_array_value_args(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) {
+        let value_index = match signature.name {
+            "array.push" => 1,
+            "array.set" => 2,
+            _ => return,
+        };
+        let Some(array_type) = arg_types.first().copied().flatten() else {
+            return;
+        };
+        if array_type.kind != ValueKind::IntArray {
+            return;
+        }
+        let Some(value_type) = arg_types.get(value_index).copied().flatten() else {
+            return;
+        };
+        if !matches!(value_type.kind, ValueKind::Int | ValueKind::Na) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_TYPE",
+                format!(
+                    "`{}` argument `value` does not accept {:?} {:?} for int arrays",
+                    signature.name, value_type.qualifier, value_type.kind
+                ),
+                args.get(value_index)
+                    .map_or(Span::default(), |arg| arg.span),
+            ));
+        }
     }
 
     fn resolve_param<'a>(
@@ -1204,6 +1239,7 @@ impl Analyzer {
                 .flatten()
                 .map(float_return_for_arg),
             ReturnSpec::PromotedNumeric => promoted_numeric_type(arg_types),
+            ReturnSpec::ArrayElement(index) => array_element_return_type(arg_types, index),
             ReturnSpec::IntFromArg(index) => arg_types
                 .get(index)
                 .copied()
@@ -2156,6 +2192,9 @@ impl Analyzer {
                             .flatten()
                             .map(float_return_for_arg),
                         ReturnSpec::PromotedNumeric => promoted_numeric_type(&arg_types),
+                        ReturnSpec::ArrayElement(index) => {
+                            array_element_return_type(&arg_types, index)
+                        }
                         ReturnSpec::IntFromArg(index) => arg_types
                             .get(index)
                             .copied()
@@ -2219,7 +2258,7 @@ impl Analyzer {
                     .resolve(receiver_name)
                     .map(|symbol| symbol.pine_type)
             })?;
-        if receiver_type.kind != ValueKind::FloatArray {
+        if !is_array_kind(receiver_type.kind) {
             return None;
         }
 
@@ -2767,7 +2806,7 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
-        Accepts::FloatArray => arg_type.kind == ValueKind::FloatArray,
+        Accepts::Array => is_array_kind(arg_type.kind),
         Accepts::InputDefval => {
             arg_type.qualifier == Qualifier::Const
                 && matches!(
@@ -2947,6 +2986,20 @@ fn round_return_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
     } else {
         Some(number_type)
     }
+}
+
+fn array_element_return_type(arg_types: &[Option<PineType>], index: usize) -> Option<PineType> {
+    let array_type = arg_types.get(index).copied().flatten()?;
+    let kind = match array_type.kind {
+        ValueKind::FloatArray => ValueKind::Float,
+        ValueKind::IntArray => ValueKind::Int,
+        _ => return None,
+    };
+    Some(PineType::new(Qualifier::Series, kind))
+}
+
+fn is_array_kind(kind: ValueKind) -> bool {
+    matches!(kind, ValueKind::FloatArray | ValueKind::IntArray)
 }
 
 #[cfg(test)]
@@ -4314,6 +4367,57 @@ plot(y)
     }
 
     #[test]
+    fn accepts_int_array_operations() {
+        let analysis = analyze(
+            "values = array.new_int(2, bar_index)\narray.push(values, 10)\narray.set(values, 0, 3)\nfirst = array.get(values, 0)\nlast = array.pop(values)\narray.clear(values)\nplot(first + last + array.size(values))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "array.new_int")
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_int_array_method_calls() {
+        let analysis = analyze(
+            "values = array.new_int(2, bar_index)\nvalues.push(10)\nvalues.set(0, 3)\nfirst = values.get(0)\nlast = values.pop()\nvalues.clear()\nplot(first + last + values.size())\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn rejects_float_value_for_int_array_mutation() {
+        let analysis =
+            analyze("values = array.new_int()\narray.push(values, close)\nplot(close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
     fn accepts_array_method_call_on_namespace_like_variable_name() {
         let analysis =
             analyze("strategy = array.new_float()\nstrategy.push(close)\nplot(strategy.size())\n");
@@ -4343,14 +4447,14 @@ plot(y)
 
     #[test]
     fn rejects_unsupported_array_function() {
-        let analysis = analyze("values = array.new_int(0)\nplot(close)\n");
+        let analysis = analyze("values = array.new_bool(0)\nplot(close)\n");
 
         assert!(
             analysis
                 .compatibility
                 .unsupported
                 .iter()
-                .any(|feature| feature.feature == "array.new_int"),
+                .any(|feature| feature.feature == "array.new_bool"),
             "{:?}",
             analysis.compatibility.unsupported
         );
@@ -4361,6 +4465,20 @@ plot(y)
     fn accepts_readonly_float_array_udf_parameter() {
         let analysis = analyze(
             "first(values) => array.get(values, 0)\nvalues = array.new_float(1, close)\nplot(first(values) + array.size(values))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_readonly_int_array_udf_parameter() {
+        let analysis = analyze(
+            "first(values) => array.get(values, 0)\nvalues = array.new_int(1, bar_index)\nplot(first(values) + array.size(values))\n",
         );
 
         assert!(

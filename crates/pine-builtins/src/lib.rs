@@ -42,7 +42,7 @@ pub enum Accepts {
     StringConvertible,
     IntCompatible,
     PlotOrHLine,
-    FloatArray,
+    Array,
     InputDefval,
 }
 
@@ -59,6 +59,7 @@ pub enum ReturnSpec {
     PromotedString,
     FloatFromStringArg(usize),
     PromotedNumeric,
+    ArrayElement(usize),
     IntFromArg(usize),
     FloatFromArg(usize),
     PromotedFloat,
@@ -79,6 +80,7 @@ const HLINE: PineType = PineType::new(Qualifier::Const, ValueKind::HLine);
 const VOID: PineType = PineType::new(Qualifier::Const, ValueKind::Void);
 const SIMPLE_INT: PineType = PineType::new(Qualifier::Simple, ValueKind::Int);
 const SIMPLE_FLOAT_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::FloatArray);
+const SIMPLE_INT_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::IntArray);
 
 const INDICATOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
@@ -894,16 +896,29 @@ const ARRAY_NEW_FLOAT_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_NEW_INT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "size",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "initial_value",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+];
+
 const ARRAY_SIZE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "id",
-    accepts: Accepts::FloatArray,
+    accepts: Accepts::Array,
     optional: false,
 }];
 
 const ARRAY_VALUE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
-        accepts: Accepts::FloatArray,
+        accepts: Accepts::Array,
         optional: false,
     },
     BuiltinParam {
@@ -916,7 +931,7 @@ const ARRAY_VALUE_PARAMS: &[BuiltinParam] = &[
 const ARRAY_INDEX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
-        accepts: Accepts::FloatArray,
+        accepts: Accepts::Array,
         optional: false,
     },
     BuiltinParam {
@@ -929,7 +944,7 @@ const ARRAY_INDEX_PARAMS: &[BuiltinParam] = &[
 const ARRAY_SET_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
-        accepts: Accepts::FloatArray,
+        accepts: Accepts::Array,
         optional: false,
     },
     BuiltinParam {
@@ -1473,6 +1488,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "array.new_int",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NEW_INT_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_INT_ARRAY),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "array.size",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_SIZE_PARAMS,
@@ -1490,7 +1512,7 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "array.get",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_INDEX_PARAMS,
-        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        returns: ReturnSpec::ArrayElement(0),
         variadic: false,
     },
     BuiltinSignature {
@@ -1504,7 +1526,7 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "array.pop",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_SIZE_PARAMS,
-        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        returns: ReturnSpec::ArrayElement(0),
         variadic: false,
     },
     BuiltinSignature {

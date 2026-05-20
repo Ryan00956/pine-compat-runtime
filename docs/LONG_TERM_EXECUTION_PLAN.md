@@ -25,7 +25,7 @@ Implemented or partially implemented:
 - Partial `switch` expressions.
 - Partial `for` and `while` loops.
 - Constant non-negative history offsets.
-- Partial float arrays and float-array method calls.
+- Partial float/int arrays and supported array method calls.
 - A fixture-covered set of `input.*`, output calls, color helpers, math
   helpers, and `ta.*` functions.
 - CLI, Python, and WASM surfaces for the supported runtime result model.
@@ -104,8 +104,8 @@ storage model.
 
 Scope:
 
-- Add typed arrays beyond float arrays: bool, int, string, color, and source
-  where practical.
+- Add typed arrays beyond the current float/int subset: bool, string, color,
+  and source where practical.
 - Add common array constructors and helpers after element typing is stable.
 - Define copy/reference behavior for array values across assignments,
   function calls, `var`, rollback, and incremental execution.
@@ -129,10 +129,9 @@ Acceptance criteria:
 
 Suggested commits:
 
-1. `Support typed int arrays`
-2. `Support typed bool string color arrays`
-3. `Expand array helper coverage`
-4. `Document collection semantics`
+1. `Support typed bool string color arrays`
+2. `Expand array helper coverage`
+3. `Document collection semantics`
 
 ## Phase C: History and Series Semantics
 

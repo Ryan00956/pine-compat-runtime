@@ -1,6 +1,10 @@
 //@version=5
 indicator("Realtime array rollback")
 var values = array.new_float()
+var counts = array.new_int()
 array.push(values, close)
+array.push(counts, bar_index)
 plot(array.size(values))
 plot(array.get(values, 0))
+plot(array.size(counts))
+plot(array.get(counts, 0))

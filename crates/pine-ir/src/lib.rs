@@ -30,6 +30,7 @@ pub enum ValueKind {
     Plot,
     HLine,
     FloatArray,
+    IntArray,
     Tuple,
     Na,
     Void,

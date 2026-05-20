@@ -10,8 +10,10 @@
 - Added partial float array support with runtime-owned array ids,
   `array.new_float`, `array.push`, `array.get`, `array.set`, `array.size`,
   `array.pop`, and `array.clear`.
-- Added partial array method-call syntax for float array `size`, `get`, `set`,
-  `push`, `pop`, and `clear`.
+- Added partial int array support through `array.new_int` and the existing
+  size/get/set/push/pop/clear operations.
+- Added partial array method-call syntax for supported array `size`, `get`,
+  `set`, `push`, `pop`, and `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.
 - Added `input.price`, `input.time`, `input.symbol`, and `input.timeframe`
   support for the executable `defval`/`title` subset.
