@@ -142,7 +142,7 @@ ta.ema               supported
 ta.rsi               partial      requires rma warmup tests
 request.security     unsupported  out of Phase 1 scope
 strategy.*           unsupported  out of project scope for now
-array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, insert/remove, fill, slice/concat, search/binary search, numeric statistics/range/median/mode/variance/stdev, ordering, join, mutation, and helper fixture subset only
+array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, insert/remove, fill, slice/concat, search/binary search, numeric statistics/range/median/mode/percentile/variance/stdev, ordering, join, mutation, and helper fixture subset only
 import               unsupported  out of Phase 1 scope
 ```
 

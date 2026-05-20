@@ -987,6 +987,32 @@ const ARRAY_VARIANCE_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_PERCENTILE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::NumericArray,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "percentage",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+];
+
+const ARRAY_PERCENTRANK_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::NumericArray,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "index",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
 const ARRAY_JOIN_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1868,6 +1894,27 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_NUMERIC_PARAMS,
         returns: ReturnSpec::ArrayNumeric(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.percentile_nearest_rank",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_PERCENTILE_PARAMS,
+        returns: ReturnSpec::ArrayNumeric(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.percentile_linear_interpolation",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_PERCENTILE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.percentrank",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_PERCENTRANK_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {

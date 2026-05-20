@@ -181,10 +181,12 @@ Supported operations are
 `array.binary_search`, `array.binary_search_leftmost`,
 `array.binary_search_rightmost`, `array.min`, `array.max`, `array.sum`,
 `array.avg`, `array.range`, `array.median`, `array.mode`, `array.variance`,
-`array.stdev`, `array.sort`, `array.reverse`, `array.join`, and `array.clear`;
+`array.stdev`, `array.percentile_nearest_rank`,
+`array.percentile_linear_interpolation`, `array.percentrank`, `array.sort`,
+`array.reverse`, `array.join`, and `array.clear`;
 `size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/reverse/join/clear`
 may also be called with method syntax on a supported array receiver. Numeric
-`binary_search/binary_search_leftmost/binary_search_rightmost/min/max/sum/avg/range/median/mode/variance/stdev/sort`
+`binary_search/binary_search_leftmost/binary_search_rightmost/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/variance/stdev/sort`
 helpers may also be called with method syntax on float and int arrays. Float
 arrays accept int or float values and store them as
 floats. Int arrays accept int values. Bool arrays accept bool values. String
@@ -211,7 +213,10 @@ existing insertion-side index and return `-1` for empty arrays. Numeric helpers
 to float and int arrays; they ignore `na` elements and return `na` when no
 numeric element is present. `array.range` returns max minus min. `array.mode`
 returns the smallest value among tied most-frequent values and returns `na`
-when all remaining values occur only once. `array.variance` and `array.stdev`
+when all remaining values occur only once. Percentile helpers operate on
+non-`na` values sorted ascending. Percentages outside `0..=100`,
+empty/all-`na` arrays, and invalid `array.percentrank` indexes return `na`.
+`array.variance` and `array.stdev`
 accept an optional `biased` bool argument that defaults to `true`; passing
 `false` uses the sample denominator and returns `na` when fewer than two
 numeric values remain.

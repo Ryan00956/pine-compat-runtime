@@ -28,8 +28,8 @@ Implemented or partially implemented:
 - Partial float/int/bool/string/color arrays, reference assignment,
   `array.from`, `array.copy`, `array.insert`, `array.remove`, `array.slice`,
   `array.concat`, `array.fill`, search/binary search helpers, numeric
-  statistics/range/median/mode/variance/stdev helpers, queue/end helpers,
-  ordering helpers, `array.join`, and supported
+  statistics/range/median/mode/percentile/variance/stdev helpers, queue/end
+  helpers, ordering helpers, `array.join`, and supported
   array method calls.
 - A fixture-covered set of `input.*`, output calls, color helpers, math
   helpers, and `ta.*` functions.

@@ -236,6 +236,9 @@ Initial supported functions:
 - `array.range`
 - `array.median`
 - `array.mode`
+- `array.percentile_nearest_rank`
+- `array.percentile_linear_interpolation`
+- `array.percentrank`
 - `array.variance`
 - `array.stdev`
 - `array.sort`
@@ -253,7 +256,7 @@ Resolved implementation choices:
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
 - The current pass supports float, int, bool, string, and color arrays with
   array.from inference and size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/clear
-  plus numeric binary search/min/max/sum/avg/range/median/mode/variance/stdev/sort,
+  plus numeric binary search/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/variance/stdev/sort,
   all-supported-array reverse, and all-supported-array join only; unsupported
   `array.*` variants still produce diagnostics.
 - Array assignment and UDF argument binding pass the runtime array id by

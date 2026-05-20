@@ -2529,6 +2529,9 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "range" => Some("array.range"),
         "median" => Some("array.median"),
         "mode" => Some("array.mode"),
+        "percentile_nearest_rank" => Some("array.percentile_nearest_rank"),
+        "percentile_linear_interpolation" => Some("array.percentile_linear_interpolation"),
+        "percentrank" => Some("array.percentrank"),
         "variance" => Some("array.variance"),
         "stdev" => Some("array.stdev"),
         "sort" => Some("array.sort"),
@@ -4875,7 +4878,7 @@ plot(y)
     #[test]
     fn accepts_numeric_array_statistics() {
         let analysis = analyze(
-            "ints = array.new_int()\narray.push(ints, 1)\narray.push(ints, 3)\narray.push(ints, 3)\nfloats = array.new_float()\nfloats.push(close)\nfloats.push(high)\nplot(array.min(ints) + array.max(ints) + array.sum(ints) + ints.range() + ints.median() + array.mode(ints) + ints.variance(false) + array.avg(floats) + floats.max() + array.range(floats) + array.stdev(floats))\n",
+            "ints = array.new_int()\narray.push(ints, 1)\narray.push(ints, 3)\narray.push(ints, 3)\nfloats = array.new_float()\nfloats.push(close)\nfloats.push(high)\nplot(array.min(ints) + array.max(ints) + array.sum(ints) + ints.range() + ints.median() + array.mode(ints) + ints.percentile_nearest_rank(50) + array.percentile_linear_interpolation(ints, 75) + array.percentrank(ints, 1) + ints.variance(false) + array.avg(floats) + floats.max() + array.range(floats) + array.stdev(floats))\n",
         );
 
         assert!(
@@ -4891,6 +4894,9 @@ plot(y)
             "array.range",
             "array.median",
             "array.mode",
+            "array.percentile_nearest_rank",
+            "array.percentile_linear_interpolation",
+            "array.percentrank",
             "array.variance",
             "array.stdev",
         ] {

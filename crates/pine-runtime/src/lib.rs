@@ -462,6 +462,12 @@ enum ArrayVarianceMode {
     Stdev,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ArrayPercentileMode {
+    NearestRank,
+    LinearInterpolation,
+}
+
 fn infer_array_from_kind(values: &[PineValue]) -> Option<ArrayElementKind> {
     let mut inferred_kind: Option<ArrayElementKind> = None;
     for value in values {
@@ -1522,6 +1528,13 @@ impl<'a> HistoricalRuntime<'a> {
             "array.range" => self.eval_array_numeric(args, ArrayNumericMode::Range),
             "array.median" => self.eval_array_numeric(args, ArrayNumericMode::Median),
             "array.mode" => self.eval_array_numeric(args, ArrayNumericMode::Mode),
+            "array.percentile_nearest_rank" => {
+                self.eval_array_percentile(args, ArrayPercentileMode::NearestRank)
+            }
+            "array.percentile_linear_interpolation" => {
+                self.eval_array_percentile(args, ArrayPercentileMode::LinearInterpolation)
+            }
+            "array.percentrank" => self.eval_array_percentrank(args),
             "array.variance" => self.eval_array_variance(args, ArrayVarianceMode::Variance),
             "array.stdev" => self.eval_array_variance(args, ArrayVarianceMode::Stdev),
             "array.sort" => self.eval_array_sort(args),
@@ -2228,6 +2241,97 @@ impl<'a> HistoricalRuntime<'a> {
                 Ok(array_numeric_result(kind, best_value))
             }
         }
+    }
+
+    fn eval_array_percentile(
+        &mut self,
+        args: &[HirCallArg],
+        mode: ArrayPercentileMode,
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let percentage = self.eval_expr(&args[1].value)?.as_f64();
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(percentage) = percentage else {
+            return Ok(PineValue::Na);
+        };
+        if !(0.0..=100.0).contains(&percentage) {
+            return Ok(PineValue::Na);
+        }
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
+            return Ok(PineValue::Na);
+        }
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Na);
+        };
+        let mut numeric_values: Vec<_> = values.iter().filter_map(PineValue::as_f64).collect();
+        if numeric_values.is_empty() {
+            return Ok(PineValue::Na);
+        }
+        numeric_values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
+
+        match mode {
+            ArrayPercentileMode::NearestRank => {
+                let rank = ((percentage / 100.0) * numeric_values.len() as f64).ceil();
+                let index = (rank as usize)
+                    .saturating_sub(1)
+                    .min(numeric_values.len() - 1);
+                Ok(array_numeric_result(kind, numeric_values[index]))
+            }
+            ArrayPercentileMode::LinearInterpolation => {
+                if numeric_values.len() == 1 {
+                    return Ok(finite_float_or_na(numeric_values[0]));
+                }
+                let rank = (percentage / 100.0) * (numeric_values.len() - 1) as f64;
+                let lower = rank.floor() as usize;
+                let upper = rank.ceil() as usize;
+                let fraction = rank - lower as f64;
+                let value = numeric_values[lower]
+                    + (numeric_values[upper] - numeric_values[lower]) * fraction;
+                Ok(finite_float_or_na(value))
+            }
+        }
+    }
+
+    fn eval_array_percentrank(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let index = self.eval_expr(&args[1].value)?.as_i64();
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(index) = index else {
+            return Ok(PineValue::Na);
+        };
+        if index < 0 {
+            return Ok(PineValue::Na);
+        }
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
+            return Ok(PineValue::Na);
+        }
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Na);
+        };
+        let Some(target) = values.get(index as usize).and_then(PineValue::as_f64) else {
+            return Ok(PineValue::Na);
+        };
+        let numeric_values: Vec<_> = values.iter().filter_map(PineValue::as_f64).collect();
+        if numeric_values.is_empty() {
+            return Ok(PineValue::Na);
+        }
+        let count = numeric_values
+            .iter()
+            .filter(|value| **value <= target || (**value - target).abs() < f64::EPSILON)
+            .count();
+        Ok(finite_float_or_na(
+            count as f64 / numeric_values.len() as f64 * 100.0,
+        ))
     }
 
     fn eval_array_variance(
@@ -8098,6 +8202,9 @@ plot(array.sum(ints))
 plot(array.avg(ints))
 plot(array.range(ints))
 plot(array.median(ints))
+plot(array.percentile_nearest_rank(ints, 50))
+plot(ints.percentile_linear_interpolation(75))
+plot(array.percentrank(ints, 1))
 plot(array.variance(ints, false))
 mode_ints = array.from(1, 3, 3, 2, 2)
 plot(mode_ints.mode())
@@ -8112,12 +8219,15 @@ plot(floats.sum())
 plot(floats.avg())
 plot(floats.range())
 plot(floats.median())
+plot(floats.percentile_nearest_rank(50))
+plot(array.percentile_linear_interpolation(floats, 50))
+plot(floats.percentrank(1))
 plot(array.variance(floats))
 plot(floats.stdev(false))
 
 empty = array.new_float()
 only_na = array.new_int(2)
-plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) and na(array.mode(ints)) and na(array.variance(empty)) and na(only_na.stdev()) ? 1 : 0)
+plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) and na(array.mode(ints)) and na(array.percentile_nearest_rank(empty, 50)) and na(array.percentile_linear_interpolation(ints, 150)) and na(array.percentrank(empty, 0)) and na(array.variance(empty)) and na(only_na.stdev()) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -8130,24 +8240,30 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
         let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 17);
+        assert_eq!(result.plots.len(), 23);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[5.0, 5.0]);
         assert_values_close(&result.plots[2].values, &[8.0, 8.0]);
         assert_values_close(&result.plots[3].values, &[8.0 / 3.0, 8.0 / 3.0]);
         assert_values_close(&result.plots[4].values, &[4.0, 4.0]);
         assert_values_close(&result.plots[5].values, &[2.0, 2.0]);
-        assert_values_close(&result.plots[6].values, &[13.0 / 3.0, 13.0 / 3.0]);
-        assert_values_close(&result.plots[7].values, &[2.0, 2.0]);
-        assert_values_close(&result.plots[8].values, &[2.0, 3.0]);
-        assert_values_close(&result.plots[9].values, &[4.0, 6.0]);
-        assert_values_close(&result.plots[10].values, &[6.0, 9.0]);
-        assert_values_close(&result.plots[11].values, &[3.0, 4.5]);
-        assert_values_close(&result.plots[12].values, &[2.0, 3.0]);
-        assert_values_close(&result.plots[13].values, &[3.0, 4.5]);
-        assert_values_close(&result.plots[14].values, &[1.0, 2.25]);
-        assert_values_close(&result.plots[15].values, &[2.0_f64.sqrt(), 4.5_f64.sqrt()]);
-        assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[6].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[7].values, &[3.5, 3.5]);
+        assert_values_close(&result.plots[8].values, &[100.0, 100.0]);
+        assert_values_close(&result.plots[9].values, &[13.0 / 3.0, 13.0 / 3.0]);
+        assert_values_close(&result.plots[10].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[11].values, &[2.0, 3.0]);
+        assert_values_close(&result.plots[12].values, &[4.0, 6.0]);
+        assert_values_close(&result.plots[13].values, &[6.0, 9.0]);
+        assert_values_close(&result.plots[14].values, &[3.0, 4.5]);
+        assert_values_close(&result.plots[15].values, &[2.0, 3.0]);
+        assert_values_close(&result.plots[16].values, &[3.0, 4.5]);
+        assert_values_close(&result.plots[17].values, &[2.0, 3.0]);
+        assert_values_close(&result.plots[18].values, &[3.0, 4.5]);
+        assert_values_close(&result.plots[19].values, &[100.0, 100.0]);
+        assert_values_close(&result.plots[20].values, &[1.0, 2.25]);
+        assert_values_close(&result.plots[21].values, &[2.0_f64.sqrt(), 4.5_f64.sqrt()]);
+        assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
     }
 
     #[test]

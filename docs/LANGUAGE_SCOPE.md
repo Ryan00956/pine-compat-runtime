@@ -80,7 +80,8 @@ Phase 1 executable subset:
   `array.indexof`, `array.lastindexof`, numeric `array.binary_search*`,
   `array.clear`, numeric `array.min`, `array.max`, `array.sum`,
   `array.avg`, `array.range`, `array.median`, `array.mode`,
-  `array.variance`, `array.stdev`, numeric `array.sort`,
+  `array.percentile_nearest_rank`, `array.percentile_linear_interpolation`,
+  `array.percentrank`, `array.variance`, `array.stdev`, numeric `array.sort`,
   `array.reverse`, `array.join`, and equivalent method-call syntax such as
   `values.push(close)` and `values.get(0)`
 

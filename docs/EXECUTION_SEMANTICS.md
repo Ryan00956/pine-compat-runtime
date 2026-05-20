@@ -129,7 +129,10 @@ element is `na` or the array is empty, `array.min`, `array.max`, `array.sum`,
 and `array.stdev` return `na`. `array.range` returns max minus min.
 `array.median` returns the median of non-`na` values. `array.mode` returns the
 smallest value among tied most-frequent values and returns `na` when all
-remaining values occur only once. `array.variance` and `array.stdev` use a
+remaining values occur only once. Percentile helpers operate on non-`na` values
+sorted ascending. Percentages outside `0..=100`, empty/all-`na` arrays, and
+invalid `array.percentrank` indexes return `na`. `array.variance` and
+`array.stdev` use a
 biased population estimate by default; with `biased=false`, they use the
 sample denominator and return `na` when fewer than two numeric values remain.
 `array.sort` orders int/float arrays ascending and places `na` values after

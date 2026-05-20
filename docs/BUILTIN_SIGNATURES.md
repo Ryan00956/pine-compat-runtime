@@ -205,6 +205,9 @@ array.avg(id: float-array|int-array) -> series float
 array.range(id: float-array|int-array) -> series element
 array.median(id: float-array|int-array) -> series element
 array.mode(id: float-array|int-array) -> series element
+array.percentile_nearest_rank(id: float-array|int-array, percentage: numeric-compatible) -> series element
+array.percentile_linear_interpolation(id: float-array|int-array, percentage: numeric-compatible) -> series float
+array.percentrank(id: float-array|int-array, index: simple int) -> series float
 array.variance(id: float-array|int-array, biased?: bool-compatible) -> series float
 array.stdev(id: float-array|int-array, biased?: bool-compatible) -> series float
 array.sort(id: float-array|int-array) -> void
@@ -230,7 +233,7 @@ are supplied; invalid ranges are no-ops. `array.slice` allocates a same-kind
 array containing the half-open `[index_from, index_to)` window; invalid bounds
 return `na` at runtime. `array.concat` requires two arrays of the same kind,
 appends `id2` values to `id` in place, and returns `id`. Numeric array
-`binary_search/binary_search_leftmost/binary_search_rightmost/min/max/sum/avg/range/median/mode/variance/stdev`
+`binary_search/binary_search_leftmost/binary_search_rightmost/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/variance/stdev`
 helpers may also be called with method syntax on float and int array receivers.
 Binary search helpers expect the current array contents to be sorted ascending;
 `array.binary_search` returns `-1` when not found, while leftmost/rightmost
@@ -239,6 +242,9 @@ arrays. `array.range` returns max minus min while ignoring `na` elements.
 `array.median` returns the median of non-`na` values. `array.mode` returns the
 smallest value among tied most-frequent values and returns `na` when all
 remaining values occur only once.
+Percentile helpers operate on non-`na` values sorted ascending. Percentages
+outside `0..=100`, empty/all-`na` arrays, and invalid percentrank indexes
+return `na`.
 `array.variance` and `array.stdev` ignore `na` elements and use a biased
 population estimate by default; pass `false` for an unbiased sample estimate.
 `array.sort` currently supports float and int arrays only and sorts ascending
