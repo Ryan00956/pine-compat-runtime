@@ -19,6 +19,8 @@
   defaults.
 - Added UTC-derived `year`, `month`, `dayofmonth`, `hour`, `minute`, and
   `second` bar time component variables.
+- Added UTC-only function overloads for `year`, `month`, `dayofmonth`, `hour`,
+  `minute`, and `second`.
 - Added `bgcolor` and `barcolor` support with bar-aligned color output series.
 - Added basic `plotchar` support with bar-aligned values, chars, and colors.
 - Added basic `plotshape` support with bar-aligned values, style, location,

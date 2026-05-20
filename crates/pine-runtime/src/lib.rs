@@ -1350,6 +1350,12 @@ impl<'a> HistoricalRuntime<'a> {
             "str.format" => self.eval_str_format(args),
             "str.match" => self.eval_str_match_regex(args),
             "str.format_time" => self.eval_str_format_time(args),
+            "year" => self.eval_time_component(args, TimeComponent::Year),
+            "month" => self.eval_time_component(args, TimeComponent::Month),
+            "dayofmonth" => self.eval_time_component(args, TimeComponent::DayOfMonth),
+            "hour" => self.eval_time_component(args, TimeComponent::Hour),
+            "minute" => self.eval_time_component(args, TimeComponent::Minute),
+            "second" => self.eval_time_component(args, TimeComponent::Second),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -2067,6 +2073,43 @@ impl<'a> HistoricalRuntime<'a> {
 
         let result = format_utc_datetime(datetime, &format);
         self.string_value_or_error(result, "str.format_time")
+    }
+
+    fn eval_time_component(
+        &mut self,
+        args: &[HirCallArg],
+        component: TimeComponent,
+    ) -> Result<PineValue, RuntimeError> {
+        let timestamp = match self.eval_expr(&args[0].value)? {
+            PineValue::Int(value) => value,
+            PineValue::Na => return Ok(PineValue::Na),
+            _ => return Ok(PineValue::Na),
+        };
+        let timezone = if let Some(arg) = args.get(1) {
+            match self.eval_expr(&arg.value)? {
+                PineValue::String(timezone) => timezone,
+                PineValue::Na => "UTC".to_owned(),
+                _ => return Ok(PineValue::Na),
+            }
+        } else {
+            "UTC".to_owned()
+        };
+        if !is_supported_utc_timezone(&timezone) {
+            return Err(RuntimeError {
+                message: format!(
+                    "{} unsupported timezone `{timezone}`",
+                    component.function_name()
+                ),
+            });
+        }
+        let datetime = utc_datetime_from_millis(timestamp).map_err(|_| RuntimeError {
+            message: format!(
+                "{} timestamp is out of range: {timestamp}",
+                component.function_name()
+            ),
+        })?;
+
+        Ok(PineValue::Int(component.value(datetime)))
     }
 
     fn stringify_value(&self, value: &PineValue, format: &str) -> String {
@@ -3164,6 +3207,40 @@ fn color_component(color: u32, component: ColorComponent) -> f64 {
         ColorComponent::Green => ((rgb >> 8) & 0xFF) as f64,
         ColorComponent::Blue => (rgb & 0xFF) as f64,
         ColorComponent::Transparency => (100.0 - (alpha as f64 * 100.0 / 255.0)).round(),
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TimeComponent {
+    Year,
+    Month,
+    DayOfMonth,
+    Hour,
+    Minute,
+    Second,
+}
+
+impl TimeComponent {
+    fn function_name(self) -> &'static str {
+        match self {
+            Self::Year => "year",
+            Self::Month => "month",
+            Self::DayOfMonth => "dayofmonth",
+            Self::Hour => "hour",
+            Self::Minute => "minute",
+            Self::Second => "second",
+        }
+    }
+
+    fn value(self, datetime: DateTime<Utc>) -> i64 {
+        match self {
+            Self::Year => datetime.year() as i64,
+            Self::Month => datetime.month() as i64,
+            Self::DayOfMonth => datetime.day() as i64,
+            Self::Hour => datetime.hour() as i64,
+            Self::Minute => datetime.minute() as i64,
+            Self::Second => datetime.second() as i64,
+        }
     }
 }
 
@@ -4619,6 +4696,14 @@ plot(dayofmonth)
 plot(hour)
 plot(minute)
 plot(second)
+ts = 1612235045000
+plot(year(ts))
+plot(month(ts, "UTC"))
+plot(dayofmonth(ts))
+plot(hour(ts))
+plot(minute(ts))
+plot(second(ts))
+plot(na(year(na)) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -4654,6 +4739,40 @@ plot(second)
         assert_values_close(&result.plots[3].values, &[0.0, 3.0]);
         assert_values_close(&result.plots[4].values, &[0.0, 4.0]);
         assert_values_close(&result.plots[5].values, &[0.0, 5.0]);
+        assert_values_close(&result.plots[6].values, &[2021.0, 2021.0]);
+        assert_values_close(&result.plots[7].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[8].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[9].values, &[3.0, 3.0]);
+        assert_values_close(&result.plots[10].values, &[4.0, 4.0]);
+        assert_values_close(&result.plots[11].values, &[5.0, 5.0]);
+        assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
+    }
+
+    #[test]
+    fn rejects_unsupported_calendar_function_timezone() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bad calendar timezone")
+plot(hour(time, "America/New_York"))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected calendar timezone error");
+
+        assert!(
+            error
+                .message
+                .contains("hour unsupported timezone `America/New_York`"),
+            "{}",
+            error.message
+        );
     }
 
     #[test]

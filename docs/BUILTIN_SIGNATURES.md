@@ -56,6 +56,20 @@ bar_index -> series int
 UTC calendar components derived from each bar's `time`. Full exchange-timezone
 calendar semantics are not claimed until symbol timezone metadata exists.
 
+The same names are also supported as functions over a timestamp:
+
+```text
+year(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
+month(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
+dayofmonth(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
+hour(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
+minute(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
+second(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
+```
+
+For now, these function overloads use the same UTC-only timezone subset as
+`str.format_time`; unsupported time zones are runtime errors.
+
 Derived values:
 
 ```text

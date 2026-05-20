@@ -712,6 +712,19 @@ const STR_FORMAT_TIME_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TIME_COMPONENT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "time",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "timezone",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+];
+
 const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "a",
@@ -1247,6 +1260,48 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: STR_FORMAT_TIME_PARAMS,
         returns: ReturnSpec::PromotedString,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "year",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIME_COMPONENT_PARAMS,
+        returns: ReturnSpec::PromotedInt,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "month",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIME_COMPONENT_PARAMS,
+        returns: ReturnSpec::PromotedInt,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "dayofmonth",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIME_COMPONENT_PARAMS,
+        returns: ReturnSpec::PromotedInt,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "hour",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIME_COMPONENT_PARAMS,
+        returns: ReturnSpec::PromotedInt,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "minute",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIME_COMPONENT_PARAMS,
+        returns: ReturnSpec::PromotedInt,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "second",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIME_COMPONENT_PARAMS,
+        returns: ReturnSpec::PromotedInt,
         variadic: false,
     },
     BuiltinSignature {
