@@ -183,11 +183,11 @@ Supported operations are
 `array.sum`, `array.avg`, `array.range`, `array.median`, `array.mode`,
 `array.variance`, `array.stdev`, `array.percentile_nearest_rank`,
 `array.percentile_linear_interpolation`, `array.percentrank`,
-`array.standardize`, `array.sort`, `array.reverse`, `array.join`, and
-`array.clear`;
+`array.covariance`, `array.standardize`, `array.sort`, `array.reverse`,
+`array.join`, and `array.clear`;
 `size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/reverse/join/clear`
 may also be called with method syntax on a supported array receiver. Numeric
-`binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/standardize/variance/stdev/sort`
+`binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev/sort`
 helpers may also be called with method syntax on float and int arrays. Float
 arrays accept int or float values and store them as
 floats. Int arrays accept int values. Bool arrays accept bool values. String
@@ -210,9 +210,13 @@ expect the current array contents to be sorted ascending. `array.binary_search`
 returns `-1` when the value is not found; leftmost/rightmost return the nearest
 existing insertion-side index and return `-1` for empty arrays. Numeric helpers
 `array.abs`, `array.min`, `array.max`, `array.sum`, `array.avg`, `array.range`,
-`array.median`, `array.mode`, `array.standardize`, `array.variance`, and
-`array.stdev` are limited to float and int arrays. `array.abs` allocates a new
-same-kind array, preserves `na`, and leaves the source array unchanged.
+`array.median`, `array.mode`, `array.covariance`, `array.standardize`,
+`array.variance`, and `array.stdev` are limited to float and int arrays.
+`array.abs` allocates a new same-kind array, preserves `na`, and leaves the
+source array unchanged. `array.covariance` requires two same-size numeric
+arrays, skips pairs where either side is `na`, defaults to a biased population
+estimate, and returns `na` when no numeric pair remains or an unbiased sample
+has fewer than two numeric pairs.
 `array.standardize` allocates a new float array, uses non-`na` values to
 calculate mean and population standard deviation, preserves `na` element
 positions when at least one numeric value exists, and returns an empty array

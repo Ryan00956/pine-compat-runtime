@@ -240,6 +240,7 @@ Initial supported functions:
 - `array.percentile_nearest_rank`
 - `array.percentile_linear_interpolation`
 - `array.percentrank`
+- `array.covariance`
 - `array.standardize`
 - `array.variance`
 - `array.stdev`

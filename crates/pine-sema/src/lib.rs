@@ -2533,6 +2533,7 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "percentile_nearest_rank" => Some("array.percentile_nearest_rank"),
         "percentile_linear_interpolation" => Some("array.percentile_linear_interpolation"),
         "percentrank" => Some("array.percentrank"),
+        "covariance" => Some("array.covariance"),
         "standardize" => Some("array.standardize"),
         "variance" => Some("array.variance"),
         "stdev" => Some("array.stdev"),
@@ -4880,7 +4881,7 @@ plot(y)
     #[test]
     fn accepts_numeric_array_statistics() {
         let analysis = analyze(
-            "ints = array.new_int()\narray.push(ints, 1)\narray.push(ints, 3)\narray.push(ints, 3)\nabs_ints = ints.abs()\nstandard_ints = ints.standardize()\nfloats = array.new_float()\nfloats.push(close)\nfloats.push(high)\nplot(array.min(ints) + array.max(ints) + array.sum(ints) + ints.range() + ints.median() + array.mode(ints) + ints.percentile_nearest_rank(50) + array.percentile_linear_interpolation(ints, 75) + array.percentrank(ints, 1) + ints.variance(false) + array.avg(floats) + floats.max() + array.range(floats) + array.stdev(floats) + array.sum(abs_ints) + standard_ints.get(0))\n",
+            "ints = array.new_int()\narray.push(ints, 1)\narray.push(ints, 3)\narray.push(ints, 3)\nabs_ints = ints.abs()\nstandard_ints = ints.standardize()\nfloats = array.new_float()\nfloats.push(close)\nfloats.push(high)\nplot(array.min(ints) + array.max(ints) + array.sum(ints) + ints.range() + ints.median() + array.mode(ints) + ints.percentile_nearest_rank(50) + array.percentile_linear_interpolation(ints, 75) + array.percentrank(ints, 1) + ints.covariance(standard_ints) + ints.variance(false) + array.avg(floats) + floats.max() + array.range(floats) + array.stdev(floats) + array.sum(abs_ints) + standard_ints.get(0))\n",
         );
 
         assert!(
@@ -4899,6 +4900,7 @@ plot(y)
             "array.percentile_nearest_rank",
             "array.percentile_linear_interpolation",
             "array.percentrank",
+            "array.covariance",
             "array.standardize",
             "array.variance",
             "array.stdev",

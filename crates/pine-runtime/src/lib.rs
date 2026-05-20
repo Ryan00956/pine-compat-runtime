@@ -1536,6 +1536,7 @@ impl<'a> HistoricalRuntime<'a> {
                 self.eval_array_percentile(args, ArrayPercentileMode::LinearInterpolation)
             }
             "array.percentrank" => self.eval_array_percentrank(args),
+            "array.covariance" => self.eval_array_covariance(args),
             "array.standardize" => self.eval_array_standardize(args),
             "array.variance" => self.eval_array_variance(args, ArrayVarianceMode::Variance),
             "array.stdev" => self.eval_array_variance(args, ArrayVarianceMode::Stdev),
@@ -2419,6 +2420,56 @@ impl<'a> HistoricalRuntime<'a> {
             .collect();
 
         Ok(self.new_array_from_values(ArrayElementKind::Float, values))
+    }
+
+    fn eval_array_covariance(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id1 = self.eval_expr(&args[0].value)?;
+        let id2 = self.eval_expr(&args[1].value)?;
+        let biased = match args.get(2) {
+            Some(arg) => matches!(self.eval_expr(&arg.value)?, PineValue::Bool(true)),
+            None => true,
+        };
+        let (PineValue::Array(id1), PineValue::Array(id2)) = (id1, id2) else {
+            return Ok(PineValue::Na);
+        };
+        let (Some(kind1), Some(kind2)) = (
+            self.array_kinds.get(&id1).copied(),
+            self.array_kinds.get(&id2).copied(),
+        ) else {
+            return Ok(PineValue::Na);
+        };
+        if !matches!(kind1, ArrayElementKind::Float | ArrayElementKind::Int)
+            || !matches!(kind2, ArrayElementKind::Float | ArrayElementKind::Int)
+        {
+            return Ok(PineValue::Na);
+        }
+        let (Some(values1), Some(values2)) =
+            (self.array_store.get(&id1), self.array_store.get(&id2))
+        else {
+            return Ok(PineValue::Na);
+        };
+        if values1.len() != values2.len() {
+            return Ok(PineValue::Na);
+        }
+
+        let pairs: Vec<_> = values1
+            .iter()
+            .zip(values2)
+            .filter_map(|(left, right)| Some((left.as_f64()?, right.as_f64()?)))
+            .collect();
+        let count = pairs.len();
+        if count == 0 || (!biased && count < 2) {
+            return Ok(PineValue::Na);
+        }
+
+        let mean1 = pairs.iter().map(|(left, _)| left).sum::<f64>() / count as f64;
+        let mean2 = pairs.iter().map(|(_, right)| right).sum::<f64>() / count as f64;
+        let covariance_sum = pairs
+            .iter()
+            .map(|(left, right)| (left - mean1) * (right - mean2))
+            .sum::<f64>();
+        let denominator = if biased { count } else { count - 1 };
+        Ok(finite_float_or_na(covariance_sum / denominator as f64))
     }
 
     fn eval_array_variance(
@@ -8333,11 +8384,22 @@ standardized_with_na = array.standardize(standard_with_na)
 plot(standardized_with_na.size())
 plot(na(standardized_with_na.get(1)) ? 1 : 0)
 
+covariance_x = array.from(1, 2, 3)
+covariance_y = array.from(1, 5, 7)
+plot(array.covariance(covariance_x, covariance_y))
+plot(covariance_x.covariance(covariance_y, false))
+covariance_with_na_x = array.from(close, na, high)
+covariance_with_na_y = array.from(open, close, na)
+plot(array.covariance(covariance_with_na_x, covariance_with_na_y))
+plot(na(covariance_with_na_x.covariance(covariance_with_na_y, false)) ? 1 : 0)
+mismatched_covariance = array.from(1, 2)
+plot(na(array.covariance(covariance_x, mismatched_covariance)) ? 1 : 0)
+
 empty = array.new_float()
 only_na = array.new_int(2)
 empty_standardized = array.standardize(empty)
 only_na_standardized = only_na.standardize()
-plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) and na(array.mode(ints)) and na(array.percentile_nearest_rank(empty, 50)) and na(array.percentile_linear_interpolation(ints, 150)) and na(array.percentrank(empty, 0)) and empty_standardized.size() == 0 and only_na_standardized.size() == 0 and na(array.variance(empty)) and na(only_na.stdev()) ? 1 : 0)
+plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.avg(only_na)) and na(array.range(empty)) and na(array.mode(ints)) and na(array.percentile_nearest_rank(empty, 50)) and na(array.percentile_linear_interpolation(ints, 150)) and na(array.percentrank(empty, 0)) and empty_standardized.size() == 0 and only_na_standardized.size() == 0 and na(array.covariance(empty, empty)) and na(array.variance(empty)) and na(only_na.stdev()) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -8350,7 +8412,7 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
         let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 32);
+        assert_eq!(result.plots.len(), 37);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[5.0, 5.0]);
         assert_values_close(&result.plots[2].values, &[8.0, 8.0]);
@@ -8382,7 +8444,12 @@ plot(na(array.min(empty)) and na(array.max(only_na)) and na(array.sum(empty)) an
         assert_values_close(&result.plots[28].values, &[2.0, 2.0]);
         assert_values_close(&result.plots[29].values, &[3.0, 3.0]);
         assert_values_close(&result.plots[30].values, &[1.0, 1.0]);
-        assert_values_close(&result.plots[31].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[31].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[32].values, &[3.0, 3.0]);
+        assert_values_close(&result.plots[33].values, &[0.0, 0.0]);
+        assert_values_close(&result.plots[34].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[35].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[36].values, &[1.0, 1.0]);
     }
 
     #[test]

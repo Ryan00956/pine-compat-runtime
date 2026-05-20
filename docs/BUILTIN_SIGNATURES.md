@@ -209,6 +209,7 @@ array.mode(id: float-array|int-array) -> series element
 array.percentile_nearest_rank(id: float-array|int-array, percentage: numeric-compatible) -> series element
 array.percentile_linear_interpolation(id: float-array|int-array, percentage: numeric-compatible) -> series float
 array.percentrank(id: float-array|int-array, index: simple int) -> series float
+array.covariance(id1: float-array|int-array, id2: float-array|int-array, biased?: bool-compatible) -> series float
 array.standardize(id: float-array|int-array) -> float-array
 array.variance(id: float-array|int-array, biased?: bool-compatible) -> series float
 array.stdev(id: float-array|int-array, biased?: bool-compatible) -> series float
@@ -235,7 +236,7 @@ are supplied; invalid ranges are no-ops. `array.slice` allocates a same-kind
 array containing the half-open `[index_from, index_to)` window; invalid bounds
 return `na` at runtime. `array.concat` requires two arrays of the same kind,
 appends `id2` values to `id` in place, and returns `id`. Numeric array
-`binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/standardize/variance/stdev`
+`binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev`
 helpers may also be called with method syntax on float and int array receivers.
 Binary search helpers expect the current array contents to be sorted ascending;
 `array.binary_search` returns `-1` when not found, while leftmost/rightmost
@@ -249,6 +250,9 @@ remaining values occur only once.
 Percentile helpers operate on non-`na` values sorted ascending. Percentages
 outside `0..=100`, empty/all-`na` arrays, and invalid percentrank indexes
 return `na`.
+`array.covariance` requires two same-size numeric arrays, skips pairs where
+either side is `na`, and uses a biased population estimate by default; pass
+`false` for an unbiased sample estimate.
 `array.standardize` allocates a new float array, uses non-`na` values to
 calculate mean and population standard deviation, preserves `na` element
 positions when at least one numeric value is present, and returns an empty

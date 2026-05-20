@@ -131,6 +131,7 @@ array.mode	partial	float/int arrays only; returns na when no repeated value	test
 array.percentile_nearest_rank	partial	float/int arrays only; percentage 0..100	tests/fixtures/runtime/array_statistics.pine
 array.percentile_linear_interpolation	partial	float/int arrays only; percentage 0..100; returns float	tests/fixtures/runtime/array_statistics.pine
 array.percentrank	partial	float/int arrays only; simple int index; returns float	tests/fixtures/runtime/array_statistics.pine
+array.covariance	partial	float/int arrays only; same-size arrays; optional biased bool; returns float	tests/fixtures/runtime/array_statistics.pine
 array.standardize	partial	float/int arrays only; returns new float array	tests/fixtures/runtime/array_statistics.pine
 array.variance	partial	float/int arrays only; optional biased bool; returns float	tests/fixtures/runtime/array_statistics.pine
 array.stdev	partial	float/int arrays only; optional biased bool; returns float	tests/fixtures/runtime/array_statistics.pine

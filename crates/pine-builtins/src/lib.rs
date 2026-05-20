@@ -987,6 +987,24 @@ const ARRAY_VARIANCE_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_COVARIANCE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id1",
+        accepts: Accepts::NumericArray,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "id2",
+        accepts: Accepts::NumericArray,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "biased",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+];
+
 const ARRAY_PERCENTILE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1921,6 +1939,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "array.percentrank",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_PERCENTRANK_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.covariance",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_COVARIANCE_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
