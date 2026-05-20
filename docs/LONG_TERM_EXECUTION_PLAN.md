@@ -164,8 +164,8 @@ Scope:
 
 - Add clearer diagnostics/profile fields or per-variable `max_bars_back`
   handling for scripts that depend on dynamic history.
-- Expand tests around `na`, first-bar behavior, and history inside loops and
-  UDFs.
+- Continue expanding tests around `na`, first-bar behavior, and interactions
+  with more built-ins as needed.
 - Tighten qualifier propagation for const, input, simple, and series values.
 - Audit built-in signatures against actual accepted qualifier behavior.
 
@@ -193,6 +193,7 @@ Suggested commits:
 7. `Support series history offsets`
 8. `Expose history retention profile`
 9. `Support indicator max bars back`
+10. `Cover dynamic history scopes`
 
 ## Phase D: Built-In Coverage Expansion
 

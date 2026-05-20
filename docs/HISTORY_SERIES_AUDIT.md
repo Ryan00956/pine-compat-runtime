@@ -28,7 +28,8 @@ rules.
 - Constant history is fixture-covered for built-in series, expression history,
   branch bodies, loop bodies, and user-defined function parameters.
 - Dynamic integer history is fixture-covered for built-in series, expression
-  history, and series-qualified offsets.
+  history, series-qualified offsets, loop-produced offsets, user-defined
+  function parameters, and realtime forming rollback.
 
 ## Current Rejections
 

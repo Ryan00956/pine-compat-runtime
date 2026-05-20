@@ -174,6 +174,39 @@ fn array_rollback_fixture_restores_confirmed_store_between_forming_updates() {
     assert_values(&result.plots[8].values, &[1.0, 2.0, 3.0]);
 }
 
+#[test]
+fn dynamic_history_fixture_rolls_back_forming_history() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/dynamic_history_rollback.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[1.0, 1.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should read confirmed history only");
+    assert_values(&result.plots[0].values, &[1.0, 1.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit dynamic history");
+    assert_values(&result.plots[0].values, &[1.0, 1.0]);
+    assert_values(&runtime.confirmed_result().plots[0].values, &[1.0, 1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(5.0)))
+        .expect("next forming update should use latest confirmed history");
+    assert_values(&result.plots[0].values, &[1.0, 1.0, 4.0]);
+}
+
 fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");

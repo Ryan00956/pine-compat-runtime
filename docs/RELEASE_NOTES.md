@@ -142,12 +142,13 @@ feature-level matrix and its fixture paths.
 - `for`: supports inclusive integer ranges, loop control, and loop results, but
   does not claim full Pine loop compatibility.
 - `history references`: supports constant non-negative offsets and guarded
-  dynamic integer offsets, including `series int`.
+  dynamic integer offsets, including `series int`, loop-produced offsets, and
+  user-defined function parameters.
 - `max_bars_back`: supports indicator-level constant non-negative retention
   bounds for dynamic history.
 - `color.*` named constants: supports the current common registry only.
-- `realtime forming rollback`: covers output, `var`, callsite, and array
-  rollback; `varip` remains unsupported.
+- `realtime forming rollback`: covers output, `var`, callsite, array, and
+  dynamic history rollback; `varip` remains unsupported.
 
 ### Explicitly Unsupported
 

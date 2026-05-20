@@ -1,0 +1,4 @@
+//@version=5
+indicator("Dynamic history rollback", max_bars_back=2)
+offset = bar_index == 0 ? 0 : 1
+plot(close[offset])

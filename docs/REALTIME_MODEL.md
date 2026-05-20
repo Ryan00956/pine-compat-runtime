@@ -101,9 +101,11 @@ produce incorrect realtime behavior.
 ## Current Status
 
 Phase 7 now defines the model and implements rollback for repeated forming
-updates. Realtime fixtures cover temporary output rollback, `var` rollback, and
-stateful TA callsite rollback inside conditional branches. `varip` remains
-rejected until its intrabar persistence semantics are implemented precisely.
+updates. Realtime fixtures cover temporary output rollback, `var` rollback,
+stateful TA callsite rollback inside conditional branches, array rollback, and
+dynamic history reads from confirmed history during forming updates. `varip`
+remains rejected until its intrabar persistence semantics are implemented
+precisely.
 
 Next work:
 
