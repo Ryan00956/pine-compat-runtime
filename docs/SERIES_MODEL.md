@@ -90,6 +90,8 @@ Initial rules:
   qualifier, including `series int`.
 - scripts with any dynamic offset use conservative full-history retention up to
   the runtime cap.
+- `indicator(..., max_bars_back=N)` bounds dynamic history retention when `N`
+  is a non-negative constant integer.
 
 The lowering stage should determine whether `expr` needs a compiler-generated
 series id. For example:
@@ -173,12 +175,13 @@ HIR lowering records static history metadata:
 When no dynamic offsets exist, the runtime trims each series buffer to that
 series' maximum constant offset and stores no committed history for series that
 are never history-indexed. When any dynamic offset exists, retention remains
-conservative and keeps full committed series history up to the runtime cap. The
-profile reports these modes as `staticTrimmed` and `dynamicFull`.
+conservative and keeps full committed series history up to the runtime cap. A
+declared `max_bars_back` bounds retained history for dynamic scripts and is
+reported as `maxBarsBack`. The profile also reports `staticTrimmed` and
+`dynamicFull`.
 
 Later phases should add:
 
-- optional `max_bars_back` handling
 - configurable memory limits and diagnostics for excessive history
 
 ## Realtime Preview

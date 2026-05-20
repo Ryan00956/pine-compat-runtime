@@ -69,8 +69,8 @@ Dynamic history offsets now use an explicit integer-kind policy:
 
 ## Recommended Next Steps
 
-1. Add optional `max_bars_back` handling or more explicit diagnostics/profile
-   fields for scripts that depend on dynamic offsets.
+1. Add more explicit diagnostics/profile fields for scripts that depend on
+   dynamic offsets beyond the indicator-level `max_bars_back` bound.
 2. Add a precise helper for qualifier-bound argument acceptance so built-in
    signatures can say "at most input" or "at most simple" without bespoke enum
    variants for every kind.

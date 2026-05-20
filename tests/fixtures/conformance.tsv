@@ -154,6 +154,7 @@ function side effects	unsupported	output, declaration, input calls, and array mu
 color.* named constants	partial	common registry only	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 #RRGGBB/#RRGGBBAA color literals	supported	normalized runtime color value	tests/fixtures/syntax/phase1_basic.pine
 history references	partial	constant non-negative offsets and dynamic integer offsets including series int; covers built-in series, expression history, branches, loops, and UDF parameters	tests/fixtures/runtime/na.pine;tests/fixtures/runtime/history_edges.pine;tests/fixtures/runtime/dynamic_history.pine;tests/fixtures/runtime/series_history_offset.pine
+max_bars_back	partial	indicator-level constant non-negative bound for dynamic history retention	tests/fixtures/runtime/max_bars_back.pine
 var	supported	historical persistence and local declaration-site storage	tests/fixtures/runtime/local_scope.pine;tests/fixtures/realtime/var_rollback.pine
 realtime forming rollback	partial	forming updates roll back output, var, callsite, and array state to confirmed bars	tests/fixtures/realtime/forming_close.pine;tests/fixtures/realtime/var_rollback.pine;tests/fixtures/realtime/conditional_ta_rollback.pine;tests/fixtures/realtime/array_rollback.pine
 varip	unsupported	intrabar persistence not implemented	tests/fixtures/sema/unsupported_varip.pine

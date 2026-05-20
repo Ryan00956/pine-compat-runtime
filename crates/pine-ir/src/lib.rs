@@ -59,6 +59,7 @@ pub struct HirProgram {
     pub next_series_id: u32,
     pub next_call_site_id: u32,
     pub next_var_slot_id: u32,
+    pub max_bars_back: Option<u32>,
     pub history: HirHistoryRequirements,
     pub series_history: Vec<HirSeriesHistoryRequirement>,
 }

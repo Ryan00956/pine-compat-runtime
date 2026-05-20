@@ -214,6 +214,7 @@ pub struct RuntimeProfile {
     pub max_series_depth: usize,
     pub history_retention_mode: HistoryRetentionMode,
     pub history_max_constant_offset: u32,
+    pub history_max_bars_back: Option<u32>,
     pub history_has_dynamic_offsets: bool,
     pub symbol_slots: usize,
     pub symbol_capacity: usize,
@@ -269,6 +270,7 @@ pub struct RuntimeProfile {
 pub enum HistoryRetentionMode {
     StaticTrimmed,
     DynamicFull,
+    MaxBarsBack,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -435,6 +437,7 @@ pub struct HistoricalRuntime<'a> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct SeriesRetention {
     static_depths: Option<HashMap<SeriesId, usize>>,
+    max_bars_back: Option<usize>,
 }
 
 impl SeriesRetention {
@@ -442,6 +445,7 @@ impl SeriesRetention {
         if program.history.has_dynamic_offsets {
             return Self {
                 static_depths: None,
+                max_bars_back: program.max_bars_back.map(|value| value as usize),
             };
         }
 
@@ -458,17 +462,29 @@ impl SeriesRetention {
                     })
                     .collect(),
             ),
+            max_bars_back: program.max_bars_back.map(|value| value as usize),
         }
     }
 
     fn max_depth_for(&self, series_id: SeriesId) -> Option<usize> {
-        self.static_depths
-            .as_ref()
-            .map(|depths| depths.get(&series_id).copied().unwrap_or(0))
+        match (&self.static_depths, self.max_bars_back) {
+            (Some(depths), Some(max_bars_back)) => Some(
+                depths
+                    .get(&series_id)
+                    .copied()
+                    .unwrap_or(0)
+                    .min(max_bars_back),
+            ),
+            (Some(depths), None) => Some(depths.get(&series_id).copied().unwrap_or(0)),
+            (None, Some(max_bars_back)) => Some(max_bars_back),
+            (None, None) => None,
+        }
     }
 
     fn mode(&self) -> HistoryRetentionMode {
-        if self.static_depths.is_some() {
+        if self.max_bars_back.is_some() {
+            HistoryRetentionMode::MaxBarsBack
+        } else if self.static_depths.is_some() {
             HistoryRetentionMode::StaticTrimmed
         } else {
             HistoryRetentionMode::DynamicFull
@@ -997,6 +1013,7 @@ impl<'a> HistoricalRuntime<'a> {
             max_series_depth: self.series_store.max_depth(),
             history_retention_mode: self.series_retention.mode(),
             history_max_constant_offset: self.program.history.max_constant_offset,
+            history_max_bars_back: self.program.max_bars_back,
             history_has_dynamic_offsets: self.program.history.has_dynamic_offsets,
             symbol_slots: self.current_symbols.len(),
             symbol_capacity: self.current_symbols.capacity(),
@@ -6557,6 +6574,7 @@ plot(ma)
             HistoryRetentionMode::StaticTrimmed
         );
         assert_eq!(profiled.profile.history_max_constant_offset, 0);
+        assert_eq!(profiled.profile.history_max_bars_back, None);
         assert!(!profiled.profile.history_has_dynamic_offsets);
         assert_eq!(profiled.profile.rolling_window_slots, 1);
         assert_eq!(profiled.profile.rolling_window_values, 2);
@@ -6605,6 +6623,7 @@ plot(close[2])
             HistoryRetentionMode::StaticTrimmed
         );
         assert_eq!(profiled.profile.history_max_constant_offset, 2);
+        assert_eq!(profiled.profile.history_max_bars_back, None);
         assert!(!profiled.profile.history_has_dynamic_offsets);
     }
 
@@ -6638,6 +6657,39 @@ plot(close[length])
             HistoryRetentionMode::DynamicFull
         );
         assert_eq!(profiled.profile.history_max_constant_offset, 0);
+        assert_eq!(profiled.profile.history_max_bars_back, None);
+        assert!(profiled.profile.history_has_dynamic_offsets);
+    }
+
+    #[test]
+    fn max_bars_back_bounds_dynamic_history_retention() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("dynamic history retention", max_bars_back=2)
+offset = bar_index == 0 ? 0 : 3
+plot(close[offset])
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+        let profiled =
+            run_historical_profiled(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(profiled.result.plots.len(), 1);
+        assert_eq!(profiled.result.plots[0].values[0], PineValue::Float(1.0));
+        assert_eq!(profiled.result.plots[0].values[1..], vec![PineValue::Na; 3]);
+        assert_eq!(profiled.profile.max_series_depth, 2);
+        assert_eq!(
+            profiled.profile.history_retention_mode,
+            HistoryRetentionMode::MaxBarsBack
+        );
+        assert_eq!(profiled.profile.history_max_bars_back, Some(2));
         assert!(profiled.profile.history_has_dynamic_offsets);
     }
 

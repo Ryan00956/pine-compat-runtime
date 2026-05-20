@@ -1161,6 +1161,35 @@ impl Analyzer {
         self.validate_array_value_args(signature, args, arg_types);
         self.validate_array_concat_args(signature, args, arg_types);
         self.validate_array_from_args(signature, args, arg_types);
+        self.validate_indicator_args(signature, args);
+    }
+
+    fn validate_indicator_args(&mut self, signature: &BuiltinSignature, args: &[CallArg]) {
+        if signature.name != "indicator" {
+            return;
+        }
+
+        for (index, arg) in args.iter().enumerate() {
+            let is_max_bars_back = arg.name.as_deref() == Some("max_bars_back")
+                || (arg.name.is_none()
+                    && signature
+                        .params
+                        .get(index)
+                        .is_some_and(|param| param.name == "max_bars_back"));
+            if !is_max_bars_back {
+                continue;
+            }
+
+            if let Some(value) = const_int_value(&arg.value)
+                && value < 0
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`indicator` argument `max_bars_back` must be non-negative",
+                    arg.span,
+                ));
+            }
+        }
     }
 
     fn validate_array_value_args(
@@ -1730,12 +1759,14 @@ impl Analyzer {
 
         let symbols = self.lower_symbols();
         let history = infer_history_requirements(&statements, &symbols);
+        let max_bars_back = infer_max_bars_back(&statements);
         Some(HirProgram {
             symbols,
             statements,
             next_series_id: self.next_series_id,
             next_call_site_id: self.next_call_site_id,
             next_var_slot_id: self.next_var_slot_id,
+            max_bars_back,
             history: history.program,
             series_history: history.series,
         })
@@ -2728,6 +2759,102 @@ fn infer_history_requirements(
                 has_dynamic_offsets: requirements.has_dynamic_offsets,
             })
             .collect(),
+    }
+}
+
+fn infer_max_bars_back(statements: &[HirStmt]) -> Option<u32> {
+    statements.iter().find_map(max_bars_back_from_stmt)
+}
+
+fn max_bars_back_from_stmt(statement: &HirStmt) -> Option<u32> {
+    match &statement.kind {
+        HirStmtKind::Expr(expr)
+        | HirStmtKind::Decl { value: expr, .. }
+        | HirStmtKind::Reassign { value: expr, .. }
+        | HirStmtKind::TupleDecl { value: expr, .. } => max_bars_back_from_expr(expr),
+        HirStmtKind::If {
+            condition,
+            then_branch,
+            else_branch,
+        } => max_bars_back_from_expr(condition)
+            .or_else(|| infer_max_bars_back(then_branch))
+            .or_else(|| infer_max_bars_back(else_branch)),
+        HirStmtKind::For {
+            from,
+            to,
+            step,
+            body,
+            ..
+        } => max_bars_back_from_expr(from)
+            .or_else(|| max_bars_back_from_expr(to))
+            .or_else(|| step.as_ref().and_then(max_bars_back_from_expr))
+            .or_else(|| infer_max_bars_back(body)),
+        HirStmtKind::While { condition, body } => {
+            max_bars_back_from_expr(condition).or_else(|| infer_max_bars_back(body))
+        }
+        HirStmtKind::Break | HirStmtKind::Continue => None,
+    }
+}
+
+fn max_bars_back_from_expr(expr: &HirExpr) -> Option<u32> {
+    match &expr.kind {
+        HirExprKind::Call { callee, args, .. } if callee == "indicator" => args
+            .iter()
+            .enumerate()
+            .find(|(index, arg)| {
+                arg.name.as_deref() == Some("max_bars_back") || (arg.name.is_none() && *index == 3)
+            })
+            .and_then(|(_, arg)| constant_hir_int(&arg.value))
+            .and_then(|value| u32::try_from(value).ok()),
+        HirExprKind::Call { args, .. } => args
+            .iter()
+            .find_map(|arg| max_bars_back_from_expr(&arg.value)),
+        HirExprKind::Unary { expr, .. } => max_bars_back_from_expr(expr),
+        HirExprKind::Binary { left, right, .. } => {
+            max_bars_back_from_expr(left).or_else(|| max_bars_back_from_expr(right))
+        }
+        HirExprKind::Ternary {
+            condition,
+            then_expr,
+            else_expr,
+        } => max_bars_back_from_expr(condition)
+            .or_else(|| max_bars_back_from_expr(then_expr))
+            .or_else(|| max_bars_back_from_expr(else_expr)),
+        HirExprKind::Switch { selector, arms } => selector
+            .as_deref()
+            .and_then(max_bars_back_from_expr)
+            .or_else(|| {
+                arms.iter().find_map(|arm| {
+                    arm.condition
+                        .as_ref()
+                        .and_then(max_bars_back_from_expr)
+                        .or_else(|| max_bars_back_from_expr(&arm.result))
+                })
+            }),
+        HirExprKind::For {
+            from,
+            to,
+            step,
+            statements,
+            result,
+            ..
+        } => max_bars_back_from_expr(from)
+            .or_else(|| max_bars_back_from_expr(to))
+            .or_else(|| step.as_deref().and_then(max_bars_back_from_expr))
+            .or_else(|| infer_max_bars_back(statements))
+            .or_else(|| max_bars_back_from_expr(result)),
+        HirExprKind::Tuple(items) => items.iter().find_map(max_bars_back_from_expr),
+        HirExprKind::Block { statements, result } => {
+            infer_max_bars_back(statements).or_else(|| max_bars_back_from_expr(result))
+        }
+        HirExprKind::History { expr, offset } => max_bars_back_from_expr(expr).or_else(|| {
+            if let HirHistoryOffset::Dynamic(offset) = offset {
+                max_bars_back_from_expr(offset)
+            } else {
+                None
+            }
+        }),
+        HirExprKind::Literal(_) | HirExprKind::Symbol(_) | HirExprKind::Builtin(_) => None,
     }
 }
 
@@ -3834,6 +3961,49 @@ mod tests {
         assert!(analysis.compatibility.unsupported.is_empty());
         let hir = analysis.hir.expect("HIR");
         assert!(hir.history.has_dynamic_offsets);
+    }
+
+    #[test]
+    fn accepts_indicator_max_bars_back() {
+        let analysis = analyze("indicator(\"Demo\", max_bars_back=10)\nplot(close[bar_index])\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.expect("HIR");
+        assert_eq!(hir.max_bars_back, Some(10));
+    }
+
+    #[test]
+    fn rejects_negative_indicator_max_bars_back() {
+        let analysis = analyze("indicator(\"Demo\", max_bars_back=-1)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_non_const_indicator_max_bars_back() {
+        let analysis = analyze("indicator(\"Demo\", max_bars_back=bar_index)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
     }
 
     #[test]

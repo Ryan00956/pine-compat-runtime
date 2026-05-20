@@ -87,7 +87,7 @@ Scope:
 
 Out of scope:
 
-- `max_bars_back` declarations.
+- Per-variable `max_bars_back` declarations and inference.
 - Object systems.
 - Multi-timeframe data.
 
@@ -162,8 +162,8 @@ retention trims static-only scripts to those requirements.
 
 Scope:
 
-- Add optional `max_bars_back` handling or clearer diagnostics/profile fields
-  for scripts that depend on dynamic history.
+- Add clearer diagnostics/profile fields or per-variable `max_bars_back`
+  handling for scripts that depend on dynamic history.
 - Expand tests around `na`, first-bar behavior, and history inside loops and
   UDFs.
 - Tighten qualifier propagation for const, input, simple, and series values.
@@ -192,6 +192,7 @@ Suggested commits:
 6. `Trim static history retention`
 7. `Support series history offsets`
 8. `Expose history retention profile`
+9. `Support indicator max bars back`
 
 ## Phase D: Built-In Coverage Expansion
 

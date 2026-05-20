@@ -96,12 +96,13 @@ ohlc4 = (open + high + low + close) / 4
 ## Declarations
 
 ```text
-indicator(title: const string, shorttitle?: const string, overlay?: const bool, ...)
+indicator(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, ...)
   -> void
 ```
 
-Only metadata arguments needed by the output model should be accepted in Phase
-1. Unsupported named arguments should produce compatibility diagnostics.
+Only metadata arguments needed by the output and history-retention model should
+be accepted in Phase 1. `max_bars_back` must be non-negative when provided.
+Unsupported named arguments should produce compatibility diagnostics.
 
 ## Inputs
 

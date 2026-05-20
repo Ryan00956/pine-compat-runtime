@@ -22,8 +22,9 @@ compatibility matrix.
 
 The runtime still makes compatibility claims by tested feature. Recursive
 functions, function side effects, `varip` intrabar persistence, `request.*`,
-`strategy.*`, alerts, imports, arrays, drawing objects, and dynamic history
-offsets remain outside the executable subset and should produce diagnostics.
+`strategy.*`, alerts, imports, drawing objects, array history snapshots, and
+per-variable `max_bars_back` declarations remain outside the executable subset
+and should produce diagnostics.
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes. Skipped series values are committed as `na` so history buffers
 remain bar-aligned.
@@ -176,8 +177,9 @@ depth for series buffers, plot values, and runtime state maps. It also reports
 history retention mode, maximum static offset, and dynamic-offset presence. It
 is a portable storage profile, not a process-wide allocator hook. Static-only
 history is trimmed to HIR-inferred per-series retention requirements. Dynamic
-history offsets keep full committed series history up to a runtime cap so they
-cannot grow storage without bound.
+history offsets keep full committed series history up to a runtime cap, or to
+the indicator-level `max_bars_back` bound when provided, so they cannot grow
+storage without bound.
 
 Rolling TA state is optimized for `ta.sma`, `ta.bb`, `ta.highest`, and
 `ta.lowest`. These functions now maintain per-callsite rolling windows instead

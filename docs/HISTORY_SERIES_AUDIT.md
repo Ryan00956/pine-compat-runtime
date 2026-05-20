@@ -38,7 +38,7 @@ rules.
   `dynamic_history_offset`.
 - Array, object, map, matrix, and drawing-object history snapshots are not
   designed.
-- `max_bars_back` inference and declarations are not implemented.
+- Per-variable `max_bars_back` inference and declarations are not implemented.
 
 ## Series Offset Policy
 
@@ -50,6 +50,8 @@ Series integer offsets are supported as a guarded dynamic subset:
 - out-of-range offsets return `na`
 - scripts with any dynamic offset keep full committed series history up to the
   configured runtime cap
+- `indicator(..., max_bars_back=N)` bounds dynamic retention when `N` is a
+  non-negative constant integer
 - runtime profiles expose the retention mode and HIR history requirement fields
 
 Static-only scripts still use HIR metadata to trim retention.
@@ -61,7 +63,7 @@ Static-only scripts still use HIR metadata to trim retention.
    Current findings are in `docs/QUALIFIER_AUDIT.md`.
 3. Audit built-in signatures that currently accept broader qualifiers than the
    compatibility docs claim.
-4. Add optional `max_bars_back` declarations or tighter runtime diagnostics for
+4. Add tighter runtime diagnostics or per-variable `max_bars_back` handling for
    scripts that depend on dynamic history.
 
 ## Acceptance Criteria For Expanding History

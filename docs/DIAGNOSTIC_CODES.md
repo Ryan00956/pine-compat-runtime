@@ -28,6 +28,8 @@ improved over time, but codes should remain stable once published.
 - `E_BRANCH_TYPE`: ternary branch type mismatch.
 - `E_CALL_ARG_NAME`: unknown named argument.
 - `E_CALL_ARG_TYPE`: argument type does not satisfy the built-in signature.
+- `E_CALL_ARG_VALUE`: argument type is valid, but the value is outside the
+  supported range.
 - `E_CALL_ARITY`: wrong number of call arguments.
 - `E_CALL_TARGET`: invalid function call target.
 - `E_CONDITION_TYPE`: condition expression is not bool.

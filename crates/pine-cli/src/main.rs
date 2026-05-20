@@ -344,6 +344,7 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"maxSeriesDepth\":{},",
             "\"historyRetentionMode\":\"{}\",",
             "\"historyMaxConstantOffset\":{},",
+            "\"historyMaxBarsBack\":{},",
             "\"historyHasDynamicOffsets\":{},",
             "\"symbolSlots\":{},",
             "\"symbolCapacity\":{},",
@@ -402,6 +403,7 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.max_series_depth,
         history_retention_mode_json(profile.history_retention_mode),
         profile.history_max_constant_offset,
+        option_u32_json(profile.history_max_bars_back),
         profile.history_has_dynamic_offsets,
         profile.symbol_slots,
         profile.symbol_capacity,
@@ -458,7 +460,12 @@ fn history_retention_mode_json(mode: HistoryRetentionMode) -> &'static str {
     match mode {
         HistoryRetentionMode::StaticTrimmed => "staticTrimmed",
         HistoryRetentionMode::DynamicFull => "dynamicFull",
+        HistoryRetentionMode::MaxBarsBack => "maxBarsBack",
     }
+}
+
+fn option_u32_json(value: Option<u32>) -> String {
+    value.map_or_else(|| "null".to_owned(), |value| value.to_string())
 }
 
 fn plots_json(plots: &[pine_runtime::PlotSeries]) -> String {
@@ -810,6 +817,7 @@ mod tests {
             max_series_depth: 3,
             history_retention_mode: HistoryRetentionMode::DynamicFull,
             history_max_constant_offset: 2,
+            history_max_bars_back: None,
             history_has_dynamic_offsets: true,
             symbol_slots: 10,
             symbol_capacity: 14,
@@ -869,6 +877,7 @@ mod tests {
         assert!(output.contains(r#""maxSeriesDepth":3"#));
         assert!(output.contains(r#""historyRetentionMode":"dynamicFull""#));
         assert!(output.contains(r#""historyMaxConstantOffset":2"#));
+        assert!(output.contains(r#""historyMaxBarsBack":null"#));
         assert!(output.contains(r#""historyHasDynamicOffsets":true"#));
         assert!(output.contains(r#""arrayValues":2"#));
         assert!(output.contains(r#""rollingWindowValues":2"#));
