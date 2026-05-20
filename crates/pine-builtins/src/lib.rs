@@ -612,6 +612,47 @@ const STR_REPEAT_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const STR_REPLACE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "target",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "replacement",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "occurrence",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+];
+
+const STR_REPLACE_ALL_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "target",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "replacement",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+];
+
 const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "a",
@@ -1097,6 +1138,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "str.repeat",
         phase: BuiltinPhase::Phase1Core,
         params: STR_REPEAT_PARAMS,
+        returns: ReturnSpec::PromotedString,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.replace",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_REPLACE_PARAMS,
+        returns: ReturnSpec::PromotedString,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.replace_all",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_REPLACE_ALL_PARAMS,
         returns: ReturnSpec::PromotedString,
         variadic: false,
     },

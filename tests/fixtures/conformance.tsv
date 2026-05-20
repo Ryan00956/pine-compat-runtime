@@ -37,6 +37,8 @@ str.pos	supported	fixture-derived executable subset	tests/fixtures/runtime/strin
 str.substring	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
 str.trim	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
 str.repeat	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
+str.replace	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
+str.replace_all	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
 math.abs	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.max	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.min	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine

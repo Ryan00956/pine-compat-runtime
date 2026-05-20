@@ -1334,6 +1334,8 @@ impl<'a> HistoricalRuntime<'a> {
             "str.substring" => self.eval_str_substring(args),
             "str.trim" => self.eval_str_trim(args),
             "str.repeat" => self.eval_str_repeat(args),
+            "str.replace" => self.eval_str_replace(args),
+            "str.replace_all" => self.eval_str_replace_all(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -1921,6 +1923,68 @@ impl<'a> HistoricalRuntime<'a> {
             result.push_str(&source);
         }
         Ok(PineValue::String(result))
+    }
+
+    fn eval_str_replace(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some((source, target, replacement)) = self.eval_replace_strings(args)? else {
+            return Ok(PineValue::Na);
+        };
+        let occurrence = if let Some(arg) = args.get(3) {
+            self.eval_optional_string_index(&arg.value, 0)?
+        } else {
+            0
+        };
+        if occurrence < 0 {
+            return Ok(PineValue::String(source));
+        }
+
+        let result = if target.is_empty() {
+            replace_zero_width_occurrence(&source, &replacement, occurrence as usize)
+        } else {
+            replace_nth_non_overlapping(&source, &target, &replacement, occurrence as usize)
+        };
+        self.string_value_or_error(result, "str.replace")
+    }
+
+    fn eval_str_replace_all(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some((source, target, replacement)) = self.eval_replace_strings(args)? else {
+            return Ok(PineValue::Na);
+        };
+        let result = if target.is_empty() {
+            replace_all_zero_width_boundaries(&source, &replacement)
+        } else {
+            source.replace(&target, &replacement)
+        };
+        self.string_value_or_error(result, "str.replace_all")
+    }
+
+    fn eval_replace_strings(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<Option<(String, String, String)>, RuntimeError> {
+        let PineValue::String(source) = self.eval_expr(&args[0].value)? else {
+            return Ok(None);
+        };
+        let PineValue::String(target) = self.eval_expr(&args[1].value)? else {
+            return Ok(None);
+        };
+        let PineValue::String(replacement) = self.eval_expr(&args[2].value)? else {
+            return Ok(None);
+        };
+        Ok(Some((source, target, replacement)))
+    }
+
+    fn string_value_or_error(
+        &self,
+        value: String,
+        function: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        if value.chars().count() > MAX_STRING_CHARS {
+            return Err(RuntimeError {
+                message: format!("{function} result cannot exceed {MAX_STRING_CHARS} characters"),
+            });
+        }
+        Ok(PineValue::String(value))
     }
 
     fn eval_string_index(&mut self, expr: &HirExpr) -> Result<Option<i64>, RuntimeError> {
@@ -2976,6 +3040,52 @@ fn color_component(color: u32, component: ColorComponent) -> f64 {
     }
 }
 
+fn replace_nth_non_overlapping(
+    source: &str,
+    target: &str,
+    replacement: &str,
+    occurrence: usize,
+) -> String {
+    let Some((byte_index, _)) = source.match_indices(target).nth(occurrence) else {
+        return source.to_owned();
+    };
+    let mut result = String::with_capacity(source.len() + replacement.len());
+    result.push_str(&source[..byte_index]);
+    result.push_str(replacement);
+    result.push_str(&source[byte_index + target.len()..]);
+    result
+}
+
+fn replace_zero_width_occurrence(source: &str, replacement: &str, occurrence: usize) -> String {
+    let char_count = source.chars().count();
+    if occurrence > char_count {
+        return source.to_owned();
+    }
+
+    let mut result = String::with_capacity(source.len() + replacement.len());
+    if occurrence == 0 {
+        result.push_str(replacement);
+    }
+    for (index, ch) in source.chars().enumerate() {
+        result.push(ch);
+        if index + 1 == occurrence {
+            result.push_str(replacement);
+        }
+    }
+    result
+}
+
+fn replace_all_zero_width_boundaries(source: &str, replacement: &str) -> String {
+    let mut result =
+        String::with_capacity(source.len() + replacement.len() * (source.chars().count() + 1));
+    result.push_str(replacement);
+    for ch in source.chars() {
+        result.push(ch);
+        result.push_str(replacement);
+    }
+    result
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum StringCase {
     Upper,
@@ -3987,6 +4097,13 @@ trimmed = str.trim(" \tSMA\n")
 repeated = str.repeat("ab", 2, "-")
 empty_repeat = str.repeat("ab", 0)
 missing_repeat = str.repeat("ab", na)
+replace_first = str.replace("hello", "l", "1")
+replace_second = str.replace("hello", "l", "1", 1)
+replace_missing = str.replace("hello", "z", "1", 0)
+replace_all = str.replace_all("hello", "l", "1")
+replace_boundary = str.replace("ab", "", ".", 1)
+replace_all_boundaries = str.replace_all("ab", "", ".")
+missing_replace = str.replace(na, "x", "y")
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
@@ -3996,6 +4113,9 @@ plot(na(missing_pos) ? 1 : 0)
 plot(slice == "M" and tail == "MA" and wide == "MA" and na_begin == "S" ? 1 : 0)
 plot(trimmed == upper and repeated == "ab-ab" and empty_repeat == "" ? 1 : 0)
 plot(na(missing_repeat) ? 1 : 0)
+plot(replace_first == "he1lo" and replace_second == "hel1o" and replace_missing == "hello" ? 1 : 0)
+plot(replace_all == "he11o" and replace_boundary == "a.b" and replace_all_boundaries == ".a.b." ? 1 : 0)
+plot(na(missing_replace) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -4017,6 +4137,9 @@ plot(na(missing_repeat) ? 1 : 0)
         assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
     }
 
     #[test]

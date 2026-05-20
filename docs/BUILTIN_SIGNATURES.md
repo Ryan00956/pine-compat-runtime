@@ -213,6 +213,10 @@ str.substring(source: string-compatible, begin_pos: int-compatible, end_pos?: in
 str.trim(string: string-compatible) -> string with same qualifier
 str.repeat(source: string-compatible, repeat: int-compatible, separator?: string-compatible)
   -> string with strongest qualifier
+str.replace(source: string-compatible, target: string-compatible, replacement: string-compatible, occurrence?: int-compatible)
+  -> string with strongest qualifier
+str.replace_all(source: string-compatible, target: string-compatible, replacement: string-compatible)
+  -> string with strongest qualifier
 ```
 
 Supported `str.*` helpers return `na` for `na` inputs.
@@ -226,6 +230,10 @@ errors.
 `str.trim` removes leading and trailing ASCII whitespace only. `str.repeat`
 defaults `separator` to an empty string, returns an empty string for repeat 0,
 and errors for negative counts or results over 40,960 characters.
+`str.replace` replaces one non-overlapping occurrence, defaulting `occurrence`
+to 0. `str.replace_all` replaces all non-overlapping occurrences. Empty
+targets replace zero-width character boundaries. Replacement results over
+40,960 characters are runtime errors.
 
 ## Math
 
