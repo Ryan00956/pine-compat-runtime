@@ -218,6 +218,8 @@ str.replace(source: string-compatible, target: string-compatible, replacement: s
 str.replace_all(source: string-compatible, target: string-compatible, replacement: string-compatible)
   -> string with strongest qualifier
 str.tonumber(string: string-compatible) -> float with same qualifier
+str.tostring(value: int|float|bool|string|float-array|na, format?: string-compatible)
+  -> string with strongest qualifier
 ```
 
 Supported `str.*` helpers return `na` for `na` inputs.
@@ -238,6 +240,10 @@ targets replace zero-width character boundaries. Replacement results over
 `str.tonumber` accepts strings containing ASCII digits, an optional leading
 sign, and at most one decimal point. It returns `na` for invalid formats,
 `na` inputs, and non-finite parsed results.
+`str.tostring` supports scalar int, float, bool, string, `na`, and float array
+values. Numeric formatting supports the default `#.########`, `format.mintick`
+as the default format, `format.percent` as `#.##%`, and fixture-covered custom
+patterns using `#`, `0`, `.`, `,`, and trailing `%` tokens.
 
 ## Math
 

@@ -39,6 +39,7 @@ pub enum Accepts {
     ConstOrInputFloat,
     ColorCompatible,
     StringCompatible,
+    StringConvertible,
     IntCompatible,
     PlotOrHLine,
     FloatArray,
@@ -654,6 +655,19 @@ const STR_REPLACE_ALL_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const STR_TOSTRING_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "value",
+        accepts: Accepts::StringConvertible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "format",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+];
+
 const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "a",
@@ -1164,6 +1178,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "str.tostring",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_TOSTRING_PARAMS,
+        returns: ReturnSpec::PromotedString,
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "math.abs",
         phase: BuiltinPhase::Phase1Core,
         params: MATH_NUMBER_PARAMS,
@@ -1631,6 +1652,8 @@ const NAMED_STRING_CONSTANTS: &[&str] = &[
     "size.huge",
     "display.all",
     "display.none",
+    "format.mintick",
+    "format.percent",
 ];
 
 #[must_use]

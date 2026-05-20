@@ -1337,6 +1337,7 @@ impl<'a> HistoricalRuntime<'a> {
             "str.replace" => self.eval_str_replace(args),
             "str.replace_all" => self.eval_str_replace_all(args),
             "str.tonumber" => self.eval_str_tonumber(args),
+            "str.tostring" => self.eval_str_tostring(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -1971,6 +1972,37 @@ impl<'a> HistoricalRuntime<'a> {
             .parse::<f64>()
             .ok()
             .map_or(PineValue::Na, finite_float_or_na))
+    }
+
+    fn eval_str_tostring(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let value = self.eval_expr(&args[0].value)?;
+        let format = if let Some(arg) = args.get(1) {
+            match self.eval_expr(&arg.value)? {
+                PineValue::String(format) => format,
+                PineValue::Na => "#.########".to_owned(),
+                _ => return Ok(PineValue::Na),
+            }
+        } else {
+            "#.########".to_owned()
+        };
+        let result = self.stringify_value(&value, &format);
+        self.string_value_or_error(result, "str.tostring")
+    }
+
+    fn stringify_value(&self, value: &PineValue, format: &str) -> String {
+        match value {
+            PineValue::Int(value) => format_number(*value as f64, format),
+            PineValue::Float(value) => format_number(*value, format),
+            PineValue::Bool(value) => value.to_string(),
+            PineValue::String(value) => value.clone(),
+            PineValue::Array(id) => self
+                .array_store
+                .get(id)
+                .map(|values| stringify_array(values, format))
+                .unwrap_or_else(|| "NaN".to_owned()),
+            PineValue::Na => "NaN".to_owned(),
+            _ => "NaN".to_owned(),
+        }
     }
 
     fn eval_replace_strings(
@@ -3117,6 +3149,100 @@ fn is_pine_numeric_string(value: &str) -> bool {
     saw_digit
 }
 
+fn stringify_array(values: &[PineValue], format: &str) -> String {
+    let mut result = String::from("[");
+    for (index, value) in values.iter().enumerate() {
+        if index > 0 {
+            result.push_str(", ");
+        }
+        result.push_str(&stringify_array_element(value, format));
+    }
+    result.push(']');
+    result
+}
+
+fn stringify_array_element(value: &PineValue, format: &str) -> String {
+    match value {
+        PineValue::Int(value) => format_number(*value as f64, format),
+        PineValue::Float(value) => format_number(*value, format),
+        PineValue::Bool(value) => value.to_string(),
+        PineValue::String(value) => value.clone(),
+        PineValue::Na => "NaN".to_owned(),
+        _ => "NaN".to_owned(),
+    }
+}
+
+fn format_number(value: f64, format: &str) -> String {
+    if !value.is_finite() {
+        return "NaN".to_owned();
+    }
+
+    let format = match format {
+        "" | "format.mintick" => "#.########",
+        "format.percent" => "#.##%",
+        other => other,
+    };
+    let percent = format.ends_with('%');
+    let pattern = format.strip_suffix('%').unwrap_or(format);
+    let value = if percent { value * 100.0 } else { value };
+
+    let (whole_pattern, fractional_pattern) = pattern.split_once('.').unwrap_or((pattern, ""));
+    let decimal_places = fractional_pattern
+        .chars()
+        .filter(|ch| matches!(ch, '#' | '0'))
+        .count();
+    let required_fractional = fractional_pattern.chars().filter(|ch| *ch == '0').count();
+    let min_integer_digits = whole_pattern.chars().filter(|ch| *ch == '0').count();
+    let use_grouping = whole_pattern.contains(',');
+    let rounded = if decimal_places == 0 {
+        value.round()
+    } else {
+        let factor = 10_f64.powi(decimal_places.min(308) as i32);
+        (value * factor).round() / factor
+    };
+    let negative = rounded.is_sign_negative() && rounded != 0.0;
+    let abs_value = rounded.abs();
+    let raw = format!("{abs_value:.decimal_places$}");
+    let (whole, fractional) = raw.split_once('.').unwrap_or((raw.as_str(), ""));
+    let mut whole = whole.to_owned();
+    if whole.len() < min_integer_digits {
+        whole = format!("{}{}", "0".repeat(min_integer_digits - whole.len()), whole);
+    }
+    if use_grouping {
+        whole = group_integer_digits(&whole);
+    }
+
+    let mut fractional = fractional.to_owned();
+    while fractional.len() > required_fractional && fractional.ends_with('0') {
+        fractional.pop();
+    }
+
+    let mut result = String::new();
+    if negative {
+        result.push('-');
+    }
+    result.push_str(&whole);
+    if !fractional.is_empty() {
+        result.push('.');
+        result.push_str(&fractional);
+    }
+    if percent {
+        result.push('%');
+    }
+    result
+}
+
+fn group_integer_digits(value: &str) -> String {
+    let mut result = String::new();
+    for (index, ch) in value.chars().rev().enumerate() {
+        if index > 0 && index % 3 == 0 {
+            result.push(',');
+        }
+        result.push(ch);
+    }
+    result.chars().rev().collect()
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum StringCase {
     Upper,
@@ -4107,7 +4233,7 @@ plot(channels)
     fn runs_string_helpers() {
         let source = SourceFile::new(
             "test.pine",
-            r#"indicator("strings")
+            r##"indicator("strings")
 mode = input.string("sma", "Mode")
 upper = str.upper(mode)
 lower = str.lower(upper)
@@ -4140,6 +4266,19 @@ signed_number = str.tonumber("-.5")
 invalid_number = str.tonumber("$1,234.50")
 exponent_number = str.tonumber("1e3")
 missing_number = str.tonumber(na)
+text_int = str.tostring(42)
+text_float = str.tostring(1.25)
+text_round0 = str.tostring(1.25, "#")
+text_round1 = str.tostring(1.25, "#.#")
+text_zeros = str.tostring(1.25, "#.0000")
+text_percent = str.tostring(0.1234, format.percent)
+text_bool = str.tostring(true)
+text_string = str.tostring("ok")
+text_na = str.tostring(na)
+values = array.new_float(3)
+array.set(values, 0, 1.2)
+array.set(values, 1, 2.6)
+text_array = str.tostring(values, "#")
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
@@ -4154,7 +4293,11 @@ plot(replace_all == "he11o" and replace_boundary == "a.b" and replace_all_bounda
 plot(na(missing_replace) ? 1 : 0)
 plot(number == 1234.5 and signed_number == -0.5 ? 1 : 0)
 plot(na(invalid_number) and na(exponent_number) and na(missing_number) ? 1 : 0)
-"#,
+plot(text_int == "42" and text_float == "1.25" and text_round0 == "1" and text_round1 == "1.3" ? 1 : 0)
+plot(text_zeros == "1.2500" and text_percent == "12.34%" ? 1 : 0)
+plot(text_bool == "true" and text_string == "ok" and text_na == "NaN" ? 1 : 0)
+plot(text_array == "[1, 3, NaN]" ? 1 : 0)
+"##,
         );
         let analysis = analyze_source(&source);
         assert!(
@@ -4180,6 +4323,10 @@ plot(na(invalid_number) and na(exponent_number) and na(missing_number) ? 1 : 0)
         assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
     }
 
     #[test]

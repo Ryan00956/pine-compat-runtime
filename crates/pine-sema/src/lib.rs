@@ -2742,6 +2742,17 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             matches!(arg_type.kind, ValueKind::String | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::StringConvertible => {
+            matches!(
+                arg_type.kind,
+                ValueKind::Int
+                    | ValueKind::Float
+                    | ValueKind::Bool
+                    | ValueKind::String
+                    | ValueKind::FloatArray
+                    | ValueKind::Na
+            ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::IntCompatible => {
             matches!(arg_type.kind, ValueKind::Int | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
@@ -3348,7 +3359,7 @@ plot(close, color=shade)
     #[test]
     fn accepts_string_helpers() {
         let analysis = analyze(
-            r#"indicator("strings")
+            r##"indicator("strings")
 mode = input.string("sma", "Mode")
 upper = str.upper(mode)
 lower = str.lower(upper)
@@ -3381,6 +3392,19 @@ signed_number = str.tonumber("-.5")
 invalid_number = str.tonumber("$1,234.50")
 exponent_number = str.tonumber("1e3")
 missing_number = str.tonumber(na)
+text_int = str.tostring(42)
+text_float = str.tostring(1.25)
+text_round0 = str.tostring(1.25, "#")
+text_round1 = str.tostring(1.25, "#.#")
+text_zeros = str.tostring(1.25, "#.0000")
+text_percent = str.tostring(0.1234, format.percent)
+text_bool = str.tostring(true)
+text_string = str.tostring("ok")
+text_na = str.tostring(na)
+values = array.new_float(3)
+array.set(values, 0, 1.2)
+array.set(values, 1, 2.6)
+text_array = str.tostring(values, "#")
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
@@ -3395,7 +3419,11 @@ plot(replace_all == "he11o" and replace_boundary == "a.b" and replace_all_bounda
 plot(na(missing_replace) ? 1 : 0)
 plot(number == 1234.5 and signed_number == -0.5 ? 1 : 0)
 plot(na(invalid_number) and na(exponent_number) and na(missing_number) ? 1 : 0)
-"#,
+plot(text_int == "42" and text_float == "1.25" and text_round0 == "1" and text_round1 == "1.3" ? 1 : 0)
+plot(text_zeros == "1.2500" and text_percent == "12.34%" ? 1 : 0)
+plot(text_bool == "true" and text_string == "ok" and text_na == "NaN" ? 1 : 0)
+plot(text_array == "[1, 3, NaN]" ? 1 : 0)
+"##,
         );
 
         assert!(
@@ -3417,6 +3445,7 @@ plot(na(invalid_number) and na(exponent_number) and na(missing_number) ? 1 : 0)
             "str.replace",
             "str.replace_all",
             "str.tonumber",
+            "str.tostring",
         ] {
             assert!(
                 analysis
