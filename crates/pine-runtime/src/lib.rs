@@ -1329,6 +1329,8 @@ impl<'a> HistoricalRuntime<'a> {
             "str.contains" => self.eval_str_match(args, StringMatch::Contains),
             "str.startswith" => self.eval_str_match(args, StringMatch::StartsWith),
             "str.endswith" => self.eval_str_match(args, StringMatch::EndsWith),
+            "str.pos" => self.eval_str_pos(args),
+            "str.substring" => self.eval_str_substring(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -1811,6 +1813,67 @@ impl<'a> HistoricalRuntime<'a> {
             StringMatch::EndsWith => source.ends_with(&pattern),
         };
         Ok(PineValue::Bool(matched))
+    }
+
+    fn eval_str_pos(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(source) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let pattern = match self.eval_expr(&args[1].value)? {
+            PineValue::String(pattern) => pattern,
+            PineValue::Na => return Ok(PineValue::Int(0)),
+            _ => return Ok(PineValue::Na),
+        };
+        if pattern.is_empty() {
+            return Ok(PineValue::Int(0));
+        }
+
+        Ok(source.find(&pattern).map_or(PineValue::Na, |byte_index| {
+            PineValue::Int(source[..byte_index].chars().count() as i64)
+        }))
+    }
+
+    fn eval_str_substring(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(source) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let begin = self.eval_optional_string_index(&args[1].value, 0)?;
+        let chars: Vec<char> = source.chars().collect();
+        let len = chars.len() as i64;
+        if begin < 0 || begin > len {
+            return Err(RuntimeError {
+                message: format!("str.substring begin_pos {begin} is outside string length {len}"),
+            });
+        }
+
+        let end = if let Some(arg) = args.get(2) {
+            self.eval_optional_string_index(&arg.value, len)?
+        } else {
+            len
+        }
+        .min(len);
+        if end < begin {
+            return Err(RuntimeError {
+                message: format!("str.substring end_pos {end} is less than begin_pos {begin}"),
+            });
+        }
+
+        Ok(PineValue::String(
+            chars[begin as usize..end as usize].iter().collect(),
+        ))
+    }
+
+    fn eval_optional_string_index(
+        &mut self,
+        expr: &HirExpr,
+        default: i64,
+    ) -> Result<i64, RuntimeError> {
+        Ok(match self.eval_expr(expr)? {
+            PineValue::Int(value) => value,
+            PineValue::Float(value) if value.is_finite() => value as i64,
+            PineValue::Na => default,
+            _ => default,
+        })
     }
 
     fn eval_math_abs(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -3848,10 +3911,21 @@ missing = str.length(na)
 matched = str.contains(upper, "M") and str.startswith(upper, "S") and str.endswith(upper, "A")
 empty_match = str.contains(upper, "") and str.startswith(upper, "") and str.endswith(upper, "")
 missing_match = str.contains(na, "S")
+mid = str.pos(upper, "M")
+missing_pos = str.pos(upper, "Z")
+empty_pos = str.pos(upper, "")
+na_pos = str.pos(upper, na)
+slice = str.substring(upper, mid, mid + 1)
+tail = str.substring(upper, mid)
+wide = str.substring(upper, 1, 99)
+na_begin = str.substring(upper, na, 1)
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
 plot(na(missing_match) ? 1 : 0)
+plot(mid + empty_pos + na_pos)
+plot(na(missing_pos) ? 1 : 0)
+plot(slice == "M" and tail == "MA" and wide == "MA" and na_begin == "S" ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -3868,6 +3942,36 @@ plot(na(missing_match) ? 1 : 0)
         assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
+    }
+
+    #[test]
+    fn rejects_invalid_substring_range() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bad substring")
+plot(str.length(str.substring("SMA", 2, 1)))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected substring range error");
+
+        assert!(
+            error
+                .message
+                .contains("str.substring end_pos 1 is less than begin_pos 2"),
+            "{}",
+            error.message
+        );
     }
 
     #[test]

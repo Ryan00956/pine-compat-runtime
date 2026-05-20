@@ -39,6 +39,7 @@ pub enum Accepts {
     ConstOrInputFloat,
     ColorCompatible,
     StringCompatible,
+    IntCompatible,
     PlotOrHLine,
     FloatArray,
     InputDefval,
@@ -53,6 +54,8 @@ pub enum ReturnSpec {
     ColorFromArg(usize),
     PromotedColor,
     PromotedBool,
+    PromotedInt,
+    PromotedString,
     PromotedNumeric,
     IntFromArg(usize),
     FloatFromArg(usize),
@@ -573,6 +576,24 @@ const STR_SOURCE_SUBSTRING_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const STR_SUBSTRING_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "begin_pos",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "end_pos",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+];
+
 const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "a",
@@ -1031,6 +1052,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: STR_SOURCE_SUBSTRING_PARAMS,
         returns: ReturnSpec::PromotedBool,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.pos",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_SOURCE_SUBSTRING_PARAMS,
+        returns: ReturnSpec::PromotedInt,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.substring",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_SUBSTRING_PARAMS,
+        returns: ReturnSpec::PromotedString,
         variadic: false,
     },
     BuiltinSignature {

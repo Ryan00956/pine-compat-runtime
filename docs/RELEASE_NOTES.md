@@ -32,6 +32,7 @@
 - Added `color.r`, `color.g`, `color.b`, and `color.t` channel extraction.
 - Added `str.length`, `str.upper`, and `str.lower` string helpers.
 - Added `str.contains`, `str.startswith`, and `str.endswith` string predicates.
+- Added `str.pos` and `str.substring` string extraction helpers.
 - Added `math.floor` and `math.ceil` support for numeric values.
 - Added `math.sqrt`, `math.log`, and `math.pow` support for numeric values.
 - Added `math.sin`, `math.cos`, and `math.tan` support for numeric values.

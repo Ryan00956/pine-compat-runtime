@@ -207,12 +207,19 @@ str.lower(string: string-compatible) -> string with same qualifier
 str.contains(source: string-compatible, str: string-compatible) -> bool with strongest qualifier
 str.startswith(source: string-compatible, str: string-compatible) -> bool with strongest qualifier
 str.endswith(source: string-compatible, str: string-compatible) -> bool with strongest qualifier
+str.pos(source: string-compatible, str: string-compatible) -> int with strongest qualifier
+str.substring(source: string-compatible, begin_pos: int-compatible, end_pos?: int-compatible)
+  -> string with strongest qualifier
 ```
 
 Supported `str.*` helpers return `na` for `na` inputs.
 `str.length` counts Unicode scalar values.
 `str.contains`, `str.startswith`, and `str.endswith` return `true` for empty
 substring arguments.
+`str.pos` returns `na` when no match is found and returns 0 for `na` or empty
+substring arguments. `str.substring` treats `na` `begin_pos` as 0 and omitted,
+`na`, or too-large `end_pos` as the string length; invalid ranges are runtime
+errors.
 
 ## Math
 

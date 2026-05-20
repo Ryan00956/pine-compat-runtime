@@ -1196,6 +1196,8 @@ impl Analyzer {
                 .map(pine_builtins::color_return_for_arg),
             ReturnSpec::PromotedColor => promoted_color_type(arg_types),
             ReturnSpec::PromotedBool => promoted_bool_type(arg_types),
+            ReturnSpec::PromotedInt => promoted_int_type(arg_types),
+            ReturnSpec::PromotedString => promoted_string_type(arg_types),
             ReturnSpec::PromotedNumeric => promoted_numeric_type(arg_types),
             ReturnSpec::IntFromArg(index) => arg_types
                 .get(index)
@@ -2141,6 +2143,8 @@ impl Analyzer {
                             .map(pine_builtins::color_return_for_arg),
                         ReturnSpec::PromotedColor => promoted_color_type(&arg_types),
                         ReturnSpec::PromotedBool => promoted_bool_type(&arg_types),
+                        ReturnSpec::PromotedInt => promoted_int_type(&arg_types),
+                        ReturnSpec::PromotedString => promoted_string_type(&arg_types),
                         ReturnSpec::PromotedNumeric => promoted_numeric_type(&arg_types),
                         ReturnSpec::IntFromArg(index) => arg_types
                             .get(index)
@@ -2728,6 +2732,10 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             matches!(arg_type.kind, ValueKind::String | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::IntCompatible => {
+            matches!(arg_type.kind, ValueKind::Int | ValueKind::Na)
+                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
         Accepts::FloatArray => arg_type.kind == ValueKind::FloatArray,
         Accepts::InputDefval => {
@@ -2880,6 +2888,26 @@ fn promoted_bool_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
         });
     }
     qualifier.map(|qualifier| PineType::new(qualifier, ValueKind::Bool))
+}
+
+fn promoted_int_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
+    promoted_kind_type(arg_types, ValueKind::Int)
+}
+
+fn promoted_string_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
+    promoted_kind_type(arg_types, ValueKind::String)
+}
+
+fn promoted_kind_type(arg_types: &[Option<PineType>], kind: ValueKind) -> Option<PineType> {
+    let mut qualifier: Option<Qualifier> = None;
+    for arg_type in arg_types {
+        let arg_type = (*arg_type)?;
+        qualifier = Some(match qualifier {
+            Some(current) => strongest_qualifier(current, arg_type.qualifier),
+            None => arg_type.qualifier,
+        });
+    }
+    qualifier.map(|qualifier| PineType::new(qualifier, kind))
 }
 
 fn round_return_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
@@ -3319,10 +3347,21 @@ missing = str.length(na)
 matched = str.contains(upper, "M") and str.startswith(upper, "S") and str.endswith(upper, "A")
 empty_match = str.contains(upper, "") and str.startswith(upper, "") and str.endswith(upper, "")
 missing_match = str.contains(na, "S")
+mid = str.pos(upper, "M")
+missing_pos = str.pos(upper, "Z")
+empty_pos = str.pos(upper, "")
+na_pos = str.pos(upper, na)
+slice = str.substring(upper, mid, mid + 1)
+tail = str.substring(upper, mid)
+wide = str.substring(upper, 1, 99)
+na_begin = str.substring(upper, na, 1)
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
 plot(na(missing_match) ? 1 : 0)
+plot(mid + empty_pos + na_pos)
+plot(na(missing_pos) ? 1 : 0)
+plot(slice == "M" and tail == "MA" and wide == "MA" and na_begin == "S" ? 1 : 0)
 "#,
         );
 
@@ -3338,6 +3377,8 @@ plot(na(missing_match) ? 1 : 0)
             "str.contains",
             "str.startswith",
             "str.endswith",
+            "str.pos",
+            "str.substring",
         ] {
             assert!(
                 analysis

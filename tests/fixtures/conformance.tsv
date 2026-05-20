@@ -33,6 +33,8 @@ str.lower	supported	fixture-derived executable subset	tests/fixtures/runtime/str
 str.contains	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
 str.startswith	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
 str.endswith	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
+str.pos	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
+str.substring	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
 math.abs	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.max	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.min	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
