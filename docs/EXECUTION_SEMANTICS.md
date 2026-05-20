@@ -125,7 +125,10 @@ index_to)` window when bounds are supplied; invalid ranges are ignored.
 present. Numeric binary search helpers expect int/float arrays sorted ascending;
 `array.binary_search` returns `-1` when not found, while leftmost/rightmost
 return the nearest existing insertion-side index and return `-1` for empty
-arrays. Numeric helpers on int/float arrays skip `na` elements; if every
+arrays. `array.every` and `array.some` operate on float/int/bool arrays only:
+false, zero, and `na` elements are falsey, other numeric values are truthy,
+empty arrays return `true` for `every` and `false` for `some`. Numeric helpers
+on int/float arrays skip `na` elements; if every
 element is `na` or the array is empty, `array.min`, `array.max`, `array.sum`,
 `array.avg`, `array.range`, `array.median`, `array.mode`, `array.variance`,
 and `array.stdev` return `na`. `array.range` returns max minus min.

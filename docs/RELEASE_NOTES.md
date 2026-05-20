@@ -32,6 +32,8 @@
   snapshots while plain array assignment remains id/reference-based.
 - Added array search helpers `array.includes`, `array.indexof`,
   `array.lastindexof`, and numeric `array.binary_search*` variants.
+- Added array truth helpers `array.every` and `array.some` for float, int, and
+  bool arrays.
 - Added numeric array statistics helpers `array.min`, `array.max`,
   `array.sum`, `array.avg`, `array.range`, `array.median`, `array.mode`,
   `array.percentile_nearest_rank`, `array.percentile_linear_interpolation`,
@@ -48,8 +50,8 @@
 - Added partial array method-call syntax for supported array `size`, `get`,
   `set`, `insert`, `push`, `pop`, `remove`, `shift`, `unshift`, `first`,
   `last`, `fill`, `copy`, `slice`, `concat`, `includes`, `indexof`,
-  `lastindexof`, numeric `binary_search*`, `min`, `max`, `sum`, `avg`, `range`,
-  `median`, `mode`, `percentile_nearest_rank`,
+  `lastindexof`, `every`, `some`, numeric `binary_search*`, `min`, `max`,
+  `sum`, `avg`, `range`, `median`, `mode`, `percentile_nearest_rank`,
   `percentile_linear_interpolation`, `percentrank`, `variance`, `stdev`,
   `sort`, `reverse`, `join`, and `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.

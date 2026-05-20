@@ -193,6 +193,8 @@ array.copy(id: float-array|int-array|bool-array|string-array|color-array) -> sam
 array.slice(id: float-array|int-array|bool-array|string-array|color-array, index_from: simple int, index_to: simple int) -> same array kind
 array.concat(id: float-array|int-array|bool-array|string-array|color-array, id2: same array kind) -> same array kind
 array.includes(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> series bool
+array.every(id: float-array|int-array|bool-array) -> series bool
+array.some(id: float-array|int-array|bool-array) -> series bool
 array.indexof(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> simple int
 array.lastindexof(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> simple int
 array.binary_search(id: float-array|int-array, value: element-compatible) -> simple int
@@ -241,10 +243,15 @@ no-ops. `array.slice` allocates a same-kind array containing the half-open
 appends `id2` values to `id` in place, and returns `id`. Numeric array
 `binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev`
 helpers may also be called with method syntax on float and int array receivers.
+`every/some` may also be called with method syntax on float, int, and bool
+array receivers.
 Binary search helpers expect the current array contents to be sorted ascending;
 `array.binary_search` returns `-1` when not found, while leftmost/rightmost
 return the nearest existing insertion-side index and return `-1` for empty
-arrays. `array.abs` allocates a new same-kind array containing the absolute
+arrays. `array.every` and `array.some` are limited to float, int, and bool
+arrays; false, zero, and `na` elements are falsey, other numeric values are
+truthy, empty arrays return `true` for `every` and `false` for `some`.
+`array.abs` allocates a new same-kind array containing the absolute
 value of each source element, preserves `na`, and does not mutate the source.
 `array.range` returns max minus min while ignoring `na` elements.
 `array.median` returns the median of non-`na` values. `array.mode` returns the

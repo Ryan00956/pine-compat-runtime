@@ -224,6 +224,8 @@ Initial supported functions:
 - `array.slice`
 - `array.concat`
 - `array.includes`
+- `array.every`
+- `array.some`
 - `array.indexof`
 - `array.lastindexof`
 - `array.binary_search`

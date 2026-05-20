@@ -45,6 +45,7 @@ pub enum Accepts {
     PlotOrHLine,
     Array,
     NumericArray,
+    NumericOrBoolArray,
     InputDefval,
 }
 
@@ -974,6 +975,12 @@ const ARRAY_NUMERIC_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const ARRAY_TRUTHY_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::NumericOrBoolArray,
+    optional: false,
+}];
+
 const ARRAY_VARIANCE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1827,6 +1834,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "array.includes",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_VALUE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_BOOL),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.every",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_TRUTHY_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_BOOL),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.some",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_TRUTHY_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_BOOL),
         variadic: false,
     },

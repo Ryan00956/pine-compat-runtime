@@ -2517,6 +2517,8 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "slice" => Some("array.slice"),
         "concat" => Some("array.concat"),
         "includes" => Some("array.includes"),
+        "every" => Some("array.every"),
+        "some" => Some("array.some"),
         "indexof" => Some("array.indexof"),
         "lastindexof" => Some("array.lastindexof"),
         "binary_search" => Some("array.binary_search"),
@@ -2957,6 +2959,9 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
         Accepts::Array => is_array_kind(arg_type.kind),
         Accepts::NumericArray => is_numeric_array_kind(arg_type.kind),
+        Accepts::NumericOrBoolArray => {
+            is_numeric_array_kind(arg_type.kind) || arg_type.kind == ValueKind::BoolArray
+        }
         Accepts::InputDefval => {
             arg_type.qualifier == Qualifier::Const
                 && matches!(
@@ -4850,7 +4855,7 @@ plot(y)
     #[test]
     fn accepts_array_search_operations() {
         let analysis = analyze(
-            "values = array.new_string()\narray.push(values, \"a\")\narray.push(values, \"b\")\narray.push(values, \"a\")\nhas_a = array.includes(values, \"a\")\nfirst = array.indexof(values, \"a\")\nlast = array.lastindexof(values, \"a\")\nmissing = values.indexof(\"z\")\nnums = array.from(1, 2, 2, 4)\nfound = array.binary_search(nums, 2)\nleft = nums.binary_search_leftmost(3)\nright = nums.binary_search_rightmost(3)\nplot(has_a and values.includes(\"b\") ? first + last + missing + found + left + right : 0)\n",
+            "values = array.new_string()\narray.push(values, \"a\")\narray.push(values, \"b\")\narray.push(values, \"a\")\nhas_a = array.includes(values, \"a\")\nfirst = array.indexof(values, \"a\")\nlast = array.lastindexof(values, \"a\")\nmissing = values.indexof(\"z\")\nnums = array.from(1, 2, 2, 4)\nfound = array.binary_search(nums, 2)\nleft = nums.binary_search_leftmost(3)\nright = nums.binary_search_rightmost(3)\nflags = array.from(true, false)\nplot(has_a and values.includes(\"b\") and flags.some() and not flags.every() ? first + last + missing + found + left + right : 0)\n",
         );
 
         assert!(
@@ -4860,6 +4865,8 @@ plot(y)
         );
         for feature in [
             "array.includes",
+            "array.every",
+            "array.some",
             "array.indexof",
             "array.lastindexof",
             "array.binary_search",
@@ -5136,6 +5143,21 @@ plot(y)
     #[test]
     fn rejects_float_value_for_int_array_binary_search() {
         let analysis = analyze("values = array.new_int()\nplot(values.binary_search(close))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_string_array_truth_helpers() {
+        let analysis = analyze("values = array.new_string()\nplot(array.every(values))\n");
 
         assert!(
             analysis

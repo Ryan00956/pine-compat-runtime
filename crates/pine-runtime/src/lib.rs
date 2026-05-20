@@ -446,6 +446,12 @@ enum ArrayBinarySearchMode {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ArrayTruthMode {
+    Every,
+    Some,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ArrayNumericMode {
     Min,
     Max,
@@ -1510,6 +1516,8 @@ impl<'a> HistoricalRuntime<'a> {
             "array.slice" => self.eval_array_slice(args),
             "array.concat" => self.eval_array_concat(args),
             "array.includes" => self.eval_array_includes(args),
+            "array.every" => self.eval_array_truth(args, ArrayTruthMode::Every),
+            "array.some" => self.eval_array_truth(args, ArrayTruthMode::Some),
             "array.indexof" => self.eval_array_indexof(args),
             "array.lastindexof" => self.eval_array_lastindexof(args),
             "array.binary_search" => {
@@ -2021,6 +2029,34 @@ impl<'a> HistoricalRuntime<'a> {
     fn eval_array_includes(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let index = self.eval_array_search(args, ArraySearchMode::First)?;
         Ok(PineValue::Bool(index.is_some()))
+    }
+
+    fn eval_array_truth(
+        &mut self,
+        args: &[HirCallArg],
+        mode: ArrayTruthMode,
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let PineValue::Array(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        if !matches!(
+            kind,
+            ArrayElementKind::Float | ArrayElementKind::Int | ArrayElementKind::Bool
+        ) {
+            return Ok(PineValue::Na);
+        }
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Na);
+        };
+        let result = match mode {
+            ArrayTruthMode::Every => values.iter().all(array_truthy_value),
+            ArrayTruthMode::Some => values.iter().any(array_truthy_value),
+        };
+        Ok(PineValue::Bool(result))
     }
 
     fn eval_array_indexof(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -4738,6 +4774,15 @@ fn values_equal(left: &PineValue, right: &PineValue) -> bool {
     match (left.as_f64(), right.as_f64()) {
         (Some(left), Some(right)) => (left - right).abs() < f64::EPSILON,
         _ => left == right,
+    }
+}
+
+fn array_truthy_value(value: &PineValue) -> bool {
+    match value {
+        PineValue::Bool(value) => *value,
+        PineValue::Int(value) => *value != 0,
+        PineValue::Float(value) => *value != 0.0,
+        _ => false,
     }
 }
 
@@ -8343,6 +8388,24 @@ plot(array.binary_search_rightmost(numbers, 4))
 plot(numbers.binary_search_leftmost(2))
 plot(numbers.binary_search_rightmost(2))
 
+truth_flags = array.from(true, true)
+plot(array.every(truth_flags) and truth_flags.some() ? 1 : 0)
+truth_flags.push(false)
+plot(array.every(truth_flags) ? 99 : (array.some(truth_flags) ? 1 : 0))
+truth_numbers = array.from(1, -2, 3)
+plot(truth_numbers.every() and array.some(truth_numbers) ? 1 : 0)
+truth_numbers.push(0)
+plot(array.every(truth_numbers) ? 99 : 1)
+truth_floats = array.new_float()
+truth_floats.push(na)
+truth_floats.push(0)
+truth_floats.push(close)
+plot(array.every(truth_floats) ? 99 : (truth_floats.some() ? 1 : 0))
+empty_truth = array.new_bool()
+plot(array.every(empty_truth) and not empty_truth.some() ? 1 : 0)
+na_truth = array.new_int(2)
+plot(array.every(na_truth) ? 99 : (array.some(na_truth) ? 98 : 1))
+
 words = array.new_string()
 words.push("a")
 words.push("b")
@@ -8365,7 +8428,7 @@ plot(colors.includes(color.green) ? colors.indexof(color.green) : 0)
         let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-        assert_eq!(result.plots.len(), 12);
+        assert_eq!(result.plots.len(), 19);
         assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0]);
         assert_values_close(&result.plots[2].values, &[2.0, 2.0, 2.0]);
@@ -8376,8 +8439,15 @@ plot(colors.includes(color.green) ? colors.indexof(color.green) : 0)
         assert_values_close(&result.plots[7].values, &[2.0, 2.0, 2.0]);
         assert_values_close(&result.plots[8].values, &[0.0, 0.0, 0.0]);
         assert_values_close(&result.plots[9].values, &[1.0, 1.0, 1.0]);
-        assert_values_close(&result.plots[10].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[10].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[11].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[12].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[13].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[14].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[15].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[16].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[17].values, &[2.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[18].values, &[1.0, 1.0, 1.0]);
     }
 
     #[test]

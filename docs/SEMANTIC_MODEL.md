@@ -178,7 +178,7 @@ Supported operations are
 `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`,
 `array.fill`, `array.first`, `array.last`, and `array.copy`, `array.slice`,
 `array.concat`, `array.includes`, `array.indexof`, `array.lastindexof`,
-`array.binary_search`, `array.binary_search_leftmost`,
+`array.every`, `array.some`, `array.binary_search`, `array.binary_search_leftmost`,
 `array.binary_search_rightmost`, `array.abs`, `array.min`, `array.max`,
 `array.sum`, `array.avg`, `array.range`, `array.median`, `array.mode`,
 `array.variance`, `array.stdev`, `array.percentile_nearest_rank`,
@@ -188,7 +188,10 @@ Supported operations are
 `size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/reverse/join/clear`
 may also be called with method syntax on a supported array receiver. Numeric
 `binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev/sort/sort_indices`
-helpers may also be called with method syntax on float and int arrays. Float
+helpers may also be called with method syntax on float and int arrays.
+`every/some` may also be called with method syntax on float, int, and bool
+arrays.
+Float
 arrays accept int or float values and store them as
 floats. Int arrays accept int values. Bool arrays accept bool values. String
 arrays accept string values. Color arrays accept color values. Other array
@@ -210,7 +213,10 @@ when bounds are supplied; invalid ranges are no-ops.
 present. Numeric binary search helpers are limited to float and int arrays and
 expect the current array contents to be sorted ascending. `array.binary_search`
 returns `-1` when the value is not found; leftmost/rightmost return the nearest
-existing insertion-side index and return `-1` for empty arrays. Numeric helpers
+existing insertion-side index and return `-1` for empty arrays.
+`array.every` and `array.some` are limited to float, int, and bool arrays;
+false, zero, and `na` values are falsey, other numeric values are truthy, and
+empty arrays return `true` for `every` and `false` for `some`. Numeric helpers
 `array.abs`, `array.min`, `array.max`, `array.sum`, `array.avg`, `array.range`,
 `array.median`, `array.mode`, `array.covariance`, `array.standardize`,
 `array.variance`, and `array.stdev` are limited to float and int arrays.

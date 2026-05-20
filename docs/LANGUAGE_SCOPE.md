@@ -76,7 +76,7 @@ Phase 1 executable subset:
   `array.from`, `array.push`, `array.get`, `array.set`, `array.size`, `array.pop`,
   `array.insert`, `array.remove`, `array.shift`, `array.unshift`,
   `array.fill`, `array.first`, `array.last`, `array.copy`, `array.slice`,
-  `array.concat`, `array.includes`,
+  `array.concat`, `array.includes`, `array.every`, `array.some`,
   `array.indexof`, `array.lastindexof`, numeric `array.binary_search*`,
   `array.clear`, numeric `array.abs`, `array.min`, `array.max`, `array.sum`,
   `array.avg`, `array.range`, `array.median`, `array.mode`,
