@@ -122,10 +122,14 @@ places `na` values after numeric values. `array.reverse` reverses any supported
 typed array in place. `array.join` converts supported array elements to string
 with the default numeric format, uses `,` as the default separator, and returns
 an empty string for empty arrays. Color elements render as normalized integer
-color values. Joined results over 40,960 characters are runtime errors. A
-negative array size is a runtime error. Runtime execution limits each supported
-array to 100,000 elements; oversized creation, `array.push`, and
-`array.unshift` beyond the limit return runtime errors.
+color values. Joined results over 40,960 characters are runtime errors.
+`array.slice` returns a same-kind array with the half-open `[index_from,
+index_to)` window; negative, reversed, or out-of-range bounds return `na`.
+`array.concat` appends the second same-kind array to the first array in place
+and returns the first array id. A negative array size is a runtime error.
+Runtime execution limits each supported array to 100,000 elements; oversized
+creation, `array.push`, `array.unshift`, and `array.concat` beyond the limit
+return runtime errors.
 
 Read-only array operations are allowed inside inlined user-defined functions.
 The supported method-call syntax lowers to the same `array.*` runtime calls, so

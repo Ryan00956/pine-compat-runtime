@@ -30,10 +30,12 @@
   `na` values last, and `array.reverse` for all supported typed arrays.
 - Added `array.join` support for supported typed arrays with optional string
   separators.
+- Added `array.slice` and `array.concat` support for supported typed arrays,
+  including method-call syntax and array element limit checks.
 - Added partial array method-call syntax for supported array `size`, `get`,
   `set`, `push`, `pop`, `shift`, `unshift`, `first`, `last`, `copy`,
-  `includes`, `indexof`, `lastindexof`, numeric `min`, `max`, `sum`, `avg`,
-  `sort`, `reverse`, `join`, and `clear`.
+  `slice`, `concat`, `includes`, `indexof`, `lastindexof`, numeric `min`,
+  `max`, `sum`, `avg`, `sort`, `reverse`, `join`, and `clear`.
 - Added `input.string` support for the executable `defval`/`title` subset.
 - Added `input.price`, `input.time`, `input.symbol`, and `input.timeframe`
   support for the executable `defval`/`title` subset.

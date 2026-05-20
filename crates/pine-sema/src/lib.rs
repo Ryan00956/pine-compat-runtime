@@ -1149,6 +1149,7 @@ impl Analyzer {
         }
 
         self.validate_array_value_args(signature, args, arg_types);
+        self.validate_array_concat_args(signature, args, arg_types);
     }
 
     fn validate_array_value_args(
@@ -1210,6 +1211,38 @@ impl Analyzer {
             ),
             args.get(value_index)
                 .map_or(Span::default(), |arg| arg.span),
+        ));
+    }
+
+    fn validate_array_concat_args(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) {
+        if signature.name != "array.concat" {
+            return;
+        }
+        let Some(first_type) = arg_types.first().copied().flatten() else {
+            return;
+        };
+        let Some(second_type) = arg_types.get(1).copied().flatten() else {
+            return;
+        };
+        if !is_array_kind(first_type.kind)
+            || !is_array_kind(second_type.kind)
+            || first_type.kind == second_type.kind
+        {
+            return;
+        }
+
+        self.diagnostics.push(Diagnostic::error(
+            "E_CALL_ARG_TYPE",
+            format!(
+                "`array.concat` argument `id2` does not accept {:?} {:?} for {:?} {:?}",
+                second_type.qualifier, second_type.kind, first_type.qualifier, first_type.kind,
+            ),
+            args.get(1).map_or(Span::default(), |arg| arg.span),
         ));
     }
 
@@ -2448,6 +2481,8 @@ fn array_method_builtin_name(method_name: &str) -> Option<&'static str> {
         "first" => Some("array.first"),
         "last" => Some("array.last"),
         "copy" => Some("array.copy"),
+        "slice" => Some("array.slice"),
+        "concat" => Some("array.concat"),
         "includes" => Some("array.includes"),
         "indexof" => Some("array.indexof"),
         "lastindexof" => Some("array.lastindexof"),
@@ -2492,6 +2527,7 @@ fn is_array_mutation_builtin(name: &str) -> bool {
             | "array.clear"
             | "array.sort"
             | "array.reverse"
+            | "array.concat"
     )
 }
 
@@ -4754,6 +4790,31 @@ plot(y)
     }
 
     #[test]
+    fn accepts_array_slice_concat_operations() {
+        let analysis = analyze(
+            "values = array.new_int()\nvalues.push(1)\nvalues.push(2)\nvalues.push(3)\npart = array.slice(values, 1, 3)\nmore = array.new_int()\nmore.push(4)\nreturned = values.concat(more)\nplot(part.size() + array.size(returned) + values.get(3))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for feature in ["array.slice", "array.concat"] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|supported| supported.feature == feature),
+                "{feature} missing from supported features: {:?}",
+                analysis.compatibility.supported
+            );
+        }
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn rejects_float_value_for_int_array_mutation() {
         let analysis =
             analyze("values = array.new_int()\narray.push(values, close)\nplot(close)\n");
@@ -4850,6 +4911,39 @@ plot(y)
     #[test]
     fn rejects_numeric_separator_for_array_join() {
         let analysis = analyze("values = array.new_string()\nplot(array.join(values, close))\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_mismatched_array_concat_kind() {
+        let analysis = analyze(
+            "ints = array.new_int()\nfloats = array.new_float()\nplot(array.size(array.concat(ints, floats)))\n",
+        );
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_series_array_slice_index() {
+        let analysis =
+            analyze("values = array.new_string()\nplot(array.size(values.slice(0, bar_index)))\n");
 
         assert!(
             analysis

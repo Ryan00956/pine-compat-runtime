@@ -186,6 +186,8 @@ array.unshift(id: float-array|int-array|bool-array|string-array|color-array, val
 array.first(id: float-array|int-array|bool-array|string-array|color-array) -> series element
 array.last(id: float-array|int-array|bool-array|string-array|color-array) -> series element
 array.copy(id: float-array|int-array|bool-array|string-array|color-array) -> same array kind
+array.slice(id: float-array|int-array|bool-array|string-array|color-array, index_from: simple int, index_to: simple int) -> same array kind
+array.concat(id: float-array|int-array|bool-array|string-array|color-array, id2: same array kind) -> same array kind
 array.includes(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> series bool
 array.indexof(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> simple int
 array.lastindexof(id: float-array|int-array|bool-array|string-array|color-array, value: element-compatible) -> simple int
@@ -203,16 +205,19 @@ The supported typed-array subset covers float, int, bool, string, and color
 arrays. Float arrays accept int or float values and store them as floats. Int
 arrays accept int values. Bool arrays accept bool values. String arrays accept
 string values. Color arrays accept color values.
-`size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/clear`
-may also be called with method syntax on a supported array receiver. Numeric
-array `min/max/sum/avg` helpers may also be called with method syntax on float
-and int array receivers. `array.sort` currently supports float and int arrays
-only and sorts ascending with `na` values last. `array.reverse` supports every
-supported typed array. `array.join` supports every supported typed array,
-defaults the separator to `,`, uses the default numeric string format, and
-renders colors as their normalized integer color values. Array assignment passes
-the runtime array id by reference; use `array.copy` to allocate an independent
-array with the same current element values.
+`size/get/set/push/pop/shift/unshift/first/last/copy/slice/concat/includes/indexof/lastindexof/clear`
+may also be called with method syntax on a supported array receiver. `array.slice`
+allocates a same-kind array containing the half-open `[index_from, index_to)`
+window; invalid bounds return `na` at runtime. `array.concat` requires two
+arrays of the same kind, appends `id2` values to `id` in place, and returns
+`id`. Numeric array `min/max/sum/avg` helpers may also be called with method
+syntax on float and int array receivers. `array.sort` currently supports float
+and int arrays only and sorts ascending with `na` values last. `array.reverse`
+supports every supported typed array. `array.join` supports every supported
+typed array, defaults the separator to `,`, uses the default numeric string
+format, and renders colors as their normalized integer color values. Array
+assignment passes the runtime array id by reference; use `array.copy` to
+allocate an independent array with the same current element values.
 
 ## TA Built-Ins
 

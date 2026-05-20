@@ -980,6 +980,37 @@ const ARRAY_JOIN_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_SLICE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::Array,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "index_from",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "index_to",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
+const ARRAY_CONCAT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::Array,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "id2",
+        accepts: Accepts::Array,
+        optional: false,
+    },
+];
+
 const ARRAY_VALUE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1647,6 +1678,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "array.copy",
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_SIZE_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.slice",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_SLICE_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.concat",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_CONCAT_PARAMS,
         returns: ReturnSpec::SameAsArg(0),
         variadic: false,
     },

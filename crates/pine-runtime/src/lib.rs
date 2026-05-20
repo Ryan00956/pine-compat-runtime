@@ -1448,6 +1448,8 @@ impl<'a> HistoricalRuntime<'a> {
             "array.first" => self.eval_array_first(args),
             "array.last" => self.eval_array_last(args),
             "array.copy" => self.eval_array_copy(args),
+            "array.slice" => self.eval_array_slice(args),
+            "array.concat" => self.eval_array_concat(args),
             "array.includes" => self.eval_array_includes(args),
             "array.indexof" => self.eval_array_indexof(args),
             "array.lastindexof" => self.eval_array_lastindexof(args),
@@ -1753,6 +1755,64 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         Ok(self.new_array_from_values(kind, values))
+    }
+
+    fn eval_array_slice(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_expr(&args[0].value)?;
+        let index_from = self.eval_expr(&args[1].value)?.as_i64();
+        let index_to = self.eval_expr(&args[2].value)?.as_i64();
+        let (PineValue::Array(id), Some(index_from), Some(index_to)) = (id, index_from, index_to)
+        else {
+            return Ok(PineValue::Na);
+        };
+        if index_from < 0 || index_to < 0 || index_from > index_to {
+            return Ok(PineValue::Na);
+        }
+
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(PineValue::Na);
+        };
+        let index_from = index_from as usize;
+        let index_to = index_to as usize;
+        if index_to > values.len() {
+            return Ok(PineValue::Na);
+        }
+        let values = values[index_from..index_to].to_vec();
+
+        Ok(self.new_array_from_values(kind, values))
+    }
+
+    fn eval_array_concat(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let target = self.eval_expr(&args[0].value)?;
+        let source = self.eval_expr(&args[1].value)?;
+        let (PineValue::Array(target_id), PineValue::Array(source_id)) = (target, source) else {
+            return Ok(PineValue::Na);
+        };
+        let Some(target_kind) = self.array_kinds.get(&target_id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(source_kind) = self.array_kinds.get(&source_id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        if target_kind != source_kind {
+            return Ok(PineValue::Na);
+        }
+        let Some(source_values) = self.array_store.get(&source_id).cloned() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(target_values) = self.array_store.get_mut(&target_id) else {
+            return Ok(PineValue::Na);
+        };
+        if target_values.len() + source_values.len() > MAX_ARRAY_ELEMENTS {
+            return Err(RuntimeError {
+                message: format!("array.concat cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+            });
+        }
+        target_values.extend(source_values);
+        Ok(PineValue::Array(target_id))
     }
 
     fn eval_array_includes(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -7643,6 +7703,125 @@ plot(str.length(array.join(values, str.repeat("y", 100))))
             error
                 .message
                 .contains("array.join result cannot exceed 40960 characters"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn runs_array_slice_concat_operations() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array slice concat")
+ints = array.new_int()
+ints.push(1)
+ints.push(2)
+ints.push(3)
+part = array.slice(ints, 1, 3)
+part.set(0, 20)
+plot(part.size())
+plot(part.get(0) + part.get(1))
+plot(ints.get(1))
+
+more = array.new_int()
+more.push(4)
+returned = array.concat(ints, more)
+plot(array.size(ints))
+plot(array.size(returned))
+plot(returned.get(3))
+
+words = array.new_string()
+words.push("a")
+words.push("b")
+words.push("c")
+tail = words.slice(1, 3)
+extra = array.new_string()
+extra.push("d")
+words.concat(extra)
+plot(tail.join("|") == "b|c" and words.join("|") == "a|b|c|d" ? 1 : 0)
+
+colors = array.new_color()
+colors.push(color.red)
+colors.push(color.green)
+colors_tail = colors.slice(1, 2)
+colors.concat(colors_tail)
+plot(colors.get(2) == color.green ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 8);
+        assert_values_close(&result.plots[0].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[1].values, &[23.0, 23.0]);
+        assert_values_close(&result.plots[2].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[3].values, &[4.0, 4.0]);
+        assert_values_close(&result.plots[4].values, &[4.0, 4.0]);
+        assert_values_close(&result.plots[5].values, &[4.0, 4.0]);
+        assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
+    }
+
+    #[test]
+    fn handles_invalid_array_slice_bounds() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array slice bounds")
+values = array.new_int()
+values.push(1)
+plot(na(array.slice(values, -1, 1)) ? 1 : 0)
+plot(na(values.slice(1, 3)) ? 1 : 0)
+plot(na(array.slice(values, 1, 0)) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let result =
+            run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 3);
+        assert_values_close(&result.plots[0].values, &[1.0]);
+        assert_values_close(&result.plots[1].values, &[1.0]);
+        assert_values_close(&result.plots[2].values, &[1.0]);
+    }
+
+    #[test]
+    fn rejects_oversized_array_concat_result() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("array concat limit")
+left = array.new_int(100000, 1)
+right = array.new_int(1, 2)
+array.concat(left, right)
+plot(array.size(left))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected array.concat limit error");
+
+        assert!(
+            error
+                .message
+                .contains("array.concat cannot exceed 100000 elements"),
             "{}",
             error.message
         );

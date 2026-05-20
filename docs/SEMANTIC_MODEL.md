@@ -172,10 +172,10 @@ the array id and backing storage across bars. Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
 `array.new_color`, `array.push`, `array.get`, `array.set`, `array.size`,
 `array.pop`, `array.shift`, `array.unshift`, `array.first`, `array.last`, and
-`array.copy`, `array.includes`, `array.indexof`, `array.lastindexof`,
+`array.copy`, `array.slice`, `array.concat`, `array.includes`, `array.indexof`, `array.lastindexof`,
 `array.min`, `array.max`, `array.sum`, `array.avg`, `array.sort`,
 `array.reverse`, `array.join`, and `array.clear`;
-`size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/reverse/join/clear`
+`size/get/set/push/pop/shift/unshift/first/last/copy/slice/concat/includes/indexof/lastindexof/reverse/join/clear`
 may also be called with method syntax on a supported array receiver. Numeric
 `min/max/sum/avg/sort` helpers may also be called with method syntax on float
 and int arrays. Float arrays accept int or float values and store them as
@@ -184,7 +184,11 @@ arrays accept string values. Color arrays accept color values. Other array
 constructors and unsupported `array.*` functions are rejected. Array assignment
 and UDF argument binding pass the runtime array id by reference. `array.copy`
 allocates a new array id with the same current element values, so later
-mutations do not affect the source.
+mutations do not affect the source. `array.slice` allocates a same-kind array
+containing the half-open `[index_from, index_to)` window; invalid bounds return
+`na` at runtime. `array.concat` requires two arrays of the same kind, appends
+the second array's current values to the first array in place, and returns the
+first array id.
 `array.indexof` and `array.lastindexof` return `-1` when the value is not
 present. Numeric helpers `array.min`, `array.max`, `array.sum`, and `array.avg`
 are limited to float and int arrays; they ignore `na` elements and return `na`
@@ -196,8 +200,8 @@ uses `,` as the default separator, and returns an empty string for empty arrays.
 Color elements render as normalized integer color values. Out-of-range
 `array.get`, empty `array.pop`, empty `array.shift`, and `array.first`/`array.last` on empty arrays
 return `na`; out-of-range `array.set` is a no-op. Negative array sizes fail at
-runtime. Each array can contain at most 100,000 elements; creation, push, or
-unshift operations beyond that limit fail at runtime.
+runtime. Each array can contain at most 100,000 elements; creation, push,
+unshift, or concat operations beyond that limit fail at runtime.
 
 User-defined functions may receive supported arrays and use read-only
 operations such as `array.size` and `array.get`. Array mutation inside

@@ -217,6 +217,8 @@ Initial supported functions:
 - `array.first`
 - `array.last`
 - `array.copy`
+- `array.slice`
+- `array.concat`
 - `array.includes`
 - `array.indexof`
 - `array.lastindexof`
@@ -238,7 +240,7 @@ Resolved implementation choices:
 - `var` arrays preserve their id and backing storage across bars.
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
 - The current pass supports float, int, bool, string, and color arrays with
-  size/get/set/push/pop/shift/unshift/first/last/copy/includes/indexof/lastindexof/clear
+  size/get/set/push/pop/shift/unshift/first/last/copy/slice/concat/includes/indexof/lastindexof/clear
   plus numeric min/max/sum/avg/sort, all-supported-array reverse, and
   all-supported-array join only; unsupported `array.*` variants still produce
   diagnostics.
