@@ -6,6 +6,7 @@ use pine_ir::{
     CallSiteId, HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirLiteral, HirProgram, HirStmt,
     HirStmtKind, HirUnaryOp, SeriesId, SymbolId, VarSlotId,
 };
+use regex::Regex;
 
 const MAX_WHILE_ITERATIONS: usize = 100_000;
 const MAX_ARRAY_ELEMENTS: usize = 100_000;
@@ -1339,6 +1340,7 @@ impl<'a> HistoricalRuntime<'a> {
             "str.tonumber" => self.eval_str_tonumber(args),
             "str.tostring" => self.eval_str_tostring(args),
             "str.format" => self.eval_str_format(args),
+            "str.match" => self.eval_str_match_regex(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -2001,6 +2003,24 @@ impl<'a> HistoricalRuntime<'a> {
 
         let result = format_string_placeholders(&format_string, &values, self)?;
         self.string_value_or_error(result, "str.format")
+    }
+
+    fn eval_str_match_regex(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(source) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::String(regex) = self.eval_expr(&args[1].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let regex = Regex::new(&regex).map_err(|err| RuntimeError {
+            message: format!("str.match invalid regex: {err}"),
+        })?;
+
+        Ok(PineValue::String(
+            regex
+                .find(&source)
+                .map_or_else(String::new, |matched| matched.as_str().to_owned()),
+        ))
     }
 
     fn stringify_value(&self, value: &PineValue, format: &str) -> String {
@@ -4359,6 +4379,10 @@ formatted = str.format("A={0}, B={1}, A2={0}", text_int, text_float)
 formatted_missing = str.format("Missing {2}", text_int)
 formatted_number = str.format("Rounded {0,number,#.00} Percent {1,number,percent}", 1.2, 0.0345)
 formatted_array = str.format("Values {0}", values)
+match_prefix = str.match("NASDAQ:AAPL", "^(?:BATS|NASDAQ|NYSE|AMEX):")
+match_suffix = str.match("NASDAQ:AAPL", "AAPL$")
+match_missing = str.match("NASDAQ:AAPL", "^NYSE:")
+missing_match_regex = str.match(na, ".+")
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
@@ -4380,6 +4404,8 @@ plot(text_array == "[1, 3, NaN]" ? 1 : 0)
 plot(formatted == "A=42, B=1.25, A2=42" and formatted_missing == "Missing {2}" ? 1 : 0)
 plot(formatted_number == "Rounded 1.20 Percent 3.45%" ? 1 : 0)
 plot(formatted_array == "Values [1.2, 2.6, NaN]" ? 1 : 0)
+plot(match_prefix == "NASDAQ:" and match_suffix == "AAPL" and match_missing == "" ? 1 : 0)
+plot(na(missing_match_regex) ? 1 : 0)
 "##,
         );
         let analysis = analyze_source(&source);
@@ -4413,6 +4439,8 @@ plot(formatted_array == "Values [1.2, 2.6, NaN]" ? 1 : 0)
         assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
     }
 
     #[test]
@@ -4435,6 +4463,31 @@ plot(str.length(str.format("Value {0", close)))
 
         assert!(
             error.message.contains("str.format has unmatched `{`"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_str_match_regex() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bad match")
+plot(str.length(str.match("abc", "(")))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected str.match regex error");
+
+        assert!(
+            error.message.contains("str.match invalid regex"),
             "{}",
             error.message
         );

@@ -578,6 +578,19 @@ const STR_SOURCE_SUBSTRING_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const STR_SOURCE_REGEX_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "regex",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+];
+
 const STR_SUBSTRING_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
@@ -1203,6 +1216,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         params: STR_FORMAT_PARAMS,
         returns: ReturnSpec::PromotedString,
         variadic: true,
+    },
+    BuiltinSignature {
+        name: "str.match",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_SOURCE_REGEX_PARAMS,
+        returns: ReturnSpec::PromotedString,
+        variadic: false,
     },
     BuiltinSignature {
         name: "math.abs",

@@ -222,6 +222,8 @@ str.tostring(value: int|float|bool|string|float-array|na, format?: string-compat
   -> string with strongest qualifier
 str.format(formatString: string-compatible, arg0?: int|float|bool|string|float-array|na, ...)
   -> string with strongest qualifier
+str.match(source: string-compatible, regex: string-compatible)
+  -> string with strongest qualifier
 ```
 
 Supported `str.*` helpers return `na` for `na` inputs.
@@ -251,6 +253,9 @@ placeholders such as `{0,number,#.00}`. Missing placeholder indexes remain
 literal text. Unmatched braces are runtime errors. Quote handling inside format
 strings and non-numeric format modifiers outside the fixture-covered subset are
 not yet claimed.
+`str.match` uses Rust regex syntax for the fixture-covered subset. It returns
+the first matched substring, an empty string when there is no match, `na` for
+`na` inputs, and a runtime error for invalid regex patterns.
 
 ## Math
 

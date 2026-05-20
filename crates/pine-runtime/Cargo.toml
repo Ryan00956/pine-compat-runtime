@@ -8,6 +8,7 @@ rust-version.workspace = true
 [dependencies]
 pine-builtins = { path = "../pine-builtins" }
 pine-ir = { path = "../pine-ir" }
+regex = "1"
 
 [dev-dependencies]
 pine-sema = { path = "../pine-sema" }
