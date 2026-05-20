@@ -321,6 +321,7 @@ ta.stdev(source: series float, length: simple int, biased?: bool-compatible) -> 
 ta.variance(source: series float, length: simple int, biased?: bool-compatible) -> series float
 ta.range(source: series float, length: simple int) -> series float
 ta.dev(source: series float, length: simple int) -> series float
+ta.vwma(source: series float, length: simple int) -> series float
 ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
 ta.change(source: series float, length?: simple int) -> series float
@@ -341,6 +342,8 @@ Rules:
   rules as `ta.stdev`.
 - `ta.range` returns highest minus lowest over the ready rolling window.
 - `ta.dev` returns the average absolute deviation from the window mean.
+- `ta.vwma` returns `sum(source * volume) / sum(volume)` over the ready rolling
+  window and returns `na` when the volume sum is zero.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.

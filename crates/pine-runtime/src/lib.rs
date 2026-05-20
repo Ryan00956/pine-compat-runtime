@@ -419,7 +419,7 @@ pub struct HistoricalRuntime<'a> {
     array_kinds: HashMap<u32, ArrayElementKind>,
     next_array_id: u32,
     call_state: HashMap<CallSiteId, PineValue>,
-    rolling_windows: HashMap<CallSiteId, RollingWindowState>,
+    rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
     rsi_state: HashMap<CallSiteId, RsiState>,
     macd_state: HashMap<CallSiteId, MacdState>,
     plots: Vec<PlotSeries>,
@@ -517,6 +517,13 @@ struct RollingWindowState {
     sum: f64,
     sum_squares: f64,
     na_count: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum RollingWindowKey {
+    Single(CallSiteId),
+    VwmaWeighted(CallSiteId),
+    VwmaVolume(CallSiteId),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1660,6 +1667,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.variance" => self.eval_variance(call_site_id, args),
             "ta.range" => self.eval_range(call_site_id, args),
             "ta.dev" => self.eval_dev(call_site_id, args),
+            "ta.vwma" => self.eval_vwma(call_site_id, args),
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.change" => self.eval_change(args),
@@ -2985,6 +2993,72 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(window.mean_absolute_deviation(length)))
     }
 
+    fn eval_vwma(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let Some(source) = source.as_f64() else {
+            self.update_rolling_window_key(
+                RollingWindowKey::VwmaWeighted(call_site_id),
+                None,
+                length,
+            );
+            self.update_rolling_window_key(
+                RollingWindowKey::VwmaVolume(call_site_id),
+                None,
+                length,
+            );
+            return Ok(PineValue::Na);
+        };
+        let Some(volume) = self.current_builtin_f64("volume") else {
+            self.update_rolling_window_key(
+                RollingWindowKey::VwmaWeighted(call_site_id),
+                None,
+                length,
+            );
+            self.update_rolling_window_key(
+                RollingWindowKey::VwmaVolume(call_site_id),
+                None,
+                length,
+            );
+            return Ok(PineValue::Na);
+        };
+
+        self.update_rolling_window_key(
+            RollingWindowKey::VwmaWeighted(call_site_id),
+            Some(source * volume),
+            length,
+        );
+        self.update_rolling_window_key(
+            RollingWindowKey::VwmaVolume(call_site_id),
+            Some(volume),
+            length,
+        );
+
+        let weighted = self
+            .rolling_windows
+            .get(&RollingWindowKey::VwmaWeighted(call_site_id));
+        let volumes = self
+            .rolling_windows
+            .get(&RollingWindowKey::VwmaVolume(call_site_id));
+        let (Some(weighted), Some(volumes)) = (weighted, volumes) else {
+            return Ok(PineValue::Na);
+        };
+        if !weighted.is_ready(length) || !volumes.is_ready(length) || volumes.sum == 0.0 {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(weighted.sum / volumes.sum))
+    }
+
     fn eval_window_variance(
         &mut self,
         call_site_id: CallSiteId,
@@ -3139,7 +3213,16 @@ impl<'a> HistoricalRuntime<'a> {
         length: usize,
     ) -> &RollingWindowState {
         let source = source.as_f64();
-        let window = self.rolling_windows.entry(call_site_id).or_default();
+        self.update_rolling_window_key(RollingWindowKey::Single(call_site_id), source, length)
+    }
+
+    fn update_rolling_window_key(
+        &mut self,
+        key: RollingWindowKey,
+        source: Option<f64>,
+        length: usize,
+    ) -> &RollingWindowState {
+        let window = self.rolling_windows.entry(key).or_default();
         window.push(source, length);
         window
     }
@@ -6208,6 +6291,38 @@ plot(value)
         assert_values_close(
             &result.plots[0].values[2..],
             &[1.1111111111111112, 1.7777777777777777],
+        );
+    }
+
+    #[test]
+    fn runs_vwma_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("vwma")
+value = ta.vwma(close, 3)
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_volume(1.0, 10.0),
+            bar_volume(3.0, 20.0),
+            bar_volume(5.0, 30.0),
+            bar_volume(7.0, 40.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[2..],
+            &[3.6666666666666665, 5.444444444444445],
         );
     }
 
@@ -10138,6 +10253,17 @@ plot(spread(lo=low, hi=high))
 
     fn bar(close: f64) -> Bar {
         bar_ohlc(close, close, close, close)
+    }
+
+    fn bar_volume(close: f64, volume: f64) -> Bar {
+        Bar {
+            time: 0,
+            open: close,
+            high: close,
+            low: close,
+            close,
+            volume,
+        }
     }
 
     fn bar_ohlc(open: f64, high: f64, low: f64, close: f64) -> Bar {

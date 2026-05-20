@@ -87,6 +87,7 @@ ta.stdev	supported	fixture-derived executable subset	tests/fixtures/runtime/stde
 ta.variance	supported	fixture-derived executable subset	tests/fixtures/runtime/variance.pine
 ta.range	supported	fixture-derived executable subset	tests/fixtures/runtime/range.pine
 ta.dev	supported	fixture-derived executable subset	tests/fixtures/runtime/dev.pine
+ta.vwma	supported	fixture-derived executable subset	tests/fixtures/runtime/vwma.pine
 ta.tr	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
 ta.atr	supported	fixture-derived executable subset	tests/fixtures/runtime/atr.pine
 ta.change	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine

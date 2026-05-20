@@ -1,0 +1,4 @@
+//@version=5
+indicator("VWMA")
+value = ta.vwma(close, 3)
+plot(value)
