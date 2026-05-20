@@ -83,8 +83,8 @@ Phase 1 executable subset:
   `array.percentile_nearest_rank`, `array.percentile_linear_interpolation`,
   `array.percentrank`, `array.covariance`, `array.standardize`,
   `array.variance`, `array.stdev`, numeric/string `array.sort`,
-  `array.sort_indices`, `array.reverse`, `array.join`, and equivalent
-  method-call syntax such as
+  numeric/string `array.sort_indices`, `array.reverse`, `array.join`, and
+  equivalent method-call syntax such as
   `values.push(close)` and `values.get(0)`
 
 Stateful calls inside `if` blocks advance their callsite state only when the

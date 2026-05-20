@@ -216,7 +216,7 @@ array.standardize(id: float-array|int-array) -> float-array
 array.variance(id: float-array|int-array, biased?: bool-compatible) -> series float
 array.stdev(id: float-array|int-array, biased?: bool-compatible) -> series float
 array.sort(id: float-array|int-array|string-array, order?: const string) -> void
-array.sort_indices(id: float-array|int-array) -> int-array
+array.sort_indices(id: float-array|int-array|string-array, order?: const string) -> int-array
 array.reverse(id: float-array|int-array|bool-array|string-array|color-array) -> void
 array.join(id: float-array|int-array|bool-array|string-array|color-array, separator?: string-compatible) -> series string
 array.clear(id: float-array|int-array|bool-array|string-array|color-array) -> void
@@ -245,8 +245,8 @@ appends `id2` values to `id` in place, and returns `id`. Numeric array
 helpers may also be called with method syntax on float and int array receivers.
 `every/some` may also be called with method syntax on float, int, and bool
 array receivers.
-`sort` may also be called with method syntax on float, int, and string array
-receivers.
+`sort/sort_indices` may also be called with method syntax on float, int, and
+string array receivers.
 Binary search helpers expect the current array contents to be sorted ascending;
 `array.binary_search` returns `-1` when not found, while leftmost/rightmost
 return the nearest existing insertion-side index and return `-1` for empty
@@ -271,11 +271,12 @@ positions when at least one numeric value is present, and returns an empty
 array for empty/all-`na` arrays.
 `array.variance` and `array.stdev` ignore `na` elements and use a biased
 population estimate by default; pass `false` for an unbiased sample estimate.
-`array.sort` supports float, int, and string arrays, sorts ascending by
-default, accepts `order.ascending` or `order.descending`, and keeps `na` values
-last. `array.sort_indices` supports the numeric subset and returns a new int
-array containing original indexes in ascending sorted order without modifying
-the source array. `array.reverse` supports every supported typed array.
+`array.sort` and `array.sort_indices` support float, int, and string arrays,
+sort ascending by default, and accept `order.ascending` or `order.descending`.
+`na` values and empty string elements sort last in ascending order and first in
+descending order. `array.sort_indices` returns a new int array containing
+original indexes in sorted order without modifying the source array.
+`array.reverse` supports every supported typed array.
 `array.join` supports every supported typed array, defaults the
 separator to `,`, uses the default numeric string format, and renders colors as
 their normalized integer color values. Array assignment passes the runtime array

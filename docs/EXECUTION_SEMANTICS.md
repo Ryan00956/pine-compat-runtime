@@ -149,11 +149,12 @@ array; otherwise `na` element positions are preserved.
 biased population estimate by default; with `biased=false`, they use the
 sample denominator and return `na` when fewer than two numeric values remain.
 `array.sort` orders int/float/string arrays in place, sorts ascending by
-default, accepts `order.ascending` or `order.descending`, and places `na` values
-after typed values in either direction. `array.sort_indices` returns a new int
-array containing the source indexes in ascending sorted order, places `na`
-indexes last, and leaves the source array unchanged. `array.reverse` reverses
-any supported typed array in place.
+default, and accepts `order.ascending` or `order.descending`. `na` values and
+empty string elements sort last in ascending order and first in descending
+order. `array.sort_indices` returns a new int array containing the source
+indexes in sorted order, follows the same order and special-value rules, and
+leaves the source array unchanged. `array.reverse` reverses any supported typed
+array in place.
 `array.join` converts supported array elements to string
 with the default numeric format, uses `,` as the default separator, and returns
 an empty string for empty arrays. Color elements render as normalized integer

@@ -2015,7 +2015,7 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "array.sort_indices",
         phase: BuiltinPhase::Phase1Core,
-        params: ARRAY_NUMERIC_PARAMS,
+        params: ARRAY_SORT_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_INT_ARRAY),
         variadic: false,
     },

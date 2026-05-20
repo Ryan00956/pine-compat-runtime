@@ -4933,7 +4933,7 @@ plot(y)
     #[test]
     fn accepts_array_ordering_operations() {
         let analysis = analyze(
-            "values = array.new_int()\narray.push(values, 3)\narray.push(values, 1)\nindices = values.sort_indices()\narray.sort(values, order.descending)\nvalues.reverse()\nwords = array.from(\"b\", \"a\")\nwords.sort(order.ascending)\nplot(values.get(0) + values.get(1) + indices.get(0))\n",
+            "values = array.new_int()\narray.push(values, 3)\narray.push(values, 1)\nindices = values.sort_indices(order.descending)\narray.sort(values, order.descending)\nvalues.reverse()\nwords = array.from(\"b\", \"a\")\nword_indices = words.sort_indices(order.ascending)\nwords.sort(order.ascending)\nplot(values.get(0) + values.get(1) + indices.get(0) + word_indices.get(0))\n",
         );
 
         assert!(
@@ -5207,6 +5207,37 @@ plot(y)
     #[test]
     fn rejects_numeric_array_sort_order() {
         let analysis = analyze("values = array.new_int()\narray.sort(values, close)\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_bool_array_sort_indices() {
+        let analysis =
+            analyze("values = array.new_bool()\nvalues.push(true)\nvalues.sort_indices()\n");
+
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.hir.is_none());
+    }
+
+    #[test]
+    fn rejects_numeric_array_sort_indices_order() {
+        let analysis = analyze("values = array.new_int()\narray.sort_indices(values, close)\n");
 
         assert!(
             analysis

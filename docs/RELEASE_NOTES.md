@@ -41,8 +41,8 @@
   `array.variance`, and `array.stdev`, plus same-kind `array.abs`, for float
   and int arrays.
 - Added array ordering helpers: `array.sort` for numeric/string arrays with
-  optional order direction, numeric `array.sort_indices` for ascending order
-  with `na` values last, and `array.reverse` for all supported typed arrays.
+  optional order direction, `array.sort_indices` for numeric/string arrays with
+  optional order direction, and `array.reverse` for all supported typed arrays.
 - Added `array.join` support for supported typed arrays with optional string
   separators.
 - Added `array.slice` and `array.concat` support for supported typed arrays,
