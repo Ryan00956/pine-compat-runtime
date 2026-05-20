@@ -1,0 +1,4 @@
+//@version=5
+indicator("Range")
+value = ta.range(close, 3)
+plot(value)

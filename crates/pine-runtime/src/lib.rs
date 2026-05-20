@@ -1658,6 +1658,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.bb" => self.eval_bb(call_site_id, args),
             "ta.stdev" => self.eval_stdev(call_site_id, args),
             "ta.variance" => self.eval_variance(call_site_id, args),
+            "ta.range" => self.eval_range(call_site_id, args),
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.change" => self.eval_change(args),
@@ -2943,6 +2944,26 @@ impl<'a> HistoricalRuntime<'a> {
         self.eval_window_variance(call_site_id, args)
     }
 
+    fn eval_range(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(window.range().map_or(PineValue::Na, PineValue::Float))
+    }
+
     fn eval_window_variance(
         &mut self,
         call_site_id: CallSiteId,
@@ -4024,6 +4045,12 @@ impl RollingWindowState {
                 WindowExtreme::Highest => current.max(value),
                 WindowExtreme::Lowest => current.min(value),
             })
+    }
+
+    fn range(&self) -> Option<f64> {
+        let highest = self.extreme(WindowExtreme::Highest)?;
+        let lowest = self.extreme(WindowExtreme::Lowest)?;
+        Some(highest - lowest)
     }
 }
 
@@ -6100,6 +6127,30 @@ plot(sample)
         assert_eq!(result.plots[1].values[0], PineValue::Na);
         assert_eq!(result.plots[1].values[1], PineValue::Na);
         assert_values_close(&result.plots[1].values[2..], &[1.0, 2.3333333333333335]);
+    }
+
+    #[test]
+    fn runs_range_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("range")
+value = ta.range(close, 3)
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(3.0), bar(2.0), bar(5.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[2.0, 3.0]);
     }
 
     #[test]
