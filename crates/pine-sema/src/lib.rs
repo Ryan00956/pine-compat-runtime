@@ -3685,7 +3685,7 @@ mod tests {
     #[test]
     fn accepts_ta_window_statistics() {
         let analysis = analyze(
-            "plot(ta.stdev(close, 3, false) + ta.variance(close, 3, true) + ta.range(close, 3) + ta.dev(close, 3) + ta.vwma(close, 3) + ta.wma(close, 3) + ta.hma(close, 4))\n",
+            "plot(ta.stdev(close, 3, false) + ta.variance(close, 3, true) + ta.range(close, 3) + ta.dev(close, 3) + ta.vwma(close, 3) + ta.wma(close, 3) + ta.hma(close, 4) + ta.correlation(close, high, 3))\n",
         );
 
         assert!(
@@ -3720,6 +3720,13 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.dev")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.correlation")
         );
         assert!(
             analysis

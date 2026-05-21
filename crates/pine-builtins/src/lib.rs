@@ -896,6 +896,24 @@ const TA_TWO_SOURCE_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_TWO_SOURCE_LENGTH_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source1",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "source2",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "length",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
 const TA_LENGTH_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "length",
     accepts: Accepts::SimpleInt,
@@ -2198,6 +2216,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "ta.hma",
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.correlation",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_TWO_SOURCE_LENGTH_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },

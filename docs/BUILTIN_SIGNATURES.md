@@ -340,6 +340,7 @@ ta.tr(handle_na?: const bool) -> series float
 ta.change(source: series float, length?: simple int) -> series float
 ta.mom(source: series float, length: simple int) -> series float
 ta.roc(source: series float, length: simple int) -> series float
+ta.correlation(source1: series/simple numeric, source2: series/simple numeric, length: simple int) -> series float
 ta.rising(source: series float, length: simple int) -> series bool
 ta.falling(source: series float, length: simple int) -> series bool
 ta.barssince(condition: series bool) -> series int
@@ -406,6 +407,9 @@ Rules:
   history depth.
 - `ta.roc` returns `100 * (source - source[length]) / source[length]` and
   returns `na` when the historical denominator is zero.
+- `ta.correlation` returns the Pearson correlation coefficient over the ready
+  paired source window and returns `na` while the window is not ready, contains
+  `na`, or either source has zero variance.
 - `ta.rising`/`ta.falling` compare the current source against the previous
   ready-window values and return `false` while that window is not ready.
 - `ta.barssince` returns `0` on true conditions, increments after the last true
