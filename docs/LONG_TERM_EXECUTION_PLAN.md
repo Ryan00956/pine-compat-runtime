@@ -67,6 +67,9 @@ python -m pytest python/tests
 
 ## Phase A: Loop and Branch Hardening
 
+Status: complete for the current executable subset. See
+`docs/LOOP_BRANCH_AUDIT.md`.
+
 Goal: turn the current partial loop support into a more reliable Pine subset
 before adding larger runtime systems.
 
@@ -435,17 +438,16 @@ Acceptance criteria:
 
 Recommended order from the current state:
 
-1. Phase A: harden `for`, `while`, and branch interactions.
-2. Phase D: add more high-value pure and stateful built-ins.
-3. Phase B: expand collections beyond float arrays.
-4. Phase C: revisit history and qualifier semantics.
-5. Phase K: strengthen release infrastructure before large platform features.
-6. Phase E: drawing objects.
-7. Phase F: `request.*` and multi-timeframe data.
-8. Phase I: `varip`.
-9. Phase H: alerts.
-10. Phase J: libraries, user types, and methods.
-11. Phase G: strategy runtime.
+1. Phase D: add more high-value pure and stateful built-ins.
+2. Phase B: expand collections beyond float arrays.
+3. Phase C: revisit history and qualifier semantics when new built-ins need it.
+4. Phase K: strengthen release infrastructure before large platform features.
+5. Phase E: drawing objects.
+6. Phase F: `request.*` and multi-timeframe data.
+7. Phase I: `varip`.
+8. Phase H: alerts.
+9. Phase J: libraries, user types, and methods.
+10. Phase G: strategy runtime.
 
 This order keeps the project useful for indicator execution while delaying
 features that require new host APIs, object lifetimes, or broker simulation.

@@ -201,7 +201,7 @@ Status: in progress.
 Status: planned in
 [`LONG_TERM_EXECUTION_PLAN.md`](LONG_TERM_EXECUTION_PLAN.md).
 
-- [ ] Harden loop and branch edge cases.
+- [x] Harden loop and branch edge cases.
 - [x] Expand scalar typed-array support beyond float arrays.
 - [ ] Design unsupported collection families and remaining Pine array
   semantics.
