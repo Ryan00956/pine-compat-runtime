@@ -6271,8 +6271,9 @@ fn format_number(value: f64, format: &str) -> String {
     }
 
     let format = match format {
-        "" | "format.mintick" => "#.########",
+        "" | "format.mintick" | "format.price" => "#.########",
         "format.percent" => "#.##%",
+        "format.volume" => "#.##",
         other => other,
     };
     let percent = format.ends_with('%');
@@ -8698,6 +8699,8 @@ text_round0 = str.tostring(1.25, "#")
 text_round1 = str.tostring(1.25, "#.#")
 text_zeros = str.tostring(1.25, "#.0000")
 text_percent = str.tostring(0.1234, format.percent)
+text_price = str.tostring(1.234567891, format.price)
+text_volume = str.tostring(1234.567, format.volume)
 text_bool = str.tostring(true)
 text_string = str.tostring("ok")
 text_na = str.tostring(na)
@@ -8736,6 +8739,7 @@ plot(number == 1234.5 and signed_number == -0.5 ? 1 : 0)
 plot(na(invalid_number) and na(exponent_number) and na(missing_number) ? 1 : 0)
 plot(text_int == "42" and text_float == "1.25" and text_round0 == "1" and text_round1 == "1.3" ? 1 : 0)
 plot(text_zeros == "1.2500" and text_percent == "12.34%" ? 1 : 0)
+plot(text_price == "1.23456789" and text_volume == "1234.57" ? 1 : 0)
 plot(text_bool == "true" and text_string == "ok" and text_na == "NaN" ? 1 : 0)
 plot(text_array == "[1, 3, NaN]" ? 1 : 0)
 plot(formatted == "A=42, B=1.25, A2=42" and formatted_missing == "Missing {2}" ? 1 : 0)
@@ -8786,6 +8790,7 @@ plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_tim
         assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[26].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[27].values, &[1.0, 1.0]);
     }
 
     #[test]

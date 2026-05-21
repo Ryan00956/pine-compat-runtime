@@ -567,10 +567,10 @@ targets replace zero-width character boundaries. Replacement results over
 sign, and at most one decimal point. It returns `na` for invalid formats,
 `na` inputs, and non-finite parsed results.
 `str.tostring` supports scalar int, float, bool, string, `na`, and
-fixture-covered non-color array values. Numeric formatting supports the default `#.########`,
-`format.mintick` as the default format, `format.percent` as `#.##%`, and
-fixture-covered custom patterns using `#`, `0`, `.`, `,`, and trailing `%`
-tokens.
+fixture-covered non-color array values. Numeric formatting supports the default
+`#.########`, `format.mintick` and `format.price` as the default format,
+`format.volume` as `#.##`, `format.percent` as `#.##%`, and fixture-covered
+custom patterns using `#`, `0`, `.`, `,`, and trailing `%` tokens.
 `str.format` supports indexed placeholders such as `{0}` and numeric
 placeholders such as `{0,number,#.00}`. Missing placeholder indexes remain
 literal text. Unmatched braces are runtime errors. Quote handling inside format
