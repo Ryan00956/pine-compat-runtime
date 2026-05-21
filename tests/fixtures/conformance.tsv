@@ -112,6 +112,8 @@ ta.ao	supported	fixture-derived Awesome Oscillator subset	tests/fixtures/runtime
 ta.bop	supported	fixture-derived Balance of Power subset	tests/fixtures/runtime/bop.pine
 ta.bb	supported	fixture-derived executable subset	tests/fixtures/runtime/bb.pine
 ta.bbw	supported	Bollinger Bands Width over ready rolling windows	tests/fixtures/runtime/bbw.pine
+ta.kc	supported	fixture-derived Keltner Channels subset	tests/fixtures/runtime/kc.pine
+ta.kcw	supported	fixture-derived Keltner Channels Width subset	tests/fixtures/runtime/kcw.pine
 ta.cum	supported	fixture-derived executable subset	tests/fixtures/runtime/cum.pine
 ta.max	supported	all-time maximum over executed non-na source values	tests/fixtures/runtime/all_time_extremes.pine
 ta.min	supported	all-time minimum over executed non-na source values	tests/fixtures/runtime/all_time_extremes.pine

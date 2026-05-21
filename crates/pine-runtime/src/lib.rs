@@ -2036,6 +2036,8 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.bop" => self.eval_bop(),
             "ta.bb" => self.eval_bb(call_site_id, args),
             "ta.bbw" => self.eval_bbw(call_site_id, args),
+            "ta.kc" => self.eval_kc(call_site_id, args),
+            "ta.kcw" => self.eval_kcw(call_site_id, args),
             "ta.cum" => self.eval_cum(call_site_id, args),
             "ta.max" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Highest),
             "ta.min" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Lowest),
@@ -3372,6 +3374,88 @@ impl<'a> HistoricalRuntime<'a> {
         let dev = mult * window.variance(length, true).sqrt();
 
         Ok(finite_float_or_na((2.0 * dev) / basis))
+    }
+
+    fn eval_kc(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some((basis, range_ema, mult)) = self.eval_kc_components(call_site_id, args)? else {
+            return Ok(three_na_tuple());
+        };
+
+        Ok(PineValue::Tuple(vec![
+            finite_float_or_na(basis),
+            finite_float_or_na(basis + range_ema * mult),
+            finite_float_or_na(basis - range_ema * mult),
+        ]))
+    }
+
+    fn eval_kcw(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some((basis, range_ema, mult)) = self.eval_kc_components(call_site_id, args)? else {
+            return Ok(PineValue::Na);
+        };
+        if basis == 0.0 {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na((2.0 * range_ema * mult) / basis))
+    }
+
+    fn eval_kc_components(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<Option<(f64, f64, f64)>, RuntimeError> {
+        let Some(source) = self.eval_expr(&args[0].value)?.as_f64() else {
+            return Ok(None);
+        };
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let Some(mult) = self.eval_expr(&args[2].value)?.as_f64() else {
+            return Ok(None);
+        };
+        let use_true_range = if let Some(arg) = args.get(3) {
+            match self.eval_expr(&arg.value)? {
+                PineValue::Bool(value) => value,
+                PineValue::Na => true,
+                _ => false,
+            }
+        } else {
+            true
+        };
+        if length <= 0 {
+            return Ok(None);
+        }
+
+        let span = if use_true_range {
+            self.true_range(true).as_f64()
+        } else {
+            match (
+                self.current_builtin_f64("high"),
+                self.current_builtin_f64("low"),
+            ) {
+                (Some(high), Some(low)) => Some(high - low),
+                _ => None,
+            }
+        };
+        let Some(span) = span else {
+            return Ok(None);
+        };
+
+        let previous = kc_state(self.call_state.get(&call_site_id));
+        let basis = ema_next(previous.map(|state| state.0), source, length);
+        let range_ema = ema_next(previous.map(|state| state.1), span, length);
+        self.call_state.insert(
+            call_site_id,
+            PineValue::Tuple(vec![PineValue::Float(basis), PineValue::Float(range_ema)]),
+        );
+
+        Ok(Some((basis, range_ema, mult)))
     }
 
     fn eval_cum(
@@ -6225,6 +6309,16 @@ fn dmi_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, f64)> {
     ))
 }
 
+fn kc_state(value: Option<&PineValue>) -> Option<(f64, f64)> {
+    let Some(PineValue::Tuple(values)) = value else {
+        return None;
+    };
+    let [basis, range_ema] = values.as_slice() else {
+        return None;
+    };
+    Some((basis.as_f64()?, range_ema.as_f64()?))
+}
+
 fn sar_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, bool)> {
     let Some(PineValue::Tuple(values)) = value else {
         return None;
@@ -8228,6 +8322,97 @@ plot(na(invalid) ? 1 : 0)
         );
         assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_keltner_channels_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("KC")
+[middle, upper, lower] = ta.kc(close, 2, 2)
+[middle_plain, upper_plain, lower_plain] = ta.kc(close, 2, 2, false)
+[invalid_middle, invalid_upper, invalid_lower] = ta.kc(close, 0, 2)
+plot(middle)
+plot(upper)
+plot(lower)
+plot(upper_plain)
+plot(lower_plain)
+plot(na(invalid_upper) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(10.0, 11.0, 9.0, 10.0),
+            bar_ohlc(12.0, 15.0, 14.0, 12.0),
+            bar_ohlc(9.0, 10.0, 8.0, 9.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(
+            &result.plots[0].values,
+            &[10.0, 11.333333333333332, 9.777777777777779],
+        );
+        assert_values_close(
+            &result.plots[1].values,
+            &[14.0, 19.333333333333332, 17.77777777777778],
+        );
+        assert_values_close(
+            &result.plots[2].values,
+            &[6.0, 3.333333333333332, 1.7777777777777786],
+        );
+        assert_values_close(&result.plots[3].values, &[14.0, 14.0, 13.333333333333334]);
+        assert_values_close(
+            &result.plots[4].values,
+            &[6.0, 8.666666666666666, 6.222222222222223],
+        );
+        assert_values_close(&result.plots[5].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_keltner_channel_width_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("KCW")
+width = ta.kcw(close, 2, 2)
+plain_width = ta.kcw(close, 2, 2, false)
+zero_basis = ta.kcw(close - close, 2, 2)
+invalid = ta.kcw(close, 0, 2)
+plot(width)
+plot(plain_width)
+plot(na(zero_basis) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(10.0, 11.0, 9.0, 10.0),
+            bar_ohlc(12.0, 15.0, 14.0, 12.0),
+            bar_ohlc(9.0, 10.0, 8.0, 9.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(
+            &result.plots[0].values,
+            &[0.8, 1.411764705882353, 1.6363636363636362],
+        );
+        assert_values_close(
+            &result.plots[1].values,
+            &[0.8, 0.4705882352941177, 0.7272727272727272],
+        );
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[3].values, &[1.0, 1.0, 1.0]);
     }
 
     #[test]
@@ -11692,6 +11877,65 @@ if close > open
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_eq!(result.plots[0].values[1], PineValue::Na);
         assert_values_close(&result.plots[0].values[2..], &[4.0, 7.0]);
+    }
+
+    #[test]
+    fn advances_conditional_kc_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional kc")
+score = close
+if close > open
+    [middle, upper, lower] = ta.kc(close, 2, 2)
+    score := upper
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(0.0, 11.0, 9.0, 10.0),
+            bar_ohlc(13.0, 15.0, 14.0, 12.0),
+            bar_ohlc(0.0, 10.0, 8.0, 9.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[14.0, 12.0, 16.0]);
+    }
+
+    #[test]
+    fn advances_conditional_kcw_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional kcw")
+score = close
+if close > open
+    score := ta.kcw(close, 2, 2)
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(0.0, 11.0, 9.0, 10.0),
+            bar_ohlc(13.0, 15.0, 14.0, 12.0),
+            bar_ohlc(0.0, 10.0, 8.0, 9.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[0.8, 12.0, 1.4285714285714286]);
     }
 
     #[test]

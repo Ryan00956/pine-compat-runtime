@@ -1,0 +1,4 @@
+//@version=5
+indicator("KCW")
+value = ta.kcw(close, 2, 2)
+plot(value)

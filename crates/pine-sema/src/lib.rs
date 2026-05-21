@@ -3063,7 +3063,9 @@ impl HistoryRequirementCollector {
 
     fn record_call_history(&mut self, callee: &str, args: &[HirCallArg]) {
         match callee {
-            "ta.tr" | "ta.atr" | "ta.supertrend" => self.record_builtin_history("close", 1),
+            "ta.tr" | "ta.atr" | "ta.supertrend" | "ta.kc" | "ta.kcw" => {
+                self.record_builtin_history("close", 1)
+            }
             "ta.dmi" => {
                 self.record_builtin_history("high", 1);
                 self.record_builtin_history("low", 1);
@@ -4361,6 +4363,33 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.cog")
+        );
+    }
+
+    #[test]
+    fn accepts_ta_kc_and_kcw() {
+        let analysis = analyze(
+            "[middle, upper, lower] = ta.kc(close, 3, 2, false)\nplot(middle + upper + lower + ta.kcw(close, 3, 2))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.kc")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.kcw")
         );
     }
 

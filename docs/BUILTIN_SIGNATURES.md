@@ -379,6 +379,9 @@ ta.bop() -> series float
 ta.bb(source: series int/float, length: simple int, mult: numeric)
   -> tuple(series float, series float, series float)
 ta.bbw(source: series int/float, length: simple int, mult: numeric) -> series float
+ta.kc(source: series int/float, length: simple int, mult: simple numeric, useTrueRange?: bool-compatible)
+  -> tuple(series float, series float, series float)
+ta.kcw(source: series int/float, length: simple int, mult: simple numeric, useTrueRange?: bool-compatible) -> series float
 ta.stdev(source: series int/float, length: simple int, biased?: bool-compatible) -> series float
 ta.variance(source: series int/float, length: simple int, biased?: bool-compatible) -> series float
 ta.range(source: series int/float, length: simple int) -> series float
@@ -447,6 +450,12 @@ Rules:
 - `ta.bbw` uses the same basis/deviation window as `ta.bb` and returns
   `(upper - lower) / basis`; it returns `na` when the window is not ready or
   basis is zero.
+- `ta.kc` returns Keltner Channels as `[ema(source, length), basis +
+  ema(span, length) * mult, basis - ema(span, length) * mult]`, where `span`
+  defaults to true range and uses `high - low` when `useTrueRange` is `false`.
+- `ta.kcw` uses the same Keltner Channel basis/range EMA calculation and
+  returns `(upper - lower) / basis`; it returns `na` when inputs are `na`,
+  length is non-positive, or basis is zero.
 - `ta.stdev` defaults `biased` to `true`; `false` uses sample standard
   deviation and returns `na` for windows shorter than two values.
 - `ta.variance` uses the same `biased` default and sample/population window

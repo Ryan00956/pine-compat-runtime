@@ -27,6 +27,8 @@
 - Added `ta.ao` Awesome Oscillator support as the fast/slow SMA spread of
   median price.
 - Added `ta.bop` Balance of Power support over current OHLC values.
+- Added `ta.kc` and `ta.kcw` Keltner Channel support using source/range EMA
+  state.
 - Added `ta.wpr` Williams %R support over ready rolling high/low windows and
   current close.
 - Added `ta.stoch` four-argument stochastic oscillator support over ready

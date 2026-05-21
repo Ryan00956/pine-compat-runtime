@@ -1613,6 +1613,29 @@ const TA_BB_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_KC_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "length",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "mult",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "useTrueRange",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+];
+
 const TA_SUPERTREND_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "factor",
@@ -2935,6 +2958,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "ta.bbw",
         phase: BuiltinPhase::Phase1Core,
         params: TA_BB_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.kc",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_KC_PARAMS,
+        returns: ReturnSpec::Tuple(THREE_SERIES_FLOATS),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.kcw",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_KC_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },

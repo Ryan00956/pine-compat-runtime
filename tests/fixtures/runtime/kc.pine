@@ -1,0 +1,6 @@
+//@version=5
+indicator("KC")
+[middle, upper, lower] = ta.kc(close, 2, 2)
+plot(middle)
+plot(upper)
+plot(lower)
