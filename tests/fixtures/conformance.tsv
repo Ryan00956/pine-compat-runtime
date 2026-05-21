@@ -105,6 +105,7 @@ ta.rma	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pin
 ta.rsi	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
 ta.macd	supported	fixture-derived executable subset	tests/fixtures/runtime/macd.pine
 ta.bb	supported	fixture-derived executable subset	tests/fixtures/runtime/bb.pine
+ta.bbw	supported	Bollinger Bands Width over ready rolling windows	tests/fixtures/runtime/bbw.pine
 ta.cum	supported	fixture-derived executable subset	tests/fixtures/runtime/cum.pine
 ta.max	supported	all-time maximum over executed non-na source values	tests/fixtures/runtime/all_time_extremes.pine
 ta.min	supported	all-time minimum over executed non-na source values	tests/fixtures/runtime/all_time_extremes.pine

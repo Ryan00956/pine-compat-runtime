@@ -353,6 +353,7 @@ ta.macd(source: series float, fastlen: simple int, slowlen: simple int, siglen: 
   -> tuple(series float, series float, series float)
 ta.bb(source: series float, length: simple int, mult: numeric)
   -> tuple(series float, series float, series float)
+ta.bbw(source: series float, length: simple int, mult: numeric) -> series float
 ta.stdev(source: series float, length: simple int, biased?: bool-compatible) -> series float
 ta.variance(source: series float, length: simple int, biased?: bool-compatible) -> series float
 ta.range(source: series float, length: simple int) -> series float
@@ -405,6 +406,9 @@ Rules:
 
 - `length` should initially be `simple int`; reject `series int` lengths.
 - `ta.bb` currently accepts any numeric qualifier for `mult`.
+- `ta.bbw` uses the same basis/deviation window as `ta.bb` and returns
+  `(upper - lower) / basis`; it returns `na` when the window is not ready or
+  basis is zero.
 - `ta.stdev` defaults `biased` to `true`; `false` uses sample standard
   deviation and returns `na` for windows shorter than two values.
 - `ta.variance` uses the same `biased` default and sample/population window

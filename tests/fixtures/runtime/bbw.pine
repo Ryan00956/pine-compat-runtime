@@ -1,0 +1,8 @@
+//@version=5
+indicator("BB Width")
+width = ta.bbw(close, 3, 2)
+zero_basis = ta.bbw(close - close, 3, 2)
+invalid = ta.bbw(close, 0, 2)
+plot(width)
+plot(na(zero_basis) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)

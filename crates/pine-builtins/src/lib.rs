@@ -2784,6 +2784,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "ta.bbw",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_BB_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "ta.cum",
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_PARAMS,

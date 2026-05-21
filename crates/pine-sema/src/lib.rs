@@ -3708,13 +3708,20 @@ mod tests {
     #[test]
     fn accepts_ta_window_statistics() {
         let analysis = analyze(
-            "plot(ta.stdev(close, 3, false) + ta.variance(close, 3, true) + ta.range(close, 3) + ta.dev(close, 3) + ta.vwma(close, 3) + ta.wma(close, 3) + ta.hma(close, 4) + ta.swma(close) + ta.alma(close, 4, 0.85, 6, true) + ta.linreg(close, 3, 0) + ta.correlation(close, high, 3) + ta.covariance(close, high, 3) + ta.median(close, 3) + ta.mode(close, 3) + ta.percentile_nearest_rank(close, 3, 50) + ta.percentile_linear_interpolation(close, 3, 50) + ta.percentrank(close, 3))\n",
+            "plot(ta.bbw(close, 3, 2) + ta.stdev(close, 3, false) + ta.variance(close, 3, true) + ta.range(close, 3) + ta.dev(close, 3) + ta.vwma(close, 3) + ta.wma(close, 3) + ta.hma(close, 4) + ta.swma(close) + ta.alma(close, 4, 0.85, 6, true) + ta.linreg(close, 3, 0) + ta.correlation(close, high, 3) + ta.covariance(close, high, 3) + ta.median(close, 3) + ta.mode(close, 3) + ta.percentile_nearest_rank(close, 3, 50) + ta.percentile_linear_interpolation(close, 3, 50) + ta.percentrank(close, 3))\n",
         );
 
         assert!(
             analysis.diagnostics.is_empty(),
             "{:?}",
             analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.bbw")
         );
         assert!(
             analysis

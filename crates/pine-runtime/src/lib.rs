@@ -2016,6 +2016,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.rsi" => self.eval_rsi(call_site_id, args),
             "ta.macd" => self.eval_macd(call_site_id, args),
             "ta.bb" => self.eval_bb(call_site_id, args),
+            "ta.bbw" => self.eval_bbw(call_site_id, args),
             "ta.cum" => self.eval_cum(call_site_id, args),
             "ta.max" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Highest),
             "ta.min" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Lowest),
@@ -3319,6 +3320,33 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Float(basis + dev),
             PineValue::Float(basis - dev),
         ]))
+    }
+
+    fn eval_bbw(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let mult = self.eval_expr(&args[2].value)?.as_f64().unwrap_or(0.0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let basis = window.mean(length);
+        if basis == 0.0 {
+            return Ok(PineValue::Na);
+        }
+        let dev = mult * window.variance(length, true).sqrt();
+
+        Ok(finite_float_or_na((2.0 * dev) / basis))
     }
 
     fn eval_cum(
@@ -7352,6 +7380,39 @@ plot(lower)
             &result.plots[2].values[2..],
             &[0.36700683814454793, 1.367006838144548],
         );
+    }
+
+    #[test]
+    fn runs_bollinger_band_width_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("BB Width")
+width = ta.bbw(close, 3, 2)
+zero_basis = ta.bbw(close - close, 3, 2)
+invalid = ta.bbw(close, 0, 2)
+plot(width)
+plot(na(zero_basis) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(5.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[2..],
+            &[1.632993161855452, 1.4966629547095767],
+        );
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0]);
     }
 
     #[test]

@@ -139,6 +139,7 @@
 - Added `ta.alma` support for Arnaud Legoux moving averages with optional
   floored offset centers.
 - Added `ta.linreg` support for rolling least-squares linear regression values.
+- Added `ta.bbw` support for Bollinger Bands Width values.
 - Added `ta.cum` support for cumulative numeric source sums.
 - Added `ta.max` and `ta.min` support for all-time source extremes.
 - Added `ta.accdist` support as the built-in Accumulation/Distribution index
