@@ -3336,6 +3336,9 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             qualifier_at_most(arg_type.qualifier, Qualifier::Simple)
                 && arg_type.kind == ValueKind::Bool
         }
+        Accepts::ConstNumeric => {
+            arg_type.qualifier == Qualifier::Const && is_numeric(arg_type.kind)
+        }
         Accepts::ConstString => {
             arg_type.qualifier == Qualifier::Const && arg_type.kind == ValueKind::String
         }
@@ -3387,6 +3390,7 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
         }
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
         Accepts::Array => is_array_kind(arg_type.kind),
+        Accepts::Tuple => arg_type.kind == ValueKind::Tuple,
         Accepts::NumericArray => is_numeric_array_kind(arg_type.kind),
         Accepts::NumericOrBoolArray => {
             is_numeric_array_kind(arg_type.kind) || arg_type.kind == ValueKind::BoolArray
@@ -4104,6 +4108,28 @@ mod tests {
                 .iter()
                 .any(|feature| feature.feature == "input")
         );
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
+    fn accepts_common_input_metadata_parameters() {
+        let analysis = analyze(
+            r#"length = input.int(2, "Length", minval=1, maxval=20, step=1, options=[1, 2, 3], tooltip="Bars", inline="row", group="Settings", confirm=true, display=display.all)
+scale = input.float(1.5, "Scale", minval=0.5, maxval=5.0, step=0.25, options=[1.0, 1.5], display=display.none)
+enabled = input.bool(true, "Enabled", tooltip="Toggle", inline="row", group="Settings", confirm=false)
+mode = input.string("SMA", "Mode", options=["SMA", "EMA"], tooltip="Mode")
+shade = input.color(color.orange, "Shade", group="Style")
+src = input.source(close, "Source", tooltip="Price", inline="src", group="Settings", display=display.all)
+plot(enabled and mode == "SMA" ? math.max(src, length) * scale : close, color=shade)
+"#,
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.compatibility.unsupported.is_empty());
         assert!(analysis.hir.is_some());
     }
 

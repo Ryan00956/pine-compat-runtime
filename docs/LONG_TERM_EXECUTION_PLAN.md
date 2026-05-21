@@ -228,6 +228,9 @@ Candidate areas:
   helper coverage includes the numeric UTC `timestamp` subset.
 - Initial `barstate.*` coverage includes `barstate.isfirst`,
   `barstate.isconfirmed`, `barstate.ishistory`, and `barstate.isrealtime`.
+- Initial `input.*` metadata coverage accepts common min/max/step, `options`,
+  `tooltip`, `inline`, `group`, `confirm`, and `display` parameters while
+  continuing to execute the `defval` value.
 - More complete `color.*` constants and helpers.
 - More complete `input.*` parameters and host-side input override APIs.
 - More plot options, visibility controls, styles, and display parameters.

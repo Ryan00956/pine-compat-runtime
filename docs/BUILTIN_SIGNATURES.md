@@ -127,25 +127,26 @@ Unsupported named arguments should produce compatibility diagnostics.
 ## Inputs
 
 ```text
-input(defval: const int/float/bool/string/color, title?: const string, ...) -> input defval kind
-input.int(defval: const int, title?: const string, ...) -> input int
-input.float(defval: const float, title?: const string, ...) -> input float
-input.bool(defval: const bool, title?: const string, ...) -> input bool
-input.color(defval: const color, title?: const string, ...) -> input color
-input.string(defval: const string, title?: const string, ...) -> input string
-input.price(defval: const float, title?: const string, ...) -> input float
-input.time(defval: const int, title?: const string, ...) -> input int
-input.symbol(defval: const string, title?: const string, ...) -> input string
-input.timeframe(defval: const string, title?: const string, ...) -> input string
-input.source(defval: series float, title?: const string, ...) -> series float
+input(defval: const int/float/bool/string/color, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input defval kind
+input.int(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input int
+input.float(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input float
+input.bool(defval: const bool, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input bool
+input.color(defval: const color, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input color
+input.string(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
+input.price(defval: const float, title?: const string, minval?: const numeric, maxval?: const numeric, step?: const numeric, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input float
+input.time(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input int
+input.symbol(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
+input.timeframe(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
+input.source(defval: series float, title?: const string, tooltip?: const string, inline?: const string, group?: const string, display?: string-compatible) -> series float
 ```
 
 Rules:
 
 - Input metadata should be collected during analysis.
 - Host-provided input values override `defval` at runtime.
-- Unsupported options such as complex grouping or display flags should be
-  diagnosed before runtime.
+- The supported metadata subset validates common option names and types, then
+  ignores metadata at runtime; `defval` remains the executable value until
+  host-side input override APIs are implemented.
 - `input.source` returns the selected source series. Phase 1 may restrict this
   to known OHLCV-derived series.
 

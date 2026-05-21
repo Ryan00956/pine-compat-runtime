@@ -59,6 +59,9 @@
   support for the executable `defval`/`title` subset.
 - Added generic `input` support for const int, float, bool, string, and color
   defaults.
+- Added common `input.*` metadata parameters, including min/max/step,
+  `options`, `tooltip`, `inline`, `group`, `confirm`, and `display` where they
+  fit the supported input kinds.
 - Added UTC-derived `year`, `month`, `dayofmonth`, `hour`, `minute`, and
   `second` bar time component variables.
 - Added UTC-only function overloads for `year`, `month`, `dayofmonth`, `hour`,

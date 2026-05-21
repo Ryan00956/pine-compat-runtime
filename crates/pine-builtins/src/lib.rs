@@ -36,6 +36,7 @@ pub enum Accepts {
     SimpleInt,
     SimpleNumeric,
     SimpleBool,
+    ConstNumeric,
     ConstString,
     ConstBool,
     ConstOrInputFloat,
@@ -47,6 +48,7 @@ pub enum Accepts {
     BoolCompatible,
     PlotOrHLine,
     Array,
+    Tuple,
     NumericArray,
     NumericOrBoolArray,
     NumericOrStringArray,
@@ -131,6 +133,36 @@ const INPUT_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstString,
         optional: true,
     },
+    BuiltinParam {
+        name: "options",
+        accepts: Accepts::Tuple,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "tooltip",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "inline",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "group",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "confirm",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
 ];
 
 const INPUT_INT_PARAMS: &[BuiltinParam] = &[
@@ -142,6 +174,51 @@ const INPUT_INT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "title",
         accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "minval",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
+        optional: true,
+    },
+    BuiltinParam {
+        name: "maxval",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
+        optional: true,
+    },
+    BuiltinParam {
+        name: "step",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
+        optional: true,
+    },
+    BuiltinParam {
+        name: "options",
+        accepts: Accepts::Tuple,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "tooltip",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "inline",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "group",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "confirm",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
 ];
@@ -157,6 +234,51 @@ const INPUT_FLOAT_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstString,
         optional: true,
     },
+    BuiltinParam {
+        name: "minval",
+        accepts: Accepts::ConstNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "maxval",
+        accepts: Accepts::ConstNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "step",
+        accepts: Accepts::ConstNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "options",
+        accepts: Accepts::Tuple,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "tooltip",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "inline",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "group",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "confirm",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
 ];
 
 const INPUT_BOOL_PARAMS: &[BuiltinParam] = &[
@@ -168,6 +290,31 @@ const INPUT_BOOL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "title",
         accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "tooltip",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "inline",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "group",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "confirm",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
 ];
@@ -183,6 +330,31 @@ const INPUT_COLOR_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstString,
         optional: true,
     },
+    BuiltinParam {
+        name: "tooltip",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "inline",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "group",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "confirm",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
 ];
 
 const INPUT_STRING_PARAMS: &[BuiltinParam] = &[
@@ -196,6 +368,36 @@ const INPUT_STRING_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstString,
         optional: true,
     },
+    BuiltinParam {
+        name: "options",
+        accepts: Accepts::Tuple,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "tooltip",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "inline",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "group",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "confirm",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
 ];
 
 const INPUT_SOURCE_PARAMS: &[BuiltinParam] = &[
@@ -207,6 +409,26 @@ const INPUT_SOURCE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "title",
         accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "tooltip",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "inline",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "group",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::StringCompatible,
         optional: true,
     },
 ];

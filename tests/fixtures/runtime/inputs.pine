@@ -1,9 +1,9 @@
 //@version=5
 indicator("Inputs")
-threshold = input.price(2.5, "Price")
-start = input.time(2, "Start")
-symbol = input.symbol("AAPL", "Symbol")
-timeframe = input.timeframe("D", "Timeframe")
+threshold = input.price(2.5, "Price", minval=0.0, maxval=10.0, step=0.5, tooltip="Trigger", inline="row", group="Inputs", confirm=true, display=display.all)
+start = input.time(2, "Start", tooltip="Start time", group="Inputs", confirm=false)
+symbol = input.symbol("AAPL", "Symbol", options=["AAPL", "MSFT"], inline="row", group="Inputs")
+timeframe = input.timeframe("D", "Timeframe", options=["D", "W"], tooltip="Resolution", display=display.none)
 
 enabled = time >= start and symbol == "AAPL" and timeframe == "D"
 plot(enabled ? math.max(close, threshold) : 0)

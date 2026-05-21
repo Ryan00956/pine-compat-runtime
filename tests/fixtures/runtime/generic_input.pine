@@ -1,9 +1,9 @@
 //@version=5
 indicator("Generic input")
-length = input(2, "Length")
-scale = input(1.5, "Scale")
-enabled = input(true, "Enabled")
-mode = input("SMA", "Mode")
-shade = input(color.orange, "Shade")
+length = input(2, "Length", options=[1, 2, 3], tooltip="Bars", inline="row", group="Inputs", confirm=false, display=display.all)
+scale = input(1.5, "Scale", tooltip="Scale", group="Inputs")
+enabled = input(true, "Enabled", inline="row", group="Inputs")
+mode = input("SMA", "Mode", options=["SMA", "EMA"], tooltip="Mode")
+shade = input(color.orange, "Shade", group="Style")
 
 plot(enabled and mode == "SMA" ? ta.sma(close, length) * scale : open, color=color.new(shade, 10))
