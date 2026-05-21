@@ -15,6 +15,8 @@
   Wilder/RMA-style smoothing behavior.
 - Added `ta.sar` Parabolic SAR support with callsite state and prior-bar
   high/low clamping.
+- Added `ta.mfi` Money Flow Index support over ready positive/negative
+  money-flow windows using source and volume.
 - Added `ta.stoch` four-argument stochastic oscillator support over ready
   rolling high/low windows.
 - Added partial float array support with runtime-owned array ids,

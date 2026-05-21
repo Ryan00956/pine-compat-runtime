@@ -130,6 +130,7 @@ ta.variance	supported	fixture-derived executable subset	tests/fixtures/runtime/v
 ta.range	supported	fixture-derived executable subset	tests/fixtures/runtime/range.pine
 ta.dev	supported	fixture-derived executable subset	tests/fixtures/runtime/dev.pine
 ta.vwma	supported	fixture-derived executable subset	tests/fixtures/runtime/vwma.pine
+ta.mfi	supported	fixture-derived Money Flow Index subset	tests/fixtures/runtime/mfi.pine
 ta.wma	supported	fixture-derived executable subset	tests/fixtures/runtime/wma.pine
 ta.hma	supported	fixture-derived executable subset	tests/fixtures/runtime/hma.pine
 ta.swma	supported	fixture-derived executable subset	tests/fixtures/runtime/swma.pine

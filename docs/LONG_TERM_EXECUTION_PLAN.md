@@ -217,6 +217,7 @@ Candidate areas:
   `ta.percentrank` over ready rolling windows, `ta.cum` cumulative sums,
   `ta.accdist`/`ta.iii`/`ta.nvi`/
   `ta.obv`/`ta.pvi`/`ta.pvt`, partial `ta.vwap` variable/source-call support,
+  `ta.mfi` Money Flow Index support,
   `ta.max`/`ta.min` all-time source extremes, `ta.tr` as a true range series
   variable, `ta.wad`/`ta.wvad` flow variables, `ta.supertrend`
   line/direction tuple support, `ta.dmi` directional movement tuple support,

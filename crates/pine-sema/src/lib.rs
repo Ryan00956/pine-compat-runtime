@@ -3074,6 +3074,9 @@ impl HistoryRequirementCollector {
                 self.record_builtin_history("low", 2);
                 self.record_builtin_history("close", 1);
             }
+            "ta.mfi" => {
+                self.record_constant_history(args.first().and_then(|arg| arg.value.series_id), 1)
+            }
             "ta.change" => self.record_optional_length_history(args),
             "ta.mom" | "ta.roc" => self.record_required_length_history(args),
             "ta.cross" | "ta.crossover" | "ta.crossunder" => self.record_cross_history(args),
@@ -4262,6 +4265,24 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.sar")
+        );
+    }
+
+    #[test]
+    fn accepts_ta_mfi() {
+        let analysis = analyze("plot(ta.mfi(hlc3, 3))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.mfi")
         );
     }
 

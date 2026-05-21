@@ -556,6 +556,8 @@ enum RollingWindowKey {
     Single(CallSiteId),
     VwmaWeighted(CallSiteId),
     VwmaVolume(CallSiteId),
+    MfiPositive(CallSiteId),
+    MfiNegative(CallSiteId),
     CorrelationLeft(CallSiteId),
     CorrelationRight(CallSiteId),
     CorrelationProduct(CallSiteId),
@@ -2031,6 +2033,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.dev" => self.eval_dev(call_site_id, args),
             "ta.vwap" => self.eval_vwap_source(call_site_id, args),
             "ta.vwma" => self.eval_vwma(call_site_id, args),
+            "ta.mfi" => self.eval_mfi(call_site_id, args),
             "ta.wma" => self.eval_wma(call_site_id, args),
             "ta.hma" => self.eval_hma(call_site_id, args),
             "ta.swma" => self.eval_swma(call_site_id, args),
@@ -3536,6 +3539,66 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(weighted.sum / volumes.sum))
     }
 
+    fn eval_mfi(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let Some(source) = source.as_f64() else {
+            self.update_mfi_windows(call_site_id, None, None, length);
+            return Ok(PineValue::Na);
+        };
+        let Some(volume) = self.current_builtin_f64("volume") else {
+            self.update_mfi_windows(call_site_id, None, None, length);
+            return Ok(PineValue::Na);
+        };
+        let Some(series_id) = args[0].value.series_id else {
+            self.update_mfi_windows(call_site_id, None, None, length);
+            return Ok(PineValue::Na);
+        };
+
+        let (positive_flow, negative_flow) = match self.series_store.read(series_id, 1).as_f64() {
+            Some(previous) if source > previous => (Some(source * volume), Some(0.0)),
+            Some(previous) if source < previous => (Some(0.0), Some(source * volume)),
+            Some(_) | None => (Some(0.0), Some(0.0)),
+        };
+        self.update_mfi_windows(call_site_id, positive_flow, negative_flow, length);
+
+        let positive_window = self
+            .rolling_windows
+            .get(&RollingWindowKey::MfiPositive(call_site_id));
+        let negative_window = self
+            .rolling_windows
+            .get(&RollingWindowKey::MfiNegative(call_site_id));
+        let (Some(positive_window), Some(negative_window)) = (positive_window, negative_window)
+        else {
+            return Ok(PineValue::Na);
+        };
+        if !positive_window.is_ready(length) || !negative_window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let positive_sum = positive_window.sum;
+        let negative_sum = negative_window.sum;
+        if positive_sum == 0.0 && negative_sum == 0.0 {
+            return Ok(PineValue::Na);
+        }
+        if negative_sum == 0.0 {
+            return Ok(PineValue::Float(100.0));
+        }
+
+        Ok(finite_float_or_na(
+            100.0 - 100.0 / (1.0 + positive_sum / negative_sum),
+        ))
+    }
+
     fn eval_vwap_source(
         &mut self,
         call_site_id: CallSiteId,
@@ -4650,6 +4713,25 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> &RollingWindowState {
         let source = source.as_f64();
         self.update_rolling_window_key(RollingWindowKey::Single(call_site_id), source, length)
+    }
+
+    fn update_mfi_windows(
+        &mut self,
+        call_site_id: CallSiteId,
+        positive_flow: Option<f64>,
+        negative_flow: Option<f64>,
+        length: usize,
+    ) {
+        self.update_rolling_window_key(
+            RollingWindowKey::MfiPositive(call_site_id),
+            positive_flow,
+            length,
+        );
+        self.update_rolling_window_key(
+            RollingWindowKey::MfiNegative(call_site_id),
+            negative_flow,
+            length,
+        );
     }
 
     fn update_rolling_window_key(
@@ -9219,6 +9301,51 @@ plot(value)
     }
 
     #[test]
+    fn runs_mfi_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("mfi")
+value = ta.mfi(close, 3)
+flat = ta.mfi(close * 0 + 1, 2)
+invalid = ta.mfi(close, 0)
+plot(value)
+plot(na(flat) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_volume(10.0, 100.0),
+            bar_volume(11.0, 200.0),
+            bar_volume(12.0, 300.0),
+            bar_volume(10.0, 400.0),
+            bar_volume(13.0, 500.0),
+            bar_volume(12.0, 600.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[2..],
+            &[
+                100.0,
+                59.183673469387756,
+                71.63120567375887,
+                36.72316384180791,
+            ],
+        );
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    }
+
+    #[test]
     fn runs_wma_over_historical_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -11134,6 +11261,36 @@ plot(score)
         assert_eq!(result.plots.len(), 1);
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_values_close(&result.plots[0].values[1..], &[2.0, 1.0]);
+    }
+
+    #[test]
+    fn advances_conditional_mfi_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional mfi")
+score = close
+if close > open
+    score := ta.mfi(close, 2)
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlcv(1.0, 10.0, 1.0, 5.0, 10.0),
+            bar_ohlcv(3.0, 4.0, 1.0, 2.0, 10.0),
+            bar_ohlcv(4.0, 20.0, 10.0, 15.0, 10.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.0, 100.0]);
     }
 
     #[test]

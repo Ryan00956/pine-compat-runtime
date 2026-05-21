@@ -398,6 +398,7 @@ ta.vwap -> series float
 ta.vwap(source: series/simple numeric) -> series float
 ta.wad -> series float
 ta.wvad -> series float
+ta.mfi(source: series int/float, length: simple int) -> series float
 ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
 ta.supertrend(factor: simple numeric, atrPeriod: simple int) -> [series float, series float]
@@ -543,6 +544,10 @@ Rules:
 - `ta.sar` supports the three-argument Parabolic SAR form. It initializes from
   the previous bar, clamps against the previous two highs/lows when available,
   and returns `na` until the callsite has enough prior OHLC data to initialize.
+- `ta.mfi` supports the two-argument Money Flow Index form using the supplied
+  source, current `volume`, and ready positive/negative money-flow windows. It
+  returns `na` before the window is ready, when source/volume is `na`, for
+  non-positive lengths, or when both flow sums are zero.
 - `ta.stoch` supports the four-argument stochastic oscillator form using ready
   rolling `high`/`low` windows. It returns `na` before the window is ready, when
   either window contains `na`, for non-positive lengths, or when the high-low
