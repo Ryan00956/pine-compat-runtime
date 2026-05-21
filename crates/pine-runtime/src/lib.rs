@@ -2031,6 +2031,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.tsi" => self.eval_tsi(call_site_id, args),
             "ta.cmo" => self.eval_cmo(call_site_id, args),
             "ta.ao" => self.eval_ao(call_site_id),
+            "ta.bop" => self.eval_bop(),
             "ta.bb" => self.eval_bb(call_site_id, args),
             "ta.bbw" => self.eval_bbw(call_site_id, args),
             "ta.cum" => self.eval_cum(call_site_id, args),
@@ -4207,6 +4208,24 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(
             fast_window.mean(5) - slow_window.mean(34),
         ))
+    }
+
+    fn eval_bop(&self) -> Result<PineValue, RuntimeError> {
+        let (Some(open), Some(high), Some(low), Some(close)) = (
+            self.current_builtin_f64("open"),
+            self.current_builtin_f64("high"),
+            self.current_builtin_f64("low"),
+            self.current_builtin_f64("close"),
+        ) else {
+            return Ok(PineValue::Na);
+        };
+
+        let range = high - low;
+        if range == 0.0 {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na((close - open) / range))
     }
 
     fn eval_window_variance(
@@ -9994,6 +10013,34 @@ plot(value)
             &result.plots[0].values[33..],
             &[14.5, 14.5, 14.5, 14.5, 14.5, 14.5, 14.5],
         );
+    }
+
+    #[test]
+    fn runs_bop_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bop")
+value = ta.bop()
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(10.0, 12.0, 8.0, 11.0),
+            bar_ohlc(10.0, 13.0, 9.0, 9.0),
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values[..2], &[0.25, -0.25]);
+        assert_eq!(result.plots[0].values[2], PineValue::Na);
     }
 
     #[test]

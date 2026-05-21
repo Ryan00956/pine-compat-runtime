@@ -23,6 +23,7 @@
   positive/negative source-change windows.
 - Added `ta.ao` Awesome Oscillator support as the fast/slow SMA spread of
   median price.
+- Added `ta.bop` Balance of Power support over current OHLC values.
 - Added `ta.wpr` Williams %R support over ready rolling high/low windows and
   current close.
 - Added `ta.stoch` four-argument stochastic oscillator support over ready

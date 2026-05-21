@@ -4311,6 +4311,24 @@ mod tests {
     }
 
     #[test]
+    fn accepts_ta_bop() {
+        let analysis = analyze("plot(ta.bop())\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.bop")
+        );
+    }
+
+    #[test]
     fn accepts_ta_mfi() {
         let analysis = analyze("plot(ta.mfi(hlc3, 3))\n");
 

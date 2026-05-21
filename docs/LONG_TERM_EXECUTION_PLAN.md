@@ -217,6 +217,7 @@ Candidate areas:
   `ta.percentrank` over ready rolling windows, `ta.cum` cumulative sums,
   `ta.cmo` Chande Momentum Oscillator rolling change sums,
   `ta.ao` Awesome Oscillator fast/slow median-price SMA spread,
+  `ta.bop` Balance of Power OHLC range oscillator,
   `ta.tsi` True Strength Index double-EMA momentum support,
   `ta.accdist`/`ta.iii`/`ta.nvi`/
   `ta.obv`/`ta.pvi`/`ta.pvt`, partial `ta.vwap` variable/source-call support,
