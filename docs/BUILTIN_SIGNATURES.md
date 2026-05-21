@@ -499,6 +499,8 @@ str.format(formatString: string-compatible, arg0?: int|float|bool|string|non-col
   -> string with strongest qualifier
 str.match(source: string-compatible, regex: string-compatible)
   -> string with strongest qualifier
+str.split(source: string-compatible, separator: string-compatible)
+  -> simple string-array
 str.format_time(time: int-compatible, format?: string-compatible, timezone?: string-compatible)
   -> string with strongest qualifier
 ```
@@ -534,6 +536,9 @@ not yet claimed.
 `str.match` uses Rust regex syntax for the fixture-covered subset. It returns
 the first matched substring, an empty string when there is no match, `na` for
 `na` inputs, and a runtime error for invalid regex patterns.
+`str.split` splits by a literal separator and returns a string array. Empty
+separators split the source into Unicode scalar values. It returns `na` for
+`na` inputs and errors if the result would exceed 100,000 array elements.
 `str.format_time` supports UNIX timestamps in milliseconds and a UTC-only
 timezone subset (`UTC`, `Etc/UTC`, `GMT`, `Z`, `+0000`, `+00:00`). Omitted or
 `na` `format` defaults to `yyyy-MM-dd'T'HH:mm:ssZ`. Supported tokens include

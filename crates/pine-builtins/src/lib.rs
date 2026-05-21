@@ -613,6 +613,19 @@ const STR_SOURCE_REGEX_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const STR_SPLIT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "separator",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+];
+
 const STR_SUBSTRING_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
@@ -1644,6 +1657,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: STR_SOURCE_REGEX_PARAMS,
         returns: ReturnSpec::PromotedString,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "str.split",
+        phase: BuiltinPhase::Phase1Core,
+        params: STR_SPLIT_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_STRING_ARRAY),
         variadic: false,
     },
     BuiltinSignature {

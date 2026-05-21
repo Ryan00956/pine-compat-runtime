@@ -224,7 +224,7 @@ Candidate areas:
   `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`,
   `math.todegrees`, `math.toradians`, `math.sin`, `math.cos`, `math.tan`,
   `math.avg`, `math.e`, `math.pi`, `math.phi`, `math.rphi`, `math.pow`,
-  `math.round`, and `math.sum`.
+  `math.round`, and `math.sum`; string coverage includes `str.split`.
 - More complete `color.*` constants and helpers.
 - More complete `input.*` parameters and host-side input override APIs.
 - More plot options, visibility controls, styles, and display parameters.

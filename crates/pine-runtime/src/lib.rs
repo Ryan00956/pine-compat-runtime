@@ -1943,6 +1943,7 @@ impl<'a> HistoricalRuntime<'a> {
             "str.tostring" => self.eval_str_tostring(args),
             "str.format" => self.eval_str_format(args),
             "str.match" => self.eval_str_match_regex(args),
+            "str.split" => self.eval_str_split(args),
             "str.format_time" => self.eval_str_format_time(args),
             "year" => self.eval_time_component(args, TimeComponent::Year),
             "month" => self.eval_time_component(args, TimeComponent::Month),
@@ -4501,6 +4502,34 @@ impl<'a> HistoricalRuntime<'a> {
                 .find(&source)
                 .map_or_else(String::new, |matched| matched.as_str().to_owned()),
         ))
+    }
+
+    fn eval_str_split(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(source) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::String(separator) = self.eval_expr(&args[1].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        let parts: Vec<PineValue> = if separator.is_empty() {
+            source
+                .chars()
+                .map(|ch| PineValue::String(ch.to_string()))
+                .collect()
+        } else {
+            source
+                .split(&separator)
+                .map(|part| PineValue::String(part.to_owned()))
+                .collect()
+        };
+        if parts.len() > MAX_ARRAY_ELEMENTS {
+            return Err(RuntimeError {
+                message: format!("str.split cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+            });
+        }
+
+        Ok(self.new_array_from_values(ArrayElementKind::String, parts))
     }
 
     fn eval_str_format_time(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -8441,6 +8470,9 @@ match_prefix = str.match("NASDAQ:AAPL", "^(?:BATS|NASDAQ|NYSE|AMEX):")
 match_suffix = str.match("NASDAQ:AAPL", "AAPL$")
 match_missing = str.match("NASDAQ:AAPL", "^NYSE:")
 missing_match_regex = str.match(na, ".+")
+split_words = str.split("A,B,,C", ",")
+split_chars = str.split("xy", "")
+split_missing = str.split(na, ",")
 formatted_time_default = str.format_time(1609459200000)
 formatted_time_date = str.format_time(1609459200000, "yyyy-MM-dd")
 formatted_time_text = str.format_time(1609459200000, "HH:mm:ss 'on' MMM dd, yyyy", "UTC")
@@ -8468,6 +8500,8 @@ plot(formatted_number == "Rounded 1.20 Percent 3.45%" ? 1 : 0)
 plot(formatted_array == "Values [1.2, 2.6, NaN]" ? 1 : 0)
 plot(match_prefix == "NASDAQ:" and match_suffix == "AAPL" and match_missing == "" ? 1 : 0)
 plot(na(missing_match_regex) ? 1 : 0)
+plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" ? 1 : 0)
+plot(split_chars.size() == 2 and split_chars.get(0) == "x" and split_chars.get(1) == "y" and na(split_missing) ? 1 : 0)
 plot(formatted_time_default == "2021-01-01T00:00:00+0000" and formatted_time_date == "2021-01-01" ? 1 : 0)
 plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_time) ? 1 : 0)
 "##,
@@ -8507,6 +8541,8 @@ plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_tim
         assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[26].values, &[1.0, 1.0]);
     }
 
     #[test]
