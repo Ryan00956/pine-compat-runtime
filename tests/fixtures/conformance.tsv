@@ -33,6 +33,7 @@ timestamp	supported	numeric UTC timestamp subset	tests/fixtures/runtime/time_com
 int	supported	numeric/bool/na scalar cast subset	tests/fixtures/runtime/casts.pine
 float	supported	numeric/bool/na scalar cast subset	tests/fixtures/runtime/casts.pine
 bool	supported	numeric/bool/na scalar cast subset	tests/fixtures/runtime/casts.pine
+string	supported	numeric/bool/string/na scalar cast subset	tests/fixtures/runtime/casts.pine
 barstate.isfirst	supported	true only on the first runtime bar	tests/fixtures/runtime/barstate.pine
 barstate.isconfirmed	supported	false only for forming realtime updates	tests/fixtures/runtime/barstate.pine
 barstate.ishistory	supported	true for historical updates	tests/fixtures/runtime/barstate.pine

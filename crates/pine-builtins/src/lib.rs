@@ -46,6 +46,7 @@ pub enum Accepts {
     StringCompatible,
     StringConvertible,
     CastScalar,
+    StringCastScalar,
     ValueWhenSource,
     NumericOrColorCompatible,
     NumericCompatible,
@@ -1043,6 +1044,12 @@ const MATH_NUMBER_PARAMS: &[BuiltinParam] = &[BuiltinParam {
 const TYPE_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "x",
     accepts: Accepts::CastScalar,
+    optional: false,
+}];
+
+const STRING_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "x",
+    accepts: Accepts::StringCastScalar,
     optional: false,
 }];
 
@@ -2464,6 +2471,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TYPE_CAST_PARAMS,
         returns: ReturnSpec::BoolFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "string",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRING_CAST_PARAMS,
+        returns: ReturnSpec::PromotedString,
         variadic: false,
     },
     BuiltinSignature {

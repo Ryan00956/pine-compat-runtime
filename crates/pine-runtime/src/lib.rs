@@ -2040,6 +2040,7 @@ impl<'a> HistoricalRuntime<'a> {
             "int" => self.eval_int_cast(args),
             "float" => self.eval_float_cast(args),
             "bool" => self.eval_bool_cast(args),
+            "string" => self.eval_string_cast(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -2247,6 +2248,19 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Na => PineValue::Bool(false),
             _ => PineValue::Bool(false),
         })
+    }
+
+    fn eval_string_cast(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let value = self.eval_expr(&args[0].value)?;
+        let result = match value {
+            PineValue::Int(value) => value.to_string(),
+            PineValue::Float(value) => format_number(value, "#.########"),
+            PineValue::Bool(value) => value.to_string(),
+            PineValue::String(value) => value,
+            PineValue::Na => return Ok(PineValue::Na),
+            _ => return Ok(PineValue::Na),
+        };
+        self.string_value_or_error(result, "string")
     }
 
     fn eval_fixnan(
@@ -11904,14 +11918,21 @@ truncated = int(close / 2)
 from_bool = int(close > open)
 as_float = float(truncated) + float(close > open)
 truth = bool(close - 2)
+text_number = string(close / 2)
+text_bool = string(close > open)
+text_string = string("ok")
 missing_int = int(na)
 missing_float = float(na)
 missing_bool = bool(na)
+missing_string = string(na)
 plot(truncated)
 plot(from_bool)
 plot(as_float)
 plot(truth ? 1 : 0)
-plot(na(missing_int) and na(missing_float) and not missing_bool ? 1 : 0)
+plot(str.length(text_number))
+plot(text_bool == "true" ? 1 : 0)
+plot(text_string == "ok" ? 1 : 0)
+plot(na(missing_int) and na(missing_float) and not missing_bool and na(missing_string) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -11933,7 +11954,10 @@ plot(na(missing_int) and na(missing_float) and not missing_bool ? 1 : 0)
         assert_values_close(&result.plots[1].values, &[0.0, 1.0, 0.0, 1.0]);
         assert_values_close(&result.plots[2].values, &[0.0, 2.0, 1.0, 3.0]);
         assert_values_close(&result.plots[3].values, &[1.0, 0.0, 1.0, 1.0]);
-        assert_values_close(&result.plots[4].values, &[1.0, 1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[4].values, &[3.0, 1.0, 3.0, 3.0]);
+        assert_values_close(&result.plots[5].values, &[0.0, 1.0, 0.0, 1.0]);
+        assert_values_close(&result.plots[6].values, &[1.0, 1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[7].values, &[1.0, 1.0, 1.0, 1.0]);
     }
 
     #[test]

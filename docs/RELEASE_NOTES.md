@@ -145,8 +145,8 @@
 - Added `str.split` support for literal separators and empty-separator
   character splitting.
 - Added a UTC subset of `str.format_time` timestamp formatting.
-- Added `int`, `float`, and `bool` scalar type casts for numeric, bool, and
-  `na` values.
+- Added `int`, `float`, `bool`, and `string` scalar type casts for numeric,
+  bool, string, and `na` values.
 - Added `fixnan` support for carrying forward the last non-`na` numeric or
   color value at each callsite.
 - Added `math.floor` and `math.ceil` support for numeric values.

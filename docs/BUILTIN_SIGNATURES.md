@@ -120,12 +120,15 @@ Type casts:
 int(x: int|float|bool|na) -> int with same qualifier
 float(x: int|float|bool|na) -> float with same qualifier
 bool(x: int|float|bool|na) -> bool with same qualifier
+string(x: int|float|bool|string|na) -> string with same qualifier
 ```
 
 `int` truncates finite floats toward zero and maps bools to `1`/`0`.
 `float` maps ints and bools to numeric floats. `bool` maps zero and `na` to
 `false`, and nonzero numeric values to `true`. `int(na)` and `float(na)`
-return `na`. String and object casts are not part of the current subset.
+return `na`. `string` maps scalar values using the default numeric text format
+and returns `na` for `string(na)`. Color and object casts are not part of the
+current subset.
 
 Derived values:
 
