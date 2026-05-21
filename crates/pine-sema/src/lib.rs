@@ -4076,7 +4076,7 @@ mod tests {
     #[test]
     fn accepts_additional_input_variants() {
         let analysis = analyze(
-            "threshold = input.price(2.5, \"Price\")\nstart = input.time(0, \"Start\")\nsymbol = input.symbol(\"AAPL\", \"Symbol\")\ntimeframe = input.timeframe(\"D\", \"Timeframe\")\nplot(time >= start and symbol == \"AAPL\" and timeframe == \"D\" ? math.max(close, threshold) : open)\n",
+            "threshold = input.price(2.5, \"Price\")\nstart = input.time(0, \"Start\")\nsymbol = input.symbol(\"AAPL\", \"Symbol\")\ntimeframe = input.timeframe(\"D\", \"Timeframe\")\nsession = input.session(\"0930-1600\", \"Session\")\nnotes = input.text_area(\"Plan\", \"Notes\")\nplot(time >= start and symbol == \"AAPL\" and timeframe == \"D\" and session == \"0930-1600\" and notes == \"Plan\" ? math.max(close, threshold) : open)\n",
         );
 
         assert!(
@@ -4089,6 +4089,8 @@ mod tests {
             "input.time",
             "input.symbol",
             "input.timeframe",
+            "input.session",
+            "input.text_area",
         ] {
             assert!(
                 analysis

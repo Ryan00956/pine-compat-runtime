@@ -232,7 +232,8 @@ Candidate areas:
   `barstate.isconfirmed`, `barstate.ishistory`, and `barstate.isrealtime`.
 - Initial `input.*` metadata coverage accepts common min/max/step, `options`,
   `tooltip`, `inline`, `group`, `confirm`, and `display` parameters while
-  continuing to execute the `defval` value.
+  continuing to execute the `defval` value. Additional string-like input
+  coverage includes `input.session` and `input.text_area`.
 - Initial output metadata coverage accepts common style/display/editability
   parameters on `plot`, `hline`, `fill`, `bgcolor`, and `barcolor` without
   changing the normalized runtime output schemas.

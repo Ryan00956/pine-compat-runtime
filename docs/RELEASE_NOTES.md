@@ -82,6 +82,8 @@
   metadata parameters while preserving existing OHLC output schemas.
 - Added `color.from_gradient` with fixture-covered linear RGBA interpolation.
 - Added conformance coverage for hex color literals as const colors.
+- Added `input.session` and `input.text_area` defval execution with metadata
+  validation.
 - Added basic `plotshape` support with bar-aligned values, style, location,
   color, text, text color, and size marker output.
 - Added basic `plotarrow` support with bar-aligned numeric values, up/down

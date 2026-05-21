@@ -34,7 +34,7 @@ Phase 1 should be intentionally small:
 - `indicator`
 - `input`, `input.int`, `input.float`, `input.bool`, `input.source`,
   `input.color`, `input.string`, `input.price`, `input.time`, `input.symbol`,
-  `input.timeframe`
+  `input.timeframe`, `input.session`, `input.text_area`
 - `plot`
 - `hline`
 - `fill`
@@ -137,6 +137,8 @@ input.price(defval: const float, title?: const string, minval?: const numeric, m
 input.time(defval: const int, title?: const string, minval?: const int, maxval?: const int, step?: const int, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input int
 input.symbol(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
 input.timeframe(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
+input.session(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
+input.text_area(defval: const string, title?: const string, tooltip?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
 input.source(defval: series float, title?: const string, tooltip?: const string, inline?: const string, group?: const string, display?: string-compatible) -> series float
 ```
 
@@ -147,6 +149,8 @@ Rules:
 - The supported metadata subset validates common option names and types, then
   ignores metadata at runtime; `defval` remains the executable value until
   host-side input override APIs are implemented.
+- `input.session` and `input.text_area` currently execute their `defval`
+  strings and accept metadata parameters without host-side override behavior.
 - `input.source` returns the selected source series. Phase 1 may restrict this
   to known OHLCV-derived series.
 

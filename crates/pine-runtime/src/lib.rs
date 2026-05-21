@@ -1720,7 +1720,9 @@ impl<'a> HistoricalRuntime<'a> {
             "indicator" => Ok(PineValue::Void),
             "input" | "input.int" | "input.float" | "input.bool" | "input.color"
             | "input.string" | "input.price" | "input.time" | "input.symbol"
-            | "input.timeframe" | "input.source" => self.eval_expr(&args[0].value),
+            | "input.timeframe" | "input.session" | "input.text_area" | "input.source" => {
+                self.eval_expr(&args[0].value)
+            }
             "plot" => {
                 let value = self.eval_expr(&args[0].value)?;
                 push_series_value(&mut self.plots, self.bars, call_site_id.0, value);
@@ -6822,7 +6824,9 @@ threshold = input.price(2.5, "Price")
 start = input.time(2, "Start")
 symbol = input.symbol("AAPL", "Symbol")
 timeframe = input.timeframe("D", "Timeframe")
-enabled = time >= start and symbol == "AAPL" and timeframe == "D"
+session = input.session("0930-1600", "Session")
+notes = input.text_area("Plan", "Notes")
+enabled = time >= start and symbol == "AAPL" and timeframe == "D" and session == "0930-1600" and notes == "Plan"
 plot(enabled ? math.max(close, threshold) : 0)
 "#,
         );

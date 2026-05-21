@@ -401,6 +401,39 @@ const INPUT_STRING_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const INPUT_TEXT_AREA_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "defval",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::String)),
+        optional: false,
+    },
+    BuiltinParam {
+        name: "title",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "tooltip",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "group",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "confirm",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+];
+
 const INPUT_SOURCE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "defval",
@@ -1881,6 +1914,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "input.timeframe",
         phase: BuiltinPhase::Phase1Core,
         params: INPUT_STRING_PARAMS,
+        returns: ReturnSpec::Fixed(INPUT_STRING),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "input.session",
+        phase: BuiltinPhase::Phase1Core,
+        params: INPUT_STRING_PARAMS,
+        returns: ReturnSpec::Fixed(INPUT_STRING),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "input.text_area",
+        phase: BuiltinPhase::Phase1Core,
+        params: INPUT_TEXT_AREA_PARAMS,
         returns: ReturnSpec::Fixed(INPUT_STRING),
         variadic: false,
     },
