@@ -95,6 +95,7 @@
 - Added `math.avg` support for variadic numeric averages.
 - Added `math.e`, `math.pi`, `math.phi`, and `math.rphi` constants.
 - Added `precision` argument support for `math.round`.
+- Added `math.sum` support for rolling source sums with simple-int lengths.
 - Added `ta.stdev` support with default biased and optional sample standard
   deviation modes.
 - Added `ta.variance` support with the same biased/sample window modes as

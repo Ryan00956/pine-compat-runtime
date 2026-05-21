@@ -792,6 +792,19 @@ const MATH_ROUND_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const MATH_SUM_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "length",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
 const NA_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "x",
     accepts: Accepts::Any,
@@ -1827,6 +1840,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: MATH_ROUND_PARAMS,
         returns: ReturnSpec::Round,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "math.sum",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_SUM_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {

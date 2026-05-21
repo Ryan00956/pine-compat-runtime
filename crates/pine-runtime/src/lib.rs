@@ -1971,6 +1971,7 @@ impl<'a> HistoricalRuntime<'a> {
             "math.tan" => self.eval_math_unary_float(args, f64::tan),
             "math.pow" => self.eval_math_pow(args),
             "math.round" => self.eval_math_round(args),
+            "math.sum" => self.eval_math_sum(call_site_id, args),
             "ta.sma" => self.eval_sma(call_site_id, args),
             "ta.ema" => self.eval_ema(call_site_id, args),
             "ta.rma" => self.eval_rma(call_site_id, args),
@@ -4670,6 +4671,26 @@ impl<'a> HistoricalRuntime<'a> {
         let precision = precision.clamp(i32::MIN as i64, i32::MAX as i64) as i32;
         let factor = 10_f64.powi(precision);
         Ok(finite_float_or_na((value * factor).round() / factor))
+    }
+
+    fn eval_math_sum(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(window.sum))
     }
 
     fn eval_math_floor(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -8890,6 +8911,39 @@ plot(math.pow(-1, 0.5))
         assert_eq!(result.plots[25].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[26].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[27].values, vec![PineValue::Na; 4]);
+    }
+
+    #[test]
+    fn runs_math_sum_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("math sum")
+value = math.sum(close, 3)
+with_na = math.sum(bar_index == 3 ? na : close, 3)
+invalid = math.sum(close, 0)
+plot(value)
+plot(with_na)
+plot(invalid)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(4.0), bar(8.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[7.0, 14.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_values_close(&result.plots[1].values[2..3], &[7.0]);
+        assert_eq!(result.plots[1].values[3], PineValue::Na);
+        assert_eq!(result.plots[2].values, vec![PineValue::Na; 4]);
     }
 
     #[test]

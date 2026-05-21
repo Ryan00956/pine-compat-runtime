@@ -75,6 +75,7 @@ math.cos	supported	fixture-derived executable subset	tests/fixtures/runtime/math
 math.tan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.pow	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.round	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.sum	supported	fixture-derived executable subset; length currently simple int	tests/fixtures/runtime/math.pine
 na	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine
 nz	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine
 ta.sma	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/conditional_ta.pine;tests/fixtures/runtime/udf.pine
