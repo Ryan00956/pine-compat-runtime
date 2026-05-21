@@ -291,19 +291,24 @@ h = hline(70)
 fill(p, h)
 ```
 
-The runtime should collect:
+The runtime currently collects normalized output fields, not full TradingView
+rendering metadata:
 
-- numeric series
-- horizontal lines
-- fills
-- bar colors
-- background colors
-- plotchar marker values
-- plotshape marker values
-- plotarrow marker values
-- plotbar OHLC values
-- plotcandle OHLC values
-- later shapes
+- `plot`: numeric values and id.
+- `hline`: price and id.
+- `fill`: first/second plot or hline ids.
+- `barcolor` and `bgcolor`: color values and id.
+- `plotchar`: marker values, chars, and colors.
+- `plotshape`: marker values, styles, locations, colors, texts, text colors,
+  and sizes.
+- `plotarrow`: marker values, up/down colors, min heights, and max heights.
+- `plotbar`: open, high, low, close, and color values.
+- `plotcandle`: open, high, low, close, body colors, wick colors, and border
+  colors.
+
+Accepted metadata such as `offset`, `show_last`, `display`, `force_overlay`,
+and `editable` does not yet transform, filter, or annotate these output series.
+Later drawing object systems will add separate shape outputs.
 
 ## Determinism
 

@@ -193,17 +193,35 @@ barcolor(color: color-compatible, title?: const string, offset?: simple int, edi
 - series color where the target built-in supports dynamic color
 - `na` to mean no color for that bar when supported
 
-The output collector should retain plot ids, hline ids, and bar-aligned color
-series so host integrations can adapt the normalized result without
-reinterpreting the script.
-The supported output metadata subset accepts common style, visibility, display,
-and editability parameters for compatibility. `plotchar` currently emits the
-normalized value/char/color series only; text/location/size metadata is accepted
-but not exposed as extra output fields. `plotshape` emits value/style/location/
-color/text/textcolor/size series, and `plotarrow` emits value/up-color/down-color/
-height series. `plotbar` and `plotcandle` emit OHLC/color series and accept the
-documented metadata parameters. Parameters such as `offset`, `show_last`,
-`display`, and `force_overlay` do not yet transform the runtime output series.
+The output collector retains plot ids, hline ids, and bar-aligned output series
+so host integrations can adapt the normalized result without reinterpreting the
+script. The supported output metadata subset accepts common style, visibility,
+display, and editability parameters for compatibility, but accepted metadata is
+not the same as emitted output schema.
+
+Current normalized output fields are:
+
+- `plot`: id and values only. Color, line style, width, trackprice, histbase,
+  join, format, precision, and editability metadata are accepted but not
+  emitted as fields.
+- `hline`: id and price only. Color, line style, width, editability, and
+  display metadata are accepted but not emitted as fields.
+- `fill`: id plus first/second plot or hline ids only. Color, title,
+  editability, show_last, fillgaps, and display metadata are accepted but not
+  emitted as fields.
+- `bgcolor`/`barcolor`: id and color values only.
+- `plotchar`: value, char, and color series only. Location, text, textcolor,
+  size, visibility, and editability metadata are accepted but not emitted as
+  fields.
+- `plotshape`: value, style, location, color, text, textcolor, and size
+  series.
+- `plotarrow`: value, up-color, down-color, min-height, and max-height series.
+- `plotbar`: open, high, low, close, and color series.
+- `plotcandle`: open, high, low, close, body color, wick color, and border
+  color series.
+
+Parameters such as `offset`, `show_last`, `display`, `force_overlay`, and
+`editable` do not yet transform, filter, or annotate the runtime output series.
 Supported direct display constants include `display.all`, `display.none`,
 `display.pane`, `display.price_scale`, `display.status_line`, and
 `display.data_window`. Display flag arithmetic is not implemented yet.
