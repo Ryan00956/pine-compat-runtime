@@ -203,6 +203,9 @@ color/text/textcolor/size series, and `plotarrow` emits value/up-color/down-colo
 height series. `plotbar` and `plotcandle` emit OHLC/color series and accept the
 documented metadata parameters. Parameters such as `offset`, `show_last`,
 `display`, and `force_overlay` do not yet transform the runtime output series.
+Supported direct display constants include `display.all`, `display.none`,
+`display.pane`, `display.price_scale`, `display.status_line`, and
+`display.data_window`. Display flag arithmetic is not implemented yet.
 
 ## Utility
 

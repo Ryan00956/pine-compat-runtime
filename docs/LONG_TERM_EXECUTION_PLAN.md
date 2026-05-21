@@ -236,7 +236,9 @@ Candidate areas:
   coverage includes `input.session` and `input.text_area`.
 - Initial output metadata coverage accepts common style/display/editability
   parameters on `plot`, `hline`, `fill`, `bgcolor`, and `barcolor` without
-  changing the normalized runtime output schemas.
+  changing the normalized runtime output schemas. Direct `display.*` constant
+  coverage includes all/none plus pane, price scale, status line, and data
+  window values.
 - Initial `plotchar` metadata coverage accepts common marker display/style
   parameters while keeping the normalized value/char/color output schema.
 - Initial `plotshape`/`plotarrow` metadata coverage accepts common marker

@@ -4177,10 +4177,10 @@ plot(enabled and mode == "SMA" ? math.max(src, length) * scale : close, color=sh
     #[test]
     fn accepts_common_output_metadata_parameters() {
         let analysis = analyze(
-            r#"p = plot(close, title="Close", color=color.green, linewidth=2, style=plot.style_line, trackprice=false, histbase=0, offset=1, join=false, editable=true, show_last=10, display=display.all, format=format.price, precision=2, force_overlay=false)
-h = hline(2, title="Two", color=color.gray, linestyle=hline.style_dotted, linewidth=1, editable=true, display=display.none)
-fill(p, h, color=color.new(color.green, 80), title="Fill", editable=false, show_last=5, fillgaps=true, display=display.all)
-bgcolor(color.new(color.blue, 90), title="Background", offset=0, editable=false, show_last=3, display=display.all)
+            r#"p = plot(close, title="Close", color=color.green, linewidth=2, style=plot.style_line, trackprice=false, histbase=0, offset=1, join=false, editable=true, show_last=10, display=display.pane, format=format.price, precision=2, force_overlay=false)
+h = hline(2, title="Two", color=color.gray, linestyle=hline.style_dotted, linewidth=1, editable=true, display=display.price_scale)
+fill(p, h, color=color.new(color.green, 80), title="Fill", editable=false, show_last=5, fillgaps=true, display=display.status_line)
+bgcolor(color.new(color.blue, 90), title="Background", offset=0, editable=false, show_last=3, display=display.data_window)
 barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editable=true, show_last=3, display=display.none)
 "#,
         );
@@ -4191,6 +4191,21 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
             analysis.diagnostics
         );
         assert!(analysis.compatibility.unsupported.is_empty());
+        for name in [
+            "display.pane",
+            "display.price_scale",
+            "display.status_line",
+            "display.data_window",
+        ] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|feature| feature.feature == name),
+                "{name} should be reported as supported"
+            );
+        }
         assert!(analysis.hir.is_some());
     }
 
