@@ -1,6 +1,6 @@
 //@version=5
 indicator("Color outputs")
 if close > 1
-    bgcolor(color.green)
-barcolor(close > 2 ? color.red : na)
+    bgcolor(color.green, title="Background", offset=0, editable=false, show_last=5, display=display.all)
+barcolor(close > 2 ? color.red : na, title="Bars", offset=0, editable=true, show_last=5, display=display.none)
 plot(close)

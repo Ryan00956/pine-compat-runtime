@@ -6706,6 +6706,41 @@ fill(p, h)
     }
 
     #[test]
+    fn runs_output_metadata_parameters() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("output metadata")
+p = plot(close, title="Close", color=color.green, linewidth=2, style=plot.style_line, trackprice=false, histbase=0, offset=1, join=false, editable=true, show_last=10, display=display.all, format=format.price, precision=2, force_overlay=false)
+h = hline(2, title="Two", color=color.gray, linestyle=hline.style_dotted, linewidth=1, editable=true, display=display.none)
+fill(p, h, color=color.new(color.green, 80), title="Fill", editable=false, show_last=5, fillgaps=true, display=display.all)
+bgcolor(color.new(color.blue, 90), title="Background", offset=0, editable=false, show_last=3, display=display.all)
+barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editable=true, show_last=3, display=display.none)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+        assert_eq!(result.hlines.len(), 1);
+        assert_eq!(result.hlines[0].price, PineValue::Int(2));
+        assert_eq!(result.fills.len(), 1);
+        assert_eq!(result.fills[0].first_id, result.plots[0].id);
+        assert_eq!(result.fills[0].second_id, result.hlines[0].id);
+        assert_eq!(result.bg_colors.len(), 1);
+        assert_eq!(result.bg_colors[0].values.len(), 3);
+        assert_eq!(result.bar_colors.len(), 1);
+        assert_eq!(result.bar_colors[0].values.len(), 3);
+    }
+
+    #[test]
     fn runs_input_string_condition() {
         let source = SourceFile::new(
             "test.pine",

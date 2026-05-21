@@ -231,6 +231,9 @@ Candidate areas:
 - Initial `input.*` metadata coverage accepts common min/max/step, `options`,
   `tooltip`, `inline`, `group`, `confirm`, and `display` parameters while
   continuing to execute the `defval` value.
+- Initial output metadata coverage accepts common style/display/editability
+  parameters on `plot`, `hline`, `fill`, `bgcolor`, and `barcolor` without
+  changing the normalized runtime output schemas.
 - More complete `color.*` constants and helpers.
 - More complete `input.*` parameters and host-side input override APIs.
 - More plot options, visibility controls, styles, and display parameters.

@@ -22,16 +22,16 @@ barstate.isfirst	supported	true only on the first runtime bar	tests/fixtures/run
 barstate.isconfirmed	supported	false only for forming realtime updates	tests/fixtures/runtime/barstate.pine
 barstate.ishistory	supported	true for historical updates	tests/fixtures/runtime/barstate.pine
 barstate.isrealtime	supported	true for forming and confirmed realtime updates	tests/fixtures/runtime/barstate.pine
-plot	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/if.pine
+plot	supported	series output plus common style/display metadata parameter subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/if.pine
 plotchar	supported	bool/numeric marker series with const char and color-compatible color	tests/fixtures/runtime/plotchar.pine
 plotshape	supported	bool/numeric marker series with style/location/text/size constants	tests/fixtures/runtime/plotshape.pine
 plotarrow	supported	numeric arrow marker series with up/down colors and height bounds	tests/fixtures/runtime/plotarrow.pine
 plotbar	supported	OHLC bar output with optional color	tests/fixtures/runtime/plotbar.pine
 plotcandle	supported	OHLC candle output with body, wick, and border colors	tests/fixtures/runtime/plotcandle.pine
-bgcolor	supported	color series output with conditional padding	tests/fixtures/runtime/color_outputs.pine
-barcolor	supported	color series output with conditional padding	tests/fixtures/runtime/color_outputs.pine
-hline	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
-fill	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
+bgcolor	supported	color series output with conditional padding plus common metadata parameters	tests/fixtures/runtime/color_outputs.pine
+barcolor	supported	color series output with conditional padding plus common metadata parameters	tests/fixtures/runtime/color_outputs.pine
+hline	supported	horizontal line output plus common style/display metadata parameters	tests/fixtures/runtime/io.pine
+fill	supported	plot/hline fill output plus common display/fillgaps metadata parameters	tests/fixtures/runtime/io.pine
 color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 color.rgb	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
 color.r	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine

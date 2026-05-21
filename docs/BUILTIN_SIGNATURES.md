@@ -153,7 +153,7 @@ Rules:
 ## Plotting
 
 ```text
-plot(series: series/simple numeric, title?: const string, color?: color-compatible, ...)
+plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: simple int, style?: const string, trackprice?: const bool, histbase?: numeric, offset?: simple int, join?: const bool, editable?: const bool, show_last?: simple int, display?: const string, format?: const string, precision?: simple int, force_overlay?: const bool)
   -> plot
 
 plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, ...)
@@ -171,14 +171,14 @@ plotbar(open: series/simple numeric, high: series/simple numeric, low: series/si
 plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, bordercolor?: color-compatible, ...)
   -> void
 
-hline(price: const-or-input float, title?: const string, color?: color-compatible, ...)
+hline(price: const-or-input float, title?: const string, color?: color-compatible, linestyle?: const string, linewidth?: simple int, editable?: const bool, display?: const string)
   -> hline
 
-fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, ...)
+fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title?: const string, editable?: const bool, show_last?: simple int, fillgaps?: const bool, display?: const string)
   -> void
 
-bgcolor(color: color-compatible, title?: const string, ...) -> void
-barcolor(color: color-compatible, title?: const string, ...) -> void
+bgcolor(color: color-compatible, title?: const string, offset?: simple int, editable?: const bool, show_last?: simple int, display?: const string) -> void
+barcolor(color: color-compatible, title?: const string, offset?: simple int, editable?: const bool, show_last?: simple int, display?: const string) -> void
 ```
 
 `color-compatible` should initially accept:
@@ -191,6 +191,10 @@ barcolor(color: color-compatible, title?: const string, ...) -> void
 The output collector should retain plot ids, hline ids, and bar-aligned color
 series so host integrations can adapt the normalized result without
 reinterpreting the script.
+The supported output metadata subset accepts common style, visibility, display,
+and editability parameters for compatibility, but parameters such as `offset`,
+`show_last`, `display`, and `force_overlay` do not yet transform the runtime
+output series.
 
 ## Utility
 

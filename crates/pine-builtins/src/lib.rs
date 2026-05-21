@@ -449,6 +449,66 @@ const PLOT_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ColorCompatible,
         optional: true,
     },
+    BuiltinParam {
+        name: "linewidth",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "style",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "trackprice",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "histbase",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "offset",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "join",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "editable",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "show_last",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "format",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "precision",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "force_overlay",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
 ];
 
 const COLOR_OUTPUT_PARAMS: &[BuiltinParam] = &[
@@ -459,6 +519,26 @@ const COLOR_OUTPUT_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "title",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "offset",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "editable",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "show_last",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
         accepts: Accepts::ConstString,
         optional: true,
     },
@@ -735,6 +815,26 @@ const HLINE_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ColorCompatible,
         optional: true,
     },
+    BuiltinParam {
+        name: "linestyle",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "linewidth",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "editable",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
 ];
 
 const FILL_PARAMS: &[BuiltinParam] = &[
@@ -751,6 +851,31 @@ const FILL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "color",
         accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "title",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "editable",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "show_last",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "fillgaps",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::ConstString,
         optional: true,
     },
 ];
@@ -2972,6 +3097,19 @@ const NAMED_STRING_CONSTANTS: &[&str] = &[
     "location.top",
     "location.bottom",
     "location.absolute",
+    "plot.style_line",
+    "plot.style_stepline",
+    "plot.style_stepline_diamond",
+    "plot.style_histogram",
+    "plot.style_cross",
+    "plot.style_area",
+    "plot.style_columns",
+    "plot.style_circles",
+    "plot.style_linebr",
+    "plot.style_areabr",
+    "hline.style_solid",
+    "hline.style_dotted",
+    "hline.style_dashed",
     "size.auto",
     "size.tiny",
     "size.small",
@@ -2981,7 +3119,9 @@ const NAMED_STRING_CONSTANTS: &[&str] = &[
     "display.all",
     "display.none",
     "format.mintick",
+    "format.price",
     "format.percent",
+    "format.volume",
     "order.ascending",
     "order.descending",
 ];

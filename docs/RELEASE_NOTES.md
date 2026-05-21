@@ -70,6 +70,9 @@
 - Added `barstate.isfirst`, `barstate.isconfirmed`, `barstate.ishistory`,
   and `barstate.isrealtime`.
 - Added `bgcolor` and `barcolor` support with bar-aligned color output series.
+- Added common `plot`, `hline`, `fill`, `bgcolor`, and `barcolor` metadata
+  parameters for style/display compatibility; runtime output series remain
+  unshifted by display metadata in this subset.
 - Added basic `plotchar` support with bar-aligned values, chars, and colors.
 - Added basic `plotshape` support with bar-aligned values, style, location,
   color, text, text color, and size marker output.
