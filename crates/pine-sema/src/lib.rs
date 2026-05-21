@@ -820,6 +820,9 @@ impl Analyzer {
             }
 
             self.validate_call_args(signature, args, &arg_types);
+            if is_ta_vwap_bands_call(&name, args) {
+                return Some(pine_builtins::tuple_return_type());
+            }
             return self.return_type(signature, &arg_types);
         }
 
@@ -2407,6 +2410,9 @@ impl Analyzer {
                     .collect();
                 let name = expr_name(callee)?;
                 if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
+                    if is_ta_vwap_bands_call(&name, args) {
+                        return Some(pine_builtins::tuple_return_type());
+                    }
                     match signature.returns {
                         ReturnSpec::Fixed(pine_type) => Some(pine_type),
                         ReturnSpec::Tuple(_) => Some(pine_builtins::tuple_return_type()),
@@ -2577,7 +2583,12 @@ impl Analyzer {
                 .iter()
                 .map(|item| self.type_of_expr(item))
                 .collect::<Option<_>>(),
-            ExprKind::Call { callee, .. } => {
+            ExprKind::Call { callee, args } => {
+                let name = expr_name(callee)?;
+                if is_ta_vwap_bands_call(&name, args) {
+                    let series_float = PineType::new(Qualifier::Series, ValueKind::Float);
+                    return Some(vec![series_float, series_float, series_float]);
+                }
                 let signature = pine_builtins::get_phase_1_builtin(&expr_name(callee)?)?;
                 match signature.returns {
                     ReturnSpec::Tuple(types) => Some(types.to_vec()),
@@ -2756,6 +2767,13 @@ fn is_ta_extreme_length_overload(name: &str) -> bool {
 
 fn is_ta_pivot_default_source_overload(name: &str) -> bool {
     matches!(name, "ta.pivothigh" | "ta.pivotlow")
+}
+
+fn is_ta_vwap_bands_call(name: &str, args: &[CallArg]) -> bool {
+    name == "ta.vwap"
+        && args.iter().enumerate().any(|(index, arg)| {
+            arg.name.as_deref() == Some("stdev_mult") || (index >= 2 && arg.name.is_none())
+        })
 }
 
 fn resolve_udf_arg_indices(params: &[String], args: &[CallArg]) -> Result<Vec<usize>, UdfArgError> {
@@ -4239,6 +4257,26 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.wvad")
+        );
+    }
+
+    #[test]
+    fn accepts_ta_vwap_bands_tuple_overload() {
+        let analysis = analyze(
+            "[basis, upper, lower] = ta.vwap(close, bar_index == 1, 2.0)\nplot(basis + upper + lower)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.vwap")
         );
     }
 

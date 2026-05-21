@@ -1427,6 +1427,11 @@ const TA_VWAP_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::BoolCompatible,
         optional: true,
     },
+    BuiltinParam {
+        name: "stdev_mult",
+        accepts: Accepts::SimpleNumeric,
+        optional: true,
+    },
 ];
 
 const TA_SOURCE_LENGTH_BIASED_PARAMS: &[BuiltinParam] = &[

@@ -540,6 +540,7 @@ struct MacdState {
 #[derive(Debug, Default, Clone, Copy, PartialEq)]
 struct VwapState {
     weighted_sum: f64,
+    weighted_square_sum: f64,
     volume_sum: f64,
 }
 
@@ -3823,21 +3824,45 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let anchor = if let Some(arg) = args.get(1) {
-            matches!(self.eval_expr(&arg.value)?, PineValue::Bool(true))
+        let has_bands = vwap_arg(args, 2, "stdev_mult").is_some();
+        let source_arg = vwap_arg(args, 0, "source").ok_or_else(|| RuntimeError {
+            message: "ta.vwap missing source argument".to_owned(),
+        })?;
+        let source = self.eval_expr(source_arg)?;
+        let anchor = if let Some(arg) = vwap_arg(args, 1, "anchor") {
+            matches!(self.eval_expr(arg)?, PineValue::Bool(true))
         } else {
             false
+        };
+        let stdev_mult = if let Some(arg) = vwap_arg(args, 2, "stdev_mult") {
+            let Some(mult) = self.eval_expr(arg)?.as_f64() else {
+                self.vwap_call_state.remove(&call_site_id);
+                return Ok(vwap_result_na(has_bands));
+            };
+            Some(mult)
+        } else {
+            None
         };
         let (Some(source), Some(volume)) = (source.as_f64(), self.current_builtin_f64("volume"))
         else {
             self.vwap_call_state.remove(&call_site_id);
-            return Ok(PineValue::Na);
+            return Ok(vwap_result_na(has_bands));
         };
         let weighted = source * volume;
-        if !source.is_finite() || !volume.is_finite() || !weighted.is_finite() {
+        let weighted_square = source * source * volume;
+        if !source.is_finite()
+            || !volume.is_finite()
+            || !weighted.is_finite()
+            || !weighted_square.is_finite()
+        {
             self.vwap_call_state.remove(&call_site_id);
-            return Ok(PineValue::Na);
+            return Ok(vwap_result_na(has_bands));
+        }
+        if let Some(mult) = stdev_mult
+            && !mult.is_finite()
+        {
+            self.vwap_call_state.remove(&call_site_id);
+            return Ok(vwap_result_na(has_bands));
         }
 
         let state = self.vwap_call_state.entry(call_site_id).or_default();
@@ -3845,15 +3870,29 @@ impl<'a> HistoricalRuntime<'a> {
             *state = VwapState::default();
         }
         state.weighted_sum += weighted;
+        state.weighted_square_sum += weighted_square;
         state.volume_sum += volume;
         if state.volume_sum == 0.0
             || !state.weighted_sum.is_finite()
+            || !state.weighted_square_sum.is_finite()
             || !state.volume_sum.is_finite()
         {
-            return Ok(PineValue::Na);
+            return Ok(vwap_result_na(has_bands));
         }
 
-        Ok(finite_float_or_na(state.weighted_sum / state.volume_sum))
+        let vwap = state.weighted_sum / state.volume_sum;
+        let value = finite_float_or_na(vwap);
+        let Some(mult) = stdev_mult else {
+            return Ok(value);
+        };
+        let variance = (state.weighted_square_sum / state.volume_sum) - vwap * vwap;
+        let deviation = variance.max(0.0).sqrt();
+        let band = deviation * mult;
+        Ok(PineValue::Tuple(vec![
+            value,
+            finite_float_or_na(vwap + band),
+            finite_float_or_na(vwap - band),
+        ]))
     }
 
     fn eval_wma(
@@ -6357,6 +6396,25 @@ fn three_na_tuple() -> PineValue {
     PineValue::Tuple(vec![PineValue::Na, PineValue::Na, PineValue::Na])
 }
 
+fn vwap_result_na(has_bands: bool) -> PineValue {
+    if has_bands {
+        three_na_tuple()
+    } else {
+        PineValue::Na
+    }
+}
+
+fn vwap_arg<'a>(args: &'a [HirCallArg], positional: usize, name: &str) -> Option<&'a HirExpr> {
+    args.iter()
+        .find(|arg| arg.name.as_deref() == Some(name))
+        .map(|arg| &arg.value)
+        .or_else(|| {
+            args.get(positional)
+                .filter(|arg| arg.name.is_none())
+                .map(|arg| &arg.value)
+        })
+}
+
 fn supertrend_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, f64)> {
     let Some(PineValue::Tuple(values)) = value else {
         return None;
@@ -8688,6 +8746,10 @@ plot(ta.iii)
 plot(ta.vwap)
 plot(ta.vwap(close))
 plot(ta.vwap(close, bar_index == 1))
+[basis, upper, lower] = ta.vwap(close, false, 2.0)
+plot(basis)
+plot(upper)
+plot(lower)
 plot(ta.vwap(bar_index == 2 ? na : close))
 "#,
         );
@@ -8708,8 +8770,17 @@ plot(ta.vwap(bar_index == 2 ? na : close))
         assert_values_close(&result.plots[0].values, &[9.0, 15.75, 15.75]);
         assert_values_close(&result.plots[1].values, &[9.0, 15.75, 15.75]);
         assert_values_close(&result.plots[2].values, &[9.0, 18.0, 18.0]);
-        assert_values_close(&result.plots[3].values[..2], &[9.0, 15.75]);
-        assert_eq!(result.plots[3].values[2], PineValue::Na);
+        assert_values_close(&result.plots[3].values, &[9.0, 15.75, 15.75]);
+        assert_values_close(
+            &result.plots[4].values,
+            &[9.0, 23.544228634059948, 23.544228634059948],
+        );
+        assert_values_close(
+            &result.plots[5].values,
+            &[9.0, 7.955771365940052, 7.955771365940052],
+        );
+        assert_values_close(&result.plots[6].values[..2], &[9.0, 15.75]);
+        assert_eq!(result.plots[6].values[2], PineValue::Na);
     }
 
     #[test]

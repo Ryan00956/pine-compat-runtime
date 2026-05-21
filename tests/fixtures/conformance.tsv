@@ -125,7 +125,7 @@ ta.nvi	supported	fixture-derived executable subset	tests/fixtures/runtime/nvi.pi
 ta.obv	supported	fixture-derived executable subset	tests/fixtures/runtime/obv.pine
 ta.pvi	supported	fixture-derived executable subset	tests/fixtures/runtime/pvi.pine
 ta.pvt	supported	fixture-derived executable subset	tests/fixtures/runtime/pvt.pine
-ta.vwap	supported	fixture-derived variable, source-call, and source/anchor-call subset; cumulative over runtime bars with anchor reset; bands overloads and session-derived anchoring not yet implemented	tests/fixtures/runtime/vwap.pine
+ta.vwap	supported	fixture-derived variable, source-call, source/anchor-call, and source/anchor/bands-call subset; cumulative over runtime bars with anchor reset; session-derived anchoring not yet implemented	tests/fixtures/runtime/vwap.pine
 ta.wad	supported	fixture-derived executable subset	tests/fixtures/runtime/wad.pine
 ta.wvad	supported	fixture-derived executable subset	tests/fixtures/runtime/wvad.pine
 ta.correlation	supported	series/simple numeric source rolling correlation	tests/fixtures/runtime/correlation.pine
