@@ -144,8 +144,9 @@ input.source(defval: series float, title?: const string, tooltip?: const string,
 
 Rules:
 
-- Input metadata should be collected during analysis.
-- Host-provided input values override `defval` at runtime.
+- Input metadata is accepted and validated during analysis.
+- Runtime execution currently uses each input's `defval`; host-provided input
+  override APIs are not implemented yet.
 - The supported metadata subset validates common option names and types, then
   ignores metadata at runtime; `defval` remains the executable value until
   host-side input override APIs are implemented.

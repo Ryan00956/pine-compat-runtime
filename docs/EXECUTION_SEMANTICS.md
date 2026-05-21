@@ -256,9 +256,9 @@ mode = input.string("SMA", "Mode")
 start = input.time(0, "Start")
 ```
 
-The runtime should collect input metadata during compilation or a dry run, then
-execute with host-provided input values. Inputs should carry the `input`
-qualifier.
+The analyzer accepts the supported input metadata subset and inputs carry the
+`input` qualifier. Runtime execution currently evaluates each input's `defval`;
+host-provided input override APIs are not implemented yet.
 
 ## Built-In OHLCV Series
 
