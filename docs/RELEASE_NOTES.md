@@ -126,6 +126,7 @@
   lengths.
 - Added `ta.correlation` support for rolling Pearson correlation coefficients.
 - Added `ta.covariance` support for rolling population covariance values.
+- Added `ta.median` and `ta.mode` support for rolling sorted-window statistics.
 - Added `ta.percentile_nearest_rank` support for rolling nearest-rank
   percentile values.
 - Added `ta.percentile_linear_interpolation` support for rolling interpolated

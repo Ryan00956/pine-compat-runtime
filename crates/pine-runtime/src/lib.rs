@@ -1988,6 +1988,8 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.hma" => self.eval_hma(call_site_id, args),
             "ta.correlation" => self.eval_correlation(call_site_id, args),
             "ta.covariance" => self.eval_covariance(call_site_id, args),
+            "ta.median" => self.eval_median(call_site_id, args),
+            "ta.mode" => self.eval_mode(call_site_id, args),
             "ta.percentile_nearest_rank" => {
                 self.eval_percentile(call_site_id, args, ArrayPercentileMode::NearestRank)
             }
@@ -3581,6 +3583,77 @@ impl<'a> HistoricalRuntime<'a> {
 
         let covariance = product.mean(length) - (left.mean(length) * right.mean(length));
         Ok(finite_float_or_na(covariance))
+    }
+
+    fn eval_median(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let mut values: Vec<_> = window.values.iter().flatten().copied().collect();
+        values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
+        let middle = values.len() / 2;
+        let median = if values.len() % 2 == 0 {
+            (values[middle - 1] + values[middle]) / 2.0
+        } else {
+            values[middle]
+        };
+        Ok(finite_float_or_na(median))
+    }
+
+    fn eval_mode(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let mut values: Vec<_> = window.values.iter().flatten().copied().collect();
+        values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
+
+        let mut best_value = values[0];
+        let mut best_count = 0_usize;
+        let mut current_value = values[0];
+        let mut current_count = 0_usize;
+        for value in values {
+            if (value - current_value).abs() < f64::EPSILON {
+                current_count += 1;
+            } else {
+                if current_count > best_count {
+                    best_value = current_value;
+                    best_count = current_count;
+                }
+                current_value = value;
+                current_count = 1;
+            }
+        }
+        if current_count > best_count {
+            best_value = current_value;
+        }
+
+        Ok(finite_float_or_na(best_value))
     }
 
     fn eval_percentile(
@@ -7620,6 +7693,95 @@ plot(invalid)
         assert_eq!(result.plots[3].values[0], PineValue::Na);
         assert_eq!(result.plots[3].values[1], PineValue::Na);
         assert_values_close(&result.plots[3].values[2..3], &[2.0 / 3.0]);
+        assert_eq!(result.plots[3].values[3], PineValue::Na);
+        assert_eq!(result.plots[4].values[0], PineValue::Na);
+        assert_eq!(result.plots[4].values[1], PineValue::Na);
+        assert_eq!(result.plots[4].values[2], PineValue::Na);
+        assert_eq!(result.plots[4].values[3], PineValue::Na);
+    }
+
+    #[test]
+    fn runs_median_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("median")
+odd = ta.median(close, 3)
+even = ta.median(close, 4)
+with_na = ta.median(bar_index == 3 ? na : close, 3)
+invalid = ta.median(close, 0)
+plot(odd)
+plot(even)
+plot(with_na)
+plot(invalid)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(5.0), bar(2.0), bar(8.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[2.0, 5.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_eq!(result.plots[1].values[2], PineValue::Na);
+        assert_values_close(&result.plots[1].values[3..], &[3.5]);
+        assert_eq!(result.plots[2].values[0], PineValue::Na);
+        assert_eq!(result.plots[2].values[1], PineValue::Na);
+        assert_values_close(&result.plots[2].values[2..3], &[2.0]);
+        assert_eq!(result.plots[2].values[3], PineValue::Na);
+        assert_eq!(result.plots[3].values[0], PineValue::Na);
+        assert_eq!(result.plots[3].values[1], PineValue::Na);
+        assert_eq!(result.plots[3].values[2], PineValue::Na);
+        assert_eq!(result.plots[3].values[3], PineValue::Na);
+    }
+
+    #[test]
+    fn runs_mode_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("mode")
+repeated = ta.mode(close, 3)
+unique = ta.mode(close + bar_index, 3)
+tie = ta.mode(close, 4)
+with_na = ta.mode(bar_index == 3 ? na : close, 3)
+invalid = ta.mode(close, 0)
+plot(repeated)
+plot(unique)
+plot(tie)
+plot(with_na)
+plot(invalid)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(1.0), bar(2.0), bar(2.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[1.0, 2.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_values_close(&result.plots[1].values[2..], &[1.0, 2.0]);
+        assert_eq!(result.plots[2].values[0], PineValue::Na);
+        assert_eq!(result.plots[2].values[1], PineValue::Na);
+        assert_eq!(result.plots[2].values[2], PineValue::Na);
+        assert_values_close(&result.plots[2].values[3..], &[1.0]);
+        assert_eq!(result.plots[3].values[0], PineValue::Na);
+        assert_eq!(result.plots[3].values[1], PineValue::Na);
+        assert_values_close(&result.plots[3].values[2..3], &[1.0]);
         assert_eq!(result.plots[3].values[3], PineValue::Na);
         assert_eq!(result.plots[4].values[0], PineValue::Na);
         assert_eq!(result.plots[4].values[1], PineValue::Na);

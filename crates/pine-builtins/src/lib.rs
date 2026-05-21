@@ -2252,6 +2252,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "ta.median",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.mode",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "ta.percentile_nearest_rank",
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_LENGTH_PERCENTAGE_PARAMS,
