@@ -238,6 +238,8 @@ Candidate areas:
   parameters while keeping the normalized value/char/color output schema.
 - Initial `plotshape`/`plotarrow` metadata coverage accepts common marker
   display/style parameters while preserving existing normalized output schemas.
+- Initial `plotbar`/`plotcandle` metadata coverage accepts common display
+  parameters while preserving existing OHLC output schemas.
 - More complete `color.*` constants and helpers.
 - More complete `input.*` parameters and host-side input override APIs.
 - More plot options, visibility controls, styles, and display parameters.

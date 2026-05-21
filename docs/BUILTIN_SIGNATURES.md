@@ -165,10 +165,10 @@ plotshape(series: series/simple numeric-or-bool, title?: const string, style?: c
 plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple int, minheight?: simple int, maxheight?: simple int, editable?: const bool, show_last?: simple int, display?: const string, force_overlay?: const bool)
   -> void
 
-plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, ...)
+plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, editable?: const bool, show_last?: simple int, display?: const string)
   -> void
 
-plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, bordercolor?: color-compatible, ...)
+plotcandle(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, wickcolor?: color-compatible, editable?: const bool, show_last?: simple int, bordercolor?: color-compatible, display?: const string)
   -> void
 
 hline(price: const-or-input float, title?: const string, color?: color-compatible, linestyle?: const string, linewidth?: simple int, editable?: const bool, display?: const string)
@@ -196,8 +196,9 @@ and editability parameters for compatibility. `plotchar` currently emits the
 normalized value/char/color series only; text/location/size metadata is accepted
 but not exposed as extra output fields. `plotshape` emits value/style/location/
 color/text/textcolor/size series, and `plotarrow` emits value/up-color/down-color/
-height series. Parameters such as `offset`, `show_last`, `display`, and
-`force_overlay` do not yet transform the runtime output series.
+height series. `plotbar` and `plotcandle` emit OHLC/color series and accept the
+documented metadata parameters. Parameters such as `offset`, `show_last`,
+`display`, and `force_overlay` do not yet transform the runtime output series.
 
 ## Utility
 

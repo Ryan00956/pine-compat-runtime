@@ -1,5 +1,5 @@
 //@version=5
 indicator("Plotbar")
 if close > 1
-    plotbar(open, high, low, close, color=color.green)
+    plotbar(open, high, low, close, title="Bars", color=color.green, editable=true, show_last=5, display=display.all)
 plot(close)

@@ -4252,7 +4252,9 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
 
     #[test]
     fn accepts_plotbar() {
-        let analysis = analyze("plotbar(open, high, low, close, color=color.green)\nplot(close)\n");
+        let analysis = analyze(
+            "plotbar(open, high, low, close, title=\"Bars\", color=color.green, editable=true, show_last=5, display=display.all)\nplot(close)\n",
+        );
 
         assert!(
             analysis.diagnostics.is_empty(),
@@ -4272,7 +4274,7 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
     #[test]
     fn accepts_plotcandle() {
         let analysis = analyze(
-            "plotcandle(open, high, low, close, color=color.green, wickcolor=color.white, bordercolor=color.red)\nplot(close)\n",
+            "plotcandle(open, high, low, close, title=\"Candles\", color=color.green, wickcolor=color.white, editable=true, show_last=5, bordercolor=color.red, display=display.all)\nplot(close)\n",
         );
 
         assert!(

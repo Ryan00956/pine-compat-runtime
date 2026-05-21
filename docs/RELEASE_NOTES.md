@@ -78,6 +78,8 @@
   runtime output remains normalized to value, char, and color series.
 - Expanded `plotshape` and `plotarrow` compatibility with common marker
   metadata parameters while preserving the existing normalized output schemas.
+- Expanded `plotbar` and `plotcandle` compatibility with common display
+  metadata parameters while preserving existing OHLC output schemas.
 - Added basic `plotshape` support with bar-aligned values, style, location,
   color, text, text color, and size marker output.
 - Added basic `plotarrow` support with bar-aligned numeric values, up/down

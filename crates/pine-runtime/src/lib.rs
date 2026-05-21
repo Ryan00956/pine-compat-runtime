@@ -7083,7 +7083,7 @@ plot(close)
             "test.pine",
             r#"indicator("plotbar")
 if close > 1
-    plotbar(open, high, low, close, color=color.green)
+    plotbar(open, high, low, close, title="Bars", color=color.green, editable=true, show_last=5, display=display.all)
 plot(close)
 "#,
         );
@@ -7134,7 +7134,7 @@ plot(close)
             "test.pine",
             r#"indicator("plotcandle")
 if close > 1
-    plotcandle(open, high, low, close, color=color.green, wickcolor=color.white, bordercolor=color.red)
+    plotcandle(open, high, low, close, title="Candles", color=color.green, wickcolor=color.white, editable=true, show_last=5, bordercolor=color.red, display=display.all)
 plot(close)
 "#,
         );
