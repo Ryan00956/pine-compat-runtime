@@ -1,0 +1,8 @@
+//@version=5
+indicator("While stateful calls")
+i = 0
+sum = close > 0 ? 0.0 : 0.0
+while i < 2
+    sum := sum + nz(ta.sma(close, 2))
+    i := i + 1
+plot(close + sum)
