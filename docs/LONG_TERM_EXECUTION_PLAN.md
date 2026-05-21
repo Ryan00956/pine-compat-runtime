@@ -218,8 +218,8 @@ Candidate areas:
   `ta.accdist`/`ta.iii`/`ta.nvi`/
   `ta.obv`/`ta.pvi`/`ta.pvt`, partial `ta.vwap` variable/source-call support,
   `ta.max`/`ta.min` all-time source extremes, `ta.tr` as a true range series
-  variable, `ta.wad`/`ta.wvad` flow variables, and `ta.supertrend`
-  line/direction tuple support,
+  variable, `ta.wad`/`ta.wvad` flow variables, `ta.supertrend`
+  line/direction tuple support, and `ta.dmi` directional movement tuple support,
   numeric `series int`/`series float` sources across core TA windows,
   `ta.change` over numeric and bool series sources,
   `ta.mom`/`ta.roc` over explicit source history, and

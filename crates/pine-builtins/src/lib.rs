@@ -1581,6 +1581,19 @@ const TA_SUPERTREND_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_DMI_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "diLength",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "adxSmoothing",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
 const ARRAY_NEW_FLOAT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
@@ -2986,6 +2999,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TA_SUPERTREND_PARAMS,
         returns: ReturnSpec::Tuple(TWO_SERIES_FLOATS),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.dmi",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_DMI_PARAMS,
+        returns: ReturnSpec::Tuple(THREE_SERIES_FLOATS),
         variadic: false,
     },
     BuiltinSignature {

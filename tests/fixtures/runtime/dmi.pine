@@ -1,0 +1,8 @@
+//@version=5
+indicator("DMI")
+[plus, minus, adx] = ta.dmi(3, 2)
+[bad_plus, bad_minus, bad_adx] = ta.dmi(3, 0)
+plot(plus)
+plot(minus)
+plot(adx)
+plot(na(bad_plus) and na(bad_minus) and na(bad_adx) ? 1 : 0)

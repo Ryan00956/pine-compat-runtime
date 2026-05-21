@@ -400,6 +400,7 @@ ta.wvad -> series float
 ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
 ta.supertrend(factor: simple numeric, atrPeriod: simple int) -> [series float, series float]
+ta.dmi(diLength: simple int, adxSmoothing: simple int) -> [series float, series float, series float]
 ta.change(source: series int/float/bool, length?: simple int) -> series float/bool
 ta.mom(source: series int/float, length: simple int) -> series float
 ta.roc(source: series int/float, length: simple int) -> series float
@@ -534,6 +535,9 @@ Rules:
   uptrend line and `1` for the downtrend line. The current subset follows the
   TradingView band update rules using the runtime's existing RMA-style ATR
   behavior.
+- `ta.dmi` returns `[+DI, -DI, ADX]`. The current subset uses Wilder/RMA-style
+  smoothing from the first executed bar, reuses `ta.tr(true)` true range
+  semantics, and returns an all-`na` tuple for non-positive lengths.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.

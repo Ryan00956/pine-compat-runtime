@@ -138,6 +138,7 @@ ta.linreg	supported	fixture-derived executable subset	tests/fixtures/runtime/lin
 ta.tr	supported	built-in true range variable plus handle_na function subset	tests/fixtures/runtime/ta.pine
 ta.atr	supported	fixture-derived executable subset	tests/fixtures/runtime/atr.pine
 ta.supertrend	supported	fixture-derived Supertrend line and direction tuple subset	tests/fixtures/runtime/supertrend.pine
+ta.dmi	supported	fixture-derived directional movement tuple subset	tests/fixtures/runtime/dmi.pine
 ta.change	supported	numeric source differences and bool source change detection	tests/fixtures/runtime/cross.pine
 ta.mom	supported	series int/float source history differences	tests/fixtures/runtime/mom.pine
 ta.roc	supported	series int/float source rate of change	tests/fixtures/runtime/roc.pine

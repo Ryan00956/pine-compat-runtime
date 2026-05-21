@@ -2048,6 +2048,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.supertrend" => self.eval_supertrend(call_site_id, args),
+            "ta.dmi" => self.eval_dmi(call_site_id, args),
             "ta.change" => self.eval_change(args),
             "ta.mom" => self.eval_mom(args),
             "ta.roc" => self.eval_roc(args),
@@ -4151,6 +4152,87 @@ impl<'a> HistoricalRuntime<'a> {
         ]))
     }
 
+    fn eval_dmi(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let di_length = self.eval_expr(&args[0].value)?.as_i64().unwrap_or(0);
+        let adx_smoothing = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if di_length <= 0 || adx_smoothing <= 0 {
+            return Ok(three_na_tuple());
+        }
+
+        let (Some(high), Some(low)) = (
+            self.current_builtin_f64("high"),
+            self.current_builtin_f64("low"),
+        ) else {
+            return Ok(three_na_tuple());
+        };
+        let Some(true_range) = self.true_range(true).as_f64() else {
+            return Ok(three_na_tuple());
+        };
+
+        let (plus_dm, minus_dm) = match (
+            self.previous_builtin_f64("high"),
+            self.previous_builtin_f64("low"),
+        ) {
+            (Some(previous_high), Some(previous_low)) => {
+                let up_move = high - previous_high;
+                let down_move = previous_low - low;
+                (
+                    if up_move > down_move && up_move > 0.0 {
+                        up_move
+                    } else {
+                        0.0
+                    },
+                    if down_move > up_move && down_move > 0.0 {
+                        down_move
+                    } else {
+                        0.0
+                    },
+                )
+            }
+            _ => (0.0, 0.0),
+        };
+
+        let previous = dmi_state(self.call_state.get(&call_site_id));
+        let smoothed_tr = rma_next(previous.map(|state| state.0), true_range, di_length);
+        let smoothed_plus_dm = rma_next(previous.map(|state| state.1), plus_dm, di_length);
+        let smoothed_minus_dm = rma_next(previous.map(|state| state.2), minus_dm, di_length);
+        let (plus_di, minus_di) = if smoothed_tr.is_finite() && smoothed_tr != 0.0 {
+            (
+                100.0 * smoothed_plus_dm / smoothed_tr,
+                100.0 * smoothed_minus_dm / smoothed_tr,
+            )
+        } else {
+            (0.0, 0.0)
+        };
+        let di_sum = plus_di + minus_di;
+        let dx = if di_sum.is_finite() && di_sum != 0.0 {
+            100.0 * (plus_di - minus_di).abs() / di_sum
+        } else {
+            0.0
+        };
+        let adx = rma_next(previous.map(|state| state.3), dx, adx_smoothing);
+
+        self.call_state.insert(
+            call_site_id,
+            PineValue::Tuple(vec![
+                PineValue::Float(smoothed_tr),
+                PineValue::Float(smoothed_plus_dm),
+                PineValue::Float(smoothed_minus_dm),
+                PineValue::Float(adx),
+            ]),
+        );
+
+        Ok(PineValue::Tuple(vec![
+            finite_float_or_na(plus_di),
+            finite_float_or_na(minus_di),
+            finite_float_or_na(adx),
+        ]))
+    }
+
     fn eval_change(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let current = self.eval_expr(&args[0].value)?;
         let length = if let Some(length_arg) = args.get(1) {
@@ -5178,14 +5260,18 @@ impl<'a> HistoricalRuntime<'a> {
         self.current_symbols.get(&symbol.id)?.as_f64()
     }
 
-    fn previous_close(&self) -> Option<f64> {
+    fn previous_builtin_f64(&self, name: &str) -> Option<f64> {
         let symbol = self
             .program
             .symbols
             .iter()
-            .find(|symbol| symbol.name == "close")?;
+            .find(|symbol| symbol.name == name)?;
         let series_id = symbol.series_id?;
         self.series_store.read(series_id, 1).as_f64()
+    }
+
+    fn previous_close(&self) -> Option<f64> {
+        self.previous_builtin_f64("close")
     }
 
     fn eval_ema(
@@ -5569,6 +5655,10 @@ fn two_na_tuple() -> PineValue {
     PineValue::Tuple(vec![PineValue::Na, PineValue::Na])
 }
 
+fn three_na_tuple() -> PineValue {
+    PineValue::Tuple(vec![PineValue::Na, PineValue::Na, PineValue::Na])
+}
+
 fn supertrend_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, f64)> {
     let Some(PineValue::Tuple(values)) = value else {
         return None;
@@ -5581,6 +5671,21 @@ fn supertrend_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, f64)> {
         upper.as_f64()?,
         lower.as_f64()?,
         supertrend.as_f64()?,
+    ))
+}
+
+fn dmi_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, f64)> {
+    let Some(PineValue::Tuple(values)) = value else {
+        return None;
+    };
+    let [smoothed_tr, smoothed_plus_dm, smoothed_minus_dm, adx] = values.as_slice() else {
+        return None;
+    };
+    Some((
+        smoothed_tr.as_f64()?,
+        smoothed_plus_dm.as_f64()?,
+        smoothed_minus_dm.as_f64()?,
+        adx.as_f64()?,
     ))
 }
 
@@ -7965,6 +8070,58 @@ plot(na(bad_line) and na(bad_direction) ? 1 : 0)
         );
         assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, -1.0, -1.0, 1.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_dmi_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("DMI")
+[plus, minus, adx] = ta.dmi(3, 2)
+[bad_plus, bad_minus, bad_adx] = ta.dmi(3, 0)
+plot(plus)
+plot(minus)
+plot(adx)
+plot(na(bad_plus) and na(bad_minus) and na(bad_adx) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(10.0, 11.0, 9.0, 10.0),
+            bar_ohlc(10.0, 12.0, 10.0, 11.0),
+            bar_ohlc(11.0, 13.0, 11.0, 12.0),
+            bar_ohlc(12.0, 16.0, 12.0, 15.0),
+            bar_ohlc(15.0, 17.0, 14.0, 16.0),
+            bar_ohlc(16.0, 14.0, 8.0, 9.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(
+            &result.plots[0].values,
+            &[
+                0.0,
+                16.666666666666664,
+                27.777777777777775,
+                51.38888888888888,
+                44.88888888888889,
+                18.397085610200364,
+            ],
+        );
+        assert_values_close(
+            &result.plots[1].values,
+            &[0.0, 0.0, 0.0, 0.0, 0.0, 44.26229508196722],
+        );
+        assert_values_close(
+            &result.plots[2].values,
+            &[0.0, 50.0, 75.0, 87.5, 93.75, 67.51453488372093],
+        );
+        assert_values_close(&result.plots[3].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
     }
 
     #[test]
@@ -10624,6 +10781,40 @@ plot(a)
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[1.0, 2.0, 2.5]);
+    }
+
+    #[test]
+    fn advances_conditional_dmi_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional dmi")
+score = close
+if close > open
+    [plus, minus, adx] = ta.dmi(3, 2)
+    score := plus + minus + adx
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+            bar_ohlc(5.0, 8.0, 5.0, 8.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(
+            &result.plots[0].values,
+            &[0.0, 2.0, 100.0, 132.14285714285714],
+        );
     }
 
     #[test]
