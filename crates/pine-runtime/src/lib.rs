@@ -434,6 +434,7 @@ pub struct HistoricalRuntime<'a> {
     pvt_current: PineValue,
     wad_state: PineValue,
     wad_current: PineValue,
+    wvad_current: PineValue,
     plots: Vec<PlotSeries>,
     plot_chars: Vec<PlotCharSeries>,
     plot_shapes: Vec<PlotShapeSeries>,
@@ -659,6 +660,7 @@ impl<'a> HistoricalRuntime<'a> {
             pvt_current: PineValue::Na,
             wad_state: PineValue::Na,
             wad_current: PineValue::Na,
+            wvad_current: PineValue::Na,
             plots: Vec::new(),
             plot_chars: Vec::new(),
             plot_shapes: Vec::new(),
@@ -1117,6 +1119,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.obv_current = self.next_obv(bar, previous_close);
         self.pvt_current = self.next_pvt(bar, previous_close);
         self.wad_current = self.next_wad(bar, previous_close);
+        self.wvad_current = Self::wvad_value(bar);
         self.price_flow_previous_close = Some(bar.close);
         let builtins = [
             ("open", PineValue::Float(bar.open)),
@@ -1227,6 +1230,15 @@ impl<'a> HistoricalRuntime<'a> {
         self.wad_state.clone()
     }
 
+    fn wvad_value(bar: &Bar) -> PineValue {
+        let range = bar.high - bar.low;
+        if range == 0.0 {
+            return PineValue::Na;
+        }
+
+        finite_float_or_na(((bar.close - bar.open) / range) * bar.volume)
+    }
+
     fn eval_builtin_value(&self, name: &str) -> PineValue {
         if name == "ta.obv" {
             return self.obv_current.clone();
@@ -1236,6 +1248,9 @@ impl<'a> HistoricalRuntime<'a> {
         }
         if name == "ta.wad" {
             return self.wad_current.clone();
+        }
+        if name == "ta.wvad" {
+            return self.wvad_current.clone();
         }
         eval_static_builtin_value(name)
     }
@@ -6540,6 +6555,33 @@ plot(ta.wad)
     }
 
     #[test]
+    fn runs_wvad_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("wvad")
+plot(ta.wvad)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlcv(10.0, 15.0, 5.0, 12.0, 100.0),
+            bar_ohlcv(10.0, 10.0, 10.0, 10.0, 50.0),
+            bar_ohlcv(20.0, 25.0, 15.0, 15.0, 40.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values[..1], &[20.0]);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[-20.0]);
+    }
+
+    #[test]
     fn runs_true_range_over_historical_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -11040,13 +11082,17 @@ plot(spread(lo=low, hi=high))
     }
 
     fn bar_ohlc(open: f64, high: f64, low: f64, close: f64) -> Bar {
+        bar_ohlcv(open, high, low, close, 1.0)
+    }
+
+    fn bar_ohlcv(open: f64, high: f64, low: f64, close: f64, volume: f64) -> Bar {
         Bar {
             time: 0,
             open,
             high,
             low,
             close,
-            volume: 1.0,
+            volume,
         }
     }
 

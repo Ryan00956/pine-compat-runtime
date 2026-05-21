@@ -3885,7 +3885,7 @@ mod tests {
 
     #[test]
     fn accepts_ta_volume_flow_variables() {
-        let analysis = analyze("plot(ta.obv + ta.pvt + ta.wad)\n");
+        let analysis = analyze("plot(ta.obv + ta.pvt + ta.wad + ta.wvad)\n");
 
         assert!(
             analysis.diagnostics.is_empty(),
@@ -3912,6 +3912,13 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.wad")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.wvad")
         );
     }
 
