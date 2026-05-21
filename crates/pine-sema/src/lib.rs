@@ -4903,6 +4903,21 @@ plot(year(ts) + month(ts, "UTC") + dayofmonth(ts) + hour(ts) + minute(ts) + seco
     }
 
     #[test]
+    fn accepts_global_price_and_derived_series() {
+        let analysis = analyze(
+            "plot(open + high + low + close + volume + time + hl2 + hlc3 + ohlc4 + bar_index)\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(analysis.compatibility.unsupported.is_empty());
+        assert!(analysis.hir.is_some());
+    }
+
+    #[test]
     fn accepts_selected_math_functions() {
         let analysis = analyze(
             r#"indicator("math")

@@ -8863,6 +8863,62 @@ plot(na(timestamp(na, 1, 1)) ? 1 : 0)
     }
 
     #[test]
+    fn runs_global_price_and_derived_series() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("global series")
+plot(open)
+plot(high)
+plot(low)
+plot(close)
+plot(volume)
+plot(time)
+plot(hl2)
+plot(hlc3)
+plot(ohlc4)
+plot(bar_index)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            Bar {
+                time: 1000,
+                open: 1.0,
+                high: 5.0,
+                low: -1.0,
+                close: 3.0,
+                volume: 10.0,
+            },
+            Bar {
+                time: 2000,
+                open: 2.0,
+                high: 8.0,
+                low: 0.0,
+                close: 4.0,
+                volume: 20.0,
+            },
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values, &[1.0, 2.0]);
+        assert_values_close(&result.plots[1].values, &[5.0, 8.0]);
+        assert_values_close(&result.plots[2].values, &[-1.0, 0.0]);
+        assert_values_close(&result.plots[3].values, &[3.0, 4.0]);
+        assert_values_close(&result.plots[4].values, &[10.0, 20.0]);
+        assert_values_close(&result.plots[5].values, &[1000.0, 2000.0]);
+        assert_values_close(&result.plots[6].values, &[2.0, 4.0]);
+        assert_values_close(&result.plots[7].values, &[7.0 / 3.0, 4.0]);
+        assert_values_close(&result.plots[8].values, &[2.0, 3.5]);
+        assert_values_close(&result.plots[9].values, &[0.0, 1.0]);
+    }
+
+    #[test]
     fn rejects_unsupported_calendar_function_timezone() {
         let source = SourceFile::new(
             "test.pine",

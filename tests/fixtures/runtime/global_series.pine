@@ -1,0 +1,12 @@
+//@version=5
+indicator("Global series")
+plot(open)
+plot(high)
+plot(low)
+plot(close)
+plot(volume)
+plot(time)
+plot(hl2)
+plot(hlc3)
+plot(ohlc4)
+plot(bar_index)
