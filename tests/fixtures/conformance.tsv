@@ -85,6 +85,7 @@ ta.macd	supported	fixture-derived executable subset	tests/fixtures/runtime/macd.
 ta.bb	supported	fixture-derived executable subset	tests/fixtures/runtime/bb.pine
 ta.cum	supported	fixture-derived executable subset	tests/fixtures/runtime/cum.pine
 ta.accdist	supported	fixture-derived executable subset	tests/fixtures/runtime/accdist.pine
+ta.iii	supported	fixture-derived executable subset	tests/fixtures/runtime/iii.pine
 ta.nvi	supported	fixture-derived executable subset	tests/fixtures/runtime/nvi.pine
 ta.obv	supported	fixture-derived executable subset	tests/fixtures/runtime/obv.pine
 ta.pvi	supported	fixture-derived executable subset	tests/fixtures/runtime/pvi.pine

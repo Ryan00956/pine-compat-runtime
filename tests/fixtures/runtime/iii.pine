@@ -1,0 +1,3 @@
+//@version=5
+indicator("Intraday Intensity Index")
+plot(ta.iii)

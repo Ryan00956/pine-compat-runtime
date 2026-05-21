@@ -431,6 +431,7 @@ pub struct HistoricalRuntime<'a> {
     price_flow_previous_volume: Option<f64>,
     accdist_state: PineValue,
     accdist_current: PineValue,
+    iii_current: PineValue,
     nvi_state: PineValue,
     nvi_current: PineValue,
     obv_state: PineValue,
@@ -664,6 +665,7 @@ impl<'a> HistoricalRuntime<'a> {
             price_flow_previous_volume: None,
             accdist_state: PineValue::Na,
             accdist_current: PineValue::Na,
+            iii_current: PineValue::Na,
             nvi_state: PineValue::Na,
             nvi_current: PineValue::Na,
             obv_state: PineValue::Na,
@@ -1132,6 +1134,7 @@ impl<'a> HistoricalRuntime<'a> {
         let previous_close = self.price_flow_previous_close;
         let previous_volume = self.price_flow_previous_volume;
         self.accdist_current = self.next_accdist(bar);
+        self.iii_current = Self::iii_value(bar);
         self.nvi_current = self.next_nvi(bar, previous_close, previous_volume);
         self.obv_current = self.next_obv(bar, previous_close);
         self.pvi_current = self.next_pvi(bar, previous_close, previous_volume);
@@ -1200,6 +1203,15 @@ impl<'a> HistoricalRuntime<'a> {
         let value = self.accdist_state.as_f64().unwrap_or(0.0) + increment;
         self.accdist_state = finite_float_or_na(value);
         self.accdist_state.clone()
+    }
+
+    fn iii_value(bar: &Bar) -> PineValue {
+        let denominator = (bar.high - bar.low) * bar.volume;
+        if denominator == 0.0 {
+            return PineValue::Na;
+        }
+
+        finite_float_or_na((2.0 * bar.close - bar.high - bar.low) / denominator)
     }
 
     fn next_nvi(
@@ -1347,6 +1359,9 @@ impl<'a> HistoricalRuntime<'a> {
     fn eval_builtin_value(&self, name: &str) -> PineValue {
         if name == "ta.accdist" {
             return self.accdist_current.clone();
+        }
+        if name == "ta.iii" {
+            return self.iii_current.clone();
         }
         if name == "ta.nvi" {
             return self.nvi_current.clone();
@@ -6638,6 +6653,34 @@ plot(ta.accdist)
         assert_values_close(&result.plots[0].values[..2], &[40.0, -10.0]);
         assert_eq!(result.plots[0].values[2], PineValue::Na);
         assert_values_close(&result.plots[0].values[3..], &[10.0]);
+    }
+
+    #[test]
+    fn runs_iii_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("iii")
+plot(ta.iii)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlcv(10.0, 15.0, 5.0, 12.0, 100.0),
+            bar_ohlcv(12.0, 20.0, 10.0, 5.0, 2.0),
+            bar_ohlcv(10.0, 10.0, 10.0, 10.0, 10.0),
+            bar_ohlcv(10.0, 20.0, 10.0, 15.0, 0.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values[..2], &[0.004, -1.0]);
+        assert_eq!(result.plots[0].values[2], PineValue::Na);
+        assert_eq!(result.plots[0].values[3], PineValue::Na);
     }
 
     #[test]

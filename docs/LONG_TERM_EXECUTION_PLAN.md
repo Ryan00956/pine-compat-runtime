@@ -208,8 +208,8 @@ Candidate areas:
 - Additional `ta.*` functions. Initial Phase D coverage includes `ta.stdev`
   and `ta.variance` with default biased and optional sample window modes, plus
   `ta.range`, `ta.dev`, `ta.vwma`, `ta.wma`, and `ta.hma` over ready rolling
-  windows, `ta.cum` cumulative sums, `ta.accdist`/`ta.nvi`/`ta.obv`/`ta.pvi`/
-  `ta.pvt`/`ta.wad`/`ta.wvad` flow variables,
+  windows, `ta.cum` cumulative sums, `ta.accdist`/`ta.iii`/`ta.nvi`/
+  `ta.obv`/`ta.pvi`/`ta.pvt`/`ta.wad`/`ta.wvad` flow variables,
   `ta.mom`/`ta.roc` over explicit source history, and
   `ta.rising`/`ta.falling` trend-window checks. It also includes
   two-argument `ta.highestbars`/`ta.lowestbars` rolling extreme offsets and

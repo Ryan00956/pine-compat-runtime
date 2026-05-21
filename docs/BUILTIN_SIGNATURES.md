@@ -326,6 +326,7 @@ ta.wma(source: series float, length: simple int) -> series float
 ta.hma(source: series float, length: simple int) -> series float
 ta.cum(source: series/simple numeric) -> series float
 ta.accdist -> series float
+ta.iii -> series float
 ta.nvi -> series float
 ta.obv -> series float
 ta.pvi -> series float
@@ -373,6 +374,9 @@ Rules:
   Accumulation/Distribution money flow volume:
   `(((close - low) - (high - close)) / (high - low)) * volume`. It returns
   `na` and resets the next cumulative step when `high == low`.
+- `ta.iii` is a built-in series variable equivalent to
+  `(2 * close - high - low) / ((high - low) * volume)`; it returns `na` when
+  the price range or volume is zero.
 - `ta.nvi` is a built-in series variable with an initial value of `1.0`; it
   updates by `((close - close[1]) / close[1]) * previous_nvi` only when
   `volume < volume[1]`, and carries the previous value when the current or

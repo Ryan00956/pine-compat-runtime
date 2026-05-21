@@ -108,6 +108,8 @@
 - Added `ta.cum` support for cumulative numeric source sums.
 - Added `ta.accdist` support as the built-in Accumulation/Distribution index
   series variable.
+- Added `ta.iii` support as the built-in Intraday Intensity Index series
+  variable.
 - Added `ta.nvi` and `ta.pvi` support as built-in Negative/Positive Volume
   Index series variables.
 - Added `ta.obv` support as the built-in On Balance Volume series variable.
