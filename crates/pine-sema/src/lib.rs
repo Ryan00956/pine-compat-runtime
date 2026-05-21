@@ -1121,7 +1121,12 @@ impl Analyzer {
             .count();
         let accepts_single_extreme_length =
             is_ta_extreme_length_overload(signature.name) && args.len() == 1;
-        if args.len() < required_count && !accepts_single_extreme_length {
+        let accepts_pivot_default_source =
+            is_ta_pivot_default_source_overload(signature.name) && args.len() == 2;
+        if args.len() < required_count
+            && !accepts_single_extreme_length
+            && !accepts_pivot_default_source
+        {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARITY",
                 format!(
@@ -1149,6 +1154,36 @@ impl Analyzer {
         }
 
         for (index, arg) in args.iter().enumerate() {
+            if accepts_pivot_default_source {
+                let expected_name = if index == 0 { "leftbars" } else { "rightbars" };
+                if let Some(name) = &arg.name
+                    && name != expected_name
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_NAME",
+                        format!(
+                            "`{}` two-argument overload has no argument named `{name}`",
+                            signature.name
+                        ),
+                        arg.span,
+                    ));
+                    continue;
+                }
+                let Some(arg_type) = arg_types.get(index).copied().flatten() else {
+                    continue;
+                };
+                if !accepts_type(Accepts::SimpleInt, arg_type) {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_TYPE",
+                        format!(
+                            "`{}` argument `{expected_name}` does not accept {:?} {:?}",
+                            signature.name, arg_type.qualifier, arg_type.kind
+                        ),
+                        arg.span,
+                    ));
+                }
+                continue;
+            }
             if accepts_single_extreme_length && index == 0 {
                 if let Some(name) = &arg.name
                     && name != "length"
@@ -2717,6 +2752,10 @@ fn is_ta_extreme_length_overload(name: &str) -> bool {
         name,
         "ta.highest" | "ta.lowest" | "ta.highestbars" | "ta.lowestbars"
     )
+}
+
+fn is_ta_pivot_default_source_overload(name: &str) -> bool {
+    matches!(name, "ta.pivothigh" | "ta.pivotlow")
 }
 
 fn resolve_udf_arg_indices(params: &[String], args: &[CallArg]) -> Result<Vec<usize>, UdfArgError> {
@@ -4390,6 +4429,33 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.kcw")
+        );
+    }
+
+    #[test]
+    fn accepts_ta_pivots() {
+        let analysis = analyze(
+            "plot(ta.pivothigh(close, 2, 1) + ta.pivotlow(low, 2, 1) + ta.pivothigh(2, 1) + ta.pivotlow(leftbars=2, rightbars=1))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.pivothigh")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.pivotlow")
         );
     }
 

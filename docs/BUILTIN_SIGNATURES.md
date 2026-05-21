@@ -382,6 +382,10 @@ ta.bbw(source: series int/float, length: simple int, mult: numeric) -> series fl
 ta.kc(source: series int/float, length: simple int, mult: simple numeric, useTrueRange?: bool-compatible)
   -> tuple(series float, series float, series float)
 ta.kcw(source: series int/float, length: simple int, mult: simple numeric, useTrueRange?: bool-compatible) -> series float
+ta.pivothigh(leftbars: simple int, rightbars: simple int) -> series float
+ta.pivothigh(source: series int/float, leftbars: simple int, rightbars: simple int) -> series float
+ta.pivotlow(leftbars: simple int, rightbars: simple int) -> series float
+ta.pivotlow(source: series int/float, leftbars: simple int, rightbars: simple int) -> series float
 ta.stdev(source: series int/float, length: simple int, biased?: bool-compatible) -> series float
 ta.variance(source: series int/float, length: simple int, biased?: bool-compatible) -> series float
 ta.range(source: series int/float, length: simple int) -> series float
@@ -456,6 +460,11 @@ Rules:
 - `ta.kcw` uses the same Keltner Channel basis/range EMA calculation and
   returns `(upper - lower) / basis`; it returns `na` when inputs are `na`,
   length is non-positive, or basis is zero.
+- `ta.pivothigh`/`ta.pivotlow` support the default-source two-argument forms
+  and explicit-source three-argument forms. The default sources are `high` and
+  `low` respectively. The current subset uses simple integer left/right bar
+  counts and returns the confirmed pivot value `rightbars` bars after the pivot
+  bar, otherwise `na`.
 - `ta.stdev` defaults `biased` to `true`; `false` uses sample standard
   deviation and returns `na` for windows shorter than two values.
 - `ta.variance` uses the same `biased` default and sample/population window

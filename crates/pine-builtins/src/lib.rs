@@ -1358,6 +1358,24 @@ const TA_SOURCE_LENGTH_OFFSET_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_PIVOT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "leftbars",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "rightbars",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
 const TA_ALMA_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "series",
@@ -2972,6 +2990,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "ta.kcw",
         phase: BuiltinPhase::Phase1Core,
         params: TA_KC_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.pivothigh",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_PIVOT_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.pivotlow",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_PIVOT_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },

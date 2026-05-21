@@ -213,6 +213,7 @@ Candidate areas:
   `ta.range`, `ta.dev`, `ta.vwma`, `ta.wma`, `ta.hma`, `ta.swma`, `ta.alma`,
   `ta.linreg`, `ta.bbw`, `ta.correlation`, `ta.covariance`, `ta.median`,
   `ta.mode`, `ta.kc`, `ta.kcw`,
+  `ta.pivothigh`, `ta.pivotlow`,
   `ta.percentile_nearest_rank`, `ta.percentile_linear_interpolation`, and
   `ta.percentrank` over ready rolling windows, `ta.cum` cumulative sums,
   `ta.cmo` Chande Momentum Oscillator rolling change sums,

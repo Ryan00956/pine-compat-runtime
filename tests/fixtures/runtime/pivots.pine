@@ -1,0 +1,6 @@
+//@version=5
+indicator("Pivots")
+ph = ta.pivothigh(high, 1, 1)
+pl = ta.pivotlow(low, 1, 1)
+plot(ph)
+plot(pl)

@@ -2038,6 +2038,8 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.bbw" => self.eval_bbw(call_site_id, args),
             "ta.kc" => self.eval_kc(call_site_id, args),
             "ta.kcw" => self.eval_kcw(call_site_id, args),
+            "ta.pivothigh" => self.eval_pivot(call_site_id, args, WindowExtreme::Highest),
+            "ta.pivotlow" => self.eval_pivot(call_site_id, args, WindowExtreme::Lowest),
             "ta.cum" => self.eval_cum(call_site_id, args),
             "ta.max" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Highest),
             "ta.min" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Lowest),
@@ -3456,6 +3458,74 @@ impl<'a> HistoricalRuntime<'a> {
         );
 
         Ok(Some((basis, range_ema, mult)))
+    }
+
+    fn eval_pivot(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+        mode: WindowExtreme,
+    ) -> Result<PineValue, RuntimeError> {
+        let (source, leftbars, rightbars) = self.eval_pivot_args(args, mode)?;
+        if leftbars < 0 || rightbars < 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let leftbars = leftbars as usize;
+        let rightbars = rightbars as usize;
+        let length = leftbars + rightbars + 1;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let candidate_index = length - 1 - rightbars;
+        let candidate = window.values.get(candidate_index).and_then(|value| *value);
+        let Some(candidate) = candidate else {
+            return Ok(PineValue::Na);
+        };
+
+        let is_pivot = window
+            .values
+            .iter()
+            .flatten()
+            .enumerate()
+            .all(|(index, value)| {
+                index == candidate_index
+                    || match mode {
+                        WindowExtreme::Highest => candidate > *value,
+                        WindowExtreme::Lowest => candidate < *value,
+                    }
+            });
+        if !is_pivot {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(candidate))
+    }
+
+    fn eval_pivot_args(
+        &mut self,
+        args: &[HirCallArg],
+        mode: WindowExtreme,
+    ) -> Result<(PineValue, i64, i64), RuntimeError> {
+        if args.len() == 2 {
+            let leftbars = self.eval_expr(&args[0].value)?.as_i64().unwrap_or(-1);
+            let rightbars = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(-1);
+            let source_name = match mode {
+                WindowExtreme::Highest => "high",
+                WindowExtreme::Lowest => "low",
+            };
+            let source = self
+                .current_builtin_f64(source_name)
+                .map_or(PineValue::Na, PineValue::Float);
+            return Ok((source, leftbars, rightbars));
+        }
+
+        let source = self.eval_expr(&args[0].value)?;
+        let leftbars = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(-1);
+        let rightbars = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(-1);
+        Ok((source, leftbars, rightbars))
     }
 
     fn eval_cum(
@@ -8416,6 +8486,79 @@ plot(na(invalid) ? 1 : 0)
     }
 
     #[test]
+    fn runs_pivots_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("pivots")
+ph = ta.pivothigh(close, 1, 1)
+pl = ta.pivotlow(close, 1, 1)
+default_ph = ta.pivothigh(1, 1)
+default_pl = ta.pivotlow(1, 1)
+invalid = ta.pivothigh(close, -1, 1)
+plot(ph)
+plot(pl)
+plot(default_ph)
+plot(default_pl)
+plot(na(invalid) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 10.0, 5.0, 1.0),
+            bar_ohlc(3.0, 12.0, 3.0, 3.0),
+            bar_ohlc(2.0, 11.0, 4.0, 2.0),
+            bar_ohlc(4.0, 14.0, 2.0, 4.0),
+            bar_ohlc(1.0, 10.0, 4.0, 1.0),
+            bar_ohlc(0.0, 9.0, 1.0, 0.0),
+            bar_ohlc(2.0, 11.0, 3.0, 2.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..3], &[3.0]);
+        assert_eq!(result.plots[0].values[3], PineValue::Na);
+        assert_values_close(&result.plots[0].values[4..5], &[4.0]);
+        assert_eq!(result.plots[0].values[5], PineValue::Na);
+        assert_eq!(result.plots[0].values[6], PineValue::Na);
+
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_eq!(result.plots[1].values[2], PineValue::Na);
+        assert_values_close(&result.plots[1].values[3..4], &[2.0]);
+        assert_eq!(result.plots[1].values[4], PineValue::Na);
+        assert_eq!(result.plots[1].values[5], PineValue::Na);
+        assert_values_close(&result.plots[1].values[6..], &[0.0]);
+
+        assert_eq!(result.plots[2].values[0], PineValue::Na);
+        assert_eq!(result.plots[2].values[1], PineValue::Na);
+        assert_values_close(&result.plots[2].values[2..3], &[12.0]);
+        assert_eq!(result.plots[2].values[3], PineValue::Na);
+        assert_values_close(&result.plots[2].values[4..5], &[14.0]);
+        assert_eq!(result.plots[2].values[5], PineValue::Na);
+        assert_eq!(result.plots[2].values[6], PineValue::Na);
+
+        assert_eq!(result.plots[3].values[0], PineValue::Na);
+        assert_eq!(result.plots[3].values[1], PineValue::Na);
+        assert_values_close(&result.plots[3].values[2..3], &[3.0]);
+        assert_eq!(result.plots[3].values[3], PineValue::Na);
+        assert_values_close(&result.plots[3].values[4..5], &[2.0]);
+        assert_eq!(result.plots[3].values[5], PineValue::Na);
+        assert_values_close(&result.plots[3].values[6..], &[1.0]);
+
+        assert_values_close(
+            &result.plots[4].values,
+            &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+        );
+    }
+
+    #[test]
     fn runs_cum_over_historical_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -11936,6 +12079,39 @@ plot(score)
 
         assert_eq!(result.plots.len(), 1);
         assert_values_close(&result.plots[0].values, &[0.8, 12.0, 1.4285714285714286]);
+    }
+
+    #[test]
+    fn advances_conditional_pivot_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional pivot")
+score = close
+if close > open
+    score := ta.pivothigh(close, 1, 1)
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(0.0, 1.0, 1.0, 1.0),
+            bar_ohlc(5.0, 2.0, 2.0, 2.0),
+            bar_ohlc(0.0, 3.0, 3.0, 3.0),
+            bar_ohlc(0.0, 2.0, 2.0, 2.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..2], &[2.0]);
+        assert_eq!(result.plots[0].values[2], PineValue::Na);
+        assert_values_close(&result.plots[0].values[3..], &[3.0]);
     }
 
     #[test]

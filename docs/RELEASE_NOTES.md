@@ -29,6 +29,8 @@
 - Added `ta.bop` Balance of Power support over current OHLC values.
 - Added `ta.kc` and `ta.kcw` Keltner Channel support using source/range EMA
   state.
+- Added `ta.pivothigh` and `ta.pivotlow` support for confirmed left/right pivot
+  windows.
 - Added `ta.wpr` Williams %R support over ready rolling high/low windows and
   current close.
 - Added `ta.stoch` four-argument stochastic oscillator support over ready
