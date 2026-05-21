@@ -1,0 +1,4 @@
+//@version=5
+indicator("CCI")
+value = ta.cci(close, 3)
+plot(value)

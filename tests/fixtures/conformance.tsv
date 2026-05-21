@@ -106,6 +106,7 @@ ta.rsi	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pin
 ta.macd	supported	fixture-derived executable subset	tests/fixtures/runtime/macd.pine
 ta.tsi	supported	fixture-derived True Strength Index subset	tests/fixtures/runtime/tsi.pine
 ta.cmo	supported	fixture-derived Chande Momentum Oscillator subset	tests/fixtures/runtime/cmo.pine
+ta.cci	supported	fixture-derived Commodity Channel Index subset	tests/fixtures/runtime/cci.pine
 ta.ao	supported	fixture-derived Awesome Oscillator subset	tests/fixtures/runtime/ao.pine
 ta.bop	supported	fixture-derived Balance of Power subset	tests/fixtures/runtime/bop.pine
 ta.bb	supported	fixture-derived executable subset	tests/fixtures/runtime/bb.pine

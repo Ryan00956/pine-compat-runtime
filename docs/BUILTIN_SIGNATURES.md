@@ -372,6 +372,7 @@ ta.macd(source: series int/float, fastlen: simple int, slowlen: simple int, sigl
   -> tuple(series float, series float, series float)
 ta.tsi(source: series int/float, short_length: simple int, long_length: simple int) -> series float
 ta.cmo(source: series int/float, length: simple int) -> series float
+ta.cci(source: series int/float, length: simple int) -> series float
 ta.ao() -> series float
 ta.bop() -> series float
 ta.bb(source: series int/float, length: simple int, mult: numeric)
@@ -562,6 +563,10 @@ Rules:
   sum(down)) / (sum(up) + sum(down))` over ready rolling source-change windows.
   It returns `na` before the window is ready, for non-positive lengths, or when
   the denominator is zero.
+- `ta.cci` returns the Commodity Channel Index as `(source - sma(source,
+  length)) / (0.015 * ta.dev(source, length))`. It returns `na` before the
+  rolling window is ready, for non-positive lengths, when source is `na`, or
+  when mean absolute deviation is zero.
 - `ta.ao` returns the Awesome Oscillator as `sma(hl2, 5) - sma(hl2, 34)`.
   It returns `na` until both rolling windows are ready or when either window
   contains `na`.

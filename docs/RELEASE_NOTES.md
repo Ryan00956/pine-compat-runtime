@@ -21,6 +21,8 @@
   source momentum and absolute momentum.
 - Added `ta.cmo` Chande Momentum Oscillator support over ready rolling
   positive/negative source-change windows.
+- Added `ta.cci` Commodity Channel Index support over ready source mean
+  deviation windows.
 - Added `ta.ao` Awesome Oscillator support as the fast/slow SMA spread of
   median price.
 - Added `ta.bop` Balance of Power support over current OHLC values.
