@@ -2022,6 +2022,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.rma" => self.eval_rma(call_site_id, args),
             "ta.rsi" => self.eval_rsi(call_site_id, args),
             "ta.macd" => self.eval_macd(call_site_id, args),
+            "ta.tsi" => self.eval_tsi(call_site_id, args),
             "ta.bb" => self.eval_bb(call_site_id, args),
             "ta.bbw" => self.eval_bbw(call_site_id, args),
             "ta.cum" => self.eval_cum(call_site_id, args),
@@ -5658,6 +5659,56 @@ impl<'a> HistoricalRuntime<'a> {
         ]))
     }
 
+    fn eval_tsi(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let short_length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let long_length = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(0);
+        if short_length <= 0 || long_length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let Some(source) = source.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(series_id) = args[0].value.series_id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(previous_source) = self.series_store.read(series_id, 1).as_f64() else {
+            return Ok(PineValue::Na);
+        };
+
+        let momentum = source - previous_source;
+        let previous = tsi_state(self.call_state.get(&call_site_id));
+        let short_momentum = ema_next(previous.map(|state| state.0), momentum, short_length);
+        let long_momentum = ema_next(previous.map(|state| state.1), short_momentum, long_length);
+        let short_abs_momentum =
+            ema_next(previous.map(|state| state.2), momentum.abs(), short_length);
+        let long_abs_momentum = ema_next(
+            previous.map(|state| state.3),
+            short_abs_momentum,
+            long_length,
+        );
+
+        self.call_state.insert(
+            call_site_id,
+            PineValue::Tuple(vec![
+                PineValue::Float(short_momentum),
+                PineValue::Float(long_momentum),
+                PineValue::Float(short_abs_momentum),
+                PineValue::Float(long_abs_momentum),
+            ]),
+        );
+
+        if long_abs_momentum == 0.0 {
+            return Ok(PineValue::Na);
+        }
+        Ok(finite_float_or_na(long_momentum / long_abs_momentum))
+    }
+
     fn finalize_series_outputs(&mut self) {
         finalize_series_values(&mut self.plots, self.bars);
         finalize_bar_aligned_outputs(&mut self.plot_chars, self.bars);
@@ -5943,6 +5994,27 @@ fn sar_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, bool)> {
         max_min.as_f64()?,
         acceleration.as_f64()?,
         *is_below,
+    ))
+}
+
+fn tsi_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, f64)> {
+    let Some(PineValue::Tuple(values)) = value else {
+        return None;
+    };
+    let [
+        short_momentum,
+        long_momentum,
+        short_abs_momentum,
+        long_abs_momentum,
+    ] = values.as_slice()
+    else {
+        return None;
+    };
+    Some((
+        short_momentum.as_f64()?,
+        long_momentum.as_f64()?,
+        short_abs_momentum.as_f64()?,
+        long_abs_momentum.as_f64()?,
     ))
 }
 
@@ -9346,6 +9418,51 @@ plot(na(invalid) ? 1 : 0)
     }
 
     #[test]
+    fn runs_tsi_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("tsi")
+value = ta.tsi(close, 2, 3)
+flat = ta.tsi(close * 0 + 1, 2, 3)
+invalid = ta.tsi(close, 0, 3)
+plot(value)
+plot(na(flat) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar(10.0),
+            bar(11.0),
+            bar(12.0),
+            bar(10.0),
+            bar(13.0),
+            bar(12.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[1..],
+            &[
+                1.0,
+                1.0,
+                4.163336342344337e-17,
+                0.42857142857142866,
+                0.2085561497326204,
+            ],
+        );
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    }
+
+    #[test]
     fn runs_wma_over_historical_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -11291,6 +11408,36 @@ plot(score)
         assert_eq!(result.plots.len(), 1);
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_values_close(&result.plots[0].values[1..], &[2.0, 100.0]);
+    }
+
+    #[test]
+    fn advances_conditional_tsi_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional tsi")
+score = close
+if close > open
+    score := ta.tsi(close, 2, 3)
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 10.0, 1.0, 5.0),
+            bar_ohlc(3.0, 4.0, 1.0, 2.0),
+            bar_ohlc(4.0, 20.0, 10.0, 15.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.0, 1.0]);
     }
 
     #[test]

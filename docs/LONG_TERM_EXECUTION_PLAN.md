@@ -215,6 +215,7 @@ Candidate areas:
   `ta.mode`,
   `ta.percentile_nearest_rank`, `ta.percentile_linear_interpolation`, and
   `ta.percentrank` over ready rolling windows, `ta.cum` cumulative sums,
+  `ta.tsi` True Strength Index double-EMA momentum support,
   `ta.accdist`/`ta.iii`/`ta.nvi`/
   `ta.obv`/`ta.pvi`/`ta.pvt`, partial `ta.vwap` variable/source-call support,
   `ta.mfi` Money Flow Index support,

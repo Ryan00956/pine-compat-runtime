@@ -104,6 +104,7 @@ ta.ema	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pin
 ta.rma	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
 ta.rsi	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
 ta.macd	supported	fixture-derived executable subset	tests/fixtures/runtime/macd.pine
+ta.tsi	supported	fixture-derived True Strength Index subset	tests/fixtures/runtime/tsi.pine
 ta.bb	supported	fixture-derived executable subset	tests/fixtures/runtime/bb.pine
 ta.bbw	supported	Bollinger Bands Width over ready rolling windows	tests/fixtures/runtime/bbw.pine
 ta.cum	supported	fixture-derived executable subset	tests/fixtures/runtime/cum.pine

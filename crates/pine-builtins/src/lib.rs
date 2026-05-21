@@ -1573,6 +1573,24 @@ const TA_MACD_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_TSI_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "short_length",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "long_length",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
 const TA_BB_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
@@ -2858,6 +2876,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TA_MACD_PARAMS,
         returns: ReturnSpec::Tuple(THREE_SERIES_FLOATS),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.tsi",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_TSI_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {

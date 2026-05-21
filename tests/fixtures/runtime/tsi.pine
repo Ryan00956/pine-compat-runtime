@@ -1,0 +1,8 @@
+//@version=5
+indicator("TSI")
+value = ta.tsi(close, 2, 3)
+flat = ta.tsi(close * 0 + 1, 2, 3)
+invalid = ta.tsi(close, 0, 3)
+plot(value)
+plot(na(flat) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)
