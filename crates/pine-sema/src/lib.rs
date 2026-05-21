@@ -5451,6 +5451,8 @@ trig = math.sin(close) + math.cos(close) + math.tan(close)
 inverse_trig = math.acos(close - 2) + math.asin(close - 2) + math.atan(close)
 angle_helpers = math.sign(close - 2) + math.todegrees(close) + math.toradians(close)
 constants = math.pi + math.e + math.phi + math.rphi
+rounded_mintick = math.round_to_mintick(close + 0.006)
+mintick = syminfo.mintick
 sum_value = math.sum(close, 3)
 plot(y)
 "#,
@@ -5635,6 +5637,20 @@ plot(y)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "math.sum")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.round_to_mintick")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "syminfo.mintick")
         );
     }
 

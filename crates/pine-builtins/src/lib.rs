@@ -2561,6 +2561,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "math.round_to_mintick",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "math.sum",
         phase: BuiltinPhase::Phase1Core,
         params: MATH_SUM_PARAMS,
@@ -3474,6 +3481,10 @@ const NAMED_FLOAT_CONSTANTS: &[NamedFloatConstant] = &[
     NamedFloatConstant {
         name: "math.rphi",
         value: 0.618_033_988_749_894_8,
+    },
+    NamedFloatConstant {
+        name: "syminfo.mintick",
+        value: 0.01,
     },
 ];
 

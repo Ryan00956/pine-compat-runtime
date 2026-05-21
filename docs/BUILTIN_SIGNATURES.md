@@ -86,6 +86,15 @@ barstate.isrealtime -> series bool
 `barstate.ishistory` is `true` for historical updates. `barstate.isrealtime`
 is `true` for forming and confirmed realtime updates.
 
+Symbol info:
+
+```text
+syminfo.mintick -> const float
+```
+
+`syminfo.mintick` currently uses a fixed default value of `0.01` until runtime
+symbol metadata is available.
+
 The same names are also supported as functions over a timestamp:
 
 ```text
@@ -757,6 +766,7 @@ math.tan(number: numeric) -> float with same qualifier
 math.pow(base: numeric, exponent: numeric) -> float with strongest qualifier
 math.round(number: numeric) -> numeric
 math.round(number: numeric, precision: int) -> float with same qualifier
+math.round_to_mintick(number: numeric) -> float with same qualifier
 math.sum(source: series/simple numeric, length: simple int) -> series float
 ```
 
@@ -770,6 +780,8 @@ Current Phase 4 behavior:
 - `math.floor` and `math.ceil` preserve int/float kind and qualifier; float inputs return whole-number floats.
 - `math.sqrt`, `math.log`, `math.log10`, `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`, `math.todegrees`, `math.toradians`, `math.sin`, `math.cos`, `math.tan`, and `math.pow` return float values and preserve or promote qualifiers from their arguments.
 - `math.round` preserves int/float kind and qualifier when `precision` is omitted; with `precision`, it returns a float rounded to that many decimal places.
+- `math.round_to_mintick` rounds to the nearest multiple of the current
+  `syminfo.mintick` subset value, with ties rounding up.
 - `math.sum` returns the rolling sum of `source` over a ready simple-int `length` window; it returns `na` for invalid lengths, until the window is ready, or when the window contains `na`.
 - `math.max` and `math.min` require at least two numeric args and accept variadic numeric args.
 - `math.max` and `math.min` return int only when all args are int; otherwise they return float.

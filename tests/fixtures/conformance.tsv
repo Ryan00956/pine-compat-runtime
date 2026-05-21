@@ -91,11 +91,13 @@ math.pi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.
 math.e	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.phi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.rphi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+syminfo.mintick	supported	fixed default mintick subset used by math.round_to_mintick	tests/fixtures/runtime/math.pine
 math.sin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.cos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.tan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.pow	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.round	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.round_to_mintick	supported	fixture-derived executable subset using default syminfo.mintick	tests/fixtures/runtime/math.pine
 math.sum	supported	fixture-derived executable subset; length currently simple int	tests/fixtures/runtime/math.pine
 na	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine
 nz	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine

@@ -154,6 +154,8 @@
 - Added `math.avg` support for variadic numeric averages.
 - Added `math.e`, `math.pi`, `math.phi`, and `math.rphi` constants.
 - Added `precision` argument support for `math.round`.
+- Added `math.round_to_mintick` support using the current default
+  `syminfo.mintick` subset value.
 - Added `math.sum` support for rolling source sums with simple-int lengths.
 - Added `ta.stdev` support with default biased and optional sample standard
   deviation modes.

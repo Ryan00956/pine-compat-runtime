@@ -2056,6 +2056,7 @@ impl<'a> HistoricalRuntime<'a> {
             "math.tan" => self.eval_math_unary_float(args, f64::tan),
             "math.pow" => self.eval_math_pow(args),
             "math.round" => self.eval_math_round(args),
+            "math.round_to_mintick" => self.eval_math_round_to_mintick(args),
             "math.sum" => self.eval_math_sum(call_site_id, args),
             "ta.sma" => self.eval_sma(call_site_id, args),
             "ta.ema" => self.eval_ema(call_site_id, args),
@@ -5800,6 +5801,21 @@ impl<'a> HistoricalRuntime<'a> {
         let precision = precision.clamp(i32::MIN as i64, i32::MAX as i64) as i32;
         let factor = 10_f64.powi(precision);
         Ok(finite_float_or_na((value * factor).round() / factor))
+    }
+
+    fn eval_math_round_to_mintick(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(value) = self.eval_expr(&args[0].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+        if !value.is_finite() || mintick <= 0.0 || !mintick.is_finite() {
+            return Ok(PineValue::Na);
+        }
+        let rounded_ticks = (value / mintick + 0.5).floor();
+        Ok(finite_float_or_na(rounded_ticks * mintick))
     }
 
     fn eval_math_sum(
@@ -11507,6 +11523,8 @@ cos_value = math.cos(close)
 tan_value = math.tan(close)
 pow_value = math.pow(close, 2)
 rounded_precision = math.round(close / 3, 2)
+rounded_mintick = math.round_to_mintick(close + 0.006)
+mintick = syminfo.mintick
 plot(x)
 plot(y)
 plot(avg_value)
@@ -11528,6 +11546,8 @@ plot(cos_value)
 plot(tan_value)
 plot(pow_value)
 plot(rounded_precision)
+plot(rounded_mintick)
+plot(mintick)
 plot(math.sqrt(-1))
 plot(math.log(0))
 plot(math.log10(0))
@@ -11627,13 +11647,15 @@ plot(math.pow(-1, 0.5))
         );
         assert_values_close(&result.plots[19].values, &[1.0, 4.0, 9.0, 16.0]);
         assert_values_close(&result.plots[20].values, &[0.33, 0.67, 1.0, 1.33]);
-        assert_eq!(result.plots[21].values, vec![PineValue::Na; 4]);
-        assert_eq!(result.plots[22].values, vec![PineValue::Na; 4]);
+        assert_values_close(&result.plots[21].values, &[1.01, 2.01, 3.01, 4.01]);
+        assert_values_close(&result.plots[22].values, &[0.01, 0.01, 0.01, 0.01]);
         assert_eq!(result.plots[23].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[24].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[25].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[26].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[27].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[28].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[29].values, vec![PineValue::Na; 4]);
     }
 
     #[test]
