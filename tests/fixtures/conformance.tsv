@@ -86,6 +86,7 @@ ta.bb	supported	fixture-derived executable subset	tests/fixtures/runtime/bb.pine
 ta.cum	supported	fixture-derived executable subset	tests/fixtures/runtime/cum.pine
 ta.obv	supported	fixture-derived executable subset	tests/fixtures/runtime/obv.pine
 ta.pvt	supported	fixture-derived executable subset	tests/fixtures/runtime/pvt.pine
+ta.wad	supported	fixture-derived executable subset	tests/fixtures/runtime/wad.pine
 ta.stdev	supported	fixture-derived executable subset	tests/fixtures/runtime/stdev.pine
 ta.variance	supported	fixture-derived executable subset	tests/fixtures/runtime/variance.pine
 ta.range	supported	fixture-derived executable subset	tests/fixtures/runtime/range.pine
