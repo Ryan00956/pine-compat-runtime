@@ -558,6 +558,9 @@ enum RollingWindowKey {
     CorrelationLeft(CallSiteId),
     CorrelationRight(CallSiteId),
     CorrelationProduct(CallSiteId),
+    CovarianceLeft(CallSiteId),
+    CovarianceRight(CallSiteId),
+    CovarianceProduct(CallSiteId),
     HmaHalf(CallSiteId),
     HmaFull(CallSiteId),
     HmaSmooth(CallSiteId),
@@ -1984,6 +1987,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.wma" => self.eval_wma(call_site_id, args),
             "ta.hma" => self.eval_hma(call_site_id, args),
             "ta.correlation" => self.eval_correlation(call_site_id, args),
+            "ta.covariance" => self.eval_covariance(call_site_id, args),
             "ta.percentile_nearest_rank" => {
                 self.eval_percentile(call_site_id, args, ArrayPercentileMode::NearestRank)
             }
@@ -3525,6 +3529,58 @@ impl<'a> HistoricalRuntime<'a> {
 
         let covariance = product.mean(length) - (left.mean(length) * right.mean(length));
         Ok(finite_float_or_na(covariance / denominator))
+    }
+
+    fn eval_covariance(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let left = self.eval_expr(&args[0].value)?;
+        let right = self.eval_expr(&args[1].value)?;
+        let length = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let left = left.as_f64();
+        let right = right.as_f64();
+        let product = left.zip(right).map(|(left, right)| left * right);
+        self.update_rolling_window_key(
+            RollingWindowKey::CovarianceLeft(call_site_id),
+            left,
+            length,
+        );
+        self.update_rolling_window_key(
+            RollingWindowKey::CovarianceRight(call_site_id),
+            right,
+            length,
+        );
+        self.update_rolling_window_key(
+            RollingWindowKey::CovarianceProduct(call_site_id),
+            product,
+            length,
+        );
+
+        let left = self
+            .rolling_windows
+            .get(&RollingWindowKey::CovarianceLeft(call_site_id));
+        let right = self
+            .rolling_windows
+            .get(&RollingWindowKey::CovarianceRight(call_site_id));
+        let product = self
+            .rolling_windows
+            .get(&RollingWindowKey::CovarianceProduct(call_site_id));
+        let (Some(left), Some(right), Some(product)) = (left, right, product) else {
+            return Ok(PineValue::Na);
+        };
+        if !left.is_ready(length) || !right.is_ready(length) || !product.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let covariance = product.mean(length) - (left.mean(length) * right.mean(length));
+        Ok(finite_float_or_na(covariance))
     }
 
     fn eval_percentile(
@@ -7518,6 +7574,57 @@ plot(with_na)
         assert_eq!(result.plots[3].values[1], PineValue::Na);
         assert_values_close(&result.plots[3].values[2..3], &[1.0]);
         assert_eq!(result.plots[3].values[3], PineValue::Na);
+    }
+
+    #[test]
+    fn runs_covariance_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("covariance")
+same = ta.covariance(close, close, 3)
+inverse = ta.covariance(close, -close, 3)
+flat = ta.covariance(close, open, 3)
+with_na = ta.covariance(close, bar_index == 3 ? na : high, 3)
+invalid = ta.covariance(close, high, 0)
+plot(same)
+plot(inverse)
+plot(flat)
+plot(with_na)
+plot(invalid)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlcv(10.0, 1.0, 1.0, 1.0, 1.0),
+            bar_ohlcv(10.0, 2.0, 2.0, 2.0, 1.0),
+            bar_ohlcv(10.0, 3.0, 3.0, 3.0, 1.0),
+            bar_ohlcv(10.0, 5.0, 5.0, 5.0, 1.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[2.0 / 3.0, 14.0 / 9.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_values_close(&result.plots[1].values[2..], &[-2.0 / 3.0, -14.0 / 9.0]);
+        assert_eq!(result.plots[2].values[0], PineValue::Na);
+        assert_eq!(result.plots[2].values[1], PineValue::Na);
+        assert_values_close(&result.plots[2].values[2..], &[0.0, 0.0]);
+        assert_eq!(result.plots[3].values[0], PineValue::Na);
+        assert_eq!(result.plots[3].values[1], PineValue::Na);
+        assert_values_close(&result.plots[3].values[2..3], &[2.0 / 3.0]);
+        assert_eq!(result.plots[3].values[3], PineValue::Na);
+        assert_eq!(result.plots[4].values[0], PineValue::Na);
+        assert_eq!(result.plots[4].values[1], PineValue::Na);
+        assert_eq!(result.plots[4].values[2], PineValue::Na);
+        assert_eq!(result.plots[4].values[3], PineValue::Na);
     }
 
     #[test]

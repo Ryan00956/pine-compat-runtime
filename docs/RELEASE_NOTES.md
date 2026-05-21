@@ -125,6 +125,7 @@
 - Added `ta.roc` support for rate-of-change percentages over explicit history
   lengths.
 - Added `ta.correlation` support for rolling Pearson correlation coefficients.
+- Added `ta.covariance` support for rolling population covariance values.
 - Added `ta.percentile_nearest_rank` support for rolling nearest-rank
   percentile values.
 - Added `ta.percentile_linear_interpolation` support for rolling interpolated

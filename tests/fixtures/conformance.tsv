@@ -94,6 +94,7 @@ ta.vwap	supported	fixture-derived variable and one-argument source-call subset; 
 ta.wad	supported	fixture-derived executable subset	tests/fixtures/runtime/wad.pine
 ta.wvad	supported	fixture-derived executable subset	tests/fixtures/runtime/wvad.pine
 ta.correlation	supported	fixture-derived executable subset	tests/fixtures/runtime/correlation.pine
+ta.covariance	supported	fixture-derived executable subset	tests/fixtures/runtime/covariance.pine
 ta.percentile_linear_interpolation	supported	fixture-derived executable subset	tests/fixtures/runtime/percentile_linear_interpolation.pine
 ta.percentile_nearest_rank	supported	fixture-derived executable subset	tests/fixtures/runtime/percentile_nearest_rank.pine
 ta.percentrank	supported	fixture-derived executable subset	tests/fixtures/runtime/percentrank.pine

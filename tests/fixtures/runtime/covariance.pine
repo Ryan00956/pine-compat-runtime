@@ -1,0 +1,3 @@
+//@version=5
+indicator("Covariance")
+plot(ta.covariance(close, high, 3))

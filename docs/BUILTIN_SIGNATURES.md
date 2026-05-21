@@ -341,6 +341,7 @@ ta.change(source: series float, length?: simple int) -> series float
 ta.mom(source: series float, length: simple int) -> series float
 ta.roc(source: series float, length: simple int) -> series float
 ta.correlation(source1: series/simple numeric, source2: series/simple numeric, length: simple int) -> series float
+ta.covariance(source1: series/simple numeric, source2: series/simple numeric, length: simple int) -> series float
 ta.percentile_nearest_rank(source: series/simple numeric, length: simple int, percentage: input/const numeric) -> series float
 ta.percentile_linear_interpolation(source: series/simple numeric, length: simple int, percentage: input/const numeric) -> series float
 ta.percentrank(source: series/simple numeric, length: simple int) -> series float
@@ -413,6 +414,8 @@ Rules:
 - `ta.correlation` returns the Pearson correlation coefficient over the ready
   paired source window and returns `na` while the window is not ready, contains
   `na`, or either source has zero variance.
+- `ta.covariance` returns population covariance over the ready paired source
+  window and returns `na` while the window is not ready or contains `na`.
 - `ta.percentile_nearest_rank` sorts the ready source window ascending and
   returns the nearest-rank percentile member. It returns `na` while the window
   is not ready, contains `na`, or `percentage` is outside `0..=100`.
