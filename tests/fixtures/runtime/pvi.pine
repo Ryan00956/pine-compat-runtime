@@ -1,0 +1,3 @@
+//@version=5
+indicator("Positive Volume Index")
+plot(ta.pvi)

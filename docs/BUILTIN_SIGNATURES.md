@@ -326,7 +326,9 @@ ta.wma(source: series float, length: simple int) -> series float
 ta.hma(source: series float, length: simple int) -> series float
 ta.cum(source: series/simple numeric) -> series float
 ta.accdist -> series float
+ta.nvi -> series float
 ta.obv -> series float
+ta.pvi -> series float
 ta.pvt -> series float
 ta.wad -> series float
 ta.wvad -> series float
@@ -371,8 +373,16 @@ Rules:
   Accumulation/Distribution money flow volume:
   `(((close - low) - (high - close)) / (high - low)) * volume`. It returns
   `na` and resets the next cumulative step when `high == low`.
+- `ta.nvi` is a built-in series variable with an initial value of `1.0`; it
+  updates by `((close - close[1]) / close[1]) * previous_nvi` only when
+  `volume < volume[1]`, and carries the previous value when the current or
+  previous close is zero.
 - `ta.obv` is a built-in series variable equivalent to
   `ta.cum(math.sign(ta.change(close)) * volume)`.
+- `ta.pvi` is a built-in series variable with an initial value of `1.0`; it
+  updates by `((close - close[1]) / close[1]) * previous_pvi` only when
+  `volume > volume[1]`, and carries the previous value when the current or
+  previous close is zero.
 - `ta.pvt` is a built-in series variable equivalent to
   `ta.cum((ta.change(close) / close[1]) * volume)`.
 - `ta.wad` is a built-in series variable equivalent to cumulative Williams

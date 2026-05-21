@@ -108,6 +108,8 @@
 - Added `ta.cum` support for cumulative numeric source sums.
 - Added `ta.accdist` support as the built-in Accumulation/Distribution index
   series variable.
+- Added `ta.nvi` and `ta.pvi` support as built-in Negative/Positive Volume
+  Index series variables.
 - Added `ta.obv` support as the built-in On Balance Volume series variable.
 - Added `ta.pvt` support as the built-in Price Volume Trend series variable.
 - Added `ta.wad` support as the built-in Williams Accumulation/Distribution

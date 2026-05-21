@@ -1,0 +1,3 @@
+//@version=5
+indicator("Negative Volume Index")
+plot(ta.nvi)

@@ -428,10 +428,15 @@ pub struct HistoricalRuntime<'a> {
     rsi_state: HashMap<CallSiteId, RsiState>,
     macd_state: HashMap<CallSiteId, MacdState>,
     price_flow_previous_close: Option<f64>,
+    price_flow_previous_volume: Option<f64>,
     accdist_state: PineValue,
     accdist_current: PineValue,
+    nvi_state: PineValue,
+    nvi_current: PineValue,
     obv_state: PineValue,
     obv_current: PineValue,
+    pvi_state: PineValue,
+    pvi_current: PineValue,
     pvt_state: PineValue,
     pvt_current: PineValue,
     wad_state: PineValue,
@@ -656,10 +661,15 @@ impl<'a> HistoricalRuntime<'a> {
             rsi_state: HashMap::new(),
             macd_state: HashMap::new(),
             price_flow_previous_close: None,
+            price_flow_previous_volume: None,
             accdist_state: PineValue::Na,
             accdist_current: PineValue::Na,
+            nvi_state: PineValue::Na,
+            nvi_current: PineValue::Na,
             obv_state: PineValue::Na,
             obv_current: PineValue::Na,
+            pvi_state: PineValue::Na,
+            pvi_current: PineValue::Na,
             pvt_state: PineValue::Na,
             pvt_current: PineValue::Na,
             wad_state: PineValue::Na,
@@ -1120,12 +1130,16 @@ impl<'a> HistoricalRuntime<'a> {
     fn set_builtin_symbols(&mut self, bar: &Bar, bar_index: usize) -> Result<(), RuntimeError> {
         let datetime = utc_datetime_from_millis(bar.time)?;
         let previous_close = self.price_flow_previous_close;
+        let previous_volume = self.price_flow_previous_volume;
         self.accdist_current = self.next_accdist(bar);
+        self.nvi_current = self.next_nvi(bar, previous_close, previous_volume);
         self.obv_current = self.next_obv(bar, previous_close);
+        self.pvi_current = self.next_pvi(bar, previous_close, previous_volume);
         self.pvt_current = self.next_pvt(bar, previous_close);
         self.wad_current = self.next_wad(bar, previous_close);
         self.wvad_current = Self::wvad_value(bar);
         self.price_flow_previous_close = Some(bar.close);
+        self.price_flow_previous_volume = Some(bar.volume);
         let builtins = [
             ("open", PineValue::Float(bar.open)),
             ("high", PineValue::Float(bar.high)),
@@ -1188,6 +1202,21 @@ impl<'a> HistoricalRuntime<'a> {
         self.accdist_state.clone()
     }
 
+    fn next_nvi(
+        &mut self,
+        bar: &Bar,
+        previous_close: Option<f64>,
+        previous_volume: Option<f64>,
+    ) -> PineValue {
+        Self::next_volume_index(
+            &mut self.nvi_state,
+            bar,
+            previous_close,
+            previous_volume,
+            |volume, previous_volume| volume < previous_volume,
+        )
+    }
+
     fn next_obv(&mut self, bar: &Bar, previous_close: Option<f64>) -> PineValue {
         let Some(previous_close) = previous_close else {
             self.obv_state = PineValue::Na;
@@ -1205,6 +1234,21 @@ impl<'a> HistoricalRuntime<'a> {
         let value = self.obv_state.as_f64().unwrap_or(0.0) + signed_volume;
         self.obv_state = PineValue::Float(value);
         self.obv_state.clone()
+    }
+
+    fn next_pvi(
+        &mut self,
+        bar: &Bar,
+        previous_close: Option<f64>,
+        previous_volume: Option<f64>,
+    ) -> PineValue {
+        Self::next_volume_index(
+            &mut self.pvi_state,
+            bar,
+            previous_close,
+            previous_volume,
+            |volume, previous_volume| volume > previous_volume,
+        )
     }
 
     fn next_pvt(&mut self, bar: &Bar, previous_close: Option<f64>) -> PineValue {
@@ -1254,6 +1298,43 @@ impl<'a> HistoricalRuntime<'a> {
         self.wad_state.clone()
     }
 
+    fn next_volume_index(
+        state: &mut PineValue,
+        bar: &Bar,
+        previous_close: Option<f64>,
+        previous_volume: Option<f64>,
+        should_update: impl FnOnce(f64, f64) -> bool,
+    ) -> PineValue {
+        let previous_value = state.as_f64().filter(|value| *value != 0.0).unwrap_or(1.0);
+        let Some(previous_close) = previous_close else {
+            *state = PineValue::Float(previous_value);
+            return state.clone();
+        };
+
+        if bar.close == 0.0
+            || previous_close == 0.0
+            || !bar.close.is_finite()
+            || !previous_close.is_finite()
+            || !bar.volume.is_finite()
+        {
+            *state = PineValue::Float(previous_value);
+            return state.clone();
+        }
+
+        let previous_volume = previous_volume
+            .filter(|volume| volume.is_finite())
+            .unwrap_or(0.0);
+        if !should_update(bar.volume, previous_volume) {
+            *state = PineValue::Float(previous_value);
+            return state.clone();
+        }
+
+        let value =
+            previous_value + ((bar.close - previous_close) / previous_close) * previous_value;
+        *state = finite_float_or_na(value);
+        state.clone()
+    }
+
     fn wvad_value(bar: &Bar) -> PineValue {
         let range = bar.high - bar.low;
         if range == 0.0 {
@@ -1267,8 +1348,14 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "ta.accdist" {
             return self.accdist_current.clone();
         }
+        if name == "ta.nvi" {
+            return self.nvi_current.clone();
+        }
         if name == "ta.obv" {
             return self.obv_current.clone();
+        }
+        if name == "ta.pvi" {
+            return self.pvi_current.clone();
         }
         if name == "ta.pvt" {
             return self.pvt_current.clone();
@@ -6551,6 +6638,43 @@ plot(ta.accdist)
         assert_values_close(&result.plots[0].values[..2], &[40.0, -10.0]);
         assert_eq!(result.plots[0].values[2], PineValue::Na);
         assert_values_close(&result.plots[0].values[3..], &[10.0]);
+    }
+
+    #[test]
+    fn runs_nvi_pvi_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("volume index")
+plot(ta.nvi)
+plot(ta.pvi)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_volume(10.0, 100.0),
+            bar_volume(12.0, 90.0),
+            bar_volume(6.0, 120.0),
+            bar_volume(0.0, 80.0),
+            bar_volume(5.0, 60.0),
+            bar_volume(10.0, 50.0),
+            bar_volume(15.0, 70.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(
+            &result.plots[0].values,
+            &[1.0, 1.2, 1.2, 1.2, 1.2, 2.4, 2.4],
+        );
+        assert_values_close(
+            &result.plots[1].values,
+            &[1.0, 1.0, 0.5, 0.5, 0.5, 0.5, 0.75],
+        );
     }
 
     #[test]
