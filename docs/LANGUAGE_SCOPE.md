@@ -70,7 +70,10 @@ Phase 1 executable subset:
 - `plot`, `plotchar`, `plotshape`, `plotarrow`, `plotbar`, `plotcandle`,
   `bgcolor`, `barcolor`, `hline`, and `fill`
 - `na`, `nz`
-- `ta.sma` and `ta.ema`
+- common `ta.*` helpers listed in
+  [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md), including moving averages,
+  rolling statistics, momentum/history helpers, crosses, extremes, trend
+  checks, value lookups, true range, volume flow helpers, and partial VWAP
 - partial float, int, bool, string, and color arrays with `array.new_float`,
   `array.new_int`, `array.new_bool`, `array.new_string`, `array.new_color`,
   `array.from`, `array.push`, `array.get`, `array.set`, `array.size`, `array.pop`,
@@ -175,23 +178,13 @@ Input namespace:
 - `input.time`
 - `input.symbol`
 - `input.timeframe`
+- `input.session`
+- `input.text_area`
 
 TA namespace:
 
-- `ta.sma`
-- `ta.ema`
-- `ta.rma`
-- `ta.rsi`
-- `ta.macd`
-- `ta.bb`
-- `ta.atr`
-- `ta.tr`
-- `ta.change`
-- `ta.cross`
-- `ta.crossover`
-- `ta.crossunder`
-- `ta.highest`
-- `ta.lowest`
+- common indicator helpers listed in
+  [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md)
 
 Plotting:
 
@@ -210,13 +203,17 @@ Color namespace:
 
 - common named colors
 - `color.new`
+- `color.rgb`
+- color component helpers
+- `color.from_gradient`
 - hex color parsing
 
 Utility:
 
 - `na`
 - `nz`
-- basic `math.*` functions
+- selected `math.*`, `str.*`, and UTC time helpers listed in
+  [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md)
 
 ## Explicitly Unsupported in Phase 1
 

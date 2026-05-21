@@ -120,7 +120,7 @@ Planned commands:
 
 ```text
 pine-compat analyze script.pine
-pine-compat run script.pine --bars bars.csv --inputs inputs.json --out result.json
+pine-compat run script.pine --bars bars.csv --out result.json
 pine-compat fmt-ast script.pine
 ```
 

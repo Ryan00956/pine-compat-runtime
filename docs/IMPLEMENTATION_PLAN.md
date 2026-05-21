@@ -119,7 +119,8 @@ Exit criteria:
   fixtures.
 - Results are deterministic and snapshot tested.
 - Constant and guarded dynamic integer history offsets, `var`, `na`, `nz`,
-  `plot`, `hline`, `fill`, `ta.sma`, and `ta.ema` are covered by fixtures.
+  core output calls, and fixture-covered `ta.*` helpers are covered by
+  fixtures.
 
 ## Phase 4: Expanded Built-Ins and Output
 
@@ -132,9 +133,11 @@ Deliverables:
 
 Exit criteria:
 
-- CLI can run SMA, EMA, RSI, MACD, Bollinger Bands, and ATR fixtures.
-- Output includes series, annotations, fills, inputs, diagnostics, and
-  compatibility report.
+- CLI can run fixture-covered TA, math, string, array, input, and output
+  examples.
+- Output includes normalized series, annotations, fills, diagnostics, and
+  compatibility reports. Input calls currently execute their `defval` values;
+  host-side input override APIs are later work.
 
 ## Phase 5: Python Binding
 

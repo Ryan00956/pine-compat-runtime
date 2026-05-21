@@ -202,7 +202,9 @@ Status: planned in
 [`LONG_TERM_EXECUTION_PLAN.md`](LONG_TERM_EXECUTION_PLAN.md).
 
 - [ ] Harden loop and branch edge cases.
-- [ ] Expand collection support beyond float arrays.
+- [x] Expand scalar typed-array support beyond float arrays.
+- [ ] Design unsupported collection families and remaining Pine array
+  semantics.
 - [x] Revisit history and qualifier semantics for the current executable subset.
 - [ ] Add per-variable `max_bars_back` and deeper history diagnostics.
 - [ ] Add more built-in coverage.

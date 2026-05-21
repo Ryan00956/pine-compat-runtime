@@ -69,14 +69,14 @@ pine-compat-runtime/
 
 The current baseline is a Rust CLI and embeddable runtime that can parse,
 analyze, and execute a small set of common indicator scripts over CSV OHLCV
-data, then emit normalized JSON containing series, annotations, fills, inputs,
-and diagnostics.
+data, then emit normalized JSON containing series, annotations, fills,
+diagnostics, and compatibility reports.
 
 The project should not move into host-specific integration work until this
 standalone loop is reliable:
 
 ```text
-source.pine + bars.csv + inputs.json
+source.pine + bars.csv
   -> compile
   -> analyze
   -> run
@@ -84,16 +84,18 @@ source.pine + bars.csv + inputs.json
 ```
 
 The supported executable subset includes indicator scripts, historical
-bar-by-bar execution, constant history offsets, `if`/`else` blocks, `var`,
-normal block-local declarations inside `if`, `na`, `nz`, `input.*`, `plot`,
-`hline`, `fill`, common `ta.*` functions, selected `math.*` functions,
-user-defined functions, named colors, `color.new`, tuple
-returns, incremental append execution, realtime forming-bar rollback, Python
-bindings, and a thin WASM binding.
+bar-by-bar execution, constant and guarded dynamic integer history offsets,
+`if`/`else` blocks, `switch`, partial `for`/`while` loops, `var`, block-local
+declarations, `na`, `nz`, `input.*` defval execution, output calls, partial
+typed arrays, common `ta.*` functions, selected `math.*` and `str.*` functions,
+user-defined functions, named colors, color helpers, tuple returns,
+incremental append execution, realtime forming-bar rollback, Python bindings,
+and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as `strategy.*`,
-`request.*`, alerts, imports, arrays, drawing objects, dynamic history offsets,
-recursive functions, function side effects, and `varip` intrabar persistence.
+`request.*`, alerts, imports, drawing objects, unsupported collection families
+and element types, recursive functions, function side effects, and `varip`
+intrabar persistence.
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes; skipped bars commit `na` for series values that were not
 evaluated on that bar.
