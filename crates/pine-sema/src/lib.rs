@@ -4225,6 +4225,24 @@ mod tests {
     }
 
     #[test]
+    fn accepts_ta_stoch() {
+        let analysis = analyze("plot(ta.stoch(close, high, low, 3))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.stoch")
+        );
+    }
+
+    #[test]
     fn accepts_input_string_in_conditions() {
         let analysis = analyze(
             "mode = input.string(\"SMA\", \"Mode\")\nplot(mode == \"SMA\" ? close : open)\n",

@@ -1515,6 +1515,29 @@ const TA_TWO_SOURCE_LENGTH_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_STOCH_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "high",
+        accepts: Accepts::SeriesNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "low",
+        accepts: Accepts::SeriesNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "length",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
 const TA_LENGTH_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "length",
     accepts: Accepts::SimpleInt,
@@ -2928,6 +2951,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "ta.linreg",
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_LENGTH_OFFSET_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.stoch",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_STOCH_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },

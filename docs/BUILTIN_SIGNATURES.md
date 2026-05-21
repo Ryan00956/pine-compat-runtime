@@ -383,6 +383,7 @@ ta.hma(source: series int/float, length: simple int) -> series float
 ta.swma(source: series int/float) -> series float
 ta.alma(series: series int/float, length: simple int, offset: simple numeric, sigma: simple numeric, floor?: simple bool) -> series float
 ta.linreg(source: series int/float, length: simple int, offset: simple int) -> series float
+ta.stoch(source: series int/float, high: series int/float, low: series int/float, length: simple int) -> series float
 ta.cum(source: series/simple numeric) -> series float
 ta.max(source: series/simple numeric) -> series float
 ta.min(source: series/simple numeric) -> series float
@@ -538,6 +539,10 @@ Rules:
 - `ta.dmi` returns `[+DI, -DI, ADX]`. The current subset uses Wilder/RMA-style
   smoothing from the first executed bar, reuses `ta.tr(true)` true range
   semantics, and returns an all-`na` tuple for non-positive lengths.
+- `ta.stoch` supports the four-argument stochastic oscillator form using ready
+  rolling `high`/`low` windows. It returns `na` before the window is ready, when
+  either window contains `na`, for non-positive lengths, or when the high-low
+  range is zero.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.

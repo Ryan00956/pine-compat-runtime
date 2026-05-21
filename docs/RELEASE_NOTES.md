@@ -13,6 +13,8 @@
   ATR-based subset.
 - Added `ta.dmi` `+DI`/`-DI`/`ADX` tuple support using the runtime's existing
   Wilder/RMA-style smoothing behavior.
+- Added `ta.stoch` four-argument stochastic oscillator support over ready
+  rolling high/low windows.
 - Added partial float array support with runtime-owned array ids,
   `array.new_float`, `array.push`, `array.get`, `array.set`, `array.size`,
   `array.pop`, and `array.clear`.
