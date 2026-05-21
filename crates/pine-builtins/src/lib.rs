@@ -1568,6 +1568,19 @@ const TA_BB_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_SUPERTREND_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "factor",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "atrPeriod",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
 const ARRAY_NEW_FLOAT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
@@ -1851,6 +1864,7 @@ const ARRAY_SET_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TWO_SERIES_FLOATS: &[PineType] = &[SERIES_FLOAT, SERIES_FLOAT];
 const THREE_SERIES_FLOATS: &[PineType] = &[SERIES_FLOAT, SERIES_FLOAT, SERIES_FLOAT];
 
 pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
@@ -2965,6 +2979,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TA_LENGTH_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.supertrend",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SUPERTREND_PARAMS,
+        returns: ReturnSpec::Tuple(TWO_SERIES_FLOATS),
         variadic: false,
     },
     BuiltinSignature {

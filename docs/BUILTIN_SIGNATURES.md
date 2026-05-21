@@ -399,6 +399,7 @@ ta.wad -> series float
 ta.wvad -> series float
 ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
+ta.supertrend(factor: simple numeric, atrPeriod: simple int) -> [series float, series float]
 ta.change(source: series int/float/bool, length?: simple int) -> series float/bool
 ta.mom(source: series int/float, length: simple int) -> series float
 ta.roc(source: series int/float, length: simple int) -> series float
@@ -529,6 +530,10 @@ Rules:
   `ta.lowest`/`ta.lowestbars` length-only overloads use `low` as the source.
 - `ta.highestbars`/`ta.lowestbars` return the offset to the most recent
   matching extreme in the ready window.
+- `ta.supertrend` returns `[line, direction]`, where direction is `-1` for the
+  uptrend line and `1` for the downtrend line. The current subset follows the
+  TradingView band update rules using the runtime's existing RMA-style ATR
+  behavior.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.

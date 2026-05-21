@@ -3063,7 +3063,7 @@ impl HistoryRequirementCollector {
 
     fn record_call_history(&mut self, callee: &str, args: &[HirCallArg]) {
         match callee {
-            "ta.tr" | "ta.atr" => self.record_builtin_history("close", 1),
+            "ta.tr" | "ta.atr" | "ta.supertrend" => self.record_builtin_history("close", 1),
             "ta.change" => self.record_optional_length_history(args),
             "ta.mom" | "ta.roc" => self.record_required_length_history(args),
             "ta.cross" | "ta.crossover" | "ta.crossunder" => self.record_cross_history(args),
@@ -4179,6 +4179,25 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.wvad")
+        );
+    }
+
+    #[test]
+    fn accepts_ta_supertrend() {
+        let analysis =
+            analyze("[line, direction] = ta.supertrend(2.0, 3)\nplot(line + direction)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.supertrend")
         );
     }
 

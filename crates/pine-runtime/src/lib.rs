@@ -2047,6 +2047,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.percentrank" => self.eval_percentrank(call_site_id, args),
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
+            "ta.supertrend" => self.eval_supertrend(call_site_id, args),
             "ta.change" => self.eval_change(args),
             "ta.mom" => self.eval_mom(args),
             "ta.roc" => self.eval_roc(args),
@@ -4065,6 +4066,91 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(value)
     }
 
+    fn eval_supertrend(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(factor) = self.eval_expr(&args[0].value)?.as_f64() else {
+            return Ok(two_na_tuple());
+        };
+        let atr_period = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if atr_period <= 0 {
+            return Ok(two_na_tuple());
+        }
+
+        let Some(true_range) = self.true_range(true).as_f64() else {
+            return Ok(two_na_tuple());
+        };
+        let (Some(high), Some(low), Some(close)) = (
+            self.current_builtin_f64("high"),
+            self.current_builtin_f64("low"),
+            self.current_builtin_f64("close"),
+        ) else {
+            return Ok(two_na_tuple());
+        };
+
+        let previous = supertrend_state(self.call_state.get(&call_site_id));
+        let atr = rma_next(previous.map(|state| state.0), true_range, atr_period);
+        let hl2 = (high + low) / 2.0;
+        let basic_upper = hl2 + factor * atr;
+        let basic_lower = hl2 - factor * atr;
+        let previous_close = self.previous_close();
+
+        let upper = match previous.zip(previous_close) {
+            Some(((_, previous_upper, _, _), previous_close))
+                if basic_upper >= previous_upper && previous_close <= previous_upper =>
+            {
+                previous_upper
+            }
+            _ => basic_upper,
+        };
+        let lower = match previous.zip(previous_close) {
+            Some(((_, _, previous_lower, _), previous_close))
+                if basic_lower <= previous_lower && previous_close >= previous_lower =>
+            {
+                previous_lower
+            }
+            _ => basic_lower,
+        };
+
+        let direction = match previous {
+            None => 1.0,
+            Some((_, previous_upper, _, previous_supertrend))
+                if previous_supertrend == previous_upper =>
+            {
+                if close > upper {
+                    -1.0
+                } else {
+                    1.0
+                }
+            }
+            Some(_) => {
+                if close < lower {
+                    1.0
+                } else {
+                    -1.0
+                }
+            }
+        };
+        let supertrend = if direction < 0.0 { lower } else { upper };
+
+        self.call_state.insert(
+            call_site_id,
+            PineValue::Tuple(vec![
+                PineValue::Float(atr),
+                PineValue::Float(upper),
+                PineValue::Float(lower),
+                PineValue::Float(supertrend),
+            ]),
+        );
+
+        Ok(PineValue::Tuple(vec![
+            finite_float_or_na(supertrend),
+            PineValue::Float(direction),
+        ]))
+    }
+
     fn eval_change(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let current = self.eval_expr(&args[0].value)?;
         let length = if let Some(length_arg) = args.get(1) {
@@ -5477,6 +5563,25 @@ fn rma_next(previous: Option<f64>, source: f64, length: i64) -> f64 {
         Some(previous) => (previous * (length - 1) as f64 + source) / length as f64,
         None => source,
     }
+}
+
+fn two_na_tuple() -> PineValue {
+    PineValue::Tuple(vec![PineValue::Na, PineValue::Na])
+}
+
+fn supertrend_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, f64)> {
+    let Some(PineValue::Tuple(values)) = value else {
+        return None;
+    };
+    let [atr, upper, lower, supertrend] = values.as_slice() else {
+        return None;
+    };
+    Some((
+        atr.as_f64()?,
+        upper.as_f64()?,
+        lower.as_f64()?,
+        supertrend.as_f64()?,
+    ))
 }
 
 fn ema_next(previous: Option<f64>, source: f64, length: i64) -> f64 {
@@ -7816,6 +7921,50 @@ plot(atr)
             &result.plots[0].values,
             &[2.0, 2.3333333333333335, 3.2222222222222223],
         );
+    }
+
+    #[test]
+    fn runs_supertrend_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("Supertrend")
+[line, direction] = ta.supertrend(2, 3)
+[bad_line, bad_direction] = ta.supertrend(2, 0)
+plot(line)
+plot(direction)
+plot(na(bad_line) and na(bad_direction) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(10.0, 11.0, 9.0, 10.0),
+            bar_ohlc(10.0, 12.0, 10.0, 11.0),
+            bar_ohlc(11.0, 13.0, 11.0, 12.0),
+            bar_ohlc(12.0, 16.0, 12.0, 15.0),
+            bar_ohlc(15.0, 17.0, 14.0, 16.0),
+            bar_ohlc(16.0, 14.0, 8.0, 9.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(
+            &result.plots[0].values,
+            &[
+                14.0,
+                14.0,
+                14.0,
+                8.666666666666668,
+                9.944444444444445,
+                20.037037037037038,
+            ],
+        );
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, -1.0, -1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
     }
 
     #[test]

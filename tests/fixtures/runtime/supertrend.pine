@@ -1,0 +1,7 @@
+//@version=5
+indicator("Supertrend")
+[line, direction] = ta.supertrend(2, 3)
+[bad_line, bad_direction] = ta.supertrend(2, 0)
+plot(line)
+plot(direction)
+plot(na(bad_line) and na(bad_direction) ? 1 : 0)

@@ -9,6 +9,8 @@
   `continue`, scoped loop bodies, and a runtime iteration guard.
 - Added coverage for stateful callsite advancement inside `for` and `while`
   loop bodies.
+- Added `ta.supertrend` line/direction tuple support for the fixture-covered
+  ATR-based subset.
 - Added partial float array support with runtime-owned array ids,
   `array.new_float`, `array.push`, `array.get`, `array.set`, `array.size`,
   `array.pop`, and `array.clear`.
