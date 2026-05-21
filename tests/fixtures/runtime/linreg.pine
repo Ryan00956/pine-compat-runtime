@@ -1,0 +1,3 @@
+//@version=5
+indicator("Linear Regression")
+plot(ta.linreg(close, 3, 0))

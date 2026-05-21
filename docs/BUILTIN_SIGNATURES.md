@@ -324,6 +324,7 @@ ta.dev(source: series float, length: simple int) -> series float
 ta.vwma(source: series float, length: simple int) -> series float
 ta.wma(source: series float, length: simple int) -> series float
 ta.hma(source: series float, length: simple int) -> series float
+ta.linreg(source: series float, length: simple int, offset: simple int) -> series float
 ta.cum(source: series/simple numeric) -> series float
 ta.accdist -> series float
 ta.iii -> series float
@@ -376,6 +377,8 @@ Rules:
   weight `1` and the current value has weight `length`.
 - `ta.hma` composes `ta.wma`-style windows as
   `wma(2 * wma(source, length / 2) - wma(source, length), round(sqrt(length)))`.
+- `ta.linreg` fits a least-squares line over the ready source window and
+  returns `intercept + slope * (length - 1 - offset)`.
 - `ta.cum` returns the cumulative sum of numeric source values from the start of
   execution; a current `na` source returns `na` and resets the next cumulative
   step to the next available source value.

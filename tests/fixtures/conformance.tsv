@@ -107,6 +107,7 @@ ta.dev	supported	fixture-derived executable subset	tests/fixtures/runtime/dev.pi
 ta.vwma	supported	fixture-derived executable subset	tests/fixtures/runtime/vwma.pine
 ta.wma	supported	fixture-derived executable subset	tests/fixtures/runtime/wma.pine
 ta.hma	supported	fixture-derived executable subset	tests/fixtures/runtime/hma.pine
+ta.linreg	supported	fixture-derived executable subset	tests/fixtures/runtime/linreg.pine
 ta.tr	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
 ta.atr	supported	fixture-derived executable subset	tests/fixtures/runtime/atr.pine
 ta.change	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine

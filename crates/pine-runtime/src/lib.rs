@@ -1986,6 +1986,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.vwma" => self.eval_vwma(call_site_id, args),
             "ta.wma" => self.eval_wma(call_site_id, args),
             "ta.hma" => self.eval_hma(call_site_id, args),
+            "ta.linreg" => self.eval_linreg(call_site_id, args),
             "ta.correlation" => self.eval_correlation(call_site_id, args),
             "ta.covariance" => self.eval_covariance(call_site_id, args),
             "ta.median" => self.eval_median(call_site_id, args),
@@ -3779,6 +3780,52 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(finite_float_or_na(smooth.weighted_mean(smooth_length)))
+    }
+
+    fn eval_linreg(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let offset = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let values: Vec<_> = window.values.iter().flatten().copied().collect();
+        if values.len() == 1 {
+            return Ok(finite_float_or_na(values[0]));
+        }
+
+        let n = length as f64;
+        let mut sum_x = 0.0;
+        let mut sum_y = 0.0;
+        let mut sum_x_squared = 0.0;
+        let mut sum_xy = 0.0;
+        for (index, value) in values.iter().enumerate() {
+            let x = index as f64;
+            sum_x += x;
+            sum_y += value;
+            sum_x_squared += x * x;
+            sum_xy += x * value;
+        }
+
+        let denominator = n * sum_x_squared - sum_x * sum_x;
+        if denominator == 0.0 {
+            return Ok(PineValue::Na);
+        }
+        let slope = (n * sum_xy - sum_x * sum_y) / denominator;
+        let intercept = (sum_y - slope * sum_x) / n;
+        let value = intercept + slope * (length as f64 - 1.0 - offset as f64);
+        Ok(finite_float_or_na(value))
     }
 
     fn eval_window_variance(
@@ -8064,6 +8111,64 @@ plot(value)
             &result.plots[0].values[4..],
             &[10.38888888888889, 15.38888888888889],
         );
+    }
+
+    #[test]
+    fn runs_linreg_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("linreg")
+current = ta.linreg(close, 3, 0)
+previous = ta.linreg(close, 3, 1)
+projected = ta.linreg(close, 3, -1)
+single = ta.linreg(close, 1, 0)
+with_na = ta.linreg(bar_index == 3 ? na : close, 3, 0)
+invalid = ta.linreg(close, 0, 0)
+plot(current)
+plot(previous)
+plot(projected)
+plot(single)
+plot(with_na)
+plot(invalid)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(4.0), bar(8.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[2..],
+            &[3.8333333333333335, 7.666666666666667],
+        );
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[1].values[2..],
+            &[2.3333333333333335, 4.666666666666667],
+        );
+        assert_eq!(result.plots[2].values[0], PineValue::Na);
+        assert_eq!(result.plots[2].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[2].values[2..],
+            &[5.333333333333334, 10.666666666666668],
+        );
+        assert_values_close(&result.plots[3].values, &[1.0, 2.0, 4.0, 8.0]);
+        assert_eq!(result.plots[4].values[0], PineValue::Na);
+        assert_eq!(result.plots[4].values[1], PineValue::Na);
+        assert_values_close(&result.plots[4].values[2..3], &[3.8333333333333335]);
+        assert_eq!(result.plots[4].values[3], PineValue::Na);
+        assert_eq!(result.plots[5].values[0], PineValue::Na);
+        assert_eq!(result.plots[5].values[1], PineValue::Na);
+        assert_eq!(result.plots[5].values[2], PineValue::Na);
+        assert_eq!(result.plots[5].values[3], PineValue::Na);
     }
 
     #[test]
