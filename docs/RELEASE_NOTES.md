@@ -114,8 +114,9 @@
   Index series variables.
 - Added `ta.obv` support as the built-in On Balance Volume series variable.
 - Added `ta.pvt` support as the built-in Price Volume Trend series variable.
-- Added partial `ta.vwap` support for the variable form as a runtime-bar
-  cumulative VWAP; source overloads and session anchoring remain future work.
+- Added partial `ta.vwap` support for the variable form and one-argument
+  source call as runtime-bar cumulative VWAP; anchor/bands overloads and
+  session anchoring remain future work.
 - Added `ta.wad` support as the built-in Williams Accumulation/Distribution
   series variable.
 - Added `ta.wvad` support as the built-in Williams Variable

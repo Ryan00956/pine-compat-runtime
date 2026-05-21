@@ -1,3 +1,4 @@
 //@version=5
 indicator("VWAP")
 plot(ta.vwap)
+plot(ta.vwap(close))

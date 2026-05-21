@@ -427,6 +427,7 @@ pub struct HistoricalRuntime<'a> {
     rolling_windows: HashMap<RollingWindowKey, RollingWindowState>,
     rsi_state: HashMap<CallSiteId, RsiState>,
     macd_state: HashMap<CallSiteId, MacdState>,
+    vwap_call_state: HashMap<CallSiteId, VwapState>,
     price_flow_previous_close: Option<f64>,
     price_flow_previous_volume: Option<f64>,
     accdist_state: PineValue,
@@ -533,6 +534,12 @@ struct MacdState {
     fast_ema: Option<f64>,
     slow_ema: Option<f64>,
     signal_ema: Option<f64>,
+}
+
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+struct VwapState {
+    weighted_sum: f64,
+    volume_sum: f64,
 }
 
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -664,6 +671,7 @@ impl<'a> HistoricalRuntime<'a> {
             rolling_windows: HashMap::new(),
             rsi_state: HashMap::new(),
             macd_state: HashMap::new(),
+            vwap_call_state: HashMap::new(),
             price_flow_previous_close: None,
             price_flow_previous_volume: None,
             accdist_state: PineValue::Na,
@@ -1968,6 +1976,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.variance" => self.eval_variance(call_site_id, args),
             "ta.range" => self.eval_range(call_site_id, args),
             "ta.dev" => self.eval_dev(call_site_id, args),
+            "ta.vwap" => self.eval_vwap_source(call_site_id, args),
             "ta.vwma" => self.eval_vwma(call_site_id, args),
             "ta.wma" => self.eval_wma(call_site_id, args),
             "ta.hma" => self.eval_hma(call_site_id, args),
@@ -3396,6 +3405,36 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(finite_float_or_na(weighted.sum / volumes.sum))
+    }
+
+    fn eval_vwap_source(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let (Some(source), Some(volume)) = (source.as_f64(), self.current_builtin_f64("volume"))
+        else {
+            self.vwap_call_state.remove(&call_site_id);
+            return Ok(PineValue::Na);
+        };
+        let weighted = source * volume;
+        if !source.is_finite() || !volume.is_finite() || !weighted.is_finite() {
+            self.vwap_call_state.remove(&call_site_id);
+            return Ok(PineValue::Na);
+        }
+
+        let state = self.vwap_call_state.entry(call_site_id).or_default();
+        state.weighted_sum += weighted;
+        state.volume_sum += volume;
+        if state.volume_sum == 0.0
+            || !state.weighted_sum.is_finite()
+            || !state.volume_sum.is_finite()
+        {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(state.weighted_sum / state.volume_sum))
     }
 
     fn eval_wma(
@@ -6723,6 +6762,8 @@ plot(ta.iii)
             "test.pine",
             r#"indicator("vwap")
 plot(ta.vwap)
+plot(ta.vwap(close))
+plot(ta.vwap(bar_index == 2 ? na : close))
 "#,
         );
         let analysis = analyze_source(&source);
@@ -6740,6 +6781,9 @@ plot(ta.vwap)
         let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
         assert_values_close(&result.plots[0].values, &[9.0, 15.75, 15.75]);
+        assert_values_close(&result.plots[1].values, &[9.0, 15.75, 15.75]);
+        assert_values_close(&result.plots[2].values[..2], &[9.0, 15.75]);
+        assert_eq!(result.plots[2].values[2], PineValue::Na);
     }
 
     #[test]

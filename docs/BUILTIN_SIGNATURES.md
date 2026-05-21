@@ -332,6 +332,7 @@ ta.obv -> series float
 ta.pvi -> series float
 ta.pvt -> series float
 ta.vwap -> series float
+ta.vwap(source: series/simple numeric) -> series float
 ta.wad -> series float
 ta.wvad -> series float
 ta.atr(length: simple int) -> series float
@@ -390,10 +391,11 @@ Rules:
   previous close is zero.
 - `ta.pvt` is a built-in series variable equivalent to
   `ta.cum((ta.change(close) / close[1]) * volume)`.
-- `ta.vwap` is currently the variable form only. It returns cumulative
-  `sum(hlc3 * volume) / sum(volume)` over the runtime bars and returns `na`
-  while the cumulative volume is zero. Session anchoring and
-  `ta.vwap(source, ...)` overloads are not implemented yet.
+- `ta.vwap` variable form returns cumulative
+  `sum(hlc3 * volume) / sum(volume)` over the runtime bars.
+- `ta.vwap(source)` returns cumulative `sum(source * volume) / sum(volume)` in
+  its own call-site state. Both forms return `na` while the cumulative volume
+  is zero. Session anchoring and anchor/bands overloads are not implemented yet.
 - `ta.wad` is a built-in series variable equivalent to cumulative Williams
   Accumulation/Distribution gain using `trueHigh = max(high, close[1])` and
   `trueLow = min(low, close[1])`.
