@@ -234,6 +234,8 @@ Candidate areas:
 - Initial output metadata coverage accepts common style/display/editability
   parameters on `plot`, `hline`, `fill`, `bgcolor`, and `barcolor` without
   changing the normalized runtime output schemas.
+- Initial `plotchar` metadata coverage accepts common marker display/style
+  parameters while keeping the normalized value/char/color output schema.
 - More complete `color.*` constants and helpers.
 - More complete `input.*` parameters and host-side input override APIs.
 - More plot options, visibility controls, styles, and display parameters.

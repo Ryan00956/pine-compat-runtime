@@ -74,6 +74,8 @@
   parameters for style/display compatibility; runtime output series remain
   unshifted by display metadata in this subset.
 - Added basic `plotchar` support with bar-aligned values, chars, and colors.
+- Expanded `plotchar` compatibility with common marker metadata parameters;
+  runtime output remains normalized to value, char, and color series.
 - Added basic `plotshape` support with bar-aligned values, style, location,
   color, text, text color, and size marker output.
 - Added basic `plotarrow` support with bar-aligned numeric values, up/down

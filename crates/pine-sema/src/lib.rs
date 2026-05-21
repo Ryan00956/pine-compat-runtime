@@ -4182,8 +4182,9 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
 
     #[test]
     fn accepts_plotchar() {
-        let analysis =
-            analyze("plotchar(close > open, char=\"x\", color=color.green)\nplot(close)\n");
+        let analysis = analyze(
+            "plotchar(close > open, title=\"Marker\", char=\"x\", color=color.green, location=location.abovebar, offset=1, text=\"Up\", textcolor=color.white, editable=true, size=size.small, show_last=5, display=display.all)\nplot(close)\n",
+        );
 
         assert!(
             analysis.diagnostics.is_empty(),

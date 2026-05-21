@@ -6914,7 +6914,7 @@ plot(close)
             "test.pine",
             r#"indicator("plotchar")
 if close > 1
-    plotchar(close > 2, char="x", color=color.green)
+    plotchar(close > 2, title="Marker", char="x", color=color.green, location=location.abovebar, offset=1, text="Up", textcolor=color.white, editable=true, size=size.small, show_last=5, display=display.all)
 plot(close)
 "#,
         );

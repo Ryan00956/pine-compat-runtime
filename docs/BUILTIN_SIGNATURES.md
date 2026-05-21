@@ -156,7 +156,7 @@ Rules:
 plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: simple int, style?: const string, trackprice?: const bool, histbase?: numeric, offset?: simple int, join?: const bool, editable?: const bool, show_last?: simple int, display?: const string, format?: const string, precision?: simple int, force_overlay?: const bool)
   -> plot
 
-plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, ...)
+plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, location?: const string, offset?: simple int, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: simple int, display?: const string)
   -> void
 
 plotshape(series: series/simple numeric-or-bool, title?: const string, style?: const string, location?: const string, color?: color-compatible, text?: const string, textcolor?: color-compatible, size?: const string, ...)
@@ -192,9 +192,10 @@ The output collector should retain plot ids, hline ids, and bar-aligned color
 series so host integrations can adapt the normalized result without
 reinterpreting the script.
 The supported output metadata subset accepts common style, visibility, display,
-and editability parameters for compatibility, but parameters such as `offset`,
-`show_last`, `display`, and `force_overlay` do not yet transform the runtime
-output series.
+and editability parameters for compatibility. `plotchar` currently emits the
+normalized value/char/color series only; text/location/size metadata is accepted
+but not exposed as extra output fields. Parameters such as `offset`, `show_last`,
+`display`, and `force_overlay` do not yet transform the runtime output series.
 
 ## Utility
 

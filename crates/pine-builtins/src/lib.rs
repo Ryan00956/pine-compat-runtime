@@ -565,6 +565,46 @@ const PLOTCHAR_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ColorCompatible,
         optional: true,
     },
+    BuiltinParam {
+        name: "location",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "offset",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "textcolor",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "editable",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "size",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "show_last",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "display",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
 ];
 
 const PLOTSHAPE_PARAMS: &[BuiltinParam] = &[
