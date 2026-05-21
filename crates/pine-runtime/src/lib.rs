@@ -4076,18 +4076,25 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let Some(current) = current.as_f64() else {
-            return Ok(PineValue::Na);
-        };
         let Some(series_id) = args[0].value.series_id else {
             return Ok(PineValue::Na);
         };
         let previous = self.series_store.read(series_id, length as usize);
-        let Some(previous) = previous.as_f64() else {
-            return Ok(PineValue::Na);
-        };
 
-        Ok(PineValue::Float(current - previous))
+        match (current, previous) {
+            (PineValue::Bool(current), PineValue::Bool(previous)) => {
+                Ok(PineValue::Bool(current != previous))
+            }
+            (current, previous) => {
+                let Some(current) = current.as_f64() else {
+                    return Ok(PineValue::Na);
+                };
+                let Some(previous) = previous.as_f64() else {
+                    return Ok(PineValue::Na);
+                };
+                Ok(PineValue::Float(current - previous))
+            }
+        }
     }
 
     fn eval_mom(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -7818,8 +7825,12 @@ plot(atr)
             r#"indicator("change")
 c1 = ta.change(close)
 c2 = ta.change(close, 2)
+index_change = ta.change(bar_index)
+flag_change = ta.change(close > open)
 plot(c1)
 plot(c2)
+plot(index_change)
+plot(na(flag_change) ? 0 : flag_change ? 1 : -1)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -7837,6 +7848,9 @@ plot(c2)
         assert_eq!(result.plots[1].values[0], PineValue::Na);
         assert_eq!(result.plots[1].values[1], PineValue::Na);
         assert_values_close(&result.plots[1].values[2..], &[5.0, 7.0]);
+        assert_eq!(result.plots[2].values[0], PineValue::Na);
+        assert_values_close(&result.plots[2].values[1..], &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[3].values, &[0.0, -1.0, -1.0, -1.0]);
     }
 
     #[test]

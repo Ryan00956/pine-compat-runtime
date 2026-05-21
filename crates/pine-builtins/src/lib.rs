@@ -31,6 +31,7 @@ pub enum Accepts {
     Kind(ValueKind),
     Numeric,
     SeriesFloat,
+    SeriesNumericOrBool,
     SeriesOrSimpleNumeric,
     SeriesOrSimpleNumericOrBool,
     SimpleInt,
@@ -75,6 +76,7 @@ pub enum ReturnSpec {
     IntFromArg(usize),
     FloatFromArg(usize),
     SeriesFromArg(usize),
+    ChangeFromArg(usize),
     PromotedFloat,
     Round,
     InputFromArg(usize),
@@ -1458,7 +1460,7 @@ const TA_VALUEWHEN_PARAMS: &[BuiltinParam] = &[
 const TA_SOURCE_OPTIONAL_LENGTH_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
-        accepts: Accepts::SeriesFloat,
+        accepts: Accepts::SeriesNumericOrBool,
         optional: false,
     },
     BuiltinParam {
@@ -2955,7 +2957,7 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "ta.change",
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_OPTIONAL_LENGTH_PARAMS,
-        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        returns: ReturnSpec::ChangeFromArg(0),
         variadic: false,
     },
     BuiltinSignature {
@@ -3296,6 +3298,17 @@ pub fn fallback_bool_for_arg(arg_type: PineType) -> PineType {
 #[must_use]
 pub fn color_return_for_arg(arg_type: PineType) -> PineType {
     PineType::new(arg_type.qualifier, ValueKind::Color)
+}
+
+#[must_use]
+pub fn change_return_for_arg(arg_type: PineType) -> Option<PineType> {
+    match arg_type.kind {
+        ValueKind::Bool => Some(PineType::new(Qualifier::Series, ValueKind::Bool)),
+        ValueKind::Int | ValueKind::Float => {
+            Some(PineType::new(Qualifier::Series, ValueKind::Float))
+        }
+        _ => None,
+    }
 }
 
 #[must_use]

@@ -161,6 +161,7 @@
 - Added `ta.mom` support for source momentum over explicit history lengths.
 - Added `ta.roc` support for rate-of-change percentages over explicit history
   lengths.
+- Expanded `ta.change` to support series int and bool sources.
 - Added `ta.correlation` support for rolling Pearson correlation coefficients.
 - Added `ta.covariance` support for rolling population covariance values.
 - Added `ta.median` and `ta.mode` support for rolling sorted-window statistics.

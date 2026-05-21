@@ -1425,6 +1425,11 @@ impl Analyzer {
                 .copied()
                 .flatten()
                 .and_then(series_return_for_arg),
+            ReturnSpec::ChangeFromArg(index) => arg_types
+                .get(index)
+                .copied()
+                .flatten()
+                .and_then(pine_builtins::change_return_for_arg),
             ReturnSpec::PromotedFloat => promoted_float_type(arg_types),
             ReturnSpec::Round => round_return_type(arg_types),
             ReturnSpec::InputFromArg(index) => arg_types
@@ -2413,6 +2418,11 @@ impl Analyzer {
                             .copied()
                             .flatten()
                             .and_then(series_return_for_arg),
+                        ReturnSpec::ChangeFromArg(index) => arg_types
+                            .get(index)
+                            .copied()
+                            .flatten()
+                            .and_then(pine_builtins::change_return_for_arg),
                         ReturnSpec::PromotedFloat => promoted_float_type(&arg_types),
                         ReturnSpec::Round => round_return_type(&arg_types),
                         ReturnSpec::InputFromArg(index) => arg_types
@@ -3369,6 +3379,10 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
         Accepts::SeriesFloat => {
             arg_type.qualifier == Qualifier::Series && arg_type.kind == ValueKind::Float
         }
+        Accepts::SeriesNumericOrBool => {
+            arg_type.qualifier == Qualifier::Series
+                && (is_numeric(arg_type.kind) || arg_type.kind == ValueKind::Bool)
+        }
         Accepts::SeriesOrSimpleNumeric => {
             qualifier_at_most(arg_type.qualifier, Qualifier::Series) && is_numeric(arg_type.kind)
         }
@@ -3889,12 +3903,21 @@ mod tests {
 
     #[test]
     fn accepts_ta_momentum_history_calls() {
-        let analysis = analyze("plot(ta.mom(close, 2) + ta.roc(open, 2))\n");
+        let analysis = analyze(
+            "flag_changed = ta.change(close > open)\nplot(ta.change(bar_index) + ta.mom(close, 2) + ta.roc(open, 2) + (flag_changed ? 1 : 0))\n",
+        );
 
         assert!(
             analysis.diagnostics.is_empty(),
             "{:?}",
             analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.change")
         );
         assert!(
             analysis

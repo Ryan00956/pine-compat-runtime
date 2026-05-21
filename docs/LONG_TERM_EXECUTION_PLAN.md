@@ -216,6 +216,7 @@ Candidate areas:
   `ta.obv`/`ta.pvi`/`ta.pvt`, partial `ta.vwap` variable/source-call support,
   `ta.max`/`ta.min` all-time source extremes, `ta.tr` as a true range series
   variable, and `ta.wad`/`ta.wvad` flow variables,
+  `ta.change` over numeric and bool series sources,
   `ta.mom`/`ta.roc` over explicit source history, and
   `ta.rising`/`ta.falling` trend-window checks. It also includes
   source/length and length-only rolling extreme helpers, `ta.barssince`

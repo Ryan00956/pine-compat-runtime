@@ -4,7 +4,10 @@ baseline = 2.0
 crossed = ta.cross(close, baseline)
 over = ta.crossover(close, baseline)
 under = ta.crossunder(close, baseline)
+index_change = ta.change(bar_index)
+flag_change = ta.change(close > open)
 plot(crossed ? 1 : 0)
 plot(over ? 1 : 0)
 plot(under ? 1 : 0)
-
+plot(index_change)
+plot(na(flag_change) ? 0 : flag_change ? 1 : -1)

@@ -380,7 +380,7 @@ ta.wad -> series float
 ta.wvad -> series float
 ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
-ta.change(source: series float, length?: simple int) -> series float
+ta.change(source: series int/float/bool, length?: simple int) -> series float/bool
 ta.mom(source: series float, length: simple int) -> series float
 ta.roc(source: series float, length: simple int) -> series float
 ta.correlation(source1: series/simple numeric, source2: series/simple numeric, length: simple int) -> series float
@@ -473,6 +473,9 @@ Rules:
 - `ta.wvad` is a built-in series variable equivalent to
   `(close - open) / (high - low) * volume`; it returns `na` when
   `high == low`.
+- `ta.change` returns `source - source[length]` for numeric sources and whether
+  the value changed for bool sources. It records the required source history
+  depth.
 - `ta.mom` returns `source - source[length]` and records the required source
   history depth.
 - `ta.roc` returns `100 * (source - source[length]) / source[length]` and
