@@ -3977,6 +3977,31 @@ mod tests {
     }
 
     #[test]
+    fn accepts_ta_all_time_extremes() {
+        let analysis = analyze("plot(ta.max(close) + ta.min(open) + ta.max(bar_index))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.max")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.min")
+        );
+    }
+
+    #[test]
     fn accepts_ta_volume_flow_variables() {
         let analysis = analyze(
             "plot(ta.accdist + ta.iii + ta.nvi + ta.obv + ta.pvi + ta.pvt + ta.vwap + ta.vwap(close) + ta.wad + ta.wvad)\n",

@@ -1,0 +1,8 @@
+//@version=5
+indicator("All-time extremes")
+highest = ta.max(close)
+lowest = ta.min(open)
+held = ta.max(bar_index == 2 ? na : low)
+plot(highest)
+plot(lowest)
+plot(held)

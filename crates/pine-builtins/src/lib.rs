@@ -2791,6 +2791,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "ta.max",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.min",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "ta.stdev",
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_LENGTH_BIASED_PARAMS,

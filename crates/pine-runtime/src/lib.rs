@@ -2017,6 +2017,8 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.macd" => self.eval_macd(call_site_id, args),
             "ta.bb" => self.eval_bb(call_site_id, args),
             "ta.cum" => self.eval_cum(call_site_id, args),
+            "ta.max" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Highest),
+            "ta.min" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Lowest),
             "ta.stdev" => self.eval_stdev(call_site_id, args),
             "ta.variance" => self.eval_variance(call_site_id, args),
             "ta.range" => self.eval_range(call_site_id, args),
@@ -3337,6 +3339,37 @@ impl<'a> HistoricalRuntime<'a> {
             .unwrap_or(0.0)
             + source;
         let value = PineValue::Float(value);
+        self.call_state.insert(call_site_id, value.clone());
+        Ok(value)
+    }
+
+    fn eval_all_time_extreme(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+        mode: WindowExtreme,
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let Some(source) = source.as_f64() else {
+            return Ok(self
+                .call_state
+                .get(&call_site_id)
+                .cloned()
+                .unwrap_or(PineValue::Na));
+        };
+
+        let value = match self
+            .call_state
+            .get(&call_site_id)
+            .and_then(PineValue::as_f64)
+        {
+            Some(previous) => match mode {
+                WindowExtreme::Highest => previous.max(source),
+                WindowExtreme::Lowest => previous.min(source),
+            },
+            None => source,
+        };
+        let value = finite_float_or_na(value);
         self.call_state.insert(call_site_id, value.clone());
         Ok(value)
     }
@@ -7911,6 +7944,75 @@ plot(lo)
         assert_eq!(result.plots[1].values[0], PineValue::Na);
         assert_eq!(result.plots[1].values[1], PineValue::Na);
         assert_values_close(&result.plots[1].values[2..], &[1.0, 2.0]);
+    }
+
+    #[test]
+    fn runs_all_time_extremes_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("all-time extremes")
+hi = ta.max(close)
+lo = ta.min(open)
+held = ta.max(bar_index == 2 ? na : low)
+plot(hi)
+plot(lo)
+plot(held)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            Bar {
+                time: 1,
+                open: 3.0,
+                high: 5.0,
+                low: 5.0,
+                close: 1.0,
+                volume: 100.0,
+            },
+            Bar {
+                time: 2,
+                open: 2.0,
+                high: 4.0,
+                low: 4.0,
+                close: 3.0,
+                volume: 100.0,
+            },
+            Bar {
+                time: 3,
+                open: 4.0,
+                high: 6.0,
+                low: 1.0,
+                close: 2.0,
+                volume: 100.0,
+            },
+            Bar {
+                time: 4,
+                open: 1.0,
+                high: 7.0,
+                low: 6.0,
+                close: 5.0,
+                volume: 100.0,
+            },
+            Bar {
+                time: 5,
+                open: 5.0,
+                high: 6.0,
+                low: 3.0,
+                close: 4.0,
+                volume: 100.0,
+            },
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values, &[1.0, 3.0, 3.0, 5.0, 5.0]);
+        assert_values_close(&result.plots[1].values, &[3.0, 2.0, 2.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[5.0, 5.0, 5.0, 6.0, 6.0]);
     }
 
     #[test]

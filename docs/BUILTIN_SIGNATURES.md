@@ -364,6 +364,8 @@ ta.swma(source: series float) -> series float
 ta.alma(series: series float, length: simple int, offset: simple numeric, sigma: simple numeric, floor?: simple bool) -> series float
 ta.linreg(source: series float, length: simple int, offset: simple int) -> series float
 ta.cum(source: series/simple numeric) -> series float
+ta.max(source: series/simple numeric) -> series float
+ta.min(source: series/simple numeric) -> series float
 ta.accdist -> series float
 ta.iii -> series float
 ta.nvi -> series float
@@ -426,6 +428,10 @@ Rules:
 - `ta.cum` returns the cumulative sum of numeric source values from the start of
   execution; a current `na` source returns `na` and resets the next cumulative
   step to the next available source value.
+- `ta.max` and `ta.min` return the all-time maximum/minimum over executed
+  non-`na` source values in their callsite state. A current `na` source leaves
+  the previous extreme unchanged; if no non-`na` value has executed yet, they
+  return `na`.
 - `ta.accdist` is a built-in series variable equivalent to cumulative
   Accumulation/Distribution money flow volume:
   `(((close - low) - (high - close)) / (high - low)) * volume`. It returns
