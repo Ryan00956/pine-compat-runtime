@@ -50,11 +50,13 @@ Normal and tuple declarations inside `if` blocks are scoped to the branch. If
 the branch is skipped, branch-local series slots commit `na` for that bar.
 
 `for i = start to end` evaluates the integer range once when the loop statement
-is reached on a bar. The range is inclusive. The runtime steps by `1` for
-ascending ranges and `-1` for descending ranges unless an explicit non-zero int
-`by step` is provided. The counter is scoped to the loop body.
-`break` exits the nearest enclosing loop. `continue` skips the rest of the
-current iteration and advances to the next loop counter value.
+is reached on a bar. The range is inclusive. The runtime increments when
+`start <= end` and decrements when `start > end`. An explicit non-zero int
+`by step` supplies the absolute step magnitude; the sign of `step` does not
+override the range direction. If `start`, `end`, or `step` evaluates to `na`,
+the loop body is skipped. The counter is scoped to the loop body. `break` exits
+the nearest enclosing loop. `continue` skips the rest of the current iteration
+and advances to the next loop counter value.
 
 When a `for` loop is used as a declaration value, the loop body must end with an
 expression. The loop returns the last value produced by that expression. If a
@@ -67,7 +69,8 @@ condition executes the body, while `false` or `na` exits the loop. `break`
 exits the nearest enclosing loop. `continue` skips the remaining body statements
 and re-evaluates the condition. Runtime execution enforces a maximum iteration
 guard per while statement evaluation so non-terminating scripts fail instead of
-hanging execution.
+hanging execution. `while` expressions are not part of the current executable
+subset.
 
 `switch` expressions evaluate arms in source order. Selector-form switches
 evaluate the selector once per bar, then compare each case expression with that

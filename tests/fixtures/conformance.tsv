@@ -153,7 +153,7 @@ ta.highestbars	supported	source/length form plus length-only high source overloa
 ta.lowestbars	supported	source/length form plus length-only low source overload	tests/fixtures/runtime/extreme_bars.pine
 if	supported	conditional callsites advance only when their branch executes	tests/fixtures/runtime/if.pine;tests/fixtures/runtime/conditional_ta.pine;tests/fixtures/runtime/branch_loop_interactions.pine
 switch	partial	expression arms with condition and selector forms	tests/fixtures/runtime/switch.pine;tests/fixtures/runtime/branch_loop_interactions.pine
-for	partial	inclusive integer ranges, loop control, loop results, dynamic bounds, signed steps, and stateful callsites in loop bodies	tests/fixtures/runtime/block_statements.pine;tests/fixtures/runtime/for_edges.pine;tests/fixtures/runtime/for_stateful.pine;tests/fixtures/runtime/branch_loop_interactions.pine;tests/fixtures/sema/supported_block_statements.pine
+for	partial	inclusive integer ranges, loop control, loop results, dynamic/na bounds, absolute signed step magnitudes, and stateful callsites in loop bodies	tests/fixtures/runtime/block_statements.pine;tests/fixtures/runtime/for_edges.pine;tests/fixtures/runtime/for_stateful.pine;tests/fixtures/runtime/branch_loop_interactions.pine;tests/fixtures/sema/supported_block_statements.pine
 while	partial	statement loops with bool/na conditions, loop control, local var, nested loops, stateful callsites in loop bodies, and iteration guard	tests/fixtures/runtime/while.pine;tests/fixtures/runtime/while_edges.pine;tests/fixtures/runtime/while_stateful.pine;tests/fixtures/runtime/branch_loop_interactions.pine
 array.new_float	partial	float arrays only	tests/fixtures/runtime/array.pine
 array.new_int	partial	int arrays only	tests/fixtures/runtime/array.pine
