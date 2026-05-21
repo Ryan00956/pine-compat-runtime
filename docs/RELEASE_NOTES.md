@@ -81,6 +81,7 @@
 - Expanded `plotbar` and `plotcandle` compatibility with common display
   metadata parameters while preserving existing OHLC output schemas.
 - Added `color.from_gradient` with fixture-covered linear RGBA interpolation.
+- Added conformance coverage for hex color literals as const colors.
 - Added basic `plotshape` support with bar-aligned values, style, location,
   color, text, text color, and size marker output.
 - Added basic `plotarrow` support with bar-aligned numeric values, up/down

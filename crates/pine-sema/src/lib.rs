@@ -580,7 +580,15 @@ impl Analyzer {
 
     fn analyze_expr(&mut self, expr: &Expr) -> Option<PineType> {
         match &expr.kind {
-            ExprKind::Literal(literal) => Some(literal_type(literal)),
+            ExprKind::Literal(literal) => {
+                if matches!(literal, Literal::ColorHex(_)) {
+                    self.compatibility.supported.push(FeatureUse {
+                        feature: "hex color literal".to_owned(),
+                        span: expr.span,
+                    });
+                }
+                Some(literal_type(literal))
+            }
             ExprKind::Identifier(name) => {
                 self.check_feature_expr(expr);
                 self.resolve_symbol(name, expr.span)
@@ -4579,7 +4587,9 @@ shade = color.new(base, 50)
 opaque = color.new(color.blue)
 custom = color.rgb(255, 153, 0, 50)
 gradient = color.from_gradient(close, 1, 3, color.red, color.green)
+hex = #ff990080
 channels = color.r(custom) + color.g(custom) + color.b(custom) + color.t(custom)
+hex_channels = color.r(hex) + color.g(hex) + color.b(hex) + color.t(hex)
 plot(close, color=gradient)
 "#,
         );
@@ -4637,6 +4647,13 @@ plot(close, color=gradient)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "color.from_gradient")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "hex color literal")
         );
         assert!(
             analysis

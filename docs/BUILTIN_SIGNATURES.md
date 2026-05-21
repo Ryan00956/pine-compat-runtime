@@ -496,6 +496,8 @@ color.from_gradient(value: numeric, bottom_value: numeric, top_value: numeric, b
 ```
 
 Named colors include the common TradingView color constants used by fixtures.
+Hex color literals in `#RRGGBB` and `#RRGGBBAA` form are accepted as const
+colors.
 `color.new` defaults `transp` to 0 when omitted.
 `color.r`, `color.g`, `color.b`, and `color.t` return `na` for `na` colors;
 `color.t` returns transparency on the 0-100 scale.
@@ -504,7 +506,7 @@ colors, clamps values outside the numeric range to the nearest endpoint, and
 returns `na` when any required input is `na`. Equal bottom/top values return
 the top color.
 
-Hex color parsing should be implemented in the syntax or semantic layer with a
+Hex color literals are parsed by the syntax layer and lowered to the runtime's
 single normalized `Color` representation.
 
 ## String
