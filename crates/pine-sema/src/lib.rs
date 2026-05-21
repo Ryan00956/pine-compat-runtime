@@ -3885,12 +3885,19 @@ mod tests {
 
     #[test]
     fn accepts_ta_volume_flow_variables() {
-        let analysis = analyze("plot(ta.obv + ta.pvt + ta.wad + ta.wvad)\n");
+        let analysis = analyze("plot(ta.accdist + ta.obv + ta.pvt + ta.wad + ta.wvad)\n");
 
         assert!(
             analysis.diagnostics.is_empty(),
             "{:?}",
             analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.accdist")
         );
         assert!(
             analysis

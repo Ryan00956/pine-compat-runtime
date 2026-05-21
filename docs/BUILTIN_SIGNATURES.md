@@ -325,6 +325,7 @@ ta.vwma(source: series float, length: simple int) -> series float
 ta.wma(source: series float, length: simple int) -> series float
 ta.hma(source: series float, length: simple int) -> series float
 ta.cum(source: series/simple numeric) -> series float
+ta.accdist -> series float
 ta.obv -> series float
 ta.pvt -> series float
 ta.wad -> series float
@@ -366,6 +367,10 @@ Rules:
 - `ta.cum` returns the cumulative sum of numeric source values from the start of
   execution; a current `na` source returns `na` and resets the next cumulative
   step to the next available source value.
+- `ta.accdist` is a built-in series variable equivalent to cumulative
+  Accumulation/Distribution money flow volume:
+  `(((close - low) - (high - close)) / (high - low)) * volume`. It returns
+  `na` and resets the next cumulative step when `high == low`.
 - `ta.obv` is a built-in series variable equivalent to
   `ta.cum(math.sign(ta.change(close)) * volume)`.
 - `ta.pvt` is a built-in series variable equivalent to

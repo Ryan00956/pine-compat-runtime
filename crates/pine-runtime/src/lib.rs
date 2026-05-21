@@ -428,6 +428,8 @@ pub struct HistoricalRuntime<'a> {
     rsi_state: HashMap<CallSiteId, RsiState>,
     macd_state: HashMap<CallSiteId, MacdState>,
     price_flow_previous_close: Option<f64>,
+    accdist_state: PineValue,
+    accdist_current: PineValue,
     obv_state: PineValue,
     obv_current: PineValue,
     pvt_state: PineValue,
@@ -654,6 +656,8 @@ impl<'a> HistoricalRuntime<'a> {
             rsi_state: HashMap::new(),
             macd_state: HashMap::new(),
             price_flow_previous_close: None,
+            accdist_state: PineValue::Na,
+            accdist_current: PineValue::Na,
             obv_state: PineValue::Na,
             obv_current: PineValue::Na,
             pvt_state: PineValue::Na,
@@ -1116,6 +1120,7 @@ impl<'a> HistoricalRuntime<'a> {
     fn set_builtin_symbols(&mut self, bar: &Bar, bar_index: usize) -> Result<(), RuntimeError> {
         let datetime = utc_datetime_from_millis(bar.time)?;
         let previous_close = self.price_flow_previous_close;
+        self.accdist_current = self.next_accdist(bar);
         self.obv_current = self.next_obv(bar, previous_close);
         self.pvt_current = self.next_pvt(bar, previous_close);
         self.wad_current = self.next_wad(bar, previous_close);
@@ -1162,6 +1167,25 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(())
+    }
+
+    fn next_accdist(&mut self, bar: &Bar) -> PineValue {
+        let range = bar.high - bar.low;
+        if range == 0.0 {
+            self.accdist_state = PineValue::Na;
+            return PineValue::Na;
+        }
+
+        let multiplier = ((bar.close - bar.low) - (bar.high - bar.close)) / range;
+        let increment = multiplier * bar.volume;
+        if !increment.is_finite() {
+            self.accdist_state = PineValue::Na;
+            return PineValue::Na;
+        }
+
+        let value = self.accdist_state.as_f64().unwrap_or(0.0) + increment;
+        self.accdist_state = finite_float_or_na(value);
+        self.accdist_state.clone()
     }
 
     fn next_obv(&mut self, bar: &Bar, previous_close: Option<f64>) -> PineValue {
@@ -1240,6 +1264,9 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn eval_builtin_value(&self, name: &str) -> PineValue {
+        if name == "ta.accdist" {
+            return self.accdist_current.clone();
+        }
         if name == "ta.obv" {
             return self.obv_current.clone();
         }
@@ -6496,6 +6523,34 @@ plot(ta.obv)
 
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_values_close(&result.plots[0].values[1..], &[20.0, 20.0, -20.0, 30.0]);
+    }
+
+    #[test]
+    fn runs_accdist_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("accdist")
+plot(ta.accdist)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlcv(10.0, 15.0, 5.0, 12.0, 100.0),
+            bar_ohlcv(10.0, 20.0, 10.0, 10.0, 50.0),
+            bar_ohlcv(10.0, 10.0, 10.0, 10.0, 30.0),
+            bar_ohlcv(20.0, 30.0, 10.0, 25.0, 20.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values[..2], &[40.0, -10.0]);
+        assert_eq!(result.plots[0].values[2], PineValue::Na);
+        assert_values_close(&result.plots[0].values[3..], &[10.0]);
     }
 
     #[test]
