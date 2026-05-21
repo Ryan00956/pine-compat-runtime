@@ -1,3 +1,4 @@
 //@version=5
 indicator("Median")
 plot(ta.median(close, 3))
+plot(ta.median(3, 3))

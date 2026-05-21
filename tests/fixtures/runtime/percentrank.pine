@@ -1,3 +1,4 @@
 //@version=5
 indicator("Percent Rank")
 plot(ta.percentrank(close, 3))
+plot(ta.percentrank(3, 3))

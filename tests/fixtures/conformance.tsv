@@ -118,13 +118,13 @@ ta.pvt	supported	fixture-derived executable subset	tests/fixtures/runtime/pvt.pi
 ta.vwap	supported	fixture-derived variable and one-argument source-call subset; cumulative over runtime bars, session anchoring and anchor/bands overloads not yet implemented	tests/fixtures/runtime/vwap.pine
 ta.wad	supported	fixture-derived executable subset	tests/fixtures/runtime/wad.pine
 ta.wvad	supported	fixture-derived executable subset	tests/fixtures/runtime/wvad.pine
-ta.correlation	supported	fixture-derived executable subset	tests/fixtures/runtime/correlation.pine
-ta.covariance	supported	fixture-derived executable subset	tests/fixtures/runtime/covariance.pine
-ta.median	supported	fixture-derived executable subset	tests/fixtures/runtime/median.pine
-ta.mode	supported	fixture-derived executable subset	tests/fixtures/runtime/mode.pine
-ta.percentile_linear_interpolation	supported	fixture-derived executable subset	tests/fixtures/runtime/percentile_linear_interpolation.pine
-ta.percentile_nearest_rank	supported	fixture-derived executable subset	tests/fixtures/runtime/percentile_nearest_rank.pine
-ta.percentrank	supported	fixture-derived executable subset	tests/fixtures/runtime/percentrank.pine
+ta.correlation	supported	series/simple numeric source rolling correlation	tests/fixtures/runtime/correlation.pine
+ta.covariance	supported	series/simple numeric source rolling covariance	tests/fixtures/runtime/covariance.pine
+ta.median	supported	series/simple numeric source rolling median	tests/fixtures/runtime/median.pine
+ta.mode	supported	series/simple numeric source rolling mode	tests/fixtures/runtime/mode.pine
+ta.percentile_linear_interpolation	supported	series/simple numeric source linear percentile	tests/fixtures/runtime/percentile_linear_interpolation.pine
+ta.percentile_nearest_rank	supported	series/simple numeric source nearest-rank percentile	tests/fixtures/runtime/percentile_nearest_rank.pine
+ta.percentrank	supported	series/simple numeric source percent rank	tests/fixtures/runtime/percentrank.pine
 ta.stdev	supported	fixture-derived executable subset	tests/fixtures/runtime/stdev.pine
 ta.variance	supported	fixture-derived executable subset	tests/fixtures/runtime/variance.pine
 ta.range	supported	fixture-derived executable subset	tests/fixtures/runtime/range.pine

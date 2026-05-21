@@ -1,3 +1,4 @@
 //@version=5
 indicator("Mode")
 plot(ta.mode(close, 3))
+plot(ta.mode(3, 3))

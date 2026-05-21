@@ -8302,10 +8302,12 @@ plot(sample)
 same = ta.correlation(close, close, 3)
 inverse = ta.correlation(close, -close, 3)
 flat = ta.correlation(close, open, 3)
+simple = ta.correlation(close, 10, 3)
 with_na = ta.correlation(close, bar_index == 3 ? na : high, 3)
 plot(same)
 plot(inverse)
 plot(flat)
+plot(simple)
 plot(with_na)
 "#,
         );
@@ -8336,8 +8338,12 @@ plot(with_na)
         assert_eq!(result.plots[2].values[3], PineValue::Na);
         assert_eq!(result.plots[3].values[0], PineValue::Na);
         assert_eq!(result.plots[3].values[1], PineValue::Na);
-        assert_values_close(&result.plots[3].values[2..3], &[1.0]);
+        assert_eq!(result.plots[3].values[2], PineValue::Na);
         assert_eq!(result.plots[3].values[3], PineValue::Na);
+        assert_eq!(result.plots[4].values[0], PineValue::Na);
+        assert_eq!(result.plots[4].values[1], PineValue::Na);
+        assert_values_close(&result.plots[4].values[2..3], &[1.0]);
+        assert_eq!(result.plots[4].values[3], PineValue::Na);
     }
 
     #[test]
@@ -8348,11 +8354,13 @@ plot(with_na)
 same = ta.covariance(close, close, 3)
 inverse = ta.covariance(close, -close, 3)
 flat = ta.covariance(close, open, 3)
+simple = ta.covariance(close, 10, 3)
 with_na = ta.covariance(close, bar_index == 3 ? na : high, 3)
 invalid = ta.covariance(close, high, 0)
 plot(same)
 plot(inverse)
 plot(flat)
+plot(simple)
 plot(with_na)
 plot(invalid)
 "#,
@@ -8383,12 +8391,15 @@ plot(invalid)
         assert_values_close(&result.plots[2].values[2..], &[0.0, 0.0]);
         assert_eq!(result.plots[3].values[0], PineValue::Na);
         assert_eq!(result.plots[3].values[1], PineValue::Na);
-        assert_values_close(&result.plots[3].values[2..3], &[2.0 / 3.0]);
-        assert_eq!(result.plots[3].values[3], PineValue::Na);
+        assert_values_close(&result.plots[3].values[2..], &[0.0, 0.0]);
         assert_eq!(result.plots[4].values[0], PineValue::Na);
         assert_eq!(result.plots[4].values[1], PineValue::Na);
-        assert_eq!(result.plots[4].values[2], PineValue::Na);
+        assert_values_close(&result.plots[4].values[2..3], &[2.0 / 3.0]);
         assert_eq!(result.plots[4].values[3], PineValue::Na);
+        assert_eq!(result.plots[5].values[0], PineValue::Na);
+        assert_eq!(result.plots[5].values[1], PineValue::Na);
+        assert_eq!(result.plots[5].values[2], PineValue::Na);
+        assert_eq!(result.plots[5].values[3], PineValue::Na);
     }
 
     #[test]
@@ -8398,10 +8409,12 @@ plot(invalid)
             r#"indicator("median")
 odd = ta.median(close, 3)
 even = ta.median(close, 4)
+simple = ta.median(3, 3)
 with_na = ta.median(bar_index == 3 ? na : close, 3)
 invalid = ta.median(close, 0)
 plot(odd)
 plot(even)
+plot(simple)
 plot(with_na)
 plot(invalid)
 "#,
@@ -8425,12 +8438,15 @@ plot(invalid)
         assert_values_close(&result.plots[1].values[3..], &[3.5]);
         assert_eq!(result.plots[2].values[0], PineValue::Na);
         assert_eq!(result.plots[2].values[1], PineValue::Na);
-        assert_values_close(&result.plots[2].values[2..3], &[2.0]);
-        assert_eq!(result.plots[2].values[3], PineValue::Na);
+        assert_values_close(&result.plots[2].values[2..], &[3.0, 3.0]);
         assert_eq!(result.plots[3].values[0], PineValue::Na);
         assert_eq!(result.plots[3].values[1], PineValue::Na);
-        assert_eq!(result.plots[3].values[2], PineValue::Na);
+        assert_values_close(&result.plots[3].values[2..3], &[2.0]);
         assert_eq!(result.plots[3].values[3], PineValue::Na);
+        assert_eq!(result.plots[4].values[0], PineValue::Na);
+        assert_eq!(result.plots[4].values[1], PineValue::Na);
+        assert_eq!(result.plots[4].values[2], PineValue::Na);
+        assert_eq!(result.plots[4].values[3], PineValue::Na);
     }
 
     #[test]
@@ -8441,11 +8457,13 @@ plot(invalid)
 repeated = ta.mode(close, 3)
 unique = ta.mode(close + bar_index, 3)
 tie = ta.mode(close, 4)
+simple = ta.mode(3, 3)
 with_na = ta.mode(bar_index == 3 ? na : close, 3)
 invalid = ta.mode(close, 0)
 plot(repeated)
 plot(unique)
 plot(tie)
+plot(simple)
 plot(with_na)
 plot(invalid)
 "#,
@@ -8472,12 +8490,15 @@ plot(invalid)
         assert_values_close(&result.plots[2].values[3..], &[1.0]);
         assert_eq!(result.plots[3].values[0], PineValue::Na);
         assert_eq!(result.plots[3].values[1], PineValue::Na);
-        assert_values_close(&result.plots[3].values[2..3], &[1.0]);
-        assert_eq!(result.plots[3].values[3], PineValue::Na);
+        assert_values_close(&result.plots[3].values[2..], &[3.0, 3.0]);
         assert_eq!(result.plots[4].values[0], PineValue::Na);
         assert_eq!(result.plots[4].values[1], PineValue::Na);
-        assert_eq!(result.plots[4].values[2], PineValue::Na);
+        assert_values_close(&result.plots[4].values[2..3], &[1.0]);
         assert_eq!(result.plots[4].values[3], PineValue::Na);
+        assert_eq!(result.plots[5].values[0], PineValue::Na);
+        assert_eq!(result.plots[5].values[1], PineValue::Na);
+        assert_eq!(result.plots[5].values[2], PineValue::Na);
+        assert_eq!(result.plots[5].values[3], PineValue::Na);
     }
 
     #[test]
@@ -8488,11 +8509,13 @@ plot(invalid)
 middle = ta.percentile_nearest_rank(close, 3, 50)
 lowest = ta.percentile_nearest_rank(close, 3, 0)
 highest = ta.percentile_nearest_rank(close, 3, 100)
+simple = ta.percentile_nearest_rank(3, 3, 50)
 with_na = ta.percentile_nearest_rank(bar_index == 3 ? na : close, 3, 50)
 invalid = ta.percentile_nearest_rank(close, 3, 150)
 plot(middle)
 plot(lowest)
 plot(highest)
+plot(simple)
 plot(with_na)
 plot(invalid)
 "#,
@@ -8518,12 +8541,15 @@ plot(invalid)
         assert_values_close(&result.plots[2].values[2..], &[5.0, 8.0]);
         assert_eq!(result.plots[3].values[0], PineValue::Na);
         assert_eq!(result.plots[3].values[1], PineValue::Na);
-        assert_values_close(&result.plots[3].values[2..3], &[2.0]);
-        assert_eq!(result.plots[3].values[3], PineValue::Na);
+        assert_values_close(&result.plots[3].values[2..], &[3.0, 3.0]);
         assert_eq!(result.plots[4].values[0], PineValue::Na);
         assert_eq!(result.plots[4].values[1], PineValue::Na);
-        assert_eq!(result.plots[4].values[2], PineValue::Na);
+        assert_values_close(&result.plots[4].values[2..3], &[2.0]);
         assert_eq!(result.plots[4].values[3], PineValue::Na);
+        assert_eq!(result.plots[5].values[0], PineValue::Na);
+        assert_eq!(result.plots[5].values[1], PineValue::Na);
+        assert_eq!(result.plots[5].values[2], PineValue::Na);
+        assert_eq!(result.plots[5].values[3], PineValue::Na);
     }
 
     #[test]
@@ -8535,12 +8561,14 @@ middle = ta.percentile_linear_interpolation(close, 3, 50)
 quarter = ta.percentile_linear_interpolation(close, 3, 25)
 lowest = ta.percentile_linear_interpolation(close, 3, 0)
 highest = ta.percentile_linear_interpolation(close, 3, 100)
+simple = ta.percentile_linear_interpolation(3, 3, 50)
 with_na = ta.percentile_linear_interpolation(bar_index == 3 ? na : close, 3, 50)
 invalid = ta.percentile_linear_interpolation(close, 3, -1)
 plot(middle)
 plot(quarter)
 plot(lowest)
 plot(highest)
+plot(simple)
 plot(with_na)
 plot(invalid)
 "#,
@@ -8569,12 +8597,15 @@ plot(invalid)
         assert_values_close(&result.plots[3].values[2..], &[5.0, 8.0]);
         assert_eq!(result.plots[4].values[0], PineValue::Na);
         assert_eq!(result.plots[4].values[1], PineValue::Na);
-        assert_values_close(&result.plots[4].values[2..3], &[2.0]);
-        assert_eq!(result.plots[4].values[3], PineValue::Na);
+        assert_values_close(&result.plots[4].values[2..], &[3.0, 3.0]);
         assert_eq!(result.plots[5].values[0], PineValue::Na);
         assert_eq!(result.plots[5].values[1], PineValue::Na);
-        assert_eq!(result.plots[5].values[2], PineValue::Na);
+        assert_values_close(&result.plots[5].values[2..3], &[2.0]);
         assert_eq!(result.plots[5].values[3], PineValue::Na);
+        assert_eq!(result.plots[6].values[0], PineValue::Na);
+        assert_eq!(result.plots[6].values[1], PineValue::Na);
+        assert_eq!(result.plots[6].values[2], PineValue::Na);
+        assert_eq!(result.plots[6].values[3], PineValue::Na);
     }
 
     #[test]
@@ -8584,10 +8615,12 @@ plot(invalid)
             r#"indicator("percentrank")
 rank = ta.percentrank(close, 3)
 low_rank = ta.percentrank(bar_index == 3 ? 1 : close, 3)
+simple = ta.percentrank(3, 3)
 with_na = ta.percentrank(bar_index == 3 ? na : close, 3)
 invalid = ta.percentrank(close, 0)
 plot(rank)
 plot(low_rank)
+plot(simple)
 plot(with_na)
 plot(invalid)
 "#,
@@ -8610,12 +8643,15 @@ plot(invalid)
         assert_values_close(&result.plots[1].values[2..], &[200.0 / 3.0, 100.0 / 3.0]);
         assert_eq!(result.plots[2].values[0], PineValue::Na);
         assert_eq!(result.plots[2].values[1], PineValue::Na);
-        assert_values_close(&result.plots[2].values[2..3], &[200.0 / 3.0]);
-        assert_eq!(result.plots[2].values[3], PineValue::Na);
+        assert_values_close(&result.plots[2].values[2..], &[100.0, 100.0]);
         assert_eq!(result.plots[3].values[0], PineValue::Na);
         assert_eq!(result.plots[3].values[1], PineValue::Na);
-        assert_eq!(result.plots[3].values[2], PineValue::Na);
+        assert_values_close(&result.plots[3].values[2..3], &[200.0 / 3.0]);
         assert_eq!(result.plots[3].values[3], PineValue::Na);
+        assert_eq!(result.plots[4].values[0], PineValue::Na);
+        assert_eq!(result.plots[4].values[1], PineValue::Na);
+        assert_eq!(result.plots[4].values[2], PineValue::Na);
+        assert_eq!(result.plots[4].values[3], PineValue::Na);
     }
 
     #[test]

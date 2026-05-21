@@ -3768,7 +3768,7 @@ mod tests {
     #[test]
     fn accepts_ta_window_statistics() {
         let analysis = analyze(
-            "plot(ta.bbw(close, 3, 2) + ta.stdev(close, 3, false) + ta.variance(close, 3, true) + ta.range(close, 3) + ta.dev(close, 3) + ta.vwma(close, 3) + ta.wma(close, 3) + ta.hma(close, 4) + ta.swma(close) + ta.alma(close, 4, 0.85, 6, true) + ta.linreg(close, 3, 0) + ta.correlation(close, high, 3) + ta.covariance(close, high, 3) + ta.median(close, 3) + ta.mode(close, 3) + ta.percentile_nearest_rank(close, 3, 50) + ta.percentile_linear_interpolation(close, 3, 50) + ta.percentrank(close, 3))\n",
+            "plot(ta.bbw(close, 3, 2) + ta.stdev(close, 3, false) + ta.variance(close, 3, true) + ta.range(close, 3) + ta.dev(close, 3) + ta.vwma(close, 3) + ta.wma(close, 3) + ta.hma(close, 4) + ta.swma(close) + ta.alma(close, 4, 0.85, 6, true) + ta.linreg(close, 3, 0) + ta.correlation(close, 1, 3) + ta.covariance(1, high, 3) + ta.median(1, 3) + ta.mode(1, 3) + ta.percentile_nearest_rank(1, 3, 50) + ta.percentile_linear_interpolation(1, 3, 50) + ta.percentrank(1, 3))\n",
         );
 
         assert!(

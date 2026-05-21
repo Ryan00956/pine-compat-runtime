@@ -164,6 +164,8 @@
 - Expanded `ta.change` to support series int and bool sources.
 - Expanded core TA source signatures to accept series int sources where the
   runtime already evaluates numeric windows through floating-point values.
+- Added explicit fixture coverage for simple numeric sources in rolling
+  correlation, covariance, median, mode, percentile, and percent-rank helpers.
 - Added `ta.correlation` support for rolling Pearson correlation coefficients.
 - Added `ta.covariance` support for rolling population covariance values.
 - Added `ta.median` and `ta.mode` support for rolling sorted-window statistics.

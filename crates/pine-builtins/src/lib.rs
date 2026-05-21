@@ -1416,6 +1416,19 @@ const TA_SOURCE_LENGTH_BIASED_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_SOURCE_OR_SIMPLE_LENGTH_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "length",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
 const TA_SOURCE_LENGTH_PERCENTAGE_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
@@ -2908,14 +2921,14 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "ta.median",
         phase: BuiltinPhase::Phase1Core,
-        params: TA_SOURCE_LENGTH_PARAMS,
+        params: TA_SOURCE_OR_SIMPLE_LENGTH_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {
         name: "ta.mode",
         phase: BuiltinPhase::Phase1Core,
-        params: TA_SOURCE_LENGTH_PARAMS,
+        params: TA_SOURCE_OR_SIMPLE_LENGTH_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
@@ -2936,7 +2949,7 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "ta.percentrank",
         phase: BuiltinPhase::Phase1Core,
-        params: TA_SOURCE_LENGTH_PARAMS,
+        params: TA_SOURCE_OR_SIMPLE_LENGTH_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
