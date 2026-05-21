@@ -3824,6 +3824,11 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         let source = self.eval_expr(&args[0].value)?;
+        let anchor = if let Some(arg) = args.get(1) {
+            matches!(self.eval_expr(&arg.value)?, PineValue::Bool(true))
+        } else {
+            false
+        };
         let (Some(source), Some(volume)) = (source.as_f64(), self.current_builtin_f64("volume"))
         else {
             self.vwap_call_state.remove(&call_site_id);
@@ -3836,6 +3841,9 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         let state = self.vwap_call_state.entry(call_site_id).or_default();
+        if anchor {
+            *state = VwapState::default();
+        }
         state.weighted_sum += weighted;
         state.volume_sum += volume;
         if state.volume_sum == 0.0
@@ -8679,6 +8687,7 @@ plot(ta.iii)
             r#"indicator("vwap")
 plot(ta.vwap)
 plot(ta.vwap(close))
+plot(ta.vwap(close, bar_index == 1))
 plot(ta.vwap(bar_index == 2 ? na : close))
 "#,
         );
@@ -8698,8 +8707,9 @@ plot(ta.vwap(bar_index == 2 ? na : close))
 
         assert_values_close(&result.plots[0].values, &[9.0, 15.75, 15.75]);
         assert_values_close(&result.plots[1].values, &[9.0, 15.75, 15.75]);
-        assert_values_close(&result.plots[2].values[..2], &[9.0, 15.75]);
-        assert_eq!(result.plots[2].values[2], PineValue::Na);
+        assert_values_close(&result.plots[2].values, &[9.0, 18.0, 18.0]);
+        assert_values_close(&result.plots[3].values[..2], &[9.0, 15.75]);
+        assert_eq!(result.plots[3].values[2], PineValue::Na);
     }
 
     #[test]
@@ -11790,6 +11800,36 @@ plot(e)
             &result.plots[0].values,
             &[2.0, 2.0, 4.666666666666667, 6.888888888888889],
         );
+    }
+
+    #[test]
+    fn advances_conditional_vwap_anchor_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional anchored vwap")
+score = close
+if close > open
+    score := ta.vwap(close, bar_index == 2)
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlcv(0.0, 10.0, 10.0, 10.0, 1.0),
+            bar_ohlcv(30.0, 20.0, 20.0, 20.0, 100.0),
+            bar_ohlcv(0.0, 30.0, 30.0, 30.0, 1.0),
+            bar_ohlcv(0.0, 40.0, 40.0, 40.0, 1.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[10.0, 20.0, 30.0, 35.0]);
     }
 
     #[test]

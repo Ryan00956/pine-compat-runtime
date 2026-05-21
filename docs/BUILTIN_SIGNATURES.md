@@ -410,6 +410,7 @@ ta.pvt -> series float
 ta.tr -> series float
 ta.vwap -> series float
 ta.vwap(source: series/simple numeric) -> series float
+ta.vwap(source: series/simple numeric, anchor: bool-compatible) -> series float
 ta.wad -> series float
 ta.wvad -> series float
 ta.mfi(source: series int/float, length: simple int) -> series float
@@ -516,8 +517,10 @@ Rules:
 - `ta.vwap` variable form returns cumulative
   `sum(hlc3 * volume) / sum(volume)` over the runtime bars.
 - `ta.vwap(source)` returns cumulative `sum(source * volume) / sum(volume)` in
-  its own call-site state. Both forms return `na` while the cumulative volume
-  is zero. Session anchoring and anchor/bands overloads are not implemented yet.
+  its own call-site state. `ta.vwap(source, anchor)` uses the same call-site
+  cumulative state and resets it before the current bar when `anchor` is true.
+  These forms return `na` while the cumulative volume is zero. Session-derived
+  anchoring and bands overloads are not implemented yet.
 - `ta.wad` is a built-in series variable equivalent to cumulative Williams
   Accumulation/Distribution gain using `trueHigh = max(high, close[1])` and
   `trueLow = min(low, close[1])`.

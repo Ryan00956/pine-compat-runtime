@@ -1416,6 +1416,19 @@ const TA_SOURCE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const TA_VWAP_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "anchor",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+];
+
 const TA_SOURCE_LENGTH_BIASED_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
@@ -3059,7 +3072,7 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "ta.vwap",
         phase: BuiltinPhase::Phase1Core,
-        params: TA_SOURCE_PARAMS,
+        params: TA_VWAP_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },

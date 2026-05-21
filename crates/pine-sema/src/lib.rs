@@ -4169,7 +4169,7 @@ mod tests {
     #[test]
     fn accepts_ta_volume_flow_variables() {
         let analysis = analyze(
-            "plot(ta.accdist + ta.iii + ta.nvi + ta.obv + ta.pvi + ta.pvt + ta.vwap + ta.vwap(close) + ta.wad + ta.wvad)\n",
+            "plot(ta.accdist + ta.iii + ta.nvi + ta.obv + ta.pvi + ta.pvt + ta.vwap + ta.vwap(close) + ta.vwap(close, bar_index == 1) + ta.wad + ta.wvad)\n",
         );
 
         assert!(

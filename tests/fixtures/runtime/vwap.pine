@@ -2,3 +2,4 @@
 indicator("VWAP")
 plot(ta.vwap)
 plot(ta.vwap(close))
+plot(ta.vwap(close, bar_index == 1))

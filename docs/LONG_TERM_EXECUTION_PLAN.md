@@ -223,7 +223,8 @@ Candidate areas:
   `ta.bop` Balance of Power OHLC range oscillator,
   `ta.tsi` True Strength Index double-EMA momentum support,
   `ta.accdist`/`ta.iii`/`ta.nvi`/
-  `ta.obv`/`ta.pvi`/`ta.pvt`, partial `ta.vwap` variable/source-call support,
+  `ta.obv`/`ta.pvi`/`ta.pvt`, partial `ta.vwap` variable/source/anchor-call
+  support,
   `ta.mfi` Money Flow Index support,
   `ta.max`/`ta.min` all-time source extremes, `ta.tr` as a true range series
   variable, `ta.wad`/`ta.wvad` flow variables, `ta.supertrend`
