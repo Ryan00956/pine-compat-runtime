@@ -7,6 +7,7 @@
   execution.
 - Added partial `while` statement support with bool conditions, `break`,
   `continue`, scoped loop bodies, and a runtime iteration guard.
+- Added coverage for stateful callsite advancement inside `for` loop bodies.
 - Added partial float array support with runtime-owned array ids,
   `array.new_float`, `array.push`, `array.get`, `array.set`, `array.size`,
   `array.pop`, and `array.clear`.

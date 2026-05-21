@@ -11239,6 +11239,31 @@ plot(sum)
     }
 
     #[test]
+    fn advances_stateful_calls_inside_for_loop_body() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("for stateful")
+sum = close > 0 ? 0.0 : 0.0
+for i = 0 to 1
+    sum := sum + nz(ta.sma(close, 2))
+plot(close + sum)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_values_close(&result.plots[0].values, &[2.0, 5.5, 8.5]);
+    }
+
+    #[test]
     fn runs_while_loop_inside_block_body_function() {
         let source = SourceFile::new(
             "test.pine",
