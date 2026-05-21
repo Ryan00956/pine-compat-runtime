@@ -767,6 +767,7 @@ math.pow(base: numeric, exponent: numeric) -> float with strongest qualifier
 math.round(number: numeric) -> numeric
 math.round(number: numeric, precision: int) -> float with same qualifier
 math.round_to_mintick(number: numeric) -> float with same qualifier
+math.random(min?: numeric, max?: numeric, seed?: simple int) -> series float
 math.sum(source: series/simple numeric, length: simple int) -> series float
 ```
 
@@ -782,6 +783,10 @@ Current Phase 4 behavior:
 - `math.round` preserves int/float kind and qualifier when `precision` is omitted; with `precision`, it returns a float rounded to that many decimal places.
 - `math.round_to_mintick` rounds to the nearest multiple of the current
   `syminfo.mintick` subset value, with ties rounding up.
+- `math.random` returns a deterministic pseudorandom `series float` sequence
+  per callsite. Omitted `min`/`max` default to `0` and `1`; seeded calls are
+  reproducible for the same callsite and seed. Invalid or non-finite ranges
+  return `na`.
 - `math.sum` returns the rolling sum of `source` over a ready simple-int `length` window; it returns `na` for invalid lengths, until the window is ready, or when the window contains `na`.
 - `math.max` and `math.min` require at least two numeric args and accept variadic numeric args.
 - `math.max` and `math.min` return int only when all args are int; otherwise they return float.

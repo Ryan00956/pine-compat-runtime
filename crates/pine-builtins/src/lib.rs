@@ -1295,6 +1295,24 @@ const MATH_ROUND_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const MATH_RANDOM_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "min",
+        accepts: Accepts::Numeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "max",
+        accepts: Accepts::Numeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "seed",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+];
+
 const MATH_SUM_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
@@ -2565,6 +2583,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: MATH_NUMBER_PARAMS,
         returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "math.random",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_RANDOM_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {

@@ -5446,6 +5446,7 @@ avg_value = math.avg(open, close, high, low)
 rounded_precision = math.round(close / 3, 2)
 z = math.floor(close / 2) + math.ceil(close / 2)
 w = math.sqrt(close) + math.log(close) + math.pow(close, 2)
+random_value = math.random(10, 20, 7)
 scale = math.log10(close) + math.exp(close)
 trig = math.sin(close) + math.cos(close) + math.tan(close)
 inverse_trig = math.acos(close - 2) + math.asin(close - 2) + math.atan(close)
@@ -5490,6 +5491,13 @@ plot(y)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "math.round")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.random")
         );
         assert!(
             analysis

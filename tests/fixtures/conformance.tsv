@@ -98,6 +98,7 @@ math.tan	supported	fixture-derived executable subset	tests/fixtures/runtime/math
 math.pow	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.round	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.round_to_mintick	supported	fixture-derived executable subset using default syminfo.mintick	tests/fixtures/runtime/math.pine
+math.random	supported	fixture-derived deterministic callsite PRNG subset with optional min/max/seed	tests/fixtures/runtime/math.pine
 math.sum	supported	fixture-derived executable subset; length currently simple int	tests/fixtures/runtime/math.pine
 na	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine
 nz	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine

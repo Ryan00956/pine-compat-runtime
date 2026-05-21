@@ -430,6 +430,7 @@ pub struct HistoricalRuntime<'a> {
     macd_state: HashMap<CallSiteId, MacdState>,
     vwap_call_state: HashMap<CallSiteId, VwapState>,
     pivot_point_state: HashMap<CallSiteId, PivotPointState>,
+    random_state: HashMap<CallSiteId, u64>,
     price_flow_previous_close: Option<f64>,
     price_flow_previous_volume: Option<f64>,
     accdist_state: PineValue,
@@ -724,6 +725,7 @@ impl<'a> HistoricalRuntime<'a> {
             macd_state: HashMap::new(),
             vwap_call_state: HashMap::new(),
             pivot_point_state: HashMap::new(),
+            random_state: HashMap::new(),
             price_flow_previous_close: None,
             price_flow_previous_volume: None,
             accdist_state: PineValue::Na,
@@ -2057,6 +2059,7 @@ impl<'a> HistoricalRuntime<'a> {
             "math.pow" => self.eval_math_pow(args),
             "math.round" => self.eval_math_round(args),
             "math.round_to_mintick" => self.eval_math_round_to_mintick(args),
+            "math.random" => self.eval_math_random(call_site_id, args),
             "math.sum" => self.eval_math_sum(call_site_id, args),
             "ta.sma" => self.eval_sma(call_site_id, args),
             "ta.ema" => self.eval_ema(call_site_id, args),
@@ -5818,6 +5821,51 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(rounded_ticks * mintick))
     }
 
+    fn eval_math_random(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let min = match args.first() {
+            Some(arg) => {
+                let Some(value) = self.eval_expr(&arg.value)?.as_f64() else {
+                    return Ok(PineValue::Na);
+                };
+                value
+            }
+            None => 0.0,
+        };
+        let max = match args.get(1) {
+            Some(arg) => {
+                let Some(value) = self.eval_expr(&arg.value)?.as_f64() else {
+                    return Ok(PineValue::Na);
+                };
+                value
+            }
+            None => 1.0,
+        };
+        let seed = match args.get(2) {
+            Some(arg) => self.eval_expr(&arg.value)?.as_i64(),
+            None => None,
+        };
+
+        if !min.is_finite() || !max.is_finite() || min >= max {
+            return Ok(PineValue::Na);
+        }
+
+        let initial_state = seed.map_or_else(
+            || default_random_seed(call_site_id),
+            |seed| mix_random_seed(seed as u64),
+        );
+        let state = self
+            .random_state
+            .entry(call_site_id)
+            .or_insert(initial_state);
+        *state = next_random_state(*state);
+        let unit = random_unit_interval(*state);
+        Ok(finite_float_or_na(min + (max - min) * unit))
+    }
+
     fn eval_math_sum(
         &mut self,
         call_site_id: CallSiteId,
@@ -7936,6 +7984,27 @@ fn finite_float_or_na(value: f64) -> PineValue {
     } else {
         PineValue::Na
     }
+}
+
+fn default_random_seed(call_site_id: CallSiteId) -> u64 {
+    mix_random_seed(0x9e37_79b9_7f4a_7c15_u64 ^ u64::from(call_site_id.0))
+}
+
+fn mix_random_seed(seed: u64) -> u64 {
+    let mut state = seed.wrapping_add(0x9e37_79b9_7f4a_7c15);
+    state = (state ^ (state >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+    state = (state ^ (state >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
+    state ^ (state >> 31)
+}
+
+fn next_random_state(state: u64) -> u64 {
+    state
+        .wrapping_mul(6_364_136_223_846_793_005)
+        .wrapping_add(1_442_695_040_888_963_407)
+}
+
+fn random_unit_interval(state: u64) -> f64 {
+    ((state >> 11) as f64) * (1.0 / ((1_u64 << 53) as f64))
 }
 
 #[cfg(test)]
@@ -11525,6 +11594,10 @@ pow_value = math.pow(close, 2)
 rounded_precision = math.round(close / 3, 2)
 rounded_mintick = math.round_to_mintick(close + 0.006)
 mintick = syminfo.mintick
+seeded_random = math.random(10, 20, 7)
+seeded_random_repeat = math.random(10, 20, 7)
+default_random = math.random()
+invalid_random = math.random(5, 5, 7)
 plot(x)
 plot(y)
 plot(avg_value)
@@ -11548,6 +11621,10 @@ plot(pow_value)
 plot(rounded_precision)
 plot(rounded_mintick)
 plot(mintick)
+plot(seeded_random)
+plot(seeded_random_repeat)
+plot(default_random)
+plot(invalid_random)
 plot(math.sqrt(-1))
 plot(math.log(0))
 plot(math.log10(0))
@@ -11649,13 +11726,60 @@ plot(math.pow(-1, 0.5))
         assert_values_close(&result.plots[20].values, &[0.33, 0.67, 1.0, 1.33]);
         assert_values_close(&result.plots[21].values, &[1.01, 2.01, 3.01, 4.01]);
         assert_values_close(&result.plots[22].values, &[0.01, 0.01, 0.01, 0.01]);
-        assert_eq!(result.plots[23].values, vec![PineValue::Na; 4]);
-        assert_eq!(result.plots[24].values, vec![PineValue::Na; 4]);
-        assert_eq!(result.plots[25].values, vec![PineValue::Na; 4]);
+        for value in &result.plots[23].values {
+            let value = value.as_f64().expect("seeded random is numeric");
+            assert!((10.0..20.0).contains(&value), "random value {value}");
+        }
+        assert_eq!(result.plots[23].values, result.plots[24].values);
+        for value in &result.plots[25].values {
+            let value = value.as_f64().expect("default random is numeric");
+            assert!((0.0..1.0).contains(&value), "random value {value}");
+        }
         assert_eq!(result.plots[26].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[27].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[28].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[29].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[30].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[31].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[32].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[33].values, vec![PineValue::Na; 4]);
+    }
+
+    #[test]
+    fn realtime_rollback_restores_math_random_state() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("realtime random")
+plot(math.random(0, 1, 7))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.expect("HIR");
+        let mut runtime = RealtimeRuntime::new(&hir);
+
+        runtime
+            .update(BarUpdate::historical(bar(1.0)))
+            .expect("historical update");
+
+        let forming = runtime
+            .update(BarUpdate::forming(bar(2.0)))
+            .expect("forming update");
+        let forming_value = forming.plots[0].values[1].clone();
+
+        let rolled_back = runtime
+            .update(BarUpdate::forming(bar(3.0)))
+            .expect("second forming update");
+        assert_eq!(rolled_back.plots[0].values[1], forming_value);
+
+        let confirmed = runtime
+            .update(BarUpdate::confirmed(bar(4.0)))
+            .expect("confirmed update");
+        assert_eq!(confirmed.plots[0].values[1], forming_value);
     }
 
     #[test]

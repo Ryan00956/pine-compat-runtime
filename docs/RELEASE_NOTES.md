@@ -156,6 +156,8 @@
 - Added `precision` argument support for `math.round`.
 - Added `math.round_to_mintick` support using the current default
   `syminfo.mintick` subset value.
+- Added deterministic callsite-backed `math.random` support with optional
+  `min`, `max`, and `seed` arguments.
 - Added `math.sum` support for rolling source sums with simple-int lengths.
 - Added `ta.stdev` support with default biased and optional sample standard
   deviation modes.

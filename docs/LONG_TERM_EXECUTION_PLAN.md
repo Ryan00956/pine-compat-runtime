@@ -243,8 +243,8 @@ Candidate areas:
   `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`,
   `math.todegrees`, `math.toradians`, `math.sin`, `math.cos`, `math.tan`,
   `math.avg`, `math.e`, `math.pi`, `math.phi`, `math.rphi`, `math.pow`,
-  `math.round`, `math.round_to_mintick`, and `math.sum`; string coverage
-  includes `str.split`; time
+  `math.round`, `math.round_to_mintick`, `math.random`, and `math.sum`;
+  string coverage includes `str.split`; time
   helper coverage includes the numeric UTC `timestamp` subset.
 - Initial color helper coverage includes `color.from_gradient` linear RGBA
   interpolation and `#RRGGBB`/`#RRGGBBAA` hex color literals.
