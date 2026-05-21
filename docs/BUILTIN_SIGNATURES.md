@@ -492,12 +492,17 @@ color.r(color: color-compatible) -> float with same qualifier
 color.g(color: color-compatible) -> float with same qualifier
 color.b(color: color-compatible) -> float with same qualifier
 color.t(color: color-compatible) -> float with same qualifier
+color.from_gradient(value: numeric, bottom_value: numeric, top_value: numeric, bottom_color: color-compatible, top_color: color-compatible) -> color with strongest qualifier
 ```
 
 Named colors include the common TradingView color constants used by fixtures.
 `color.new` defaults `transp` to 0 when omitted.
 `color.r`, `color.g`, `color.b`, and `color.t` return `na` for `na` colors;
 `color.t` returns transparency on the 0-100 scale.
+`color.from_gradient` linearly interpolates RGBA channels between the two
+colors, clamps values outside the numeric range to the nearest endpoint, and
+returns `na` when any required input is `na`. Equal bottom/top values return
+the top color.
 
 Hex color parsing should be implemented in the syntax or semantic layer with a
 single normalized `Color` representation.

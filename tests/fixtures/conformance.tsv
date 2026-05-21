@@ -38,6 +38,7 @@ color.r	supported	fixture-derived executable subset	tests/fixtures/runtime/color
 color.g	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
 color.b	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
 color.t	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
+color.from_gradient	supported	linear RGBA interpolation with endpoint clamping	tests/fixtures/runtime/colors.pine
 str.length	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
 str.upper	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
 str.lower	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine

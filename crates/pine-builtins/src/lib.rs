@@ -44,6 +44,7 @@ pub enum Accepts {
     StringCompatible,
     StringConvertible,
     ValueWhenSource,
+    NumericCompatible,
     IntCompatible,
     BoolCompatible,
     PlotOrHLine,
@@ -961,6 +962,34 @@ const COLOR_COMPONENT_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     accepts: Accepts::ColorCompatible,
     optional: false,
 }];
+
+const COLOR_FROM_GRADIENT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "value",
+        accepts: Accepts::NumericCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "bottom_value",
+        accepts: Accepts::NumericCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "top_value",
+        accepts: Accepts::NumericCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "bottom_color",
+        accepts: Accepts::ColorCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "top_color",
+        accepts: Accepts::ColorCompatible,
+        optional: false,
+    },
+];
 
 const MATH_NUMBER_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "number",
@@ -1965,6 +1994,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: COLOR_COMPONENT_PARAMS,
         returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "color.from_gradient",
+        phase: BuiltinPhase::Phase1Core,
+        params: COLOR_FROM_GRADIENT_PARAMS,
+        returns: ReturnSpec::PromotedColor,
         variadic: false,
     },
     BuiltinSignature {

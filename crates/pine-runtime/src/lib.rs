@@ -1960,6 +1960,7 @@ impl<'a> HistoricalRuntime<'a> {
             "color.g" => self.eval_color_component(args, ColorComponent::Green),
             "color.b" => self.eval_color_component(args, ColorComponent::Blue),
             "color.t" => self.eval_color_component(args, ColorComponent::Transparency),
+            "color.from_gradient" => self.eval_color_from_gradient(args),
             "str.length" => self.eval_str_length(args),
             "str.upper" => self.eval_str_case(args, StringCase::Upper),
             "str.lower" => self.eval_str_case(args, StringCase::Lower),
@@ -4296,6 +4297,35 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Float(color_component(color, component)))
     }
 
+    fn eval_color_from_gradient(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(value) = self.eval_expr(&args[0].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(bottom_value) = self.eval_expr(&args[1].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(top_value) = self.eval_expr(&args[2].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::Color(bottom_color) = self.eval_expr(&args[3].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::Color(top_color) = self.eval_expr(&args[4].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        let ratio = if (top_value - bottom_value).abs() < f64::EPSILON {
+            1.0
+        } else {
+            ((value - bottom_value) / (top_value - bottom_value)).clamp(0.0, 1.0)
+        };
+        Ok(PineValue::Color(interpolate_color(
+            bottom_color,
+            top_color,
+            ratio,
+        )))
+    }
+
     fn eval_str_length(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let PineValue::String(value) = self.eval_expr(&args[0].value)? else {
             return Ok(PineValue::Na);
@@ -5870,6 +5900,30 @@ fn color_channel(value: f64) -> u32 {
     value.round().clamp(0.0, 255.0) as u32
 }
 
+fn color_rgba(color: u32) -> (u32, u32, u32, u32) {
+    let (rgb, alpha) = if color > 0xFF_FFFF {
+        (color >> 8, color & 0xFF)
+    } else {
+        (color, 0xFF)
+    };
+    ((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF, alpha)
+}
+
+fn interpolate_color(bottom_color: u32, top_color: u32, ratio: f64) -> u32 {
+    let (bottom_red, bottom_green, bottom_blue, bottom_alpha) = color_rgba(bottom_color);
+    let (top_red, top_green, top_blue, top_alpha) = color_rgba(top_color);
+    let interpolate = |bottom: u32, top: u32| -> u32 {
+        (bottom as f64 + (top as f64 - bottom as f64) * ratio)
+            .round()
+            .clamp(0.0, 255.0) as u32
+    };
+    let red = interpolate(bottom_red, top_red);
+    let green = interpolate(bottom_green, top_green);
+    let blue = interpolate(bottom_blue, top_blue);
+    let alpha = interpolate(bottom_alpha, top_alpha);
+    (red << 24) | (green << 16) | (blue << 8) | alpha
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ColorComponent {
     Red,
@@ -5879,16 +5933,12 @@ enum ColorComponent {
 }
 
 fn color_component(color: u32, component: ColorComponent) -> f64 {
-    let (rgb, alpha) = if color > 0xFF_FFFF {
-        (color >> 8, color & 0xFF)
-    } else {
-        (color, 0xFF)
-    };
+    let (red, green, blue, alpha) = color_rgba(color);
 
     match component {
-        ColorComponent::Red => ((rgb >> 16) & 0xFF) as f64,
-        ColorComponent::Green => ((rgb >> 8) & 0xFF) as f64,
-        ColorComponent::Blue => (rgb & 0xFF) as f64,
+        ColorComponent::Red => red as f64,
+        ColorComponent::Green => green as f64,
+        ColorComponent::Blue => blue as f64,
         ColorComponent::Transparency => (100.0 - (alpha as f64 * 100.0 / 255.0)).round(),
     }
 }
@@ -8563,11 +8613,16 @@ plot(invalid)
 c = color.new(color.red, 50)
 opaque = color.new(color.blue)
 custom = color.rgb(255, 153, 0, 50)
+gradient = color.from_gradient(close, 1, 3, color.red, color.green)
+missing_gradient = color.from_gradient(na, 1, 3, color.red, color.green)
 channels = color.r(custom) + color.g(custom) + color.b(custom) + color.t(custom)
+gradient_channels = color.r(gradient) + color.g(gradient) + color.b(gradient) + color.t(gradient)
 bgcolor(custom)
 plot(na(c) ? 0 : 1)
 plot(opaque == color.new(color.blue, 0) ? 1 : 0)
 plot(channels)
+plot(gradient_channels)
+plot(na(missing_gradient) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -8583,6 +8638,8 @@ plot(channels)
         assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[2].values, &[458.0, 458.0]);
+        assert_values_close(&result.plots[3].values, &[255.0, 192.0]);
+        assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
         assert_eq!(apply_transparency(0xFF0000, 50), 0xFF000080);
         assert_eq!(
             result.bg_colors[0].values,

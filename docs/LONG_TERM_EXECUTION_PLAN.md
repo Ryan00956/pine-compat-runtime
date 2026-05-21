@@ -226,6 +226,8 @@ Candidate areas:
   `math.avg`, `math.e`, `math.pi`, `math.phi`, `math.rphi`, `math.pow`,
   `math.round`, and `math.sum`; string coverage includes `str.split`; time
   helper coverage includes the numeric UTC `timestamp` subset.
+- Initial color helper coverage includes `color.from_gradient` linear RGBA
+  interpolation.
 - Initial `barstate.*` coverage includes `barstate.isfirst`,
   `barstate.isconfirmed`, `barstate.ishistory`, and `barstate.isrealtime`.
 - Initial `input.*` metadata coverage accepts common min/max/step, `options`,

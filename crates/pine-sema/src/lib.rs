@@ -3380,6 +3380,10 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
                     | ValueKind::Na
             ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::NumericCompatible => {
+            (is_numeric(arg_type.kind) || arg_type.kind == ValueKind::Na)
+                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::IntCompatible => {
             matches!(arg_type.kind, ValueKind::Int | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
@@ -4574,8 +4578,9 @@ base = input.color(color.orange, "Base")
 shade = color.new(base, 50)
 opaque = color.new(color.blue)
 custom = color.rgb(255, 153, 0, 50)
+gradient = color.from_gradient(close, 1, 3, color.red, color.green)
 channels = color.r(custom) + color.g(custom) + color.b(custom) + color.t(custom)
-plot(close, color=shade)
+plot(close, color=gradient)
 "#,
         );
 
@@ -4625,6 +4630,13 @@ plot(close, color=shade)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "color.t")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "color.from_gradient")
         );
         assert!(
             analysis
