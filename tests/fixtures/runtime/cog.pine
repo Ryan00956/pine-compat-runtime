@@ -1,0 +1,4 @@
+//@version=5
+indicator("COG")
+value = ta.cog(close, 3)
+plot(value)

@@ -2031,6 +2031,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.tsi" => self.eval_tsi(call_site_id, args),
             "ta.cmo" => self.eval_cmo(call_site_id, args),
             "ta.cci" => self.eval_cci(call_site_id, args),
+            "ta.cog" => self.eval_cog(call_site_id, args),
             "ta.ao" => self.eval_ao(call_site_id),
             "ta.bop" => self.eval_bop(),
             "ta.bb" => self.eval_bb(call_site_id, args),
@@ -3515,6 +3516,26 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(
             (current - window.mean(length)) / (0.015 * deviation),
         ))
+    }
+
+    fn eval_cog(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) || window.sum == 0.0 {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(window.center_of_gravity(length)))
     }
 
     fn eval_vwma(
@@ -6120,6 +6141,17 @@ impl RollingWindowState {
             .map(|value| (*value - mean).abs())
             .sum::<f64>()
             / length as f64
+    }
+
+    fn center_of_gravity(&self, length: usize) -> f64 {
+        let numerator = self
+            .values
+            .iter()
+            .flatten()
+            .enumerate()
+            .map(|(index, value)| *value * (length - index) as f64)
+            .sum::<f64>();
+        -numerator / self.sum
     }
 
     fn weighted_mean(&self, length: usize) -> f64 {
@@ -9748,6 +9780,39 @@ plot(na(invalid) ? 1 : 0)
     }
 
     #[test]
+    fn runs_cog_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("cog")
+value = ta.cog(close, 3)
+zero = ta.cog(close * 0, 2)
+invalid = ta.cog(close, 0)
+plot(value)
+plot(na(zero) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[2..],
+            &[-1.6666666666666667, -1.7777777777777777],
+        );
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0]);
+    }
+
+    #[test]
     fn runs_wma_over_historical_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -11974,6 +12039,39 @@ plot(score)
         assert_values_close(&result.plots[0].values[1..2], &[2.0]);
         assert_eq!(result.plots[0].values[2], PineValue::Na);
         assert_values_close(&result.plots[0].values[3..], &[80.0]);
+    }
+
+    #[test]
+    fn advances_conditional_cog_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional cog")
+score = close
+if close > open
+    score := ta.cog(close, 3)
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(0.0, 1.0, 1.0, 1.0),
+            bar_ohlc(3.0, 2.0, 2.0, 2.0),
+            bar_ohlc(0.0, 3.0, 3.0, 3.0),
+            bar_ohlc(0.0, 4.0, 4.0, 4.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..2], &[2.0]);
+        assert_eq!(result.plots[0].values[2], PineValue::Na);
+        assert_values_close(&result.plots[0].values[3..], &[-1.625]);
     }
 
     #[test]

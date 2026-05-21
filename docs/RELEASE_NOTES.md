@@ -23,6 +23,7 @@
   positive/negative source-change windows.
 - Added `ta.cci` Commodity Channel Index support over ready source mean
   deviation windows.
+- Added `ta.cog` Center of Gravity support over ready source windows.
 - Added `ta.ao` Awesome Oscillator support as the fast/slow SMA spread of
   median price.
 - Added `ta.bop` Balance of Power support over current OHLC values.

@@ -2904,6 +2904,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "ta.cog",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "ta.ao",
         phase: BuiltinPhase::Phase1Core,
         params: TA_AO_PARAMS,
