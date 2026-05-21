@@ -86,6 +86,7 @@
   validation.
 - Added direct `display.pane`, `display.price_scale`, `display.status_line`,
   and `display.data_window` metadata constants.
+- Accepted `confirm` metadata on `input.source`.
 - Added basic `plotshape` support with bar-aligned values, style, location,
   color, text, text color, and size marker output.
 - Added basic `plotarrow` support with bar-aligned numeric values, up/down

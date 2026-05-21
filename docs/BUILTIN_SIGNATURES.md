@@ -139,7 +139,7 @@ input.symbol(defval: const string, title?: const string, options?: tuple, toolti
 input.timeframe(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
 input.session(defval: const string, title?: const string, options?: tuple, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
 input.text_area(defval: const string, title?: const string, tooltip?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> input string
-input.source(defval: series float, title?: const string, tooltip?: const string, inline?: const string, group?: const string, display?: string-compatible) -> series float
+input.source(defval: series float, title?: const string, tooltip?: const string, inline?: const string, group?: const string, confirm?: const bool, display?: string-compatible) -> series float
 ```
 
 Rules:

@@ -461,6 +461,11 @@ const INPUT_SOURCE_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
     BuiltinParam {
+        name: "confirm",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
         name: "display",
         accepts: Accepts::StringCompatible,
         optional: true,

@@ -1,6 +1,6 @@
 //@version=5
 indicator("IO", overlay=true)
-src = input.source(close, "Source")
+src = input.source(close, "Source", confirm=true)
 length = input.int(2, "Length")
 scale = input.float(1.5, "Scale")
 enabled = input.bool(true, "Enabled")

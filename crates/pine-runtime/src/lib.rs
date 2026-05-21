@@ -6907,7 +6907,7 @@ scale = input.float(1.5, "Scale", minval=0.5, maxval=5.0, step=0.25, options=[1.
 enabled = input.bool(true, "Enabled", tooltip="Toggle", inline="row", group="Settings", confirm=false)
 mode = input.string("SMA", "Mode", options=["SMA", "EMA"], tooltip="Mode")
 shade = input.color(color.orange, "Shade", group="Style")
-src = input.source(close, "Source", tooltip="Price", inline="src", group="Settings", display=display.all)
+src = input.source(close, "Source", tooltip="Price", inline="src", group="Settings", confirm=true, display=display.all)
 plot(enabled and mode == "SMA" ? math.max(src, length) * scale : close, color=shade)
 "#,
         );
