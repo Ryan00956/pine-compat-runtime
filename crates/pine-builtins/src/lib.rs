@@ -34,6 +34,8 @@ pub enum Accepts {
     SeriesOrSimpleNumeric,
     SeriesOrSimpleNumericOrBool,
     SimpleInt,
+    SimpleNumeric,
+    SimpleBool,
     ConstString,
     ConstBool,
     ConstOrInputFloat,
@@ -837,6 +839,34 @@ const TA_SOURCE_LENGTH_OFFSET_PARAMS: &[BuiltinParam] = &[
         name: "offset",
         accepts: Accepts::SimpleInt,
         optional: false,
+    },
+];
+
+const TA_ALMA_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "series",
+        accepts: Accepts::SeriesFloat,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "length",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "offset",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "sigma",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "floor",
+        accepts: Accepts::SimpleBool,
+        optional: true,
     },
 ];
 
@@ -2265,6 +2295,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "ta.swma",
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_ONLY_SERIES_FLOAT_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.alma",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_ALMA_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },

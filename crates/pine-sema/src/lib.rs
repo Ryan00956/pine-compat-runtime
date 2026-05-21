@@ -3329,6 +3329,13 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             qualifier_at_most(arg_type.qualifier, Qualifier::Simple)
                 && arg_type.kind == ValueKind::Int
         }
+        Accepts::SimpleNumeric => {
+            qualifier_at_most(arg_type.qualifier, Qualifier::Simple) && is_numeric(arg_type.kind)
+        }
+        Accepts::SimpleBool => {
+            qualifier_at_most(arg_type.qualifier, Qualifier::Simple)
+                && arg_type.kind == ValueKind::Bool
+        }
         Accepts::ConstString => {
             arg_type.qualifier == Qualifier::Const && arg_type.kind == ValueKind::String
         }
@@ -3685,7 +3692,7 @@ mod tests {
     #[test]
     fn accepts_ta_window_statistics() {
         let analysis = analyze(
-            "plot(ta.stdev(close, 3, false) + ta.variance(close, 3, true) + ta.range(close, 3) + ta.dev(close, 3) + ta.vwma(close, 3) + ta.wma(close, 3) + ta.hma(close, 4) + ta.swma(close) + ta.linreg(close, 3, 0) + ta.correlation(close, high, 3) + ta.covariance(close, high, 3) + ta.median(close, 3) + ta.mode(close, 3) + ta.percentile_nearest_rank(close, 3, 50) + ta.percentile_linear_interpolation(close, 3, 50) + ta.percentrank(close, 3))\n",
+            "plot(ta.stdev(close, 3, false) + ta.variance(close, 3, true) + ta.range(close, 3) + ta.dev(close, 3) + ta.vwma(close, 3) + ta.wma(close, 3) + ta.hma(close, 4) + ta.swma(close) + ta.alma(close, 4, 0.85, 6, true) + ta.linreg(close, 3, 0) + ta.correlation(close, high, 3) + ta.covariance(close, high, 3) + ta.median(close, 3) + ta.mode(close, 3) + ta.percentile_nearest_rank(close, 3, 50) + ta.percentile_linear_interpolation(close, 3, 50) + ta.percentrank(close, 3))\n",
         );
 
         assert!(
@@ -3797,6 +3804,13 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.swma")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.alma")
         );
         assert!(
             analysis

@@ -1,0 +1,3 @@
+//@version=5
+indicator("Arnaud Legoux Moving Average")
+plot(ta.alma(close, 4, 0.85, 6))

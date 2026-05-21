@@ -107,6 +107,8 @@
   windows.
 - Added `ta.swma` support for fixed four-bar symmetric weighted moving
   averages.
+- Added `ta.alma` support for Arnaud Legoux moving averages with optional
+  floored offset centers.
 - Added `ta.linreg` support for rolling least-squares linear regression values.
 - Added `ta.cum` support for cumulative numeric source sums.
 - Added `ta.accdist` support as the built-in Accumulation/Distribution index
