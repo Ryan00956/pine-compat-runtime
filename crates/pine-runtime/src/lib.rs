@@ -4255,8 +4255,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         mode: WindowExtreme,
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_extreme_source_length(args, mode)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -4277,8 +4276,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         mode: WindowExtreme,
     ) -> Result<PineValue, RuntimeError> {
-        let source = self.eval_expr(&args[0].value)?;
-        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let (source, length) = self.eval_extreme_source_length(args, mode)?;
         if length <= 0 {
             return Ok(PineValue::Na);
         }
@@ -4292,6 +4290,28 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(window
             .extreme_offset(mode)
             .map_or(PineValue::Na, |offset| PineValue::Int(offset as i64)))
+    }
+
+    fn eval_extreme_source_length(
+        &mut self,
+        args: &[HirCallArg],
+        mode: WindowExtreme,
+    ) -> Result<(PineValue, i64), RuntimeError> {
+        if args.len() == 1 {
+            let length = self.eval_expr(&args[0].value)?.as_i64().unwrap_or(0);
+            let source_name = match mode {
+                WindowExtreme::Highest => "high",
+                WindowExtreme::Lowest => "low",
+            };
+            let source = self
+                .current_builtin_f64(source_name)
+                .map_or(PineValue::Na, PineValue::Float);
+            return Ok((source, length));
+        }
+
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        Ok((source, length))
     }
 
     fn update_rolling_window(
@@ -8134,6 +8154,46 @@ plot(lo)
         assert_eq!(result.plots[1].values[0], PineValue::Na);
         assert_eq!(result.plots[1].values[1], PineValue::Na);
         assert_values_close(&result.plots[1].values[2..], &[2.0, 1.0, 2.0, 0.0]);
+    }
+
+    #[test]
+    fn runs_single_argument_extremes_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("single argument extremes")
+hi = ta.highest(2)
+lo = ta.lowest(2)
+hi_offset = ta.highestbars(2)
+lo_offset = ta.lowestbars(length=2)
+plot(hi)
+plot(lo)
+plot(hi_offset)
+plot(lo_offset)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 5.0, 1.0, 1.0),
+            bar_ohlc(1.0, 3.0, 0.0, 1.0),
+            bar_ohlc(1.0, 4.0, 2.0, 1.0),
+            bar_ohlc(1.0, 4.0, -1.0, 1.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[5.0, 4.0, 4.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_values_close(&result.plots[1].values[1..], &[0.0, 0.0, -1.0]);
+        assert_eq!(result.plots[2].values[0], PineValue::Na);
+        assert_values_close(&result.plots[2].values[1..], &[1.0, 0.0, 0.0]);
+        assert_eq!(result.plots[3].values[0], PineValue::Na);
+        assert_values_close(&result.plots[3].values[1..], &[0.0, 1.0, 0.0]);
     }
 
     #[test]

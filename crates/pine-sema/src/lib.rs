@@ -1119,7 +1119,9 @@ impl Analyzer {
             .iter()
             .filter(|param| !param.optional)
             .count();
-        if args.len() < required_count {
+        let accepts_single_extreme_length =
+            is_ta_extreme_length_overload(signature.name) && args.len() == 1;
+        if args.len() < required_count && !accepts_single_extreme_length {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARITY",
                 format!(
@@ -1147,6 +1149,35 @@ impl Analyzer {
         }
 
         for (index, arg) in args.iter().enumerate() {
+            if accepts_single_extreme_length && index == 0 {
+                if let Some(name) = &arg.name
+                    && name != "length"
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_NAME",
+                        format!(
+                            "`{}` single-argument overload has no argument named `{name}`",
+                            signature.name
+                        ),
+                        arg.span,
+                    ));
+                    continue;
+                }
+                let Some(arg_type) = arg_types.first().copied().flatten() else {
+                    continue;
+                };
+                if !accepts_type(Accepts::SimpleInt, arg_type) {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_TYPE",
+                        format!(
+                            "`{}` argument `length` does not accept {:?} {:?}",
+                            signature.name, arg_type.qualifier, arg_type.kind
+                        ),
+                        arg.span,
+                    ));
+                }
+                continue;
+            }
             let Some(param) = self.resolve_param(signature, index, arg) else {
                 continue;
             };
@@ -2671,6 +2702,13 @@ fn is_array_mutation_method_call_name(name: &str) -> bool {
         .is_some_and(is_array_mutation_builtin)
 }
 
+fn is_ta_extreme_length_overload(name: &str) -> bool {
+    matches!(
+        name,
+        "ta.highest" | "ta.lowest" | "ta.highestbars" | "ta.lowestbars"
+    )
+}
+
 fn resolve_udf_arg_indices(params: &[String], args: &[CallArg]) -> Result<Vec<usize>, UdfArgError> {
     let mut used = vec![false; params.len()];
     let mut indices = Vec::with_capacity(args.len());
@@ -3909,12 +3947,28 @@ mod tests {
 
     #[test]
     fn accepts_ta_extreme_bar_offsets() {
-        let analysis = analyze("plot(ta.highestbars(close, 3) + ta.lowestbars(open, 3))\n");
+        let analysis = analyze(
+            "plot(ta.highest(3) + ta.lowest(3) + ta.highestbars(close, 3) + ta.lowestbars(open, 3) + ta.highestbars(3) + ta.lowestbars(length=3))\n",
+        );
 
         assert!(
             analysis.diagnostics.is_empty(),
             "{:?}",
             analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.highest")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.lowest")
         );
         assert!(
             analysis

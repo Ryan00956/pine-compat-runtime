@@ -177,6 +177,8 @@
   condition.
 - Added `ta.valuewhen` support for retrieving source values from prior true
   condition occurrences.
+- Added length-only overloads for `ta.highest`, `ta.lowest`,
+  `ta.highestbars`, and `ta.lowestbars`.
 - Tightened float array UDF boundaries: read-only array operations are allowed,
   while array mutation inside UDFs is rejected as a side effect.
 - Added a 100,000-element runtime guard for each float array.

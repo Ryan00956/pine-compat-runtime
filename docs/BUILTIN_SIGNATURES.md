@@ -397,9 +397,13 @@ ta.valuewhen(condition: series bool, source: series int/float/bool/color, occurr
 ta.cross(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossover(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossunder(source1: series/simple numeric, source2: series/simple numeric) -> series bool
+ta.highest(length: simple int) -> series float
 ta.highest(source: series float, length: simple int) -> series float
+ta.lowest(length: simple int) -> series float
 ta.lowest(source: series float, length: simple int) -> series float
+ta.highestbars(length: simple int) -> series int
 ta.highestbars(source: series float, length: simple int) -> series int
+ta.lowestbars(length: simple int) -> series int
 ta.lowestbars(source: series float, length: simple int) -> series int
 ```
 
@@ -497,8 +501,10 @@ Rules:
   condition, and returns `na` before the first true condition.
 - `ta.valuewhen` returns the `source` value from the nth most recent true
   condition, where `occurrence = 0` is the most recent match.
-- `ta.highestbars`/`ta.lowestbars` currently support the two-argument form and
-  return the offset to the most recent matching extreme in the ready window.
+- `ta.highest`/`ta.highestbars` length-only overloads use `high` as the source.
+  `ta.lowest`/`ta.lowestbars` length-only overloads use `low` as the source.
+- `ta.highestbars`/`ta.lowestbars` return the offset to the most recent
+  matching extreme in the ready window.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.

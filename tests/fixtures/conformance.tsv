@@ -147,10 +147,10 @@ ta.valuewhen	supported	fixture-derived executable subset	tests/fixtures/runtime/
 ta.cross	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
 ta.crossover	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
 ta.crossunder	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
-ta.highest	supported	fixture-derived executable subset	tests/fixtures/runtime/extremes.pine
-ta.lowest	supported	fixture-derived executable subset	tests/fixtures/runtime/extremes.pine
-ta.highestbars	supported	fixture-derived executable subset	tests/fixtures/runtime/extreme_bars.pine
-ta.lowestbars	supported	fixture-derived executable subset	tests/fixtures/runtime/extreme_bars.pine
+ta.highest	supported	source/length form plus length-only high source overload	tests/fixtures/runtime/extremes.pine
+ta.lowest	supported	source/length form plus length-only low source overload	tests/fixtures/runtime/extremes.pine
+ta.highestbars	supported	source/length form plus length-only high source overload	tests/fixtures/runtime/extreme_bars.pine
+ta.lowestbars	supported	source/length form plus length-only low source overload	tests/fixtures/runtime/extreme_bars.pine
 if	supported	conditional callsites advance only when their branch executes	tests/fixtures/runtime/if.pine;tests/fixtures/runtime/conditional_ta.pine;tests/fixtures/runtime/branch_loop_interactions.pine
 switch	partial	expression arms with condition and selector forms	tests/fixtures/runtime/switch.pine;tests/fixtures/runtime/branch_loop_interactions.pine
 for	partial	inclusive integer ranges, loop control, loop results, dynamic bounds, and signed steps	tests/fixtures/runtime/block_statements.pine;tests/fixtures/runtime/for_edges.pine;tests/fixtures/runtime/branch_loop_interactions.pine;tests/fixtures/sema/supported_block_statements.pine
