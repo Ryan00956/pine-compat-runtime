@@ -371,6 +371,7 @@ ta.rsi(source: series int/float, length: simple int) -> series float
 ta.macd(source: series int/float, fastlen: simple int, slowlen: simple int, siglen: simple int)
   -> tuple(series float, series float, series float)
 ta.tsi(source: series int/float, short_length: simple int, long_length: simple int) -> series float
+ta.cmo(source: series int/float, length: simple int) -> series float
 ta.bb(source: series int/float, length: simple int, mult: numeric)
   -> tuple(series float, series float, series float)
 ta.bbw(source: series int/float, length: simple int, mult: numeric) -> series float
@@ -554,6 +555,10 @@ Rules:
   momentum with short then long EMA stages and returns `na` when prior source
   data is unavailable, lengths are non-positive, or the smoothed absolute
   momentum denominator is zero.
+- `ta.cmo` returns the Chande Momentum Oscillator as `100 * (sum(up) -
+  sum(down)) / (sum(up) + sum(down))` over ready rolling source-change windows.
+  It returns `na` before the window is ready, for non-positive lengths, or when
+  the denominator is zero.
 - `ta.stoch` supports the four-argument stochastic oscillator form using ready
   rolling `high`/`low` windows. It returns `na` before the window is ready, when
   either window contains `na`, for non-positive lengths, or when the high-low

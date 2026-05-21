@@ -558,6 +558,8 @@ enum RollingWindowKey {
     VwmaVolume(CallSiteId),
     MfiPositive(CallSiteId),
     MfiNegative(CallSiteId),
+    CmoPositive(CallSiteId),
+    CmoNegative(CallSiteId),
     CorrelationLeft(CallSiteId),
     CorrelationRight(CallSiteId),
     CorrelationProduct(CallSiteId),
@@ -2023,6 +2025,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.rsi" => self.eval_rsi(call_site_id, args),
             "ta.macd" => self.eval_macd(call_site_id, args),
             "ta.tsi" => self.eval_tsi(call_site_id, args),
+            "ta.cmo" => self.eval_cmo(call_site_id, args),
             "ta.bb" => self.eval_bb(call_site_id, args),
             "ta.bbw" => self.eval_bbw(call_site_id, args),
             "ta.cum" => self.eval_cum(call_site_id, args),
@@ -4735,6 +4738,25 @@ impl<'a> HistoricalRuntime<'a> {
         );
     }
 
+    fn update_cmo_windows(
+        &mut self,
+        call_site_id: CallSiteId,
+        positive_change: Option<f64>,
+        negative_change: Option<f64>,
+        length: usize,
+    ) {
+        self.update_rolling_window_key(
+            RollingWindowKey::CmoPositive(call_site_id),
+            positive_change,
+            length,
+        );
+        self.update_rolling_window_key(
+            RollingWindowKey::CmoNegative(call_site_id),
+            negative_change,
+            length,
+        );
+    }
+
     fn update_rolling_window_key(
         &mut self,
         key: RollingWindowKey,
@@ -5707,6 +5729,59 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
         Ok(finite_float_or_na(long_momentum / long_abs_momentum))
+    }
+
+    fn eval_cmo(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let (positive_change, negative_change) = match (source.as_f64(), args[0].value.series_id) {
+            (Some(source), Some(series_id)) => {
+                match self.series_store.read(series_id, 1).as_f64() {
+                    Some(previous) => {
+                        let change = source - previous;
+                        (Some(change.max(0.0)), Some((-change).max(0.0)))
+                    }
+                    None => (None, None),
+                }
+            }
+            _ => (None, None),
+        };
+
+        self.update_cmo_windows(call_site_id, positive_change, negative_change, length);
+
+        let positive_window = self
+            .rolling_windows
+            .get(&RollingWindowKey::CmoPositive(call_site_id));
+        let negative_window = self
+            .rolling_windows
+            .get(&RollingWindowKey::CmoNegative(call_site_id));
+        let (Some(positive_window), Some(negative_window)) = (positive_window, negative_window)
+        else {
+            return Ok(PineValue::Na);
+        };
+        if !positive_window.is_ready(length) || !negative_window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let positive_sum = positive_window.sum;
+        let negative_sum = negative_window.sum;
+        let denominator = positive_sum + negative_sum;
+        if denominator == 0.0 {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(
+            100.0 * (positive_sum - negative_sum) / denominator,
+        ))
     }
 
     fn finalize_series_outputs(&mut self) {
@@ -9463,6 +9538,47 @@ plot(na(invalid) ? 1 : 0)
     }
 
     #[test]
+    fn runs_cmo_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("cmo")
+value = ta.cmo(close, 3)
+flat = ta.cmo(close * 0 + 1, 2)
+invalid = ta.cmo(close, 0)
+plot(value)
+plot(na(flat) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar(10.0),
+            bar(11.0),
+            bar(12.0),
+            bar(10.0),
+            bar(13.0),
+            bar(12.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_eq!(result.plots[0].values[2], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[3..],
+            &[0.0, 33.333333333333336, 0.0],
+        );
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+    }
+
+    #[test]
     fn runs_wma_over_historical_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -11438,6 +11554,36 @@ plot(score)
         assert_eq!(result.plots.len(), 1);
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_values_close(&result.plots[0].values[1..], &[2.0, 1.0]);
+    }
+
+    #[test]
+    fn advances_conditional_cmo_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional cmo")
+score = close
+if close > open
+    score := ta.cmo(close, 1)
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 10.0, 1.0, 5.0),
+            bar_ohlc(3.0, 4.0, 1.0, 2.0),
+            bar_ohlc(4.0, 20.0, 10.0, 15.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.0, 100.0]);
     }
 
     #[test]

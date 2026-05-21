@@ -19,6 +19,8 @@
   money-flow windows using source and volume.
 - Added `ta.tsi` True Strength Index support using short/long EMA smoothing of
   source momentum and absolute momentum.
+- Added `ta.cmo` Chande Momentum Oscillator support over ready rolling
+  positive/negative source-change windows.
 - Added `ta.stoch` four-argument stochastic oscillator support over ready
   rolling high/low windows.
 - Added partial float array support with runtime-owned array ids,

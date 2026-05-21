@@ -1,0 +1,8 @@
+//@version=5
+indicator("CMO")
+value = ta.cmo(close, 3)
+flat = ta.cmo(close * 0 + 1, 2)
+invalid = ta.cmo(close, 0)
+plot(value)
+plot(na(flat) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)
