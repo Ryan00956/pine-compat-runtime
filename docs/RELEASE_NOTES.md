@@ -13,6 +13,8 @@
   ATR-based subset.
 - Added `ta.dmi` `+DI`/`-DI`/`ADX` tuple support using the runtime's existing
   Wilder/RMA-style smoothing behavior.
+- Added `ta.sar` Parabolic SAR support with callsite state and prior-bar
+  high/low clamping.
 - Added `ta.stoch` four-argument stochastic oscillator support over ready
   rolling high/low windows.
 - Added partial float array support with runtime-owned array ids,

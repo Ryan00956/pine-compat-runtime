@@ -2052,6 +2052,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.supertrend" => self.eval_supertrend(call_site_id, args),
             "ta.dmi" => self.eval_dmi(call_site_id, args),
+            "ta.sar" => self.eval_sar(call_site_id, args),
             "ta.change" => self.eval_change(args),
             "ta.mom" => self.eval_mom(args),
             "ta.roc" => self.eval_roc(args),
@@ -4281,6 +4282,110 @@ impl<'a> HistoricalRuntime<'a> {
         ]))
     }
 
+    fn eval_sar(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(start) = self.eval_expr(&args[0].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(increment) = self.eval_expr(&args[1].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(max_acceleration) = self.eval_expr(&args[2].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        if !start.is_finite() || !increment.is_finite() || !max_acceleration.is_finite() {
+            return Ok(PineValue::Na);
+        }
+
+        let (Some(high), Some(low), Some(close)) = (
+            self.current_builtin_f64("high"),
+            self.current_builtin_f64("low"),
+            self.current_builtin_f64("close"),
+        ) else {
+            return Ok(PineValue::Na);
+        };
+
+        let mut is_first_trend_bar = false;
+        let (mut result, mut max_min, mut acceleration, mut is_below) =
+            if let Some(state) = sar_state(self.call_state.get(&call_site_id)) {
+                state
+            } else {
+                let (Some(previous_close), Some(previous_high), Some(previous_low)) = (
+                    self.previous_builtin_f64("close"),
+                    self.previous_builtin_f64("high"),
+                    self.previous_builtin_f64("low"),
+                ) else {
+                    return Ok(PineValue::Na);
+                };
+                is_first_trend_bar = true;
+                if close > previous_close {
+                    (previous_low, high, start, true)
+                } else {
+                    (previous_high, low, start, false)
+                }
+            };
+
+        result += acceleration * (max_min - result);
+        if is_below {
+            if result > low {
+                is_first_trend_bar = true;
+                is_below = false;
+                result = high.max(max_min);
+                max_min = low;
+                acceleration = start;
+            }
+        } else if result < high {
+            is_first_trend_bar = true;
+            is_below = true;
+            result = low.min(max_min);
+            max_min = high;
+            acceleration = start;
+        }
+
+        if !is_first_trend_bar {
+            if is_below {
+                if high > max_min {
+                    max_min = high;
+                    acceleration = (acceleration + increment).min(max_acceleration);
+                }
+            } else if low < max_min {
+                max_min = low;
+                acceleration = (acceleration + increment).min(max_acceleration);
+            }
+        }
+
+        if is_below {
+            if let Some(previous_low) = self.previous_builtin_f64("low") {
+                result = result.min(previous_low);
+            }
+            if let Some(previous_previous_low) = self.builtin_f64_at("low", 2) {
+                result = result.min(previous_previous_low);
+            }
+        } else {
+            if let Some(previous_high) = self.previous_builtin_f64("high") {
+                result = result.max(previous_high);
+            }
+            if let Some(previous_previous_high) = self.builtin_f64_at("high", 2) {
+                result = result.max(previous_previous_high);
+            }
+        }
+
+        self.call_state.insert(
+            call_site_id,
+            PineValue::Tuple(vec![
+                PineValue::Float(result),
+                PineValue::Float(max_min),
+                PineValue::Float(acceleration),
+                PineValue::Bool(is_below),
+            ]),
+        );
+
+        Ok(finite_float_or_na(result))
+    }
+
     fn eval_change(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let current = self.eval_expr(&args[0].value)?;
         let length = if let Some(length_arg) = args.get(1) {
@@ -5308,14 +5413,18 @@ impl<'a> HistoricalRuntime<'a> {
         self.current_symbols.get(&symbol.id)?.as_f64()
     }
 
-    fn previous_builtin_f64(&self, name: &str) -> Option<f64> {
+    fn builtin_f64_at(&self, name: &str, offset: usize) -> Option<f64> {
         let symbol = self
             .program
             .symbols
             .iter()
             .find(|symbol| symbol.name == name)?;
         let series_id = symbol.series_id?;
-        self.series_store.read(series_id, 1).as_f64()
+        self.series_store.read(series_id, offset).as_f64()
+    }
+
+    fn previous_builtin_f64(&self, name: &str) -> Option<f64> {
+        self.builtin_f64_at(name, 1)
     }
 
     fn previous_close(&self) -> Option<f64> {
@@ -5734,6 +5843,24 @@ fn dmi_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, f64)> {
         smoothed_plus_dm.as_f64()?,
         smoothed_minus_dm.as_f64()?,
         adx.as_f64()?,
+    ))
+}
+
+fn sar_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, bool)> {
+    let Some(PineValue::Tuple(values)) = value else {
+        return None;
+    };
+    let [result, max_min, acceleration, is_below] = values.as_slice() else {
+        return None;
+    };
+    let PineValue::Bool(is_below) = is_below else {
+        return None;
+    };
+    Some((
+        result.as_f64()?,
+        max_min.as_f64()?,
+        acceleration.as_f64()?,
+        *is_below,
     ))
 }
 
@@ -9334,6 +9461,45 @@ plot(na(invalid) ? 1 : 0)
     }
 
     #[test]
+    fn runs_sar_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("sar")
+sar = ta.sar(0.02, 0.02, 0.2)
+plot(sar)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(10.0, 11.0, 9.0, 10.0),
+            bar_ohlc(10.0, 12.0, 10.0, 11.0),
+            bar_ohlc(11.0, 13.0, 11.0, 12.0),
+            bar_ohlc(12.0, 16.0, 12.0, 15.0),
+            bar_ohlc(15.0, 17.0, 14.0, 16.0),
+            bar_ohlc(16.0, 14.0, 8.0, 9.0),
+            bar_ohlc(9.0, 10.0, 6.0, 7.0),
+            bar_ohlc(7.0, 8.0, 4.0, 5.0),
+            bar_ohlc(5.0, 7.0, 3.0, 6.0),
+            bar_ohlc(6.0, 12.0, 5.0, 11.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[1..],
+            &[
+                9.0, 9.0, 9.16, 9.5704, 17.0, 17.0, 16.56, 15.8064, 14.781888,
+            ],
+        );
+    }
+
+    #[test]
     fn runs_color_new_and_named_colors() {
         let source = SourceFile::new(
             "test.pine",
@@ -10938,6 +11104,36 @@ plot(score)
         assert_eq!(result.plots.len(), 1);
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_values_close(&result.plots[0].values[1..], &[2.0, 75.0]);
+    }
+
+    #[test]
+    fn advances_conditional_sar_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional sar")
+score = close
+if close > open
+    score := ta.sar(0.02, 0.02, 0.2)
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 10.0, 1.0, 5.0),
+            bar_ohlc(3.0, 4.0, 1.0, 2.0),
+            bar_ohlc(4.0, 20.0, 10.0, 15.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.0, 1.0]);
     }
 
     #[test]

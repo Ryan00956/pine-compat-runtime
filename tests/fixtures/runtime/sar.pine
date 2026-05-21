@@ -1,0 +1,4 @@
+//@version=5
+indicator("SAR")
+sar = ta.sar(0.02, 0.02, 0.2)
+plot(sar)

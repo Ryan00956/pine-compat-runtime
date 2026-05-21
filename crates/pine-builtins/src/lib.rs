@@ -1617,6 +1617,24 @@ const TA_DMI_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_SAR_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "start",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "inc",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "max",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+];
+
 const ARRAY_NEW_FLOAT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
@@ -3036,6 +3054,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TA_DMI_PARAMS,
         returns: ReturnSpec::Tuple(THREE_SERIES_FLOATS),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.sar",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SAR_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {

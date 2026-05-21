@@ -3069,6 +3069,11 @@ impl HistoryRequirementCollector {
                 self.record_builtin_history("low", 1);
                 self.record_builtin_history("close", 1);
             }
+            "ta.sar" => {
+                self.record_builtin_history("high", 2);
+                self.record_builtin_history("low", 2);
+                self.record_builtin_history("close", 1);
+            }
             "ta.change" => self.record_optional_length_history(args),
             "ta.mom" | "ta.roc" => self.record_required_length_history(args),
             "ta.cross" | "ta.crossover" | "ta.crossunder" => self.record_cross_history(args),
@@ -4239,6 +4244,24 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.stoch")
+        );
+    }
+
+    #[test]
+    fn accepts_ta_sar() {
+        let analysis = analyze("plot(ta.sar(0.02, 0.02, 0.2))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.sar")
         );
     }
 

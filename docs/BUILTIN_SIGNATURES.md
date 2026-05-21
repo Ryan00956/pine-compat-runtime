@@ -402,6 +402,7 @@ ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
 ta.supertrend(factor: simple numeric, atrPeriod: simple int) -> [series float, series float]
 ta.dmi(diLength: simple int, adxSmoothing: simple int) -> [series float, series float, series float]
+ta.sar(start: simple numeric, inc: simple numeric, max: simple numeric) -> series float
 ta.change(source: series int/float/bool, length?: simple int) -> series float/bool
 ta.mom(source: series int/float, length: simple int) -> series float
 ta.roc(source: series int/float, length: simple int) -> series float
@@ -539,6 +540,9 @@ Rules:
 - `ta.dmi` returns `[+DI, -DI, ADX]`. The current subset uses Wilder/RMA-style
   smoothing from the first executed bar, reuses `ta.tr(true)` true range
   semantics, and returns an all-`na` tuple for non-positive lengths.
+- `ta.sar` supports the three-argument Parabolic SAR form. It initializes from
+  the previous bar, clamps against the previous two highs/lows when available,
+  and returns `na` until the callsite has enough prior OHLC data to initialize.
 - `ta.stoch` supports the four-argument stochastic oscillator form using ready
   rolling `high`/`low` windows. It returns `na` before the window is ready, when
   either window contains `na`, for non-positive lengths, or when the high-low
