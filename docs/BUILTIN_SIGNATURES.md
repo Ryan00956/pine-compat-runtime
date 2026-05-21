@@ -159,10 +159,10 @@ plot(series: series/simple numeric, title?: const string, color?: color-compatib
 plotchar(series: series/simple numeric-or-bool, title?: const string, char?: const string, color?: color-compatible, location?: const string, offset?: simple int, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: simple int, display?: const string)
   -> void
 
-plotshape(series: series/simple numeric-or-bool, title?: const string, style?: const string, location?: const string, color?: color-compatible, text?: const string, textcolor?: color-compatible, size?: const string, ...)
+plotshape(series: series/simple numeric-or-bool, title?: const string, style?: const string, location?: const string, color?: color-compatible, offset?: simple int, text?: const string, textcolor?: color-compatible, editable?: const bool, size?: const string, show_last?: simple int, display?: const string, force_overlay?: const bool)
   -> void
 
-plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple int, minheight?: simple int, maxheight?: simple int, ...)
+plotarrow(series: series/simple numeric, title?: const string, colorup?: color-compatible, colordown?: color-compatible, offset?: simple int, minheight?: simple int, maxheight?: simple int, editable?: const bool, show_last?: simple int, display?: const string, force_overlay?: const bool)
   -> void
 
 plotbar(open: series/simple numeric, high: series/simple numeric, low: series/simple numeric, close: series/simple numeric, title?: const string, color?: color-compatible, ...)
@@ -194,8 +194,10 @@ reinterpreting the script.
 The supported output metadata subset accepts common style, visibility, display,
 and editability parameters for compatibility. `plotchar` currently emits the
 normalized value/char/color series only; text/location/size metadata is accepted
-but not exposed as extra output fields. Parameters such as `offset`, `show_last`,
-`display`, and `force_overlay` do not yet transform the runtime output series.
+but not exposed as extra output fields. `plotshape` emits value/style/location/
+color/text/textcolor/size series, and `plotarrow` emits value/up-color/down-color/
+height series. Parameters such as `offset`, `show_last`, `display`, and
+`force_overlay` do not yet transform the runtime output series.
 
 ## Utility
 

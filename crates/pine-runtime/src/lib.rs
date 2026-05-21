@@ -6957,7 +6957,7 @@ plot(close)
             "test.pine",
             r#"indicator("plotshape")
 if close > 1
-    plotshape(close > 2, style=shape.triangleup, location=location.belowbar, color=color.green, text="Buy", textcolor=color.white, size=size.small)
+    plotshape(close > 2, title="Buy", style=shape.triangleup, location=location.belowbar, color=color.green, offset=1, text="Buy", textcolor=color.white, editable=true, size=size.small, show_last=5, display=display.all, force_overlay=false)
 plot(close)
 "#,
         );
@@ -7032,7 +7032,7 @@ plot(close)
             "test.pine",
             r#"indicator("plotarrow")
 if close > 1
-    plotarrow(close - 2, colorup=color.green, colordown=color.red, minheight=5, maxheight=20)
+    plotarrow(close - 2, title="Momentum", colorup=color.green, colordown=color.red, offset=1, minheight=5, maxheight=20, editable=true, show_last=5, display=display.all, force_overlay=false)
 plot(close)
 "#,
         );

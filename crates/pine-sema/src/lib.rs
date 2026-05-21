@@ -4204,7 +4204,7 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
     #[test]
     fn accepts_plotshape() {
         let analysis = analyze(
-            "plotshape(close > open, style=shape.triangleup, location=location.belowbar, color=color.green, text=\"Buy\", textcolor=color.white, size=size.small)\nplot(close)\n",
+            "plotshape(close > open, title=\"Buy\", style=shape.triangleup, location=location.belowbar, color=color.green, offset=1, text=\"Buy\", textcolor=color.white, editable=true, size=size.small, show_last=5, display=display.all, force_overlay=false)\nplot(close)\n",
         );
 
         assert!(
@@ -4232,7 +4232,7 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
     #[test]
     fn accepts_plotarrow() {
         let analysis = analyze(
-            "plotarrow(close - open, colorup=color.green, colordown=color.red, minheight=5, maxheight=20)\nplot(close)\n",
+            "plotarrow(close - open, title=\"Momentum\", colorup=color.green, colordown=color.red, offset=1, minheight=5, maxheight=20, editable=true, show_last=5, display=display.all, force_overlay=false)\nplot(close)\n",
         );
 
         assert!(

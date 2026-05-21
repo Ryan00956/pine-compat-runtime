@@ -1,5 +1,5 @@
 //@version=5
 indicator("Plotarrow")
 if close > 1
-    plotarrow(close - 2, colorup=color.green, colordown=color.red, minheight=5, maxheight=20)
+    plotarrow(close - 2, title="Momentum", colorup=color.green, colordown=color.red, offset=1, minheight=5, maxheight=20, editable=true, show_last=5, display=display.all, force_overlay=false)
 plot(close)

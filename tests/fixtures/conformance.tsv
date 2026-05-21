@@ -24,8 +24,8 @@ barstate.ishistory	supported	true for historical updates	tests/fixtures/runtime/
 barstate.isrealtime	supported	true for forming and confirmed realtime updates	tests/fixtures/runtime/barstate.pine
 plot	supported	series output plus common style/display metadata parameter subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/if.pine
 plotchar	supported	bool/numeric marker series with const char, color-compatible color, and common marker metadata parameters	tests/fixtures/runtime/plotchar.pine
-plotshape	supported	bool/numeric marker series with style/location/text/size constants	tests/fixtures/runtime/plotshape.pine
-plotarrow	supported	numeric arrow marker series with up/down colors and height bounds	tests/fixtures/runtime/plotarrow.pine
+plotshape	supported	bool/numeric marker series with style/location/text/size constants and common marker metadata parameters	tests/fixtures/runtime/plotshape.pine
+plotarrow	supported	numeric arrow marker series with up/down colors, height bounds, and common marker metadata parameters	tests/fixtures/runtime/plotarrow.pine
 plotbar	supported	OHLC bar output with optional color	tests/fixtures/runtime/plotbar.pine
 plotcandle	supported	OHLC candle output with body, wick, and border colors	tests/fixtures/runtime/plotcandle.pine
 bgcolor	supported	color series output with conditional padding plus common metadata parameters	tests/fixtures/runtime/color_outputs.pine
