@@ -1,0 +1,8 @@
+//@version=5
+indicator("DEMA TEMA")
+dema = ta.dema(close, 3)
+tema = ta.tema(close, 3)
+invalid = ta.dema(close, 0)
+plot(dema)
+plot(tema)
+plot(invalid)

@@ -2971,6 +2971,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "ta.dema",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.tema",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "ta.rma",
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_LENGTH_PARAMS,

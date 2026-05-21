@@ -375,6 +375,8 @@ ta.ema(source: series int/float, length: simple int) -> series float
 Next signatures after Phase 1 is stable:
 
 ```text
+ta.dema(source: series int/float, length: simple int) -> series float
+ta.tema(source: series int/float, length: simple int) -> series float
 ta.rma(source: series int/float, length: simple int) -> series float
 ta.rsi(source: series int/float, length: simple int) -> series float
 ta.macd(source: series int/float, fastlen: simple int, slowlen: simple int, siglen: simple int)
@@ -472,6 +474,10 @@ Rules:
 - `ta.kcw` uses the same Keltner Channel basis/range EMA calculation and
   returns `(upper - lower) / basis`; it returns `na` when inputs are `na`,
   length is non-positive, or basis is zero.
+- `ta.dema` returns `2 * ema(source, length) - ema(ema(source, length),
+  length)` using independent callsite state.
+- `ta.tema` returns `3 * ema1 - 3 * ema2 + ema3`, where each EMA is the next
+  EMA of the previous EMA in the chain, using independent callsite state.
 - `ta.pivothigh`/`ta.pivotlow` support the default-source two-argument forms
   and explicit-source three-argument forms. The default sources are `high` and
   `low` respectively. The current subset uses simple integer left/right bar

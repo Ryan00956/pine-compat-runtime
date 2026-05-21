@@ -2063,6 +2063,8 @@ impl<'a> HistoricalRuntime<'a> {
             "math.sum" => self.eval_math_sum(call_site_id, args),
             "ta.sma" => self.eval_sma(call_site_id, args),
             "ta.ema" => self.eval_ema(call_site_id, args),
+            "ta.dema" => self.eval_dema(call_site_id, args),
+            "ta.tema" => self.eval_tema(call_site_id, args),
             "ta.rma" => self.eval_rma(call_site_id, args),
             "ta.rsi" => self.eval_rsi(call_site_id, args),
             "ta.macd" => self.eval_macd(call_site_id, args),
@@ -6079,6 +6081,63 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(value)
     }
 
+    fn eval_dema(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some((source, length)) = self.eval_ema_source_and_length(args)? else {
+            return Ok(PineValue::Na);
+        };
+        let (previous_ema1, previous_ema2, _) = ema_chain_state(self.call_state.get(&call_site_id));
+        let ema1 = ema_next(previous_ema1, source, length);
+        let ema2 = ema_next(previous_ema2, ema1, length);
+        self.call_state.insert(
+            call_site_id,
+            PineValue::Tuple(vec![PineValue::Float(ema1), PineValue::Float(ema2)]),
+        );
+        Ok(finite_float_or_na(2.0 * ema1 - ema2))
+    }
+
+    fn eval_tema(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some((source, length)) = self.eval_ema_source_and_length(args)? else {
+            return Ok(PineValue::Na);
+        };
+        let (previous_ema1, previous_ema2, previous_ema3) =
+            ema_chain_state(self.call_state.get(&call_site_id));
+        let ema1 = ema_next(previous_ema1, source, length);
+        let ema2 = ema_next(previous_ema2, ema1, length);
+        let ema3 = ema_next(previous_ema3, ema2, length);
+        self.call_state.insert(
+            call_site_id,
+            PineValue::Tuple(vec![
+                PineValue::Float(ema1),
+                PineValue::Float(ema2),
+                PineValue::Float(ema3),
+            ]),
+        );
+        Ok(finite_float_or_na(3.0 * ema1 - 3.0 * ema2 + ema3))
+    }
+
+    fn eval_ema_source_and_length(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<Option<(f64, i64)>, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        let Some(source) = source.as_f64() else {
+            return Ok(None);
+        };
+        if length <= 0 {
+            return Ok(None);
+        }
+        Ok(Some((source, length)))
+    }
+
     fn eval_rma(
         &mut self,
         call_site_id: CallSiteId,
@@ -6804,6 +6863,17 @@ fn ema_next(previous: Option<f64>, source: f64, length: i64) -> f64 {
         Some(previous) => alpha * source + (1.0 - alpha) * previous,
         None => source,
     }
+}
+
+fn ema_chain_state(value: Option<&PineValue>) -> (Option<f64>, Option<f64>, Option<f64>) {
+    let Some(PineValue::Tuple(values)) = value else {
+        return (None, None, None);
+    };
+    (
+        values.first().and_then(PineValue::as_f64),
+        values.get(1).and_then(PineValue::as_f64),
+        values.get(2).and_then(PineValue::as_f64),
+    )
 }
 
 fn rsi_from_averages(average_gain: f64, average_loss: f64) -> f64 {
@@ -8103,6 +8173,34 @@ plot(ma)
                 PineValue::Float(3.125),
             ]
         );
+    }
+
+    #[test]
+    fn runs_dema_tema_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("DEMA TEMA")
+dema = ta.dema(close, 3)
+tema = ta.tema(close, 3)
+invalid = ta.dema(close, 0)
+plot(dema)
+plot(tema)
+plot(invalid)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values, &[1.0, 1.75, 2.75, 3.8125]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.875, 2.9375, 4.0]);
+        assert_eq!(result.plots[2].values, vec![PineValue::Na; 4]);
     }
 
     #[test]
@@ -12357,6 +12455,45 @@ plot(e)
         assert_values_close(
             &result.plots[0].values,
             &[2.0, 2.0, 4.666666666666667, 6.888888888888889],
+        );
+    }
+
+    #[test]
+    fn advances_conditional_dema_tema_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional dema tema")
+d = close
+t = close
+if close > open
+    d := ta.dema(close, 2)
+    t := ta.tema(close, 2)
+plot(d)
+plot(t)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+            bar_ohlc(5.0, 8.0, 5.0, 8.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(
+            &result.plots[0].values,
+            &[2.0, 2.0, 5.555555555555555, 7.925925925925926],
+        );
+        assert_values_close(
+            &result.plots[1].values,
+            &[2.0, 2.0, 5.851851851851852, 8.074074074074074],
         );
     }
 

@@ -173,6 +173,8 @@
   averages.
 - Added `ta.alma` support for Arnaud Legoux moving averages with optional
   floored offset centers.
+- Added `ta.dema` and `ta.tema` support for double and triple EMA-chain
+  smoothing.
 - Added `ta.linreg` support for rolling least-squares linear regression values.
 - Added `ta.bbw` support for Bollinger Bands Width values.
 - Added `ta.cum` support for cumulative numeric source sums.

@@ -104,6 +104,8 @@ na	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine
 nz	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine
 ta.sma	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/conditional_ta.pine;tests/fixtures/runtime/udf.pine
 ta.ema	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
+ta.dema	supported	fixture-derived double exponential moving average subset	tests/fixtures/runtime/dema_tema.pine
+ta.tema	supported	fixture-derived triple exponential moving average subset	tests/fixtures/runtime/dema_tema.pine
 ta.rma	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
 ta.rsi	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
 ta.macd	supported	fixture-derived executable subset	tests/fixtures/runtime/macd.pine

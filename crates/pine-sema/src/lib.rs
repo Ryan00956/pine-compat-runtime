@@ -4185,6 +4185,31 @@ mod tests {
     }
 
     #[test]
+    fn accepts_ta_dema_tema() {
+        let analysis = analyze("plot(ta.dema(close, 3) + ta.tema(bar_index, 3))\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.dema")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.tema")
+        );
+    }
+
+    #[test]
     fn accepts_ta_volume_flow_variables() {
         let analysis = analyze(
             "plot(ta.accdist + ta.iii + ta.nvi + ta.obv + ta.pvi + ta.pvt + ta.vwap + ta.vwap(close) + ta.vwap(close, bar_index == 1) + ta.wad + ta.wvad)\n",
