@@ -76,11 +76,15 @@ Bar state:
 ```text
 barstate.isfirst -> series bool
 barstate.isconfirmed -> series bool
+barstate.ishistory -> series bool
+barstate.isrealtime -> series bool
 ```
 
 `barstate.isfirst` is `true` only when `bar_index == 0`.
 `barstate.isconfirmed` is `true` for historical and confirmed updates, and
 `false` for forming realtime updates.
+`barstate.ishistory` is `true` for historical updates. `barstate.isrealtime`
+is `true` for forming and confirmed realtime updates.
 
 The same names are also supported as functions over a timestamp:
 

@@ -64,7 +64,8 @@
 - Added UTC-only function overloads for `year`, `month`, `dayofmonth`, `hour`,
   `minute`, and `second`.
 - Added a numeric UTC subset of `timestamp`.
-- Added `barstate.isfirst` and `barstate.isconfirmed`.
+- Added `barstate.isfirst`, `barstate.isconfirmed`, `barstate.ishistory`,
+  and `barstate.isrealtime`.
 - Added `bgcolor` and `barcolor` support with bar-aligned color output series.
 - Added basic `plotchar` support with bar-aligned values, chars, and colors.
 - Added basic `plotshape` support with bar-aligned values, style, location,

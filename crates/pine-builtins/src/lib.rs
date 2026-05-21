@@ -2697,6 +2697,14 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Bool),
     ),
     (
+        "barstate.ishistory",
+        PineType::new(Qualifier::Series, ValueKind::Bool),
+    ),
+    (
+        "barstate.isrealtime",
+        PineType::new(Qualifier::Series, ValueKind::Bool),
+    ),
+    (
         "ta.accdist",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
