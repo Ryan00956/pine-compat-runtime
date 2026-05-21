@@ -1053,6 +1053,12 @@ const STRING_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const COLOR_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "x",
+    accepts: Accepts::ColorCompatible,
+    optional: false,
+}];
+
 const STR_TEXT_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "string",
     accepts: Accepts::StringCompatible,
@@ -2478,6 +2484,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: STRING_CAST_PARAMS,
         returns: ReturnSpec::PromotedString,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "color",
+        phase: BuiltinPhase::Phase1Core,
+        params: COLOR_CAST_PARAMS,
+        returns: ReturnSpec::ColorFromArg(0),
         variadic: false,
     },
     BuiltinSignature {

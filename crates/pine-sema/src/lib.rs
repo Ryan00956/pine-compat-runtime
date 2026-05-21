@@ -3886,7 +3886,7 @@ mod tests {
     #[test]
     fn accepts_type_casts() {
         let analysis = analyze(
-            "length = int(2.9)\nscale = float(length)\nflag = bool(close - open)\nlabel = string(close)\nplot(flag ? ta.sma(close, length) + scale + str.length(label) : float(na))\n",
+            "length = int(2.9)\nscale = float(length)\nflag = bool(close - open)\nlabel = string(close)\nshade = color(color.red)\nmissing = color(na)\nplot(flag ? ta.sma(close, length) + scale + str.length(label) + (shade == color.red and na(missing) ? 1 : 0) : float(na))\n",
         );
 
         assert!(
@@ -3894,7 +3894,7 @@ mod tests {
             "{:?}",
             analysis.diagnostics
         );
-        for feature in ["int", "float", "bool", "string"] {
+        for feature in ["int", "float", "bool", "string", "color"] {
             assert!(
                 analysis
                     .compatibility

@@ -2041,6 +2041,7 @@ impl<'a> HistoricalRuntime<'a> {
             "float" => self.eval_float_cast(args),
             "bool" => self.eval_bool_cast(args),
             "string" => self.eval_string_cast(args),
+            "color" => self.eval_color_cast(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -2261,6 +2262,14 @@ impl<'a> HistoricalRuntime<'a> {
             _ => return Ok(PineValue::Na),
         };
         self.string_value_or_error(result, "string")
+    }
+
+    fn eval_color_cast(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        Ok(match self.eval_expr(&args[0].value)? {
+            PineValue::Color(value) => PineValue::Color(value),
+            PineValue::Na => PineValue::Na,
+            _ => PineValue::Na,
+        })
     }
 
     fn eval_fixnan(
@@ -11921,6 +11930,8 @@ truth = bool(close - 2)
 text_number = string(close / 2)
 text_bool = string(close > open)
 text_string = string("ok")
+shade = color(close > open ? color.green : color.red)
+missing_color = color(na)
 missing_int = int(na)
 missing_float = float(na)
 missing_bool = bool(na)
@@ -11932,7 +11943,8 @@ plot(truth ? 1 : 0)
 plot(str.length(text_number))
 plot(text_bool == "true" ? 1 : 0)
 plot(text_string == "ok" ? 1 : 0)
-plot(na(missing_int) and na(missing_float) and not missing_bool and na(missing_string) ? 1 : 0)
+plot(shade == color.green ? 1 : 0)
+plot(na(missing_int) and na(missing_float) and not missing_bool and na(missing_string) and na(missing_color) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -11957,7 +11969,8 @@ plot(na(missing_int) and na(missing_float) and not missing_bool and na(missing_s
         assert_values_close(&result.plots[4].values, &[3.0, 1.0, 3.0, 3.0]);
         assert_values_close(&result.plots[5].values, &[0.0, 1.0, 0.0, 1.0]);
         assert_values_close(&result.plots[6].values, &[1.0, 1.0, 1.0, 1.0]);
-        assert_values_close(&result.plots[7].values, &[1.0, 1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[7].values, &[0.0, 1.0, 0.0, 1.0]);
+        assert_values_close(&result.plots[8].values, &[1.0, 1.0, 1.0, 1.0]);
     }
 
     #[test]
