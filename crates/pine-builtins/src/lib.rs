@@ -45,6 +45,7 @@ pub enum Accepts {
     ColorCompatible,
     StringCompatible,
     StringConvertible,
+    CastScalar,
     ValueWhenSource,
     NumericOrColorCompatible,
     NumericCompatible,
@@ -1036,6 +1037,12 @@ const COLOR_FROM_GRADIENT_PARAMS: &[BuiltinParam] = &[
 const MATH_NUMBER_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "number",
     accepts: Accepts::Numeric,
+    optional: false,
+}];
+
+const TYPE_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "x",
+    accepts: Accepts::CastScalar,
     optional: false,
 }];
 
@@ -2436,6 +2443,27 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TIMESTAMP_PARAMS,
         returns: ReturnSpec::PromotedInt,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "int",
+        phase: BuiltinPhase::Phase1Core,
+        params: TYPE_CAST_PARAMS,
+        returns: ReturnSpec::IntFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "float",
+        phase: BuiltinPhase::Phase1Core,
+        params: TYPE_CAST_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "bool",
+        phase: BuiltinPhase::Phase1Core,
+        params: TYPE_CAST_PARAMS,
+        returns: ReturnSpec::BoolFromArg(0),
         variadic: false,
     },
     BuiltinSignature {

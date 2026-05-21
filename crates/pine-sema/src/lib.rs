@@ -3516,6 +3516,12 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
                     | ValueKind::Na
             ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::CastScalar => {
+            matches!(
+                arg_type.kind,
+                ValueKind::Int | ValueKind::Float | ValueKind::Bool | ValueKind::Na
+            ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::ValueWhenSource => {
             matches!(
                 arg_type.kind,
@@ -3865,6 +3871,29 @@ mod tests {
                 .iter()
                 .any(|feature| feature.feature == "fixnan")
         );
+    }
+
+    #[test]
+    fn accepts_type_casts() {
+        let analysis = analyze(
+            "length = int(2.9)\nscale = float(length)\nflag = bool(close - open)\nplot(flag ? ta.sma(close, length) + scale : float(na))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for feature in ["int", "float", "bool"] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|supported| supported.feature == feature),
+                "{feature} should be reported as supported"
+            );
+        }
     }
 
     #[test]

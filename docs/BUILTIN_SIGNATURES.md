@@ -114,6 +114,19 @@ currently supports only the numeric UTC subset; omitted hour/minute/second
 default to 0, `na` inputs return `na`, and invalid UTC dates are runtime
 errors.
 
+Type casts:
+
+```text
+int(x: int|float|bool|na) -> int with same qualifier
+float(x: int|float|bool|na) -> float with same qualifier
+bool(x: int|float|bool|na) -> bool with same qualifier
+```
+
+`int` truncates finite floats toward zero and maps bools to `1`/`0`.
+`float` maps ints and bools to numeric floats. `bool` maps zero and `na` to
+`false`, and nonzero numeric values to `true`. `int(na)` and `float(na)`
+return `na`. String and object casts are not part of the current subset.
+
 Derived values:
 
 ```text

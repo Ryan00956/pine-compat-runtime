@@ -2037,6 +2037,9 @@ impl<'a> HistoricalRuntime<'a> {
             "minute" => self.eval_time_component(args, TimeComponent::Minute),
             "second" => self.eval_time_component(args, TimeComponent::Second),
             "timestamp" => self.eval_timestamp(args),
+            "int" => self.eval_int_cast(args),
+            "float" => self.eval_float_cast(args),
+            "bool" => self.eval_bool_cast(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -2214,6 +2217,36 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("unsupported runtime call `{callee}`"),
             }),
         }
+    }
+
+    fn eval_int_cast(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        Ok(match self.eval_expr(&args[0].value)? {
+            PineValue::Int(value) => PineValue::Int(value),
+            PineValue::Float(value) if value.is_finite() => PineValue::Int(value.trunc() as i64),
+            PineValue::Bool(value) => PineValue::Int(i64::from(value)),
+            PineValue::Na => PineValue::Na,
+            _ => PineValue::Na,
+        })
+    }
+
+    fn eval_float_cast(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        Ok(match self.eval_expr(&args[0].value)? {
+            PineValue::Int(value) => PineValue::Float(value as f64),
+            PineValue::Float(value) => finite_float_or_na(value),
+            PineValue::Bool(value) => PineValue::Float(if value { 1.0 } else { 0.0 }),
+            PineValue::Na => PineValue::Na,
+            _ => PineValue::Na,
+        })
+    }
+
+    fn eval_bool_cast(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        Ok(match self.eval_expr(&args[0].value)? {
+            PineValue::Int(value) => PineValue::Bool(value != 0),
+            PineValue::Float(value) => PineValue::Bool(value != 0.0 && !value.is_nan()),
+            PineValue::Bool(value) => PineValue::Bool(value),
+            PineValue::Na => PineValue::Bool(false),
+            _ => PineValue::Bool(false),
+        })
     }
 
     fn eval_fixnan(
@@ -11860,6 +11893,47 @@ plot(math.pow(-1, 0.5))
         assert_eq!(result.plots[31].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[32].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[33].values, vec![PineValue::Na; 4]);
+    }
+
+    #[test]
+    fn runs_type_casts() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("casts")
+truncated = int(close / 2)
+from_bool = int(close > open)
+as_float = float(truncated) + float(close > open)
+truth = bool(close - 2)
+missing_int = int(na)
+missing_float = float(na)
+missing_bool = bool(na)
+plot(truncated)
+plot(from_bool)
+plot(as_float)
+plot(truth ? 1 : 0)
+plot(na(missing_int) and na(missing_float) and not missing_bool ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 1.0, 1.0, 1.0),
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 3.0, 3.0),
+            bar_ohlc(2.0, 5.0, 2.0, 5.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values, &[0.0, 1.0, 1.0, 2.0]);
+        assert_values_close(&result.plots[1].values, &[0.0, 1.0, 0.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[0.0, 2.0, 1.0, 3.0]);
+        assert_values_close(&result.plots[3].values, &[1.0, 0.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[4].values, &[1.0, 1.0, 1.0, 1.0]);
     }
 
     #[test]
