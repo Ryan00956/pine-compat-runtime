@@ -1951,6 +1951,7 @@ impl<'a> HistoricalRuntime<'a> {
             "hour" => self.eval_time_component(args, TimeComponent::Hour),
             "minute" => self.eval_time_component(args, TimeComponent::Minute),
             "second" => self.eval_time_component(args, TimeComponent::Second),
+            "timestamp" => self.eval_timestamp(args),
             "math.abs" => self.eval_math_abs(args),
             "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
             "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
@@ -4606,6 +4607,71 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Int(component.value(datetime)))
     }
 
+    fn eval_timestamp(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(year) = self.eval_optional_timestamp_part(args, 0, 0)? else {
+            return Ok(PineValue::Na);
+        };
+        let Some(month) = self.eval_optional_timestamp_part(args, 1, 0)? else {
+            return Ok(PineValue::Na);
+        };
+        let Some(day) = self.eval_optional_timestamp_part(args, 2, 0)? else {
+            return Ok(PineValue::Na);
+        };
+        let Some(hour) = self.eval_optional_timestamp_part(args, 3, 0)? else {
+            return Ok(PineValue::Na);
+        };
+        let Some(minute) = self.eval_optional_timestamp_part(args, 4, 0)? else {
+            return Ok(PineValue::Na);
+        };
+        let Some(second) = self.eval_optional_timestamp_part(args, 5, 0)? else {
+            return Ok(PineValue::Na);
+        };
+
+        let Ok(year) = i32::try_from(year) else {
+            return Err(RuntimeError {
+                message: format!("timestamp year is out of range: {year}"),
+            });
+        };
+        let Some((month, day, hour, minute, second)) =
+            timestamp_unsigned_parts(month, day, hour, minute, second)
+        else {
+            return Err(RuntimeError {
+                message: format!(
+                    "timestamp invalid UTC datetime: {year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}"
+                ),
+            });
+        };
+        let Some(datetime) = Utc
+            .with_ymd_and_hms(year, month, day, hour, minute, second)
+            .single()
+        else {
+            return Err(RuntimeError {
+                message: format!(
+                    "timestamp invalid UTC datetime: {year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}"
+                ),
+            });
+        };
+
+        Ok(PineValue::Int(datetime.timestamp_millis()))
+    }
+
+    fn eval_optional_timestamp_part(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        default: i64,
+    ) -> Result<Option<i64>, RuntimeError> {
+        let Some(arg) = args.get(index) else {
+            return Ok(Some(default));
+        };
+        let value = match self.eval_expr(&arg.value)? {
+            PineValue::Int(value) => value,
+            PineValue::Na => return Ok(None),
+            _ => return Ok(None),
+        };
+        Ok(Some(value))
+    }
+
     fn stringify_value(&self, value: &PineValue, format: &str) -> String {
         match value {
             PineValue::Int(value) => format_number(*value as f64, format),
@@ -5992,6 +6058,22 @@ fn is_supported_utc_timezone(timezone: &str) -> bool {
         timezone,
         "UTC" | "Etc/UTC" | "GMT" | "Z" | "+0000" | "+00:00"
     )
+}
+
+fn timestamp_unsigned_parts(
+    month: i64,
+    day: i64,
+    hour: i64,
+    minute: i64,
+    second: i64,
+) -> Option<(u32, u32, u32, u32, u32)> {
+    Some((
+        u32::try_from(month).ok()?,
+        u32::try_from(day).ok()?,
+        u32::try_from(hour).ok()?,
+        u32::try_from(minute).ok()?,
+        u32::try_from(second).ok()?,
+    ))
 }
 
 fn utc_datetime_from_millis(timestamp: i64) -> Result<DateTime<Utc>, RuntimeError> {
@@ -8557,6 +8639,8 @@ plot(hour)
 plot(minute)
 plot(second)
 ts = 1612235045000
+made_ts = timestamp(2021, 2, 2, 3, 4, 5)
+date_ts = timestamp(2021, 1, 1)
 plot(year(ts))
 plot(month(ts, "UTC"))
 plot(dayofmonth(ts))
@@ -8564,6 +8648,8 @@ plot(hour(ts))
 plot(minute(ts))
 plot(second(ts))
 plot(na(year(na)) ? 1 : 0)
+plot(made_ts == ts and date_ts == 1609459200000 ? 1 : 0)
+plot(na(timestamp(na, 1, 1)) ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -8606,6 +8692,8 @@ plot(na(year(na)) ? 1 : 0)
         assert_values_close(&result.plots[10].values, &[4.0, 4.0]);
         assert_values_close(&result.plots[11].values, &[5.0, 5.0]);
         assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
     }
 
     #[test]
@@ -8707,6 +8795,33 @@ plot(str.length(str.format_time(1609459200000, "yyyy-MM-dd", "America/New_York")
             error
                 .message
                 .contains("str.format_time unsupported timezone `America/New_York`"),
+            "{}",
+            error.message
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_timestamp_date() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bad timestamp")
+plot(timestamp(2021, 2, 30))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected invalid timestamp error");
+
+        assert!(
+            error
+                .message
+                .contains("timestamp invalid UTC datetime: 2021-02-30"),
             "{}",
             error.message
         );

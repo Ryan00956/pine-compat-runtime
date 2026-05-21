@@ -4730,6 +4730,40 @@ plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_tim
     }
 
     #[test]
+    fn accepts_time_helpers() {
+        let analysis = analyze(
+            r#"indicator("time helpers")
+ts = timestamp(2021, 2, 2, 3, 4, 5)
+plot(year(ts) + month(ts, "UTC") + dayofmonth(ts) + hour(ts) + minute(ts) + second(ts))
+"#,
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for feature in [
+            "timestamp",
+            "year",
+            "month",
+            "dayofmonth",
+            "hour",
+            "minute",
+            "second",
+        ] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|supported| supported.feature == feature),
+                "{feature} not reported as supported"
+            );
+        }
+    }
+
+    #[test]
     fn accepts_selected_math_functions() {
         let analysis = analyze(
             r#"indicator("math")

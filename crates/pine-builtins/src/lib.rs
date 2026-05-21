@@ -760,6 +760,39 @@ const TIME_COMPONENT_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TIMESTAMP_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "year",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "month",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "day",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "hour",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "minute",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "second",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+];
+
 const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "a",
@@ -1712,6 +1745,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "second",
         phase: BuiltinPhase::Phase1Core,
         params: TIME_COMPONENT_PARAMS,
+        returns: ReturnSpec::PromotedInt,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "timestamp",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIMESTAMP_PARAMS,
         returns: ReturnSpec::PromotedInt,
         variadic: false,
     },

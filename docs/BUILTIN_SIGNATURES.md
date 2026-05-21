@@ -80,10 +80,15 @@ dayofmonth(time: int-compatible, timezone?: string-compatible) -> int with stron
 hour(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 minute(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 second(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
+timestamp(year: int-compatible, month: int-compatible, day: int-compatible, hour?: int-compatible, minute?: int-compatible, second?: int-compatible)
+  -> int with strongest qualifier
 ```
 
 For now, these function overloads use the same UTC-only timezone subset as
-`str.format_time`; unsupported time zones are runtime errors.
+`str.format_time`; unsupported time zones are runtime errors. `timestamp`
+currently supports only the numeric UTC subset; omitted hour/minute/second
+default to 0, `na` inputs return `na`, and invalid UTC dates are runtime
+errors.
 
 Derived values:
 

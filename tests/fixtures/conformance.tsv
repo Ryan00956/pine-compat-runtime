@@ -17,6 +17,7 @@ dayofmonth	supported	UTC bar time component variable and function subset	tests/f
 hour	supported	UTC bar time component variable and function subset	tests/fixtures/runtime/time_components.pine
 minute	supported	UTC bar time component variable and function subset	tests/fixtures/runtime/time_components.pine
 second	supported	UTC bar time component variable and function subset	tests/fixtures/runtime/time_components.pine
+timestamp	supported	numeric UTC timestamp subset	tests/fixtures/runtime/time_components.pine
 plot	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/if.pine
 plotchar	supported	bool/numeric marker series with const char and color-compatible color	tests/fixtures/runtime/plotchar.pine
 plotshape	supported	bool/numeric marker series with style/location/text/size constants	tests/fixtures/runtime/plotshape.pine
