@@ -142,6 +142,7 @@
 - Added `ta.bbw` support for Bollinger Bands Width values.
 - Added `ta.cum` support for cumulative numeric source sums.
 - Added `ta.max` and `ta.min` support for all-time source extremes.
+- Added `ta.tr` support as a built-in true range series variable.
 - Added `ta.accdist` support as the built-in Accumulation/Distribution index
   series variable.
 - Added `ta.iii` support as the built-in Intraday Intensity Index series

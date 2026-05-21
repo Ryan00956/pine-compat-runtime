@@ -373,6 +373,7 @@ ta.nvi -> series float
 ta.obv -> series float
 ta.pvi -> series float
 ta.pvt -> series float
+ta.tr -> series float
 ta.vwap -> series float
 ta.vwap(source: series/simple numeric) -> series float
 ta.wad -> series float
@@ -455,6 +456,8 @@ Rules:
   previous close is zero.
 - `ta.pvt` is a built-in series variable equivalent to
   `ta.cum((ta.change(close) / close[1]) * volume)`.
+- `ta.tr` variable form is true range without first-bar `na` handling; it
+  returns `na` until `close[1]` is available.
 - `ta.vwap` variable form returns cumulative
   `sum(hlc3 * volume) / sum(volume)` over the runtime bars.
 - `ta.vwap(source)` returns cumulative `sum(source * volume) / sum(volume)` in

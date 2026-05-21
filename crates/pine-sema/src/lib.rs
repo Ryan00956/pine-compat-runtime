@@ -2930,7 +2930,12 @@ impl HistoryRequirementCollector {
 
     fn visit_expr(&mut self, expr: &HirExpr) {
         match &expr.kind {
-            HirExprKind::Literal(_) | HirExprKind::Symbol(_) | HirExprKind::Builtin(_) => {}
+            HirExprKind::Literal(_) | HirExprKind::Symbol(_) => {}
+            HirExprKind::Builtin(name) => {
+                if name == "ta.tr" {
+                    self.record_builtin_history("close", 1);
+                }
+            }
             HirExprKind::Unary { expr, .. } => self.visit_expr(expr),
             HirExprKind::Binary { left, right, .. } => {
                 self.visit_expr(left);
@@ -4433,7 +4438,7 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
     #[test]
     fn infers_implicit_builtin_history_requirements() {
         let analysis = analyze(
-            "len = input.int(1, \"Length\")\nplot(ta.tr())\nplot(ta.change(open, 2))\nplot(ta.change(close, len))\n",
+            "len = input.int(1, \"Length\")\nplot(ta.tr)\nplot(ta.tr())\nplot(ta.change(open, 2))\nplot(ta.change(close, len))\n",
         );
 
         assert!(

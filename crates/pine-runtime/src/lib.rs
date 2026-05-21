@@ -1453,6 +1453,9 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "ta.pvt" {
             return self.pvt_current.clone();
         }
+        if name == "ta.tr" {
+            return self.true_range(false);
+        }
         if name == "ta.vwap" {
             return self.vwap_current.clone();
         }
@@ -7729,6 +7732,34 @@ plot(tr)
 
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_values_close(&result.plots[0].values[1..], &[3.0]);
+    }
+
+    #[test]
+    fn runs_true_range_variable_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("TR variable")
+plot(ta.tr)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.expect("HIR");
+        assert_eq!(hir.history.max_constant_offset, 1);
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 1.5),
+            bar_ohlc(2.0, 5.0, 2.0, 4.0),
+            bar_ohlc(3.0, 4.0, 1.0, 2.0),
+        ];
+        let result = run_historical(&hir, &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[3.5, 3.0]);
     }
 
     #[test]

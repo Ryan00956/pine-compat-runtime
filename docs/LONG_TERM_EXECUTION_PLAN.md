@@ -214,7 +214,8 @@ Candidate areas:
   `ta.percentrank` over ready rolling windows, `ta.cum` cumulative sums,
   `ta.accdist`/`ta.iii`/`ta.nvi`/
   `ta.obv`/`ta.pvi`/`ta.pvt`, partial `ta.vwap` variable/source-call support,
-  `ta.max`/`ta.min` all-time source extremes, and `ta.wad`/`ta.wvad` flow variables,
+  `ta.max`/`ta.min` all-time source extremes, `ta.tr` as a true range series
+  variable, and `ta.wad`/`ta.wvad` flow variables,
   `ta.mom`/`ta.roc` over explicit source history, and
   `ta.rising`/`ta.falling` trend-window checks. It also includes
   two-argument `ta.highestbars`/`ta.lowestbars` rolling extreme offsets and
