@@ -429,6 +429,7 @@ pub struct HistoricalRuntime<'a> {
     rsi_state: HashMap<CallSiteId, RsiState>,
     macd_state: HashMap<CallSiteId, MacdState>,
     vwap_call_state: HashMap<CallSiteId, VwapState>,
+    pivot_point_state: HashMap<CallSiteId, PivotPointState>,
     price_flow_previous_close: Option<f64>,
     price_flow_previous_volume: Option<f64>,
     accdist_state: PineValue,
@@ -542,6 +543,37 @@ struct VwapState {
     weighted_sum: f64,
     weighted_square_sum: f64,
     volume_sum: f64,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct PivotPointPeriod {
+    open: f64,
+    high: f64,
+    low: f64,
+    close: f64,
+}
+
+impl PivotPointPeriod {
+    fn new(open: f64, high: f64, low: f64, close: f64) -> Self {
+        Self {
+            open,
+            high,
+            low,
+            close,
+        }
+    }
+
+    fn update(&mut self, high: f64, low: f64, close: f64) {
+        self.high = self.high.max(high);
+        self.low = self.low.min(low);
+        self.close = close;
+    }
+}
+
+#[derive(Debug, Default, Clone, PartialEq)]
+struct PivotPointState {
+    current: Option<PivotPointPeriod>,
+    active_levels: Option<Vec<PineValue>>,
 }
 
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -691,6 +723,7 @@ impl<'a> HistoricalRuntime<'a> {
             rsi_state: HashMap::new(),
             macd_state: HashMap::new(),
             vwap_call_state: HashMap::new(),
+            pivot_point_state: HashMap::new(),
             price_flow_previous_close: None,
             price_flow_previous_volume: None,
             accdist_state: PineValue::Na,
@@ -2041,6 +2074,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.kcw" => self.eval_kcw(call_site_id, args),
             "ta.pivothigh" => self.eval_pivot(call_site_id, args, WindowExtreme::Highest),
             "ta.pivotlow" => self.eval_pivot(call_site_id, args, WindowExtreme::Lowest),
+            "ta.pivot_point_levels" => self.eval_pivot_point_levels(call_site_id, args),
             "ta.cum" => self.eval_cum(call_site_id, args),
             "ta.max" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Highest),
             "ta.min" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Lowest),
@@ -3527,6 +3561,63 @@ impl<'a> HistoricalRuntime<'a> {
         let leftbars = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(-1);
         let rightbars = self.eval_expr(&args[2].value)?.as_i64().unwrap_or(-1);
         Ok((source, leftbars, rightbars))
+    }
+
+    fn eval_pivot_point_levels(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let type_arg = pivot_point_arg(args, 0, "type").ok_or_else(|| RuntimeError {
+            message: "ta.pivot_point_levels missing type argument".to_owned(),
+        })?;
+        let anchor_arg = pivot_point_arg(args, 1, "anchor").ok_or_else(|| RuntimeError {
+            message: "ta.pivot_point_levels missing anchor argument".to_owned(),
+        })?;
+        let PineValue::String(type_name) = self.eval_expr(type_arg)? else {
+            return Ok(self.new_array_from_values(ArrayElementKind::Float, pivot_na_levels()));
+        };
+        let anchor = matches!(self.eval_expr(anchor_arg)?, PineValue::Bool(true));
+        let developing = if let Some(arg) = pivot_point_arg(args, 2, "developing") {
+            matches!(self.eval_expr(arg)?, PineValue::Bool(true))
+        } else {
+            false
+        };
+
+        let (Some(open), Some(high), Some(low), Some(close)) = (
+            self.current_builtin_f64("open"),
+            self.current_builtin_f64("high"),
+            self.current_builtin_f64("low"),
+            self.current_builtin_f64("close"),
+        ) else {
+            return Ok(self.new_array_from_values(ArrayElementKind::Float, pivot_na_levels()));
+        };
+        if !open.is_finite() || !high.is_finite() || !low.is_finite() || !close.is_finite() {
+            return Ok(self.new_array_from_values(ArrayElementKind::Float, pivot_na_levels()));
+        }
+
+        let state = self.pivot_point_state.entry(call_site_id).or_default();
+        if anchor {
+            if let Some(previous) = state.current {
+                state.active_levels = Some(pivot_point_levels(&type_name, previous, open));
+            }
+            state.current = Some(PivotPointPeriod::new(open, high, low, close));
+        } else if let Some(current) = &mut state.current {
+            current.update(high, low, close);
+        } else {
+            state.current = Some(PivotPointPeriod::new(open, high, low, close));
+        }
+
+        let levels = if developing {
+            state
+                .current
+                .map(|current| pivot_point_levels(&type_name, current, current.open))
+        } else {
+            state.active_levels.clone()
+        }
+        .unwrap_or_else(pivot_na_levels);
+
+        Ok(self.new_array_from_values(ArrayElementKind::Float, levels))
     }
 
     fn eval_cum(
@@ -6415,6 +6506,155 @@ fn vwap_arg<'a>(args: &'a [HirCallArg], positional: usize, name: &str) -> Option
         })
 }
 
+fn pivot_point_arg<'a>(
+    args: &'a [HirCallArg],
+    positional: usize,
+    name: &str,
+) -> Option<&'a HirExpr> {
+    args.iter()
+        .find(|arg| arg.name.as_deref() == Some(name))
+        .map(|arg| &arg.value)
+        .or_else(|| {
+            args.get(positional)
+                .filter(|arg| arg.name.is_none())
+                .map(|arg| &arg.value)
+        })
+}
+
+fn pivot_na_levels() -> Vec<PineValue> {
+    vec![PineValue::Na; 11]
+}
+
+fn pivot_level_values(levels: [Option<f64>; 11]) -> Vec<PineValue> {
+    levels
+        .into_iter()
+        .map(|value| value.map_or(PineValue::Na, finite_float_or_na))
+        .collect()
+}
+
+fn pivot_point_levels(
+    type_name: &str,
+    period: PivotPointPeriod,
+    current_open: f64,
+) -> Vec<PineValue> {
+    let high = period.high;
+    let low = period.low;
+    let close = period.close;
+    let range = high - low;
+    match type_name {
+        "Traditional" => {
+            let p = (high + low + close) / 3.0;
+            pivot_level_values([
+                Some(p),
+                Some(2.0 * p - low),
+                Some(2.0 * p - high),
+                Some(p + range),
+                Some(p - range),
+                Some(2.0 * p + high - 2.0 * low),
+                Some(2.0 * p - (2.0 * high - low)),
+                Some(3.0 * p + high - 3.0 * low),
+                Some(3.0 * p - (3.0 * high - low)),
+                Some(4.0 * p + high - 4.0 * low),
+                Some(4.0 * p - (4.0 * high - low)),
+            ])
+        }
+        "Fibonacci" => {
+            let p = (high + low + close) / 3.0;
+            pivot_level_values([
+                Some(p),
+                Some(p + 0.382 * range),
+                Some(p - 0.382 * range),
+                Some(p + 0.618 * range),
+                Some(p - 0.618 * range),
+                Some(p + range),
+                Some(p - range),
+                None,
+                None,
+                None,
+                None,
+            ])
+        }
+        "Woodie" => {
+            let p = (high + low + 2.0 * current_open) / 4.0;
+            let r3 = high + 2.0 * (p - low);
+            let s3 = low - 2.0 * (high - p);
+            pivot_level_values([
+                Some(p),
+                Some(2.0 * p - low),
+                Some(2.0 * p - high),
+                Some(p + range),
+                Some(p - range),
+                Some(r3),
+                Some(s3),
+                Some(r3 + range),
+                Some(s3 - range),
+                None,
+                None,
+            ])
+        }
+        "Classic" => {
+            let p = (high + low + close) / 3.0;
+            pivot_level_values([
+                Some(p),
+                Some(2.0 * p - low),
+                Some(2.0 * p - high),
+                Some(p + range),
+                Some(p - range),
+                Some(p + 2.0 * range),
+                Some(p - 2.0 * range),
+                Some(p + 3.0 * range),
+                Some(p - 3.0 * range),
+                None,
+                None,
+            ])
+        }
+        "DM" => {
+            let x = if period.open == close {
+                high + low + 2.0 * close
+            } else if close > period.open {
+                2.0 * high + low + close
+            } else {
+                2.0 * low + high + close
+            };
+            pivot_level_values([
+                Some(x / 4.0),
+                Some(x / 2.0 - low),
+                Some(x / 2.0 - high),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+            ])
+        }
+        "Camarilla" => {
+            let r5 = if low == 0.0 {
+                None
+            } else {
+                Some((high / low) * close)
+            };
+            let s5 = r5.map(|r5| close - (r5 - close));
+            pivot_level_values([
+                Some((high + low + close) / 3.0),
+                Some(close + 1.1 * range / 12.0),
+                Some(close - 1.1 * range / 12.0),
+                Some(close + 1.1 * range / 6.0),
+                Some(close - 1.1 * range / 6.0),
+                Some(close + 1.1 * range / 4.0),
+                Some(close - 1.1 * range / 4.0),
+                Some(close + 1.1 * range / 2.0),
+                Some(close - 1.1 * range / 2.0),
+                r5,
+                s5,
+            ])
+        }
+        _ => pivot_na_levels(),
+    }
+}
+
 fn supertrend_state(value: Option<&PineValue>) -> Option<(f64, f64, f64, f64)> {
     let Some(PineValue::Tuple(values)) = value else {
         return None;
@@ -8621,6 +8861,107 @@ plot(na(invalid) ? 1 : 0)
         assert_values_close(
             &result.plots[4].values,
             &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+        );
+    }
+
+    #[test]
+    fn runs_pivot_point_levels_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("pivot levels")
+levels = ta.pivot_point_levels("Traditional", bar_index == 2)
+plot(array.get(levels, 0))
+plot(array.get(levels, 1))
+plot(array.get(levels, 2))
+developing = ta.pivot_point_levels("Traditional", bar_index == 2, true)
+plot(array.get(developing, 0))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlcv(10.0, 12.0, 8.0, 11.0, 10.0),
+            bar_ohlcv(11.0, 13.0, 9.0, 12.0, 10.0),
+            bar_ohlcv(12.0, 14.0, 10.0, 13.0, 10.0),
+            bar_ohlcv(13.0, 15.0, 11.0, 14.0, 10.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 4);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[11.0, 11.0]);
+        assert_values_close(&result.plots[1].values[2..], &[14.0, 14.0]);
+        assert_values_close(&result.plots[2].values[2..], &[9.0, 9.0]);
+        assert_values_close(
+            &result.plots[3].values,
+            &[10.333333333333334, 11.0, 12.333333333333334, 13.0],
+        );
+    }
+
+    #[test]
+    fn calculates_pivot_point_level_formulas() {
+        let period = PivotPointPeriod::new(10.0, 13.0, 8.0, 12.0);
+
+        assert_values_close(
+            &pivot_point_levels("Traditional", period, 12.0),
+            &[11.0, 14.0, 9.0, 16.0, 6.0, 19.0, 4.0, 22.0, 2.0, 25.0, 0.0],
+        );
+
+        let fibonacci = pivot_point_levels("Fibonacci", period, 12.0);
+        assert_values_close(
+            &fibonacci[..7],
+            &[11.0, 12.91, 9.09, 14.09, 7.91, 16.0, 6.0],
+        );
+        assert_eq!(fibonacci[7], PineValue::Na);
+        assert_eq!(fibonacci[10], PineValue::Na);
+
+        let woodie = pivot_point_levels("Woodie", period, 12.0);
+        assert_values_close(
+            &woodie[..9],
+            &[11.25, 14.5, 9.5, 16.25, 6.25, 19.5, 4.5, 24.5, -0.5],
+        );
+        assert_eq!(woodie[9], PineValue::Na);
+        assert_eq!(woodie[10], PineValue::Na);
+
+        let classic = pivot_point_levels("Classic", period, 12.0);
+        assert_values_close(
+            &classic[..9],
+            &[11.0, 14.0, 9.0, 16.0, 6.0, 21.0, 1.0, 26.0, -4.0],
+        );
+        assert_eq!(classic[9], PineValue::Na);
+        assert_eq!(classic[10], PineValue::Na);
+
+        let dm = pivot_point_levels("DM", period, 12.0);
+        assert_values_close(&dm[..3], &[11.5, 15.0, 10.0]);
+        assert_eq!(dm[3], PineValue::Na);
+        assert_eq!(dm[10], PineValue::Na);
+
+        assert_values_close(
+            &pivot_point_levels("Camarilla", period, 12.0),
+            &[
+                11.0,
+                12.458333333333334,
+                11.541666666666666,
+                12.916666666666666,
+                11.083333333333334,
+                13.375,
+                10.625,
+                14.75,
+                9.25,
+                19.5,
+                4.5,
+            ],
+        );
+
+        assert_eq!(
+            pivot_point_levels("Unknown", period, 12.0),
+            pivot_na_levels()
         );
     }
 

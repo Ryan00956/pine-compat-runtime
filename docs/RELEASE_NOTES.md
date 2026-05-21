@@ -31,6 +31,9 @@
   state.
 - Added `ta.pivothigh` and `ta.pivotlow` support for confirmed left/right pivot
   windows.
+- Added `ta.pivot_point_levels` support for runtime-bar anchored pivot level
+  arrays across Traditional, Fibonacci, Woodie, Classic, DM, and Camarilla
+  formulas.
 - Added `ta.wpr` Williams %R support over ready rolling high/low windows and
   current close.
 - Added `ta.stoch` four-argument stochastic oscillator support over ready

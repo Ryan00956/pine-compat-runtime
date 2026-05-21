@@ -4281,6 +4281,26 @@ mod tests {
     }
 
     #[test]
+    fn accepts_ta_pivot_point_levels() {
+        let analysis = analyze(
+            "levels = ta.pivot_point_levels(\"Traditional\", bar_index == 2, true)\nplot(array.get(levels, 0))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.pivot_point_levels")
+        );
+    }
+
+    #[test]
     fn accepts_ta_supertrend() {
         let analysis =
             analyze("[line, direction] = ta.supertrend(2.0, 3)\nplot(line + direction)\n");

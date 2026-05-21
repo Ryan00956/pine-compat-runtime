@@ -116,6 +116,7 @@ ta.kc	supported	fixture-derived Keltner Channels subset	tests/fixtures/runtime/k
 ta.kcw	supported	fixture-derived Keltner Channels Width subset	tests/fixtures/runtime/kcw.pine
 ta.pivothigh	supported	fixture-derived pivot high subset	tests/fixtures/runtime/pivots.pine
 ta.pivotlow	supported	fixture-derived pivot low subset	tests/fixtures/runtime/pivots.pine
+ta.pivot_point_levels	supported	fixture-derived runtime-bar anchored pivot level array subset	tests/fixtures/runtime/pivot_point_levels.pine
 ta.cum	supported	fixture-derived executable subset	tests/fixtures/runtime/cum.pine
 ta.max	supported	all-time maximum over executed non-na source values	tests/fixtures/runtime/all_time_extremes.pine
 ta.min	supported	all-time minimum over executed non-na source values	tests/fixtures/runtime/all_time_extremes.pine

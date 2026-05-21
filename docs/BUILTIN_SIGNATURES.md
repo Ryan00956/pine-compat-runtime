@@ -386,6 +386,7 @@ ta.pivothigh(leftbars: simple int, rightbars: simple int) -> series float
 ta.pivothigh(source: series int/float, leftbars: simple int, rightbars: simple int) -> series float
 ta.pivotlow(leftbars: simple int, rightbars: simple int) -> series float
 ta.pivotlow(source: series int/float, leftbars: simple int, rightbars: simple int) -> series float
+ta.pivot_point_levels(type: series string, anchor: series bool, developing?: series bool) -> float[]
 ta.stdev(source: series int/float, length: simple int, biased?: bool-compatible) -> series float
 ta.variance(source: series int/float, length: simple int, biased?: bool-compatible) -> series float
 ta.range(source: series int/float, length: simple int) -> series float
@@ -467,6 +468,13 @@ Rules:
   `low` respectively. The current subset uses simple integer left/right bar
   counts and returns the confirmed pivot value `rightbars` bars after the pivot
   bar, otherwise `na`.
+- `ta.pivot_point_levels` returns an 11-element float array ordered as
+  `[P, R1, S1, R2, S2, R3, S3, R4, S4, R5, S5]`. The current subset supports
+  `Traditional`, `Fibonacci`, `Woodie`, `Classic`, `DM`, and `Camarilla`
+  formulas over runtime bars using the caller-provided `anchor` condition. With
+  `developing = false`, levels update from the completed period when `anchor`
+  is true; with `developing = true`, levels are recalculated from the current
+  in-progress period. It does not request higher-timeframe/session data.
 - `ta.stdev` defaults `biased` to `true`; `false` uses sample standard
   deviation and returns `na` for windows shorter than two values.
 - `ta.variance` uses the same `biased` default and sample/population window

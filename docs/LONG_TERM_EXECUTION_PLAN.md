@@ -226,6 +226,7 @@ Candidate areas:
   `ta.obv`/`ta.pvi`/`ta.pvt`, partial `ta.vwap` variable/source/anchor/bands
   support,
   `ta.mfi` Money Flow Index support,
+  `ta.pivot_point_levels` runtime-bar anchored pivot arrays,
   `ta.max`/`ta.min` all-time source extremes, `ta.tr` as a true range series
   variable, `ta.wad`/`ta.wvad` flow variables, `ta.supertrend`
   line/direction tuple support, `ta.dmi` directional movement tuple support,

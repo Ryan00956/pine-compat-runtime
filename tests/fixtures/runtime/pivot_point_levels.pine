@@ -1,0 +1,8 @@
+//@version=5
+indicator("Pivot Point Levels")
+levels = ta.pivot_point_levels("Traditional", bar_index == 2)
+plot(array.get(levels, 0))
+plot(array.get(levels, 1))
+plot(array.get(levels, 2))
+developing = ta.pivot_point_levels("Traditional", bar_index == 2, true)
+plot(array.get(developing, 0))

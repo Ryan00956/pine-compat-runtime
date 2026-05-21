@@ -1376,6 +1376,24 @@ const TA_PIVOT_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_PIVOT_POINT_LEVELS_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "type",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "anchor",
+        accepts: Accepts::BoolCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "developing",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+];
+
 const TA_ALMA_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "series",
@@ -3023,6 +3041,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TA_PIVOT_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.pivot_point_levels",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_PIVOT_POINT_LEVELS_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_FLOAT_ARRAY),
         variadic: false,
     },
     BuiltinSignature {
