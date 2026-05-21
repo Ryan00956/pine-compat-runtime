@@ -1,0 +1,3 @@
+//@version=5
+indicator("Barstate")
+plot(barstate.isfirst ? 1 : 0)

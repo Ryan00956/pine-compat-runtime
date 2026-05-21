@@ -4764,6 +4764,24 @@ plot(year(ts) + month(ts, "UTC") + dayofmonth(ts) + hour(ts) + minute(ts) + seco
     }
 
     #[test]
+    fn accepts_barstate_isfirst() {
+        let analysis = analyze("plot(barstate.isfirst ? 1 : 0)\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "barstate.isfirst")
+        );
+    }
+
+    #[test]
     fn accepts_selected_math_functions() {
         let analysis = analyze(
             r#"indicator("math")

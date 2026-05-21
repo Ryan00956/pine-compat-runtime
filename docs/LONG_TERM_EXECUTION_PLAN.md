@@ -226,6 +226,7 @@ Candidate areas:
   `math.avg`, `math.e`, `math.pi`, `math.phi`, `math.rphi`, `math.pow`,
   `math.round`, and `math.sum`; string coverage includes `str.split`; time
   helper coverage includes the numeric UTC `timestamp` subset.
+- Initial `barstate.*` coverage includes `barstate.isfirst`.
 - More complete `color.*` constants and helpers.
 - More complete `input.*` parameters and host-side input override APIs.
 - More plot options, visibility controls, styles, and display parameters.

@@ -2689,6 +2689,10 @@ pub fn named_float_constant(name: &str) -> Option<f64> {
 
 const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     (
+        "barstate.isfirst",
+        PineType::new(Qualifier::Series, ValueKind::Bool),
+    ),
+    (
         "ta.accdist",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),

@@ -1402,6 +1402,9 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn eval_builtin_value(&self, name: &str) -> PineValue {
+        if name == "barstate.isfirst" {
+            return PineValue::Bool(self.bars == 0);
+        }
         if name == "ta.accdist" {
             return self.accdist_current.clone();
         }
@@ -9284,6 +9287,27 @@ plot(e)
         assert!(BarUpdate::historical(bar).commits_series());
         assert!(BarUpdate::confirmed(bar).commits_series());
         assert!(!BarUpdate::forming(bar).commits_series());
+    }
+
+    #[test]
+    fn runs_barstate_isfirst_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("barstate")
+plot(barstate.isfirst ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+            .expect("runtime result");
+
+        assert_values_close(&result.plots[0].values, &[1.0, 0.0, 0.0]);
     }
 
     #[test]

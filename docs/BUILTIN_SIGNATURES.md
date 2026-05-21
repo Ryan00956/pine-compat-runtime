@@ -71,6 +71,14 @@ bar_index -> series int
 UTC calendar components derived from each bar's `time`. Full exchange-timezone
 calendar semantics are not claimed until symbol timezone metadata exists.
 
+Bar state:
+
+```text
+barstate.isfirst -> series bool
+```
+
+`barstate.isfirst` is `true` only when `bar_index == 0`.
+
 The same names are also supported as functions over a timestamp:
 
 ```text
