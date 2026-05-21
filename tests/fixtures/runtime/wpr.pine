@@ -1,0 +1,6 @@
+//@version=5
+indicator("WPR")
+value = ta.wpr(3)
+invalid = ta.wpr(0)
+plot(value)
+plot(na(invalid) ? 1 : 0)

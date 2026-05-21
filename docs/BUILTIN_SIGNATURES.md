@@ -386,6 +386,7 @@ ta.swma(source: series int/float) -> series float
 ta.alma(series: series int/float, length: simple int, offset: simple numeric, sigma: simple numeric, floor?: simple bool) -> series float
 ta.linreg(source: series int/float, length: simple int, offset: simple int) -> series float
 ta.stoch(source: series int/float, high: series int/float, low: series int/float, length: simple int) -> series float
+ta.wpr(length: simple int) -> series float
 ta.cum(source: series/simple numeric) -> series float
 ta.max(source: series/simple numeric) -> series float
 ta.min(source: series/simple numeric) -> series float
@@ -563,6 +564,9 @@ Rules:
   rolling `high`/`low` windows. It returns `na` before the window is ready, when
   either window contains `na`, for non-positive lengths, or when the high-low
   range is zero.
+- `ta.wpr` supports the single-argument Williams %R form over ready rolling
+  `high`/`low` windows and current `close`. It returns `na` before the window is
+  ready, for non-positive lengths, or when the high-low range is zero.
 - Stateful TA functions require callsite ids.
 - Tuple-returning functions require tuple lowering before execution.
 - Numerical formulas must be fixture-tested with tolerance.

@@ -568,6 +568,8 @@ enum RollingWindowKey {
     CovarianceProduct(CallSiteId),
     StochHigh(CallSiteId),
     StochLow(CallSiteId),
+    WprHigh(CallSiteId),
+    WprLow(CallSiteId),
     HmaHalf(CallSiteId),
     HmaFull(CallSiteId),
     HmaSmooth(CallSiteId),
@@ -2044,6 +2046,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.alma" => self.eval_alma(call_site_id, args),
             "ta.linreg" => self.eval_linreg(call_site_id, args),
             "ta.stoch" => self.eval_stoch(call_site_id, args),
+            "ta.wpr" => self.eval_wpr(call_site_id, args),
             "ta.correlation" => self.eval_correlation(call_site_id, args),
             "ta.covariance" => self.eval_covariance(call_site_id, args),
             "ta.median" => self.eval_median(call_site_id, args),
@@ -4120,6 +4123,57 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(finite_float_or_na(100.0 * (source - lowest_low) / range))
+    }
+
+    fn eval_wpr(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let length = self.eval_expr(&args[0].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let close = self.current_builtin_f64("close");
+        self.update_rolling_window_key(
+            RollingWindowKey::WprHigh(call_site_id),
+            self.current_builtin_f64("high"),
+            length,
+        );
+        self.update_rolling_window_key(
+            RollingWindowKey::WprLow(call_site_id),
+            self.current_builtin_f64("low"),
+            length,
+        );
+
+        let high_window = self
+            .rolling_windows
+            .get(&RollingWindowKey::WprHigh(call_site_id));
+        let low_window = self
+            .rolling_windows
+            .get(&RollingWindowKey::WprLow(call_site_id));
+        let (Some(close), Some(high_window), Some(low_window)) = (close, high_window, low_window)
+        else {
+            return Ok(PineValue::Na);
+        };
+        if !high_window.is_ready(length) || !low_window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let (Some(highest_high), Some(lowest_low)) = (
+            high_window.extreme(WindowExtreme::Highest),
+            low_window.extreme(WindowExtreme::Lowest),
+        ) else {
+            return Ok(PineValue::Na);
+        };
+        let range = highest_high - lowest_low;
+        if range == 0.0 {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(-100.0 * (highest_high - close) / range))
     }
 
     fn eval_window_variance(
@@ -9821,6 +9875,66 @@ plot(na(invalid) ? 1 : 0)
     }
 
     #[test]
+    fn runs_wpr_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("wpr")
+value = ta.wpr(3)
+invalid = ta.wpr(0)
+plot(value)
+plot(na(invalid) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(10.0, 11.0, 9.0, 10.0),
+            bar_ohlc(10.0, 12.0, 10.0, 11.0),
+            bar_ohlc(11.0, 13.0, 11.0, 12.0),
+            bar_ohlc(12.0, 16.0, 12.0, 15.0),
+            bar_ohlc(15.0, 17.0, 14.0, 16.0),
+            bar_ohlc(16.0, 14.0, 8.0, 9.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(
+            &result.plots[0].values[2..],
+            &[
+                -25.0,
+                -16.666666666666668,
+                -16.666666666666668,
+                -88.88888888888889,
+            ],
+        );
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]);
+
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("flat wpr")
+plot(na(ta.wpr(2)) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar_ohlc(1.0, 1.0, 1.0, 1.0), bar_ohlc(1.0, 1.0, 1.0, 1.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
+    }
+
+    #[test]
     fn runs_sar_over_historical_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -11464,6 +11578,36 @@ plot(score)
         assert_eq!(result.plots.len(), 1);
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_values_close(&result.plots[0].values[1..], &[2.0, 75.0]);
+    }
+
+    #[test]
+    fn advances_conditional_wpr_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional wpr")
+score = close
+if close > open
+    score := ta.wpr(2)
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 10.0, 0.0, 5.0),
+            bar_ohlc(3.0, 100.0, 100.0, 2.0),
+            bar_ohlc(4.0, 20.0, 10.0, 15.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.0, -25.0]);
     }
 
     #[test]

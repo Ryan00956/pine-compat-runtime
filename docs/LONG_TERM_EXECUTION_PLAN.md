@@ -224,6 +224,7 @@ Candidate areas:
   variable, `ta.wad`/`ta.wvad` flow variables, `ta.supertrend`
   line/direction tuple support, `ta.dmi` directional movement tuple support,
   `ta.sar` Parabolic SAR support, and `ta.stoch` stochastic oscillator support,
+  `ta.wpr` Williams %R support,
   numeric `series int`/`series float` sources across core TA windows,
   `ta.change` over numeric and bool series sources,
   `ta.mom`/`ta.roc` over explicit source history, and

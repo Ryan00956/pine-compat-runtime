@@ -139,6 +139,7 @@ ta.swma	supported	fixture-derived executable subset	tests/fixtures/runtime/swma.
 ta.alma	supported	fixture-derived executable subset	tests/fixtures/runtime/alma.pine
 ta.linreg	supported	fixture-derived executable subset	tests/fixtures/runtime/linreg.pine
 ta.stoch	supported	fixture-derived stochastic oscillator subset	tests/fixtures/runtime/stoch.pine
+ta.wpr	supported	fixture-derived Williams Percent Range subset	tests/fixtures/runtime/wpr.pine
 ta.tr	supported	built-in true range variable plus handle_na function subset	tests/fixtures/runtime/ta.pine
 ta.atr	supported	fixture-derived executable subset	tests/fixtures/runtime/atr.pine
 ta.supertrend	supported	fixture-derived Supertrend line and direction tuple subset	tests/fixtures/runtime/supertrend.pine
