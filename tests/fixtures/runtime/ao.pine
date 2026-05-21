@@ -1,0 +1,4 @@
+//@version=5
+indicator("AO")
+value = ta.ao()
+plot(value)

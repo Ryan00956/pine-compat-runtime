@@ -1544,6 +1544,8 @@ const TA_LENGTH_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const TA_AO_PARAMS: &[BuiltinParam] = &[];
+
 const TA_TR_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "handle_na",
     accepts: Accepts::ConstBool,
@@ -2889,6 +2891,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "ta.cmo",
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.ao",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_AO_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },

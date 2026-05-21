@@ -4293,6 +4293,24 @@ mod tests {
     }
 
     #[test]
+    fn accepts_ta_ao() {
+        let analysis = analyze("plot(ta.ao())\n");
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "ta.ao")
+        );
+    }
+
+    #[test]
     fn accepts_ta_mfi() {
         let analysis = analyze("plot(ta.mfi(hlc3, 3))\n");
 

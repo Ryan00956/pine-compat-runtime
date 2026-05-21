@@ -560,6 +560,8 @@ enum RollingWindowKey {
     MfiNegative(CallSiteId),
     CmoPositive(CallSiteId),
     CmoNegative(CallSiteId),
+    AoFast(CallSiteId),
+    AoSlow(CallSiteId),
     CorrelationLeft(CallSiteId),
     CorrelationRight(CallSiteId),
     CorrelationProduct(CallSiteId),
@@ -2028,6 +2030,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.macd" => self.eval_macd(call_site_id, args),
             "ta.tsi" => self.eval_tsi(call_site_id, args),
             "ta.cmo" => self.eval_cmo(call_site_id, args),
+            "ta.ao" => self.eval_ao(call_site_id),
             "ta.bb" => self.eval_bb(call_site_id, args),
             "ta.bbw" => self.eval_bbw(call_site_id, args),
             "ta.cum" => self.eval_cum(call_site_id, args),
@@ -4174,6 +4177,36 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(finite_float_or_na(-100.0 * (highest_high - close) / range))
+    }
+
+    fn eval_ao(&mut self, call_site_id: CallSiteId) -> Result<PineValue, RuntimeError> {
+        let source = match (
+            self.current_builtin_f64("high"),
+            self.current_builtin_f64("low"),
+        ) {
+            (Some(high), Some(low)) => Some((high + low) / 2.0),
+            _ => None,
+        };
+
+        self.update_rolling_window_key(RollingWindowKey::AoFast(call_site_id), source, 5);
+        self.update_rolling_window_key(RollingWindowKey::AoSlow(call_site_id), source, 34);
+
+        let fast_window = self
+            .rolling_windows
+            .get(&RollingWindowKey::AoFast(call_site_id));
+        let slow_window = self
+            .rolling_windows
+            .get(&RollingWindowKey::AoSlow(call_site_id));
+        let (Some(fast_window), Some(slow_window)) = (fast_window, slow_window) else {
+            return Ok(PineValue::Na);
+        };
+        if !fast_window.is_ready(5) || !slow_window.is_ready(34) {
+            return Ok(PineValue::Na);
+        }
+
+        Ok(finite_float_or_na(
+            fast_window.mean(5) - slow_window.mean(34),
+        ))
     }
 
     fn eval_window_variance(
@@ -9935,6 +9968,35 @@ plot(na(ta.wpr(2)) ? 1 : 0)
     }
 
     #[test]
+    fn runs_ao_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("ao")
+value = ta.ao()
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars: Vec<_> = (1..=40).map(|value| bar(value as f64)).collect();
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        for value in &result.plots[0].values[..33] {
+            assert_eq!(*value, PineValue::Na);
+        }
+        assert_values_close(
+            &result.plots[0].values[33..],
+            &[14.5, 14.5, 14.5, 14.5, 14.5, 14.5, 14.5],
+        );
+    }
+
+    #[test]
     fn runs_sar_over_historical_bars() {
         let source = SourceFile::new(
             "test.pine",
@@ -11608,6 +11670,47 @@ plot(score)
         assert_eq!(result.plots.len(), 1);
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_values_close(&result.plots[0].values[1..], &[2.0, -25.0]);
+    }
+
+    #[test]
+    fn advances_conditional_ao_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional ao")
+score = close
+if close > open
+    score := ta.ao()
+plot(score)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars: Vec<_> = (1..=35)
+            .map(|value| {
+                if value == 11 {
+                    bar_ohlc(2.0, 2.0, 2.0, 1.0)
+                } else {
+                    let value = value as f64;
+                    bar_ohlc(0.0, value, value, value)
+                }
+            })
+            .collect();
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots.len(), 1);
+        for value in &result.plots[0].values[..10] {
+            assert_eq!(*value, PineValue::Na);
+        }
+        assert_values_close(&result.plots[0].values[10..11], &[1.0]);
+        for value in &result.plots[0].values[11..34] {
+            assert_eq!(*value, PineValue::Na);
+        }
+        assert_values_close(&result.plots[0].values[34..], &[14.794117647058822]);
     }
 
     #[test]
