@@ -2252,6 +2252,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "ta.percentile_linear_interpolation",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_LENGTH_PERCENTAGE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "ta.tr",
         phase: BuiltinPhase::Phase1Core,
         params: TA_TR_PARAMS,

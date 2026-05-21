@@ -127,6 +127,8 @@
 - Added `ta.correlation` support for rolling Pearson correlation coefficients.
 - Added `ta.percentile_nearest_rank` support for rolling nearest-rank
   percentile values.
+- Added `ta.percentile_linear_interpolation` support for rolling interpolated
+  percentile values.
 - Added `ta.rising` and `ta.falling` support for current-vs-previous-window
   trend checks.
 - Added two-argument `ta.highestbars` and `ta.lowestbars` support for rolling

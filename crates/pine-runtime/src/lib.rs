@@ -1984,7 +1984,12 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.wma" => self.eval_wma(call_site_id, args),
             "ta.hma" => self.eval_hma(call_site_id, args),
             "ta.correlation" => self.eval_correlation(call_site_id, args),
-            "ta.percentile_nearest_rank" => self.eval_percentile_nearest_rank(call_site_id, args),
+            "ta.percentile_nearest_rank" => {
+                self.eval_percentile(call_site_id, args, ArrayPercentileMode::NearestRank)
+            }
+            "ta.percentile_linear_interpolation" => {
+                self.eval_percentile(call_site_id, args, ArrayPercentileMode::LinearInterpolation)
+            }
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.change" => self.eval_change(args),
@@ -3521,10 +3526,11 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(finite_float_or_na(covariance / denominator))
     }
 
-    fn eval_percentile_nearest_rank(
+    fn eval_percentile(
         &mut self,
         call_site_id: CallSiteId,
         args: &[HirCallArg],
+        mode: ArrayPercentileMode,
     ) -> Result<PineValue, RuntimeError> {
         let source = self.eval_expr(&args[0].value)?;
         let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
@@ -3547,9 +3553,24 @@ impl<'a> HistoricalRuntime<'a> {
 
         let mut values: Vec<_> = window.values.iter().flatten().copied().collect();
         values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Ordering::Equal));
-        let rank = ((percentage / 100.0) * values.len() as f64).ceil();
-        let index = (rank as usize).saturating_sub(1).min(values.len() - 1);
-        Ok(finite_float_or_na(values[index]))
+        match mode {
+            ArrayPercentileMode::NearestRank => {
+                let rank = ((percentage / 100.0) * values.len() as f64).ceil();
+                let index = (rank as usize).saturating_sub(1).min(values.len() - 1);
+                Ok(finite_float_or_na(values[index]))
+            }
+            ArrayPercentileMode::LinearInterpolation => {
+                if values.len() == 1 {
+                    return Ok(finite_float_or_na(values[0]));
+                }
+                let rank = (percentage / 100.0) * (values.len() - 1) as f64;
+                let lower = rank.floor() as usize;
+                let upper = rank.ceil() as usize;
+                let fraction = rank - lower as f64;
+                let value = values[lower] + (values[upper] - values[lower]) * fraction;
+                Ok(finite_float_or_na(value))
+            }
+        }
     }
 
     fn eval_hma(
@@ -7512,6 +7533,57 @@ plot(invalid)
         assert_eq!(result.plots[4].values[1], PineValue::Na);
         assert_eq!(result.plots[4].values[2], PineValue::Na);
         assert_eq!(result.plots[4].values[3], PineValue::Na);
+    }
+
+    #[test]
+    fn runs_percentile_linear_interpolation_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("linear percentile")
+middle = ta.percentile_linear_interpolation(close, 3, 50)
+quarter = ta.percentile_linear_interpolation(close, 3, 25)
+lowest = ta.percentile_linear_interpolation(close, 3, 0)
+highest = ta.percentile_linear_interpolation(close, 3, 100)
+with_na = ta.percentile_linear_interpolation(bar_index == 3 ? na : close, 3, 50)
+invalid = ta.percentile_linear_interpolation(close, 3, -1)
+plot(middle)
+plot(quarter)
+plot(lowest)
+plot(highest)
+plot(with_na)
+plot(invalid)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(5.0), bar(2.0), bar(8.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[2.0, 5.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_values_close(&result.plots[1].values[2..], &[1.5, 3.5]);
+        assert_eq!(result.plots[2].values[0], PineValue::Na);
+        assert_eq!(result.plots[2].values[1], PineValue::Na);
+        assert_values_close(&result.plots[2].values[2..], &[1.0, 2.0]);
+        assert_eq!(result.plots[3].values[0], PineValue::Na);
+        assert_eq!(result.plots[3].values[1], PineValue::Na);
+        assert_values_close(&result.plots[3].values[2..], &[5.0, 8.0]);
+        assert_eq!(result.plots[4].values[0], PineValue::Na);
+        assert_eq!(result.plots[4].values[1], PineValue::Na);
+        assert_values_close(&result.plots[4].values[2..3], &[2.0]);
+        assert_eq!(result.plots[4].values[3], PineValue::Na);
+        assert_eq!(result.plots[5].values[0], PineValue::Na);
+        assert_eq!(result.plots[5].values[1], PineValue::Na);
+        assert_eq!(result.plots[5].values[2], PineValue::Na);
+        assert_eq!(result.plots[5].values[3], PineValue::Na);
     }
 
     #[test]

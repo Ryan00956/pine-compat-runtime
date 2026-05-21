@@ -1,0 +1,3 @@
+//@version=5
+indicator("Percentile Linear Interpolation")
+plot(ta.percentile_linear_interpolation(close, 3, 50))
