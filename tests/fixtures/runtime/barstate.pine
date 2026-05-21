@@ -1,3 +1,4 @@
 //@version=5
 indicator("Barstate")
 plot(barstate.isfirst ? 1 : 0)
+plot(barstate.isconfirmed ? 1 : 0)

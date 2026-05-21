@@ -414,6 +414,7 @@ pub fn run_historical_profiled(
 pub struct HistoricalRuntime<'a> {
     program: &'a HirProgram,
     bars: usize,
+    current_bar_confirmed: bool,
     series_store: SeriesStore,
     series_retention: SeriesRetention,
     current_symbols: HashMap<SymbolId, PineValue>,
@@ -664,6 +665,7 @@ impl<'a> HistoricalRuntime<'a> {
         Self {
             program,
             bars: 0,
+            current_bar_confirmed: true,
             series_store: SeriesStore::new(),
             series_retention: SeriesRetention::from_program(program),
             current_symbols: HashMap::new(),
@@ -734,7 +736,16 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub fn append_bar(&mut self, bar: Bar) -> Result<(), RuntimeError> {
+        self.append_bar_with_confirmation(bar, true)
+    }
+
+    fn append_bar_with_confirmation(
+        &mut self,
+        bar: Bar,
+        confirmed: bool,
+    ) -> Result<(), RuntimeError> {
         let bar_index = self.bars;
+        self.current_bar_confirmed = confirmed;
         self.series_store.set_current_bar(bar_index);
         self.current_symbols.clear();
         self.current_series.clear();
@@ -754,6 +765,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.finalize_series_outputs();
         self.commit_current_series()?;
         self.bars += 1;
+        self.current_bar_confirmed = true;
         Ok(())
     }
 
@@ -1404,6 +1416,9 @@ impl<'a> HistoricalRuntime<'a> {
     fn eval_builtin_value(&self, name: &str) -> PineValue {
         if name == "barstate.isfirst" {
             return PineValue::Bool(self.bars == 0);
+        }
+        if name == "barstate.isconfirmed" {
+            return PineValue::Bool(self.current_bar_confirmed);
         }
         if name == "ta.accdist" {
             return self.accdist_current.clone();
@@ -5143,14 +5158,14 @@ impl<'a> RealtimeRuntime<'a> {
         match update.kind {
             BarUpdateKind::Historical | BarUpdateKind::Confirmed => {
                 let mut runtime = self.confirmed.clone();
-                runtime.append_bar(update.bar)?;
+                runtime.append_bar_with_confirmation(update.bar, true)?;
                 self.confirmed = runtime;
                 self.forming = None;
                 Ok(self.confirmed.result())
             }
             BarUpdateKind::Forming => {
                 let mut runtime = self.confirmed.clone();
-                runtime.append_bar(update.bar)?;
+                runtime.append_bar_with_confirmation(update.bar, false)?;
                 let result = runtime.result();
                 self.forming = Some(runtime);
                 Ok(result)
@@ -9295,6 +9310,7 @@ plot(e)
             "test.pine",
             r#"indicator("barstate")
 plot(barstate.isfirst ? 1 : 0)
+plot(barstate.isconfirmed ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -9308,6 +9324,40 @@ plot(barstate.isfirst ? 1 : 0)
             .expect("runtime result");
 
         assert_values_close(&result.plots[0].values, &[1.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn barstate_isconfirmed_tracks_forming_updates() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("barstate realtime")
+plot(barstate.isconfirmed ? close : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        let hir = analysis.hir.expect("HIR");
+        let mut runtime = RealtimeRuntime::new(&hir);
+
+        let confirmed = runtime
+            .update(BarUpdate::historical(bar(1.0)))
+            .expect("historical update");
+        assert_values_close(&confirmed.plots[0].values, &[1.0]);
+
+        let forming = runtime
+            .update(BarUpdate::forming(bar(2.0)))
+            .expect("forming update");
+        assert_values_close(&forming.plots[0].values, &[1.0, 0.0]);
+
+        let confirmed = runtime
+            .update(BarUpdate::confirmed(bar(3.0)))
+            .expect("confirmed update");
+        assert_values_close(&confirmed.plots[0].values, &[1.0, 3.0]);
     }
 
     #[test]

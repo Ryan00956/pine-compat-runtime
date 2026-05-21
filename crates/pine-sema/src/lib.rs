@@ -4765,7 +4765,7 @@ plot(year(ts) + month(ts, "UTC") + dayofmonth(ts) + hour(ts) + minute(ts) + seco
 
     #[test]
     fn accepts_barstate_isfirst() {
-        let analysis = analyze("plot(barstate.isfirst ? 1 : 0)\n");
+        let analysis = analyze("plot((barstate.isfirst or barstate.isconfirmed) ? 1 : 0)\n");
 
         assert!(
             analysis.diagnostics.is_empty(),
@@ -4778,6 +4778,13 @@ plot(year(ts) + month(ts, "UTC") + dayofmonth(ts) + hour(ts) + minute(ts) + seco
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "barstate.isfirst")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "barstate.isconfirmed")
         );
     }
 
