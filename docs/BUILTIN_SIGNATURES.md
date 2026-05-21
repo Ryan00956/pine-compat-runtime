@@ -343,6 +343,7 @@ ta.roc(source: series float, length: simple int) -> series float
 ta.correlation(source1: series/simple numeric, source2: series/simple numeric, length: simple int) -> series float
 ta.percentile_nearest_rank(source: series/simple numeric, length: simple int, percentage: input/const numeric) -> series float
 ta.percentile_linear_interpolation(source: series/simple numeric, length: simple int, percentage: input/const numeric) -> series float
+ta.percentrank(source: series/simple numeric, length: simple int) -> series float
 ta.rising(source: series float, length: simple int) -> series bool
 ta.falling(source: series float, length: simple int) -> series bool
 ta.barssince(condition: series bool) -> series int
@@ -418,6 +419,9 @@ Rules:
 - `ta.percentile_linear_interpolation` uses the same ready sorted window and
   interpolates between adjacent ranks. It returns `na` under the same invalid
   window or percentage conditions as `ta.percentile_nearest_rank`.
+- `ta.percentrank` returns the percentage of ready-window values less than or
+  equal to the current source value. It returns `na` while the window is not
+  ready or contains `na`.
 - `ta.rising`/`ta.falling` compare the current source against the previous
   ready-window values and return `false` while that window is not ready.
 - `ta.barssince` returns `0` on true conditions, increments after the last true

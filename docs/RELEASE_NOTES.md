@@ -129,6 +129,7 @@
   percentile values.
 - Added `ta.percentile_linear_interpolation` support for rolling interpolated
   percentile values.
+- Added `ta.percentrank` support for rolling percent-rank values.
 - Added `ta.rising` and `ta.falling` support for current-vs-previous-window
   trend checks.
 - Added two-argument `ta.highestbars` and `ta.lowestbars` support for rolling

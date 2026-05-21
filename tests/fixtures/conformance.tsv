@@ -96,6 +96,7 @@ ta.wvad	supported	fixture-derived executable subset	tests/fixtures/runtime/wvad.
 ta.correlation	supported	fixture-derived executable subset	tests/fixtures/runtime/correlation.pine
 ta.percentile_linear_interpolation	supported	fixture-derived executable subset	tests/fixtures/runtime/percentile_linear_interpolation.pine
 ta.percentile_nearest_rank	supported	fixture-derived executable subset	tests/fixtures/runtime/percentile_nearest_rank.pine
+ta.percentrank	supported	fixture-derived executable subset	tests/fixtures/runtime/percentrank.pine
 ta.stdev	supported	fixture-derived executable subset	tests/fixtures/runtime/stdev.pine
 ta.variance	supported	fixture-derived executable subset	tests/fixtures/runtime/variance.pine
 ta.range	supported	fixture-derived executable subset	tests/fixtures/runtime/range.pine

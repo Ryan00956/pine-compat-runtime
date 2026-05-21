@@ -1990,6 +1990,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.percentile_linear_interpolation" => {
                 self.eval_percentile(call_site_id, args, ArrayPercentileMode::LinearInterpolation)
             }
+            "ta.percentrank" => self.eval_percentrank(call_site_id, args),
             "ta.tr" => self.eval_tr(args),
             "ta.atr" => self.eval_atr(call_site_id, args),
             "ta.change" => self.eval_change(args),
@@ -3571,6 +3572,36 @@ impl<'a> HistoricalRuntime<'a> {
                 Ok(finite_float_or_na(value))
             }
         }
+    }
+
+    fn eval_percentrank(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = self.eval_expr(&args[1].value)?.as_i64().unwrap_or(0);
+        if length <= 0 {
+            return Ok(PineValue::Na);
+        }
+
+        let length = length as usize;
+        let target = source.as_f64();
+        let window = self.update_rolling_window(call_site_id, source, length);
+        let Some(target) = target else {
+            return Ok(PineValue::Na);
+        };
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let count = window
+            .values
+            .iter()
+            .flatten()
+            .filter(|value| **value <= target || (**value - target).abs() < f64::EPSILON)
+            .count();
+        Ok(finite_float_or_na(count as f64 / length as f64 * 100.0))
     }
 
     fn eval_hma(
@@ -7584,6 +7615,47 @@ plot(invalid)
         assert_eq!(result.plots[5].values[1], PineValue::Na);
         assert_eq!(result.plots[5].values[2], PineValue::Na);
         assert_eq!(result.plots[5].values[3], PineValue::Na);
+    }
+
+    #[test]
+    fn runs_percentrank_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("percentrank")
+rank = ta.percentrank(close, 3)
+low_rank = ta.percentrank(bar_index == 3 ? 1 : close, 3)
+with_na = ta.percentrank(bar_index == 3 ? na : close, 3)
+invalid = ta.percentrank(close, 0)
+plot(rank)
+plot(low_rank)
+plot(with_na)
+plot(invalid)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(5.0), bar(2.0), bar(8.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_values_close(&result.plots[0].values[2..], &[200.0 / 3.0, 100.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_values_close(&result.plots[1].values[2..], &[200.0 / 3.0, 100.0 / 3.0]);
+        assert_eq!(result.plots[2].values[0], PineValue::Na);
+        assert_eq!(result.plots[2].values[1], PineValue::Na);
+        assert_values_close(&result.plots[2].values[2..3], &[200.0 / 3.0]);
+        assert_eq!(result.plots[2].values[3], PineValue::Na);
+        assert_eq!(result.plots[3].values[0], PineValue::Na);
+        assert_eq!(result.plots[3].values[1], PineValue::Na);
+        assert_eq!(result.plots[3].values[2], PineValue::Na);
+        assert_eq!(result.plots[3].values[3], PineValue::Na);
     }
 
     #[test]
