@@ -1,4 +1,6 @@
 //@version=5
 indicator("Rate of Change")
 value = ta.roc(close, 2)
+index_value = ta.roc(bar_index, 2)
 plot(value)
+plot(index_value)

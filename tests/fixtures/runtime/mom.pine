@@ -1,4 +1,6 @@
 //@version=5
 indicator("Momentum")
 value = ta.mom(close, 2)
+index_value = ta.mom(bar_index, 2)
 plot(value)
+plot(index_value)

@@ -340,30 +340,30 @@ current element values.
 Initial signatures:
 
 ```text
-ta.sma(source: series float, length: simple int) -> series float
-ta.ema(source: series float, length: simple int) -> series float
+ta.sma(source: series int/float, length: simple int) -> series float
+ta.ema(source: series int/float, length: simple int) -> series float
 ```
 
 Next signatures after Phase 1 is stable:
 
 ```text
-ta.rma(source: series float, length: simple int) -> series float
-ta.rsi(source: series float, length: simple int) -> series float
-ta.macd(source: series float, fastlen: simple int, slowlen: simple int, siglen: simple int)
+ta.rma(source: series int/float, length: simple int) -> series float
+ta.rsi(source: series int/float, length: simple int) -> series float
+ta.macd(source: series int/float, fastlen: simple int, slowlen: simple int, siglen: simple int)
   -> tuple(series float, series float, series float)
-ta.bb(source: series float, length: simple int, mult: numeric)
+ta.bb(source: series int/float, length: simple int, mult: numeric)
   -> tuple(series float, series float, series float)
-ta.bbw(source: series float, length: simple int, mult: numeric) -> series float
-ta.stdev(source: series float, length: simple int, biased?: bool-compatible) -> series float
-ta.variance(source: series float, length: simple int, biased?: bool-compatible) -> series float
-ta.range(source: series float, length: simple int) -> series float
-ta.dev(source: series float, length: simple int) -> series float
-ta.vwma(source: series float, length: simple int) -> series float
-ta.wma(source: series float, length: simple int) -> series float
-ta.hma(source: series float, length: simple int) -> series float
-ta.swma(source: series float) -> series float
-ta.alma(series: series float, length: simple int, offset: simple numeric, sigma: simple numeric, floor?: simple bool) -> series float
-ta.linreg(source: series float, length: simple int, offset: simple int) -> series float
+ta.bbw(source: series int/float, length: simple int, mult: numeric) -> series float
+ta.stdev(source: series int/float, length: simple int, biased?: bool-compatible) -> series float
+ta.variance(source: series int/float, length: simple int, biased?: bool-compatible) -> series float
+ta.range(source: series int/float, length: simple int) -> series float
+ta.dev(source: series int/float, length: simple int) -> series float
+ta.vwma(source: series int/float, length: simple int) -> series float
+ta.wma(source: series int/float, length: simple int) -> series float
+ta.hma(source: series int/float, length: simple int) -> series float
+ta.swma(source: series int/float) -> series float
+ta.alma(series: series int/float, length: simple int, offset: simple numeric, sigma: simple numeric, floor?: simple bool) -> series float
+ta.linreg(source: series int/float, length: simple int, offset: simple int) -> series float
 ta.cum(source: series/simple numeric) -> series float
 ta.max(source: series/simple numeric) -> series float
 ta.min(source: series/simple numeric) -> series float
@@ -381,8 +381,8 @@ ta.wvad -> series float
 ta.atr(length: simple int) -> series float
 ta.tr(handle_na?: const bool) -> series float
 ta.change(source: series int/float/bool, length?: simple int) -> series float/bool
-ta.mom(source: series float, length: simple int) -> series float
-ta.roc(source: series float, length: simple int) -> series float
+ta.mom(source: series int/float, length: simple int) -> series float
+ta.roc(source: series int/float, length: simple int) -> series float
 ta.correlation(source1: series/simple numeric, source2: series/simple numeric, length: simple int) -> series float
 ta.covariance(source1: series/simple numeric, source2: series/simple numeric, length: simple int) -> series float
 ta.median(source: series/simple numeric, length: simple int) -> series float
@@ -390,26 +390,28 @@ ta.mode(source: series/simple numeric, length: simple int) -> series float
 ta.percentile_nearest_rank(source: series/simple numeric, length: simple int, percentage: input/const numeric) -> series float
 ta.percentile_linear_interpolation(source: series/simple numeric, length: simple int, percentage: input/const numeric) -> series float
 ta.percentrank(source: series/simple numeric, length: simple int) -> series float
-ta.rising(source: series float, length: simple int) -> series bool
-ta.falling(source: series float, length: simple int) -> series bool
+ta.rising(source: series int/float, length: simple int) -> series bool
+ta.falling(source: series int/float, length: simple int) -> series bool
 ta.barssince(condition: series bool) -> series int
 ta.valuewhen(condition: series bool, source: series int/float/bool/color, occurrence: simple int) -> series source-kind
 ta.cross(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossover(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.crossunder(source1: series/simple numeric, source2: series/simple numeric) -> series bool
 ta.highest(length: simple int) -> series float
-ta.highest(source: series float, length: simple int) -> series float
+ta.highest(source: series int/float, length: simple int) -> series float
 ta.lowest(length: simple int) -> series float
-ta.lowest(source: series float, length: simple int) -> series float
+ta.lowest(source: series int/float, length: simple int) -> series float
 ta.highestbars(length: simple int) -> series int
-ta.highestbars(source: series float, length: simple int) -> series int
+ta.highestbars(source: series int/float, length: simple int) -> series int
 ta.lowestbars(length: simple int) -> series int
-ta.lowestbars(source: series float, length: simple int) -> series int
+ta.lowestbars(source: series int/float, length: simple int) -> series int
 ```
 
 Rules:
 
 - `length` should initially be `simple int`; reject `series int` lengths.
+- TA source parameters documented as `series int/float` accept numeric series
+  sources and evaluate through the runtime's floating-point calculation path.
 - `ta.bb` currently accepts any numeric qualifier for `mult`.
 - `ta.bbw` uses the same basis/deviation window as `ta.bb` and returns
   `(upper - lower) / basis`; it returns `na` when the window is not ready or

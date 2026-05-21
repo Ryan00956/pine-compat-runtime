@@ -7859,7 +7859,9 @@ plot(na(flag_change) ? 0 : flag_change ? 1 : -1)
             "test.pine",
             r#"indicator("mom")
 value = ta.mom(close, 2)
+index_value = ta.mom(bar_index, 2)
 plot(value)
+plot(index_value)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -7875,6 +7877,9 @@ plot(value)
         assert_eq!(result.plots[0].values[0], PineValue::Na);
         assert_eq!(result.plots[0].values[1], PineValue::Na);
         assert_values_close(&result.plots[0].values[2..], &[5.0, 7.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_values_close(&result.plots[1].values[2..], &[2.0, 2.0]);
     }
 
     #[test]
@@ -7884,8 +7889,10 @@ plot(value)
             r#"indicator("roc")
 value = ta.roc(close, 2)
 zero = ta.roc(open, 2)
+index_value = ta.roc(bar_index, 2)
 plot(value)
 plot(zero)
+plot(index_value)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -7910,6 +7917,10 @@ plot(zero)
         assert_eq!(result.plots[1].values[1], PineValue::Na);
         assert_eq!(result.plots[1].values[2], PineValue::Na);
         assert_values_close(&result.plots[1].values[3..], &[200.0]);
+        assert_eq!(result.plots[2].values[0], PineValue::Na);
+        assert_eq!(result.plots[2].values[1], PineValue::Na);
+        assert_eq!(result.plots[2].values[2], PineValue::Na);
+        assert_values_close(&result.plots[2].values[3..], &[200.0]);
     }
 
     #[test]
@@ -7919,8 +7930,12 @@ plot(zero)
             r#"indicator("trend")
 up = ta.rising(close, 2)
 down = ta.falling(close, 2)
+index_up = ta.rising(bar_index, 2)
+index_down = ta.falling(bar_index, 2)
 plot(up ? 1 : 0)
 plot(down ? 1 : 0)
+plot(index_up ? 1 : 0)
+plot(index_down ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -7949,6 +7964,11 @@ plot(down ? 1 : 0)
             &result.plots[1].values,
             &[0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
         );
+        assert_values_close(
+            &result.plots[2].values,
+            &[0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+        );
+        assert_values_close(&result.plots[3].values, &[0.0; 7]);
     }
 
     #[test]

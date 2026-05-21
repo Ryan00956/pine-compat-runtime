@@ -31,6 +31,7 @@ pub enum Accepts {
     Kind(ValueKind),
     Numeric,
     SeriesFloat,
+    SeriesNumeric,
     SeriesNumericOrBool,
     SeriesOrSimpleNumeric,
     SeriesOrSimpleNumericOrBool,
@@ -1329,7 +1330,7 @@ const NZ_PARAMS: &[BuiltinParam] = &[
 const TA_SOURCE_LENGTH_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
-        accepts: Accepts::SeriesFloat,
+        accepts: Accepts::SeriesNumeric,
         optional: false,
     },
     BuiltinParam {
@@ -1342,7 +1343,7 @@ const TA_SOURCE_LENGTH_PARAMS: &[BuiltinParam] = &[
 const TA_SOURCE_LENGTH_OFFSET_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
-        accepts: Accepts::SeriesFloat,
+        accepts: Accepts::SeriesNumeric,
         optional: false,
     },
     BuiltinParam {
@@ -1360,7 +1361,7 @@ const TA_SOURCE_LENGTH_OFFSET_PARAMS: &[BuiltinParam] = &[
 const TA_ALMA_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "series",
-        accepts: Accepts::SeriesFloat,
+        accepts: Accepts::SeriesNumeric,
         optional: false,
     },
     BuiltinParam {
@@ -1387,7 +1388,7 @@ const TA_ALMA_PARAMS: &[BuiltinParam] = &[
 
 const TA_SOURCE_ONLY_SERIES_FLOAT_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "source",
-    accepts: Accepts::SeriesFloat,
+    accepts: Accepts::SeriesNumeric,
     optional: false,
 }];
 
@@ -1400,7 +1401,7 @@ const TA_SOURCE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
 const TA_SOURCE_LENGTH_BIASED_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
-        accepts: Accepts::SeriesFloat,
+        accepts: Accepts::SeriesNumeric,
         optional: false,
     },
     BuiltinParam {
@@ -1516,7 +1517,7 @@ const TA_TR_PARAMS: &[BuiltinParam] = &[BuiltinParam {
 const TA_MACD_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
-        accepts: Accepts::SeriesFloat,
+        accepts: Accepts::SeriesNumeric,
         optional: false,
     },
     BuiltinParam {
@@ -1539,7 +1540,7 @@ const TA_MACD_PARAMS: &[BuiltinParam] = &[
 const TA_BB_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
-        accepts: Accepts::SeriesFloat,
+        accepts: Accepts::SeriesNumeric,
         optional: false,
     },
     BuiltinParam {

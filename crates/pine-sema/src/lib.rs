@@ -3379,6 +3379,9 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
         Accepts::SeriesFloat => {
             arg_type.qualifier == Qualifier::Series && arg_type.kind == ValueKind::Float
         }
+        Accepts::SeriesNumeric => {
+            arg_type.qualifier == Qualifier::Series && is_numeric(arg_type.kind)
+        }
         Accepts::SeriesNumericOrBool => {
             arg_type.qualifier == Qualifier::Series
                 && (is_numeric(arg_type.kind) || arg_type.kind == ValueKind::Bool)
@@ -3898,6 +3901,19 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.linreg")
+        );
+    }
+
+    #[test]
+    fn accepts_ta_numeric_series_sources() {
+        let analysis = analyze(
+            "[macd, signal, hist] = ta.macd(bar_index, 2, 3, 2)\n[basis, upper, lower] = ta.bb(bar_index, 3, 2)\nplot(ta.sma(bar_index, 2) + ta.ema(bar_index, 2) + ta.rma(bar_index, 2) + ta.rsi(bar_index, 2) + ta.bbw(bar_index, 3, 2) + ta.stdev(bar_index, 3) + ta.variance(bar_index, 3) + ta.range(bar_index, 3) + ta.dev(bar_index, 3) + ta.vwma(bar_index, 3) + ta.wma(bar_index, 3) + ta.hma(bar_index, 4) + ta.swma(bar_index) + ta.alma(bar_index, 4, 0.85, 6) + ta.linreg(bar_index, 3, 0) + ta.median(bar_index, 3) + ta.mode(bar_index, 3) + ta.percentrank(bar_index, 3) + ta.mom(bar_index, 2) + ta.roc(bar_index, 2) + macd + signal + hist + basis + upper + lower + (ta.rising(bar_index, 2) ? 1 : 0) + (ta.falling(bar_index, 2) ? 1 : 0))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
         );
     }
 
