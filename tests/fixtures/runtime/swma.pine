@@ -1,0 +1,3 @@
+//@version=5
+indicator("Symmetrically Weighted Moving Average")
+plot(ta.swma(close))

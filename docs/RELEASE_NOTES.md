@@ -105,6 +105,8 @@
 - Added `ta.wma` support for linearly weighted moving averages.
 - Added `ta.hma` support for Hull moving averages composed from internal WMA
   windows.
+- Added `ta.swma` support for fixed four-bar symmetric weighted moving
+  averages.
 - Added `ta.linreg` support for rolling least-squares linear regression values.
 - Added `ta.cum` support for cumulative numeric source sums.
 - Added `ta.accdist` support as the built-in Accumulation/Distribution index

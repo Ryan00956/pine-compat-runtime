@@ -207,7 +207,7 @@ Candidate areas:
 
 - Additional `ta.*` functions. Initial Phase D coverage includes `ta.stdev`
   and `ta.variance` with default biased and optional sample window modes, plus
-  `ta.range`, `ta.dev`, `ta.vwma`, `ta.wma`, `ta.hma`, `ta.linreg`,
+  `ta.range`, `ta.dev`, `ta.vwma`, `ta.wma`, `ta.hma`, `ta.swma`, `ta.linreg`,
   `ta.correlation`, `ta.covariance`, `ta.median`, `ta.mode`,
   `ta.percentile_nearest_rank`, `ta.percentile_linear_interpolation`, and
   `ta.percentrank` over ready rolling windows, `ta.cum` cumulative sums,

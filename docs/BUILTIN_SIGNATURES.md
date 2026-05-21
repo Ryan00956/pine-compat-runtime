@@ -324,6 +324,7 @@ ta.dev(source: series float, length: simple int) -> series float
 ta.vwma(source: series float, length: simple int) -> series float
 ta.wma(source: series float, length: simple int) -> series float
 ta.hma(source: series float, length: simple int) -> series float
+ta.swma(source: series float) -> series float
 ta.linreg(source: series float, length: simple int, offset: simple int) -> series float
 ta.cum(source: series/simple numeric) -> series float
 ta.accdist -> series float
@@ -377,6 +378,9 @@ Rules:
   weight `1` and the current value has weight `length`.
 - `ta.hma` composes `ta.wma`-style windows as
   `wma(2 * wma(source, length / 2) - wma(source, length), round(sqrt(length)))`.
+- `ta.swma` returns a fixed four-bar symmetric weighted average using weights
+  `1, 2, 2, 1`; it returns `na` until the fixed window is ready or when the
+  window contains `na`.
 - `ta.linreg` fits a least-squares line over the ready source window and
   returns `intercept + slope * (length - 1 - offset)`.
 - `ta.cum` returns the cumulative sum of numeric source values from the start of

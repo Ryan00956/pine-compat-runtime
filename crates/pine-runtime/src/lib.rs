@@ -1986,6 +1986,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ta.vwma" => self.eval_vwma(call_site_id, args),
             "ta.wma" => self.eval_wma(call_site_id, args),
             "ta.hma" => self.eval_hma(call_site_id, args),
+            "ta.swma" => self.eval_swma(call_site_id, args),
             "ta.linreg" => self.eval_linreg(call_site_id, args),
             "ta.correlation" => self.eval_correlation(call_site_id, args),
             "ta.covariance" => self.eval_covariance(call_site_id, args),
@@ -3780,6 +3781,23 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Ok(finite_float_or_na(smooth.weighted_mean(smooth_length)))
+    }
+
+    fn eval_swma(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let source = self.eval_expr(&args[0].value)?;
+        let length = 4_usize;
+        let window = self.update_rolling_window(call_site_id, source, length);
+        if !window.is_ready(length) {
+            return Ok(PineValue::Na);
+        }
+
+        let values: Vec<_> = window.values.iter().flatten().copied().collect();
+        let value = (values[0] + 2.0 * values[1] + 2.0 * values[2] + values[3]) / 6.0;
+        Ok(finite_float_or_na(value))
     }
 
     fn eval_linreg(
@@ -8111,6 +8129,38 @@ plot(value)
             &result.plots[0].values[4..],
             &[10.38888888888889, 15.38888888888889],
         );
+    }
+
+    #[test]
+    fn runs_swma_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("swma")
+value = ta.swma(close)
+with_na = ta.swma(bar_index == 4 ? na : close)
+plot(value)
+plot(with_na)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![bar(1.0), bar(2.0), bar(4.0), bar(8.0), bar(16.0)];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_eq!(result.plots[0].values[1], PineValue::Na);
+        assert_eq!(result.plots[0].values[2], PineValue::Na);
+        assert_values_close(&result.plots[0].values[3..], &[3.5, 7.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_eq!(result.plots[1].values[2], PineValue::Na);
+        assert_values_close(&result.plots[1].values[3..4], &[3.5]);
+        assert_eq!(result.plots[1].values[4], PineValue::Na);
     }
 
     #[test]

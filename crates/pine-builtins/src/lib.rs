@@ -840,6 +840,12 @@ const TA_SOURCE_LENGTH_OFFSET_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TA_SOURCE_ONLY_SERIES_FLOAT_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "source",
+    accepts: Accepts::SeriesFloat,
+    optional: false,
+}];
+
 const TA_SOURCE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "source",
     accepts: Accepts::SeriesOrSimpleNumeric,
@@ -2252,6 +2258,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "ta.hma",
         phase: BuiltinPhase::Phase1Core,
         params: TA_SOURCE_LENGTH_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ta.swma",
+        phase: BuiltinPhase::Phase1Core,
+        params: TA_SOURCE_ONLY_SERIES_FLOAT_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
