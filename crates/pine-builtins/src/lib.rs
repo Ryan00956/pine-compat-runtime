@@ -2452,6 +2452,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("ta.pvt", PineType::new(Qualifier::Series, ValueKind::Float)),
     ("ta.wad", PineType::new(Qualifier::Series, ValueKind::Float)),
     (
+        "ta.vwap",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "ta.wvad",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),

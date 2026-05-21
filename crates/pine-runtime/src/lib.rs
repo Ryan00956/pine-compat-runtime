@@ -440,6 +440,9 @@ pub struct HistoricalRuntime<'a> {
     pvi_current: PineValue,
     pvt_state: PineValue,
     pvt_current: PineValue,
+    vwap_weighted_sum: f64,
+    vwap_volume_sum: f64,
+    vwap_current: PineValue,
     wad_state: PineValue,
     wad_current: PineValue,
     wvad_current: PineValue,
@@ -674,6 +677,9 @@ impl<'a> HistoricalRuntime<'a> {
             pvi_current: PineValue::Na,
             pvt_state: PineValue::Na,
             pvt_current: PineValue::Na,
+            vwap_weighted_sum: 0.0,
+            vwap_volume_sum: 0.0,
+            vwap_current: PineValue::Na,
             wad_state: PineValue::Na,
             wad_current: PineValue::Na,
             wvad_current: PineValue::Na,
@@ -1139,6 +1145,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.obv_current = self.next_obv(bar, previous_close);
         self.pvi_current = self.next_pvi(bar, previous_close, previous_volume);
         self.pvt_current = self.next_pvt(bar, previous_close);
+        self.vwap_current = self.next_vwap(bar);
         self.wad_current = self.next_wad(bar, previous_close);
         self.wvad_current = Self::wvad_value(bar);
         self.price_flow_previous_close = Some(bar.close);
@@ -1284,6 +1291,30 @@ impl<'a> HistoricalRuntime<'a> {
         self.pvt_state.clone()
     }
 
+    fn next_vwap(&mut self, bar: &Bar) -> PineValue {
+        let source = (bar.high + bar.low + bar.close) / 3.0;
+        let weighted = source * bar.volume;
+        if !source.is_finite() || !bar.volume.is_finite() || !weighted.is_finite() {
+            self.vwap_weighted_sum = 0.0;
+            self.vwap_volume_sum = 0.0;
+            self.vwap_current = PineValue::Na;
+            return PineValue::Na;
+        }
+
+        self.vwap_weighted_sum += weighted;
+        self.vwap_volume_sum += bar.volume;
+        if self.vwap_volume_sum == 0.0
+            || !self.vwap_weighted_sum.is_finite()
+            || !self.vwap_volume_sum.is_finite()
+        {
+            self.vwap_current = PineValue::Na;
+            return PineValue::Na;
+        }
+
+        self.vwap_current = finite_float_or_na(self.vwap_weighted_sum / self.vwap_volume_sum);
+        self.vwap_current.clone()
+    }
+
     fn next_wad(&mut self, bar: &Bar, previous_close: Option<f64>) -> PineValue {
         let Some(previous_close) = previous_close else {
             self.wad_state = PineValue::Na;
@@ -1374,6 +1405,9 @@ impl<'a> HistoricalRuntime<'a> {
         }
         if name == "ta.pvt" {
             return self.pvt_current.clone();
+        }
+        if name == "ta.vwap" {
+            return self.vwap_current.clone();
         }
         if name == "ta.wad" {
             return self.wad_current.clone();
@@ -6681,6 +6715,31 @@ plot(ta.iii)
         assert_values_close(&result.plots[0].values[..2], &[0.004, -1.0]);
         assert_eq!(result.plots[0].values[2], PineValue::Na);
         assert_eq!(result.plots[0].values[3], PineValue::Na);
+    }
+
+    #[test]
+    fn runs_vwap_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("vwap")
+plot(ta.vwap)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlcv(9.0, 12.0, 6.0, 9.0, 10.0),
+            bar_ohlcv(18.0, 24.0, 12.0, 18.0, 30.0),
+            bar_ohlcv(25.0, 30.0, 15.0, 15.0, 0.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values, &[9.0, 15.75, 15.75]);
     }
 
     #[test]
