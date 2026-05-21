@@ -2,5 +2,8 @@
 indicator("NA")
 previous = close[1]
 fallback = nz(previous, close)
+maybe_close = close > open ? close : na
+fixed = fixnan(maybe_close)
 plot(na(previous) ? close : fallback)
 plot(fallback)
+plot(fixed)

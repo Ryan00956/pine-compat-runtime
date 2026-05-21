@@ -2150,6 +2150,7 @@ impl<'a> HistoricalRuntime<'a> {
                     Ok(value)
                 }
             }
+            "fixnan" => self.eval_fixnan(call_site_id, args),
             "array.new_float" => self.eval_array_new_float(args),
             "array.new_int" => self.eval_array_new_int(args),
             "array.new_bool" => self.eval_array_new_bool(args),
@@ -2212,6 +2213,24 @@ impl<'a> HistoricalRuntime<'a> {
             _ => Err(RuntimeError {
                 message: format!("unsupported runtime call `{callee}`"),
             }),
+        }
+    }
+
+    fn eval_fixnan(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let value = self.eval_expr(&args[0].value)?;
+        if value.is_na() {
+            Ok(self
+                .call_state
+                .get(&call_site_id)
+                .cloned()
+                .unwrap_or(PineValue::Na))
+        } else {
+            self.call_state.insert(call_site_id, value.clone());
+            Ok(value)
         }
     }
 
@@ -12127,6 +12146,75 @@ plot(barstate.isrealtime ? 1 : 0)
         assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[3].values, &[0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn runs_fixnan_over_historical_bars() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("fixnan")
+source = close > open ? close : na
+fixed = fixnan(source)
+late = bar_index > 1 ? close : na
+fixed_late = fixnan(late)
+color_source = close > open ? color.green : na
+fixed_color = fixnan(color_source)
+plot(fixed)
+plot(fixed_late)
+plot(fixed_color == color.green ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+            bar_ohlc(5.0, 5.0, 5.0, 5.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_values_close(&result.plots[0].values, &[2.0, 2.0, 6.0, 6.0]);
+        assert_eq!(result.plots[1].values[0], PineValue::Na);
+        assert_eq!(result.plots[1].values[1], PineValue::Na);
+        assert_values_close(&result.plots[1].values[2..], &[6.0, 5.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0]);
+    }
+
+    #[test]
+    fn advances_conditional_fixnan_only_when_branch_executes() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("conditional fixnan")
+value = close
+if close > open
+    source = close > 4 ? close : na
+    value := fixnan(source)
+plot(value)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            bar_ohlc(1.0, 2.0, 1.0, 2.0),
+            bar_ohlc(3.0, 3.0, 2.0, 2.0),
+            bar_ohlc(4.0, 6.0, 4.0, 6.0),
+            bar_ohlc(5.0, 8.0, 5.0, 8.0),
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+        assert_eq!(result.plots[0].values[0], PineValue::Na);
+        assert_values_close(&result.plots[0].values[1..], &[2.0, 6.0, 8.0]);
     }
 
     #[test]

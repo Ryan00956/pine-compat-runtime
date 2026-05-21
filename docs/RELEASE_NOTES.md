@@ -145,6 +145,8 @@
 - Added `str.split` support for literal separators and empty-separator
   character splitting.
 - Added a UTC subset of `str.format_time` timestamp formatting.
+- Added `fixnan` support for carrying forward the last non-`na` numeric or
+  color value at each callsite.
 - Added `math.floor` and `math.ceil` support for numeric values.
 - Added `math.sqrt`, `math.log`, and `math.pow` support for numeric values.
 - Added `math.sin`, `math.cos`, and `math.tan` support for numeric values.

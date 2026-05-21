@@ -246,6 +246,8 @@ Candidate areas:
   `math.round`, `math.round_to_mintick`, `math.random`, and `math.sum`;
   string coverage includes `str.split`; time
   helper coverage includes the numeric UTC `timestamp` subset.
+- Initial utility helper coverage includes `fixnan` for the current numeric
+  and color last-non-`na` callsite subset.
 - Initial color helper coverage includes `color.from_gradient` linear RGBA
   interpolation and `#RRGGBB`/`#RRGGBBAA` hex color literals.
 - Initial `barstate.*` coverage includes `barstate.isfirst`,

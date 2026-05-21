@@ -3526,6 +3526,10 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
                     | ValueKind::Na
             ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::NumericOrColorCompatible => {
+            (is_numeric(arg_type.kind) || matches!(arg_type.kind, ValueKind::Color | ValueKind::Na))
+                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::NumericCompatible => {
             (is_numeric(arg_type.kind) || arg_type.kind == ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
@@ -3840,6 +3844,26 @@ mod tests {
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "ta.sma")
+        );
+    }
+
+    #[test]
+    fn accepts_fixnan() {
+        let analysis = analyze(
+            "source = close > open ? close : na\nplot(fixnan(source) + (fixnan(color.green == color.red ? color.green : na) == color.green ? 1 : 0))\n",
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "fixnan")
         );
     }
 

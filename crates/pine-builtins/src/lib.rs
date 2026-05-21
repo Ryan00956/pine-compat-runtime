@@ -46,6 +46,7 @@ pub enum Accepts {
     StringCompatible,
     StringConvertible,
     ValueWhenSource,
+    NumericOrColorCompatible,
     NumericCompatible,
     IntCompatible,
     BoolCompatible,
@@ -1345,6 +1346,12 @@ const NZ_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const FIXNAN_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "source",
+    accepts: Accepts::NumericOrColorCompatible,
+    optional: false,
+}];
+
 const TA_SOURCE_LENGTH_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
@@ -2610,6 +2617,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "nz",
         phase: BuiltinPhase::Phase1Core,
         params: NZ_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "fixnan",
+        phase: BuiltinPhase::Phase1Core,
+        params: FIXNAN_PARAMS,
         returns: ReturnSpec::SameAsArg(0),
         variadic: false,
     },

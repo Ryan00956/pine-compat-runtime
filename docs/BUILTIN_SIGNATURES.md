@@ -241,12 +241,16 @@ Supported direct display constants include `display.all`, `display.none`,
 na(x: any) -> simple bool or series bool
 nz(x: numeric-or-color-series) -> same kind and qualifier as x
 nz(x: T, replacement: T) -> strongest qualifier of x and replacement, kind T
+fixnan(source: series/simple int|float|color) -> same kind and qualifier as source
 ```
 
 `na(x)` returns a series-qualified bool when `x` is series-qualified.
 
 `nz` overloads must be explicit. Do not implement `nz` with a generic host
 language null helper.
+`fixnan` returns the current non-`na` source value and otherwise returns the
+last non-`na` value observed at the same callsite. It returns `na` until the
+callsite has observed a non-`na` value.
 
 ## Arrays
 
