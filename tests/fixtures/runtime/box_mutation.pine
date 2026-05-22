@@ -1,0 +1,14 @@
+//@version=5
+indicator("Box mutation")
+var box_id = box.new(bar_index, high, bar_index, low)
+if bar_index == 1
+    box.set_lefttop(box_id, bar_index, open)
+if bar_index == 2
+    box.set_rightbottom(box_id, bar_index, close)
+    box.set_bgcolor(box_id, color.green)
+for i = 0 to 0
+    if bar_index == 3
+        box.set_border_color(box_id, color.white)
+        box.set_border_width(box_id, 2)
+        box.set_border_style(box_id, line.style_dashed)
+plot(close)

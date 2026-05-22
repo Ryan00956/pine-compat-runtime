@@ -253,6 +253,183 @@ plot(close)
 }
 
 #[test]
+fn collects_box_new_snapshots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("boxes")
+box.new(bar_index, high, bar_index, low)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.boxes.len(), 3);
+    assert!(result.labels.is_empty());
+    assert!(result.lines.is_empty());
+    for (index, box_output) in result.boxes.iter().enumerate() {
+        assert_eq!(box_output.id, index as u32 + 1);
+        assert_eq!(box_output.snapshots.len(), 1);
+        let snapshot = &box_output.snapshots[0];
+        assert_eq!(snapshot.bar_index, index);
+        assert!(snapshot.exists);
+        assert_eq!(snapshot.left, PineValue::Int(index as i64));
+        assert_eq!(snapshot.top, PineValue::Float(index as f64 + 1.0));
+        assert_eq!(snapshot.right, PineValue::Int(index as i64));
+        assert_eq!(snapshot.bottom, PineValue::Float(index as f64 + 1.0));
+        assert_eq!(snapshot.bg_color, PineValue::Na);
+        assert_eq!(snapshot.border_color, PineValue::Na);
+        assert_eq!(snapshot.border_width, PineValue::Int(1));
+        assert_eq!(
+            snapshot.border_style,
+            PineValue::String("line.style_solid".to_owned())
+        );
+    }
+}
+
+#[test]
+fn collects_box_mutation_snapshots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("box mutation")
+id = box.new(bar_index, high, bar_index, low)
+box.set_left(id, 1)
+box.set_top(id, close + 1)
+box.set_lefttop(id, bar_index, open)
+box.set_right(id, 2)
+box.set_bottom(id, close + 2)
+box.set_rightbottom(id, bar_index, close)
+box.set_bgcolor(id, color.green)
+box.set_border_color(id, color.white)
+box.set_border_width(id, 2)
+box.set_border_style(id, line.style_dashed)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(result.boxes.len(), 1);
+    let box_output = &result.boxes[0];
+    assert_eq!(box_output.snapshots.len(), 11);
+    assert_eq!(box_output.snapshots[1].left, PineValue::Int(1));
+    assert_eq!(box_output.snapshots[2].top, PineValue::Float(2.0));
+    assert_eq!(box_output.snapshots[3].left, PineValue::Int(0));
+    assert_eq!(box_output.snapshots[3].top, PineValue::Float(1.0));
+    assert_eq!(box_output.snapshots[4].right, PineValue::Int(2));
+    assert_eq!(box_output.snapshots[5].bottom, PineValue::Float(3.0));
+    assert_eq!(box_output.snapshots[6].right, PineValue::Int(0));
+    assert_eq!(box_output.snapshots[6].bottom, PineValue::Float(1.0));
+    assert_eq!(box_output.snapshots[7].bg_color, PineValue::Color(0x008000));
+    assert_eq!(
+        box_output.snapshots[8].border_color,
+        PineValue::Color(0xFFFFFF)
+    );
+    assert_eq!(box_output.snapshots[9].border_width, PineValue::Int(2));
+    assert_eq!(
+        box_output.snapshots[10].border_style,
+        PineValue::String("line.style_dashed".to_owned())
+    );
+}
+
+#[test]
+fn collects_box_delete_snapshots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("box delete")
+var id = box.new(bar_index, high, bar_index, low)
+if bar_index == 1
+    box.delete(id)
+if bar_index == 2
+    box.set_bgcolor(id, color.green)
+    box.delete(id)
+box.delete(na)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.boxes.len(), 1);
+    let box_output = &result.boxes[0];
+    assert_eq!(box_output.snapshots.len(), 2);
+    assert!(box_output.snapshots[0].exists);
+    assert_eq!(box_output.snapshots[0].bar_index, 0);
+    assert!(!box_output.snapshots[1].exists);
+    assert_eq!(box_output.snapshots[1].bar_index, 1);
+}
+
+#[test]
+fn rejects_box_creation_past_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("box limit")
+for i = 0 to 500
+    box.new(i, close, i, open)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected box limit error");
+
+    assert!(error.message.contains("box count cannot exceed"));
+}
+
+#[test]
+fn profiles_box_storage() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("box profile")
+id = box.new(bar_index, high, bar_index, low)
+box.set_bgcolor(id, color.green)
+box.delete(id)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(profiled.profile.boxes, 1);
+    assert_eq!(profiled.profile.box_snapshots, 3);
+    assert!(profiled.profile.box_capacity >= 1);
+    assert!(profiled.profile.box_snapshot_capacity >= 3);
+}
+
+#[test]
 fn collects_label_new_options() {
     let source = SourceFile::new(
         "test.pine",

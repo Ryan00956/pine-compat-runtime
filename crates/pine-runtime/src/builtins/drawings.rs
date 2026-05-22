@@ -34,6 +34,18 @@ impl<'a> HistoricalRuntime<'a> {
             "line.set_style" => self.eval_line_set_style(args),
             "line.set_extend" => self.eval_line_set_extend(args),
             "line.delete" => self.eval_line_delete(args),
+            "box.new" => self.eval_box_new(args),
+            "box.set_left" => self.eval_box_set_left(args),
+            "box.set_top" => self.eval_box_set_top(args),
+            "box.set_right" => self.eval_box_set_right(args),
+            "box.set_bottom" => self.eval_box_set_bottom(args),
+            "box.set_lefttop" => self.eval_box_set_lefttop(args),
+            "box.set_rightbottom" => self.eval_box_set_rightbottom(args),
+            "box.set_bgcolor" => self.eval_box_set_bgcolor(args),
+            "box.set_border_color" => self.eval_box_set_border_color(args),
+            "box.set_border_width" => self.eval_box_set_border_width(args),
+            "box.set_border_style" => self.eval_box_set_border_style(args),
+            "box.delete" => self.eval_box_delete(args),
             _ => return None,
         })
     }
@@ -131,6 +143,41 @@ impl<'a> HistoricalRuntime<'a> {
             }],
         });
         Ok(PineValue::Line(id))
+    }
+
+    fn eval_box_new(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let left = self.eval_required_box_arg(args, 0, "left")?;
+        let top = self.eval_required_box_arg(args, 1, "top")?;
+        let right = self.eval_required_box_arg(args, 2, "right")?;
+        let bottom = self.eval_required_box_arg(args, 3, "bottom")?;
+        if self.boxes.len() >= MAX_BOXES {
+            return Err(RuntimeError {
+                message: format!("box count cannot exceed {MAX_BOXES}"),
+            });
+        }
+        let id = self.next_box_id;
+        self.next_box_id = self
+            .next_box_id
+            .checked_add(1)
+            .ok_or_else(|| RuntimeError {
+                message: "box id limit exceeded".to_owned(),
+            })?;
+        self.boxes.push(BoxOutput {
+            id,
+            snapshots: vec![BoxSnapshot {
+                bar_index: self.bars,
+                exists: true,
+                left,
+                top,
+                right,
+                bottom,
+                bg_color: PineValue::Na,
+                border_color: PineValue::Na,
+                border_width: PineValue::Int(1),
+                border_style: PineValue::String("line.style_solid".to_owned()),
+            }],
+        });
+        Ok(PineValue::Box(id))
     }
 
     fn eval_label_set_x(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -341,6 +388,124 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    fn eval_box_set_left(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let left = self.eval_required_box_arg(args, 1, "x")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.left = left;
+        })
+    }
+
+    fn eval_box_set_top(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let top = self.eval_required_box_arg(args, 1, "y")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.top = top;
+        })
+    }
+
+    fn eval_box_set_right(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let right = self.eval_required_box_arg(args, 1, "x")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.right = right;
+        })
+    }
+
+    fn eval_box_set_bottom(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let bottom = self.eval_required_box_arg(args, 1, "y")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.bottom = bottom;
+        })
+    }
+
+    fn eval_box_set_lefttop(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let left = self.eval_required_box_arg(args, 1, "x")?;
+        let top = self.eval_required_box_arg(args, 2, "y")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.left = left;
+            snapshot.top = top;
+        })
+    }
+
+    fn eval_box_set_rightbottom(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let right = self.eval_required_box_arg(args, 1, "x")?;
+        let bottom = self.eval_required_box_arg(args, 2, "y")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.right = right;
+            snapshot.bottom = bottom;
+        })
+    }
+
+    fn eval_box_set_bgcolor(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let bg_color = self.eval_required_box_arg(args, 1, "color")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.bg_color = bg_color;
+        })
+    }
+
+    fn eval_box_set_border_color(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let border_color = self.eval_required_box_arg(args, 1, "color")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.border_color = border_color;
+        })
+    }
+
+    fn eval_box_set_border_width(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let border_width = self.eval_required_box_arg(args, 1, "width")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.border_width = border_width;
+        })
+    }
+
+    fn eval_box_set_border_style(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let border_style = self.eval_required_box_arg(args, 1, "style")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.border_style = border_style;
+        })
+    }
+
+    fn eval_box_delete(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        let Some(box_output) = self.boxes.iter_mut().find(|box_output| box_output.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid box id `{id}`"),
+            });
+        };
+        let Some(latest) = box_output.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("box `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Void);
+        }
+        let mut next = latest;
+        next.bar_index = self.bars;
+        next.exists = false;
+        box_output.snapshots.push(next);
+        Ok(PineValue::Void)
+    }
+
     fn eval_label_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
@@ -371,6 +536,21 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
+    fn eval_box_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
+        let Some(id_arg) = call_arg_expr(args, 0, "id") else {
+            return Err(RuntimeError {
+                message: "box mutation missing id argument".to_owned(),
+            });
+        };
+        match self.eval_expr(id_arg)? {
+            PineValue::Box(id) => Ok(Some(id)),
+            PineValue::Na => Ok(None),
+            value => Err(RuntimeError {
+                message: format!("box mutation expected box id, got {value:?}"),
+            }),
+        }
+    }
+
     fn eval_required_label_arg(
         &mut self,
         args: &[HirCallArg],
@@ -394,6 +574,20 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(arg) = call_arg_expr(args, index, name) else {
             return Err(RuntimeError {
                 message: format!("line.new missing {name} argument"),
+            });
+        };
+        self.eval_expr(arg)
+    }
+
+    fn eval_required_box_arg(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = call_arg_expr(args, index, name) else {
+            return Err(RuntimeError {
+                message: format!("box call missing {name} argument"),
             });
         };
         self.eval_expr(arg)
@@ -455,6 +649,36 @@ impl<'a> HistoricalRuntime<'a> {
         if next != latest {
             next.bar_index = self.bars;
             line.snapshots.push(next);
+        }
+        Ok(PineValue::Void)
+    }
+
+    fn mutate_box(
+        &mut self,
+        id: Option<u32>,
+        mutate: impl FnOnce(&mut BoxSnapshot),
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        let Some(box_output) = self.boxes.iter_mut().find(|box_output| box_output.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid box id `{id}`"),
+            });
+        };
+        let Some(latest) = box_output.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("box `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Void);
+        }
+        let mut next = latest.clone();
+        mutate(&mut next);
+        if next != latest {
+            next.bar_index = self.bars;
+            box_output.snapshots.push(next);
         }
         Ok(PineValue::Void)
     }

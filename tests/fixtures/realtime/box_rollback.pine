@@ -1,0 +1,12 @@
+//@version=5
+indicator("Realtime box rollback")
+var box_id = box.new(bar_index, high, bar_index, low)
+if barstate.isrealtime and not barstate.isconfirmed
+    if close > 2.5
+        box.delete(box_id)
+    else
+        box.set_lefttop(box_id, bar_index, close)
+        box.set_bgcolor(box_id, color.green)
+    temp = box.new(bar_index, close, bar_index, open)
+    box.delete(temp)
+plot(close)

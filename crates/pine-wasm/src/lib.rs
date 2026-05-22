@@ -239,6 +239,7 @@ mod tests {
         assert!(output.contains("\"plotCandles\":[]"));
         assert!(output.contains("\"labels\":[]"));
         assert!(output.contains("\"lines\":[]"));
+        assert!(output.contains("\"boxes\":[]"));
     }
 
     #[test]

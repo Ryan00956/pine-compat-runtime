@@ -423,6 +423,43 @@ fn rejects_unimplemented_line_methods() {
 }
 
 #[test]
+fn accepts_minimal_box_new() {
+    let analysis = analyze(
+        "id = box.new(bar_index, high, bar_index, low)\nother = box.new(left=0, top=open, right=bar_index, bottom=close)\nbox.set_left(id, bar_index)\nbox.set_top(id, high)\nbox.set_right(id, bar_index)\nbox.set_bottom(id, low)\nbox.set_lefttop(id, bar_index, close)\nbox.set_rightbottom(id, bar_index, open)\nbox.set_bgcolor(id, color.green)\nbox.set_border_color(id, color.white)\nbox.set_border_width(id, 2)\nbox.set_border_style(id, line.style_dashed)\nbox.delete(na)\nbox.delete(id)\nplot(close)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "box.new")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_unimplemented_box_methods() {
+    let analysis = analyze("box.get_top(na)\nplot(close)\n");
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "box.get_top"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_input_history_offset() {
     let analysis = analyze("len = input.int(1, \"Length\")\nx = close[len]\n");
 

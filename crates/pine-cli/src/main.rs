@@ -57,6 +57,7 @@ mod tests {
             let expected_status = if signature.name.starts_with("array.")
                 || signature.name.starts_with("label.")
                 || signature.name.starts_with("line.")
+                || signature.name.starts_with("box.")
             {
                 "partial"
             } else {
@@ -192,7 +193,7 @@ mod tests {
             "import",
             "strategy.*",
             "alert/alertcondition",
-            "unsupported label/line methods/box/table/polyline",
+            "unsupported label/line/box methods/table/polyline",
             "non-int history offsets",
             "negative history offsets",
         ] {
@@ -255,6 +256,7 @@ mod tests {
             fills: vec![],
             labels: vec![],
             lines: vec![],
+            boxes: vec![],
             diagnostics: vec![],
         };
 
@@ -263,6 +265,7 @@ mod tests {
         assert!(output.starts_with(r#"{"schemaVersion":2,"#));
         assert!(output.contains(r#""labels":[]"#));
         assert!(output.contains(r#""lines":[]"#));
+        assert!(output.contains(r#""boxes":[]"#));
         assert!(output.contains(r#""diagnostics":[]"#));
     }
 
@@ -281,6 +284,7 @@ mod tests {
             fills: vec![],
             labels: vec![],
             lines: vec![],
+            boxes: vec![],
             diagnostics: vec![],
         };
         let profile = RuntimeProfile {
@@ -353,6 +357,10 @@ mod tests {
             line_snapshots: 0,
             line_capacity: 0,
             line_snapshot_capacity: 0,
+            boxes: 0,
+            box_snapshots: 0,
+            box_capacity: 0,
+            box_snapshot_capacity: 0,
         };
 
         let output = public_runtime_profiled_result_json(&result, &profile);
@@ -378,6 +386,8 @@ mod tests {
         assert!(output.contains(r#""labelSnapshots":0"#));
         assert!(output.contains(r#""lines":0"#));
         assert!(output.contains(r#""lineSnapshots":0"#));
+        assert!(output.contains(r#""boxes":0"#));
+        assert!(output.contains(r#""boxSnapshots":0"#));
     }
 
     #[test]
@@ -439,6 +449,18 @@ mod tests {
             (
                 "runtime_line_delete.json",
                 "tests/fixtures/runtime/line_delete.pine",
+            ),
+            (
+                "runtime_box_new.json",
+                "tests/fixtures/runtime/box_new.pine",
+            ),
+            (
+                "runtime_box_mutation.json",
+                "tests/fixtures/runtime/box_mutation.pine",
+            ),
+            (
+                "runtime_box_delete.json",
+                "tests/fixtures/runtime/box_delete.pine",
             ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));

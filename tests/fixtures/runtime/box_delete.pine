@@ -1,0 +1,10 @@
+//@version=5
+indicator("Box delete")
+var box_id = box.new(bar_index, high, bar_index, low)
+if bar_index == 1
+    box.delete(box_id)
+if bar_index == 2
+    box.set_bgcolor(box_id, color.green)
+    box.delete(box_id)
+box.delete(na)
+plot(close)

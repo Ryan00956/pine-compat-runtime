@@ -272,6 +272,7 @@ The core output must remain host-neutral:
   "fills": [],
   "labels": [],
   "lines": [],
+  "boxes": [],
   "diagnostics": []
 }
 ```
@@ -282,21 +283,19 @@ adds top-level drawing-object fields. Host integrations can adapt
 this model into their charting or API format, but should preserve the schema
 version when they forward machine-readable results.
 
-Drawing-object outputs use sparse snapshot families. The initial drawing
-contract reserves `labels` and `lines`, whose entries have an object `id` and a
-`snapshots` array. Label snapshots use `barIndex`, `exists`, and, while
-`exists` is true, the mutable label fields represented by normalized Pine
-values. Phase E starts
-with a `label.new` creation subset for `x`, `y`, `text`, `xloc.bar_index`,
-`yloc.price`, colors, selected label styles, size, and tooltip metadata, plus
-`label.set_*` mutation snapshots for x/y/text/color/style/size/tooltip fields.
-`label.delete` appends an `exists: false` snapshot, deleting `na` or an already
-deleted label is a no-op, and ids are not reused. The historical runtime caps
-labels at 500 objects. The initial line lifecycle emits creation, mutation, and
-deletion snapshots with `x1`, `y1`, `x2`, `y2`, `color`, `width`, `style`, and
-`extend`; `line.delete` appends an `exists: false` snapshot, deleting `na` or an
-already deleted line is a no-op, and ids are not reused. The historical runtime
-caps lines at 500 objects.
+Drawing-object outputs use sparse snapshot families. The Phase E drawing
+contract reserves `labels`, `lines`, and `boxes`, whose entries have an object
+`id` and a `snapshots` array. Label snapshots use `barIndex`, `exists`, and,
+while `exists` is true, the mutable label fields represented by normalized Pine
+values. The label lifecycle covers `label.new`, selected `label.set_*`
+mutators, and `label.delete`. Line snapshots cover `x1`, `y1`, `x2`, `y2`,
+`color`, `width`, `style`, and `extend` for `line.new`, selected `line.set_*`
+mutators, and `line.delete`. Box snapshots cover `left`, `top`, `right`,
+`bottom`, `bgColor`, `borderColor`, `borderWidth`, and `borderStyle` for
+`box.new`, selected `box.set_*` mutators, and `box.delete`. Delete calls append
+an `exists: false` snapshot; deleting `na` or an already deleted drawing object
+is a no-op; ids are not reused. The historical runtime caps each supported
+drawing family at 500 objects.
 
 The `pine-runtime` crate owns the shared runtime-result JSON helpers used by the
 CLI and WASM bindings. Python keeps explicit dictionary conversion code because

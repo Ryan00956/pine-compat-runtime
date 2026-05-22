@@ -198,6 +198,7 @@ fn runtime_result_to_py(
     output.set_item("fills", fills_to_py(py, &result.fills)?)?;
     output.set_item("labels", labels_to_py(py, &result.labels)?)?;
     output.set_item("lines", lines_to_py(py, &result.lines)?)?;
+    output.set_item("boxes", boxes_to_py(py, &result.boxes)?)?;
     output.set_item("diagnostics", PyList::empty(py))?;
     Ok(output.into_any().unbind())
 }
@@ -414,6 +415,41 @@ fn line_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
+fn boxes_to_py(py: Python<'_>, boxes: &[pine_runtime::BoxOutput]) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for box_output in boxes {
+        let item = PyDict::new(py);
+        item.set_item("id", box_output.id)?;
+        item.set_item("snapshots", box_snapshots_to_py(py, &box_output.snapshots)?)?;
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
+fn box_snapshots_to_py(
+    py: Python<'_>,
+    snapshots: &[pine_runtime::BoxSnapshot],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for snapshot in snapshots {
+        let item = PyDict::new(py);
+        item.set_item("barIndex", snapshot.bar_index)?;
+        item.set_item("exists", snapshot.exists)?;
+        if snapshot.exists {
+            item.set_item("left", value_to_py(py, &snapshot.left)?)?;
+            item.set_item("top", value_to_py(py, &snapshot.top)?)?;
+            item.set_item("right", value_to_py(py, &snapshot.right)?)?;
+            item.set_item("bottom", value_to_py(py, &snapshot.bottom)?)?;
+            item.set_item("bgColor", value_to_py(py, &snapshot.bg_color)?)?;
+            item.set_item("borderColor", value_to_py(py, &snapshot.border_color)?)?;
+            item.set_item("borderWidth", value_to_py(py, &snapshot.border_width)?)?;
+            item.set_item("borderStyle", value_to_py(py, &snapshot.border_style)?)?;
+        }
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
 fn values_to_py(py: Python<'_>, values: &[PineValue]) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for value in values {
@@ -438,7 +474,8 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
         | PineValue::Plot(value)
         | PineValue::HLine(value)
         | PineValue::Label(value)
-        | PineValue::Line(value) => output.append(*value),
+        | PineValue::Line(value)
+        | PineValue::Box(value) => output.append(*value),
         PineValue::Tuple(values) => output.append(values_to_py(py, values)?),
         PineValue::Array(_) | PineValue::Na | PineValue::Void => output.append(py.None()),
     }

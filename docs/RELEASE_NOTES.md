@@ -16,12 +16,16 @@
   runtime limit. Label creation, mutation, and deletion now have fixture-backed
   realtime rollback, and drawing side effects inside user-defined functions are
   rejected under the existing side-effect policy. Unsupported coordinate modes
-  and other drawing families remain unsupported.
+  and advanced label methods remain unsupported.
 - Added the initial `line.*` lifecycle: deterministic line ids, sparse public
   `lines` snapshots for creation/mutation/deletion, selected endpoint/color/
   width/style/extend mutators, realtime rollback coverage, and a deterministic
-  500-line runtime limit. Advanced line methods and other drawing families
-  remain unsupported.
+  500-line runtime limit. Advanced line methods remain unsupported.
+- Added the initial `box.*` lifecycle: deterministic box ids, sparse public
+  `boxes` snapshots for creation/mutation/deletion, selected geometry/
+  background/border mutators, realtime rollback coverage, and a deterministic
+  500-box runtime limit. Advanced box methods plus table and polyline drawing
+  families remain unsupported.
 - Closed Phase K release infrastructure with public `schemaVersion: 1` output
   contracts for CLI, Python, and WASM public machine-readable outputs.
 - Moved CLI and WASM runtime JSON onto shared runtime serialization helpers,
@@ -339,8 +343,8 @@ consumer-visible output change is documented with snapshot updates.
 - `max_bars_back`: supports indicator-level constant non-negative retention
   bounds for dynamic history.
 - `color.*` named constants: supports the current common registry only.
-- `realtime forming rollback`: covers output, `var`, callsite, array, and
-  dynamic history rollback; `varip` remains unsupported.
+- `realtime forming rollback`: covers output, supported drawing objects, `var`,
+  callsite, array, and dynamic history rollback; `varip` remains unsupported.
 
 ### Explicitly Unsupported
 
@@ -355,7 +359,7 @@ them silently:
   `array.*` partial subset.
 - Imports and external libraries.
 - Alerts and alert conditions.
-- Drawing object systems such as labels, lines, boxes, tables, and polylines.
+- Advanced drawing object methods and unsupported table/polyline object systems.
 - Per-variable `max_bars_back` declarations and inference.
 - Recursive user-defined functions.
 - User-defined function side effects, including output calls, input

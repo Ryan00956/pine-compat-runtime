@@ -311,6 +311,56 @@ fn line_fixture_rolls_back_forming_lifecycle_changes() {
     assert!(result.lines[0].snapshots[0].exists);
 }
 
+#[test]
+fn box_fixture_rolls_back_forming_lifecycle_changes() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/box_rollback.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_eq!(result.boxes.len(), 1);
+    assert_eq!(result.boxes[0].id, 1);
+    assert_eq!(result.boxes[0].snapshots.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_eq!(result.boxes.len(), 2);
+    assert_eq!(result.boxes[0].snapshots.len(), 3);
+    assert_eq!(result.boxes[0].snapshots[2].left, PineValue::Int(1));
+    assert_eq!(result.boxes[0].snapshots[2].top, PineValue::Float(2.0));
+    assert_eq!(
+        result.boxes[0].snapshots[2].bg_color,
+        PineValue::Color(0x008000)
+    );
+    assert_eq!(result.boxes[1].id, 2);
+    assert_eq!(result.boxes[1].snapshots.len(), 2);
+    assert!(!result.boxes[1].snapshots[1].exists);
+    assert_eq!(runtime.confirmed_result().boxes.len(), 1);
+    assert_eq!(runtime.confirmed_result().boxes[0].snapshots.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back boxes");
+    assert_eq!(result.boxes.len(), 2);
+    assert_eq!(result.boxes[0].id, 1);
+    assert_eq!(result.boxes[0].snapshots.len(), 2);
+    assert!(!result.boxes[0].snapshots[1].exists);
+    assert_eq!(result.boxes[1].id, 2);
+    assert_eq!(result.boxes[1].snapshots.len(), 2);
+    assert!(!result.boxes[1].snapshots[1].exists);
+    assert_eq!(runtime.confirmed_result().boxes.len(), 1);
+    assert_eq!(runtime.confirmed_result().boxes[0].snapshots.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit from confirmed box state");
+    assert_eq!(result.boxes.len(), 1);
+    assert_eq!(result.boxes[0].id, 1);
+    assert_eq!(result.boxes[0].snapshots.len(), 1);
+    assert!(result.boxes[0].snapshots[0].exists);
+}
+
 fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");

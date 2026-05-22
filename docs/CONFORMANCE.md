@@ -45,6 +45,7 @@ Runtime snapshots should be normalized JSON:
   "fills": [],
   "labels": [],
   "lines": [],
+  "boxes": [],
   "diagnostics": []
 }
 ```
@@ -61,26 +62,21 @@ CLI and WASM runtime JSON must be generated through the shared runtime contract
 helper so field names and nesting cannot drift. Python returns native
 dictionaries, so its binding tests assert the same top-level runtime keys and
 representative nested output families such as `plotShapes` and `plotCandles`.
-The Phase E drawing-object scaffold adds `labels` as a top-level runtime key in
-`schemaVersion: 2`. The first executable drawing subset is `label.new` creation
-with bar-index coordinates, price y-values, text, `xloc.bar_index`,
-`yloc.price`, colors, selected label styles, size, and tooltip metadata. The
-first mutation subset covers `label.set_x`, `label.set_y`, `label.set_xy`,
-`label.set_text`, `label.set_color`, `label.set_textcolor`, `label.set_style`,
-`label.set_size`, and `label.set_tooltip`. `label.delete` emits `exists: false`
-snapshots; deleting `na` or an already deleted label is a no-op; ids are stable
-and not reused; label creation has a 500-object runtime limit. Keep
-unsupported coordinate modes and other drawing families out of the supported
-matrix until they have fixtures and public-output coverage. Supported label
-creation, mutation, and deletion are covered under realtime rollback, and
-drawing side effects inside user-defined functions are rejected under the
-existing side-effect policy. The next executable drawing subset is the initial
-line lifecycle: `line.new`, selected `line.set_*` mutators, and `line.delete`.
-Lines use bar-index x coordinates and price y coordinates, represented as
-sparse `lines` snapshots with `x1`, `y1`, `x2`, `y2`, `color`, `width`,
-`style`, and `extend` fields. Line deletion emits `exists: false`; deleting
-`na` or an already deleted line is a no-op; ids are stable and not reused; line
-creation has a 500-object runtime limit.
+The Phase E drawing-object scaffold adds `labels`, `lines`, and `boxes` as
+top-level runtime keys in `schemaVersion: 2`. The executable label subset covers
+`label.new`, selected `label.set_*` mutators, and `label.delete` with sparse
+snapshots and a 500-label runtime limit. The executable line subset covers
+`line.new`, selected endpoint/color/width/style/extend mutators, and
+`line.delete` with sparse snapshots and a 500-line runtime limit. The executable
+box subset covers `box.new`, selected geometry/background/border mutators, and
+`box.delete` with sparse snapshots and a 500-box runtime limit. Deleting `na`,
+mutating `na`, or mutating an already deleted drawing object is a no-op; invalid
+non-`na` ids are runtime errors; ids are stable and not reused. Supported
+drawing creation, mutation, and deletion are covered under realtime rollback,
+and drawing side effects inside user-defined functions are rejected under the
+existing side-effect policy. Keep unsupported coordinate modes, advanced object
+methods, and table/polyline families out of the supported matrix until they
+have fixtures and public-output coverage.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field

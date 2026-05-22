@@ -150,6 +150,18 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "line.set_style"
             | "line.set_extend"
             | "line.delete"
+            | "box.new"
+            | "box.set_left"
+            | "box.set_top"
+            | "box.set_right"
+            | "box.set_bottom"
+            | "box.set_lefttop"
+            | "box.set_rightbottom"
+            | "box.set_bgcolor"
+            | "box.set_border_color"
+            | "box.set_border_width"
+            | "box.set_border_style"
+            | "box.delete"
     ) || name == "input"
         || name.starts_with("input.")
 }
@@ -466,6 +478,9 @@ impl Analyzer {
             }
             "line.set_extend" => {
                 self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
+            }
+            "box.set_border_style" => {
+                self.validate_label_string_arg(signature, args, 1, "style", LINE_STYLES);
             }
             _ => {}
         }

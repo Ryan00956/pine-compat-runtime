@@ -308,6 +308,118 @@ const LINE_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const BOX_NEW_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "left",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "top",
+        accepts: Accepts::NumericCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "right",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "bottom",
+        accepts: Accepts::NumericCompatible,
+        optional: false,
+    },
+];
+
+const BOX_SET_X_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::BoxCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "x",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+];
+
+const BOX_SET_Y_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::BoxCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "y",
+        accepts: Accepts::NumericCompatible,
+        optional: false,
+    },
+];
+
+const BOX_SET_XY_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::BoxCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "x",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "y",
+        accepts: Accepts::NumericCompatible,
+        optional: false,
+    },
+];
+
+const BOX_SET_COLOR_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::BoxCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "color",
+        accepts: Accepts::ColorCompatible,
+        optional: false,
+    },
+];
+
+const BOX_SET_BORDER_WIDTH_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::BoxCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "width",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+];
+
+const BOX_SET_BORDER_STYLE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::BoxCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "style",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
+const BOX_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::BoxCompatible,
+    optional: false,
+}];
+
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "label.new",
@@ -467,6 +579,90 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "line.delete",
         phase: BuiltinPhase::Phase1Core,
         params: LINE_DELETE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.new",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_NEW_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_BOX),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_left",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_X_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_top",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_Y_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_right",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_X_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_bottom",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_Y_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_lefttop",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_XY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_rightbottom",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_XY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_bgcolor",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_COLOR_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_border_color",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_COLOR_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_border_width",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_BORDER_WIDTH_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_border_style",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_BORDER_STYLE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.delete",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_DELETE_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

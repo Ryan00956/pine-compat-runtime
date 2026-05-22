@@ -1,6 +1,6 @@
 use crate::PineValue;
 
-use super::drawings::{LabelOutput, LineOutput};
+use super::drawings::{BoxOutput, LabelOutput, LineOutput};
 
 pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = 2;
 
@@ -18,6 +18,7 @@ pub struct RuntimeResult {
     pub fills: Vec<FillOutput>,
     pub labels: Vec<LabelOutput>,
     pub lines: Vec<LineOutput>,
+    pub boxes: Vec<BoxOutput>,
     pub diagnostics: Vec<RuntimeDiagnostic>,
 }
 

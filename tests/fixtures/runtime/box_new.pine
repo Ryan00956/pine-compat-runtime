@@ -1,0 +1,7 @@
+//@version=5
+indicator("Box new")
+if bar_index == 1
+    first = box.new(bar_index, high, bar_index, low)
+if bar_index == 2
+    second = box.new(left=bar_index, top=open, right=bar_index, bottom=close)
+plot(close)

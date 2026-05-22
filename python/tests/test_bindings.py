@@ -21,6 +21,7 @@ RUNTIME_RESULT_KEYS = {
     "fills",
     "labels",
     "lines",
+    "boxes",
     "diagnostics",
 }
 
@@ -45,6 +46,7 @@ def test_compile_script_returns_program_with_run_method():
     assert set(result) == RUNTIME_RESULT_KEYS
     assert result["labels"] == []
     assert result["lines"] == []
+    assert result["boxes"] == []
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
     assert result["diagnostics"] == []
 
@@ -110,6 +112,45 @@ def test_run_script_returns_line_outputs():
                     "style": "line.style_solid",
                     "extend": "extend.none",
                 }
+            ],
+        }
+    ]
+
+
+def test_run_script_returns_box_outputs():
+    result = pine_compat.run_script(
+        'indicator("boxes")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_bgcolor(box_id, color.green)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["boxes"] == [
+        {
+            "id": 1,
+            "snapshots": [
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "left": 1,
+                    "top": 2.0,
+                    "right": 1,
+                    "bottom": 2.0,
+                    "bgColor": None,
+                    "borderColor": None,
+                    "borderWidth": 1,
+                    "borderStyle": "line.style_solid",
+                },
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "left": 1,
+                    "top": 2.0,
+                    "right": 1,
+                    "bottom": 2.0,
+                    "bgColor": 0x008000,
+                    "borderColor": None,
+                    "borderWidth": 1,
+                    "borderStyle": "line.style_solid",
+                },
             ],
         }
     ]
