@@ -113,7 +113,21 @@ math.pi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.
 math.e	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.phi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.rphi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-syminfo.mintick	supported	fixed default mintick subset used by math.round_to_mintick	tests/fixtures/runtime/math.pine
+syminfo.tickerid	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.ticker	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.prefix	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.description	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.type	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.currency	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.basecurrency	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.session	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.timezone	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.root	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.volumetype	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.mintick	supported	fixed default mintick subset used by math.round_to_mintick	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/syminfo.pine
+syminfo.pointvalue	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.minmove	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.pricescale	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 math.sin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.cos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.tan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine

@@ -257,6 +257,8 @@ Candidate areas:
   `string`, and `color` numeric/bool/string/color/`na` subset.
 - Initial color helper coverage includes `color.from_gradient` linear RGBA
   interpolation and `#RRGGBB`/`#RRGGBBAA` hex color literals.
+- Initial symbol metadata coverage includes a fixed-default `syminfo.*` subset
+  for common string, tick-size, and price-scale fields.
 - Initial `barstate.*` coverage includes `barstate.isfirst`,
   `barstate.isconfirmed`, `barstate.ishistory`, and `barstate.isrealtime`.
 - Initial `input.*` metadata coverage accepts common min/max/step, `options`,

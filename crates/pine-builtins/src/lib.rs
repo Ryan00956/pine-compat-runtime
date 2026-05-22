@@ -3684,6 +3684,10 @@ const NAMED_FLOAT_CONSTANTS: &[NamedFloatConstant] = &[
         name: "syminfo.mintick",
         value: 0.01,
     },
+    NamedFloatConstant {
+        name: "syminfo.pointvalue",
+        value: 1.0,
+    },
 ];
 
 #[must_use]
@@ -3728,6 +3732,14 @@ const NAMED_INT_CONSTANTS: &[NamedIntConstant] = &[
     NamedIntConstant {
         name: "dayofweek.saturday",
         value: 7,
+    },
+    NamedIntConstant {
+        name: "syminfo.minmove",
+        value: 1,
+    },
+    NamedIntConstant {
+        name: "syminfo.pricescale",
+        value: 100,
     },
 ];
 
@@ -3794,63 +3806,117 @@ pub fn builtin_series_value_type(name: &str) -> Option<PineType> {
         .map(|(_, pine_type)| *pine_type)
 }
 
-const NAMED_STRING_CONSTANTS: &[&str] = &[
-    "shape.xcross",
-    "shape.cross",
-    "shape.circle",
-    "shape.triangleup",
-    "shape.triangledown",
-    "shape.flag",
-    "shape.arrowup",
-    "shape.arrowdown",
-    "shape.square",
-    "shape.diamond",
-    "shape.labelup",
-    "shape.labeldown",
-    "location.abovebar",
-    "location.belowbar",
-    "location.top",
-    "location.bottom",
-    "location.absolute",
-    "plot.style_line",
-    "plot.style_stepline",
-    "plot.style_stepline_diamond",
-    "plot.style_histogram",
-    "plot.style_cross",
-    "plot.style_area",
-    "plot.style_columns",
-    "plot.style_circles",
-    "plot.style_linebr",
-    "plot.style_areabr",
-    "hline.style_solid",
-    "hline.style_dotted",
-    "hline.style_dashed",
-    "size.auto",
-    "size.tiny",
-    "size.small",
-    "size.normal",
-    "size.large",
-    "size.huge",
-    "display.all",
-    "display.none",
-    "display.pane",
-    "display.price_scale",
-    "display.status_line",
-    "display.data_window",
-    "format.mintick",
-    "format.price",
-    "format.percent",
-    "format.volume",
-    "order.ascending",
-    "order.descending",
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct NamedStringConstant {
+    name: &'static str,
+    value: &'static str,
+}
+
+const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
+    same_string_constant("shape.xcross"),
+    same_string_constant("shape.cross"),
+    same_string_constant("shape.circle"),
+    same_string_constant("shape.triangleup"),
+    same_string_constant("shape.triangledown"),
+    same_string_constant("shape.flag"),
+    same_string_constant("shape.arrowup"),
+    same_string_constant("shape.arrowdown"),
+    same_string_constant("shape.square"),
+    same_string_constant("shape.diamond"),
+    same_string_constant("shape.labelup"),
+    same_string_constant("shape.labeldown"),
+    same_string_constant("location.abovebar"),
+    same_string_constant("location.belowbar"),
+    same_string_constant("location.top"),
+    same_string_constant("location.bottom"),
+    same_string_constant("location.absolute"),
+    same_string_constant("plot.style_line"),
+    same_string_constant("plot.style_stepline"),
+    same_string_constant("plot.style_stepline_diamond"),
+    same_string_constant("plot.style_histogram"),
+    same_string_constant("plot.style_cross"),
+    same_string_constant("plot.style_area"),
+    same_string_constant("plot.style_columns"),
+    same_string_constant("plot.style_circles"),
+    same_string_constant("plot.style_linebr"),
+    same_string_constant("plot.style_areabr"),
+    same_string_constant("hline.style_solid"),
+    same_string_constant("hline.style_dotted"),
+    same_string_constant("hline.style_dashed"),
+    same_string_constant("size.auto"),
+    same_string_constant("size.tiny"),
+    same_string_constant("size.small"),
+    same_string_constant("size.normal"),
+    same_string_constant("size.large"),
+    same_string_constant("size.huge"),
+    same_string_constant("display.all"),
+    same_string_constant("display.none"),
+    same_string_constant("display.pane"),
+    same_string_constant("display.price_scale"),
+    same_string_constant("display.status_line"),
+    same_string_constant("display.data_window"),
+    same_string_constant("format.mintick"),
+    same_string_constant("format.price"),
+    same_string_constant("format.percent"),
+    same_string_constant("format.volume"),
+    same_string_constant("order.ascending"),
+    same_string_constant("order.descending"),
+    NamedStringConstant {
+        name: "syminfo.basecurrency",
+        value: "USD",
+    },
+    NamedStringConstant {
+        name: "syminfo.currency",
+        value: "USD",
+    },
+    NamedStringConstant {
+        name: "syminfo.description",
+        value: "Apple Inc.",
+    },
+    NamedStringConstant {
+        name: "syminfo.prefix",
+        value: "NASDAQ",
+    },
+    NamedStringConstant {
+        name: "syminfo.root",
+        value: "AAPL",
+    },
+    NamedStringConstant {
+        name: "syminfo.session",
+        value: "regular",
+    },
+    NamedStringConstant {
+        name: "syminfo.ticker",
+        value: "AAPL",
+    },
+    NamedStringConstant {
+        name: "syminfo.tickerid",
+        value: "NASDAQ:AAPL",
+    },
+    NamedStringConstant {
+        name: "syminfo.timezone",
+        value: "Etc/UTC",
+    },
+    NamedStringConstant {
+        name: "syminfo.type",
+        value: "stock",
+    },
+    NamedStringConstant {
+        name: "syminfo.volumetype",
+        value: "base",
+    },
 ];
+
+const fn same_string_constant(name: &'static str) -> NamedStringConstant {
+    NamedStringConstant { name, value: name }
+}
 
 #[must_use]
 pub fn named_string_constant(name: &str) -> Option<&'static str> {
     NAMED_STRING_CONSTANTS
         .iter()
-        .copied()
-        .find(|constant| *constant == name)
+        .find(|constant| constant.name == name)
+        .map(|constant| constant.value)
 }
 
 #[must_use]

@@ -5845,6 +5845,51 @@ plot(y)
     }
 
     #[test]
+    fn accepts_syminfo_metadata() {
+        let analysis = analyze(
+            r#"indicator("syminfo")
+identity = syminfo.tickerid == "NASDAQ:AAPL" and syminfo.ticker == "AAPL" and syminfo.prefix == "NASDAQ"
+details = syminfo.description == "Apple Inc." and syminfo.type == "stock" and syminfo.currency == "USD" and syminfo.basecurrency == "USD"
+session = syminfo.session == "regular" and syminfo.timezone == "Etc/UTC" and syminfo.root == "AAPL" and syminfo.volumetype == "base"
+scale = syminfo.mintick + syminfo.pointvalue + syminfo.minmove + syminfo.pricescale
+plot(identity and details and session ? scale : 0)
+"#,
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for feature in [
+            "syminfo.tickerid",
+            "syminfo.ticker",
+            "syminfo.prefix",
+            "syminfo.description",
+            "syminfo.type",
+            "syminfo.currency",
+            "syminfo.basecurrency",
+            "syminfo.session",
+            "syminfo.timezone",
+            "syminfo.root",
+            "syminfo.volumetype",
+            "syminfo.mintick",
+            "syminfo.pointvalue",
+            "syminfo.minmove",
+            "syminfo.pricescale",
+        ] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|supported| supported.feature == feature),
+                "{feature} not reported as supported"
+            );
+        }
+    }
+
+    #[test]
     fn lowers_if_statement_to_hir() {
         let analysis = analyze("if close > open\n    plot(close)\nelse\n    plot(open)\n");
 
