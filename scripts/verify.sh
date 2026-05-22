@@ -9,6 +9,7 @@ run() {
 run cargo fmt --check
 run cargo clippy --workspace --all-targets -- -D warnings
 run cargo test --workspace
+run python3 scripts/check_structure.py
 run cargo check -p pine-wasm --target wasm32-unknown-unknown
 run maturin build --manifest-path crates/pine-python/Cargo.toml --out dist
 run python3 -m pip install --force-reinstall dist/*.whl
