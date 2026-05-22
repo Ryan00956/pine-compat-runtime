@@ -148,7 +148,8 @@
 - Added UTC `weekofyear` and `dayofweek` calendar variables/functions plus
   `dayofweek.*` constants.
 - Added fixed-default `timeframe.period` and `timeframe.in_seconds` support for
-  common seconds/minutes/days/weeks/months timeframe strings.
+  common seconds/minutes/days/weeks/months timeframe strings, plus
+  `timeframe.from_seconds` for the exact reverse conversion subset.
 - Added fixed-default `timeframe.is*` and `timeframe.multiplier` chart
   timeframe metadata.
 - Added `int`, `float`, `bool`, `string`, and `color` scalar type casts for

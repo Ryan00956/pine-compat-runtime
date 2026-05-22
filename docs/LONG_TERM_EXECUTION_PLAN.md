@@ -248,7 +248,7 @@ Candidate areas:
   string coverage includes `str.split`; time
   helper coverage includes the numeric UTC `timestamp`, `weekofyear`, and
   `dayofweek` subsets, plus a fixed-default `timeframe.period` and
-  `timeframe.in_seconds` conversion subset, plus fixed-default
+  `timeframe.in_seconds`/`timeframe.from_seconds` conversion subset, plus fixed-default
   `timeframe.is*` and `timeframe.multiplier` metadata.
 - Initial utility helper coverage includes `fixnan` for the current numeric
   and color last-non-`na` callsite subset.

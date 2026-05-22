@@ -2073,6 +2073,7 @@ impl<'a> HistoricalRuntime<'a> {
             "second" => self.eval_time_component(args, TimeComponent::Second),
             "timestamp" => self.eval_timestamp(args),
             "timeframe.in_seconds" => self.eval_timeframe_in_seconds(args),
+            "timeframe.from_seconds" => self.eval_timeframe_from_seconds(args),
             "int" => self.eval_int_cast(args),
             "float" => self.eval_float_cast(args),
             "bool" => self.eval_bool_cast(args),
@@ -5832,6 +5833,27 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Int(seconds))
     }
 
+    fn eval_timeframe_from_seconds(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = args.first() else {
+            return Ok(PineValue::Na);
+        };
+        let seconds = match self.eval_expr(&arg.value)? {
+            PineValue::Int(value) => value,
+            PineValue::Na => return Ok(PineValue::Na),
+            _ => return Ok(PineValue::Na),
+        };
+        let Some(timeframe) = timeframe_from_seconds(seconds) else {
+            return Err(RuntimeError {
+                message: format!("timeframe.from_seconds unsupported seconds `{seconds}`"),
+            });
+        };
+
+        Ok(PineValue::String(timeframe))
+    }
+
     fn eval_optional_timestamp_part(
         &mut self,
         args: &[HirCallArg],
@@ -7792,6 +7814,54 @@ fn is_supported_utc_timezone(timezone: &str) -> bool {
         timezone,
         "UTC" | "Etc/UTC" | "GMT" | "Z" | "+0000" | "+00:00"
     )
+}
+
+fn timeframe_from_seconds(seconds: i64) -> Option<String> {
+    if seconds <= 0 {
+        return None;
+    }
+    if matches!(seconds, 1 | 5 | 10 | 15 | 30 | 45) {
+        return Some(format!("{seconds}S"));
+    }
+
+    if seconds % 2_592_000 == 0 {
+        let months = seconds / 2_592_000;
+        if (1..=12).contains(&months) {
+            return Some(if months == 1 {
+                "M".to_owned()
+            } else {
+                format!("{months}M")
+            });
+        }
+    }
+    if seconds % 604_800 == 0 {
+        let weeks = seconds / 604_800;
+        if (1..=52).contains(&weeks) {
+            return Some(if weeks == 1 {
+                "W".to_owned()
+            } else {
+                format!("{weeks}W")
+            });
+        }
+    }
+    if seconds % 86_400 == 0 {
+        let days = seconds / 86_400;
+        if (1..=365).contains(&days) {
+            return Some(if days == 1 {
+                "D".to_owned()
+            } else {
+                format!("{days}D")
+            });
+        }
+    }
+    if seconds % 60 == 0 {
+        let minutes = seconds / 60;
+        if (1..=1440).contains(&minutes) {
+            return Some(minutes.to_string());
+        }
+    }
+
+    None
 }
 
 fn timeframe_seconds(timeframe: &str) -> Option<i64> {
@@ -11625,6 +11695,11 @@ plot(timeframe.in_seconds("D"))
 plot(timeframe.in_seconds("2W"))
 plot(timeframe.in_seconds("3M"))
 plot(na(timeframe.in_seconds(na)) ? 1 : 0)
+plot(timeframe.from_seconds(60) == "1" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("45S")) == "45S" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("D")) == "D" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("2W")) == "2W" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("3M")) == "3M" ? 1 : 0)
 plot(timeframe.isminutes and timeframe.isintraday and not timeframe.isseconds and not timeframe.isdaily and not timeframe.isweekly and not timeframe.ismonthly and not timeframe.isdwm ? 1 : 0)
 plot(timeframe.multiplier)
 "#,
@@ -11651,6 +11726,11 @@ plot(timeframe.multiplier)
         assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
     }
 
     #[test]
@@ -11673,6 +11753,30 @@ plot(timeframe.in_seconds("1H"))
         assert!(
             err.message
                 .contains("timeframe.in_seconds unsupported timeframe `1H`"),
+            "unexpected error: {err:?}"
+        );
+    }
+
+    #[test]
+    fn rejects_unsupported_timeframe_from_seconds_value() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bad timeframe seconds")
+plot(timeframe.from_seconds(46) == "" ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let err = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected timeframe error");
+        assert!(
+            err.message
+                .contains("timeframe.from_seconds unsupported seconds `46`"),
             "unexpected error: {err:?}"
         );
     }
