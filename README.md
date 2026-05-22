@@ -40,6 +40,7 @@ able to integrate it through adapters.
 - [Conformance](docs/CONFORMANCE.md)
 - [Diagnostic Codes](docs/DIAGNOSTIC_CODES.md)
 - [Release Notes](docs/RELEASE_NOTES.md)
+- [Phase K Execution Plan](docs/PHASE_K_EXECUTION_PLAN.md)
 - [Next Language Expansion Playbook](docs/NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md)
 - [Task Breakdown](docs/TASK_BREAKDOWN.md)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)

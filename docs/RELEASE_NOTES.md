@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Closed Phase K release infrastructure with public `schemaVersion: 1` output
+  contracts for CLI, Python, and WASM public machine-readable outputs.
+- Moved CLI and WASM runtime JSON onto shared runtime serialization helpers,
+  with Python binding tests asserting the same public runtime key contract.
+- Added golden JSON snapshots for representative CLI runtime output, CLI matrix
+  JSON, and WASM analysis JSON.
+- Hardened `tests/fixtures/conformance.tsv` validation so compatibility matrix
+  claims require unique features, valid statuses, notes, existing fixtures, and
+  status-appropriate fixture coverage.
+- Added `scripts/verify.sh` as the canonical local and CI release verification
+  entry point.
+- Added deterministic runtime profile fixture gates for long TA histories,
+  many stateful callsites, array-heavy scripts, and dynamic history retention.
 - Added partial `switch` expression support for condition arms, selector/case
   arms, expression results, default arms, and conditional stateful-call
   execution.
@@ -253,6 +266,10 @@ Compatibility claims are backed by `tests/fixtures/conformance.tsv`; run
 `pine-compat matrix` or `pine-compat matrix --format json` to inspect the
 feature-level matrix and its fixture paths.
 
+Machine-readable public outputs use top-level `schemaVersion`. The current
+release contract is `schemaVersion: 1`; increment it only when an intentional
+consumer-visible output change is documented with snapshot updates.
+
 ### Runtime Surfaces
 
 - Rust crates for syntax, semantic analysis, HIR, built-ins, runtime, CLI,
@@ -261,6 +278,12 @@ feature-level matrix and its fixture paths.
   and compatibility matrix output.
 - Python binding exposing compile, analyze, and run entry points.
 - WASM binding exposing compile, analyze, and CSV execution entry points.
+- Public JSON/dictionary outputs for CLI, Python, and WASM expose
+  `schemaVersion`; CLI and WASM runtime JSON share the same runtime contract
+  helper.
+- The compatibility matrix source of truth is
+  `tests/fixtures/conformance.tsv`; generated text and JSON matrix output must
+  remain fixture-backed.
 
 ### Supported Executable Subset
 
@@ -283,6 +306,8 @@ feature-level matrix and its fixture paths.
 - `na`, `nz`, `indicator`, `input.*`, `plot`, `hline`, `fill`, `color.new`,
   selected named colors, selected `math.*` functions, and the fixture-covered
   `ta.*` built-ins listed in the compatibility matrix.
+- Typed scalar arrays for float, int, bool, string, and color through the
+  fixture-covered `array.*` subset documented as partial in the matrix.
 
 ### Partial Support
 
@@ -305,7 +330,9 @@ them silently:
 - `varip` intrabar persistence.
 - `request.*` multi-symbol and multi-timeframe data requests.
 - `strategy.*` broker emulation and backtesting.
-- Non-float arrays, matrices, maps, and unsupported collection operations.
+- Generic arrays, object arrays, user-defined type arrays, matrices, maps, and
+  deferred collection semantics that are not fixture-backed in the current
+  `array.*` partial subset.
 - Imports and external libraries.
 - Alerts and alert conditions.
 - Drawing object systems such as labels, lines, boxes, tables, and polylines.
@@ -320,11 +347,9 @@ them silently:
 The release baseline is expected to pass:
 
 ```text
-cargo fmt --check
-cargo test --workspace
-cargo clippy --workspace --all-targets -- -D warnings
-cargo check -p pine-wasm --target wasm32-unknown-unknown
-maturin build --manifest-path crates/pine-python/Cargo.toml --out dist
-python -m pip install --force-reinstall dist/*.whl
-python -m pytest python/tests
+scripts/verify.sh
 ```
+
+Snapshot updates are intentional public-contract changes. Refresh them with the
+commands in `docs/CONFORMANCE.md`, review the JSON diff, then run
+`scripts/verify.sh`.

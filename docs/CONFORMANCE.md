@@ -76,6 +76,15 @@ cargo test --workspace
 Review the resulting JSON diff before committing. Do not update snapshots to
 hide accidental public contract changes.
 
+Snapshot maintenance rules:
+
+- Treat checked-in snapshots as public contract evidence, not generated noise.
+- Update snapshots only with the targeted `UPDATE_SNAPSHOTS=1` commands above.
+- Include the source change, snapshot diff, and documentation update in the
+  same commit when a public output change is intentional.
+- Run `scripts/verify.sh` after any snapshot refresh so CLI, WASM, Python, and
+  matrix contracts are checked together.
+
 ## Numeric Tolerance
 
 Floating point outputs should be compared with an explicit tolerance:
@@ -205,6 +214,19 @@ Conformance metadata is validated before matrix output is trusted:
 Malformed rows, duplicate feature names, invalid statuses, missing fixture paths,
 and status/fixture mismatches are first-class tests. The matrix command is
 derived from the same validated metadata used by those tests.
+
+Matrix maintenance rules:
+
+- Edit `tests/fixtures/conformance.tsv` first; do not hand-edit generated
+  matrix output.
+- Add or update fixture paths in the same change as any new supported,
+  partial, or unsupported claim.
+- Keep unsupported platform families represented even when they remain outside
+  the executable subset.
+- If the JSON matrix shape changes, refresh `tests/snapshots/matrix.json` and
+  document the public contract change in release notes.
+- Use `pine-compat matrix --format json` to inspect the release matrix exposed
+  to consumers.
 
 The current scalar typed-array subset is summarized in
 `docs/ARRAY_STAGE_AUDIT.md`. Keep `array.*` marked `partial` until the deferred

@@ -57,14 +57,8 @@ Remaining work falls into the phases below.
 Recommended verification:
 
 ```text
-cargo fmt --check
 git diff --check
-cargo test --workspace
-cargo clippy --workspace --all-targets -- -D warnings
-cargo check -p pine-wasm --target wasm32-unknown-unknown
-maturin build --manifest-path crates/pine-python/Cargo.toml --out dist
-python -m pip install --force-reinstall dist/*.whl
-python -m pytest python/tests
+scripts/verify.sh
 ```
 
 ## Phase A: Loop and Branch Hardening
@@ -460,13 +454,17 @@ Acceptance criteria:
 
 Goal: keep the growing subset maintainable.
 
+Execution playbook: `docs/PHASE_K_EXECUTION_PLAN.md`.
+Closure audit: `docs/PHASE_K_AUDIT.md`.
+
 Scope:
 
 - Result schema versioning for CLI, Python, and WASM.
-- More conformance fixtures sourced from real indicators.
+- Fixture-backed conformance metadata gates.
 - Golden JSON snapshots for public output shapes.
-- Performance benchmarks for long histories and many callsites.
-- CI jobs for Python wheel build and WASM target checks.
+- Deterministic runtime profile gates for long histories and many callsites.
+- A shared CI/local release verification entry point covering Rust, Python
+  wheel, and WASM target checks.
 - Compatibility matrix reporting by feature, status, fixture, and known gaps.
 
 Acceptance criteria:
@@ -480,12 +478,13 @@ Acceptance criteria:
 
 Recommended order from the current state:
 
-1. Phase K: strengthen release infrastructure before large platform features.
-2. Phase E: drawing objects.
-3. Phase F: `request.*` and multi-timeframe data.
-4. Phase I: `varip`.
-5. Phase H: alerts.
-6. Phase J: libraries, user types, and methods.
+1. Phase E: drawing objects.
+2. Phase F: `request.*` and multi-timeframe data.
+3. Phase I: `varip`.
+4. Phase H: alerts.
+5. Phase J: libraries, user types, and methods.
+6. Phase K maintenance only when release contracts, snapshots, or matrix gates
+   need tightening.
 7. Phase G: strategy runtime.
 8. Phase B/C maintenance when new work exposes collection, history, or
    qualifier gaps.
