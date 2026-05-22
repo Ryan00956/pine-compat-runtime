@@ -153,20 +153,19 @@ cargo check -p pine-wasm --target wasm32-unknown-unknown
 
 ## Development Verification
 
-Run the core Rust and WASM checks before publishing changes:
+Run the release verification entry point before publishing changes:
 
 ```text
-cargo fmt --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
-cargo check -p pine-wasm --target wasm32-unknown-unknown
+scripts/verify.sh
 ```
 
-Python binding tests require the extension module to be installed into an
-active Python environment:
+This is the same canonical command list used by CI: Rust formatting, clippy,
+workspace tests, the `wasm32-unknown-unknown` target check, Python wheel build,
+wheel reinstall, and Python binding tests.
+
+Prerequisites for the full gate:
 
 ```text
-python -m pip install --upgrade pip maturin pytest
-maturin develop --manifest-path crates/pine-python/Cargo.toml
-python -m pytest python/tests
+python3 -m pip install --upgrade pip maturin pytest
+rustup target add wasm32-unknown-unknown
 ```
