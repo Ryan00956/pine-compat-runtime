@@ -417,6 +417,7 @@ pub struct HistoricalRuntime<'a> {
     bars: usize,
     historical_end: Option<usize>,
     current_bar_update_kind: BarUpdateKind,
+    current_bar_is_new: bool,
     series_store: SeriesStore,
     series_retention: SeriesRetention,
     current_symbols: HashMap<SymbolId, PineValue>,
@@ -714,6 +715,7 @@ impl<'a> HistoricalRuntime<'a> {
             bars: 0,
             historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
+            current_bar_is_new: true,
             series_store: SeriesStore::new(),
             series_retention: SeriesRetention::from_program(program),
             current_symbols: HashMap::new(),
@@ -800,8 +802,18 @@ impl<'a> HistoricalRuntime<'a> {
         bar: Bar,
         update_kind: BarUpdateKind,
     ) -> Result<(), RuntimeError> {
+        self.append_bar_with_context(bar, update_kind, true)
+    }
+
+    fn append_bar_with_context(
+        &mut self,
+        bar: Bar,
+        update_kind: BarUpdateKind,
+        is_new_bar: bool,
+    ) -> Result<(), RuntimeError> {
         let bar_index = self.bars;
         self.current_bar_update_kind = update_kind;
+        self.current_bar_is_new = is_new_bar;
         self.series_store.set_current_bar(bar_index);
         self.current_symbols.clear();
         self.current_series.clear();
@@ -823,6 +835,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.previous_bar_time = Some(bar.time);
         self.bars += 1;
         self.current_bar_update_kind = BarUpdateKind::Historical;
+        self.current_bar_is_new = true;
         Ok(())
     }
 
@@ -1503,6 +1516,9 @@ impl<'a> HistoricalRuntime<'a> {
                 BarUpdateKind::Forming | BarUpdateKind::Confirmed => true,
             };
             return PineValue::Bool(is_last);
+        }
+        if name == "barstate.isnew" {
+            return PineValue::Bool(self.current_bar_is_new);
         }
         if name == "barstate.isconfirmed" {
             return PineValue::Bool(matches!(
@@ -6674,16 +6690,25 @@ impl<'a> RealtimeRuntime<'a> {
 
     pub fn update(&mut self, update: BarUpdate) -> Result<RuntimeResult, RuntimeError> {
         match update.kind {
-            BarUpdateKind::Historical | BarUpdateKind::Confirmed => {
+            BarUpdateKind::Historical => {
                 let mut runtime = self.confirmed.clone();
                 runtime.append_bar_with_kind(update.bar, update.kind)?;
                 self.confirmed = runtime;
                 self.forming = None;
                 Ok(self.confirmed.result())
             }
-            BarUpdateKind::Forming => {
+            BarUpdateKind::Confirmed => {
+                let is_new_bar = self.forming.is_none();
                 let mut runtime = self.confirmed.clone();
-                runtime.append_bar_with_kind(update.bar, update.kind)?;
+                runtime.append_bar_with_context(update.bar, update.kind, is_new_bar)?;
+                self.confirmed = runtime;
+                self.forming = None;
+                Ok(self.confirmed.result())
+            }
+            BarUpdateKind::Forming => {
+                let is_new_bar = self.forming.is_none();
+                let mut runtime = self.confirmed.clone();
+                runtime.append_bar_with_context(update.bar, update.kind, is_new_bar)?;
                 let result = runtime.result();
                 self.forming = Some(runtime);
                 Ok(result)
@@ -12795,6 +12820,7 @@ plot(e)
             r#"indicator("barstate")
 plot(barstate.isfirst ? 1 : 0)
 plot(barstate.islast ? 1 : 0)
+plot(barstate.isnew ? 1 : 0)
 plot(barstate.isconfirmed ? 1 : 0)
 plot(barstate.ishistory ? 1 : 0)
 plot(barstate.isrealtime ? 1 : 0)
@@ -12817,10 +12843,11 @@ plot(session.ispostmarket ? 1 : 0)
         assert_values_close(&result.plots[1].values, &[0.0, 0.0, 1.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[3].values, &[1.0, 1.0, 1.0]);
-        assert_values_close(&result.plots[4].values, &[0.0, 0.0, 0.0]);
-        assert_values_close(&result.plots[5].values, &[1.0, 1.0, 1.0]);
-        assert_values_close(&result.plots[6].values, &[0.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[4].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[5].values, &[0.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[6].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[7].values, &[0.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[8].values, &[0.0, 0.0, 0.0]);
     }
 
     #[test]
@@ -12925,6 +12952,7 @@ plot(barstate.isconfirmed ? close : 0)
 plot(barstate.ishistory ? close : 0)
 plot(barstate.isrealtime ? close : 0)
 plot(barstate.islast ? close : 0)
+plot(barstate.isnew ? close : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -12943,6 +12971,7 @@ plot(barstate.islast ? close : 0)
         assert_values_close(&confirmed.plots[1].values, &[1.0]);
         assert_values_close(&confirmed.plots[2].values, &[0.0]);
         assert_values_close(&confirmed.plots[3].values, &[1.0]);
+        assert_values_close(&confirmed.plots[4].values, &[1.0]);
 
         let forming = runtime
             .update(BarUpdate::forming(bar(2.0)))
@@ -12951,6 +12980,16 @@ plot(barstate.islast ? close : 0)
         assert_values_close(&forming.plots[1].values, &[1.0, 0.0]);
         assert_values_close(&forming.plots[2].values, &[0.0, 2.0]);
         assert_values_close(&forming.plots[3].values, &[1.0, 2.0]);
+        assert_values_close(&forming.plots[4].values, &[1.0, 2.0]);
+
+        let forming = runtime
+            .update(BarUpdate::forming(bar(4.0)))
+            .expect("second forming update");
+        assert_values_close(&forming.plots[0].values, &[1.0, 0.0]);
+        assert_values_close(&forming.plots[1].values, &[1.0, 0.0]);
+        assert_values_close(&forming.plots[2].values, &[0.0, 4.0]);
+        assert_values_close(&forming.plots[3].values, &[1.0, 4.0]);
+        assert_values_close(&forming.plots[4].values, &[1.0, 0.0]);
 
         let confirmed = runtime
             .update(BarUpdate::confirmed(bar(3.0)))
@@ -12959,6 +12998,7 @@ plot(barstate.islast ? close : 0)
         assert_values_close(&confirmed.plots[1].values, &[1.0, 0.0]);
         assert_values_close(&confirmed.plots[2].values, &[0.0, 3.0]);
         assert_values_close(&confirmed.plots[3].values, &[1.0, 3.0]);
+        assert_values_close(&confirmed.plots[4].values, &[1.0, 0.0]);
     }
 
     #[test]

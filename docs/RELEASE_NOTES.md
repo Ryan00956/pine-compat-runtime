@@ -98,8 +98,8 @@
 - Added UTC-only function overloads for `year`, `month`, `dayofmonth`, `hour`,
   `minute`, and `second`.
 - Added a numeric UTC subset of `timestamp`.
-- Added `barstate.isfirst`, `barstate.islast`, `barstate.isconfirmed`,
-  `barstate.ishistory`, and `barstate.isrealtime`.
+- Added `barstate.isfirst`, `barstate.islast`, `barstate.isnew`,
+  `barstate.isconfirmed`, `barstate.ishistory`, and `barstate.isrealtime`.
 - Added fixed-default regular-session `session.ismarket`,
   `session.ispremarket`, and `session.ispostmarket`.
 - Added `bgcolor` and `barcolor` support with bar-aligned color output series.

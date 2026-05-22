@@ -53,6 +53,7 @@ string	supported	numeric/bool/string/na scalar cast subset	tests/fixtures/runtim
 color	supported	color/na scalar cast subset	tests/fixtures/runtime/casts.pine
 barstate.isfirst	supported	true only on the first runtime bar	tests/fixtures/runtime/barstate.pine
 barstate.islast	supported	true on the last known historical bar and on current realtime updates	tests/fixtures/runtime/barstate.pine
+barstate.isnew	supported	true on historical bars and first realtime update for a new bar	tests/fixtures/runtime/barstate.pine
 barstate.isconfirmed	supported	false only for forming realtime updates	tests/fixtures/runtime/barstate.pine
 barstate.ishistory	supported	true for historical updates	tests/fixtures/runtime/barstate.pine
 barstate.isrealtime	supported	true for forming and confirmed realtime updates	tests/fixtures/runtime/barstate.pine
