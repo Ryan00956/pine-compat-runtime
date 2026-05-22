@@ -12,6 +12,15 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Option<Result<PineValue, RuntimeError>> {
         Some(match callee {
             "label.new" => self.eval_label_new(args),
+            "label.set_x" => self.eval_label_set_x(args),
+            "label.set_y" => self.eval_label_set_y(args),
+            "label.set_xy" => self.eval_label_set_xy(args),
+            "label.set_text" => self.eval_label_set_text(args),
+            "label.set_color" => self.eval_label_set_color(args),
+            "label.set_textcolor" => self.eval_label_set_textcolor(args),
+            "label.set_style" => self.eval_label_set_style(args),
+            "label.set_size" => self.eval_label_set_size(args),
+            "label.set_tooltip" => self.eval_label_set_tooltip(args),
             _ => return None,
         })
     }
@@ -69,6 +78,136 @@ impl<'a> HistoricalRuntime<'a> {
             }],
         });
         Ok(PineValue::Label(id))
+    }
+
+    fn eval_label_set_x(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let x = self.eval_required_label_arg(args, 1, "x")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.x = x;
+        })
+    }
+
+    fn eval_label_set_y(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let y = self.eval_required_label_arg(args, 1, "y")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.y = y;
+        })
+    }
+
+    fn eval_label_set_xy(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let x = self.eval_required_label_arg(args, 1, "x")?;
+        let y = self.eval_required_label_arg(args, 2, "y")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.x = x;
+            snapshot.y = y;
+        })
+    }
+
+    fn eval_label_set_text(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let text = self.eval_required_label_arg(args, 1, "text")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.text = text;
+        })
+    }
+
+    fn eval_label_set_color(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let color = self.eval_required_label_arg(args, 1, "color")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.color = color;
+        })
+    }
+
+    fn eval_label_set_textcolor(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let text_color = self.eval_required_label_arg(args, 1, "textcolor")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.text_color = text_color;
+        })
+    }
+
+    fn eval_label_set_style(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let style = self.eval_required_label_arg(args, 1, "style")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.style = style;
+        })
+    }
+
+    fn eval_label_set_size(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let size = self.eval_required_label_arg(args, 1, "size")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.size = size;
+        })
+    }
+
+    fn eval_label_set_tooltip(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let tooltip = self.eval_required_label_arg(args, 1, "tooltip")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.tooltip = tooltip;
+        })
+    }
+
+    fn eval_label_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
+        let Some(id_arg) = call_arg_expr(args, 0, "id") else {
+            return Err(RuntimeError {
+                message: "label mutation missing id argument".to_owned(),
+            });
+        };
+        match self.eval_expr(id_arg)? {
+            PineValue::Label(id) => Ok(Some(id)),
+            PineValue::Na => Ok(None),
+            value => Err(RuntimeError {
+                message: format!("label mutation expected label id, got {value:?}"),
+            }),
+        }
+    }
+
+    fn eval_required_label_arg(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = call_arg_expr(args, index, name) else {
+            return Err(RuntimeError {
+                message: format!("label mutation missing {name} argument"),
+            });
+        };
+        self.eval_expr(arg)
+    }
+
+    fn mutate_label(
+        &mut self,
+        id: Option<u32>,
+        mutate: impl FnOnce(&mut LabelSnapshot),
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        let Some(label) = self.labels.iter_mut().find(|label| label.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid label id `{id}`"),
+            });
+        };
+        let Some(latest) = label.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("label `{id}` has no snapshots"),
+            });
+        };
+        let mut next = latest.clone();
+        mutate(&mut next);
+        if next != latest {
+            next.bar_index = self.bars;
+            label.snapshots.push(next);
+        }
+        Ok(PineValue::Void)
     }
 
     fn eval_label_option(

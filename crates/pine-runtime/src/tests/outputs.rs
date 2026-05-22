@@ -112,6 +112,84 @@ plot(close)
 }
 
 #[test]
+fn collects_label_mutation_snapshots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("label mutation")
+id = label.new(bar_index, high, "start")
+label.set_x(id, 1)
+label.set_y(id, close + 1)
+label.set_text(id, "changed")
+label.set_color(id, color.green)
+label.set_textcolor(id, color.white)
+label.set_style(id, label.style_label_up)
+label.set_size(id, size.small)
+label.set_tooltip(id, "Tip")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let label = &result.labels[0];
+
+    assert_eq!(label.snapshots.len(), 9);
+    assert_eq!(label.snapshots[0].x, PineValue::Int(0));
+    assert_eq!(label.snapshots[1].x, PineValue::Int(1));
+    assert_eq!(label.snapshots[2].y, PineValue::Float(2.0));
+    assert_eq!(
+        label.snapshots[3].text,
+        PineValue::String("changed".to_owned())
+    );
+    assert_eq!(label.snapshots[4].color, PineValue::Color(0x008000));
+    assert_eq!(label.snapshots[5].text_color, PineValue::Color(0xFFFFFF));
+    assert_eq!(
+        label.snapshots[6].style,
+        PineValue::String("label.style_label_up".to_owned())
+    );
+    assert_eq!(
+        label.snapshots[7].size,
+        PineValue::String("size.small".to_owned())
+    );
+    assert_eq!(
+        label.snapshots[8].tooltip,
+        PineValue::String("Tip".to_owned())
+    );
+}
+
+#[test]
+fn skips_noop_label_mutations() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("label noops")
+var id = label.new(bar_index, high, "start")
+label.set_text(id, "start")
+label.set_text(na, "ignored")
+if bar_index == 1
+    label.set_text(id, "start")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.labels[0].snapshots.len(), 1);
+}
+
+#[test]
 fn collects_conditional_and_stored_label_ids() {
     let source = SourceFile::new(
         "test.pine",

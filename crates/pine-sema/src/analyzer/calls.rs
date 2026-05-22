@@ -1,5 +1,34 @@
 use crate::prelude::*;
 
+const LABEL_STYLES: &[&str] = &[
+    "label.style_none",
+    "label.style_xcross",
+    "label.style_cross",
+    "label.style_triangleup",
+    "label.style_triangledown",
+    "label.style_flag",
+    "label.style_circle",
+    "label.style_arrowup",
+    "label.style_arrowdown",
+    "label.style_label_up",
+    "label.style_label_down",
+    "label.style_label_left",
+    "label.style_label_right",
+    "label.style_label_lower_left",
+    "label.style_label_lower_right",
+    "label.style_label_upper_left",
+    "label.style_label_upper_right",
+];
+
+const LABEL_SIZES: &[&str] = &[
+    "size.auto",
+    "size.tiny",
+    "size.small",
+    "size.normal",
+    "size.large",
+    "size.huge",
+];
+
 pub(crate) fn expr_name(expr: &Expr) -> Option<String> {
     match &expr.kind {
         ExprKind::Identifier(name) => Some(name.clone()),
@@ -88,6 +117,15 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "plotbar"
             | "plotcandle"
             | "label.new"
+            | "label.set_x"
+            | "label.set_y"
+            | "label.set_xy"
+            | "label.set_text"
+            | "label.set_color"
+            | "label.set_textcolor"
+            | "label.set_style"
+            | "label.set_size"
+            | "label.set_tooltip"
     ) || name == "input"
         || name.starts_with("input.")
 }
@@ -386,51 +424,21 @@ impl Analyzer {
         signature: &BuiltinSignature,
         args: &[CallArg],
     ) {
-        if signature.name != "label.new" {
-            return;
+        match signature.name {
+            "label.new" => {
+                self.validate_label_string_arg(signature, args, 3, "xloc", &["xloc.bar_index"]);
+                self.validate_label_string_arg(signature, args, 4, "yloc", &["yloc.price"]);
+                self.validate_label_string_arg(signature, args, 6, "style", LABEL_STYLES);
+                self.validate_label_string_arg(signature, args, 8, "size", LABEL_SIZES);
+            }
+            "label.set_style" => {
+                self.validate_label_string_arg(signature, args, 1, "style", LABEL_STYLES);
+            }
+            "label.set_size" => {
+                self.validate_label_string_arg(signature, args, 1, "size", LABEL_SIZES);
+            }
+            _ => {}
         }
-
-        self.validate_label_string_arg(signature, args, 3, "xloc", &["xloc.bar_index"]);
-        self.validate_label_string_arg(signature, args, 4, "yloc", &["yloc.price"]);
-        self.validate_label_string_arg(
-            signature,
-            args,
-            6,
-            "style",
-            &[
-                "label.style_none",
-                "label.style_xcross",
-                "label.style_cross",
-                "label.style_triangleup",
-                "label.style_triangledown",
-                "label.style_flag",
-                "label.style_circle",
-                "label.style_arrowup",
-                "label.style_arrowdown",
-                "label.style_label_up",
-                "label.style_label_down",
-                "label.style_label_left",
-                "label.style_label_right",
-                "label.style_label_lower_left",
-                "label.style_label_lower_right",
-                "label.style_label_upper_left",
-                "label.style_label_upper_right",
-            ],
-        );
-        self.validate_label_string_arg(
-            signature,
-            args,
-            8,
-            "size",
-            &[
-                "size.auto",
-                "size.tiny",
-                "size.small",
-                "size.normal",
-                "size.large",
-                "size.huge",
-            ],
-        );
     }
 
     pub(crate) fn validate_label_string_arg(

@@ -331,15 +331,54 @@ fn rejects_unsupported_label_new_modes() {
 }
 
 #[test]
-fn rejects_unimplemented_label_methods() {
-    let analysis = analyze("label.set_text(na, \"x\")\nplot(close)\n");
+fn accepts_label_mutation_methods() {
+    let analysis = analyze(
+        "id = label.new(bar_index, high, \"High\")\nlabel.set_x(id, bar_index)\nlabel.set_y(id, low)\nlabel.set_xy(id, bar_index, close)\nlabel.set_text(id, \"Close\")\nlabel.set_color(id, color.green)\nlabel.set_textcolor(id, color.white)\nlabel.set_style(id, label.style_label_up)\nlabel.set_size(id, size.small)\nlabel.set_tooltip(id, \"Tip\")\nlabel.set_text(na, \"noop\")\nplot(close)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "label.set_text")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_label_mutation_inside_functions() {
+    let analysis = analyze(
+        "change(id) => label.set_text(id, \"x\")\nid = label.new(bar_index, high, \"High\")\nchange(id)\nplot(close)\n",
+    );
 
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "label.set_text"),
+            .any(|feature| feature.feature == "function_side_effect"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_unimplemented_label_methods() {
+    let analysis = analyze("label.get_text(na)\nplot(close)\n");
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "label.get_text"),
         "{:?}",
         analysis.compatibility.unsupported
     );

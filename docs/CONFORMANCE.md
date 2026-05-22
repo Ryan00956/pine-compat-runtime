@@ -63,10 +63,13 @@ representative nested output families such as `plotShapes` and `plotCandles`.
 The Phase E drawing-object scaffold adds `labels` as a top-level runtime key in
 `schemaVersion: 2`. The first executable drawing subset is `label.new` creation
 with bar-index coordinates, price y-values, text, `xloc.bar_index`,
-`yloc.price`, colors, selected label styles, size, and tooltip metadata. Keep
-mutation, deletion, limits, realtime-specific behavior, unsupported coordinate
-modes, and other drawing families out of the supported matrix until they have
-fixtures and public-output coverage.
+`yloc.price`, colors, selected label styles, size, and tooltip metadata. The
+first mutation subset covers `label.set_x`, `label.set_y`, `label.set_xy`,
+`label.set_text`, `label.set_color`, `label.set_textcolor`, `label.set_style`,
+`label.set_size`, and `label.set_tooltip`. Keep deletion, limits,
+realtime-specific behavior, unsupported coordinate modes, and other drawing
+families out of the supported matrix until they have fixtures and public-output
+coverage.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field

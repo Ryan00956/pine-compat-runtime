@@ -9,8 +9,10 @@
 - Added the first drawing behavior: a `label.new` creation subset that returns
   deterministic label ids and emits sparse creation snapshots with bar-index
   coordinates, price y-values, text, colors, selected label styles, size, and
-  tooltip metadata. Mutation, deletion, limits, unsupported coordinate modes,
-  and other drawing families remain unsupported.
+  tooltip metadata.
+- Added sparse mutation snapshots for the initial `label.set_*` subset covering
+  x/y/text/color/style/size/tooltip fields. Deletion, limits, unsupported
+  coordinate modes, and other drawing families remain unsupported.
 - Closed Phase K release infrastructure with public `schemaVersion: 1` output
   contracts for CLI, Python, and WASM public machine-readable outputs.
 - Moved CLI and WASM runtime JSON onto shared runtime serialization helpers,

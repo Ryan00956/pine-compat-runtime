@@ -55,7 +55,7 @@ mod tests {
 
         for signature in pine_builtins::PHASE_1_BUILTINS {
             let expected_status =
-                if signature.name.starts_with("array.") || signature.name == "label.new" {
+                if signature.name.starts_with("array.") || signature.name.starts_with("label.") {
                     "partial"
                 } else {
                     "supported"
@@ -190,7 +190,7 @@ mod tests {
             "import",
             "strategy.*",
             "alert/alertcondition",
-            "label methods/line/box/table/polyline",
+            "unsupported label methods/line/box/table/polyline",
             "non-int history offsets",
             "negative history offsets",
         ] {
@@ -408,6 +408,10 @@ mod tests {
             (
                 "runtime_label_options.json",
                 "tests/fixtures/runtime/label_options.pine",
+            ),
+            (
+                "runtime_label_mutation.json",
+                "tests/fixtures/runtime/label_mutation.pine",
             ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));

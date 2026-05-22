@@ -51,6 +51,7 @@ pub enum Accepts {
     NumericCompatible,
     IntCompatible,
     BoolCompatible,
+    LabelCompatible,
     PlotOrHLine,
     Array,
     Tuple,

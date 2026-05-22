@@ -71,7 +71,16 @@ bgcolor	supported	color series output with conditional padding plus common metad
 barcolor	supported	color series output with conditional padding plus common metadata parameters	tests/fixtures/runtime/color_outputs.pine
 hline	supported	horizontal line output plus common style/display metadata parameters	tests/fixtures/runtime/io.pine
 fill	supported	plot/hline fill output plus common display/fillgaps metadata parameters	tests/fixtures/runtime/io.pine
-label.new	partial	bar-index x, numeric y, string text, xloc.bar_index, yloc.price, color, selected label styles, textcolor, size, and tooltip creation snapshots only; mutation, deletion, and other drawing families unsupported	tests/fixtures/runtime/label_new.pine;tests/fixtures/runtime/label_options.pine
+label.new	partial	bar-index x, numeric y, string text, xloc.bar_index, yloc.price, color, selected label styles, textcolor, size, and tooltip creation snapshots only; deletion and other drawing families unsupported	tests/fixtures/runtime/label_new.pine;tests/fixtures/runtime/label_options.pine
+label.set_x	partial	label id x mutation snapshots only; deletion, limits, and other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_y	partial	label id y mutation snapshots only; deletion, limits, and other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_xy	partial	label id x/y mutation snapshots only; deletion, limits, and other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_text	partial	label id text mutation snapshots only; deletion, limits, and other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_color	partial	label id color mutation snapshots only; deletion, limits, and other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_textcolor	partial	label id text color mutation snapshots only; deletion, limits, and other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_style	partial	label id selected style mutation snapshots only; deletion, limits, and other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_size	partial	label id size mutation snapshots only; deletion, limits, and other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_tooltip	partial	label id tooltip mutation snapshots only; deletion, limits, and other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
 color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 color.rgb	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
 color.r	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
@@ -290,7 +299,7 @@ array.*	partial	float/int/bool/string/color array creation, array.from inference
 import	unsupported	library imports out of Phase 1	tests/fixtures/sema/unsupported_import.pine
 strategy.*	unsupported	broker emulation out of current scope	tests/fixtures/sema/unsupported_strategy.pine
 alert/alertcondition	unsupported	alerts out of Phase 1	tests/fixtures/sema/unsupported_alert.pine
-label methods/line/box/table/polyline	unsupported	label methods beyond label.new plus line, box, table, and polyline object systems are not implemented	tests/fixtures/sema/unsupported_drawing.pine
+unsupported label methods/line/box/table/polyline	unsupported	label methods beyond the supported label creation/mutation subset plus line, box, table, and polyline object systems are not implemented	tests/fixtures/sema/unsupported_drawing.pine
 series history offsets	partial	series int offsets are evaluated at runtime with full-history retention up to the runtime cap	tests/fixtures/runtime/series_history_offset.pine
 non-int history offsets	unsupported	dynamic offsets must evaluate from an integer expression	tests/fixtures/sema/unsupported_dynamic_history.pine
 negative history offsets	unsupported	history offsets must be non-negative	tests/fixtures/sema/unsupported_negative_history.pine
