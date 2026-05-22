@@ -812,7 +812,9 @@ math.min(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qua
 math.avg(number: numeric, ...) -> float with strongest qualifier
 math.floor(number: numeric) -> same numeric kind and qualifier
 math.ceil(number: numeric) -> same numeric kind and qualifier
+math.trunc(number: numeric) -> same numeric kind and qualifier
 math.sqrt(number: numeric) -> float with same qualifier
+math.cbrt(number: numeric) -> float with same qualifier
 math.log(number: numeric) -> float with same qualifier
 math.log10(number: numeric) -> float with same qualifier
 math.exp(number: numeric) -> float with same qualifier
@@ -826,6 +828,7 @@ math.sin(number: numeric) -> float with same qualifier
 math.cos(number: numeric) -> float with same qualifier
 math.tan(number: numeric) -> float with same qualifier
 math.pow(base: numeric, exponent: numeric) -> float with strongest qualifier
+math.hypot(number1: numeric, number2: numeric) -> float with strongest qualifier
 math.round(number: numeric) -> numeric
 math.round(number: numeric, precision: int) -> float with same qualifier
 math.round_to_mintick(number: numeric) -> float with same qualifier
@@ -840,8 +843,8 @@ Current Phase 4 behavior:
 - `math.e`, `math.pi`, `math.phi`, and `math.rphi` evaluate as const floats.
 - `math.abs` preserves int/float kind and qualifier.
 - `math.avg` accepts one or more numeric args and returns their average as a float.
-- `math.floor` and `math.ceil` preserve int/float kind and qualifier; float inputs return whole-number floats.
-- `math.sqrt`, `math.log`, `math.log10`, `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`, `math.todegrees`, `math.toradians`, `math.sin`, `math.cos`, `math.tan`, and `math.pow` return float values and preserve or promote qualifiers from their arguments.
+- `math.floor`, `math.ceil`, and `math.trunc` preserve int/float kind and qualifier; float inputs return whole-number floats.
+- `math.sqrt`, `math.cbrt`, `math.log`, `math.log10`, `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`, `math.todegrees`, `math.toradians`, `math.sin`, `math.cos`, `math.tan`, `math.pow`, and `math.hypot` return float values and preserve or promote qualifiers from their arguments.
 - `math.round` preserves int/float kind and qualifier when `precision` is omitted; with `precision`, it returns a float rounded to that many decimal places.
 - `math.round_to_mintick` rounds to the nearest multiple of the current
   `syminfo.mintick` subset value, with ties rounding up.

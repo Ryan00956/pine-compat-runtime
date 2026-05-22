@@ -5598,7 +5598,7 @@ y = math.min(x, 3.5)
 avg_value = math.avg(open, close, high, low)
 rounded_precision = math.round(close / 3, 2)
 z = math.floor(close / 2) + math.ceil(close / 2)
-w = math.sqrt(close) + math.log(close) + math.pow(close, 2)
+w = math.trunc(close / 2) + math.sqrt(close) + math.cbrt(close) + math.log(close) + math.pow(close, 2) + math.hypot(close, high)
 random_value = math.random(10, 20, 7)
 scale = math.log10(close) + math.exp(close)
 trig = math.sin(close) + math.cos(close) + math.tan(close)
@@ -5671,7 +5671,21 @@ plot(y)
                 .compatibility
                 .supported
                 .iter()
+                .any(|feature| feature.feature == "math.trunc")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
                 .any(|feature| feature.feature == "math.sqrt")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.cbrt")
         );
         assert!(
             analysis
@@ -5770,6 +5784,13 @@ plot(y)
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "math.pow")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "math.hypot")
         );
         assert!(
             analysis

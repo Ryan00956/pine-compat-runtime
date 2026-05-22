@@ -1312,6 +1312,19 @@ const MATH_POW_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const MATH_HYPOT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "number1",
+        accepts: Accepts::Numeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "number2",
+        accepts: Accepts::Numeric,
+        optional: false,
+    },
+];
+
 const MATH_ROUND_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "number",
@@ -2566,7 +2579,21 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "math.trunc",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::SameAsArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "math.sqrt",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_NUMBER_PARAMS,
+        returns: ReturnSpec::FloatFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "math.cbrt",
         phase: BuiltinPhase::Phase1Core,
         params: MATH_NUMBER_PARAMS,
         returns: ReturnSpec::FloatFromArg(0),
@@ -2660,6 +2687,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         name: "math.pow",
         phase: BuiltinPhase::Phase1Core,
         params: MATH_POW_PARAMS,
+        returns: ReturnSpec::PromotedFloat,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "math.hypot",
+        phase: BuiltinPhase::Phase1Core,
+        params: MATH_HYPOT_PARAMS,
         returns: ReturnSpec::PromotedFloat,
         variadic: false,
     },

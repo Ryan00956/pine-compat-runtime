@@ -157,6 +157,8 @@
   color value at each callsite.
 - Added `math.floor` and `math.ceil` support for numeric values.
 - Added `math.sqrt`, `math.log`, and `math.pow` support for numeric values.
+- Added `math.trunc`, `math.cbrt`, and `math.hypot` support for numeric
+  values.
 - Added `math.sin`, `math.cos`, and `math.tan` support for numeric values.
 - Added `math.log10` and `math.exp` support for numeric values.
 - Added `math.acos`, `math.asin`, and `math.atan` support for numeric values.

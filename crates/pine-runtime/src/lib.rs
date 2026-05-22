@@ -2084,7 +2084,9 @@ impl<'a> HistoricalRuntime<'a> {
             "math.avg" => self.eval_math_avg(args),
             "math.floor" => self.eval_math_floor(args),
             "math.ceil" => self.eval_math_ceil(args),
+            "math.trunc" => self.eval_math_trunc(args),
             "math.sqrt" => self.eval_math_unary_float(args, f64::sqrt),
+            "math.cbrt" => self.eval_math_unary_float(args, f64::cbrt),
             "math.log" => self.eval_math_unary_float(args, f64::ln),
             "math.log10" => self.eval_math_unary_float(args, f64::log10),
             "math.exp" => self.eval_math_unary_float(args, f64::exp),
@@ -2098,6 +2100,7 @@ impl<'a> HistoricalRuntime<'a> {
             "math.cos" => self.eval_math_unary_float(args, f64::cos),
             "math.tan" => self.eval_math_unary_float(args, f64::tan),
             "math.pow" => self.eval_math_pow(args),
+            "math.hypot" => self.eval_math_hypot(args),
             "math.round" => self.eval_math_round(args),
             "math.round_to_mintick" => self.eval_math_round_to_mintick(args),
             "math.random" => self.eval_math_random(call_site_id, args),
@@ -6040,6 +6043,15 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
+    fn eval_math_trunc(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        match self.eval_expr(&args[0].value)? {
+            PineValue::Int(value) => Ok(PineValue::Int(value)),
+            PineValue::Float(value) => Ok(PineValue::Float(value.trunc())),
+            PineValue::Na => Ok(PineValue::Na),
+            _ => Ok(PineValue::Na),
+        }
+    }
+
     fn eval_math_unary_float(
         &mut self,
         args: &[HirCallArg],
@@ -6072,6 +6084,16 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
         Ok(finite_float_or_na(base.powf(exponent)))
+    }
+
+    fn eval_math_hypot(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(left) = self.eval_expr(&args[0].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(right) = self.eval_expr(&args[1].value)?.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        Ok(finite_float_or_na(left.hypot(right)))
     }
 
     fn eval_math_avg(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -11933,8 +11955,10 @@ y = math.min(x, 3.5)
 avg_value = math.avg(open, close, high, low)
 floor_value = math.floor(close / 2)
 ceil_value = math.ceil(close / 2 - 0.25)
+trunc_value = math.trunc(close / 2 + 0.75)
 const_value = math.floor(2) + math.ceil(1)
 sqrt_value = math.sqrt(close)
+cbrt_value = math.cbrt(close)
 log_value = math.log(close)
 log10_value = math.log10(close)
 exp_value = math.exp(close)
@@ -11949,6 +11973,7 @@ sin_value = math.sin(close)
 cos_value = math.cos(close)
 tan_value = math.tan(close)
 pow_value = math.pow(close, 2)
+hypot_value = math.hypot(close, close + 1)
 rounded_precision = math.round(close / 3, 2)
 rounded_mintick = math.round_to_mintick(close + 0.006)
 mintick = syminfo.mintick
@@ -11960,8 +11985,10 @@ plot(x)
 plot(y)
 plot(avg_value)
 plot(floor_value + ceil_value)
+plot(trunc_value)
 plot(const_value)
 plot(sqrt_value)
+plot(cbrt_value)
 plot(log_value)
 plot(log10_value)
 plot(exp_value)
@@ -11976,6 +12003,7 @@ plot(sin_value)
 plot(cos_value)
 plot(tan_value)
 plot(pow_value)
+plot(hypot_value)
 plot(rounded_precision)
 plot(rounded_mintick)
 plot(mintick)
@@ -12006,35 +12034,40 @@ plot(math.pow(-1, 0.5))
         assert_values_close(&result.plots[1].values, &[2.0, 1.0, 2.0, 2.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 2.0, 3.0, 4.0]);
         assert_values_close(&result.plots[3].values, &[1.0, 2.0, 3.0, 4.0]);
-        assert_values_close(&result.plots[4].values, &[3.0, 3.0, 3.0, 3.0]);
+        assert_values_close(&result.plots[4].values, &[1.0, 1.0, 2.0, 2.0]);
+        assert_values_close(&result.plots[5].values, &[3.0, 3.0, 3.0, 3.0]);
         assert_values_close(
-            &result.plots[5].values,
+            &result.plots[6].values,
             &[1.0, 2.0_f64.sqrt(), 3.0_f64.sqrt(), 2.0],
         );
         assert_values_close(
-            &result.plots[6].values,
-            &[0.0, 2.0_f64.ln(), 3.0_f64.ln(), 4.0_f64.ln()],
-        );
-        assert_values_close(
             &result.plots[7].values,
-            &[0.0, 2.0_f64.log10(), 3.0_f64.log10(), 4.0_f64.log10()],
+            &[1.0, 2.0_f64.cbrt(), 3.0_f64.cbrt(), 4.0_f64.cbrt()],
         );
         assert_values_close(
             &result.plots[8].values,
+            &[0.0, 2.0_f64.ln(), 3.0_f64.ln(), 4.0_f64.ln()],
+        );
+        assert_values_close(
+            &result.plots[9].values,
+            &[0.0, 2.0_f64.log10(), 3.0_f64.log10(), 4.0_f64.log10()],
+        );
+        assert_values_close(
+            &result.plots[10].values,
             &[1.0_f64.exp(), 2.0_f64.exp(), 3.0_f64.exp(), 4.0_f64.exp()],
         );
         assert_values_close(
-            &result.plots[9].values[..3],
+            &result.plots[11].values[..3],
             &[(-1.0_f64).acos(), 0.0_f64.acos(), 1.0_f64.acos()],
         );
-        assert_eq!(result.plots[9].values[3], PineValue::Na);
+        assert_eq!(result.plots[11].values[3], PineValue::Na);
         assert_values_close(
-            &result.plots[10].values[..3],
+            &result.plots[12].values[..3],
             &[(-1.0_f64).asin(), 0.0_f64.asin(), 1.0_f64.asin()],
         );
-        assert_eq!(result.plots[10].values[3], PineValue::Na);
+        assert_eq!(result.plots[12].values[3], PineValue::Na);
         assert_values_close(
-            &result.plots[11].values,
+            &result.plots[13].values,
             &[
                 1.0_f64.atan(),
                 2.0_f64.atan(),
@@ -12042,9 +12075,9 @@ plot(math.pow(-1, 0.5))
                 4.0_f64.atan(),
             ],
         );
-        assert_values_close(&result.plots[12].values, &[-1.0, 0.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[14].values, &[-1.0, 0.0, 1.0, 1.0]);
         assert_values_close(
-            &result.plots[13].values,
+            &result.plots[15].values,
             &[
                 1.0_f64.to_degrees(),
                 2.0_f64.to_degrees(),
@@ -12053,7 +12086,7 @@ plot(math.pow(-1, 0.5))
             ],
         );
         assert_values_close(
-            &result.plots[14].values,
+            &result.plots[16].values,
             &[
                 1.0_f64.to_radians(),
                 2.0_f64.to_radians(),
@@ -12062,45 +12095,49 @@ plot(math.pow(-1, 0.5))
             ],
         );
         assert_values_close(
-            &result.plots[15].values,
+            &result.plots[17].values,
             &[std::f64::consts::PI
                 + std::f64::consts::E
                 + 1.618_033_988_749_895
                 + 0.618_033_988_749_894_8; 4],
         );
         assert_values_close(
-            &result.plots[16].values,
+            &result.plots[18].values,
             &[1.0_f64.sin(), 2.0_f64.sin(), 3.0_f64.sin(), 4.0_f64.sin()],
         );
         assert_values_close(
-            &result.plots[17].values,
+            &result.plots[19].values,
             &[1.0_f64.cos(), 2.0_f64.cos(), 3.0_f64.cos(), 4.0_f64.cos()],
         );
         assert_values_close(
-            &result.plots[18].values,
+            &result.plots[20].values,
             &[1.0_f64.tan(), 2.0_f64.tan(), 3.0_f64.tan(), 4.0_f64.tan()],
         );
-        assert_values_close(&result.plots[19].values, &[1.0, 4.0, 9.0, 16.0]);
-        assert_values_close(&result.plots[20].values, &[0.33, 0.67, 1.0, 1.33]);
-        assert_values_close(&result.plots[21].values, &[1.01, 2.01, 3.01, 4.01]);
-        assert_values_close(&result.plots[22].values, &[0.01, 0.01, 0.01, 0.01]);
-        for value in &result.plots[23].values {
+        assert_values_close(&result.plots[21].values, &[1.0, 4.0, 9.0, 16.0]);
+        assert_values_close(
+            &result.plots[22].values,
+            &[5.0_f64.sqrt(), 13.0_f64.sqrt(), 5.0, 41.0_f64.sqrt()],
+        );
+        assert_values_close(&result.plots[23].values, &[0.33, 0.67, 1.0, 1.33]);
+        assert_values_close(&result.plots[24].values, &[1.01, 2.01, 3.01, 4.01]);
+        assert_values_close(&result.plots[25].values, &[0.01, 0.01, 0.01, 0.01]);
+        for value in &result.plots[26].values {
             let value = value.as_f64().expect("seeded random is numeric");
             assert!((10.0..20.0).contains(&value), "random value {value}");
         }
-        assert_eq!(result.plots[23].values, result.plots[24].values);
-        for value in &result.plots[25].values {
+        assert_eq!(result.plots[26].values, result.plots[27].values);
+        for value in &result.plots[28].values {
             let value = value.as_f64().expect("default random is numeric");
             assert!((0.0..1.0).contains(&value), "random value {value}");
         }
-        assert_eq!(result.plots[26].values, vec![PineValue::Na; 4]);
-        assert_eq!(result.plots[27].values, vec![PineValue::Na; 4]);
-        assert_eq!(result.plots[28].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[29].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[30].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[31].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[32].values, vec![PineValue::Na; 4]);
         assert_eq!(result.plots[33].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[34].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[35].values, vec![PineValue::Na; 4]);
+        assert_eq!(result.plots[36].values, vec![PineValue::Na; 4]);
     }
 
     #[test]

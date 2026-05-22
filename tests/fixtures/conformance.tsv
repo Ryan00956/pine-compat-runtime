@@ -94,7 +94,9 @@ math.min	supported	fixture-derived executable subset	tests/fixtures/runtime/math
 math.avg	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.floor	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.ceil	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.trunc	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.sqrt	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.cbrt	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.log	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.log10	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.exp	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
@@ -113,6 +115,7 @@ math.sin	supported	fixture-derived executable subset	tests/fixtures/runtime/math
 math.cos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.tan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.pow	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.hypot	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.round	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.round_to_mintick	supported	fixture-derived executable subset using default syminfo.mintick	tests/fixtures/runtime/math.pine
 math.random	supported	fixture-derived deterministic callsite PRNG subset with optional min/max/seed	tests/fixtures/runtime/math.pine

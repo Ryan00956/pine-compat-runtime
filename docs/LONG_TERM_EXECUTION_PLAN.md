@@ -242,8 +242,9 @@ Candidate areas:
   includes `math.floor`, `math.ceil`, `math.sqrt`, `math.log`, `math.log10`,
   `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`,
   `math.todegrees`, `math.toradians`, `math.sin`, `math.cos`, `math.tan`,
-  `math.avg`, `math.e`, `math.pi`, `math.phi`, `math.rphi`, `math.pow`,
-  `math.round`, `math.round_to_mintick`, `math.random`, and `math.sum`;
+  `math.trunc`, `math.cbrt`, `math.hypot`, `math.avg`, `math.e`, `math.pi`,
+  `math.phi`, `math.rphi`, `math.pow`, `math.round`,
+  `math.round_to_mintick`, `math.random`, and `math.sum`;
   string coverage includes `str.split`; time
   helper coverage includes the numeric UTC `timestamp`, `weekofyear`, and
   `dayofweek` subsets, plus a fixed-default `timeframe.period` and
