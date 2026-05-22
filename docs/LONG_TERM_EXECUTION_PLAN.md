@@ -308,6 +308,8 @@ Acceptance criteria:
 
 Goal: support Pine drawing objects as first-class runtime outputs.
 
+Execution playbook: `docs/PHASE_E_EXECUTION_PLAN.md`.
+
 Object families:
 
 - `label.*`
