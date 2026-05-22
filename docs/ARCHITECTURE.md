@@ -256,6 +256,7 @@ The core output must remain host-neutral:
 
 ```json
 {
+  "schemaVersion": 1,
   "series": [],
   "annotations": [],
   "fills": [],
@@ -268,4 +269,7 @@ The core output must remain host-neutral:
 }
 ```
 
-Host integrations can adapt this model into their charting or API format.
+The `schemaVersion` field is owned by the shared runtime contract and is exposed
+unchanged by CLI JSON, Python dictionaries, and WASM JSON. Host integrations can
+adapt this model into their charting or API format, but should preserve the
+schema version when they forward machine-readable results.

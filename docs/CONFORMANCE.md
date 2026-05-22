@@ -32,6 +32,7 @@ Runtime snapshots should be normalized JSON:
 
 ```json
 {
+  "schemaVersion": 1,
   "meta": {
     "languageVersion": 5,
     "bars": 100
@@ -49,6 +50,12 @@ Runtime snapshots should be normalized JSON:
 ```
 
 The snapshot format should avoid host-specific charting details.
+
+Every machine-readable public output must include top-level `schemaVersion`.
+The version value comes from the shared runtime contract constant and must match
+across CLI JSON, Python dictionaries, and WASM JSON. The text-only CLI
+`analyze` output is diagnostic console output and is not part of the
+machine-readable schema until a JSON mode is added.
 
 ## Numeric Tolerance
 
@@ -160,7 +167,8 @@ The generated matrix is derived from `tests/fixtures/conformance.tsv`. Each row
 declares a feature, status, notes, and one or more fixture paths that back the
 claim. CLI tests verify that every matrix entry references at least one existing
 fixture. The text matrix includes the fixture paths, and the JSON matrix exposes
-them as a `fixtures` array.
+top-level `schemaVersion` plus a `features` array whose entries expose fixture
+paths as `fixtures`.
 
 The current scalar typed-array subset is summarized in
 `docs/ARRAY_STAGE_AUDIT.md`. Keep `array.*` marked `partial` until the deferred

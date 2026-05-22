@@ -1,7 +1,8 @@
 use std::{env, fs, process::ExitCode};
 
 use pine_runtime::{
-    Bar, HistoryRetentionMode, PineValue, RuntimeProfile, RuntimeResult, run_historical,
+    Bar, HistoryRetentionMode, PUBLIC_OUTPUT_SCHEMA_VERSION, PineValue, RuntimeProfile,
+    RuntimeResult, run_historical,
 };
 use pine_sema::analyze_source;
 use pine_syntax::{SourceFile, parse_source};
@@ -228,7 +229,10 @@ fn matrix_text(entries: &[MatrixEntry]) -> String {
 }
 
 fn matrix_json(entries: &[MatrixEntry]) -> String {
-    let mut output = String::from("[");
+    let mut output = format!(
+        "{{\"schemaVersion\":{},\"features\":[",
+        PUBLIC_OUTPUT_SCHEMA_VERSION
+    );
     for (index, entry) in entries.iter().enumerate() {
         if index > 0 {
             output.push(',');
@@ -250,7 +254,7 @@ fn matrix_json(entries: &[MatrixEntry]) -> String {
         }
         output.push_str("]}");
     }
-    output.push(']');
+    output.push_str("]}");
     output
 }
 
@@ -298,7 +302,7 @@ fn parse_column<T: std::str::FromStr>(
 }
 
 fn result_json(result: &RuntimeResult) -> String {
-    let mut output = String::from("{");
+    let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_OUTPUT_SCHEMA_VERSION);
     output.push_str("\"plots\":");
     output.push_str(&plots_json(&result.plots));
     output.push_str(",\"plotChars\":");
@@ -798,8 +802,30 @@ mod tests {
 
         assert_eq!(
             output,
-            r#"[{"feature":"request.*","status":"unsupported","notes":"multi-symbol","fixtures":["tests/fixtures/sema/unsupported_request.pine"]}]"#
+            r#"{"schemaVersion":1,"features":[{"feature":"request.*","status":"unsupported","notes":"multi-symbol","fixtures":["tests/fixtures/sema/unsupported_request.pine"]}]}"#
         );
+    }
+
+    #[test]
+    fn formats_runtime_result_json_with_schema_version() {
+        let result = RuntimeResult {
+            plots: vec![],
+            plot_chars: vec![],
+            plot_shapes: vec![],
+            plot_arrows: vec![],
+            plot_bars: vec![],
+            plot_candles: vec![],
+            bg_colors: vec![],
+            bar_colors: vec![],
+            hlines: vec![],
+            fills: vec![],
+            diagnostics: vec![],
+        };
+
+        let output = result_json(&result);
+
+        assert!(output.starts_with(r#"{"schemaVersion":1,"#));
+        assert!(output.contains(r#""diagnostics":[]"#));
     }
 
     #[test]
@@ -883,6 +909,7 @@ mod tests {
 
         let output = profiled_result_json(&result, &profile);
 
+        assert!(output.starts_with(r#"{"schemaVersion":1,"#));
         assert!(output.contains(r#""profile""#));
         assert!(output.contains(r#""bars":3"#));
         assert!(output.contains(r#""seriesValues":6"#));

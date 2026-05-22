@@ -11,6 +11,7 @@ BARS = [
 def test_analyze_script_reports_executable_script():
     report = pine_compat.analyze_script('indicator("demo")\nplot(close)\n')
 
+    assert report["schemaVersion"] == 1
     assert report["executable"] is True
     assert report["diagnostics"] == []
     assert any(
@@ -23,6 +24,7 @@ def test_compile_script_returns_program_with_run_method():
     program = pine_compat.compile_script('indicator("demo")\nplot(close)\n')
     result = program.run(BARS)
 
+    assert result["schemaVersion"] == 1
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
     assert result["diagnostics"] == []
 
@@ -33,6 +35,7 @@ def test_run_script_compiles_and_executes():
         BARS,
     )
 
+    assert result["schemaVersion"] == 1
     assert result["plots"][0]["values"] == [2, 2, 3]
 
 

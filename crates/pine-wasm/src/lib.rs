@@ -1,5 +1,5 @@
 use pine_ir::HirProgram;
-use pine_runtime::{Bar, PineValue, RuntimeResult, run_historical};
+use pine_runtime::{Bar, PUBLIC_OUTPUT_SCHEMA_VERSION, PineValue, RuntimeResult, run_historical};
 use pine_sema::{Analysis, analyze_source};
 use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 use wasm_bindgen::prelude::*;
@@ -94,7 +94,7 @@ fn parse_column<T: std::str::FromStr>(
 }
 
 fn analysis_json(source: &SourceFile, analysis: &Analysis) -> String {
-    let mut output = String::from("{");
+    let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_OUTPUT_SCHEMA_VERSION);
     output.push_str("\"languageVersion\":");
     match analysis.compatibility.language_version {
         Some(version) => output.push_str(&version.to_string()),
@@ -179,7 +179,7 @@ fn span_json(source: &SourceFile, span: Span) -> String {
 }
 
 fn result_json(result: &RuntimeResult) -> String {
-    let mut output = String::from("{");
+    let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_OUTPUT_SCHEMA_VERSION);
     output.push_str("\"plots\":");
     output.push_str(&plots_json(&result.plots));
     output.push_str(",\"plotChars\":");
@@ -448,6 +448,7 @@ mod tests {
     fn analyzes_script_to_json() {
         let output = analyze_script("indicator(\"demo\")\nplot(close)\n");
 
+        assert!(output.contains("\"schemaVersion\":1"));
         assert!(output.contains("\"executable\":true"));
         assert!(output.contains("\"feature\":\"plot\""));
     }
@@ -460,6 +461,7 @@ mod tests {
         )
         .expect("script should run");
 
+        assert!(output.contains("\"schemaVersion\":1"));
         assert!(output.contains("\"values\":[1,2]"));
         assert!(output.contains("\"plotChars\":[]"));
         assert!(output.contains("\"plotShapes\":[]"));

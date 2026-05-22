@@ -185,6 +185,8 @@ fn trim_series_buffer(buffer: &mut Vec<PineValue>, max_depth: usize) {
     }
 }
 
+pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = 1;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct RuntimeResult {
     pub plots: Vec<PlotSeries>,
