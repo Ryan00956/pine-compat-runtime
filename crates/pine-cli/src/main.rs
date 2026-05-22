@@ -1,11 +1,9 @@
-use std::{collections::HashSet, env, fs, process::ExitCode};
+use std::{env, process::ExitCode};
 
-use pine_runtime::{
-    Bar, PUBLIC_OUTPUT_SCHEMA_VERSION, public_runtime_profiled_result_json,
-    public_runtime_result_json, run_historical,
-};
-use pine_sema::analyze_source;
-use pine_syntax::{SourceFile, parse_source};
+mod bars_csv;
+mod commands;
+mod conformance;
+mod json;
 
 fn main() -> ExitCode {
     match run() {
@@ -23,395 +21,32 @@ fn run() -> Result<(), String> {
         return Err(usage());
     };
 
-    if command == "matrix" {
-        return run_matrix(args.collect());
-    }
-
-    let Some(path) = args.next() else {
-        return Err(usage());
-    };
-
-    let text = fs::read_to_string(&path).map_err(|err| format!("failed to read {path}: {err}"))?;
-    let source = SourceFile::new(path, text);
-
     match command.as_str() {
-        "analyze" => {
-            let analysis = analyze_source(&source);
-            println!("diagnostics: {}", analysis.diagnostics.len());
-            println!(
-                "supported: {}, unsupported: {}",
-                analysis.compatibility.supported.len(),
-                analysis.compatibility.unsupported.len()
-            );
-            for diagnostic in analysis.diagnostics {
-                let line_col = source.line_col(diagnostic.span.start);
-                println!(
-                    "{}:{:?}:{}:{}: {}",
-                    diagnostic.code,
-                    diagnostic.severity,
-                    line_col.line,
-                    line_col.column,
-                    diagnostic.message
-                );
-            }
-            Ok(())
-        }
-        "fmt-ast" => {
-            let parsed = parse_source(&source);
-            println!("{:#?}", parsed.program);
-            for diagnostic in parsed.diagnostics {
-                let line_col = source.line_col(diagnostic.span.start);
-                println!(
-                    "{}:{:?}:{}:{}: {}",
-                    diagnostic.code,
-                    diagnostic.severity,
-                    line_col.line,
-                    line_col.column,
-                    diagnostic.message
-                );
-            }
-            Ok(())
-        }
-        "run" => {
-            let Some(flag) = args.next() else {
-                return Err(usage());
-            };
-            if flag != "--bars" {
-                return Err(usage());
-            }
-            let Some(bars_path) = args.next() else {
-                return Err(usage());
-            };
-            let profile = match args.next().as_deref() {
-                None => false,
-                Some("--profile") => true,
-                Some(_) => return Err(usage()),
-            };
-
-            let analysis = analyze_source(&source);
-            if !analysis.diagnostics.is_empty() {
-                for diagnostic in analysis.diagnostics {
-                    let line_col = source.line_col(diagnostic.span.start);
-                    eprintln!(
-                        "{}:{:?}:{}:{}: {}",
-                        diagnostic.code,
-                        diagnostic.severity,
-                        line_col.line,
-                        line_col.column,
-                        diagnostic.message
-                    );
-                }
-                return Err("analysis failed".to_owned());
-            }
-            let Some(hir) = analysis.hir else {
-                return Err("analysis did not produce executable HIR".to_owned());
-            };
-
-            let bars_text = fs::read_to_string(&bars_path)
-                .map_err(|err| format!("failed to read {bars_path}: {err}"))?;
-            let bars = parse_bars_csv(&bars_text)?;
-            if profile {
-                let result = pine_runtime::run_historical_profiled(&hir, &bars)
-                    .map_err(|err| format!("runtime failed: {}", err.message))?;
-                println!(
-                    "{}",
-                    public_runtime_profiled_result_json(&result.result, &result.profile)
-                );
-            } else {
-                let result = run_historical(&hir, &bars)
-                    .map_err(|err| format!("runtime failed: {}", err.message))?;
-                println!("{}", public_runtime_result_json(&result));
-            }
-            Ok(())
-        }
+        "analyze" => commands::analyze::run(args.collect()),
+        "fmt-ast" => commands::fmt_ast::run(args.collect()),
+        "run" => commands::run::run(args.collect()),
+        "matrix" => commands::matrix::run(args.collect()),
         _ => Err(usage()),
     }
 }
 
-fn usage() -> String {
+pub(crate) fn usage() -> String {
     "usage: pine-compat <analyze|fmt-ast> <script.pine>\n       pine-compat run <script.pine> --bars <bars.csv> [--profile]\n       pine-compat matrix [--format text|json]".to_owned()
-}
-
-fn run_matrix(args: Vec<String>) -> Result<(), String> {
-    let format = match args.as_slice() {
-        [] => MatrixFormat::Text,
-        [flag, format] if flag == "--format" && format == "text" => MatrixFormat::Text,
-        [flag, format] if flag == "--format" && format == "json" => MatrixFormat::Json,
-        _ => return Err(usage()),
-    };
-
-    let entries = conformance_entries();
-    match format {
-        MatrixFormat::Text => println!("{}", matrix_text(&entries)),
-        MatrixFormat::Json => println!("{}", matrix_json(&entries)),
-    }
-    Ok(())
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum MatrixFormat {
-    Text,
-    Json,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct MatrixEntry {
-    feature: String,
-    status: String,
-    notes: String,
-    fixtures: Vec<String>,
-}
-
-fn conformance_entries() -> Vec<MatrixEntry> {
-    conformance_entries_from_tsv(include_str!("../../../tests/fixtures/conformance.tsv"))
-}
-
-fn conformance_entries_from_tsv(text: &str) -> Vec<MatrixEntry> {
-    try_conformance_entries_from_tsv(text).expect("invalid conformance metadata")
-}
-
-fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixEntry>, String> {
-    let mut entries = Vec::new();
-    let mut features = HashSet::new();
-
-    for (index, line) in text.lines().enumerate() {
-        let line_number = index + 1;
-        if line.trim().is_empty() {
-            continue;
-        }
-        if index == 0 {
-            if line != "feature\tstatus\tnotes\tfixtures" {
-                return Err("line 1: expected conformance TSV header".to_owned());
-            }
-            continue;
-        }
-
-        let columns: Vec<_> = line.split('\t').collect();
-        if columns.len() != 4 {
-            return Err(format!(
-                "line {line_number}: expected 4 tab-separated columns, found {}",
-                columns.len()
-            ));
-        }
-
-        let feature = columns[0].trim();
-        if feature.is_empty() {
-            return Err(format!("line {line_number}: feature must be non-empty"));
-        }
-        if !features.insert(feature.to_owned()) {
-            return Err(format!("line {line_number}: duplicate feature `{feature}`"));
-        }
-
-        let status = columns[1].trim();
-        if !matches!(status, "supported" | "partial" | "unsupported") {
-            return Err(format!(
-                "line {line_number}: invalid status `{status}` for `{feature}`"
-            ));
-        }
-
-        let notes = columns[2].trim();
-        if notes.is_empty() {
-            return Err(format!("line {line_number}: notes must be non-empty"));
-        }
-
-        let fixture_column = columns[3].trim();
-        if fixture_column.is_empty() {
-            return Err(format!(
-                "line {line_number}: fixtures must list at least one path for `{feature}`"
-            ));
-        }
-        let fixtures: Vec<_> = fixture_column.split(';').map(str::trim).collect();
-        if fixtures.iter().any(|fixture| fixture.is_empty()) {
-            return Err(format!(
-                "line {line_number}: fixtures must not contain empty paths for `{feature}`"
-            ));
-        }
-
-        validate_status_fixture_paths(line_number, feature, status, &fixtures)?;
-
-        entries.push(MatrixEntry {
-            feature: feature.to_owned(),
-            status: status.to_owned(),
-            notes: notes.to_owned(),
-            fixtures: fixtures.into_iter().map(str::to_owned).collect(),
-        });
-    }
-
-    Ok(entries)
-}
-
-fn validate_status_fixture_paths(
-    line_number: usize,
-    feature: &str,
-    status: &str,
-    fixtures: &[&str],
-) -> Result<(), String> {
-    match status {
-        "supported" | "partial" => {
-            if !fixtures.iter().any(|fixture| {
-                fixture.starts_with("tests/fixtures/runtime/")
-                    || fixture.starts_with("tests/fixtures/realtime/")
-                    || fixture.starts_with("tests/fixtures/syntax/")
-                    || fixture.starts_with("tests/fixtures/sema/supported_")
-                    || fixture.starts_with("tests/fixtures/regressions/")
-            }) {
-                return Err(format!(
-                    "line {line_number}: {status} feature `{feature}` must reference runtime, realtime, syntax, supported sema, or regression fixture coverage"
-                ));
-            }
-        }
-        "unsupported" => {
-            if !fixtures
-                .iter()
-                .any(|fixture| fixture.starts_with("tests/fixtures/sema/unsupported_"))
-            {
-                return Err(format!(
-                    "line {line_number}: unsupported feature `{feature}` must reference unsupported sema diagnostic fixture coverage"
-                ));
-            }
-        }
-        _ => unreachable!("status was validated before fixture rules"),
-    }
-    Ok(())
-}
-
-#[cfg(test)]
-fn validate_fixture_paths(
-    entries: &[MatrixEntry],
-    workspace: &std::path::Path,
-) -> Result<(), String> {
-    for entry in entries {
-        for fixture in &entry.fixtures {
-            if !workspace.join(fixture).exists() {
-                return Err(format!(
-                    "{} fixture path should exist for {}",
-                    fixture, entry.feature
-                ));
-            }
-        }
-    }
-    Ok(())
-}
-
-fn matrix_text(entries: &[MatrixEntry]) -> String {
-    let feature_width = entries
-        .iter()
-        .map(|entry| entry.feature.len())
-        .chain([7])
-        .max()
-        .unwrap_or(7);
-    let status_width = entries
-        .iter()
-        .map(|entry| entry.status.len())
-        .chain([6])
-        .max()
-        .unwrap_or(6);
-
-    let mut output = String::new();
-    output.push_str(&format!(
-        "{:<feature_width$}  {:<status_width$}  fixtures  notes\n",
-        "feature", "status"
-    ));
-    output.push_str(&format!(
-        "{:-<feature_width$}  {:-<status_width$}  --------  -----\n",
-        "", ""
-    ));
-    for entry in entries {
-        output.push_str(&format!(
-            "{:<feature_width$}  {:<status_width$}  {}  {}\n",
-            entry.feature,
-            entry.status,
-            entry.fixtures.join(";"),
-            entry.notes
-        ));
-    }
-    output
-}
-
-fn matrix_json(entries: &[MatrixEntry]) -> String {
-    let mut output = format!(
-        "{{\"schemaVersion\":{},\"features\":[",
-        PUBLIC_OUTPUT_SCHEMA_VERSION
-    );
-    for (index, entry) in entries.iter().enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str("{\"feature\":\"");
-        output.push_str(&json_escape(&entry.feature));
-        output.push_str("\",\"status\":\"");
-        output.push_str(&json_escape(&entry.status));
-        output.push_str("\",\"notes\":\"");
-        output.push_str(&json_escape(&entry.notes));
-        output.push_str("\",\"fixtures\":[");
-        for (fixture_index, fixture) in entry.fixtures.iter().enumerate() {
-            if fixture_index > 0 {
-                output.push(',');
-            }
-            output.push('"');
-            output.push_str(&json_escape(fixture));
-            output.push('"');
-        }
-        output.push_str("]}");
-    }
-    output.push_str("]}");
-    output
-}
-
-fn parse_bars_csv(text: &str) -> Result<Vec<Bar>, String> {
-    let mut bars = Vec::new();
-    for (line_index, line) in text.lines().enumerate() {
-        if line.trim().is_empty() {
-            continue;
-        }
-        if line_index == 0 && line.to_ascii_lowercase().contains("close") {
-            continue;
-        }
-
-        let columns: Vec<_> = line.split(',').map(str::trim).collect();
-        if columns.len() != 6 {
-            return Err(format!(
-                "invalid bars CSV at line {}: expected 6 columns time,open,high,low,close,volume",
-                line_index + 1
-            ));
-        }
-
-        bars.push(Bar {
-            time: parse_column(columns[0], line_index, "time")?,
-            open: parse_column(columns[1], line_index, "open")?,
-            high: parse_column(columns[2], line_index, "high")?,
-            low: parse_column(columns[3], line_index, "low")?,
-            close: parse_column(columns[4], line_index, "close")?,
-            volume: parse_column(columns[5], line_index, "volume")?,
-        });
-    }
-    Ok(bars)
-}
-
-fn parse_column<T: std::str::FromStr>(
-    value: &str,
-    line_index: usize,
-    name: &str,
-) -> Result<T, String> {
-    value.parse::<T>().map_err(|_| {
-        format!(
-            "invalid `{name}` value `{value}` at bars CSV line {}",
-            line_index + 1
-        )
-    })
-}
-
-fn json_escape(value: &str) -> String {
-    value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::bars_csv::parse_bars_csv;
+    use crate::commands::matrix::{matrix_json, matrix_text};
+    use crate::conformance::{
+        MatrixEntry, conformance_entries, try_conformance_entries_from_tsv, validate_fixture_paths,
+    };
     use pine_runtime::{
         HistoryRetentionMode, RuntimeProfile, RuntimeResult, public_runtime_profiled_result_json,
-        public_runtime_result_json,
+        public_runtime_result_json, run_historical,
     };
+    use pine_sema::analyze_source;
+    use pine_syntax::SourceFile;
     use std::{env, fs, path::PathBuf};
 
     #[test]

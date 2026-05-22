@@ -2,6 +2,13 @@ use pine_ir::{HirExpr, HirStmt, HirStmtKind, SymbolId};
 
 use crate::*;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum StmtControl {
+    None,
+    Break,
+    Continue,
+}
+
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_stmt(&mut self, statement: &HirStmt) -> Result<StmtControl, RuntimeError> {
         match &statement.kind {
