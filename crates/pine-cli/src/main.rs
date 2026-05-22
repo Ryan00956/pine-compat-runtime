@@ -1,4 +1,4 @@
-use std::{env, fs, process::ExitCode};
+use std::{collections::HashSet, env, fs, process::ExitCode};
 
 use pine_runtime::{
     Bar, PUBLIC_OUTPUT_SCHEMA_VERSION, public_runtime_profiled_result_json,
@@ -167,33 +167,130 @@ fn conformance_entries() -> Vec<MatrixEntry> {
 }
 
 fn conformance_entries_from_tsv(text: &str) -> Vec<MatrixEntry> {
-    text.lines()
-        .enumerate()
-        .filter_map(|(index, line)| {
-            let line = line.trim();
-            if line.is_empty() || index == 0 {
-                return None;
-            }
+    try_conformance_entries_from_tsv(text).expect("invalid conformance metadata")
+}
 
-            let columns: Vec<_> = line.split('\t').collect();
-            assert_eq!(
-                columns.len(),
-                4,
-                "invalid conformance metadata at line {}",
-                index + 1
-            );
-            Some(MatrixEntry {
-                feature: columns[0].to_owned(),
-                status: columns[1].to_owned(),
-                notes: columns[2].to_owned(),
-                fixtures: columns[3]
-                    .split(';')
-                    .filter(|fixture| !fixture.is_empty())
-                    .map(str::to_owned)
-                    .collect(),
-            })
-        })
-        .collect()
+fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixEntry>, String> {
+    let mut entries = Vec::new();
+    let mut features = HashSet::new();
+
+    for (index, line) in text.lines().enumerate() {
+        let line_number = index + 1;
+        if line.trim().is_empty() {
+            continue;
+        }
+        if index == 0 {
+            if line != "feature\tstatus\tnotes\tfixtures" {
+                return Err("line 1: expected conformance TSV header".to_owned());
+            }
+            continue;
+        }
+
+        let columns: Vec<_> = line.split('\t').collect();
+        if columns.len() != 4 {
+            return Err(format!(
+                "line {line_number}: expected 4 tab-separated columns, found {}",
+                columns.len()
+            ));
+        }
+
+        let feature = columns[0].trim();
+        if feature.is_empty() {
+            return Err(format!("line {line_number}: feature must be non-empty"));
+        }
+        if !features.insert(feature.to_owned()) {
+            return Err(format!("line {line_number}: duplicate feature `{feature}`"));
+        }
+
+        let status = columns[1].trim();
+        if !matches!(status, "supported" | "partial" | "unsupported") {
+            return Err(format!(
+                "line {line_number}: invalid status `{status}` for `{feature}`"
+            ));
+        }
+
+        let notes = columns[2].trim();
+        if notes.is_empty() {
+            return Err(format!("line {line_number}: notes must be non-empty"));
+        }
+
+        let fixture_column = columns[3].trim();
+        if fixture_column.is_empty() {
+            return Err(format!(
+                "line {line_number}: fixtures must list at least one path for `{feature}`"
+            ));
+        }
+        let fixtures: Vec<_> = fixture_column.split(';').map(str::trim).collect();
+        if fixtures.iter().any(|fixture| fixture.is_empty()) {
+            return Err(format!(
+                "line {line_number}: fixtures must not contain empty paths for `{feature}`"
+            ));
+        }
+
+        validate_status_fixture_paths(line_number, feature, status, &fixtures)?;
+
+        entries.push(MatrixEntry {
+            feature: feature.to_owned(),
+            status: status.to_owned(),
+            notes: notes.to_owned(),
+            fixtures: fixtures.into_iter().map(str::to_owned).collect(),
+        });
+    }
+
+    Ok(entries)
+}
+
+fn validate_status_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    status: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    match status {
+        "supported" | "partial" => {
+            if !fixtures.iter().any(|fixture| {
+                fixture.starts_with("tests/fixtures/runtime/")
+                    || fixture.starts_with("tests/fixtures/realtime/")
+                    || fixture.starts_with("tests/fixtures/syntax/")
+                    || fixture.starts_with("tests/fixtures/sema/supported_")
+                    || fixture.starts_with("tests/fixtures/regressions/")
+            }) {
+                return Err(format!(
+                    "line {line_number}: {status} feature `{feature}` must reference runtime, realtime, syntax, supported sema, or regression fixture coverage"
+                ));
+            }
+        }
+        "unsupported" => {
+            if !fixtures
+                .iter()
+                .any(|fixture| fixture.starts_with("tests/fixtures/sema/unsupported_"))
+            {
+                return Err(format!(
+                    "line {line_number}: unsupported feature `{feature}` must reference unsupported sema diagnostic fixture coverage"
+                ));
+            }
+        }
+        _ => unreachable!("status was validated before fixture rules"),
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+fn validate_fixture_paths(
+    entries: &[MatrixEntry],
+    workspace: &std::path::Path,
+) -> Result<(), String> {
+    for entry in entries {
+        for fixture in &entry.fixtures {
+            if !workspace.join(fixture).exists() {
+                return Err(format!(
+                    "{} fixture path should exist for {}",
+                    fixture, entry.feature
+                ));
+            }
+        }
+    }
+    Ok(())
 }
 
 fn matrix_text(entries: &[MatrixEntry]) -> String {
@@ -377,21 +474,96 @@ mod tests {
 
     #[test]
     fn conformance_metadata_references_existing_fixtures() {
-        let workspace = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
-        for entry in conformance_entries() {
+        validate_fixture_paths(&conformance_entries(), &workspace_dir())
+            .expect("fixture paths should exist");
+    }
+
+    #[test]
+    fn rejects_malformed_conformance_rows() {
+        let error = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\nindicator\tsupported\tmissing fixture column\n",
+        )
+        .expect_err("row should be malformed");
+
+        assert!(error.contains("expected 4 tab-separated columns"));
+    }
+
+    #[test]
+    fn rejects_duplicate_conformance_features() {
+        let error = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\nindicator\tsupported\tone\ttests/fixtures/runtime/io.pine\nindicator\tsupported\ttwo\ttests/fixtures/runtime/io.pine\n",
+        )
+        .expect_err("feature should be duplicate");
+
+        assert!(error.contains("duplicate feature `indicator`"));
+    }
+
+    #[test]
+    fn rejects_invalid_conformance_statuses() {
+        let error = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\nindicator\tready\tnotes\ttests/fixtures/runtime/io.pine\n",
+        )
+        .expect_err("status should be invalid");
+
+        assert!(error.contains("invalid status `ready`"));
+    }
+
+    #[test]
+    fn rejects_empty_conformance_fixtures() {
+        let error = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\nindicator\tsupported\tnotes\t\n",
+        )
+        .expect_err("fixtures should be empty");
+
+        assert!(error.contains("fixtures must list at least one path"));
+    }
+
+    #[test]
+    fn rejects_missing_conformance_fixture_paths() {
+        let entries = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\nindicator\tsupported\tnotes\ttests/fixtures/runtime/missing.pine\n",
+        )
+        .expect("metadata shape should be valid");
+        let error = validate_fixture_paths(&entries, &workspace_dir())
+            .expect_err("fixture should be missing");
+
+        assert!(error.contains("tests/fixtures/runtime/missing.pine fixture path should exist"));
+    }
+
+    #[test]
+    fn rejects_status_fixture_mismatches() {
+        let unsupported_error = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\nrequest.*\tunsupported\tnotes\ttests/fixtures/runtime/io.pine\n",
+        )
+        .expect_err("unsupported feature should require unsupported sema fixture");
+        assert!(unsupported_error.contains("unsupported sema diagnostic fixture coverage"));
+
+        let supported_error = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\nindicator\tsupported\tnotes\ttests/fixtures/sema/unsupported_request.pine\n",
+        )
+        .expect_err("supported feature should require executable or positive fixture");
+        assert!(supported_error.contains("must reference runtime"));
+    }
+
+    #[test]
+    fn matrix_includes_known_unsupported_platform_families() {
+        let entries = conformance_entries();
+        for feature in [
+            "varip",
+            "request.*",
+            "import",
+            "strategy.*",
+            "alert/alertcondition",
+            "label/line/box/table/polyline",
+            "non-int history offsets",
+            "negative history offsets",
+        ] {
             assert!(
-                !entry.fixtures.is_empty(),
-                "{} should reference at least one fixture",
-                entry.feature
+                entries
+                    .iter()
+                    .any(|entry| entry.feature == feature && entry.status == "unsupported"),
+                "{feature} should remain explicitly unsupported in matrix"
             );
-            for fixture in entry.fixtures {
-                assert!(
-                    workspace.join(&fixture).exists(),
-                    "{} fixture path should exist for {}",
-                    fixture,
-                    entry.feature
-                );
-            }
         }
     }
 

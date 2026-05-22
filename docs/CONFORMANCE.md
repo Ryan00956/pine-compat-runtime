@@ -189,6 +189,23 @@ fixture. The text matrix includes the fixture paths, and the JSON matrix exposes
 top-level `schemaVersion` plus a `features` array whose entries expose fixture
 paths as `fixtures`.
 
+Conformance metadata is validated before matrix output is trusted:
+
+- `feature` must be non-empty and unique.
+- `status` must be `supported`, `partial`, or `unsupported`.
+- `notes` must be non-empty.
+- `fixtures` must contain at least one path and no empty `;` entries.
+- Every fixture path must exist in the workspace.
+- `supported` and `partial` entries must cite executable, realtime, syntax,
+  positive semantic, or regression coverage.
+- `unsupported` entries must cite unsupported semantic diagnostic fixtures.
+- Every supported built-in registry entry and known unsupported platform family
+  must remain represented.
+
+Malformed rows, duplicate feature names, invalid statuses, missing fixture paths,
+and status/fixture mismatches are first-class tests. The matrix command is
+derived from the same validated metadata used by those tests.
+
 The current scalar typed-array subset is summarized in
 `docs/ARRAY_STAGE_AUDIT.md`. Keep `array.*` marked `partial` until the deferred
 generic, object, UDT, map/matrix, history, and slice-aliasing semantics are
