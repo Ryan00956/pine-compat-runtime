@@ -37,7 +37,9 @@ Implemented or partially implemented:
   remains partial because generic, object, UDT, matrix/map, history, and Pine
   shallow-slice semantics are still out of scope.
 - A fixture-covered set of `input.*`, output calls, color helpers, math
-  helpers, and `ta.*` functions.
+  helpers, and `ta.*` functions. The main built-in coverage pass is closed in
+  `docs/PHASE_D_AUDIT.md`; further built-in work should be maintenance unless
+  a later phase needs it.
 - CLI, Python, and WASM surfaces for the supported runtime result model.
 
 Remaining work falls into the phases below.
@@ -203,10 +205,13 @@ Suggested commits:
 
 ## Phase D: Built-In Coverage Expansion
 
+Status: closed for the current executable indicator subset. See
+`docs/PHASE_D_AUDIT.md`.
+
 Goal: grow useful indicator compatibility through high-value built-ins before
 large platform features.
 
-Candidate areas:
+Closed coverage:
 
 - Additional `ta.*` functions. Initial Phase D coverage includes `ta.stdev`
   and `ta.variance` with default biased and optional sample window modes, plus
@@ -281,19 +286,26 @@ Candidate areas:
   display/style parameters while preserving existing normalized output schemas.
 - Initial `plotbar`/`plotcandle` metadata coverage accepts common display
   parameters while preserving existing OHLC output schemas.
-- More complete `color.*` constants and helpers.
-- More complete `input.*` parameters and host-side input override APIs.
-- More plot options, visibility controls, styles, and display parameters.
 
-Execution order:
+Maintenance tails:
 
-1. Prefer pure functions with no runtime storage.
-2. Then add stateful built-ins with explicit callsite state.
-3. Then add output parameters that affect public result schemas.
+- `ta.vwap` session-derived anchoring remains future work.
+- `color.*` named constants are a common registry, not an exhaustive claim.
+- More complete host-side input override APIs remain future work.
+- More plot options, visibility controls, styles, and display-driven renderer
+  behavior remain future work.
+
+Maintenance order:
+
+1. Prefer small compatibility fixes inside already supported built-in families.
+2. Keep new stateful helpers explicit about callsite state and rollback.
+3. Move public output schema expansion into Phase K or the relevant platform
+   phase.
 
 Acceptance criteria:
 
-- Every new built-in has semantic signature tests and runtime fixtures.
+- Every maintained built-in change has semantic signature tests and runtime
+  fixtures.
 - Stateful built-ins behave correctly inside `if`, `switch`, loops, and UDF
   callsites when those combinations are claimed.
 - CLI, Python, and WASM expose any new result fields consistently.
@@ -468,16 +480,16 @@ Acceptance criteria:
 
 Recommended order from the current state:
 
-1. Phase D: add more high-value pure and stateful built-ins.
-2. Phase B: expand collections beyond float arrays.
-3. Phase C: revisit history and qualifier semantics when new built-ins need it.
-4. Phase K: strengthen release infrastructure before large platform features.
-5. Phase E: drawing objects.
-6. Phase F: `request.*` and multi-timeframe data.
-7. Phase I: `varip`.
-8. Phase H: alerts.
-9. Phase J: libraries, user types, and methods.
-10. Phase G: strategy runtime.
+1. Phase K: strengthen release infrastructure before large platform features.
+2. Phase E: drawing objects.
+3. Phase F: `request.*` and multi-timeframe data.
+4. Phase I: `varip`.
+5. Phase H: alerts.
+6. Phase J: libraries, user types, and methods.
+7. Phase G: strategy runtime.
+8. Phase B/C maintenance when new work exposes collection, history, or
+   qualifier gaps.
+9. Phase D maintenance for small fixture-backed built-in compatibility fixes.
 
 This order keeps the project useful for indicator execution while delaying
 features that require new host APIs, object lifetimes, or broker simulation.
