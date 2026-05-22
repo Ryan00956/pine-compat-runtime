@@ -1,6 +1,8 @@
 use crate::PineValue;
 
-pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = 1;
+use super::drawings::LabelOutput;
+
+pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RuntimeResult {
@@ -14,6 +16,7 @@ pub struct RuntimeResult {
     pub bar_colors: Vec<ColorSeries>,
     pub hlines: Vec<HLineOutput>,
     pub fills: Vec<FillOutput>,
+    pub labels: Vec<LabelOutput>,
     pub diagnostics: Vec<RuntimeDiagnostic>,
 }
 

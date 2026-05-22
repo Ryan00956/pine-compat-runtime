@@ -1,5 +1,6 @@
 use crate::{HistoryRetentionMode, PineValue, RuntimeProfile};
 
+use super::drawings::LabelOutput;
 use super::model::{
     ColorSeries, FillOutput, HLineOutput, PUBLIC_OUTPUT_SCHEMA_VERSION, PlotArrowSeries,
     PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeResult,
@@ -27,6 +28,8 @@ pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
     output.push_str(&hlines_json(&result.hlines));
     output.push_str(",\"fills\":");
     output.push_str(&fills_json(&result.fills));
+    output.push_str(",\"labels\":");
+    output.push_str(&labels_json(&result.labels));
     output.push_str(",\"diagnostics\":[]");
     output.push('}');
     output
@@ -108,7 +111,11 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"hlines\":{},",
             "\"hlineCapacity\":{},",
             "\"fills\":{},",
-            "\"fillCapacity\":{}",
+            "\"fillCapacity\":{},",
+            "\"labels\":{},",
+            "\"labelSnapshots\":{},",
+            "\"labelCapacity\":{},",
+            "\"labelSnapshotCapacity\":{}",
             "}}"
         ),
         profile.bars,
@@ -171,7 +178,11 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.hlines,
         profile.hline_capacity,
         profile.fills,
-        profile.fill_capacity
+        profile.fill_capacity,
+        profile.labels,
+        profile.label_snapshots,
+        profile.label_capacity,
+        profile.label_snapshot_capacity
     )
 }
 
@@ -369,6 +380,37 @@ fn fills_json(fills: &[FillOutput]) -> String {
     output
 }
 
+fn labels_json(labels: &[LabelOutput]) -> String {
+    let mut output = String::from("[");
+    for (index, label) in labels.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"snapshots\":[", label.id));
+        for (snapshot_index, snapshot) in label.snapshots.iter().enumerate() {
+            if snapshot_index > 0 {
+                output.push(',');
+            }
+            output.push_str(&format!(
+                "{{\"barIndex\":{},\"exists\":{}",
+                snapshot.bar_index, snapshot.exists
+            ));
+            if snapshot.exists {
+                output.push_str(",\"x\":");
+                output.push_str(&value_json(&snapshot.x));
+                output.push_str(",\"y\":");
+                output.push_str(&value_json(&snapshot.y));
+                output.push_str(",\"text\":");
+                output.push_str(&value_json(&snapshot.text));
+            }
+            output.push('}');
+        }
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
 fn value_json(value: &PineValue) -> String {
     match value {
         PineValue::Int(value) => value.to_string(),
@@ -376,7 +418,9 @@ fn value_json(value: &PineValue) -> String {
         PineValue::Bool(value) => value.to_string(),
         PineValue::String(value) => format!("\"{}\"", json_escape(value)),
         PineValue::Color(value) => value.to_string(),
-        PineValue::Plot(value) | PineValue::HLine(value) => value.to_string(),
+        PineValue::Plot(value) | PineValue::HLine(value) | PineValue::Label(value) => {
+            value.to_string()
+        }
         PineValue::Tuple(values) => {
             let mut output = String::from("[");
             for (index, value) in values.iter().enumerate() {

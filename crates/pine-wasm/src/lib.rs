@@ -217,7 +217,7 @@ mod tests {
     fn analyzes_script_to_json() {
         let output = analyze_script("indicator(\"demo\")\nplot(close)\n");
 
-        assert!(output.contains("\"schemaVersion\":1"));
+        assert!(output.contains("\"schemaVersion\":2"));
         assert!(output.contains("\"executable\":true"));
         assert!(output.contains("\"feature\":\"plot\""));
     }
@@ -230,13 +230,14 @@ mod tests {
         )
         .expect("script should run");
 
-        assert!(output.contains("\"schemaVersion\":1"));
+        assert!(output.contains("\"schemaVersion\":2"));
         assert!(output.contains("\"values\":[1,2]"));
         assert!(output.contains("\"plotChars\":[]"));
         assert!(output.contains("\"plotShapes\":[]"));
         assert!(output.contains("\"plotArrows\":[]"));
         assert!(output.contains("\"plotBars\":[]"));
         assert!(output.contains("\"plotCandles\":[]"));
+        assert!(output.contains("\"labels\":[]"));
     }
 
     #[test]

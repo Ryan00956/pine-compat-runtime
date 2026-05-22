@@ -32,20 +32,19 @@ Runtime snapshots should be normalized JSON:
 
 ```json
 {
-  "schemaVersion": 1,
-  "meta": {
-    "languageVersion": 5,
-    "bars": 100
-  },
+  "schemaVersion": 2,
   "plots": [],
-  "hline": [],
+  "plotChars": [],
+  "plotShapes": [],
+  "plotArrows": [],
+  "plotBars": [],
+  "plotCandles": [],
+  "bgColors": [],
+  "barColors": [],
+  "hlines": [],
   "fills": [],
-  "inputs": [],
-  "diagnostics": [],
-  "compatibility": {
-    "supported": [],
-    "unsupported": []
-  }
+  "labels": [],
+  "diagnostics": []
 }
 ```
 
@@ -61,6 +60,9 @@ CLI and WASM runtime JSON must be generated through the shared runtime contract
 helper so field names and nesting cannot drift. Python returns native
 dictionaries, so its binding tests assert the same top-level runtime keys and
 representative nested output families such as `plotShapes` and `plotCandles`.
+The Phase E drawing-object scaffold adds `labels` as a top-level runtime key in
+`schemaVersion: 2`; it remains an empty list until a supported `label.*` method
+adds fixture-backed snapshots.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field

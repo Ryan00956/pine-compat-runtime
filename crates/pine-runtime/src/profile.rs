@@ -69,4 +69,8 @@ pub struct RuntimeProfile {
     pub hline_capacity: usize,
     pub fills: usize,
     pub fill_capacity: usize,
+    pub labels: usize,
+    pub label_snapshots: usize,
+    pub label_capacity: usize,
+    pub label_snapshot_capacity: usize,
 }

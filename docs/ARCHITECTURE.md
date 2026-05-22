@@ -89,6 +89,7 @@ Responsibilities:
 - Maintain committed historical series buffers.
 - Implement `var` and later `varip` storage.
 - Collect plot, hline, fill, bgcolor, barcolor, and signal side effects.
+- Collect drawing-object snapshots behind a host-neutral output contract.
 - Enforce runtime limits.
 
 The runtime should be deterministic for a fixed program, data set, and inputs.
@@ -159,6 +160,7 @@ enum ValueKind {
     Color,
     Plot,
     HLine,
+    Label,
     Void,
     Na,
 }
@@ -184,6 +186,7 @@ enum PineValue {
     Color(Color),
     Plot(PlotId),
     HLine(HLineId),
+    Label(LabelId),
     Na,
     Void,
 }
@@ -256,23 +259,35 @@ The core output must remain host-neutral:
 
 ```json
 {
-  "schemaVersion": 1,
-  "series": [],
-  "annotations": [],
+  "schemaVersion": 2,
+  "plots": [],
+  "plotChars": [],
+  "plotShapes": [],
+  "plotArrows": [],
+  "plotBars": [],
+  "plotCandles": [],
+  "bgColors": [],
+  "barColors": [],
+  "hlines": [],
   "fills": [],
-  "inputs": [],
-  "diagnostics": [],
-  "compatibility": {
-    "supported": [],
-    "unsupported": []
-  }
+  "labels": [],
+  "diagnostics": []
 }
 ```
 
 The `schemaVersion` field is owned by the shared runtime contract and is exposed
-unchanged by CLI JSON, Python dictionaries, and WASM JSON. Host integrations can
-adapt this model into their charting or API format, but should preserve the
-schema version when they forward machine-readable results.
+unchanged by CLI JSON, Python dictionaries, and WASM JSON. `schemaVersion: 2`
+adds the top-level drawing-object `labels` field. Host integrations can adapt
+this model into their charting or API format, but should preserve the schema
+version when they forward machine-readable results.
+
+Drawing-object outputs use sparse snapshot families. The initial drawing
+contract reserves `labels`, whose entries have an object `id` and a `snapshots`
+array. Label snapshots use `barIndex`, `exists`, and, while `exists` is true,
+the mutable label fields represented by normalized Pine values. Creation,
+mutation, deletion, realtime rollback, and object limits are implemented in
+later Phase E slices; until then `labels` is present but empty and `label.*`
+calls remain unsupported.
 
 The `pine-runtime` crate owns the shared runtime-result JSON helpers used by the
 CLI and WASM bindings. Python keeps explicit dictionary conversion code because

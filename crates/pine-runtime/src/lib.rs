@@ -15,6 +15,7 @@ mod value;
 
 pub use bar::{Bar, BarUpdate, BarUpdateKind};
 pub use error::RuntimeError;
+pub use output::drawings::{LabelOutput, LabelSnapshot};
 pub use output::json::{public_runtime_profiled_result_json, public_runtime_result_json};
 pub use output::model::{
     ColorSeries, FillOutput, HLineOutput, PUBLIC_OUTPUT_SCHEMA_VERSION, PlotArrowSeries,

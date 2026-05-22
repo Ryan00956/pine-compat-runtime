@@ -85,8 +85,9 @@ It passed on the closeout workspace. This command includes:
 
 These are not blockers for closing Phase K:
 
-- `schemaVersion` remains `1`; the next intentional consumer-visible output
-  change must decide whether to increment it and must refresh snapshots.
+- At Phase K closeout, `schemaVersion` remained `1`; later intentional
+  consumer-visible output changes must decide whether to increment it and must
+  refresh snapshots.
 - Python output conversion is intentionally explicit rather than generated from
   the runtime JSON helper. Keep the key-contract tests in lockstep with any
   shared runtime output change.

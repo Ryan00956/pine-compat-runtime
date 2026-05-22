@@ -196,6 +196,7 @@ fn runtime_result_to_py(
     output.set_item("barColors", colors_to_py(py, &result.bar_colors)?)?;
     output.set_item("hlines", hlines_to_py(py, &result.hlines)?)?;
     output.set_item("fills", fills_to_py(py, &result.fills)?)?;
+    output.set_item("labels", labels_to_py(py, &result.labels)?)?;
     output.set_item("diagnostics", PyList::empty(py))?;
     Ok(output.into_any().unbind())
 }
@@ -340,6 +341,36 @@ fn fills_to_py(py: Python<'_>, fills: &[pine_runtime::FillOutput]) -> PyResult<P
     Ok(output.into_any().unbind())
 }
 
+fn labels_to_py(py: Python<'_>, labels: &[pine_runtime::LabelOutput]) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for label in labels {
+        let item = PyDict::new(py);
+        item.set_item("id", label.id)?;
+        item.set_item("snapshots", label_snapshots_to_py(py, &label.snapshots)?)?;
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
+fn label_snapshots_to_py(
+    py: Python<'_>,
+    snapshots: &[pine_runtime::LabelSnapshot],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for snapshot in snapshots {
+        let item = PyDict::new(py);
+        item.set_item("barIndex", snapshot.bar_index)?;
+        item.set_item("exists", snapshot.exists)?;
+        if snapshot.exists {
+            item.set_item("x", value_to_py(py, &snapshot.x)?)?;
+            item.set_item("y", value_to_py(py, &snapshot.y)?)?;
+            item.set_item("text", value_to_py(py, &snapshot.text)?)?;
+        }
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
 fn values_to_py(py: Python<'_>, values: &[PineValue]) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for value in values {
@@ -360,9 +391,10 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
         PineValue::Float(value) => output.append(*value),
         PineValue::Bool(value) => output.append(*value),
         PineValue::String(value) => output.append(value),
-        PineValue::Color(value) | PineValue::Plot(value) | PineValue::HLine(value) => {
-            output.append(*value)
-        }
+        PineValue::Color(value)
+        | PineValue::Plot(value)
+        | PineValue::HLine(value)
+        | PineValue::Label(value) => output.append(*value),
         PineValue::Tuple(values) => output.append(values_to_py(py, values)?),
         PineValue::Array(_) | PineValue::Na | PineValue::Void => output.append(py.None()),
     }

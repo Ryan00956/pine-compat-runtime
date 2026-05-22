@@ -233,7 +233,7 @@ mod tests {
 
         assert_eq!(
             output,
-            r#"{"schemaVersion":1,"features":[{"feature":"request.*","status":"unsupported","notes":"multi-symbol","fixtures":["tests/fixtures/sema/unsupported_request.pine"]}]}"#
+            r#"{"schemaVersion":2,"features":[{"feature":"request.*","status":"unsupported","notes":"multi-symbol","fixtures":["tests/fixtures/sema/unsupported_request.pine"]}]}"#
         );
     }
 
@@ -250,12 +250,14 @@ mod tests {
             bar_colors: vec![],
             hlines: vec![],
             fills: vec![],
+            labels: vec![],
             diagnostics: vec![],
         };
 
         let output = public_runtime_result_json(&result);
 
-        assert!(output.starts_with(r#"{"schemaVersion":1,"#));
+        assert!(output.starts_with(r#"{"schemaVersion":2,"#));
+        assert!(output.contains(r#""labels":[]"#));
         assert!(output.contains(r#""diagnostics":[]"#));
     }
 
@@ -272,6 +274,7 @@ mod tests {
             bar_colors: vec![],
             hlines: vec![],
             fills: vec![],
+            labels: vec![],
             diagnostics: vec![],
         };
         let profile = RuntimeProfile {
@@ -336,11 +339,15 @@ mod tests {
             hline_capacity: 0,
             fills: 0,
             fill_capacity: 0,
+            labels: 0,
+            label_snapshots: 0,
+            label_capacity: 0,
+            label_snapshot_capacity: 0,
         };
 
         let output = public_runtime_profiled_result_json(&result, &profile);
 
-        assert!(output.starts_with(r#"{"schemaVersion":1,"#));
+        assert!(output.starts_with(r#"{"schemaVersion":2,"#));
         assert!(output.contains(r#""profile""#));
         assert!(output.contains(r#""bars":3"#));
         assert!(output.contains(r#""seriesValues":6"#));
@@ -357,6 +364,8 @@ mod tests {
         assert!(output.contains(r#""plotArrows":0"#));
         assert!(output.contains(r#""plotBars":0"#));
         assert!(output.contains(r#""plotCandles":0"#));
+        assert!(output.contains(r#""labels":0"#));
+        assert!(output.contains(r#""labelSnapshots":0"#));
     }
 
     #[test]

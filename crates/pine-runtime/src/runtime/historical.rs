@@ -57,6 +57,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) bar_colors: Vec<ColorSeries>,
     pub(crate) hlines: Vec<HLineOutput>,
     pub(crate) fills: Vec<FillOutput>,
+    pub(crate) labels: Vec<LabelOutput>,
 }
 
 pub fn run_historical(program: &HirProgram, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
@@ -125,6 +126,7 @@ impl<'a> HistoricalRuntime<'a> {
             bar_colors: Vec::new(),
             hlines: Vec::new(),
             fills: Vec::new(),
+            labels: Vec::new(),
         }
     }
 
@@ -218,6 +220,7 @@ impl<'a> HistoricalRuntime<'a> {
             bar_colors: self.bar_colors.clone(),
             hlines: self.hlines.clone(),
             fills: self.fills.clone(),
+            labels: self.labels.clone(),
             diagnostics: Vec::new(),
         }
     }
@@ -371,6 +374,16 @@ impl<'a> HistoricalRuntime<'a> {
             .sum::<usize>();
         let array_values = self.array_store.values().map(Vec::len).sum::<usize>();
         let array_value_capacity = self.array_store.values().map(Vec::capacity).sum::<usize>();
+        let label_snapshots = self
+            .labels
+            .iter()
+            .map(|label| label.snapshots.len())
+            .sum::<usize>();
+        let label_snapshot_capacity = self
+            .labels
+            .iter()
+            .map(|label| label.snapshots.capacity())
+            .sum::<usize>();
 
         RuntimeProfile {
             bars: self.bars,
@@ -434,6 +447,10 @@ impl<'a> HistoricalRuntime<'a> {
             hline_capacity: self.hlines.capacity(),
             fills: self.fills.len(),
             fill_capacity: self.fills.capacity(),
+            labels: self.labels.len(),
+            label_snapshots,
+            label_capacity: self.labels.capacity(),
+            label_snapshot_capacity,
         }
     }
 
