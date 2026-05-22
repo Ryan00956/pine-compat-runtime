@@ -9,6 +9,27 @@ use crate::output::collect::push_series_value;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_output_call(
+        &mut self,
+        callee: &str,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Option<Result<PineValue, RuntimeError>> {
+        Some(match callee {
+            "plot" => self.eval_plot(call_site_id, args),
+            "plotchar" => self.eval_plotchar(call_site_id, args),
+            "plotshape" => self.eval_plotshape(call_site_id, args),
+            "plotarrow" => self.eval_plotarrow(call_site_id, args),
+            "plotbar" => self.eval_plotbar(call_site_id, args),
+            "plotcandle" => self.eval_plotcandle(call_site_id, args),
+            "bgcolor" => self.eval_bgcolor(call_site_id, args),
+            "barcolor" => self.eval_barcolor(call_site_id, args),
+            "hline" => self.eval_hline(call_site_id, args),
+            "fill" => self.eval_fill(call_site_id, args),
+            _ => return None,
+        })
+    }
+
     pub(crate) fn eval_plot(
         &mut self,
         call_site_id: CallSiteId,

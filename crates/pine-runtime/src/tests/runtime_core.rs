@@ -1,7 +1,32 @@
+use pine_ir::CallSiteId;
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
 use super::*;
+
+#[test]
+fn reports_unsupported_runtime_call_from_top_level_dispatcher() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("unsupported dispatch")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let program = analysis.hir.expect("HIR");
+    let mut runtime = HistoricalRuntime::new(&program);
+
+    let error = runtime
+        .eval_call("runtime.unknown", CallSiteId(999), &[])
+        .expect_err("unsupported runtime call should fail");
+
+    assert_eq!(error.message, "unsupported runtime call `runtime.unknown`");
+}
 
 #[test]
 fn preserves_var_state_across_bars() {

@@ -4,6 +4,21 @@ use crate::builtins::strings::format_number;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_cast_call(
+        &mut self,
+        callee: &str,
+        args: &[HirCallArg],
+    ) -> Option<Result<PineValue, RuntimeError>> {
+        Some(match callee {
+            "int" => self.eval_int_cast(args),
+            "float" => self.eval_float_cast(args),
+            "bool" => self.eval_bool_cast(args),
+            "string" => self.eval_string_cast(args),
+            "color" => self.eval_color_cast(args),
+            _ => return None,
+        })
+    }
+
     pub(crate) fn eval_int_cast(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         Ok(match self.eval_expr(&args[0].value)? {
             PineValue::Int(value) => PineValue::Int(value),

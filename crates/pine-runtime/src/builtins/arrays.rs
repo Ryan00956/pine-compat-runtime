@@ -5,6 +5,8 @@ use pine_ir::{HirCallArg, HirExpr};
 use crate::builtins::strings::stringify_array_join_element;
 use crate::*;
 
+mod calls;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ArrayElementKind {
     Float,

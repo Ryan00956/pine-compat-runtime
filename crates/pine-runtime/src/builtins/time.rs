@@ -267,6 +267,28 @@ pub(crate) fn format_millis(millis: u32, width: usize) -> String {
 }
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_time_call(
+        &mut self,
+        callee: &str,
+        args: &[HirCallArg],
+    ) -> Option<Result<PineValue, RuntimeError>> {
+        Some(match callee {
+            "year" => self.eval_time_component(args, TimeComponent::Year),
+            "month" => self.eval_time_component(args, TimeComponent::Month),
+            "weekofyear" => self.eval_time_component(args, TimeComponent::WeekOfYear),
+            "dayofmonth" => self.eval_time_component(args, TimeComponent::DayOfMonth),
+            "dayofweek" => self.eval_time_component(args, TimeComponent::DayOfWeek),
+            "hour" => self.eval_time_component(args, TimeComponent::Hour),
+            "minute" => self.eval_time_component(args, TimeComponent::Minute),
+            "second" => self.eval_time_component(args, TimeComponent::Second),
+            "timestamp" => self.eval_timestamp(args),
+            "timeframe.in_seconds" => self.eval_timeframe_in_seconds(args),
+            "timeframe.from_seconds" => self.eval_timeframe_from_seconds(args),
+            "timeframe.change" => self.eval_timeframe_change(args),
+            _ => return None,
+        })
+    }
+
     pub(crate) fn eval_time_component(
         &mut self,
         args: &[HirCallArg],

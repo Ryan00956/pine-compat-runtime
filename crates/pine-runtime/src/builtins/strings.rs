@@ -255,6 +255,38 @@ pub(crate) enum StringMatch {
 }
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_string_call(
+        &mut self,
+        callee: &str,
+        args: &[HirCallArg],
+    ) -> Option<Result<PineValue, RuntimeError>> {
+        if !callee.starts_with("str.") {
+            return None;
+        }
+
+        Some(match callee {
+            "str.length" => self.eval_str_length(args),
+            "str.upper" => self.eval_str_case(args, StringCase::Upper),
+            "str.lower" => self.eval_str_case(args, StringCase::Lower),
+            "str.contains" => self.eval_str_match(args, StringMatch::Contains),
+            "str.startswith" => self.eval_str_match(args, StringMatch::StartsWith),
+            "str.endswith" => self.eval_str_match(args, StringMatch::EndsWith),
+            "str.pos" => self.eval_str_pos(args),
+            "str.substring" => self.eval_str_substring(args),
+            "str.trim" => self.eval_str_trim(args),
+            "str.repeat" => self.eval_str_repeat(args),
+            "str.replace" => self.eval_str_replace(args),
+            "str.replace_all" => self.eval_str_replace_all(args),
+            "str.tonumber" => self.eval_str_tonumber(args),
+            "str.tostring" => self.eval_str_tostring(args),
+            "str.format" => self.eval_str_format(args),
+            "str.match" => self.eval_str_match_regex(args),
+            "str.split" => self.eval_str_split(args),
+            "str.format_time" => self.eval_str_format_time(args),
+            _ => return None,
+        })
+    }
+
     pub(crate) fn eval_str_length(
         &mut self,
         args: &[HirCallArg],

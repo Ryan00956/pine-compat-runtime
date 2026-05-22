@@ -364,4 +364,94 @@ pub(crate) fn rsi_from_averages(average_gain: f64, average_loss: f64) -> f64 {
     }
 }
 
+impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_ta_call(
+        &mut self,
+        callee: &str,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Option<Result<PineValue, RuntimeError>> {
+        if !callee.starts_with("ta.") {
+            return None;
+        }
+
+        Some(match callee {
+            "ta.sma" => self.eval_sma(call_site_id, args),
+            "ta.ema" => self.eval_ema(call_site_id, args),
+            "ta.dema" => self.eval_dema(call_site_id, args),
+            "ta.tema" => self.eval_tema(call_site_id, args),
+            "ta.rma" => self.eval_rma(call_site_id, args),
+            "ta.rsi" => self.eval_rsi(call_site_id, args),
+            "ta.macd" => self.eval_macd(call_site_id, args),
+            "ta.tsi" => self.eval_tsi(call_site_id, args),
+            "ta.cmo" => self.eval_cmo(call_site_id, args),
+            "ta.cci" => self.eval_cci(call_site_id, args),
+            "ta.cog" => self.eval_cog(call_site_id, args),
+            "ta.ao" => self.eval_ao(call_site_id),
+            "ta.bop" => self.eval_bop(),
+            "ta.bb" => self.eval_bb(call_site_id, args),
+            "ta.bbw" => self.eval_bbw(call_site_id, args),
+            "ta.kc" => self.eval_kc(call_site_id, args),
+            "ta.kcw" => self.eval_kcw(call_site_id, args),
+            "ta.pivothigh" => self.eval_pivot(call_site_id, args, WindowExtreme::Highest),
+            "ta.pivotlow" => self.eval_pivot(call_site_id, args, WindowExtreme::Lowest),
+            "ta.pivot_point_levels" => self.eval_pivot_point_levels(call_site_id, args),
+            "ta.cum" => self.eval_cum(call_site_id, args),
+            "ta.max" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Highest),
+            "ta.min" => self.eval_all_time_extreme(call_site_id, args, WindowExtreme::Lowest),
+            "ta.stdev" => self.eval_stdev(call_site_id, args),
+            "ta.variance" => self.eval_variance(call_site_id, args),
+            "ta.range" => self.eval_range(call_site_id, args),
+            "ta.dev" => self.eval_dev(call_site_id, args),
+            "ta.vwap" => self.eval_vwap_source(call_site_id, args),
+            "ta.vwma" => self.eval_vwma(call_site_id, args),
+            "ta.mfi" => self.eval_mfi(call_site_id, args),
+            "ta.wma" => self.eval_wma(call_site_id, args),
+            "ta.hma" => self.eval_hma(call_site_id, args),
+            "ta.swma" => self.eval_swma(call_site_id, args),
+            "ta.alma" => self.eval_alma(call_site_id, args),
+            "ta.linreg" => self.eval_linreg(call_site_id, args),
+            "ta.stoch" => self.eval_stoch(call_site_id, args),
+            "ta.wpr" => self.eval_wpr(call_site_id, args),
+            "ta.correlation" => self.eval_correlation(call_site_id, args),
+            "ta.covariance" => self.eval_covariance(call_site_id, args),
+            "ta.median" => self.eval_median(call_site_id, args),
+            "ta.mode" => self.eval_mode(call_site_id, args),
+            "ta.percentile_nearest_rank" => {
+                self.eval_percentile(call_site_id, args, ArrayPercentileMode::NearestRank)
+            }
+            "ta.percentile_linear_interpolation" => {
+                self.eval_percentile(call_site_id, args, ArrayPercentileMode::LinearInterpolation)
+            }
+            "ta.percentrank" => self.eval_percentrank(call_site_id, args),
+            "ta.tr" => self.eval_tr(args),
+            "ta.atr" => self.eval_atr(call_site_id, args),
+            "ta.supertrend" => self.eval_supertrend(call_site_id, args),
+            "ta.dmi" => self.eval_dmi(call_site_id, args),
+            "ta.sar" => self.eval_sar(call_site_id, args),
+            "ta.change" => self.eval_change(args),
+            "ta.mom" => self.eval_mom(args),
+            "ta.roc" => self.eval_roc(args),
+            "ta.rising" => self.eval_rising_falling(call_site_id, args, RisingFallingMode::Rising),
+            "ta.falling" => {
+                self.eval_rising_falling(call_site_id, args, RisingFallingMode::Falling)
+            }
+            "ta.barssince" => self.eval_barssince(call_site_id, args),
+            "ta.valuewhen" => self.eval_valuewhen(call_site_id, args),
+            "ta.cross" => self.eval_cross(args, CrossMode::Any),
+            "ta.crossover" => self.eval_cross(args, CrossMode::Over),
+            "ta.crossunder" => self.eval_cross(args, CrossMode::Under),
+            "ta.highest" => self.eval_window_extreme(call_site_id, args, WindowExtreme::Highest),
+            "ta.lowest" => self.eval_window_extreme(call_site_id, args, WindowExtreme::Lowest),
+            "ta.highestbars" => {
+                self.eval_window_extreme_offset(call_site_id, args, WindowExtreme::Highest)
+            }
+            "ta.lowestbars" => {
+                self.eval_window_extreme_offset(call_site_id, args, WindowExtreme::Lowest)
+            }
+            _ => return None,
+        })
+    }
+}
+
 impl<'a> HistoricalRuntime<'a> {}

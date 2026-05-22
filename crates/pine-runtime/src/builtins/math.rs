@@ -17,6 +17,48 @@ pub(crate) fn math_extreme(left: f64, right: f64, mode: MathExtreme) -> f64 {
 }
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_math_call(
+        &mut self,
+        callee: &str,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Option<Result<PineValue, RuntimeError>> {
+        if !callee.starts_with("math.") {
+            return None;
+        }
+
+        Some(match callee {
+            "math.abs" => self.eval_math_abs(args),
+            "math.max" => self.eval_math_extreme(args, MathExtreme::Max),
+            "math.min" => self.eval_math_extreme(args, MathExtreme::Min),
+            "math.avg" => self.eval_math_avg(args),
+            "math.floor" => self.eval_math_floor(args),
+            "math.ceil" => self.eval_math_ceil(args),
+            "math.trunc" => self.eval_math_trunc(args),
+            "math.sqrt" => self.eval_math_unary_float(args, f64::sqrt),
+            "math.cbrt" => self.eval_math_unary_float(args, f64::cbrt),
+            "math.log" => self.eval_math_unary_float(args, f64::ln),
+            "math.log10" => self.eval_math_unary_float(args, f64::log10),
+            "math.exp" => self.eval_math_unary_float(args, f64::exp),
+            "math.acos" => self.eval_math_unary_float(args, f64::acos),
+            "math.asin" => self.eval_math_unary_float(args, f64::asin),
+            "math.atan" => self.eval_math_unary_float(args, f64::atan),
+            "math.sign" => self.eval_math_sign(args),
+            "math.todegrees" => self.eval_math_unary_float(args, f64::to_degrees),
+            "math.toradians" => self.eval_math_unary_float(args, f64::to_radians),
+            "math.sin" => self.eval_math_unary_float(args, f64::sin),
+            "math.cos" => self.eval_math_unary_float(args, f64::cos),
+            "math.tan" => self.eval_math_unary_float(args, f64::tan),
+            "math.pow" => self.eval_math_pow(args),
+            "math.hypot" => self.eval_math_hypot(args),
+            "math.round" => self.eval_math_round(args),
+            "math.round_to_mintick" => self.eval_math_round_to_mintick(args),
+            "math.random" => self.eval_math_random(call_site_id, args),
+            "math.sum" => self.eval_math_sum(call_site_id, args),
+            _ => return None,
+        })
+    }
+
     pub(crate) fn eval_math_abs(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         match self.eval_expr(&args[0].value)? {
             PineValue::Int(value) => Ok(value

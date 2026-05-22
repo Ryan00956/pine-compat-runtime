@@ -18,6 +18,26 @@ pub(crate) fn eval_static_builtin_value(name: &str) -> PineValue {
 }
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_variable_call(
+        &mut self,
+        callee: &str,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Option<Result<PineValue, RuntimeError>> {
+        Some(match callee {
+            "indicator" => Ok(PineValue::Void),
+            "input" | "input.int" | "input.float" | "input.bool" | "input.color"
+            | "input.string" | "input.price" | "input.time" | "input.symbol"
+            | "input.timeframe" | "input.session" | "input.text_area" | "input.source" => {
+                self.eval_input(args)
+            }
+            "na" => self.eval_na(args),
+            "nz" => self.eval_nz(args),
+            "fixnan" => self.eval_fixnan(call_site_id, args),
+            _ => return None,
+        })
+    }
+
     pub(crate) fn eval_input(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         self.eval_expr(&args[0].value)
     }

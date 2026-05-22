@@ -61,6 +61,27 @@ pub(crate) fn color_component(color: u32, component: ColorComponent) -> f64 {
 }
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_color_call(
+        &mut self,
+        callee: &str,
+        args: &[HirCallArg],
+    ) -> Option<Result<PineValue, RuntimeError>> {
+        if !callee.starts_with("color.") {
+            return None;
+        }
+
+        Some(match callee {
+            "color.new" => self.eval_color_new(args),
+            "color.rgb" => self.eval_color_rgb(args),
+            "color.r" => self.eval_color_component(args, ColorComponent::Red),
+            "color.g" => self.eval_color_component(args, ColorComponent::Green),
+            "color.b" => self.eval_color_component(args, ColorComponent::Blue),
+            "color.t" => self.eval_color_component(args, ColorComponent::Transparency),
+            "color.from_gradient" => self.eval_color_from_gradient(args),
+            _ => return None,
+        })
+    }
+
     pub(crate) fn eval_color_new(
         &mut self,
         args: &[HirCallArg],
