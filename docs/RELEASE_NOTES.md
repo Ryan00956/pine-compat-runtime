@@ -6,10 +6,11 @@
   machine-readable contract to `schemaVersion: 2` and adding the
   top-level `labels` output across CLI JSON, Python dictionaries, and WASM JSON.
   It is empty for scripts that do not create supported drawing objects.
-- Added the first drawing behavior: a minimal `label.new(x, y, text)` subset
-  that returns deterministic label ids and emits sparse creation snapshots in
-  the public `labels` output. Label options, mutation, deletion, limits, and
-  other drawing families remain unsupported.
+- Added the first drawing behavior: a `label.new` creation subset that returns
+  deterministic label ids and emits sparse creation snapshots with bar-index
+  coordinates, price y-values, text, colors, selected label styles, size, and
+  tooltip metadata. Mutation, deletion, limits, unsupported coordinate modes,
+  and other drawing families remain unsupported.
 - Closed Phase K release infrastructure with public `schemaVersion: 1` output
   contracts for CLI, Python, and WASM public machine-readable outputs.
 - Moved CLI and WASM runtime JSON onto shared runtime serialization helpers,

@@ -402,6 +402,20 @@ fn labels_json(labels: &[LabelOutput]) -> String {
                 output.push_str(&value_json(&snapshot.y));
                 output.push_str(",\"text\":");
                 output.push_str(&value_json(&snapshot.text));
+                output.push_str(",\"xloc\":");
+                output.push_str(&value_json(&snapshot.xloc));
+                output.push_str(",\"yloc\":");
+                output.push_str(&value_json(&snapshot.yloc));
+                output.push_str(",\"color\":");
+                output.push_str(&value_json(&snapshot.color));
+                output.push_str(",\"style\":");
+                output.push_str(&value_json(&snapshot.style));
+                output.push_str(",\"textColor\":");
+                output.push_str(&value_json(&snapshot.text_color));
+                output.push_str(",\"size\":");
+                output.push_str(&value_json(&snapshot.size));
+                output.push_str(",\"tooltip\":");
+                output.push_str(&value_json(&snapshot.tooltip));
             }
             output.push('}');
         }

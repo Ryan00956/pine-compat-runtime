@@ -18,6 +18,41 @@ const LABEL_NEW_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::StringCompatible,
         optional: false,
     },
+    BuiltinParam {
+        name: "xloc",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "yloc",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "color",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "style",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "textcolor",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "size",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "tooltip",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
 ];
 
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[BuiltinSignature {

@@ -405,6 +405,10 @@ mod tests {
                 "runtime_label_new.json",
                 "tests/fixtures/runtime/label_new.pine",
             ),
+            (
+                "runtime_label_options.json",
+                "tests/fixtures/runtime/label_options.pine",
+            ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));
         }

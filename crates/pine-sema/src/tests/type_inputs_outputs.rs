@@ -271,7 +271,7 @@ fn accepts_plotcandle() {
 #[test]
 fn accepts_minimal_label_new() {
     let analysis = analyze(
-        "id = label.new(bar_index, high, \"High\")\nother = label.new(x=1, y=close, text=\"Close\")\nplot(close)\n",
+        "id = label.new(bar_index, high, \"High\")\nother = label.new(x=1, y=close, text=\"Close\", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, tooltip=\"Tip\")\nplot(close)\n",
     );
 
     assert!(
@@ -287,6 +287,47 @@ fn accepts_minimal_label_new() {
             .any(|feature| feature.feature == "label.new")
     );
     assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_unsupported_label_new_modes() {
+    let analysis = analyze(
+        "label.new(bar_index, high, \"High\", xloc=xloc.bar_time, yloc=yloc.abovebar, style=\"label.style_unknown\", size=\"size.massive\")\nplot(close)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("xloc.bar_index")),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("yloc.price")),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("label.style_label_down")),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("size.normal")),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
 }
 
 #[test]

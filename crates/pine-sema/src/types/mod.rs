@@ -17,6 +17,13 @@ pub(crate) fn const_int_value(expr: &Expr) -> Option<i64> {
         _ => None,
     }
 }
+pub(crate) fn const_string_value(expr: &Expr) -> Option<String> {
+    match &expr.kind {
+        ExprKind::Literal(Literal::String(value)) => Some(value.clone()),
+        ExprKind::QualifiedName(parts) => Some(parts.join(".")),
+        _ => None,
+    }
+}
 pub(crate) fn literal_type(literal: &Literal) -> PineType {
     match literal {
         Literal::Int(_) => PineType::new(Qualifier::Const, ValueKind::Int),

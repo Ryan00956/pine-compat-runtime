@@ -61,10 +61,12 @@ helper so field names and nesting cannot drift. Python returns native
 dictionaries, so its binding tests assert the same top-level runtime keys and
 representative nested output families such as `plotShapes` and `plotCandles`.
 The Phase E drawing-object scaffold adds `labels` as a top-level runtime key in
-`schemaVersion: 2`. The first executable drawing subset is `label.new(x, y,
-text)`, which emits sparse creation snapshots. Keep label options, mutation,
-deletion, limits, realtime-specific behavior, and other drawing families out of
-the supported matrix until they have fixtures and public-output coverage.
+`schemaVersion: 2`. The first executable drawing subset is `label.new` creation
+with bar-index coordinates, price y-values, text, `xloc.bar_index`,
+`yloc.price`, colors, selected label styles, size, and tooltip metadata. Keep
+mutation, deletion, limits, realtime-specific behavior, unsupported coordinate
+modes, and other drawing families out of the supported matrix until they have
+fixtures and public-output coverage.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field

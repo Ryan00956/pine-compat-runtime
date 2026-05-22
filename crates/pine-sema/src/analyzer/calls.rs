@@ -378,6 +378,93 @@ impl Analyzer {
         self.validate_array_concat_args(signature, args, arg_types);
         self.validate_array_from_args(signature, args, arg_types);
         self.validate_indicator_args(signature, args);
+        self.validate_label_new_args(signature, args);
+    }
+
+    pub(crate) fn validate_label_new_args(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+    ) {
+        if signature.name != "label.new" {
+            return;
+        }
+
+        self.validate_label_string_arg(signature, args, 3, "xloc", &["xloc.bar_index"]);
+        self.validate_label_string_arg(signature, args, 4, "yloc", &["yloc.price"]);
+        self.validate_label_string_arg(
+            signature,
+            args,
+            6,
+            "style",
+            &[
+                "label.style_none",
+                "label.style_xcross",
+                "label.style_cross",
+                "label.style_triangleup",
+                "label.style_triangledown",
+                "label.style_flag",
+                "label.style_circle",
+                "label.style_arrowup",
+                "label.style_arrowdown",
+                "label.style_label_up",
+                "label.style_label_down",
+                "label.style_label_left",
+                "label.style_label_right",
+                "label.style_label_lower_left",
+                "label.style_label_lower_right",
+                "label.style_label_upper_left",
+                "label.style_label_upper_right",
+            ],
+        );
+        self.validate_label_string_arg(
+            signature,
+            args,
+            8,
+            "size",
+            &[
+                "size.auto",
+                "size.tiny",
+                "size.small",
+                "size.normal",
+                "size.large",
+                "size.huge",
+            ],
+        );
+    }
+
+    pub(crate) fn validate_label_string_arg(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        index: usize,
+        name: &str,
+        allowed: &[&str],
+    ) {
+        for (arg_index, arg) in args.iter().enumerate() {
+            let is_target = arg.name.as_deref() == Some(name)
+                || (arg.name.is_none()
+                    && signature
+                        .params
+                        .get(arg_index)
+                        .is_some_and(|param| param.name == name && index == arg_index));
+            if !is_target {
+                continue;
+            }
+            let Some(value) = const_string_value(&arg.value) else {
+                continue;
+            };
+            if !allowed.iter().any(|allowed_value| *allowed_value == value) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    format!(
+                        "`label.new` argument `{name}` only supports {}",
+                        allowed.join(", ")
+                    ),
+                    arg.span,
+                ));
+            }
+        }
     }
 
     pub(crate) fn validate_indicator_args(

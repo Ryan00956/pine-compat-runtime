@@ -285,9 +285,10 @@ Drawing-object outputs use sparse snapshot families. The initial drawing
 contract reserves `labels`, whose entries have an object `id` and a `snapshots`
 array. Label snapshots use `barIndex`, `exists`, and, while `exists` is true,
 the mutable label fields represented by normalized Pine values. Phase E starts
-with a minimal `label.new(x, y, text)` creation subset. Mutation, deletion,
-realtime rollback, object limits, label options, and other drawing families are
-implemented in later Phase E slices.
+with a `label.new` creation subset for `x`, `y`, `text`, `xloc.bar_index`,
+`yloc.price`, colors, selected label styles, size, and tooltip metadata.
+Mutation, deletion, realtime rollback, object limits, unsupported coordinate
+modes, and other drawing families are implemented in later Phase E slices.
 
 The `pine-runtime` crate owns the shared runtime-result JSON helpers used by the
 CLI and WASM bindings. Python keeps explicit dictionary conversion code because

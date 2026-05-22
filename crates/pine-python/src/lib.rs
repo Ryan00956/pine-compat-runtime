@@ -365,6 +365,13 @@ fn label_snapshots_to_py(
             item.set_item("x", value_to_py(py, &snapshot.x)?)?;
             item.set_item("y", value_to_py(py, &snapshot.y)?)?;
             item.set_item("text", value_to_py(py, &snapshot.text)?)?;
+            item.set_item("xloc", value_to_py(py, &snapshot.xloc)?)?;
+            item.set_item("yloc", value_to_py(py, &snapshot.yloc)?)?;
+            item.set_item("color", value_to_py(py, &snapshot.color)?)?;
+            item.set_item("style", value_to_py(py, &snapshot.style)?)?;
+            item.set_item("textColor", value_to_py(py, &snapshot.text_color)?)?;
+            item.set_item("size", value_to_py(py, &snapshot.size)?)?;
+            item.set_item("tooltip", value_to_py(py, &snapshot.tooltip)?)?;
         }
         output.append(item)?;
     }

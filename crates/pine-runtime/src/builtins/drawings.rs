@@ -36,6 +36,14 @@ impl<'a> HistoricalRuntime<'a> {
         let x = self.eval_expr(x_arg)?;
         let y = self.eval_expr(y_arg)?;
         let text = self.eval_expr(text_arg)?;
+        let xloc = self.eval_label_option(args, 3, "xloc", "xloc.bar_index")?;
+        let yloc = self.eval_label_option(args, 4, "yloc", "yloc.price")?;
+        let color = self.eval_label_option_value(args, 5, "color", PineValue::Na)?;
+        let style = self.eval_label_option(args, 6, "style", "label.style_label_down")?;
+        let text_color = self.eval_label_option_value(args, 7, "textcolor", PineValue::Na)?;
+        let size = self.eval_label_option(args, 8, "size", "size.normal")?;
+        let tooltip =
+            self.eval_label_option_value(args, 9, "tooltip", PineValue::String(String::new()))?;
         let id = self.next_label_id;
         self.next_label_id = self
             .next_label_id
@@ -51,8 +59,38 @@ impl<'a> HistoricalRuntime<'a> {
                 x,
                 y,
                 text,
+                xloc,
+                yloc,
+                color,
+                style,
+                text_color,
+                size,
+                tooltip,
             }],
         });
         Ok(PineValue::Label(id))
+    }
+
+    fn eval_label_option(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+        default: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_label_option_value(args, index, name, PineValue::String(default.to_owned()))
+    }
+
+    fn eval_label_option_value(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+        default: PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        match call_arg_expr(args, index, name) {
+            Some(expr) => self.eval_expr(expr),
+            None => Ok(default),
+        }
     }
 }

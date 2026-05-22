@@ -73,6 +73,13 @@ def test_run_script_returns_label_outputs():
                     "x": 0,
                     "y": 1.0,
                     "text": "start",
+                    "xloc": "xloc.bar_index",
+                    "yloc": "yloc.price",
+                    "color": None,
+                    "style": "label.style_label_down",
+                    "textColor": None,
+                    "size": "size.normal",
+                    "tooltip": "",
                 }
             ],
         }

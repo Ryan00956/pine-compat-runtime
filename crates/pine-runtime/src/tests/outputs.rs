@@ -60,7 +60,55 @@ plot(close)
         assert_eq!(snapshot.x, PineValue::Int(index as i64));
         assert_eq!(snapshot.y, PineValue::Float(index as f64 + 1.0));
         assert_eq!(snapshot.text, PineValue::String("bar".to_owned()));
+        assert_eq!(
+            snapshot.xloc,
+            PineValue::String("xloc.bar_index".to_owned())
+        );
+        assert_eq!(snapshot.yloc, PineValue::String("yloc.price".to_owned()));
+        assert_eq!(snapshot.color, PineValue::Na);
+        assert_eq!(
+            snapshot.style,
+            PineValue::String("label.style_label_down".to_owned())
+        );
+        assert_eq!(snapshot.text_color, PineValue::Na);
+        assert_eq!(snapshot.size, PineValue::String("size.normal".to_owned()));
+        assert_eq!(snapshot.tooltip, PineValue::String(String::new()));
     }
+}
+
+#[test]
+fn collects_label_new_options() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("label options")
+label.new(x=bar_index, y=high, text="bar", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, tooltip="Tip")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let snapshot = &result.labels[0].snapshots[0];
+
+    assert_eq!(
+        snapshot.xloc,
+        PineValue::String("xloc.bar_index".to_owned())
+    );
+    assert_eq!(snapshot.yloc, PineValue::String("yloc.price".to_owned()));
+    assert_eq!(snapshot.color, PineValue::Color(0x008000));
+    assert_eq!(
+        snapshot.style,
+        PineValue::String("label.style_label_up".to_owned())
+    );
+    assert_eq!(snapshot.text_color, PineValue::Color(0xFFFFFF));
+    assert_eq!(snapshot.size, PineValue::String("size.small".to_owned()));
+    assert_eq!(snapshot.tooltip, PineValue::String("Tip".to_owned()));
 }
 
 #[test]
