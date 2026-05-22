@@ -309,6 +309,13 @@ Acceptance criteria:
 Goal: support Pine drawing objects as first-class runtime outputs.
 
 Execution playbook: `docs/PHASE_E_EXECUTION_PLAN.md`.
+Closeout audit: `docs/PHASE_E_AUDIT.md`.
+
+Status: closed for the current fixture-backed partial drawing platform. Labels,
+lines, boxes, and tables have public sparse snapshots, deterministic ids,
+limits, incremental append coverage, and realtime rollback coverage for their
+claimed method subsets. `polyline.*` remains unsupported pending `chart.point`
+and point-list array design.
 
 Object families:
 

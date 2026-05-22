@@ -1,5 +1,9 @@
 # Phase E Execution Plan
 
+Status: Phase E is closed for the current fixture-backed drawing object subset.
+Use `docs/PHASE_E_AUDIT.md` as the closeout record before adding new drawing
+maintenance work.
+
 Phase E adds Pine drawing objects as first-class runtime outputs. Execute it in
 small, mergeable slices. Each slice should leave the workspace shippable and
 should keep the compatibility matrix, public output schema, Python binding, and

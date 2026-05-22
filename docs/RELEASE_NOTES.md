@@ -33,6 +33,9 @@
 - Kept `polyline.*` explicitly unsupported for Phase E because it depends on a
   future `chart.point` value and point-array design; the decision is captured in
   `docs/PHASE_E_POLYLINE_GATE.md`.
+- Closed Phase E with `docs/PHASE_E_AUDIT.md`, fixture-backed drawing matrix
+  rows, schemaVersion 2 drawing output coverage across CLI/Python/WASM, and
+  family-split runtime drawing built-ins.
 - Closed Phase K release infrastructure with public `schemaVersion: 1` output
   contracts for CLI, Python, and WASM public machine-readable outputs.
 - Moved CLI and WASM runtime JSON onto shared runtime serialization helpers,
