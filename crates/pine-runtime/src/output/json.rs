@@ -459,6 +459,14 @@ fn lines_json(lines: &[LineOutput]) -> String {
                 output.push_str(&value_json(&snapshot.x2));
                 output.push_str(",\"y2\":");
                 output.push_str(&value_json(&snapshot.y2));
+                output.push_str(",\"color\":");
+                output.push_str(&value_json(&snapshot.color));
+                output.push_str(",\"width\":");
+                output.push_str(&value_json(&snapshot.width));
+                output.push_str(",\"style\":");
+                output.push_str(&value_json(&snapshot.style));
+                output.push_str(",\"extend\":");
+                output.push_str(&value_json(&snapshot.extend));
             }
             output.push('}');
         }

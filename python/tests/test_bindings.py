@@ -105,6 +105,10 @@ def test_run_script_returns_line_outputs():
                     "y1": 2.0,
                     "x2": 1,
                     "y2": 2.0,
+                    "color": None,
+                    "width": 1,
+                    "style": "line.style_solid",
+                    "extend": "extend.none",
                 }
             ],
         }

@@ -388,7 +388,7 @@ fn rejects_unimplemented_label_methods() {
 #[test]
 fn accepts_minimal_line_new() {
     let analysis = analyze(
-        "id = line.new(bar_index - 1, low, bar_index, high)\nother = line.new(x1=0, y1=open, x2=bar_index, y2=close)\nplot(close)\n",
+        "id = line.new(bar_index - 1, low, bar_index, high)\nother = line.new(x1=0, y1=open, x2=bar_index, y2=close)\nline.set_x1(id, bar_index)\nline.set_y1(id, low)\nline.set_xy1(id, bar_index, open)\nline.set_x2(id, bar_index)\nline.set_y2(id, high)\nline.set_xy2(id, bar_index, close)\nline.set_color(id, color.green)\nline.set_width(id, 2)\nline.set_style(id, line.style_dashed)\nline.set_extend(id, extend.right)\nline.delete(na)\nline.delete(id)\nplot(close)\n",
     );
 
     assert!(
@@ -408,14 +408,14 @@ fn accepts_minimal_line_new() {
 
 #[test]
 fn rejects_unimplemented_line_methods() {
-    let analysis = analyze("line.set_xy1(na, bar_index, close)\nplot(close)\n");
+    let analysis = analyze("line.get_price(na, bar_index)\nplot(close)\n");
 
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "line.set_xy1"),
+            .any(|feature| feature.feature == "line.get_price"),
         "{:?}",
         analysis.compatibility.unsupported
     );

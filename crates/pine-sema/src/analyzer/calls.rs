@@ -29,6 +29,17 @@ const LABEL_SIZES: &[&str] = &[
     "size.huge",
 ];
 
+const LINE_STYLES: &[&str] = &[
+    "line.style_solid",
+    "line.style_dotted",
+    "line.style_dashed",
+    "line.style_arrow_left",
+    "line.style_arrow_right",
+    "line.style_arrow_both",
+];
+
+const LINE_EXTENDS: &[&str] = &["extend.none", "extend.right", "extend.left", "extend.both"];
+
 pub(crate) fn expr_name(expr: &Expr) -> Option<String> {
     match &expr.kind {
         ExprKind::Identifier(name) => Some(name.clone()),
@@ -128,6 +139,17 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "label.set_tooltip"
             | "label.delete"
             | "line.new"
+            | "line.set_x1"
+            | "line.set_y1"
+            | "line.set_xy1"
+            | "line.set_x2"
+            | "line.set_y2"
+            | "line.set_xy2"
+            | "line.set_color"
+            | "line.set_width"
+            | "line.set_style"
+            | "line.set_extend"
+            | "line.delete"
     ) || name == "input"
         || name.starts_with("input.")
 }
@@ -439,6 +461,12 @@ impl Analyzer {
             "label.set_size" => {
                 self.validate_label_string_arg(signature, args, 1, "size", LABEL_SIZES);
             }
+            "line.set_style" => {
+                self.validate_label_string_arg(signature, args, 1, "style", LINE_STYLES);
+            }
+            "line.set_extend" => {
+                self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
+            }
             _ => {}
         }
     }
@@ -468,7 +496,8 @@ impl Analyzer {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_VALUE",
                     format!(
-                        "`label.new` argument `{name}` only supports {}",
+                        "`{}` argument `{name}` only supports {}",
+                        signature.name,
                         allowed.join(", ")
                     ),
                     arg.span,

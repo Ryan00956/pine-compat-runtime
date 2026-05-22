@@ -404,6 +404,10 @@ fn line_snapshots_to_py(
             item.set_item("y1", value_to_py(py, &snapshot.y1)?)?;
             item.set_item("x2", value_to_py(py, &snapshot.x2)?)?;
             item.set_item("y2", value_to_py(py, &snapshot.y2)?)?;
+            item.set_item("color", value_to_py(py, &snapshot.color)?)?;
+            item.set_item("width", value_to_py(py, &snapshot.width)?)?;
+            item.set_item("style", value_to_py(py, &snapshot.style)?)?;
+            item.set_item("extend", value_to_py(py, &snapshot.extend)?)?;
         }
         output.append(item)?;
     }

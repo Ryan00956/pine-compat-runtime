@@ -432,6 +432,14 @@ mod tests {
                 "runtime_line_new.json",
                 "tests/fixtures/runtime/line_new.pine",
             ),
+            (
+                "runtime_line_mutation.json",
+                "tests/fixtures/runtime/line_mutation.pine",
+            ),
+            (
+                "runtime_line_delete.json",
+                "tests/fixtures/runtime/line_delete.pine",
+            ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));
         }

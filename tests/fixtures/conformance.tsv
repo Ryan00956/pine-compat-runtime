@@ -82,7 +82,18 @@ label.set_style	partial	label id selected style mutation snapshots only; deleted
 label.set_size	partial	label id size mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine;tests/fixtures/runtime/label_control_flow.pine
 label.set_tooltip	partial	label id tooltip mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine;tests/fixtures/runtime/label_control_flow.pine
 label.delete	partial	label id deletion snapshots only; deleting deleted or na labels is no-op; ids are not reused and labels have a 500-object runtime limit; other drawing families unsupported	tests/fixtures/runtime/label_delete.pine
-line.new	partial	bar-index x1/x2 and numeric y1/y2 creation snapshots only; line mutation, deletion, optional style fields, and other drawing families unsupported	tests/fixtures/runtime/line_new.pine
+line.new	partial	bar-index x1/x2 and numeric y1/y2 creation snapshots with default color/width/style/extend fields and a 500-line runtime limit; realtime rollback covered; other drawing families unsupported	tests/fixtures/runtime/line_new.pine;tests/fixtures/runtime/line_control_flow.pine
+line.set_x1	partial	line id x1 mutation snapshots only; deleted or na lines are no-op; other drawing families unsupported	tests/fixtures/runtime/line_mutation.pine
+line.set_y1	partial	line id y1 mutation snapshots only; deleted or na lines are no-op; other drawing families unsupported	tests/fixtures/runtime/line_mutation.pine
+line.set_xy1	partial	line id x1/y1 mutation snapshots only; deleted or na lines are no-op; other drawing families unsupported	tests/fixtures/runtime/line_mutation.pine
+line.set_x2	partial	line id x2 mutation snapshots only; deleted or na lines are no-op; other drawing families unsupported	tests/fixtures/runtime/line_mutation.pine
+line.set_y2	partial	line id y2 mutation snapshots only; deleted or na lines are no-op; other drawing families unsupported	tests/fixtures/runtime/line_mutation.pine
+line.set_xy2	partial	line id x2/y2 mutation snapshots only; deleted or na lines are no-op; other drawing families unsupported	tests/fixtures/runtime/line_mutation.pine
+line.set_color	partial	line id color mutation snapshots only; deleted or na lines are no-op; other drawing families unsupported	tests/fixtures/runtime/line_mutation.pine;tests/fixtures/runtime/line_control_flow.pine
+line.set_width	partial	line id width mutation snapshots only; deleted or na lines are no-op; other drawing families unsupported	tests/fixtures/runtime/line_mutation.pine;tests/fixtures/runtime/line_control_flow.pine
+line.set_style	partial	line id selected style mutation snapshots only; deleted or na lines are no-op; other drawing families unsupported	tests/fixtures/runtime/line_mutation.pine;tests/fixtures/runtime/line_control_flow.pine
+line.set_extend	partial	line id selected extend mutation snapshots only; deleted or na lines are no-op; other drawing families unsupported	tests/fixtures/runtime/line_mutation.pine;tests/fixtures/runtime/line_control_flow.pine
+line.delete	partial	line id deletion snapshots only; deleting deleted or na lines is no-op; ids are not reused and lines have a 500-object runtime limit; other drawing families unsupported	tests/fixtures/runtime/line_delete.pine
 color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 color.rgb	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
 color.r	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine

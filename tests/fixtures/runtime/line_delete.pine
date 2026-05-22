@@ -1,0 +1,10 @@
+//@version=5
+indicator("Line delete")
+var line_id = line.new(bar_index, high, bar_index, low)
+if bar_index == 1
+    line.delete(line_id)
+if bar_index == 2
+    line.set_color(line_id, color.green)
+    line.delete(line_id)
+line.delete(na)
+plot(close)

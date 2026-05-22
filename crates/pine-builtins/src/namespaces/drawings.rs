@@ -206,6 +206,108 @@ const LINE_NEW_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const LINE_SET_X_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LineCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "x",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+];
+
+const LINE_SET_Y_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LineCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "y",
+        accepts: Accepts::NumericCompatible,
+        optional: false,
+    },
+];
+
+const LINE_SET_XY_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LineCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "x",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "y",
+        accepts: Accepts::NumericCompatible,
+        optional: false,
+    },
+];
+
+const LINE_SET_COLOR_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LineCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "color",
+        accepts: Accepts::ColorCompatible,
+        optional: false,
+    },
+];
+
+const LINE_SET_WIDTH_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LineCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "width",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+];
+
+const LINE_SET_STYLE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LineCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "style",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
+const LINE_SET_EXTEND_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LineCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "extend",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
+const LINE_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::LineCompatible,
+    optional: false,
+}];
+
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "label.new",
@@ -289,6 +391,83 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: LINE_NEW_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_LINE),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_x1",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_X_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_y1",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_Y_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_xy1",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_XY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_x2",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_X_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_y2",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_Y_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_xy2",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_XY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_color",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_COLOR_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_width",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_WIDTH_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_style",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_STYLE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_extend",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_EXTEND_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.delete",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_DELETE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
 ];

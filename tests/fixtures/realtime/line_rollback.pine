@@ -1,0 +1,12 @@
+//@version=5
+indicator("Realtime line rollback")
+var line_id = line.new(bar_index, high, bar_index, low)
+if barstate.isrealtime and not barstate.isconfirmed
+    if close > 2.5
+        line.delete(line_id)
+    else
+        line.set_xy1(line_id, bar_index, close)
+        line.set_color(line_id, color.green)
+    temp = line.new(bar_index, close, bar_index, open)
+    line.delete(temp)
+plot(close)

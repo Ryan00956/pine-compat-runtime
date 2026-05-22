@@ -36,4 +36,8 @@ pub struct LineSnapshot {
     pub y1: PineValue,
     pub x2: PineValue,
     pub y2: PineValue,
+    pub color: PineValue,
+    pub width: PineValue,
+    pub style: PineValue,
+    pub extend: PineValue,
 }

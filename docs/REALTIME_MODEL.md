@@ -79,8 +79,8 @@ Each forming update starts from the confirmed snapshot. This rolls back:
 - `var` updates made during the previous forming execution
 - callsite state changes made during the previous forming execution
 - array storage mutations made during the previous forming execution
-- label creation, mutation, and deletion snapshots made during the previous
-  forming execution
+- label and line creation, mutation, and deletion snapshots made during the
+  previous forming execution
 
 Confirmed and historical updates replace the confirmed snapshot and clear the
 forming snapshot.

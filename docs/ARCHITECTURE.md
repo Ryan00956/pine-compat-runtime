@@ -292,9 +292,11 @@ with a `label.new` creation subset for `x`, `y`, `text`, `xloc.bar_index`,
 `label.set_*` mutation snapshots for x/y/text/color/style/size/tooltip fields.
 `label.delete` appends an `exists: false` snapshot, deleting `na` or an already
 deleted label is a no-op, and ids are not reused. The historical runtime caps
-labels at 500 objects. Minimal `line.new` support emits line creation snapshots
-with `x1`, `y1`, `x2`, and `y2`; line mutation, deletion, limits, realtime
-rollback, and optional style fields are implemented in later Phase E slices.
+labels at 500 objects. The initial line lifecycle emits creation, mutation, and
+deletion snapshots with `x1`, `y1`, `x2`, `y2`, `color`, `width`, `style`, and
+`extend`; `line.delete` appends an `exists: false` snapshot, deleting `na` or an
+already deleted line is a no-op, and ids are not reused. The historical runtime
+caps lines at 500 objects.
 
 The `pine-runtime` crate owns the shared runtime-result JSON helpers used by the
 CLI and WASM bindings. Python keeps explicit dictionary conversion code because

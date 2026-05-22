@@ -74,9 +74,13 @@ unsupported coordinate modes and other drawing families out of the supported
 matrix until they have fixtures and public-output coverage. Supported label
 creation, mutation, and deletion are covered under realtime rollback, and
 drawing side effects inside user-defined functions are rejected under the
-existing side-effect policy. The next executable drawing subset is `line.new`
-with bar-index x coordinates and price y coordinates, represented as sparse
-`lines` snapshots with `x1`, `y1`, `x2`, and `y2` fields.
+existing side-effect policy. The next executable drawing subset is the initial
+line lifecycle: `line.new`, selected `line.set_*` mutators, and `line.delete`.
+Lines use bar-index x coordinates and price y coordinates, represented as
+sparse `lines` snapshots with `x1`, `y1`, `x2`, `y2`, `color`, `width`,
+`style`, and `extend` fields. Line deletion emits `exists: false`; deleting
+`na` or an already deleted line is a no-op; ids are stable and not reused; line
+creation has a 500-object runtime limit.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field
