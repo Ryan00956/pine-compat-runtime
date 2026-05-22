@@ -7,6 +7,21 @@ BARS = [
     {"time": 2, "open": 3.0, "high": 3.0, "low": 3.0, "close": 3.0, "volume": 1.0},
 ]
 
+RUNTIME_RESULT_KEYS = {
+    "schemaVersion",
+    "plots",
+    "plotChars",
+    "plotShapes",
+    "plotArrows",
+    "plotBars",
+    "plotCandles",
+    "bgColors",
+    "barColors",
+    "hlines",
+    "fills",
+    "diagnostics",
+}
+
 
 def test_analyze_script_reports_executable_script():
     report = pine_compat.analyze_script('indicator("demo")\nplot(close)\n')
@@ -25,6 +40,7 @@ def test_compile_script_returns_program_with_run_method():
     result = program.run(BARS)
 
     assert result["schemaVersion"] == 1
+    assert set(result) == RUNTIME_RESULT_KEYS
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
     assert result["diagnostics"] == []
 
@@ -57,6 +73,16 @@ def test_run_script_returns_plotshape_outputs():
     )
 
     assert result["plotShapes"][0]["values"] == [False, False, True]
+    assert set(result["plotShapes"][0]) == {
+        "id",
+        "values",
+        "styles",
+        "locations",
+        "colors",
+        "texts",
+        "textColors",
+        "sizes",
+    }
     assert result["plotShapes"][0]["styles"] == [
         "shape.triangleup",
         "shape.triangleup",
@@ -114,6 +140,16 @@ def test_run_script_returns_plotcandle_outputs():
     )
 
     assert result["plotCandles"][0]["opens"] == [1.0, 2.0, 3.0]
+    assert set(result["plotCandles"][0]) == {
+        "id",
+        "opens",
+        "highs",
+        "lows",
+        "closes",
+        "colors",
+        "wickColors",
+        "borderColors",
+    }
     assert result["plotCandles"][0]["highs"] == [1.0, 2.0, 3.0]
     assert result["plotCandles"][0]["lows"] == [1.0, 2.0, 3.0]
     assert result["plotCandles"][0]["closes"] == [1.0, 2.0, 3.0]

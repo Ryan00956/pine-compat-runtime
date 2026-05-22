@@ -273,3 +273,10 @@ The `schemaVersion` field is owned by the shared runtime contract and is exposed
 unchanged by CLI JSON, Python dictionaries, and WASM JSON. Host integrations can
 adapt this model into their charting or API format, but should preserve the
 schema version when they forward machine-readable results.
+
+The `pine-runtime` crate owns the shared runtime-result JSON helpers used by the
+CLI and WASM bindings. Python keeps explicit dictionary conversion code because
+it returns native Python objects, but its top-level runtime result keys are
+tested against the same public contract. Analysis reports and compatibility
+matrix JSON remain host-specific contracts until a later infrastructure slice
+chooses to share them.

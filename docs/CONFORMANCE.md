@@ -57,6 +57,11 @@ across CLI JSON, Python dictionaries, and WASM JSON. The text-only CLI
 `analyze` output is diagnostic console output and is not part of the
 machine-readable schema until a JSON mode is added.
 
+CLI and WASM runtime JSON must be generated through the shared runtime contract
+helper so field names and nesting cannot drift. Python returns native
+dictionaries, so its binding tests assert the same top-level runtime keys and
+representative nested output families such as `plotShapes` and `plotCandles`.
+
 ## Numeric Tolerance
 
 Floating point outputs should be compared with an explicit tolerance:
