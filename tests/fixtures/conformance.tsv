@@ -326,7 +326,8 @@ array.*	partial	float/int/bool/string/color array creation, array.from inference
 import	unsupported	library imports out of Phase 1	tests/fixtures/sema/unsupported_import.pine
 strategy.*	unsupported	broker emulation out of current scope	tests/fixtures/sema/unsupported_strategy.pine
 alert/alertcondition	unsupported	alerts out of Phase 1	tests/fixtures/sema/unsupported_alert.pine
-unsupported label/line/box/table methods/polyline	unsupported	label, line, box, and table methods beyond the supported lifecycle subsets plus polyline object systems are not implemented	tests/fixtures/sema/unsupported_drawing.pine
+unsupported label/line/box/table methods	unsupported	label, line, box, and table methods beyond the supported lifecycle subsets are not implemented	tests/fixtures/sema/unsupported_drawing.pine
+polyline.*	unsupported	polyline construction depends on chart.point values and point arrays, which are not part of the current executable type or array model	tests/fixtures/sema/unsupported_drawing.pine
 series history offsets	partial	series int offsets are evaluated at runtime with full-history retention up to the runtime cap	tests/fixtures/runtime/series_history_offset.pine
 non-int history offsets	unsupported	dynamic offsets must evaluate from an integer expression	tests/fixtures/sema/unsupported_dynamic_history.pine
 negative history offsets	unsupported	history offsets must be non-negative	tests/fixtures/sema/unsupported_negative_history.pine

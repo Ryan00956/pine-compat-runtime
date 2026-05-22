@@ -343,7 +343,8 @@ rendering metadata:
 
 Accepted metadata such as `offset`, `show_last`, `display`, `force_overlay`,
 and `editable` does not yet transform, filter, or annotate these output series.
-Later drawing object systems will add separate polyline outputs.
+`polyline.*` remains unsupported until `chart.point` values and point-list
+arrays have a fixture-backed execution model.
 
 ## Determinism
 

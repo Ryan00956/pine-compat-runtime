@@ -30,6 +30,9 @@
   text/background/text-color writes, realtime rollback coverage, a
   deterministic 50-table runtime limit, and a 1000-cell per-table limit.
   Advanced table methods plus polyline drawing families remain unsupported.
+- Kept `polyline.*` explicitly unsupported for Phase E because it depends on a
+  future `chart.point` value and point-array design; the decision is captured in
+  `docs/PHASE_E_POLYLINE_GATE.md`.
 - Closed Phase K release infrastructure with public `schemaVersion: 1` output
   contracts for CLI, Python, and WASM public machine-readable outputs.
 - Moved CLI and WASM runtime JSON onto shared runtime serialization helpers,
@@ -363,7 +366,8 @@ them silently:
   `array.*` partial subset.
 - Imports and external libraries.
 - Alerts and alert conditions.
-- Advanced drawing object methods and unsupported polyline object systems.
+- Advanced drawing object methods and unsupported `polyline.*` point-list
+  object systems.
 - Per-variable `max_bars_back` declarations and inference.
 - Recursive user-defined functions.
 - User-defined function side effects, including output calls, input

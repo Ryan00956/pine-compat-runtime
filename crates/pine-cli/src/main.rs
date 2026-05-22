@@ -194,7 +194,8 @@ mod tests {
             "import",
             "strategy.*",
             "alert/alertcondition",
-            "unsupported label/line/box/table methods/polyline",
+            "unsupported label/line/box/table methods",
+            "polyline.*",
             "non-int history offsets",
             "negative history offsets",
         ] {

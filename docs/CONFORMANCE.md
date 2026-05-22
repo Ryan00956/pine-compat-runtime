@@ -78,9 +78,11 @@ deleted drawing object is a no-op where deletion exists; invalid non-`na` ids
 are runtime errors; ids are stable and not reused. Supported drawing creation,
 mutation, and cell writes are covered under realtime rollback, and drawing side
 effects inside user-defined functions are rejected under the existing
-side-effect policy. Keep unsupported coordinate modes, advanced object methods,
-and polyline families out of the supported matrix until they have fixtures and
-public-output coverage.
+side-effect policy. Keep unsupported coordinate modes and advanced object
+methods out of the supported matrix until they have fixtures and public-output
+coverage. `polyline.*` remains explicitly unsupported because it needs a
+fixture-backed point-object and point-array design; see
+`docs/PHASE_E_POLYLINE_GATE.md`.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field
