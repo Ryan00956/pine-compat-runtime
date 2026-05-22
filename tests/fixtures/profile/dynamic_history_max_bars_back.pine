@@ -1,0 +1,3 @@
+indicator("Profile dynamic history", max_bars_back=32)
+offset = bar_index > 31 ? 31 : bar_index
+plot(close[offset])

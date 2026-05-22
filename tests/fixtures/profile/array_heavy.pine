@@ -1,0 +1,6 @@
+indicator("Profile array heavy")
+var values = array.new_float()
+array.push(values, close)
+array.push(values, high)
+array.push(values, low)
+plot(array.size(values))

@@ -169,3 +169,16 @@ Prerequisites for the full gate:
 python3 -m pip install --upgrade pip maturin pytest
 rustup target add wasm32-unknown-unknown
 ```
+
+## Performance Profile Fixtures
+
+Run the deterministic runtime profile fixtures with:
+
+```text
+cargo test -p pine-runtime --test profile_fixtures
+```
+
+These tests use existing `RuntimeProfile` metrics rather than wall-clock timing.
+Hard failures cover severe growth in plot capacity, rolling-window storage,
+array storage, and `max_bars_back` history retention. Runtime speed remains an
+informational concern until a stable benchmark harness is added.
