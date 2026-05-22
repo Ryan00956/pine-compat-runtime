@@ -58,6 +58,7 @@ mod tests {
                 || signature.name.starts_with("label.")
                 || signature.name.starts_with("line.")
                 || signature.name.starts_with("box.")
+                || signature.name.starts_with("table.")
             {
                 "partial"
             } else {
@@ -193,7 +194,7 @@ mod tests {
             "import",
             "strategy.*",
             "alert/alertcondition",
-            "unsupported label/line/box methods/table/polyline",
+            "unsupported label/line/box/table methods/polyline",
             "non-int history offsets",
             "negative history offsets",
         ] {
@@ -257,6 +258,7 @@ mod tests {
             labels: vec![],
             lines: vec![],
             boxes: vec![],
+            tables: vec![],
             diagnostics: vec![],
         };
 
@@ -266,6 +268,7 @@ mod tests {
         assert!(output.contains(r#""labels":[]"#));
         assert!(output.contains(r#""lines":[]"#));
         assert!(output.contains(r#""boxes":[]"#));
+        assert!(output.contains(r#""tables":[]"#));
         assert!(output.contains(r#""diagnostics":[]"#));
     }
 
@@ -285,6 +288,7 @@ mod tests {
             labels: vec![],
             lines: vec![],
             boxes: vec![],
+            tables: vec![],
             diagnostics: vec![],
         };
         let profile = RuntimeProfile {
@@ -361,6 +365,11 @@ mod tests {
             box_snapshots: 0,
             box_capacity: 0,
             box_snapshot_capacity: 0,
+            tables: 0,
+            table_cells: 0,
+            table_capacity: 0,
+            table_snapshot_capacity: 0,
+            table_cell_capacity: 0,
         };
 
         let output = public_runtime_profiled_result_json(&result, &profile);
@@ -388,6 +397,8 @@ mod tests {
         assert!(output.contains(r#""lineSnapshots":0"#));
         assert!(output.contains(r#""boxes":0"#));
         assert!(output.contains(r#""boxSnapshots":0"#));
+        assert!(output.contains(r#""tables":0"#));
+        assert!(output.contains(r#""tableCells":0"#));
     }
 
     #[test]
@@ -461,6 +472,14 @@ mod tests {
             (
                 "runtime_box_delete.json",
                 "tests/fixtures/runtime/box_delete.pine",
+            ),
+            (
+                "runtime_table_new.json",
+                "tests/fixtures/runtime/table_new.pine",
+            ),
+            (
+                "runtime_table_cell.json",
+                "tests/fixtures/runtime/table_cell.pine",
             ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));

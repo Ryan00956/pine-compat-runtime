@@ -361,6 +361,66 @@ fn box_fixture_rolls_back_forming_lifecycle_changes() {
     assert!(result.boxes[0].snapshots[0].exists);
 }
 
+#[test]
+fn table_fixture_rolls_back_forming_cell_changes() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/table_rollback.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_eq!(result.tables.len(), 1);
+    assert_eq!(result.tables[0].id, 1);
+    assert_eq!(result.tables[0].snapshots.len(), 2);
+    assert_eq!(
+        result.tables[0].snapshots[1].cells[0].text,
+        PineValue::String("confirmed".to_owned())
+    );
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_eq!(result.tables.len(), 2);
+    assert_eq!(result.tables[0].snapshots.len(), 3);
+    assert_eq!(
+        result.tables[0].snapshots[2].cells[0].text,
+        PineValue::String("forming".to_owned())
+    );
+    assert_eq!(
+        result.tables[0].snapshots[2].cells[0].bg_color,
+        PineValue::Color(0x008000)
+    );
+    assert_eq!(result.tables[1].id, 2);
+    assert_eq!(result.tables[1].snapshots.len(), 2);
+    assert_eq!(runtime.confirmed_result().tables.len(), 1);
+    assert_eq!(runtime.confirmed_result().tables[0].snapshots.len(), 2);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back tables");
+    assert_eq!(result.tables.len(), 2);
+    assert_eq!(result.tables[0].id, 1);
+    assert_eq!(result.tables[0].snapshots.len(), 3);
+    assert_eq!(
+        result.tables[0].snapshots[2].cells[0].text,
+        PineValue::String("delete-like".to_owned())
+    );
+    assert_eq!(result.tables[1].id, 2);
+    assert_eq!(result.tables[1].snapshots.len(), 2);
+    assert_eq!(runtime.confirmed_result().tables.len(), 1);
+    assert_eq!(runtime.confirmed_result().tables[0].snapshots.len(), 2);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit from confirmed table state");
+    assert_eq!(result.tables.len(), 1);
+    assert_eq!(result.tables[0].id, 1);
+    assert_eq!(result.tables[0].snapshots.len(), 2);
+    assert_eq!(
+        result.tables[0].snapshots[1].cells[0].text,
+        PineValue::String("confirmed".to_owned())
+    );
+}
+
 fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");

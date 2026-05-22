@@ -40,6 +40,18 @@ const LINE_STYLES: &[&str] = &[
 
 const LINE_EXTENDS: &[&str] = &["extend.none", "extend.right", "extend.left", "extend.both"];
 
+const TABLE_POSITIONS: &[&str] = &[
+    "position.top_left",
+    "position.top_center",
+    "position.top_right",
+    "position.middle_left",
+    "position.middle_center",
+    "position.middle_right",
+    "position.bottom_left",
+    "position.bottom_center",
+    "position.bottom_right",
+];
+
 pub(crate) fn expr_name(expr: &Expr) -> Option<String> {
     match &expr.kind {
         ExprKind::Identifier(name) => Some(name.clone()),
@@ -162,6 +174,8 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.set_border_width"
             | "box.set_border_style"
             | "box.delete"
+            | "table.new"
+            | "table.cell"
     ) || name == "input"
         || name.starts_with("input.")
 }
@@ -481,6 +495,9 @@ impl Analyzer {
             }
             "box.set_border_style" => {
                 self.validate_label_string_arg(signature, args, 1, "style", LINE_STYLES);
+            }
+            "table.new" => {
+                self.validate_label_string_arg(signature, args, 0, "position", TABLE_POSITIONS);
             }
             _ => {}
         }

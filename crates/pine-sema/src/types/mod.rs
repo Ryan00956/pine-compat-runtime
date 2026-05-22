@@ -159,6 +159,10 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             matches!(arg_type.kind, ValueKind::Box | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::TableCompatible => {
+            matches!(arg_type.kind, ValueKind::Table | ValueKind::Na)
+                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
         Accepts::Array => is_array_kind(arg_type.kind),
         Accepts::Tuple => arg_type.kind == ValueKind::Tuple,

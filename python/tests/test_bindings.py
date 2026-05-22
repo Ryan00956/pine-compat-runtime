@@ -22,6 +22,7 @@ RUNTIME_RESULT_KEYS = {
     "labels",
     "lines",
     "boxes",
+    "tables",
     "diagnostics",
 }
 
@@ -47,6 +48,7 @@ def test_compile_script_returns_program_with_run_method():
     assert result["labels"] == []
     assert result["lines"] == []
     assert result["boxes"] == []
+    assert result["tables"] == []
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
     assert result["diagnostics"] == []
 
@@ -150,6 +152,40 @@ def test_run_script_returns_box_outputs():
                     "borderColor": None,
                     "borderWidth": 1,
                     "borderStyle": "line.style_solid",
+                },
+            ],
+        }
+    ]
+
+
+def test_run_script_returns_table_outputs():
+    result = pine_compat.run_script(
+        'indicator("tables")\nif bar_index == 1\n    table_id = table.new(position.top_right, 2, 2)\n    table.cell(table_id, 0, 0, "A", bgcolor=color.green, text_color=color.white)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["tables"] == [
+        {
+            "id": 1,
+            "position": "position.top_right",
+            "columns": 2,
+            "rows": 2,
+            "snapshots": [
+                {
+                    "barIndex": 1,
+                    "cells": [],
+                },
+                {
+                    "barIndex": 1,
+                    "cells": [
+                        {
+                            "column": 0,
+                            "row": 0,
+                            "text": "A",
+                            "bgColor": 0x008000,
+                            "textColor": 0xFFFFFF,
+                        }
+                    ],
                 },
             ],
         }

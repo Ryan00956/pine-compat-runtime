@@ -177,20 +177,24 @@ Array mutation, including push/pop/shift/unshift/set/sort/reverse/clear, inside
 user-defined functions is rejected as a function side-effect boundary.
 
 Supported drawing-object calls currently cover the initial `label.*`, `line.*`,
-and `box.*` lifecycles. Labels use deterministic ids, sparse lifecycle
-snapshots, non-reused ids, and a 500-object runtime limit. Lines use the same
-lifecycle rules with bar-index x coordinates, price y coordinates, selected
-color/width/style and extend fields. Boxes use the same lifecycle rules with
-bar-index left/right coordinates, price top/bottom coordinates, and selected
-background/border fields. `*.delete(na)`, mutation of `na`, mutation after
-deletion, and deleting an already deleted drawing object are no-ops; invalid
-non-`na` ids are runtime errors. Each supported drawing family has a 500-object
-runtime limit.
+`box.*`, and `table.*` lifecycles. Labels use deterministic ids, sparse
+lifecycle snapshots, non-reused ids, and a 500-object runtime limit. Lines use
+the same lifecycle rules with bar-index x coordinates, price y coordinates,
+selected color/width/style and extend fields. Boxes use the same lifecycle
+rules with bar-index left/right coordinates, price top/bottom coordinates, and
+selected background/border fields. Tables use deterministic ids, fixed positive
+dimensions, and sparse cell snapshots for text/background/text-color writes.
+`*.delete(na)`, mutation of `na`, mutation after deletion, and deleting an
+already deleted drawing object are no-ops where deletion exists; invalid
+non-`na` ids are runtime errors. Labels, lines, and boxes each have a
+500-object runtime limit; tables have a 50-object limit and 1000-cell
+per-table limit.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from
-the confirmed runtime snapshot, so unconfirmed label, line, and box creation,
-mutation, and deletion are rolled back when a new forming update arrives.
+the confirmed runtime snapshot, so unconfirmed label, line, box, and table
+creation, mutation, deletion, and cell writes are rolled back when a new forming
+update arrives.
 Drawing side effects inside user-defined functions are rejected under the same
 side-effect boundary as output calls and array mutation until UDF object
 semantics are deliberately expanded.
@@ -334,10 +338,12 @@ rendering metadata:
   snapshots for the supported line subset.
 - `box.*`: deterministic box ids and sparse creation, mutation, and deletion
   snapshots for the supported box subset.
+- `table.*`: deterministic table ids, dimensions, and sparse cell snapshots for
+  the supported table subset.
 
 Accepted metadata such as `offset`, `show_last`, `display`, `force_overlay`,
 and `editable` does not yet transform, filter, or annotate these output series.
-Later drawing object systems will add separate table and polyline outputs.
+Later drawing object systems will add separate polyline outputs.
 
 ## Determinism
 

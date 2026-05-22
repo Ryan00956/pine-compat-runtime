@@ -60,9 +60,11 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) labels: Vec<LabelOutput>,
     pub(crate) lines: Vec<LineOutput>,
     pub(crate) boxes: Vec<BoxOutput>,
+    pub(crate) tables: Vec<TableOutput>,
     pub(crate) next_label_id: u32,
     pub(crate) next_line_id: u32,
     pub(crate) next_box_id: u32,
+    pub(crate) next_table_id: u32,
 }
 
 pub fn run_historical(program: &HirProgram, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
@@ -134,9 +136,11 @@ impl<'a> HistoricalRuntime<'a> {
             labels: Vec::new(),
             lines: Vec::new(),
             boxes: Vec::new(),
+            tables: Vec::new(),
             next_label_id: 1,
             next_line_id: 1,
             next_box_id: 1,
+            next_table_id: 1,
         }
     }
 
@@ -233,6 +237,7 @@ impl<'a> HistoricalRuntime<'a> {
             labels: self.labels.clone(),
             lines: self.lines.clone(),
             boxes: self.boxes.clone(),
+            tables: self.tables.clone(),
             diagnostics: Vec::new(),
         }
     }
@@ -416,6 +421,23 @@ impl<'a> HistoricalRuntime<'a> {
             .iter()
             .map(|box_output| box_output.snapshots.capacity())
             .sum::<usize>();
+        let table_cells = self
+            .tables
+            .iter()
+            .flat_map(|table| table.snapshots.iter())
+            .map(|snapshot| snapshot.cells.len())
+            .sum::<usize>();
+        let table_snapshot_capacity = self
+            .tables
+            .iter()
+            .map(|table| table.snapshots.capacity())
+            .sum::<usize>();
+        let table_cell_capacity = self
+            .tables
+            .iter()
+            .flat_map(|table| table.snapshots.iter())
+            .map(|snapshot| snapshot.cells.capacity())
+            .sum::<usize>();
 
         RuntimeProfile {
             bars: self.bars,
@@ -491,6 +513,11 @@ impl<'a> HistoricalRuntime<'a> {
             box_snapshots,
             box_capacity: self.boxes.capacity(),
             box_snapshot_capacity,
+            tables: self.tables.len(),
+            table_cells,
+            table_capacity: self.tables.capacity(),
+            table_snapshot_capacity,
+            table_cell_capacity,
         }
     }
 

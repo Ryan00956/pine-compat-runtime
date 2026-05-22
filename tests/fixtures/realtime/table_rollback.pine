@@ -1,0 +1,13 @@
+//@version=5
+indicator("Realtime table rollback")
+var table_id = table.new(position.top_right, 2, 2)
+if barstate.isrealtime and not barstate.isconfirmed
+    if close > 2.5
+        table.cell(table_id, 0, 0, "delete-like")
+    else
+        table.cell(table_id, 0, 0, "forming", bgcolor=color.green)
+    temp = table.new(position.bottom_left, 1, 1)
+    table.cell(temp, 0, 0, "temp")
+if barstate.isconfirmed
+    table.cell(table_id, 0, 0, "confirmed")
+plot(close)

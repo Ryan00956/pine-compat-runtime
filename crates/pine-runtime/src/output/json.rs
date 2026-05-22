@@ -1,6 +1,6 @@
 use crate::{HistoryRetentionMode, PineValue, RuntimeProfile};
 
-use super::drawings::{BoxOutput, LabelOutput, LineOutput};
+use super::drawings::{BoxOutput, LabelOutput, LineOutput, TableOutput};
 use super::model::{
     ColorSeries, FillOutput, HLineOutput, PUBLIC_OUTPUT_SCHEMA_VERSION, PlotArrowSeries,
     PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeResult,
@@ -34,6 +34,8 @@ pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
     output.push_str(&lines_json(&result.lines));
     output.push_str(",\"boxes\":");
     output.push_str(&boxes_json(&result.boxes));
+    output.push_str(",\"tables\":");
+    output.push_str(&tables_json(&result.tables));
     output.push_str(",\"diagnostics\":[]");
     output.push('}');
     output
@@ -127,7 +129,12 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"boxes\":{},",
             "\"boxSnapshots\":{},",
             "\"boxCapacity\":{},",
-            "\"boxSnapshotCapacity\":{}",
+            "\"boxSnapshotCapacity\":{},",
+            "\"tables\":{},",
+            "\"tableCells\":{},",
+            "\"tableCapacity\":{},",
+            "\"tableSnapshotCapacity\":{},",
+            "\"tableCellCapacity\":{}",
             "}}"
         ),
         profile.bars,
@@ -202,7 +209,12 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.boxes,
         profile.box_snapshots,
         profile.box_capacity,
-        profile.box_snapshot_capacity
+        profile.box_snapshot_capacity,
+        profile.tables,
+        profile.table_cells,
+        profile.table_capacity,
+        profile.table_snapshot_capacity,
+        profile.table_cell_capacity
     )
 }
 
@@ -527,6 +539,49 @@ fn boxes_json(boxes: &[BoxOutput]) -> String {
     output
 }
 
+fn tables_json(tables: &[TableOutput]) -> String {
+    let mut output = String::from("[");
+    for (index, table) in tables.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"position\":", table.id));
+        output.push_str(&value_json(&table.position));
+        output.push_str(&format!(
+            ",\"columns\":{},\"rows\":{},\"snapshots\":[",
+            table.columns, table.rows
+        ));
+        for (snapshot_index, snapshot) in table.snapshots.iter().enumerate() {
+            if snapshot_index > 0 {
+                output.push(',');
+            }
+            output.push_str(&format!(
+                "{{\"barIndex\":{},\"cells\":[",
+                snapshot.bar_index
+            ));
+            for (cell_index, cell) in snapshot.cells.iter().enumerate() {
+                if cell_index > 0 {
+                    output.push(',');
+                }
+                output.push_str(&format!(
+                    "{{\"column\":{},\"row\":{},\"text\":",
+                    cell.column, cell.row
+                ));
+                output.push_str(&value_json(&cell.text));
+                output.push_str(",\"bgColor\":");
+                output.push_str(&value_json(&cell.bg_color));
+                output.push_str(",\"textColor\":");
+                output.push_str(&value_json(&cell.text_color));
+                output.push('}');
+            }
+            output.push_str("]}");
+        }
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
 fn value_json(value: &PineValue) -> String {
     match value {
         PineValue::Int(value) => value.to_string(),
@@ -538,7 +593,8 @@ fn value_json(value: &PineValue) -> String {
         | PineValue::HLine(value)
         | PineValue::Label(value)
         | PineValue::Line(value)
-        | PineValue::Box(value) => value.to_string(),
+        | PineValue::Box(value)
+        | PineValue::Table(value) => value.to_string(),
         PineValue::Tuple(values) => {
             let mut output = String::from("[");
             for (index, value) in values.iter().enumerate() {

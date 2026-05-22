@@ -240,6 +240,7 @@ mod tests {
         assert!(output.contains("\"labels\":[]"));
         assert!(output.contains("\"lines\":[]"));
         assert!(output.contains("\"boxes\":[]"));
+        assert!(output.contains("\"tables\":[]"));
     }
 
     #[test]

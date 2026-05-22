@@ -460,6 +460,43 @@ fn rejects_unimplemented_box_methods() {
 }
 
 #[test]
+fn accepts_minimal_table_new_and_cell() {
+    let analysis = analyze(
+        "id = table.new(position.top_right, 2, 2)\ntable.cell(id, 0, 0, \"A\")\ntable.cell(id, column=1, row=0, text=\"B\", bgcolor=color.green, text_color=color.white)\ntable.cell(na, 0, 1, \"noop\")\nplot(close)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "table.new")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_unimplemented_table_methods() {
+    let analysis = analyze("table.clear(na)\nplot(close)\n");
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "table.clear"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_input_history_offset() {
     let analysis = analyze("len = input.int(1, \"Length\")\nx = close[len]\n");
 

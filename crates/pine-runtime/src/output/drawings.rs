@@ -61,3 +61,27 @@ pub struct BoxSnapshot {
     pub border_width: PineValue,
     pub border_style: PineValue,
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TableOutput {
+    pub id: u32,
+    pub position: PineValue,
+    pub columns: i64,
+    pub rows: i64,
+    pub snapshots: Vec<TableSnapshot>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TableSnapshot {
+    pub bar_index: usize,
+    pub cells: Vec<TableCellSnapshot>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TableCellSnapshot {
+    pub column: i64,
+    pub row: i64,
+    pub text: PineValue,
+    pub bg_color: PineValue,
+    pub text_color: PineValue,
+}

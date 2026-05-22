@@ -81,4 +81,9 @@ pub struct RuntimeProfile {
     pub box_snapshots: usize,
     pub box_capacity: usize,
     pub box_snapshot_capacity: usize,
+    pub tables: usize,
+    pub table_cells: usize,
+    pub table_capacity: usize,
+    pub table_snapshot_capacity: usize,
+    pub table_cell_capacity: usize,
 }

@@ -420,6 +420,57 @@ const BOX_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const TABLE_NEW_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "position",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "columns",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "rows",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+];
+
+const TABLE_CELL_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::TableCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "column",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "row",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "text",
+        accepts: Accepts::StringCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "bgcolor",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_color",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+];
+
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "label.new",
@@ -663,6 +714,20 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "box.delete",
         phase: BuiltinPhase::Phase1Core,
         params: BOX_DELETE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "table.new",
+        phase: BuiltinPhase::Phase1Core,
+        params: TABLE_NEW_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_TABLE),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "table.cell",
+        phase: BuiltinPhase::Phase1Core,
+        params: TABLE_CELL_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

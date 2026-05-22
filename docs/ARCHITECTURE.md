@@ -273,6 +273,7 @@ The core output must remain host-neutral:
   "labels": [],
   "lines": [],
   "boxes": [],
+  "tables": [],
   "diagnostics": []
 }
 ```
@@ -284,18 +285,22 @@ this model into their charting or API format, but should preserve the schema
 version when they forward machine-readable results.
 
 Drawing-object outputs use sparse snapshot families. The Phase E drawing
-contract reserves `labels`, `lines`, and `boxes`, whose entries have an object
-`id` and a `snapshots` array. Label snapshots use `barIndex`, `exists`, and,
-while `exists` is true, the mutable label fields represented by normalized Pine
-values. The label lifecycle covers `label.new`, selected `label.set_*`
-mutators, and `label.delete`. Line snapshots cover `x1`, `y1`, `x2`, `y2`,
-`color`, `width`, `style`, and `extend` for `line.new`, selected `line.set_*`
-mutators, and `line.delete`. Box snapshots cover `left`, `top`, `right`,
-`bottom`, `bgColor`, `borderColor`, `borderWidth`, and `borderStyle` for
-`box.new`, selected `box.set_*` mutators, and `box.delete`. Delete calls append
-an `exists: false` snapshot; deleting `na` or an already deleted drawing object
-is a no-op; ids are not reused. The historical runtime caps each supported
-drawing family at 500 objects.
+contract reserves `labels`, `lines`, `boxes`, and `tables`, whose entries have
+an object `id` and a `snapshots` array. Label snapshots use `barIndex`,
+`exists`, and, while `exists` is true, the mutable label fields represented by
+normalized Pine values. The label lifecycle covers `label.new`, selected
+`label.set_*` mutators, and `label.delete`. Line snapshots cover `x1`, `y1`,
+`x2`, `y2`, `color`, `width`, `style`, and `extend` for `line.new`, selected
+`line.set_*` mutators, and `line.delete`. Box snapshots cover `left`, `top`,
+`right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, and `borderStyle`
+for `box.new`, selected `box.set_*` mutators, and `box.delete`. Table entries
+carry `position`, `columns`, `rows`, and sparse cell snapshots. Each table cell
+snapshot stores `column`, `row`, `text`, `bgColor`, and `textColor`, avoiding
+host-specific table layout assumptions. Delete calls append an `exists: false`
+snapshot for families with deletion; deleting `na` or an already deleted
+drawing object is a no-op; ids are not reused. The historical runtime caps
+labels, lines, and boxes at 500 objects, caps tables at 50 objects, and caps a
+single table at 1000 cells.
 
 The `pine-runtime` crate owns the shared runtime-result JSON helpers used by the
 CLI and WASM bindings. Python keeps explicit dictionary conversion code because

@@ -1,0 +1,10 @@
+//@version=5
+indicator("Table cell")
+var table_id = table.new(position.top_right, 2, 2)
+if bar_index == 1
+    table.cell(table_id, 0, 0, "A")
+if bar_index == 2
+    table.cell(table_id, column=1, row=0, text="B", bgcolor=color.green, text_color=color.white)
+    table.cell(table_id, 0, 0, "C")
+table.cell(na, 0, 1, "noop")
+plot(close)

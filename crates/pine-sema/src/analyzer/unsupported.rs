@@ -36,7 +36,7 @@ impl Analyzer {
             || name.starts_with("table.")
             || name.starts_with("polyline.")
         {
-            Some("drawing object systems are not supported in Phase 1")
+            Some("this drawing object call is not supported in the current partial drawing subset")
         } else {
             None
         };

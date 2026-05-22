@@ -430,6 +430,118 @@ plot(close)
 }
 
 #[test]
+fn collects_table_cell_snapshots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("tables")
+var id = table.new(position.top_right, 2, 2)
+if bar_index == 1
+    table.cell(id, 0, 0, "A")
+if bar_index == 2
+    table.cell(id, column=1, row=0, text="B", bgcolor=color.green, text_color=color.white)
+    table.cell(id, 0, 0, "C")
+table.cell(na, 0, 1, "noop")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.tables.len(), 1);
+    let table = &result.tables[0];
+    assert_eq!(
+        table.position,
+        PineValue::String("position.top_right".to_owned())
+    );
+    assert_eq!(table.columns, 2);
+    assert_eq!(table.rows, 2);
+    assert_eq!(table.snapshots.len(), 4);
+    assert!(table.snapshots[0].cells.is_empty());
+    assert_eq!(table.snapshots[1].cells[0].column, 0);
+    assert_eq!(table.snapshots[1].cells[0].row, 0);
+    assert_eq!(
+        table.snapshots[1].cells[0].text,
+        PineValue::String("A".to_owned())
+    );
+    assert_eq!(table.snapshots[2].cells.len(), 2);
+    assert_eq!(table.snapshots[2].cells[1].column, 1);
+    assert_eq!(
+        table.snapshots[2].cells[1].bg_color,
+        PineValue::Color(0x008000)
+    );
+    assert_eq!(
+        table.snapshots[2].cells[1].text_color,
+        PineValue::Color(0xFFFFFF)
+    );
+    assert_eq!(
+        table.snapshots[3].cells[0].text,
+        PineValue::String("C".to_owned())
+    );
+}
+
+#[test]
+fn rejects_invalid_table_shapes_and_cells() {
+    for source_text in [
+        r#"indicator("bad table size")
+table.new(position.top_right, 0, 1)
+plot(close)
+"#,
+        r#"indicator("bad table cells")
+id = table.new(position.top_right, 2, 2)
+table.cell(id, 2, 0, "bad")
+plot(close)
+"#,
+    ] {
+        let source = SourceFile::new("test.pine", source_text);
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        assert!(
+            run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).is_err(),
+            "{source_text}"
+        );
+    }
+}
+
+#[test]
+fn profiles_table_storage() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("table profile")
+id = table.new(position.top_right, 2, 2)
+table.cell(id, 0, 0, "A")
+table.cell(id, 1, 0, "B")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(profiled.profile.tables, 1);
+    assert_eq!(profiled.profile.table_cells, 3);
+    assert!(profiled.profile.table_capacity >= 1);
+    assert!(profiled.profile.table_snapshot_capacity >= 3);
+    assert!(profiled.profile.table_cell_capacity >= 2);
+}
+
+#[test]
 fn collects_label_new_options() {
     let source = SourceFile::new(
         "test.pine",
