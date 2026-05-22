@@ -3494,6 +3494,10 @@ fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             qualifier_at_most(arg_type.qualifier, Qualifier::Simple)
                 && arg_type.kind == ValueKind::Int
         }
+        Accepts::SimpleString => {
+            qualifier_at_most(arg_type.qualifier, Qualifier::Simple)
+                && matches!(arg_type.kind, ValueKind::String | ValueKind::Na)
+        }
         Accepts::SimpleNumeric => {
             qualifier_at_most(arg_type.qualifier, Qualifier::Simple) && is_numeric(arg_type.kind)
         }
@@ -5479,6 +5483,33 @@ plot(year(ts) + month(ts, "UTC") + weekofyear(ts) + dayofmonth(ts) + dayofweek(t
             "minute",
             "second",
         ] {
+            assert!(
+                analysis
+                    .compatibility
+                    .supported
+                    .iter()
+                    .any(|supported| supported.feature == feature),
+                "{feature} not reported as supported"
+            );
+        }
+    }
+
+    #[test]
+    fn accepts_timeframe_helpers() {
+        let analysis = analyze(
+            r#"indicator("timeframe helpers")
+tf = input.timeframe("60", "TF")
+seconds = timeframe.in_seconds() + timeframe.in_seconds(tf) + timeframe.in_seconds("D")
+plot(timeframe.period == "1" ? seconds : 0)
+"#,
+        );
+
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+        for feature in ["timeframe.in_seconds", "timeframe.period"] {
             assert!(
                 analysis
                     .compatibility

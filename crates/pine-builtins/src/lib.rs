@@ -36,6 +36,7 @@ pub enum Accepts {
     SeriesOrSimpleNumeric,
     SeriesOrSimpleNumericOrBool,
     SimpleInt,
+    SimpleString,
     SimpleNumeric,
     SimpleBool,
     ConstNumeric,
@@ -1237,6 +1238,12 @@ const TIME_COMPONENT_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
 ];
+
+const TIMEFRAME_IN_SECONDS_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "timeframe",
+    accepts: Accepts::SimpleString,
+    optional: true,
+}];
 
 const TIMESTAMP_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
@@ -2473,6 +2480,13 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "timeframe.in_seconds",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIMEFRAME_IN_SECONDS_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "int",
         phase: BuiltinPhase::Phase1Core,
         params: TYPE_CAST_PARAMS,
@@ -3679,6 +3693,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     (
         "barstate.isrealtime",
         PineType::new(Qualifier::Series, ValueKind::Bool),
+    ),
+    (
+        "timeframe.period",
+        PineType::new(Qualifier::Simple, ValueKind::String),
     ),
     (
         "ta.accdist",

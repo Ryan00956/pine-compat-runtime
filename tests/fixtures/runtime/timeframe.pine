@@ -1,0 +1,13 @@
+//@version=5
+indicator("Timeframe")
+tf = input.timeframe("60", "TF")
+plot(timeframe.period == "1" ? 1 : 0)
+plot(timeframe.in_seconds())
+plot(timeframe.in_seconds(""))
+plot(timeframe.in_seconds("1S"))
+plot(timeframe.in_seconds("45S"))
+plot(timeframe.in_seconds(tf))
+plot(timeframe.in_seconds("D"))
+plot(timeframe.in_seconds("2W"))
+plot(timeframe.in_seconds("3M"))
+plot(na(timeframe.in_seconds(na)) ? 1 : 0)

@@ -14,6 +14,7 @@ const MAX_WHILE_ITERATIONS: usize = 100_000;
 const MAX_ARRAY_ELEMENTS: usize = 100_000;
 const MAX_STRING_CHARS: usize = 40_960;
 const MAX_SERIES_HISTORY_VALUES: usize = 1_000_000;
+const DEFAULT_CHART_TIMEFRAME: &str = "1";
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum PineValue {
@@ -1486,6 +1487,9 @@ impl<'a> HistoricalRuntime<'a> {
                 BarUpdateKind::Forming | BarUpdateKind::Confirmed
             ));
         }
+        if name == "timeframe.period" {
+            return PineValue::String(DEFAULT_CHART_TIMEFRAME.to_owned());
+        }
         if name == "ta.accdist" {
             return self.accdist_current.clone();
         }
@@ -2044,6 +2048,7 @@ impl<'a> HistoricalRuntime<'a> {
             "minute" => self.eval_time_component(args, TimeComponent::Minute),
             "second" => self.eval_time_component(args, TimeComponent::Second),
             "timestamp" => self.eval_timestamp(args),
+            "timeframe.in_seconds" => self.eval_timeframe_in_seconds(args),
             "int" => self.eval_int_cast(args),
             "float" => self.eval_float_cast(args),
             "bool" => self.eval_bool_cast(args),
@@ -4774,21 +4779,17 @@ impl<'a> HistoricalRuntime<'a> {
         let direction = match previous {
             None => 1.0,
             Some((_, previous_upper, _, previous_supertrend))
+                if previous_supertrend == previous_upper && close > upper =>
+            {
+                -1.0
+            }
+            Some((_, previous_upper, _, previous_supertrend))
                 if previous_supertrend == previous_upper =>
             {
-                if close > upper {
-                    -1.0
-                } else {
-                    1.0
-                }
+                1.0
             }
-            Some(_) => {
-                if close < lower {
-                    1.0
-                } else {
-                    -1.0
-                }
-            }
+            Some(_) if close < lower => 1.0,
+            Some(_) => -1.0,
         };
         let supertrend = if direction < 0.0 { lower } else { upper };
 
@@ -5775,6 +5776,33 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(PineValue::Int(datetime.timestamp_millis()))
+    }
+
+    fn eval_timeframe_in_seconds(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let timeframe = if let Some(arg) = args.first() {
+            match self.eval_expr(&arg.value)? {
+                PineValue::String(value) => value,
+                PineValue::Na => return Ok(PineValue::Na),
+                _ => return Ok(PineValue::Na),
+            }
+        } else {
+            DEFAULT_CHART_TIMEFRAME.to_owned()
+        };
+        let timeframe = if timeframe.is_empty() {
+            DEFAULT_CHART_TIMEFRAME
+        } else {
+            timeframe.trim()
+        };
+        let Some(seconds) = timeframe_seconds(timeframe) else {
+            return Err(RuntimeError {
+                message: format!("timeframe.in_seconds unsupported timeframe `{timeframe}`"),
+            });
+        };
+
+        Ok(PineValue::Int(seconds))
     }
 
     fn eval_optional_timestamp_part(
@@ -7718,6 +7746,39 @@ fn is_supported_utc_timezone(timezone: &str) -> bool {
         timezone,
         "UTC" | "Etc/UTC" | "GMT" | "Z" | "+0000" | "+00:00"
     )
+}
+
+fn timeframe_seconds(timeframe: &str) -> Option<i64> {
+    if timeframe.is_empty() {
+        return timeframe_seconds(DEFAULT_CHART_TIMEFRAME);
+    }
+
+    let unit = timeframe
+        .chars()
+        .last()
+        .filter(|ch| ch.is_ascii_alphabetic());
+    let number = if unit.is_some() {
+        &timeframe[..timeframe.len() - 1]
+    } else {
+        timeframe
+    };
+    let multiplier = if number.is_empty() {
+        1
+    } else {
+        number.parse::<i64>().ok()?
+    };
+    if multiplier <= 0 {
+        return None;
+    }
+
+    match unit {
+        None if (1..=1440).contains(&multiplier) => multiplier.checked_mul(60),
+        Some('S') if matches!(multiplier, 1 | 5 | 10 | 15 | 30 | 45) => Some(multiplier),
+        Some('D') if (1..=365).contains(&multiplier) => multiplier.checked_mul(86_400),
+        Some('W') if (1..=52).contains(&multiplier) => multiplier.checked_mul(604_800),
+        Some('M') if (1..=12).contains(&multiplier) => multiplier.checked_mul(2_592_000),
+        _ => None,
+    }
 }
 
 fn timestamp_unsigned_parts(
@@ -11500,6 +11561,70 @@ plot(na(timestamp(na, 1, 1)) ? 1 : 0)
         assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_timeframe_helpers() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("timeframe helpers")
+tf = input.timeframe("60", "TF")
+plot(timeframe.period == "1" ? 1 : 0)
+plot(timeframe.in_seconds())
+plot(timeframe.in_seconds(""))
+plot(timeframe.in_seconds("1S"))
+plot(timeframe.in_seconds("45S"))
+plot(timeframe.in_seconds(tf))
+plot(timeframe.in_seconds("D"))
+plot(timeframe.in_seconds("2W"))
+plot(timeframe.in_seconds("3M"))
+plot(na(timeframe.in_seconds(na)) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let result =
+            run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)]).expect("result");
+
+        assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[1].values, &[60.0, 60.0]);
+        assert_values_close(&result.plots[2].values, &[60.0, 60.0]);
+        assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[4].values, &[45.0, 45.0]);
+        assert_values_close(&result.plots[5].values, &[3600.0, 3600.0]);
+        assert_values_close(&result.plots[6].values, &[86_400.0, 86_400.0]);
+        assert_values_close(&result.plots[7].values, &[1_209_600.0, 1_209_600.0]);
+        assert_values_close(&result.plots[8].values, &[7_776_000.0, 7_776_000.0]);
+        assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
+    }
+
+    #[test]
+    fn rejects_unsupported_timeframe_in_seconds_timeframe() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bad timeframe")
+plot(timeframe.in_seconds("1H"))
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let err = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected timeframe error");
+        assert!(
+            err.message
+                .contains("timeframe.in_seconds unsupported timeframe `1H`"),
+            "unexpected error: {err:?}"
+        );
     }
 
     #[test]

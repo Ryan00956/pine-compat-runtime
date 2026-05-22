@@ -67,6 +67,7 @@ hl2       -> series float
 hlc3      -> series float
 ohlc4     -> series float
 bar_index -> series int
+timeframe.period -> simple string
 ```
 
 `year`, `month`, `weekofyear`, `dayofmonth`, `dayofweek`, `hour`, `minute`,
@@ -120,6 +121,20 @@ For now, these function overloads use the same UTC-only timezone subset as
 currently supports only the numeric UTC subset; omitted hour/minute/second
 default to 0, `na` inputs return `na`, and invalid UTC dates are runtime
 errors.
+
+Timeframe helpers:
+
+```text
+timeframe.in_seconds(timeframe?: simple string) -> simple int
+```
+
+The current subset assumes a fixed default chart timeframe of `1` minute, so
+`timeframe.period` returns `"1"` and `timeframe.in_seconds()` returns `60`.
+Explicit timeframe strings support Pine-style seconds (`1S`, `5S`, `10S`,
+`15S`, `30S`, `45S`), minutes (`1` through `1440`), days (`D`/`1D` through
+`365D`), weeks (`W`/`1W` through `52W`), and months (`M`/`1M` through `12M`,
+using 30-day month seconds). Tick and invalid timeframe strings are runtime
+errors in this subset.
 
 Type casts:
 

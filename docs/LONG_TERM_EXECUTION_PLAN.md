@@ -246,7 +246,8 @@ Candidate areas:
   `math.round`, `math.round_to_mintick`, `math.random`, and `math.sum`;
   string coverage includes `str.split`; time
   helper coverage includes the numeric UTC `timestamp`, `weekofyear`, and
-  `dayofweek` subsets.
+  `dayofweek` subsets, plus a fixed-default `timeframe.period` and
+  `timeframe.in_seconds` conversion subset.
 - Initial utility helper coverage includes `fixnan` for the current numeric
   and color last-non-`na` callsite subset.
 - Initial type-cast coverage includes the pure scalar `int`, `float`, `bool`,
