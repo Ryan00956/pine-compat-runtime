@@ -9,4 +9,7 @@ fn analyze(text: &str) -> Analysis {
 mod compatibility;
 mod lowering;
 mod scopes;
-mod type_inference;
+mod type_arrays;
+mod type_core;
+mod type_inputs_outputs;
+mod type_ta;

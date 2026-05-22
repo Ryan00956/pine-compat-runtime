@@ -1,0 +1,299 @@
+use pine_sema::analyze_source;
+use pine_syntax::SourceFile;
+
+use super::*;
+
+#[test]
+fn runs_string_helpers() {
+    let source = SourceFile::new(
+        "test.pine",
+        r##"indicator("strings")
+mode = input.string("sma", "Mode")
+upper = str.upper(mode)
+lower = str.lower(upper)
+length = str.length(upper)
+missing = str.length(na)
+matched = str.contains(upper, "M") and str.startswith(upper, "S") and str.endswith(upper, "A")
+empty_match = str.contains(upper, "") and str.startswith(upper, "") and str.endswith(upper, "")
+missing_match = str.contains(na, "S")
+mid = str.pos(upper, "M")
+missing_pos = str.pos(upper, "Z")
+empty_pos = str.pos(upper, "")
+na_pos = str.pos(upper, na)
+slice = str.substring(upper, mid, mid + 1)
+tail = str.substring(upper, mid)
+wide = str.substring(upper, 1, 99)
+na_begin = str.substring(upper, na, 1)
+trimmed = str.trim(" \tSMA\n")
+repeated = str.repeat("ab", 2, "-")
+empty_repeat = str.repeat("ab", 0)
+missing_repeat = str.repeat("ab", na)
+replace_first = str.replace("hello", "l", "1")
+replace_second = str.replace("hello", "l", "1", 1)
+replace_missing = str.replace("hello", "z", "1", 0)
+replace_all = str.replace_all("hello", "l", "1")
+replace_boundary = str.replace("ab", "", ".", 1)
+replace_all_boundaries = str.replace_all("ab", "", ".")
+missing_replace = str.replace(na, "x", "y")
+number = str.tonumber("1234.50")
+signed_number = str.tonumber("-.5")
+invalid_number = str.tonumber("$1,234.50")
+exponent_number = str.tonumber("1e3")
+missing_number = str.tonumber(na)
+text_int = str.tostring(42)
+text_float = str.tostring(1.25)
+text_round0 = str.tostring(1.25, "#")
+text_round1 = str.tostring(1.25, "#.#")
+text_zeros = str.tostring(1.25, "#.0000")
+text_percent = str.tostring(0.1234, format.percent)
+text_price = str.tostring(1.234567891, format.price)
+text_volume = str.tostring(1234.567, format.volume)
+text_bool = str.tostring(true)
+text_string = str.tostring("ok")
+text_na = str.tostring(na)
+values = array.new_float(3)
+array.set(values, 0, 1.2)
+array.set(values, 1, 2.6)
+text_array = str.tostring(values, "#")
+formatted = str.format("A={0}, B={1}, A2={0}", text_int, text_float)
+formatted_missing = str.format("Missing {2}", text_int)
+formatted_number = str.format("Rounded {0,number,#.00} Percent {1,number,percent}", 1.2, 0.0345)
+formatted_array = str.format("Values {0}", values)
+match_prefix = str.match("NASDAQ:AAPL", "^(?:BATS|NASDAQ|NYSE|AMEX):")
+match_suffix = str.match("NASDAQ:AAPL", "AAPL$")
+match_missing = str.match("NASDAQ:AAPL", "^NYSE:")
+missing_match_regex = str.match(na, ".+")
+split_words = str.split("A,B,,C", ",")
+split_chars = str.split("xy", "")
+split_missing = str.split(na, ",")
+formatted_time_default = str.format_time(1609459200000)
+formatted_time_date = str.format_time(1609459200000, "yyyy-MM-dd")
+formatted_time_text = str.format_time(1609459200000, "HH:mm:ss 'on' MMM dd, yyyy", "UTC")
+missing_format_time = str.format_time(na)
+plot(upper == "SMA" and lower == "sma" ? length : 0)
+plot(na(missing) ? 1 : 0)
+plot(matched and empty_match ? 1 : 0)
+plot(na(missing_match) ? 1 : 0)
+plot(mid + empty_pos + na_pos)
+plot(na(missing_pos) ? 1 : 0)
+plot(slice == "M" and tail == "MA" and wide == "MA" and na_begin == "S" ? 1 : 0)
+plot(trimmed == upper and repeated == "ab-ab" and empty_repeat == "" ? 1 : 0)
+plot(na(missing_repeat) ? 1 : 0)
+plot(replace_first == "he1lo" and replace_second == "hel1o" and replace_missing == "hello" ? 1 : 0)
+plot(replace_all == "he11o" and replace_boundary == "a.b" and replace_all_boundaries == ".a.b." ? 1 : 0)
+plot(na(missing_replace) ? 1 : 0)
+plot(number == 1234.5 and signed_number == -0.5 ? 1 : 0)
+plot(na(invalid_number) and na(exponent_number) and na(missing_number) ? 1 : 0)
+plot(text_int == "42" and text_float == "1.25" and text_round0 == "1" and text_round1 == "1.3" ? 1 : 0)
+plot(text_zeros == "1.2500" and text_percent == "12.34%" ? 1 : 0)
+plot(text_price == "1.23456789" and text_volume == "1234.57" ? 1 : 0)
+plot(text_bool == "true" and text_string == "ok" and text_na == "NaN" ? 1 : 0)
+plot(text_array == "[1, 3, NaN]" ? 1 : 0)
+plot(formatted == "A=42, B=1.25, A2=42" and formatted_missing == "Missing {2}" ? 1 : 0)
+plot(formatted_number == "Rounded 1.20 Percent 3.45%" ? 1 : 0)
+plot(formatted_array == "Values [1.2, 2.6, NaN]" ? 1 : 0)
+plot(match_prefix == "NASDAQ:" and match_suffix == "AAPL" and match_missing == "" ? 1 : 0)
+plot(na(missing_match_regex) ? 1 : 0)
+plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" ? 1 : 0)
+plot(split_chars.size() == 2 and split_chars.get(0) == "x" and split_chars.get(1) == "y" and na(split_missing) ? 1 : 0)
+plot(formatted_time_default == "2021-01-01T00:00:00+0000" and formatted_time_date == "2021-01-01" ? 1 : 0)
+plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_time) ? 1 : 0)
+"##,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_values_close(&result.plots[0].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[26].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[27].values, &[1.0, 1.0]);
+}
+
+#[test]
+fn rejects_unbalanced_str_format_placeholders() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad format")
+plot(str.length(str.format("Value {0", close)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected str.format placeholder error");
+
+    assert!(
+        error.message.contains("str.format has unmatched `{`"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_invalid_str_match_regex() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad match")
+plot(str.length(str.match("abc", "(")))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected str.match regex error");
+
+    assert!(
+        error.message.contains("str.match invalid regex"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_unsupported_str_format_time_timezone() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad time")
+plot(str.length(str.format_time(1609459200000, "yyyy-MM-dd", "America/New_York")))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected str.format_time timezone error");
+
+    assert!(
+        error
+            .message
+            .contains("str.format_time unsupported timezone `America/New_York`"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_invalid_substring_range() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad substring")
+plot(str.length(str.substring("SMA", 2, 1)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected substring range error");
+
+    assert!(
+        error
+            .message
+            .contains("str.substring end_pos 1 is less than begin_pos 2"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_invalid_string_repeat_counts() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad repeat")
+plot(str.length(str.repeat("x", -1)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected negative repeat error");
+
+    assert!(
+        error
+            .message
+            .contains("str.repeat count cannot be negative: -1"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_oversized_string_repeat_result() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("huge repeat")
+plot(str.length(str.repeat("x", 40961)))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected oversized repeat error");
+
+    assert!(
+        error
+            .message
+            .contains("str.repeat result cannot exceed 40960 characters"),
+        "{}",
+        error.message
+    );
+}

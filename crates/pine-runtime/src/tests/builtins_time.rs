@@ -1,0 +1,333 @@
+use pine_sema::analyze_source;
+use pine_syntax::SourceFile;
+
+use super::*;
+
+#[test]
+fn runs_utc_time_component_variables() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("time components")
+plot(year)
+plot(month)
+plot(weekofyear)
+plot(dayofmonth)
+plot(dayofweek)
+plot(hour)
+plot(minute)
+plot(second)
+ts = 1612235045000
+made_ts = timestamp(2021, 2, 2, 3, 4, 5)
+date_ts = timestamp(2021, 1, 1)
+plot(year(ts))
+plot(month(ts, "UTC"))
+plot(weekofyear(ts))
+plot(dayofmonth(ts))
+plot(dayofweek(ts))
+plot(hour(ts))
+plot(minute(ts))
+plot(second(ts))
+plot(dayofweek == dayofweek.friday ? 1 : 0)
+plot(dayofweek(ts) == dayofweek.tuesday ? 1 : 0)
+plot(na(year(na)) and na(weekofyear(na)) and na(dayofweek(na)) ? 1 : 0)
+plot(made_ts == ts and date_ts == 1609459200000 ? 1 : 0)
+plot(na(timestamp(na, 1, 1)) ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        Bar {
+            time: 1_609_459_200_000,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 100.0,
+        },
+        Bar {
+            time: 1_612_235_045_000,
+            open: 2.0,
+            high: 2.0,
+            low: 2.0,
+            close: 2.0,
+            volume: 100.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_values_close(&result.plots[0].values, &[2021.0, 2021.0]);
+    assert_values_close(&result.plots[1].values, &[1.0, 2.0]);
+    assert_values_close(&result.plots[2].values, &[53.0, 5.0]);
+    assert_values_close(&result.plots[3].values, &[1.0, 2.0]);
+    assert_values_close(&result.plots[4].values, &[6.0, 3.0]);
+    assert_values_close(&result.plots[5].values, &[0.0, 3.0]);
+    assert_values_close(&result.plots[6].values, &[0.0, 4.0]);
+    assert_values_close(&result.plots[7].values, &[0.0, 5.0]);
+    assert_values_close(&result.plots[8].values, &[2021.0, 2021.0]);
+    assert_values_close(&result.plots[9].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[10].values, &[5.0, 5.0]);
+    assert_values_close(&result.plots[11].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[12].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[13].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[14].values, &[4.0, 4.0]);
+    assert_values_close(&result.plots[15].values, &[5.0, 5.0]);
+    assert_values_close(&result.plots[16].values, &[1.0, 0.0]);
+    assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
+}
+
+#[test]
+fn runs_timeframe_helpers() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("timeframe helpers")
+tf = input.timeframe("60", "TF")
+plot(timeframe.period == "1" ? 1 : 0)
+plot(timeframe.in_seconds())
+plot(timeframe.in_seconds(""))
+plot(timeframe.in_seconds("1S"))
+plot(timeframe.in_seconds("45S"))
+plot(timeframe.in_seconds(tf))
+plot(timeframe.in_seconds("D"))
+plot(timeframe.in_seconds("2W"))
+plot(timeframe.in_seconds("3M"))
+plot(na(timeframe.in_seconds(na)) ? 1 : 0)
+plot(timeframe.from_seconds(60) == "1" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("45S")) == "45S" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("D")) == "D" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("2W")) == "2W" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("3M")) == "3M" ? 1 : 0)
+plot(timeframe.change("1") ? 1 : 0)
+plot(timeframe.isminutes and timeframe.isintraday and not timeframe.isseconds and not timeframe.isdaily and not timeframe.isweekly and not timeframe.ismonthly and not timeframe.isdwm ? 1 : 0)
+plot(timeframe.multiplier)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)]).expect("result");
+
+    assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[1].values, &[60.0, 60.0]);
+    assert_values_close(&result.plots[2].values, &[60.0, 60.0]);
+    assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[4].values, &[45.0, 45.0]);
+    assert_values_close(&result.plots[5].values, &[3600.0, 3600.0]);
+    assert_values_close(&result.plots[6].values, &[86_400.0, 86_400.0]);
+    assert_values_close(&result.plots[7].values, &[1_209_600.0, 1_209_600.0]);
+    assert_values_close(&result.plots[8].values, &[7_776_000.0, 7_776_000.0]);
+    assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[15].values, &[1.0, 0.0]);
+    assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
+}
+
+#[test]
+fn runs_timeframe_change() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("timeframe change")
+plot(timeframe.change("1") ? 1 : 0)
+plot(timeframe.change("D") ? 1 : 0)
+plot(na(timeframe.change(na)) ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        Bar {
+            time: 0,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 30_000,
+            open: 2.0,
+            high: 2.0,
+            low: 2.0,
+            close: 2.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 60_000,
+            open: 3.0,
+            high: 3.0,
+            low: 3.0,
+            close: 3.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 86_400_000,
+            open: 4.0,
+            high: 4.0,
+            low: 4.0,
+            close: 4.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 86_460_000,
+            open: 5.0,
+            high: 5.0,
+            low: 5.0,
+            close: 5.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
+
+    assert_values_close(&result.plots[0].values, &[1.0, 0.0, 1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[1].values, &[1.0, 0.0, 0.0, 1.0, 0.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0]);
+}
+
+#[test]
+fn rejects_unsupported_calendar_function_timezone() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad calendar timezone")
+plot(hour(time, "America/New_York"))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected calendar timezone error");
+
+    assert!(
+        error
+            .message
+            .contains("hour unsupported timezone `America/New_York`"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_invalid_timestamp_date() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad timestamp")
+plot(timestamp(2021, 2, 30))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected invalid timestamp error");
+
+    assert!(
+        error
+            .message
+            .contains("timestamp invalid UTC datetime: 2021-02-30"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_unsupported_timeframe_in_seconds_timeframe() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad timeframe")
+plot(timeframe.in_seconds("1H"))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let err = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected timeframe error");
+    assert!(
+        err.message
+            .contains("timeframe.in_seconds unsupported timeframe `1H`"),
+        "unexpected error: {err:?}"
+    );
+}
+
+#[test]
+fn rejects_unsupported_timeframe_from_seconds_value() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad timeframe seconds")
+plot(timeframe.from_seconds(46) == "" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let err = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected timeframe error");
+    assert!(
+        err.message
+            .contains("timeframe.from_seconds unsupported seconds `46`"),
+        "unexpected error: {err:?}"
+    );
+}
+
+#[test]
+fn rejects_unsupported_timeframe_change_timeframe() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad timeframe change")
+plot(timeframe.change("1H") ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let err = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected timeframe error");
+    assert!(
+        err.message
+            .contains("timeframe.change unsupported timeframe `1H`"),
+        "unexpected error: {err:?}"
+    );
+}

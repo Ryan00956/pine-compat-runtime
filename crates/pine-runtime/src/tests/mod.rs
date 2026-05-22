@@ -1,9 +1,14 @@
 mod arrays;
-mod builtins_misc;
+mod builtins_colors;
+mod builtins_core;
+mod builtins_inputs;
+mod builtins_math;
+mod builtins_strings;
 mod builtins_ta_averages;
 mod builtins_ta_conditionals;
 mod builtins_ta_extremes;
 mod builtins_ta_flow;
+mod builtins_time;
 mod outputs;
 mod realtime;
 mod runtime_control_flow;
