@@ -1,5 +1,6 @@
 use pine_ir::{CallSiteId, HirCallArg};
 
+use crate::runtime::call_context::RuntimeCallContext;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -27,8 +28,13 @@ impl<'a> HistoricalRuntime<'a> {
         if let Some(result) = self.eval_cast_call(callee, args) {
             return result;
         }
-        if let Some(result) = self.eval_math_call(callee, call_site_id, args) {
-            return result;
+        {
+            let mut context = RuntimeCallContext::new(self);
+            if let Some(result) =
+                crate::builtins::math::eval_math_call(&mut context, callee, call_site_id, args)
+            {
+                return result;
+            }
         }
         if let Some(result) = self.eval_ta_call(callee, call_site_id, args) {
             return result;
