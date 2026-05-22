@@ -101,6 +101,8 @@ const PLOT: PineType = PineType::new(Qualifier::Const, ValueKind::Plot);
 const HLINE: PineType = PineType::new(Qualifier::Const, ValueKind::HLine);
 const VOID: PineType = PineType::new(Qualifier::Const, ValueKind::Void);
 const SIMPLE_INT: PineType = PineType::new(Qualifier::Simple, ValueKind::Int);
+const SIMPLE_BOOL: PineType = PineType::new(Qualifier::Simple, ValueKind::Bool);
+const SIMPLE_STRING: PineType = PineType::new(Qualifier::Simple, ValueKind::String);
 const SIMPLE_FLOAT_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::FloatArray);
 const SIMPLE_INT_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::IntArray);
 const SIMPLE_BOOL_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::BoolArray);
@@ -3694,10 +3696,15 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         "barstate.isrealtime",
         PineType::new(Qualifier::Series, ValueKind::Bool),
     ),
-    (
-        "timeframe.period",
-        PineType::new(Qualifier::Simple, ValueKind::String),
-    ),
+    ("timeframe.period", SIMPLE_STRING),
+    ("timeframe.isseconds", SIMPLE_BOOL),
+    ("timeframe.isminutes", SIMPLE_BOOL),
+    ("timeframe.isintraday", SIMPLE_BOOL),
+    ("timeframe.isdaily", SIMPLE_BOOL),
+    ("timeframe.isweekly", SIMPLE_BOOL),
+    ("timeframe.ismonthly", SIMPLE_BOOL),
+    ("timeframe.isdwm", SIMPLE_BOOL),
+    ("timeframe.multiplier", SIMPLE_INT),
     (
         "ta.accdist",
         PineType::new(Qualifier::Series, ValueKind::Float),

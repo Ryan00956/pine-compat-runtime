@@ -68,6 +68,14 @@ hlc3      -> series float
 ohlc4     -> series float
 bar_index -> series int
 timeframe.period -> simple string
+timeframe.isseconds -> simple bool
+timeframe.isminutes -> simple bool
+timeframe.isintraday -> simple bool
+timeframe.isdaily -> simple bool
+timeframe.isweekly -> simple bool
+timeframe.ismonthly -> simple bool
+timeframe.isdwm -> simple bool
+timeframe.multiplier -> simple int
 ```
 
 `year`, `month`, `weekofyear`, `dayofmonth`, `dayofweek`, `hour`, `minute`,
@@ -129,7 +137,11 @@ timeframe.in_seconds(timeframe?: simple string) -> simple int
 ```
 
 The current subset assumes a fixed default chart timeframe of `1` minute, so
-`timeframe.period` returns `"1"` and `timeframe.in_seconds()` returns `60`.
+`timeframe.period` returns `"1"`, `timeframe.multiplier` returns `1`,
+`timeframe.isminutes` and `timeframe.isintraday` return `true`, and
+`timeframe.isseconds`, `timeframe.isdaily`, `timeframe.isweekly`,
+`timeframe.ismonthly`, and `timeframe.isdwm` return `false`.
+`timeframe.in_seconds()` returns `60`.
 Explicit timeframe strings support Pine-style seconds (`1S`, `5S`, `10S`,
 `15S`, `30S`, `45S`), minutes (`1` through `1440`), days (`D`/`1D` through
 `365D`), weeks (`W`/`1W` through `52W`), and months (`M`/`1M` through `12M`,

@@ -5500,7 +5500,8 @@ plot(year(ts) + month(ts, "UTC") + weekofyear(ts) + dayofmonth(ts) + dayofweek(t
             r#"indicator("timeframe helpers")
 tf = input.timeframe("60", "TF")
 seconds = timeframe.in_seconds() + timeframe.in_seconds(tf) + timeframe.in_seconds("D")
-plot(timeframe.period == "1" ? seconds : 0)
+is_one_minute = timeframe.isminutes and timeframe.isintraday and not timeframe.isseconds and not timeframe.isdaily and not timeframe.isweekly and not timeframe.ismonthly and not timeframe.isdwm and timeframe.multiplier == 1
+plot(timeframe.period == "1" and is_one_minute ? seconds : 0)
 "#,
         );
 
@@ -5509,7 +5510,18 @@ plot(timeframe.period == "1" ? seconds : 0)
             "{:?}",
             analysis.diagnostics
         );
-        for feature in ["timeframe.in_seconds", "timeframe.period"] {
+        for feature in [
+            "timeframe.in_seconds",
+            "timeframe.period",
+            "timeframe.isseconds",
+            "timeframe.isminutes",
+            "timeframe.isintraday",
+            "timeframe.isdaily",
+            "timeframe.isweekly",
+            "timeframe.ismonthly",
+            "timeframe.isdwm",
+            "timeframe.multiplier",
+        ] {
             assert!(
                 analysis
                     .compatibility

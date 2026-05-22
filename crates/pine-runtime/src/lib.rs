@@ -1490,6 +1490,30 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "timeframe.period" {
             return PineValue::String(DEFAULT_CHART_TIMEFRAME.to_owned());
         }
+        if name == "timeframe.isseconds" {
+            return PineValue::Bool(false);
+        }
+        if name == "timeframe.isminutes" {
+            return PineValue::Bool(true);
+        }
+        if name == "timeframe.isintraday" {
+            return PineValue::Bool(true);
+        }
+        if name == "timeframe.isdaily" {
+            return PineValue::Bool(false);
+        }
+        if name == "timeframe.isweekly" {
+            return PineValue::Bool(false);
+        }
+        if name == "timeframe.ismonthly" {
+            return PineValue::Bool(false);
+        }
+        if name == "timeframe.isdwm" {
+            return PineValue::Bool(false);
+        }
+        if name == "timeframe.multiplier" {
+            return PineValue::Int(1);
+        }
         if name == "ta.accdist" {
             return self.accdist_current.clone();
         }
@@ -11579,6 +11603,8 @@ plot(timeframe.in_seconds("D"))
 plot(timeframe.in_seconds("2W"))
 plot(timeframe.in_seconds("3M"))
 plot(na(timeframe.in_seconds(na)) ? 1 : 0)
+plot(timeframe.isminutes and timeframe.isintraday and not timeframe.isseconds and not timeframe.isdaily and not timeframe.isweekly and not timeframe.ismonthly and not timeframe.isdwm ? 1 : 0)
+plot(timeframe.multiplier)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -11601,6 +11627,8 @@ plot(na(timeframe.in_seconds(na)) ? 1 : 0)
         assert_values_close(&result.plots[7].values, &[1_209_600.0, 1_209_600.0]);
         assert_values_close(&result.plots[8].values, &[7_776_000.0, 7_776_000.0]);
         assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
     }
 
     #[test]

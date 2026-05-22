@@ -149,6 +149,8 @@
   `dayofweek.*` constants.
 - Added fixed-default `timeframe.period` and `timeframe.in_seconds` support for
   common seconds/minutes/days/weeks/months timeframe strings.
+- Added fixed-default `timeframe.is*` and `timeframe.multiplier` chart
+  timeframe metadata.
 - Added `int`, `float`, `bool`, `string`, and `color` scalar type casts for
   numeric, bool, string, color, and `na` values.
 - Added `fixnan` support for carrying forward the last non-`na` numeric or

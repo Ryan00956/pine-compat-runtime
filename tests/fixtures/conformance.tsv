@@ -34,6 +34,14 @@ second	supported	UTC bar time component variable and function subset	tests/fixtu
 timestamp	supported	numeric UTC timestamp subset	tests/fixtures/runtime/time_components.pine
 timeframe.period	supported	fixed default chart timeframe string subset	tests/fixtures/runtime/timeframe.pine
 timeframe.in_seconds	supported	explicit timeframe string to seconds subset plus fixed default chart timeframe	tests/fixtures/runtime/timeframe.pine
+timeframe.isseconds	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
+timeframe.isminutes	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
+timeframe.isintraday	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
+timeframe.isdaily	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
+timeframe.isweekly	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
+timeframe.ismonthly	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
+timeframe.isdwm	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
+timeframe.multiplier	supported	fixed default chart timeframe multiplier subset	tests/fixtures/runtime/timeframe.pine
 int	supported	numeric/bool/na scalar cast subset	tests/fixtures/runtime/casts.pine
 float	supported	numeric/bool/na scalar cast subset	tests/fixtures/runtime/casts.pine
 bool	supported	numeric/bool/na scalar cast subset	tests/fixtures/runtime/casts.pine
