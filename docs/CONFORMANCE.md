@@ -69,9 +69,11 @@ first mutation subset covers `label.set_x`, `label.set_y`, `label.set_xy`,
 `label.set_size`, and `label.set_tooltip`. `label.delete` emits `exists: false`
 snapshots; deleting `na` or an already deleted label is a no-op; ids are stable
 and not reused; label creation has a 500-object runtime limit. Keep
-realtime-specific behavior, unsupported coordinate modes, and other drawing
-families out of the supported matrix until they have fixtures and public-output
-coverage.
+unsupported coordinate modes and other drawing families out of the supported
+matrix until they have fixtures and public-output coverage. Supported label
+creation, mutation, and deletion are covered under realtime rollback, and
+drawing side effects inside user-defined functions are rejected under the
+existing side-effect policy.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field
@@ -133,7 +135,7 @@ Examples:
 - imports
 - `varip` in historical-only mode
 - non-integer or negative history offsets
-- unsupported function side effects
+- unsupported function side effects, including drawing side effects
 
 Expected result:
 

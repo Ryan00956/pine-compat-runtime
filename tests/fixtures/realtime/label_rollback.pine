@@ -1,0 +1,14 @@
+//@version=5
+indicator("Realtime label rollback")
+var label_id = label.new(bar_index, high, "confirmed")
+if barstate.isrealtime and not barstate.isconfirmed
+    if close > 2.5
+        label.delete(label_id)
+    else
+        label.set_xy(label_id, bar_index, close)
+        label.set_text(label_id, "forming")
+    temp = label.new(bar_index, close, "temp")
+    label.delete(temp)
+if barstate.isconfirmed
+    label.set_text(label_id, "confirmed")
+plot(close)

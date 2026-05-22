@@ -71,16 +71,16 @@ bgcolor	supported	color series output with conditional padding plus common metad
 barcolor	supported	color series output with conditional padding plus common metadata parameters	tests/fixtures/runtime/color_outputs.pine
 hline	supported	horizontal line output plus common style/display metadata parameters	tests/fixtures/runtime/io.pine
 fill	supported	plot/hline fill output plus common display/fillgaps metadata parameters	tests/fixtures/runtime/io.pine
-label.new	partial	bar-index x, numeric y, string text, xloc.bar_index, yloc.price, color, selected label styles, textcolor, size, and tooltip creation snapshots with a 500-label runtime limit; other drawing families unsupported	tests/fixtures/runtime/label_new.pine;tests/fixtures/runtime/label_options.pine
+label.new	partial	bar-index x, numeric y, string text, xloc.bar_index, yloc.price, color, selected label styles, textcolor, size, and tooltip creation snapshots with a 500-label runtime limit; realtime rollback covered; other drawing families unsupported	tests/fixtures/runtime/label_new.pine;tests/fixtures/runtime/label_options.pine;tests/fixtures/runtime/label_control_flow.pine
 label.set_x	partial	label id x mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
 label.set_y	partial	label id y mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
 label.set_xy	partial	label id x/y mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
 label.set_text	partial	label id text mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine;tests/fixtures/runtime/label_delete.pine
-label.set_color	partial	label id color mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_color	partial	label id color mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine;tests/fixtures/runtime/label_control_flow.pine
 label.set_textcolor	partial	label id text color mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
 label.set_style	partial	label id selected style mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
-label.set_size	partial	label id size mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
-label.set_tooltip	partial	label id tooltip mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_size	partial	label id size mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine;tests/fixtures/runtime/label_control_flow.pine
+label.set_tooltip	partial	label id tooltip mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine;tests/fixtures/runtime/label_control_flow.pine
 label.delete	partial	label id deletion snapshots only; deleting deleted or na labels is no-op; ids are not reused and labels have a 500-object runtime limit; other drawing families unsupported	tests/fixtures/runtime/label_delete.pine
 color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 color.rgb	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
@@ -287,7 +287,7 @@ multi-statement functions	supported	block body must end with an expression	tests
 block-local declarations	supported	normal and tuple declarations are scoped to branches	tests/fixtures/runtime/block_statements.pine;tests/fixtures/runtime/local_scope.pine;tests/fixtures/sema/supported_block_statements.pine
 local scope	supported	local declarations, shadowing, and local var storage	tests/fixtures/runtime/local_scope.pine
 recursive functions	unsupported	rejected during semantic analysis	tests/fixtures/sema/unsupported_recursive_function.pine
-function side effects	unsupported	output, declaration, input calls, and array mutation inside UDFs rejected	tests/fixtures/sema/unsupported_function_side_effect.pine;tests/fixtures/sema/unsupported_array_function_side_effect.pine
+function side effects	unsupported	output, declaration, input calls, array mutation, and drawing side effects inside UDFs rejected	tests/fixtures/sema/unsupported_function_side_effect.pine;tests/fixtures/sema/unsupported_array_function_side_effect.pine;tests/fixtures/sema/unsupported_drawing_function_side_effect.pine
 color.* named constants	partial	common registry only	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 #RRGGBB/#RRGGBBAA color literals	supported	normalized runtime color value	tests/fixtures/syntax/phase1_basic.pine
 history references	partial	constant non-negative offsets and dynamic integer offsets including series int; covers built-in series, expression history, branches, loops, and UDF parameters	tests/fixtures/runtime/na.pine;tests/fixtures/runtime/history_edges.pine;tests/fixtures/runtime/dynamic_history.pine;tests/fixtures/runtime/dynamic_history_scopes.pine;tests/fixtures/runtime/series_history_offset.pine

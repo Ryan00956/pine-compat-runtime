@@ -13,8 +13,10 @@
 - Added sparse mutation snapshots for the initial `label.set_*` subset covering
   x/y/text/color/style/size/tooltip fields.
 - Added `label.delete` lifecycle snapshots and a deterministic 500-label
-  runtime limit. Unsupported coordinate modes, realtime rollback, and other
-  drawing families remain unsupported.
+  runtime limit. Label creation, mutation, and deletion now have fixture-backed
+  realtime rollback, and drawing side effects inside user-defined functions are
+  rejected under the existing side-effect policy. Unsupported coordinate modes
+  and other drawing families remain unsupported.
 - Closed Phase K release infrastructure with public `schemaVersion: 1` output
   contracts for CLI, Python, and WASM public machine-readable outputs.
 - Moved CLI and WASM runtime JSON onto shared runtime serialization helpers,

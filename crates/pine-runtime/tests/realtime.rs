@@ -207,6 +207,60 @@ fn dynamic_history_fixture_rolls_back_forming_history() {
     assert_values(&result.plots[0].values, &[1.0, 1.0, 4.0]);
 }
 
+#[test]
+fn label_fixture_rolls_back_forming_lifecycle_changes() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/label_rollback.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_eq!(result.labels.len(), 1);
+    assert_eq!(result.labels[0].id, 1);
+    assert_eq!(result.labels[0].snapshots.len(), 1);
+    assert_eq!(
+        result.labels[0].snapshots[0].text,
+        PineValue::String("confirmed".to_owned())
+    );
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_eq!(result.labels.len(), 2);
+    assert_eq!(result.labels[0].snapshots.len(), 3);
+    assert_eq!(result.labels[0].snapshots[2].x, PineValue::Int(1));
+    assert_eq!(result.labels[0].snapshots[2].y, PineValue::Float(2.0));
+    assert_eq!(
+        result.labels[0].snapshots[2].text,
+        PineValue::String("forming".to_owned())
+    );
+    assert_eq!(result.labels[1].id, 2);
+    assert_eq!(result.labels[1].snapshots.len(), 2);
+    assert!(!result.labels[1].snapshots[1].exists);
+    assert_eq!(runtime.confirmed_result().labels.len(), 1);
+    assert_eq!(runtime.confirmed_result().labels[0].snapshots.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back labels");
+    assert_eq!(result.labels.len(), 2);
+    assert_eq!(result.labels[0].id, 1);
+    assert_eq!(result.labels[0].snapshots.len(), 2);
+    assert!(!result.labels[0].snapshots[1].exists);
+    assert_eq!(result.labels[1].id, 2);
+    assert_eq!(result.labels[1].snapshots.len(), 2);
+    assert!(!result.labels[1].snapshots[1].exists);
+    assert_eq!(runtime.confirmed_result().labels.len(), 1);
+    assert_eq!(runtime.confirmed_result().labels[0].snapshots.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit from confirmed label state");
+    assert_eq!(result.labels.len(), 1);
+    assert_eq!(result.labels[0].id, 1);
+    assert_eq!(result.labels[0].snapshots.len(), 1);
+    assert!(result.labels[0].snapshots[0].exists);
+}
+
 fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");

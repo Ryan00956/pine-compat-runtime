@@ -176,6 +176,21 @@ the same bounds, persistence, and UDF side-effect rules apply.
 Array mutation, including push/pop/shift/unshift/set/sort/reverse/clear, inside
 user-defined functions is rejected as a function side-effect boundary.
 
+Supported drawing-object calls currently cover the initial `label.*` lifecycle:
+`label.new`, selected `label.set_*` mutators, and `label.delete`. Labels use
+deterministic ids, sparse lifecycle snapshots, non-reused ids, and a 500-object
+runtime limit. `label.delete(na)`, mutation of `na`, mutation after deletion,
+and deleting an already deleted label are no-ops; invalid non-`na` ids are
+runtime errors.
+
+Label side effects are allowed in top-level control flow, including supported
+`if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from
+the confirmed runtime snapshot, so unconfirmed label creation, mutation, and
+deletion are rolled back when a new forming update arrives. Drawing side effects
+inside user-defined functions are rejected under the same side-effect boundary
+as output calls and array mutation until UDF object semantics are deliberately
+expanded.
+
 ### `varip`
 
 `varip` requires precise realtime tick semantics. It is rejected until intrabar
@@ -212,9 +227,10 @@ Multi-statement function bodies execute local statements and return the final
 expression. Local declarations and reassignments inside function block bodies
 are scoped to the function callsite. A local declaration or loop counter can
 shadow a parameter without changing references that were already resolved to
-that parameter. Recursive functions, output side effects inside functions,
-global reassignment inside functions, and side-effecting calls as UDF arguments
-are rejected in the current executable subset.
+that parameter. Recursive functions, output side effects and drawing side
+effects inside functions, global reassignment inside functions, and
+side-effecting calls as UDF arguments are rejected in the current executable
+subset.
 
 ## Series and History References
 
@@ -308,10 +324,13 @@ rendering metadata:
 - `plotbar`: open, high, low, close, and color values.
 - `plotcandle`: open, high, low, close, body colors, wick colors, and border
   colors.
+- `label.*`: deterministic label ids and sparse creation, mutation, and
+  deletion snapshots for the supported label subset.
 
 Accepted metadata such as `offset`, `show_last`, `display`, `force_overlay`,
 and `editable` does not yet transform, filter, or annotate these output series.
-Later drawing object systems will add separate shape outputs.
+Later drawing object systems will add separate line, box, table, and polyline
+outputs.
 
 ## Determinism
 

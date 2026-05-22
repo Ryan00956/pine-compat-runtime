@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported drawing function side effect")
+draw_label(price) =>
+    id = label.new(bar_index, price, "bad")
+    label.delete(id)
+    price
+plot(draw_label(close))

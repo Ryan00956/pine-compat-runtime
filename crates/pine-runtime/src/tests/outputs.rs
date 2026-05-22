@@ -302,6 +302,60 @@ plot(close)
 }
 
 #[test]
+fn collects_label_side_effects_in_control_flow() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("label control flow")
+var label_id = label.new(bar_index, high, "start")
+if bar_index == 1
+    label.set_text(label_id, "if")
+direction = close > open ? 1 : -1
+switch direction
+    1 => label.set_color(label_id, color.green)
+    => label.set_color(label_id, color.red)
+for i = 0 to 0
+    if bar_index == 2
+        label.set_tooltip(label_id, "for")
+j = 0
+while j < 1
+    if bar_index == 3
+        label.set_size(label_id, size.small)
+    j := j + 1
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        bar_ohlc(1.0, 1.0, 1.0, 1.0),
+        bar_ohlc(1.0, 2.0, 1.0, 2.0),
+        bar_ohlc(3.0, 2.0, 2.0, 2.0),
+        bar_ohlc(3.0, 4.0, 3.0, 4.0),
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.labels.len(), 1);
+    let snapshots = &result.labels[0].snapshots;
+    assert_eq!(snapshots.len(), 8);
+    assert_eq!(snapshots[0].bar_index, 0);
+    assert_eq!(snapshots[1].color, PineValue::Color(0xFF0000));
+    assert_eq!(snapshots[2].text, PineValue::String("if".to_owned()));
+    assert_eq!(snapshots[3].color, PineValue::Color(0x008000));
+    assert_eq!(snapshots[4].color, PineValue::Color(0xFF0000));
+    assert_eq!(snapshots[5].tooltip, PineValue::String("for".to_owned()));
+    assert_eq!(snapshots[6].color, PineValue::Color(0x008000));
+    assert_eq!(
+        snapshots[7].size,
+        PineValue::String("size.small".to_owned())
+    );
+}
+
+#[test]
 fn runs_output_metadata_parameters() {
     let source = SourceFile::new(
         "test.pine",

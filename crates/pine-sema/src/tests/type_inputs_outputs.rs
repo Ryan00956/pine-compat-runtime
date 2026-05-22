@@ -352,9 +352,9 @@ fn accepts_label_mutation_methods() {
 }
 
 #[test]
-fn rejects_label_mutation_inside_functions() {
+fn rejects_label_side_effects_inside_functions() {
     let analysis = analyze(
-        "change(id) => label.delete(id)\nid = label.new(bar_index, high, \"High\")\nchange(id)\nplot(close)\n",
+        "change(price) =>\n    id = label.new(bar_index, price, \"High\")\n    label.delete(id)\n    price\nplot(change(close))\n",
     );
 
     assert!(
