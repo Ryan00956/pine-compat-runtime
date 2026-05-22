@@ -62,6 +62,20 @@ helper so field names and nesting cannot drift. Python returns native
 dictionaries, so its binding tests assert the same top-level runtime keys and
 representative nested output families such as `plotShapes` and `plotCandles`.
 
+Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
+strict string comparisons against deterministic compact JSON; a public field
+rename, omitted `schemaVersion`, or matrix shape change should fail tests. To
+refresh snapshots after an intentional public-output change, run:
+
+```text
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli golden_snapshot
+UPDATE_SNAPSHOTS=1 cargo test -p pine-wasm analysis_outputs_match_golden_snapshots
+cargo test --workspace
+```
+
+Review the resulting JSON diff before committing. Do not update snapshots to
+hide accidental public contract changes.
+
 ## Numeric Tolerance
 
 Floating point outputs should be compared with an explicit tolerance:

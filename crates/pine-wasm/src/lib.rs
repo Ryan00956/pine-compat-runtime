@@ -211,6 +211,7 @@ fn json_escape(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{env, fs, path::PathBuf};
 
     #[test]
     fn analyzes_script_to_json() {
@@ -236,5 +237,39 @@ mod tests {
         assert!(output.contains("\"plotArrows\":[]"));
         assert!(output.contains("\"plotBars\":[]"));
         assert!(output.contains("\"plotCandles\":[]"));
+    }
+
+    #[test]
+    fn analysis_outputs_match_golden_snapshots() {
+        assert_snapshot(
+            "analysis_supported.json",
+            &analyze_script(include_str!(
+                "../../../tests/fixtures/runtime/snapshot_plot.pine"
+            )),
+        );
+        assert_snapshot(
+            "analysis_unsupported.json",
+            &analyze_script(include_str!(
+                "../../../tests/fixtures/sema/unsupported_request.pine"
+            )),
+        );
+    }
+
+    fn assert_snapshot(name: &str, actual: &str) {
+        let snapshot_path = workspace_dir().join("tests/snapshots").join(name);
+        if env::var_os("UPDATE_SNAPSHOTS").is_some() {
+            fs::create_dir_all(snapshot_path.parent().expect("snapshot parent"))
+                .expect("create snapshot dir");
+            fs::write(&snapshot_path, format!("{actual}\n")).expect("write snapshot");
+            return;
+        }
+
+        let expected = fs::read_to_string(&snapshot_path)
+            .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
+        assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");
+    }
+
+    fn workspace_dir() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
     }
 }

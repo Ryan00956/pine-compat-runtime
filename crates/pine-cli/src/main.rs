@@ -315,6 +315,7 @@ mod tests {
         HistoryRetentionMode, RuntimeProfile, RuntimeResult, public_runtime_profiled_result_json,
         public_runtime_result_json,
     };
+    use std::{env, fs, path::PathBuf};
 
     #[test]
     fn matrix_includes_supported_builtins_and_unsupported_features() {
@@ -549,5 +550,82 @@ mod tests {
         assert!(output.contains(r#""plotArrows":0"#));
         assert!(output.contains(r#""plotBars":0"#));
         assert!(output.contains(r#""plotCandles":0"#));
+    }
+
+    #[test]
+    fn runtime_outputs_match_golden_snapshots() {
+        for (snapshot, fixture) in [
+            (
+                "runtime_basic_plot.json",
+                "tests/fixtures/runtime/snapshot_plot.pine",
+            ),
+            (
+                "runtime_plotchar.json",
+                "tests/fixtures/runtime/plotchar.pine",
+            ),
+            (
+                "runtime_plotshape.json",
+                "tests/fixtures/runtime/plotshape.pine",
+            ),
+            (
+                "runtime_plotarrow.json",
+                "tests/fixtures/runtime/plotarrow.pine",
+            ),
+            (
+                "runtime_plotbar.json",
+                "tests/fixtures/runtime/plotbar.pine",
+            ),
+            (
+                "runtime_plotcandle.json",
+                "tests/fixtures/runtime/plotcandle.pine",
+            ),
+            (
+                "runtime_color_outputs.json",
+                "tests/fixtures/runtime/color_outputs.pine",
+            ),
+            ("runtime_hline_fill.json", "tests/fixtures/runtime/io.pine"),
+        ] {
+            assert_snapshot(snapshot, &runtime_fixture_json(fixture));
+        }
+    }
+
+    #[test]
+    fn matrix_output_matches_golden_snapshot() {
+        assert_snapshot("matrix.json", &matrix_json(&conformance_entries()));
+    }
+
+    fn runtime_fixture_json(fixture: &str) -> String {
+        let workspace = workspace_dir();
+        let source_text = fs::read_to_string(workspace.join(fixture)).expect("fixture source");
+        let source = SourceFile::new(fixture, source_text);
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{fixture} diagnostics: {:?}",
+            analysis.diagnostics
+        );
+        let bars = parse_bars_csv(include_str!("../../../tests/fixtures/runtime/bars.csv"))
+            .expect("bars fixture");
+        let result =
+            run_historical(&analysis.hir.expect("fixture HIR"), &bars).expect("runtime result");
+        public_runtime_result_json(&result)
+    }
+
+    fn assert_snapshot(name: &str, actual: &str) {
+        let snapshot_path = workspace_dir().join("tests/snapshots").join(name);
+        if env::var_os("UPDATE_SNAPSHOTS").is_some() {
+            fs::create_dir_all(snapshot_path.parent().expect("snapshot parent"))
+                .expect("create snapshot dir");
+            fs::write(&snapshot_path, format!("{actual}\n")).expect("write snapshot");
+            return;
+        }
+
+        let expected = fs::read_to_string(&snapshot_path)
+            .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
+        assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");
+    }
+
+    fn workspace_dir() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
     }
 }
