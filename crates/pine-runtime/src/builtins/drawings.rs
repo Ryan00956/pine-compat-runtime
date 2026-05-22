@@ -21,6 +21,7 @@ impl<'a> HistoricalRuntime<'a> {
             "label.set_style" => self.eval_label_set_style(args),
             "label.set_size" => self.eval_label_set_size(args),
             "label.set_tooltip" => self.eval_label_set_tooltip(args),
+            "label.delete" => self.eval_label_delete(args),
             _ => return None,
         })
     }
@@ -53,6 +54,11 @@ impl<'a> HistoricalRuntime<'a> {
         let size = self.eval_label_option(args, 8, "size", "size.normal")?;
         let tooltip =
             self.eval_label_option_value(args, 9, "tooltip", PineValue::String(String::new()))?;
+        if self.labels.len() >= MAX_LABELS {
+            return Err(RuntimeError {
+                message: format!("label count cannot exceed {MAX_LABELS}"),
+            });
+        }
         let id = self.next_label_id;
         self.next_label_id = self
             .next_label_id
@@ -154,6 +160,31 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    fn eval_label_delete(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        let Some(label) = self.labels.iter_mut().find(|label| label.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid label id `{id}`"),
+            });
+        };
+        let Some(latest) = label.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("label `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Void);
+        }
+        let mut next = latest;
+        next.bar_index = self.bars;
+        next.exists = false;
+        label.snapshots.push(next);
+        Ok(PineValue::Void)
+    }
+
     fn eval_label_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
@@ -201,6 +232,9 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("label `{id}` has no snapshots"),
             });
         };
+        if !latest.exists {
+            return Ok(PineValue::Void);
+        }
         let mut next = latest.clone();
         mutate(&mut next);
         if next != latest {

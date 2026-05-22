@@ -190,6 +190,89 @@ plot(close)
 }
 
 #[test]
+fn collects_label_delete_snapshots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("label delete")
+var id = label.new(bar_index, high, "start")
+if bar_index == 1
+    label.delete(id)
+if bar_index == 2
+    label.set_text(id, "ignored")
+    label.delete(id)
+label.delete(na)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let label = &result.labels[0];
+
+    assert_eq!(label.snapshots.len(), 2);
+    assert!(label.snapshots[0].exists);
+    assert_eq!(label.snapshots[0].bar_index, 0);
+    assert!(!label.snapshots[1].exists);
+    assert_eq!(label.snapshots[1].bar_index, 1);
+}
+
+#[test]
+fn rejects_label_creation_past_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("label limit")
+for i = 0 to 500
+    label.new(i, close, "x")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected label limit error");
+
+    assert!(error.message.contains("label count cannot exceed"));
+}
+
+#[test]
+fn profiles_label_storage() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("label profile")
+id = label.new(bar_index, high, "start")
+label.set_text(id, "changed")
+label.delete(id)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let profiled =
+        run_historical_profiled(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(profiled.profile.labels, 1);
+    assert_eq!(profiled.profile.label_snapshots, 3);
+    assert!(profiled.profile.label_capacity >= 1);
+    assert!(profiled.profile.label_snapshot_capacity >= 3);
+}
+
+#[test]
 fn collects_conditional_and_stored_label_ids() {
     let source = SourceFile::new(
         "test.pine",

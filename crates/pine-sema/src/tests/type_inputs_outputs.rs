@@ -333,7 +333,7 @@ fn rejects_unsupported_label_new_modes() {
 #[test]
 fn accepts_label_mutation_methods() {
     let analysis = analyze(
-        "id = label.new(bar_index, high, \"High\")\nlabel.set_x(id, bar_index)\nlabel.set_y(id, low)\nlabel.set_xy(id, bar_index, close)\nlabel.set_text(id, \"Close\")\nlabel.set_color(id, color.green)\nlabel.set_textcolor(id, color.white)\nlabel.set_style(id, label.style_label_up)\nlabel.set_size(id, size.small)\nlabel.set_tooltip(id, \"Tip\")\nlabel.set_text(na, \"noop\")\nplot(close)\n",
+        "id = label.new(bar_index, high, \"High\")\nlabel.set_x(id, bar_index)\nlabel.set_y(id, low)\nlabel.set_xy(id, bar_index, close)\nlabel.set_text(id, \"Close\")\nlabel.set_color(id, color.green)\nlabel.set_textcolor(id, color.white)\nlabel.set_style(id, label.style_label_up)\nlabel.set_size(id, size.small)\nlabel.set_tooltip(id, \"Tip\")\nlabel.set_text(na, \"noop\")\nlabel.delete(na)\nlabel.delete(id)\nplot(close)\n",
     );
 
     assert!(
@@ -354,7 +354,7 @@ fn accepts_label_mutation_methods() {
 #[test]
 fn rejects_label_mutation_inside_functions() {
     let analysis = analyze(
-        "change(id) => label.set_text(id, \"x\")\nid = label.new(bar_index, high, \"High\")\nchange(id)\nplot(close)\n",
+        "change(id) => label.delete(id)\nid = label.new(bar_index, high, \"High\")\nchange(id)\nplot(close)\n",
     );
 
     assert!(

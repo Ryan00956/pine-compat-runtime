@@ -288,7 +288,9 @@ the mutable label fields represented by normalized Pine values. Phase E starts
 with a `label.new` creation subset for `x`, `y`, `text`, `xloc.bar_index`,
 `yloc.price`, colors, selected label styles, size, and tooltip metadata, plus
 `label.set_*` mutation snapshots for x/y/text/color/style/size/tooltip fields.
-Deletion, realtime rollback, object limits, unsupported coordinate modes, and
+`label.delete` appends an `exists: false` snapshot, deleting `na` or an already
+deleted label is a no-op, and ids are not reused. The historical runtime caps
+labels at 500 objects. Realtime rollback, unsupported coordinate modes, and
 other drawing families are implemented in later Phase E slices.
 
 The `pine-runtime` crate owns the shared runtime-result JSON helpers used by the

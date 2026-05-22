@@ -51,6 +51,7 @@ const MAX_WHILE_ITERATIONS: usize = 100_000;
 const MAX_ARRAY_ELEMENTS: usize = 100_000;
 const MAX_STRING_CHARS: usize = 40_960;
 const MAX_SERIES_HISTORY_VALUES: usize = 1_000_000;
+const MAX_LABELS: usize = 500;
 const DEFAULT_CHART_TIMEFRAME: &str = "1";
 
 #[cfg(test)]

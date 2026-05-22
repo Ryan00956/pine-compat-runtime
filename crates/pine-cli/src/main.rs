@@ -413,6 +413,10 @@ mod tests {
                 "runtime_label_mutation.json",
                 "tests/fixtures/runtime/label_mutation.pine",
             ),
+            (
+                "runtime_label_delete.json",
+                "tests/fixtures/runtime/label_delete.pine",
+            ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));
         }

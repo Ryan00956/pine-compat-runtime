@@ -66,7 +66,9 @@ with bar-index coordinates, price y-values, text, `xloc.bar_index`,
 `yloc.price`, colors, selected label styles, size, and tooltip metadata. The
 first mutation subset covers `label.set_x`, `label.set_y`, `label.set_xy`,
 `label.set_text`, `label.set_color`, `label.set_textcolor`, `label.set_style`,
-`label.set_size`, and `label.set_tooltip`. Keep deletion, limits,
+`label.set_size`, and `label.set_tooltip`. `label.delete` emits `exists: false`
+snapshots; deleting `na` or an already deleted label is a no-op; ids are stable
+and not reused; label creation has a 500-object runtime limit. Keep
 realtime-specific behavior, unsupported coordinate modes, and other drawing
 families out of the supported matrix until they have fixtures and public-output
 coverage.

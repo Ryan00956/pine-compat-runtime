@@ -1,0 +1,10 @@
+//@version=5
+indicator("Label delete")
+var label_id = label.new(bar_index, high, "start")
+if bar_index == 1
+    label.delete(label_id)
+if bar_index == 2
+    label.set_text(label_id, "ignored")
+    label.delete(label_id)
+label.delete(na)
+plot(close)
