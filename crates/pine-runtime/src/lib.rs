@@ -1502,6 +1502,12 @@ impl<'a> HistoricalRuntime<'a> {
                 BarUpdateKind::Forming | BarUpdateKind::Confirmed
             ));
         }
+        if name == "session.ismarket" {
+            return PineValue::Bool(true);
+        }
+        if name == "session.ispremarket" || name == "session.ispostmarket" {
+            return PineValue::Bool(false);
+        }
         if name == "timeframe.period" {
             return PineValue::String(DEFAULT_CHART_TIMEFRAME.to_owned());
         }
@@ -12769,6 +12775,9 @@ plot(barstate.isfirst ? 1 : 0)
 plot(barstate.isconfirmed ? 1 : 0)
 plot(barstate.ishistory ? 1 : 0)
 plot(barstate.isrealtime ? 1 : 0)
+plot(session.ismarket ? 1 : 0)
+plot(session.ispremarket ? 1 : 0)
+plot(session.ispostmarket ? 1 : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -12785,6 +12794,9 @@ plot(barstate.isrealtime ? 1 : 0)
         assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[3].values, &[0.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[4].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[5].values, &[0.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[6].values, &[0.0, 0.0, 0.0]);
     }
 
     #[test]

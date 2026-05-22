@@ -100,6 +100,8 @@
 - Added a numeric UTC subset of `timestamp`.
 - Added `barstate.isfirst`, `barstate.isconfirmed`, `barstate.ishistory`,
   and `barstate.isrealtime`.
+- Added fixed-default regular-session `session.ismarket`,
+  `session.ispremarket`, and `session.ispostmarket`.
 - Added `bgcolor` and `barcolor` support with bar-aligned color output series.
 - Added common `plot`, `hline`, `fill`, `bgcolor`, and `barcolor` metadata
   parameters for style/display compatibility; runtime output series remain

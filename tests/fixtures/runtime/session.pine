@@ -1,0 +1,5 @@
+//@version=5
+indicator("Session")
+plot(session.ismarket ? 1 : 0)
+plot(session.ispremarket ? 1 : 0)
+plot(session.ispostmarket ? 1 : 0)

@@ -261,6 +261,8 @@ Candidate areas:
   for common string, tick-size, and price-scale fields.
 - Initial `barstate.*` coverage includes `barstate.isfirst`,
   `barstate.isconfirmed`, `barstate.ishistory`, and `barstate.isrealtime`.
+- Initial session-state coverage includes fixed-default `session.ismarket`,
+  `session.ispremarket`, and `session.ispostmarket`.
 - Initial `input.*` metadata coverage accepts common min/max/step, `options`,
   `tooltip`, `inline`, `group`, `confirm`, and `display` parameters while
   continuing to execute the `defval` value. Additional string-like input

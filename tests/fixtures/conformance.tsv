@@ -54,6 +54,9 @@ barstate.isfirst	supported	true only on the first runtime bar	tests/fixtures/run
 barstate.isconfirmed	supported	false only for forming realtime updates	tests/fixtures/runtime/barstate.pine
 barstate.ishistory	supported	true for historical updates	tests/fixtures/runtime/barstate.pine
 barstate.isrealtime	supported	true for forming and confirmed realtime updates	tests/fixtures/runtime/barstate.pine
+session.ismarket	supported	fixed default regular-session state subset	tests/fixtures/runtime/session.pine
+session.ispremarket	supported	fixed default regular-session state subset	tests/fixtures/runtime/session.pine
+session.ispostmarket	supported	fixed default regular-session state subset	tests/fixtures/runtime/session.pine
 plot	supported	series output plus common style/display metadata parameter subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/if.pine
 plotchar	supported	bool/numeric marker series with const char, color-compatible color, and common marker metadata parameters	tests/fixtures/runtime/plotchar.pine
 plotshape	supported	bool/numeric marker series with style/location/text/size constants and common marker metadata parameters	tests/fixtures/runtime/plotshape.pine

@@ -102,6 +102,18 @@ barstate.isrealtime -> series bool
 `barstate.ishistory` is `true` for historical updates. `barstate.isrealtime`
 is `true` for forming and confirmed realtime updates.
 
+Session state:
+
+```text
+session.ismarket -> series bool
+session.ispremarket -> series bool
+session.ispostmarket -> series bool
+```
+
+The current subset assumes every runtime bar is in the regular session:
+`session.ismarket` is `true`, while `session.ispremarket` and
+`session.ispostmarket` are `false`.
+
 Symbol info:
 
 ```text
