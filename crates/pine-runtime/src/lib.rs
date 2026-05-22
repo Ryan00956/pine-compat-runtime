@@ -432,6 +432,7 @@ pub struct HistoricalRuntime<'a> {
     vwap_call_state: HashMap<CallSiteId, VwapState>,
     pivot_point_state: HashMap<CallSiteId, PivotPointState>,
     random_state: HashMap<CallSiteId, u64>,
+    previous_bar_time: Option<i64>,
     price_flow_previous_close: Option<f64>,
     price_flow_previous_volume: Option<f64>,
     accdist_state: PineValue,
@@ -727,6 +728,7 @@ impl<'a> HistoricalRuntime<'a> {
             vwap_call_state: HashMap::new(),
             pivot_point_state: HashMap::new(),
             random_state: HashMap::new(),
+            previous_bar_time: None,
             price_flow_previous_close: None,
             price_flow_previous_volume: None,
             accdist_state: PineValue::Na,
@@ -811,6 +813,7 @@ impl<'a> HistoricalRuntime<'a> {
 
         self.finalize_series_outputs();
         self.commit_current_series()?;
+        self.previous_bar_time = Some(bar.time);
         self.bars += 1;
         self.current_bar_update_kind = BarUpdateKind::Historical;
         Ok(())
@@ -2086,6 +2089,7 @@ impl<'a> HistoricalRuntime<'a> {
             "timestamp" => self.eval_timestamp(args),
             "timeframe.in_seconds" => self.eval_timeframe_in_seconds(args),
             "timeframe.from_seconds" => self.eval_timeframe_from_seconds(args),
+            "timeframe.change" => self.eval_timeframe_change(args),
             "int" => self.eval_int_cast(args),
             "float" => self.eval_float_cast(args),
             "bool" => self.eval_bool_cast(args),
@@ -5866,6 +5870,45 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::String(timeframe))
     }
 
+    fn eval_timeframe_change(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = args.first() else {
+            return Ok(PineValue::Na);
+        };
+        let timeframe = match self.eval_expr(&arg.value)? {
+            PineValue::String(value) => value,
+            PineValue::Na => return Ok(PineValue::Na),
+            _ => return Ok(PineValue::Na),
+        };
+        let timeframe = if timeframe.is_empty() {
+            DEFAULT_CHART_TIMEFRAME
+        } else {
+            timeframe.trim()
+        };
+        let Some(seconds) = timeframe_seconds(timeframe) else {
+            return Err(RuntimeError {
+                message: format!("timeframe.change unsupported timeframe `{timeframe}`"),
+            });
+        };
+        let Some(current_time) = self.current_builtin_i64("time") else {
+            return Ok(PineValue::Na);
+        };
+        let Some(previous_time) = self.previous_bar_time else {
+            return Ok(PineValue::Bool(true));
+        };
+        let Some(current_bucket) = timeframe_bucket(current_time, seconds) else {
+            return Err(RuntimeError {
+                message: format!("timeframe.change unsupported timeframe `{timeframe}`"),
+            });
+        };
+        let Some(previous_bucket) = timeframe_bucket(previous_time, seconds) else {
+            return Err(RuntimeError {
+                message: format!("timeframe.change unsupported timeframe `{timeframe}`"),
+            });
+        };
+
+        Ok(PineValue::Bool(current_bucket != previous_bucket))
+    }
+
     fn eval_optional_timestamp_part(
         &mut self,
         args: &[HirCallArg],
@@ -6238,6 +6281,15 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn previous_builtin_f64(&self, name: &str) -> Option<f64> {
         self.builtin_f64_at(name, 1)
+    }
+
+    fn current_builtin_i64(&self, name: &str) -> Option<i64> {
+        let symbol = self
+            .program
+            .symbols
+            .iter()
+            .find(|symbol| symbol.name == name)?;
+        self.current_symbols.get(&symbol.id)?.as_i64()
     }
 
     fn previous_close(&self) -> Option<f64> {
@@ -7874,6 +7926,14 @@ fn timeframe_from_seconds(seconds: i64) -> Option<String> {
     }
 
     None
+}
+
+fn timeframe_bucket(timestamp_ms: i64, seconds: i64) -> Option<i64> {
+    let duration_ms = seconds.checked_mul(1000)?;
+    if duration_ms <= 0 {
+        return None;
+    }
+    Some(timestamp_ms.div_euclid(duration_ms))
 }
 
 fn timeframe_seconds(timeframe: &str) -> Option<i64> {
@@ -11712,6 +11772,7 @@ plot(timeframe.from_seconds(timeframe.in_seconds("45S")) == "45S" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("D")) == "D" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("2W")) == "2W" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("3M")) == "3M" ? 1 : 0)
+plot(timeframe.change("1") ? 1 : 0)
 plot(timeframe.isminutes and timeframe.isintraday and not timeframe.isseconds and not timeframe.isdaily and not timeframe.isweekly and not timeframe.ismonthly and not timeframe.isdwm ? 1 : 0)
 plot(timeframe.multiplier)
 "#,
@@ -11741,8 +11802,75 @@ plot(timeframe.multiplier)
         assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
         assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
-        assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[15].values, &[1.0, 0.0]);
         assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
+    }
+
+    #[test]
+    fn runs_timeframe_change() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("timeframe change")
+plot(timeframe.change("1") ? 1 : 0)
+plot(timeframe.change("D") ? 1 : 0)
+plot(na(timeframe.change(na)) ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let bars = vec![
+            Bar {
+                time: 0,
+                open: 1.0,
+                high: 1.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 30_000,
+                open: 2.0,
+                high: 2.0,
+                low: 2.0,
+                close: 2.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 60_000,
+                open: 3.0,
+                high: 3.0,
+                low: 3.0,
+                close: 3.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 86_400_000,
+                open: 4.0,
+                high: 4.0,
+                low: 4.0,
+                close: 4.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 86_460_000,
+                open: 5.0,
+                high: 5.0,
+                low: 5.0,
+                close: 5.0,
+                volume: 1.0,
+            },
+        ];
+        let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
+
+        assert_values_close(&result.plots[0].values, &[1.0, 0.0, 1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[1].values, &[1.0, 0.0, 0.0, 1.0, 0.0]);
+        assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0, 1.0, 1.0]);
     }
 
     #[test]
@@ -11789,6 +11917,30 @@ plot(timeframe.from_seconds(46) == "" ? 1 : 0)
         assert!(
             err.message
                 .contains("timeframe.from_seconds unsupported seconds `46`"),
+            "unexpected error: {err:?}"
+        );
+    }
+
+    #[test]
+    fn rejects_unsupported_timeframe_change_timeframe() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("bad timeframe change")
+plot(timeframe.change("1H") ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let err = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+            .expect_err("expected timeframe error");
+        assert!(
+            err.message
+                .contains("timeframe.change unsupported timeframe `1H`"),
             "unexpected error: {err:?}"
         );
     }

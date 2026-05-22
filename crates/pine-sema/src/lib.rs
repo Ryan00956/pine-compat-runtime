@@ -5505,8 +5505,9 @@ plot(year(ts) + month(ts, "UTC") + weekofyear(ts) + dayofmonth(ts) + dayofweek(t
 tf = input.timeframe("60", "TF")
 seconds = timeframe.in_seconds() + timeframe.in_seconds(tf) + timeframe.in_seconds("D")
 roundtrip = timeframe.from_seconds(timeframe.in_seconds(tf)) == tf
+tf_change = timeframe.change("D")
 is_one_minute = timeframe.isminutes and timeframe.isintraday and not timeframe.isseconds and not timeframe.isdaily and not timeframe.isweekly and not timeframe.ismonthly and not timeframe.isdwm and timeframe.multiplier == 1
-plot(timeframe.period == "1" and is_one_minute and roundtrip ? seconds : 0)
+plot(timeframe.period == "1" and is_one_minute and roundtrip and tf_change ? seconds : 0)
 "#,
         );
 
@@ -5518,6 +5519,7 @@ plot(timeframe.period == "1" and is_one_minute and roundtrip ? seconds : 0)
         for feature in [
             "timeframe.in_seconds",
             "timeframe.from_seconds",
+            "timeframe.change",
             "timeframe.period",
             "timeframe.isseconds",
             "timeframe.isminutes",

@@ -36,6 +36,7 @@ timestamp	supported	numeric UTC timestamp subset	tests/fixtures/runtime/time_com
 timeframe.period	supported	fixed default chart timeframe string subset	tests/fixtures/runtime/timeframe.pine
 timeframe.in_seconds	supported	explicit timeframe string to seconds subset plus fixed default chart timeframe	tests/fixtures/runtime/timeframe.pine
 timeframe.from_seconds	supported	explicit seconds to timeframe string subset	tests/fixtures/runtime/timeframe.pine
+timeframe.change	supported	UTC bucket change detection over supported timeframe string subset	tests/fixtures/runtime/timeframe.pine
 timeframe.isseconds	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
 timeframe.isminutes	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
 timeframe.isintraday	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine

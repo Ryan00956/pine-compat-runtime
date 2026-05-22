@@ -137,6 +137,7 @@ Timeframe helpers:
 ```text
 timeframe.in_seconds(timeframe?: simple string) -> simple int
 timeframe.from_seconds(seconds: simple int) -> simple string
+timeframe.change(timeframe: simple string) -> series bool
 ```
 
 The current subset assumes a fixed default chart timeframe of `1` minute, so
@@ -153,6 +154,9 @@ errors in this subset. `timeframe.from_seconds` supports the exact reverse
 conversion for values representable in that subset, preferring canonical
 strings such as `"1"`, `"D"`, `"W"`, and `"M"` over equivalent longer forms.
 Non-positive or otherwise unrepresentable second counts are runtime errors.
+`timeframe.change` uses the same supported timeframe string subset and returns
+`true` on the first executed bar or when the UTC timeframe bucket changes from
+the previous committed bar.
 
 Type casts:
 
