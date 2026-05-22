@@ -1,0 +1,12 @@
+use crate::{Analysis, CompileCache, CompileCacheStats, analyze_source};
+use pine_ir::{HirStmtKind, VarSlotId};
+use pine_syntax::SourceFile;
+
+fn analyze(text: &str) -> Analysis {
+    analyze_source(&SourceFile::new("test.pine", text))
+}
+
+mod compatibility;
+mod lowering;
+mod scopes;
+mod type_inference;
