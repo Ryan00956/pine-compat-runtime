@@ -10,180 +10,25 @@ use pine_ir::{
 };
 use regex::Regex;
 
+mod bar;
+mod error;
+mod retention;
+mod series;
+mod value;
+
+pub use bar::{Bar, BarUpdate, BarUpdateKind};
+pub use error::RuntimeError;
+pub use retention::HistoryRetentionMode;
+pub use series::SeriesStore;
+pub use value::PineValue;
+
+use retention::SeriesRetention;
+
 const MAX_WHILE_ITERATIONS: usize = 100_000;
 const MAX_ARRAY_ELEMENTS: usize = 100_000;
 const MAX_STRING_CHARS: usize = 40_960;
 const MAX_SERIES_HISTORY_VALUES: usize = 1_000_000;
 const DEFAULT_CHART_TIMEFRAME: &str = "1";
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum PineValue {
-    Int(i64),
-    Float(f64),
-    Bool(bool),
-    String(String),
-    Color(u32),
-    Plot(u32),
-    HLine(u32),
-    Array(u32),
-    Tuple(Vec<PineValue>),
-    Na,
-    Void,
-}
-
-impl PineValue {
-    #[must_use]
-    pub fn is_na(&self) -> bool {
-        matches!(self, Self::Na)
-    }
-
-    #[must_use]
-    pub fn as_f64(&self) -> Option<f64> {
-        match self {
-            Self::Int(value) => Some(*value as f64),
-            Self::Float(value) => Some(*value),
-            _ => None,
-        }
-    }
-
-    #[must_use]
-    pub fn as_i64(&self) -> Option<i64> {
-        match self {
-            Self::Int(value) => Some(*value),
-            _ => None,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Bar {
-    pub time: i64,
-    pub open: f64,
-    pub high: f64,
-    pub low: f64,
-    pub close: f64,
-    pub volume: f64,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BarUpdateKind {
-    Historical,
-    Forming,
-    Confirmed,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct BarUpdate {
-    pub bar: Bar,
-    pub kind: BarUpdateKind,
-}
-
-impl BarUpdate {
-    #[must_use]
-    pub const fn historical(bar: Bar) -> Self {
-        Self {
-            bar,
-            kind: BarUpdateKind::Historical,
-        }
-    }
-
-    #[must_use]
-    pub const fn forming(bar: Bar) -> Self {
-        Self {
-            bar,
-            kind: BarUpdateKind::Forming,
-        }
-    }
-
-    #[must_use]
-    pub const fn confirmed(bar: Bar) -> Self {
-        Self {
-            bar,
-            kind: BarUpdateKind::Confirmed,
-        }
-    }
-
-    #[must_use]
-    pub const fn commits_series(self) -> bool {
-        matches!(
-            self.kind,
-            BarUpdateKind::Historical | BarUpdateKind::Confirmed
-        )
-    }
-}
-
-#[derive(Debug, Default, Clone, PartialEq)]
-pub struct SeriesStore {
-    current_bar: usize,
-    buffers: HashMap<SeriesId, Vec<PineValue>>,
-}
-
-impl SeriesStore {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn set_current_bar(&mut self, current_bar: usize) {
-        self.current_bar = current_bar;
-    }
-
-    #[must_use]
-    pub fn current_bar(&self) -> usize {
-        self.current_bar
-    }
-
-    pub fn commit(&mut self, series_id: SeriesId, value: PineValue, max_depth: Option<usize>) {
-        if matches!(max_depth, Some(0)) {
-            self.buffers.remove(&series_id);
-            return;
-        }
-
-        let buffer = self.buffers.entry(series_id).or_default();
-        buffer.push(value);
-        if let Some(max_depth) = max_depth {
-            trim_series_buffer(buffer, max_depth);
-        }
-    }
-
-    #[must_use]
-    pub fn values_len(&self) -> usize {
-        self.buffers.values().map(Vec::len).sum()
-    }
-
-    #[must_use]
-    pub fn max_depth(&self) -> usize {
-        self.buffers.values().map(Vec::len).max().unwrap_or(0)
-    }
-
-    #[must_use]
-    pub fn len(&self, series_id: SeriesId) -> usize {
-        self.buffers.get(&series_id).map(Vec::len).unwrap_or(0)
-    }
-
-    #[must_use]
-    pub fn read(&self, series_id: SeriesId, offset: usize) -> PineValue {
-        if offset == 0 {
-            return PineValue::Na;
-        }
-
-        let Some(buffer) = self.buffers.get(&series_id) else {
-            return PineValue::Na;
-        };
-        if offset > buffer.len() {
-            return PineValue::Na;
-        }
-
-        buffer[buffer.len() - offset].clone()
-    }
-}
-
-fn trim_series_buffer(buffer: &mut Vec<PineValue>, max_depth: usize) {
-    if buffer.len() > max_depth {
-        let excess = buffer.len() - max_depth;
-        buffer.drain(0..excess);
-    }
-}
 
 pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = 1;
 
@@ -271,13 +116,6 @@ pub struct RuntimeProfile {
     pub hline_capacity: usize,
     pub fills: usize,
     pub fill_capacity: usize,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum HistoryRetentionMode {
-    StaticTrimmed,
-    DynamicFull,
-    MaxBarsBack,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -788,11 +626,6 @@ fn json_escape(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RuntimeError {
-    pub message: String,
-}
-
 pub fn run_historical(program: &HirProgram, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
     HistoricalRuntime::new(program).run(bars)
 }
@@ -857,64 +690,6 @@ pub struct HistoricalRuntime<'a> {
     bar_colors: Vec<ColorSeries>,
     hlines: Vec<HLineOutput>,
     fills: Vec<FillOutput>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct SeriesRetention {
-    static_depths: Option<HashMap<SeriesId, usize>>,
-    max_bars_back: Option<usize>,
-}
-
-impl SeriesRetention {
-    fn from_program(program: &HirProgram) -> Self {
-        if program.history.has_dynamic_offsets {
-            return Self {
-                static_depths: None,
-                max_bars_back: program.max_bars_back.map(|value| value as usize),
-            };
-        }
-
-        Self {
-            static_depths: Some(
-                program
-                    .series_history
-                    .iter()
-                    .map(|requirement| {
-                        (
-                            requirement.series_id,
-                            requirement.max_constant_offset as usize,
-                        )
-                    })
-                    .collect(),
-            ),
-            max_bars_back: program.max_bars_back.map(|value| value as usize),
-        }
-    }
-
-    fn max_depth_for(&self, series_id: SeriesId) -> Option<usize> {
-        match (&self.static_depths, self.max_bars_back) {
-            (Some(depths), Some(max_bars_back)) => Some(
-                depths
-                    .get(&series_id)
-                    .copied()
-                    .unwrap_or(0)
-                    .min(max_bars_back),
-            ),
-            (Some(depths), None) => Some(depths.get(&series_id).copied().unwrap_or(0)),
-            (None, Some(max_bars_back)) => Some(max_bars_back),
-            (None, None) => None,
-        }
-    }
-
-    fn mode(&self) -> HistoryRetentionMode {
-        if self.max_bars_back.is_some() {
-            HistoryRetentionMode::MaxBarsBack
-        } else if self.static_depths.is_some() {
-            HistoryRetentionMode::StaticTrimmed
-        } else {
-            HistoryRetentionMode::DynamicFull
-        }
-    }
 }
 
 pub struct RealtimeRuntime<'a> {
