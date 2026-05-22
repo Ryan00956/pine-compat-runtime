@@ -66,6 +66,7 @@ minute    -> series int
 second    -> series int
 hl2       -> series float
 hlc3      -> series float
+hlcc4     -> series float
 ohlc4     -> series float
 bar_index -> series int
 timeframe.period -> simple string
@@ -210,6 +211,7 @@ Derived values:
 ```text
 hl2   = (high + low) / 2
 hlc3  = (high + low + close) / 3
+hlcc4 = (high + low + close + close) / 4
 ohlc4 = (open + high + low + close) / 4
 ```
 

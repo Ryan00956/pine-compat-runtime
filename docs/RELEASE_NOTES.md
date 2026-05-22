@@ -122,8 +122,8 @@
 - Accepted `confirm` metadata on `input.source`.
 - Added explicit `str.tostring` handling for `format.price` and
   `format.volume`.
-- Added dedicated conformance coverage for global OHLCV, derived price, time,
-  and `bar_index` series.
+- Added dedicated conformance coverage for global OHLCV, derived price
+  (`hl2`, `hlc3`, `hlcc4`, `ohlc4`), time, and `bar_index` series.
 - Added basic `plotshape` support with bar-aligned values, style, location,
   color, text, text color, and size marker output.
 - Added basic `plotarrow` support with bar-aligned numeric values, up/down

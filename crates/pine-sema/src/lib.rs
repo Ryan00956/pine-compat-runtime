@@ -3370,6 +3370,7 @@ const INITIAL_SYMBOLS: &[(&str, PineType)] = &[
     ("second", PineType::new(Qualifier::Series, ValueKind::Int)),
     ("hl2", PineType::new(Qualifier::Series, ValueKind::Float)),
     ("hlc3", PineType::new(Qualifier::Series, ValueKind::Float)),
+    ("hlcc4", PineType::new(Qualifier::Series, ValueKind::Float)),
     ("ohlc4", PineType::new(Qualifier::Series, ValueKind::Float)),
     (
         "bar_index",
@@ -5599,7 +5600,7 @@ plot(timeframe.period == "1" and is_one_minute and roundtrip and tf_change ? sec
     #[test]
     fn accepts_global_price_and_derived_series() {
         let analysis = analyze(
-            "plot(open + high + low + close + volume + time + time_close + hl2 + hlc3 + ohlc4 + bar_index)\n",
+            "plot(open + high + low + close + volume + time + time_close + hl2 + hlc3 + hlcc4 + ohlc4 + bar_index)\n",
         );
 
         assert!(

@@ -263,6 +263,8 @@ Candidate areas:
   `barstate.isconfirmed`, `barstate.ishistory`, and `barstate.isrealtime`.
 - Initial session-state coverage includes fixed-default `session.ismarket`,
   `session.ispremarket`, and `session.ispostmarket`.
+- Initial global derived source coverage includes `hl2`, `hlc3`, `hlcc4`, and
+  `ohlc4` as bar-local OHLC price series.
 - Initial `input.*` metadata coverage accepts common min/max/step, `options`,
   `tooltip`, `inline`, `group`, `confirm`, and `display` parameters while
   continuing to execute the `defval` value. Additional string-like input

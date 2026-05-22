@@ -1262,6 +1262,10 @@ impl<'a> HistoricalRuntime<'a> {
                 PineValue::Float((bar.high + bar.low + bar.close) / 3.0),
             ),
             (
+                "hlcc4",
+                PineValue::Float((bar.high + bar.low + bar.close + bar.close) / 4.0),
+            ),
+            (
                 "ohlc4",
                 PineValue::Float((bar.open + bar.high + bar.low + bar.close) / 4.0),
             ),
@@ -11965,6 +11969,7 @@ plot(time)
 plot(time_close)
 plot(hl2)
 plot(hlc3)
+plot(hlcc4)
 plot(ohlc4)
 plot(bar_index)
 "#,
@@ -12005,8 +12010,9 @@ plot(bar_index)
         assert_values_close(&result.plots[6].values, &[61_000.0, 62_000.0]);
         assert_values_close(&result.plots[7].values, &[2.0, 4.0]);
         assert_values_close(&result.plots[8].values, &[7.0 / 3.0, 4.0]);
-        assert_values_close(&result.plots[9].values, &[2.0, 3.5]);
-        assert_values_close(&result.plots[10].values, &[0.0, 1.0]);
+        assert_values_close(&result.plots[9].values, &[2.5, 4.0]);
+        assert_values_close(&result.plots[10].values, &[2.0, 3.5]);
+        assert_values_close(&result.plots[11].values, &[0.0, 1.0]);
     }
 
     #[test]
