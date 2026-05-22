@@ -19,6 +19,7 @@ low	supported	global OHLCV series value	tests/fixtures/runtime/global_series.pin
 close	supported	global OHLCV series value	tests/fixtures/runtime/global_series.pine
 volume	supported	global OHLCV series value	tests/fixtures/runtime/global_series.pine
 time	supported	global bar timestamp series value	tests/fixtures/runtime/global_series.pine
+time_close	supported	fixed default chart bar close timestamp series value	tests/fixtures/runtime/global_series.pine
 hl2	supported	(high + low) / 2 derived series	tests/fixtures/runtime/global_series.pine
 hlc3	supported	(high + low + close) / 3 derived series	tests/fixtures/runtime/global_series.pine
 ohlc4	supported	(open + high + low + close) / 4 derived series	tests/fixtures/runtime/global_series.pine

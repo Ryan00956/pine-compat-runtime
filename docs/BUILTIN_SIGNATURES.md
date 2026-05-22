@@ -55,6 +55,7 @@ low       -> series float
 close     -> series float
 volume    -> series float
 time      -> series int
+time_close -> series int
 year      -> series int
 month     -> series int
 weekofyear -> series int
@@ -83,7 +84,8 @@ and `second` currently expose UTC calendar components derived from each bar's
 `time`. Full exchange-timezone calendar semantics are not claimed until symbol
 timezone metadata exists. `dayofweek.sunday` through `dayofweek.saturday`
 evaluate to const ints `1` through `7`; `weekofyear` uses the UTC ISO week
-number in the current subset.
+number in the current subset. `time_close` uses the fixed default 1-minute
+chart timeframe and returns `time + 60000`.
 
 Bar state:
 

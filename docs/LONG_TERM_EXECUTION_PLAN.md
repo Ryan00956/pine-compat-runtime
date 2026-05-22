@@ -246,10 +246,11 @@ Candidate areas:
   `math.phi`, `math.rphi`, `math.pow`, `math.round`,
   `math.round_to_mintick`, `math.random`, and `math.sum`;
   string coverage includes `str.split`; time
-  helper coverage includes the numeric UTC `timestamp`, `weekofyear`, and
-  `dayofweek` subsets, plus a fixed-default `timeframe.period` and
-  `timeframe.in_seconds`/`timeframe.from_seconds` conversion subset, plus fixed-default
-  `timeframe.is*` and `timeframe.multiplier` metadata.
+  helper coverage includes the numeric UTC `timestamp`, `weekofyear`,
+  `dayofweek`, and fixed-default `time_close` subsets, plus a fixed-default
+  `timeframe.period` and `timeframe.in_seconds`/`timeframe.from_seconds`
+  conversion subset, plus fixed-default `timeframe.is*` and
+  `timeframe.multiplier` metadata.
 - Initial utility helper coverage includes `fixnan` for the current numeric
   and color last-non-`na` callsite subset.
 - Initial type-cast coverage includes the pure scalar `int`, `float`, `bool`,

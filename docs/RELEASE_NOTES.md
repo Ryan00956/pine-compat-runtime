@@ -147,6 +147,8 @@
 - Added a UTC subset of `str.format_time` timestamp formatting.
 - Added UTC `weekofyear` and `dayofweek` calendar variables/functions plus
   `dayofweek.*` constants.
+- Added fixed-default `time_close` using the current 1-minute chart timeframe
+  subset.
 - Added fixed-default `timeframe.period` and `timeframe.in_seconds` support for
   common seconds/minutes/days/weeks/months timeframe strings, plus
   `timeframe.from_seconds` for the exact reverse conversion subset.

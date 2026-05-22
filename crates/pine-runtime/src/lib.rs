@@ -1210,6 +1210,17 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn set_builtin_symbols(&mut self, bar: &Bar, bar_index: usize) -> Result<(), RuntimeError> {
         let datetime = utc_datetime_from_millis(bar.time)?;
+        let chart_duration_ms = timeframe_seconds(DEFAULT_CHART_TIMEFRAME)
+            .and_then(|seconds| seconds.checked_mul(1000))
+            .ok_or_else(|| RuntimeError {
+                message: "default chart timeframe duration is invalid".to_owned(),
+            })?;
+        let time_close = bar
+            .time
+            .checked_add(chart_duration_ms)
+            .ok_or_else(|| RuntimeError {
+                message: format!("time_close timestamp is out of range: {}", bar.time),
+            })?;
         let previous_close = self.price_flow_previous_close;
         let previous_volume = self.price_flow_previous_volume;
         self.accdist_current = self.next_accdist(bar);
@@ -1230,6 +1241,7 @@ impl<'a> HistoricalRuntime<'a> {
             ("close", PineValue::Float(bar.close)),
             ("volume", PineValue::Float(bar.volume)),
             ("time", PineValue::Int(bar.time)),
+            ("time_close", PineValue::Int(time_close)),
             ("year", PineValue::Int(datetime.year() as i64)),
             ("month", PineValue::Int(datetime.month() as i64)),
             (
@@ -11792,6 +11804,7 @@ plot(low)
 plot(close)
 plot(volume)
 plot(time)
+plot(time_close)
 plot(hl2)
 plot(hlc3)
 plot(ohlc4)
@@ -11831,10 +11844,11 @@ plot(bar_index)
         assert_values_close(&result.plots[3].values, &[3.0, 4.0]);
         assert_values_close(&result.plots[4].values, &[10.0, 20.0]);
         assert_values_close(&result.plots[5].values, &[1000.0, 2000.0]);
-        assert_values_close(&result.plots[6].values, &[2.0, 4.0]);
-        assert_values_close(&result.plots[7].values, &[7.0 / 3.0, 4.0]);
-        assert_values_close(&result.plots[8].values, &[2.0, 3.5]);
-        assert_values_close(&result.plots[9].values, &[0.0, 1.0]);
+        assert_values_close(&result.plots[6].values, &[61_000.0, 62_000.0]);
+        assert_values_close(&result.plots[7].values, &[2.0, 4.0]);
+        assert_values_close(&result.plots[8].values, &[7.0 / 3.0, 4.0]);
+        assert_values_close(&result.plots[9].values, &[2.0, 3.5]);
+        assert_values_close(&result.plots[10].values, &[0.0, 1.0]);
     }
 
     #[test]
