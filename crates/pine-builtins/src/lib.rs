@@ -2431,6 +2431,20 @@ pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "dayofweek",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIME_COMPONENT_PARAMS,
+        returns: ReturnSpec::PromotedInt,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "weekofyear",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIME_COMPONENT_PARAMS,
+        returns: ReturnSpec::PromotedInt,
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "hour",
         phase: BuiltinPhase::Phase1Core,
         params: TIME_COMPONENT_PARAMS,
@@ -3599,6 +3613,51 @@ const NAMED_FLOAT_CONSTANTS: &[NamedFloatConstant] = &[
 #[must_use]
 pub fn named_float_constant(name: &str) -> Option<f64> {
     NAMED_FLOAT_CONSTANTS
+        .iter()
+        .find(|constant| constant.name == name)
+        .map(|constant| constant.value)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct NamedIntConstant {
+    name: &'static str,
+    value: i64,
+}
+
+const NAMED_INT_CONSTANTS: &[NamedIntConstant] = &[
+    NamedIntConstant {
+        name: "dayofweek.sunday",
+        value: 1,
+    },
+    NamedIntConstant {
+        name: "dayofweek.monday",
+        value: 2,
+    },
+    NamedIntConstant {
+        name: "dayofweek.tuesday",
+        value: 3,
+    },
+    NamedIntConstant {
+        name: "dayofweek.wednesday",
+        value: 4,
+    },
+    NamedIntConstant {
+        name: "dayofweek.thursday",
+        value: 5,
+    },
+    NamedIntConstant {
+        name: "dayofweek.friday",
+        value: 6,
+    },
+    NamedIntConstant {
+        name: "dayofweek.saturday",
+        value: 7,
+    },
+];
+
+#[must_use]
+pub fn named_int_constant(name: &str) -> Option<i64> {
+    NAMED_INT_CONSTANTS
         .iter()
         .find(|constant| constant.name == name)
         .map(|constant| constant.value)

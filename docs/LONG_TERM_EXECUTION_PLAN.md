@@ -245,7 +245,8 @@ Candidate areas:
   `math.avg`, `math.e`, `math.pi`, `math.phi`, `math.rphi`, `math.pow`,
   `math.round`, `math.round_to_mintick`, `math.random`, and `math.sum`;
   string coverage includes `str.split`; time
-  helper coverage includes the numeric UTC `timestamp` subset.
+  helper coverage includes the numeric UTC `timestamp`, `weekofyear`, and
+  `dayofweek` subsets.
 - Initial utility helper coverage includes `fixnan` for the current numeric
   and color last-non-`na` callsite subset.
 - Initial type-cast coverage includes the pure scalar `int`, `float`, `bool`,

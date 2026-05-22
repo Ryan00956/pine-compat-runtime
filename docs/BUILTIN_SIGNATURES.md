@@ -57,7 +57,9 @@ volume    -> series float
 time      -> series int
 year      -> series int
 month     -> series int
+weekofyear -> series int
 dayofmonth -> series int
+dayofweek -> series int
 hour      -> series int
 minute    -> series int
 second    -> series int
@@ -67,9 +69,12 @@ ohlc4     -> series float
 bar_index -> series int
 ```
 
-`year`, `month`, `dayofmonth`, `hour`, `minute`, and `second` currently expose
-UTC calendar components derived from each bar's `time`. Full exchange-timezone
-calendar semantics are not claimed until symbol timezone metadata exists.
+`year`, `month`, `weekofyear`, `dayofmonth`, `dayofweek`, `hour`, `minute`,
+and `second` currently expose UTC calendar components derived from each bar's
+`time`. Full exchange-timezone calendar semantics are not claimed until symbol
+timezone metadata exists. `dayofweek.sunday` through `dayofweek.saturday`
+evaluate to const ints `1` through `7`; `weekofyear` uses the UTC ISO week
+number in the current subset.
 
 Bar state:
 
@@ -100,7 +105,9 @@ The same names are also supported as functions over a timestamp:
 ```text
 year(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 month(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
+weekofyear(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 dayofmonth(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
+dayofweek(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 hour(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 minute(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 second(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier

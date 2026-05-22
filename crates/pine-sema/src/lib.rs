@@ -1493,6 +1493,13 @@ impl Analyzer {
             });
             return Some(PineType::new(Qualifier::Const, ValueKind::Float));
         }
+        if pine_builtins::named_int_constant(name).is_some() {
+            self.compatibility.supported.push(FeatureUse {
+                feature: name.to_owned(),
+                span,
+            });
+            return Some(PineType::new(Qualifier::Const, ValueKind::Int));
+        }
         if pine_builtins::named_string_constant(name).is_some() {
             self.compatibility.supported.push(FeatureUse {
                 feature: name.to_owned(),
@@ -2338,6 +2345,10 @@ impl Analyzer {
                     .or_else(|| {
                         pine_builtins::named_float_constant(&name)
                             .map(|_| PineType::new(Qualifier::Const, ValueKind::Float))
+                    })
+                    .or_else(|| {
+                        pine_builtins::named_int_constant(&name)
+                            .map(|_| PineType::new(Qualifier::Const, ValueKind::Int))
                     })
                     .or_else(|| {
                         pine_builtins::named_string_constant(&name)
@@ -3339,7 +3350,15 @@ const INITIAL_SYMBOLS: &[(&str, PineType)] = &[
     ("year", PineType::new(Qualifier::Series, ValueKind::Int)),
     ("month", PineType::new(Qualifier::Series, ValueKind::Int)),
     (
+        "weekofyear",
+        PineType::new(Qualifier::Series, ValueKind::Int),
+    ),
+    (
         "dayofmonth",
+        PineType::new(Qualifier::Series, ValueKind::Int),
+    ),
+    (
+        "dayofweek",
         PineType::new(Qualifier::Series, ValueKind::Int),
     ),
     ("hour", PineType::new(Qualifier::Series, ValueKind::Int)),
@@ -5439,7 +5458,7 @@ plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_tim
         let analysis = analyze(
             r#"indicator("time helpers")
 ts = timestamp(2021, 2, 2, 3, 4, 5)
-plot(year(ts) + month(ts, "UTC") + dayofmonth(ts) + hour(ts) + minute(ts) + second(ts))
+plot(year(ts) + month(ts, "UTC") + weekofyear(ts) + dayofmonth(ts) + dayofweek(ts) + hour(ts) + minute(ts) + second(ts) + (dayofweek == dayofweek.friday ? 1 : 0))
 "#,
         );
 
@@ -5452,7 +5471,10 @@ plot(year(ts) + month(ts, "UTC") + dayofmonth(ts) + hour(ts) + minute(ts) + seco
             "timestamp",
             "year",
             "month",
+            "weekofyear",
             "dayofmonth",
+            "dayofweek",
+            "dayofweek.friday",
             "hour",
             "minute",
             "second",

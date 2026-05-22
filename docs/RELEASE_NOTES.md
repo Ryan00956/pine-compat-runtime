@@ -145,6 +145,8 @@
 - Added `str.split` support for literal separators and empty-separator
   character splitting.
 - Added a UTC subset of `str.format_time` timestamp formatting.
+- Added UTC `weekofyear` and `dayofweek` calendar variables/functions plus
+  `dayofweek.*` constants.
 - Added `int`, `float`, `bool`, `string`, and `color` scalar type casts for
   numeric, bool, string, color, and `na` values.
 - Added `fixnan` support for carrying forward the last non-`na` numeric or

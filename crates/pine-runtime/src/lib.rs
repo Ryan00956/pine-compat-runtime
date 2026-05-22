@@ -1231,7 +1231,12 @@ impl<'a> HistoricalRuntime<'a> {
             ("time", PineValue::Int(bar.time)),
             ("year", PineValue::Int(datetime.year() as i64)),
             ("month", PineValue::Int(datetime.month() as i64)),
+            (
+                "weekofyear",
+                PineValue::Int(datetime.iso_week().week() as i64),
+            ),
             ("dayofmonth", PineValue::Int(datetime.day() as i64)),
+            ("dayofweek", PineValue::Int(dayofweek_value(datetime))),
             ("hour", PineValue::Int(datetime.hour() as i64)),
             ("minute", PineValue::Int(datetime.minute() as i64)),
             ("second", PineValue::Int(datetime.second() as i64)),
@@ -2032,7 +2037,9 @@ impl<'a> HistoricalRuntime<'a> {
             "str.format_time" => self.eval_str_format_time(args),
             "year" => self.eval_time_component(args, TimeComponent::Year),
             "month" => self.eval_time_component(args, TimeComponent::Month),
+            "weekofyear" => self.eval_time_component(args, TimeComponent::WeekOfYear),
             "dayofmonth" => self.eval_time_component(args, TimeComponent::DayOfMonth),
+            "dayofweek" => self.eval_time_component(args, TimeComponent::DayOfWeek),
             "hour" => self.eval_time_component(args, TimeComponent::Hour),
             "minute" => self.eval_time_component(args, TimeComponent::Minute),
             "second" => self.eval_time_component(args, TimeComponent::Second),
@@ -7427,6 +7434,9 @@ fn eval_static_builtin_value(name: &str) -> PineValue {
     if let Some(value) = pine_builtins::named_float_constant(name) {
         return PineValue::Float(value);
     }
+    if let Some(value) = pine_builtins::named_int_constant(name) {
+        return PineValue::Int(value);
+    }
     pine_builtins::named_string_constant(name)
         .map(|constant| PineValue::String(constant.to_owned()))
         .unwrap_or(PineValue::Void)
@@ -7504,7 +7514,9 @@ fn color_component(color: u32, component: ColorComponent) -> f64 {
 enum TimeComponent {
     Year,
     Month,
+    WeekOfYear,
     DayOfMonth,
+    DayOfWeek,
     Hour,
     Minute,
     Second,
@@ -7515,7 +7527,9 @@ impl TimeComponent {
         match self {
             Self::Year => "year",
             Self::Month => "month",
+            Self::WeekOfYear => "weekofyear",
             Self::DayOfMonth => "dayofmonth",
+            Self::DayOfWeek => "dayofweek",
             Self::Hour => "hour",
             Self::Minute => "minute",
             Self::Second => "second",
@@ -7526,12 +7540,18 @@ impl TimeComponent {
         match self {
             Self::Year => datetime.year() as i64,
             Self::Month => datetime.month() as i64,
+            Self::WeekOfYear => datetime.iso_week().week() as i64,
             Self::DayOfMonth => datetime.day() as i64,
+            Self::DayOfWeek => dayofweek_value(datetime),
             Self::Hour => datetime.hour() as i64,
             Self::Minute => datetime.minute() as i64,
             Self::Second => datetime.second() as i64,
         }
     }
+}
+
+fn dayofweek_value(datetime: DateTime<Utc>) -> i64 {
+    i64::from(datetime.weekday().num_days_from_sunday()) + 1
 }
 
 fn replace_nth_non_overlapping(
@@ -11408,7 +11428,9 @@ plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_tim
             r#"indicator("time components")
 plot(year)
 plot(month)
+plot(weekofyear)
 plot(dayofmonth)
+plot(dayofweek)
 plot(hour)
 plot(minute)
 plot(second)
@@ -11417,11 +11439,15 @@ made_ts = timestamp(2021, 2, 2, 3, 4, 5)
 date_ts = timestamp(2021, 1, 1)
 plot(year(ts))
 plot(month(ts, "UTC"))
+plot(weekofyear(ts))
 plot(dayofmonth(ts))
+plot(dayofweek(ts))
 plot(hour(ts))
 plot(minute(ts))
 plot(second(ts))
-plot(na(year(na)) ? 1 : 0)
+plot(dayofweek == dayofweek.friday ? 1 : 0)
+plot(dayofweek(ts) == dayofweek.tuesday ? 1 : 0)
+plot(na(year(na)) and na(weekofyear(na)) and na(dayofweek(na)) ? 1 : 0)
 plot(made_ts == ts and date_ts == 1609459200000 ? 1 : 0)
 plot(na(timestamp(na, 1, 1)) ? 1 : 0)
 "#,
@@ -11455,19 +11481,25 @@ plot(na(timestamp(na, 1, 1)) ? 1 : 0)
 
         assert_values_close(&result.plots[0].values, &[2021.0, 2021.0]);
         assert_values_close(&result.plots[1].values, &[1.0, 2.0]);
-        assert_values_close(&result.plots[2].values, &[1.0, 2.0]);
-        assert_values_close(&result.plots[3].values, &[0.0, 3.0]);
-        assert_values_close(&result.plots[4].values, &[0.0, 4.0]);
-        assert_values_close(&result.plots[5].values, &[0.0, 5.0]);
-        assert_values_close(&result.plots[6].values, &[2021.0, 2021.0]);
-        assert_values_close(&result.plots[7].values, &[2.0, 2.0]);
-        assert_values_close(&result.plots[8].values, &[2.0, 2.0]);
-        assert_values_close(&result.plots[9].values, &[3.0, 3.0]);
-        assert_values_close(&result.plots[10].values, &[4.0, 4.0]);
-        assert_values_close(&result.plots[11].values, &[5.0, 5.0]);
-        assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
-        assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
-        assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[2].values, &[53.0, 5.0]);
+        assert_values_close(&result.plots[3].values, &[1.0, 2.0]);
+        assert_values_close(&result.plots[4].values, &[6.0, 3.0]);
+        assert_values_close(&result.plots[5].values, &[0.0, 3.0]);
+        assert_values_close(&result.plots[6].values, &[0.0, 4.0]);
+        assert_values_close(&result.plots[7].values, &[0.0, 5.0]);
+        assert_values_close(&result.plots[8].values, &[2021.0, 2021.0]);
+        assert_values_close(&result.plots[9].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[10].values, &[5.0, 5.0]);
+        assert_values_close(&result.plots[11].values, &[2.0, 2.0]);
+        assert_values_close(&result.plots[12].values, &[3.0, 3.0]);
+        assert_values_close(&result.plots[13].values, &[3.0, 3.0]);
+        assert_values_close(&result.plots[14].values, &[4.0, 4.0]);
+        assert_values_close(&result.plots[15].values, &[5.0, 5.0]);
+        assert_values_close(&result.plots[16].values, &[1.0, 0.0]);
+        assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
+        assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
     }
 
     #[test]
