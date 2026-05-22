@@ -1,0 +1,162 @@
+use pine_ir::{CallSiteId, HirCallArg};
+
+use crate::*;
+
+pub(crate) fn eval_static_builtin_value(name: &str) -> PineValue {
+    if let Some(color) = pine_builtins::named_color(name) {
+        return PineValue::Color(color);
+    }
+    if let Some(value) = pine_builtins::named_float_constant(name) {
+        return PineValue::Float(value);
+    }
+    if let Some(value) = pine_builtins::named_int_constant(name) {
+        return PineValue::Int(value);
+    }
+    pine_builtins::named_string_constant(name)
+        .map(|constant| PineValue::String(constant.to_owned()))
+        .unwrap_or(PineValue::Void)
+}
+
+impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_input(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        self.eval_expr(&args[0].value)
+    }
+
+    pub(crate) fn eval_na(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let value = self.eval_expr(&args[0].value)?;
+        Ok(PineValue::Bool(value.is_na()))
+    }
+
+    pub(crate) fn eval_nz(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let value = self.eval_expr(&args[0].value)?;
+        if value.is_na() {
+            if let Some(replacement) = args.get(1) {
+                self.eval_expr(&replacement.value)
+            } else {
+                Ok(PineValue::Int(0))
+            }
+        } else {
+            Ok(value)
+        }
+    }
+
+    pub(crate) fn eval_builtin_value(&self, name: &str) -> PineValue {
+        if name == "barstate.isfirst" {
+            return PineValue::Bool(self.bars == 0);
+        }
+        if name == "barstate.islast" {
+            let is_last = match self.current_bar_update_kind {
+                BarUpdateKind::Historical => self
+                    .historical_end
+                    .is_none_or(|historical_end| self.bars + 1 == historical_end),
+                BarUpdateKind::Forming | BarUpdateKind::Confirmed => true,
+            };
+            return PineValue::Bool(is_last);
+        }
+        if name == "barstate.isnew" {
+            return PineValue::Bool(self.current_bar_is_new);
+        }
+        if name == "barstate.isconfirmed" {
+            return PineValue::Bool(matches!(
+                self.current_bar_update_kind,
+                BarUpdateKind::Historical | BarUpdateKind::Confirmed
+            ));
+        }
+        if name == "barstate.ishistory" {
+            return PineValue::Bool(matches!(
+                self.current_bar_update_kind,
+                BarUpdateKind::Historical
+            ));
+        }
+        if name == "barstate.isrealtime" {
+            return PineValue::Bool(matches!(
+                self.current_bar_update_kind,
+                BarUpdateKind::Forming | BarUpdateKind::Confirmed
+            ));
+        }
+        if name == "session.ismarket" {
+            return PineValue::Bool(true);
+        }
+        if name == "session.ispremarket" || name == "session.ispostmarket" {
+            return PineValue::Bool(false);
+        }
+        if name == "timeframe.period" {
+            return PineValue::String(DEFAULT_CHART_TIMEFRAME.to_owned());
+        }
+        if name == "timeframe.isseconds" {
+            return PineValue::Bool(false);
+        }
+        if name == "timeframe.isminutes" {
+            return PineValue::Bool(true);
+        }
+        if name == "timeframe.isintraday" {
+            return PineValue::Bool(true);
+        }
+        if name == "timeframe.isdaily" {
+            return PineValue::Bool(false);
+        }
+        if name == "timeframe.isweekly" {
+            return PineValue::Bool(false);
+        }
+        if name == "timeframe.ismonthly" {
+            return PineValue::Bool(false);
+        }
+        if name == "timeframe.isdwm" {
+            return PineValue::Bool(false);
+        }
+        if name == "timeframe.multiplier" {
+            return PineValue::Int(1);
+        }
+        if name == "ta.accdist" {
+            return self.accdist_current.clone();
+        }
+        if name == "ta.iii" {
+            return self.iii_current.clone();
+        }
+        if name == "ta.nvi" {
+            return self.nvi_current.clone();
+        }
+        if name == "ta.obv" {
+            return self.obv_current.clone();
+        }
+        if name == "ta.pvi" {
+            return self.pvi_current.clone();
+        }
+        if name == "ta.pvt" {
+            return self.pvt_current.clone();
+        }
+        if name == "ta.tr" {
+            return self.true_range(false);
+        }
+        if name == "ta.vwap" {
+            return self.vwap_current.clone();
+        }
+        if name == "ta.wad" {
+            return self.wad_current.clone();
+        }
+        if name == "ta.wvad" {
+            return self.wvad_current.clone();
+        }
+        eval_static_builtin_value(name)
+    }
+}
+
+impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn eval_fixnan(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let value = self.eval_expr(&args[0].value)?;
+        if value.is_na() {
+            Ok(self
+                .call_state
+                .get(&call_site_id)
+                .cloned()
+                .unwrap_or(PineValue::Na))
+        } else {
+            self.call_state.insert(call_site_id, value.clone());
+            Ok(value)
+        }
+    }
+}

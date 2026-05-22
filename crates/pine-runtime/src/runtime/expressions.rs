@@ -1,5 +1,6 @@
 use pine_ir::{HirBinaryOp, HirExpr, HirExprKind, HirLiteral, HirUnaryOp};
 
+use crate::builtins::colors::parse_color_hex;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {

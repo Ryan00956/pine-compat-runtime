@@ -1,7 +1,9 @@
 use std::cmp::Ordering;
 
+use chrono::{Datelike, Timelike};
 use pine_ir::{SeriesId, SymbolId, VarSlotId};
 
+use crate::builtins::time::{dayofweek_value, timeframe_seconds, utc_datetime_from_millis};
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -280,106 +282,6 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         finite_float_or_na(((bar.close - bar.open) / range) * bar.volume)
-    }
-
-    pub(crate) fn eval_builtin_value(&self, name: &str) -> PineValue {
-        if name == "barstate.isfirst" {
-            return PineValue::Bool(self.bars == 0);
-        }
-        if name == "barstate.islast" {
-            let is_last = match self.current_bar_update_kind {
-                BarUpdateKind::Historical => self
-                    .historical_end
-                    .is_none_or(|historical_end| self.bars + 1 == historical_end),
-                BarUpdateKind::Forming | BarUpdateKind::Confirmed => true,
-            };
-            return PineValue::Bool(is_last);
-        }
-        if name == "barstate.isnew" {
-            return PineValue::Bool(self.current_bar_is_new);
-        }
-        if name == "barstate.isconfirmed" {
-            return PineValue::Bool(matches!(
-                self.current_bar_update_kind,
-                BarUpdateKind::Historical | BarUpdateKind::Confirmed
-            ));
-        }
-        if name == "barstate.ishistory" {
-            return PineValue::Bool(matches!(
-                self.current_bar_update_kind,
-                BarUpdateKind::Historical
-            ));
-        }
-        if name == "barstate.isrealtime" {
-            return PineValue::Bool(matches!(
-                self.current_bar_update_kind,
-                BarUpdateKind::Forming | BarUpdateKind::Confirmed
-            ));
-        }
-        if name == "session.ismarket" {
-            return PineValue::Bool(true);
-        }
-        if name == "session.ispremarket" || name == "session.ispostmarket" {
-            return PineValue::Bool(false);
-        }
-        if name == "timeframe.period" {
-            return PineValue::String(DEFAULT_CHART_TIMEFRAME.to_owned());
-        }
-        if name == "timeframe.isseconds" {
-            return PineValue::Bool(false);
-        }
-        if name == "timeframe.isminutes" {
-            return PineValue::Bool(true);
-        }
-        if name == "timeframe.isintraday" {
-            return PineValue::Bool(true);
-        }
-        if name == "timeframe.isdaily" {
-            return PineValue::Bool(false);
-        }
-        if name == "timeframe.isweekly" {
-            return PineValue::Bool(false);
-        }
-        if name == "timeframe.ismonthly" {
-            return PineValue::Bool(false);
-        }
-        if name == "timeframe.isdwm" {
-            return PineValue::Bool(false);
-        }
-        if name == "timeframe.multiplier" {
-            return PineValue::Int(1);
-        }
-        if name == "ta.accdist" {
-            return self.accdist_current.clone();
-        }
-        if name == "ta.iii" {
-            return self.iii_current.clone();
-        }
-        if name == "ta.nvi" {
-            return self.nvi_current.clone();
-        }
-        if name == "ta.obv" {
-            return self.obv_current.clone();
-        }
-        if name == "ta.pvi" {
-            return self.pvi_current.clone();
-        }
-        if name == "ta.pvt" {
-            return self.pvt_current.clone();
-        }
-        if name == "ta.tr" {
-            return self.true_range(false);
-        }
-        if name == "ta.vwap" {
-            return self.vwap_current.clone();
-        }
-        if name == "ta.wad" {
-            return self.wad_current.clone();
-        }
-        if name == "ta.wvad" {
-            return self.wvad_current.clone();
-        }
-        eval_static_builtin_value(name)
     }
 
     pub(crate) fn eval_decl(
