@@ -57,6 +57,28 @@ def test_run_script_compiles_and_executes():
     assert result["plots"][0]["values"] == [2, 2, 3]
 
 
+def test_run_script_returns_label_outputs():
+    result = pine_compat.run_script(
+        'indicator("labels")\nif bar_index == 0\n    label_id = label.new(bar_index, high, "start")\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["labels"] == [
+        {
+            "id": 1,
+            "snapshots": [
+                {
+                    "barIndex": 0,
+                    "exists": True,
+                    "x": 0,
+                    "y": 1.0,
+                    "text": "start",
+                }
+            ],
+        }
+    ]
+
+
 def test_run_script_returns_plotchar_outputs():
     result = pine_compat.run_script(
         'indicator("markers")\nplotchar(close > 2, char="x", color=color.green)\nplot(close)\n',

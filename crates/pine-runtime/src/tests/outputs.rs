@@ -32,6 +32,67 @@ fill(p, h)
 }
 
 #[test]
+fn collects_label_new_snapshots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("labels")
+label.new(bar_index, high, "bar")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.labels.len(), 3);
+    for (index, label) in result.labels.iter().enumerate() {
+        assert_eq!(label.id, index as u32 + 1);
+        assert_eq!(label.snapshots.len(), 1);
+        let snapshot = &label.snapshots[0];
+        assert_eq!(snapshot.bar_index, index);
+        assert!(snapshot.exists);
+        assert_eq!(snapshot.x, PineValue::Int(index as i64));
+        assert_eq!(snapshot.y, PineValue::Float(index as f64 + 1.0));
+        assert_eq!(snapshot.text, PineValue::String("bar".to_owned()));
+    }
+}
+
+#[test]
+fn collects_conditional_and_stored_label_ids() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("conditional labels")
+if close > 1
+    created = label.new(bar_index, close, "stored")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.labels.len(), 2);
+    assert_eq!(result.labels[0].id, 1);
+    assert_eq!(result.labels[0].snapshots[0].bar_index, 1);
+    assert_eq!(result.labels[0].snapshots[0].x, PineValue::Int(1));
+    assert_eq!(result.labels[1].id, 2);
+    assert_eq!(result.labels[1].snapshots[0].bar_index, 2);
+    assert_eq!(result.labels[1].snapshots[0].x, PineValue::Int(2));
+}
+
+#[test]
 fn runs_output_metadata_parameters() {
     let source = SourceFile::new(
         "test.pine",

@@ -58,6 +58,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) hlines: Vec<HLineOutput>,
     pub(crate) fills: Vec<FillOutput>,
     pub(crate) labels: Vec<LabelOutput>,
+    pub(crate) next_label_id: u32,
 }
 
 pub fn run_historical(program: &HirProgram, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
@@ -127,6 +128,7 @@ impl<'a> HistoricalRuntime<'a> {
             hlines: Vec::new(),
             fills: Vec::new(),
             labels: Vec::new(),
+            next_label_id: 1,
         }
     }
 

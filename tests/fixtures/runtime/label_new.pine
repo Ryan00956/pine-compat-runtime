@@ -1,0 +1,5 @@
+//@version=5
+indicator("Label new")
+if bar_index == 0
+    label_id = label.new(bar_index, high, "start")
+plot(close)

@@ -2,6 +2,7 @@ pub(crate) mod args;
 pub(crate) mod arrays;
 pub(crate) mod casts;
 pub(crate) mod colors;
+pub(crate) mod drawings;
 pub(crate) mod math;
 pub(crate) mod outputs;
 pub(crate) mod strings;

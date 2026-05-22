@@ -54,11 +54,12 @@ mod tests {
         let entries = conformance_entries();
 
         for signature in pine_builtins::PHASE_1_BUILTINS {
-            let expected_status = if signature.name.starts_with("array.") {
-                "partial"
-            } else {
-                "supported"
-            };
+            let expected_status =
+                if signature.name.starts_with("array.") || signature.name == "label.new" {
+                    "partial"
+                } else {
+                    "supported"
+                };
             assert!(
                 entries.iter().any(|entry| entry.feature == signature.name
                     && entry.status == expected_status
@@ -189,7 +190,7 @@ mod tests {
             "import",
             "strategy.*",
             "alert/alertcondition",
-            "label/line/box/table/polyline",
+            "label methods/line/box/table/polyline",
             "non-int history offsets",
             "negative history offsets",
         ] {
@@ -400,6 +401,10 @@ mod tests {
                 "tests/fixtures/runtime/color_outputs.pine",
             ),
             ("runtime_hline_fill.json", "tests/fixtures/runtime/io.pine"),
+            (
+                "runtime_label_new.json",
+                "tests/fixtures/runtime/label_new.pine",
+            ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));
         }

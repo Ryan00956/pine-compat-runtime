@@ -3,10 +3,13 @@
 ## Unreleased
 
 - Started Phase E drawing-object infrastructure by bumping the public
-  machine-readable contract to `schemaVersion: 2` and reserving an empty
+  machine-readable contract to `schemaVersion: 2` and adding the
   top-level `labels` output across CLI JSON, Python dictionaries, and WASM JSON.
-  `label.*`, `line.*`, `box.*`, `table.*`, and `polyline.*` remain unsupported
-  until later fixture-backed slices implement behavior.
+  It is empty for scripts that do not create supported drawing objects.
+- Added the first drawing behavior: a minimal `label.new(x, y, text)` subset
+  that returns deterministic label ids and emits sparse creation snapshots in
+  the public `labels` output. Label options, mutation, deletion, limits, and
+  other drawing families remain unsupported.
 - Closed Phase K release infrastructure with public `schemaVersion: 1` output
   contracts for CLI, Python, and WASM public machine-readable outputs.
 - Moved CLI and WASM runtime JSON onto shared runtime serialization helpers,

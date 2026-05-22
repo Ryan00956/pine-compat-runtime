@@ -87,6 +87,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "plotarrow"
             | "plotbar"
             | "plotcandle"
+            | "label.new"
     ) || name == "input"
         || name.starts_with("input.")
 }
@@ -149,7 +150,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "indicator, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, and barcolor calls are not supported inside user-defined functions",
+                    "indicator, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, and drawing calls are not supported inside user-defined functions",
                     callee.span,
                 );
             }
