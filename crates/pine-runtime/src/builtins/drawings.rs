@@ -22,6 +22,7 @@ impl<'a> HistoricalRuntime<'a> {
             "label.set_size" => self.eval_label_set_size(args),
             "label.set_tooltip" => self.eval_label_set_tooltip(args),
             "label.delete" => self.eval_label_delete(args),
+            "line.new" => self.eval_line_new(args),
             _ => return None,
         })
     }
@@ -84,6 +85,32 @@ impl<'a> HistoricalRuntime<'a> {
             }],
         });
         Ok(PineValue::Label(id))
+    }
+
+    fn eval_line_new(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let x1 = self.eval_required_line_arg(args, 0, "x1")?;
+        let y1 = self.eval_required_line_arg(args, 1, "y1")?;
+        let x2 = self.eval_required_line_arg(args, 2, "x2")?;
+        let y2 = self.eval_required_line_arg(args, 3, "y2")?;
+        let id = self.next_line_id;
+        self.next_line_id = self
+            .next_line_id
+            .checked_add(1)
+            .ok_or_else(|| RuntimeError {
+                message: "line id limit exceeded".to_owned(),
+            })?;
+        self.lines.push(LineOutput {
+            id,
+            snapshots: vec![LineSnapshot {
+                bar_index: self.bars,
+                exists: true,
+                x1,
+                y1,
+                x2,
+                y2,
+            }],
+        });
+        Ok(PineValue::Line(id))
     }
 
     fn eval_label_set_x(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -209,6 +236,20 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(arg) = call_arg_expr(args, index, name) else {
             return Err(RuntimeError {
                 message: format!("label mutation missing {name} argument"),
+            });
+        };
+        self.eval_expr(arg)
+    }
+
+    fn eval_required_line_arg(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = call_arg_expr(args, index, name) else {
+            return Err(RuntimeError {
+                message: format!("line.new missing {name} argument"),
             });
         };
         self.eval_expr(arg)

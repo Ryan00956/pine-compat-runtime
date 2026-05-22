@@ -1,0 +1,7 @@
+//@version=5
+indicator("Line new")
+if bar_index == 1
+    first = line.new(bar_index, low, bar_index, high)
+if bar_index == 2
+    second = line.new(x1=bar_index, y1=open, x2=bar_index, y2=close)
+plot(close)

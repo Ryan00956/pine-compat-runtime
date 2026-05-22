@@ -44,6 +44,7 @@ Runtime snapshots should be normalized JSON:
   "hlines": [],
   "fills": [],
   "labels": [],
+  "lines": [],
   "diagnostics": []
 }
 ```
@@ -73,7 +74,9 @@ unsupported coordinate modes and other drawing families out of the supported
 matrix until they have fixtures and public-output coverage. Supported label
 creation, mutation, and deletion are covered under realtime rollback, and
 drawing side effects inside user-defined functions are rejected under the
-existing side-effect policy.
+existing side-effect policy. The next executable drawing subset is `line.new`
+with bar-index x coordinates and price y coordinates, represented as sparse
+`lines` snapshots with `x1`, `y1`, `x2`, and `y2` fields.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field
@@ -131,7 +134,7 @@ Examples:
 - `request.security`
 - `strategy.entry`
 - unsupported collection families or unsupported array variants
-- labels and lines
+- unsupported label and line methods
 - imports
 - `varip` in historical-only mode
 - non-integer or negative history offsets

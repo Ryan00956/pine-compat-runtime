@@ -8,6 +8,7 @@ pub enum PineValue {
     Plot(u32),
     HLine(u32),
     Label(u32),
+    Line(u32),
     Array(u32),
     Tuple(Vec<PineValue>),
     Na,

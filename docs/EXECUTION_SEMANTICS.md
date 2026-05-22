@@ -176,12 +176,14 @@ the same bounds, persistence, and UDF side-effect rules apply.
 Array mutation, including push/pop/shift/unshift/set/sort/reverse/clear, inside
 user-defined functions is rejected as a function side-effect boundary.
 
-Supported drawing-object calls currently cover the initial `label.*` lifecycle:
-`label.new`, selected `label.set_*` mutators, and `label.delete`. Labels use
-deterministic ids, sparse lifecycle snapshots, non-reused ids, and a 500-object
-runtime limit. `label.delete(na)`, mutation of `na`, mutation after deletion,
-and deleting an already deleted label are no-ops; invalid non-`na` ids are
-runtime errors.
+Supported drawing-object calls currently cover the initial `label.*` lifecycle
+and minimal `line.new` creation. Labels use deterministic ids, sparse lifecycle
+snapshots, non-reused ids, and a 500-object runtime limit. `label.delete(na)`,
+mutation of `na`, mutation after deletion, and deleting an already deleted label
+are no-ops; invalid non-`na` ids are runtime errors. Lines use deterministic ids
+and sparse creation snapshots with bar-index x coordinates and price y
+coordinates; line mutation, deletion, limits, and optional style fields are not
+implemented yet.
 
 Label side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from
@@ -326,11 +328,13 @@ rendering metadata:
   colors.
 - `label.*`: deterministic label ids and sparse creation, mutation, and
   deletion snapshots for the supported label subset.
+- `line.new`: deterministic line ids and sparse creation snapshots for the
+  supported line subset.
 
 Accepted metadata such as `offset`, `show_last`, `display`, `force_overlay`,
 and `editable` does not yet transform, filter, or annotate these output series.
-Later drawing object systems will add separate line, box, table, and polyline
-outputs.
+Later drawing object systems will add line mutation/deletion plus separate box,
+table, and polyline outputs.
 
 ## Determinism
 

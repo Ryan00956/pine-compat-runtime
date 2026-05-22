@@ -1,4 +1,4 @@
 //@version=5
 indicator("Unsupported drawing")
 label.get_text(na)
-line.new(bar_index, close, bar_index, close)
+line.set_xy1(na, bar_index, close)

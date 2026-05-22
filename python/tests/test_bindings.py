@@ -20,6 +20,7 @@ RUNTIME_RESULT_KEYS = {
     "hlines",
     "fills",
     "labels",
+    "lines",
     "diagnostics",
 }
 
@@ -43,6 +44,7 @@ def test_compile_script_returns_program_with_run_method():
     assert result["schemaVersion"] == 2
     assert set(result) == RUNTIME_RESULT_KEYS
     assert result["labels"] == []
+    assert result["lines"] == []
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
     assert result["diagnostics"] == []
 
@@ -80,6 +82,29 @@ def test_run_script_returns_label_outputs():
                     "textColor": None,
                     "size": "size.normal",
                     "tooltip": "",
+                }
+            ],
+        }
+    ]
+
+
+def test_run_script_returns_line_outputs():
+    result = pine_compat.run_script(
+        'indicator("lines")\nif bar_index == 1\n    line_id = line.new(bar_index, low, bar_index, high)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["lines"] == [
+        {
+            "id": 1,
+            "snapshots": [
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "x1": 1,
+                    "y1": 2.0,
+                    "x2": 1,
+                    "y2": 2.0,
                 }
             ],
         }

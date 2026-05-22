@@ -54,12 +54,14 @@ mod tests {
         let entries = conformance_entries();
 
         for signature in pine_builtins::PHASE_1_BUILTINS {
-            let expected_status =
-                if signature.name.starts_with("array.") || signature.name.starts_with("label.") {
-                    "partial"
-                } else {
-                    "supported"
-                };
+            let expected_status = if signature.name.starts_with("array.")
+                || signature.name.starts_with("label.")
+                || signature.name.starts_with("line.")
+            {
+                "partial"
+            } else {
+                "supported"
+            };
             assert!(
                 entries.iter().any(|entry| entry.feature == signature.name
                     && entry.status == expected_status
@@ -190,7 +192,7 @@ mod tests {
             "import",
             "strategy.*",
             "alert/alertcondition",
-            "unsupported label methods/line/box/table/polyline",
+            "unsupported label/line methods/box/table/polyline",
             "non-int history offsets",
             "negative history offsets",
         ] {
@@ -252,6 +254,7 @@ mod tests {
             hlines: vec![],
             fills: vec![],
             labels: vec![],
+            lines: vec![],
             diagnostics: vec![],
         };
 
@@ -259,6 +262,7 @@ mod tests {
 
         assert!(output.starts_with(r#"{"schemaVersion":2,"#));
         assert!(output.contains(r#""labels":[]"#));
+        assert!(output.contains(r#""lines":[]"#));
         assert!(output.contains(r#""diagnostics":[]"#));
     }
 
@@ -276,6 +280,7 @@ mod tests {
             hlines: vec![],
             fills: vec![],
             labels: vec![],
+            lines: vec![],
             diagnostics: vec![],
         };
         let profile = RuntimeProfile {
@@ -344,6 +349,10 @@ mod tests {
             label_snapshots: 0,
             label_capacity: 0,
             label_snapshot_capacity: 0,
+            lines: 0,
+            line_snapshots: 0,
+            line_capacity: 0,
+            line_snapshot_capacity: 0,
         };
 
         let output = public_runtime_profiled_result_json(&result, &profile);
@@ -367,6 +376,8 @@ mod tests {
         assert!(output.contains(r#""plotCandles":0"#));
         assert!(output.contains(r#""labels":0"#));
         assert!(output.contains(r#""labelSnapshots":0"#));
+        assert!(output.contains(r#""lines":0"#));
+        assert!(output.contains(r#""lineSnapshots":0"#));
     }
 
     #[test]
@@ -416,6 +427,10 @@ mod tests {
             (
                 "runtime_label_delete.json",
                 "tests/fixtures/runtime/label_delete.pine",
+            ),
+            (
+                "runtime_line_new.json",
+                "tests/fixtures/runtime/line_new.pine",
             ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));

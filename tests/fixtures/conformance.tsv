@@ -82,6 +82,7 @@ label.set_style	partial	label id selected style mutation snapshots only; deleted
 label.set_size	partial	label id size mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine;tests/fixtures/runtime/label_control_flow.pine
 label.set_tooltip	partial	label id tooltip mutation snapshots only; deleted or na labels are no-op; other drawing families unsupported	tests/fixtures/runtime/label_mutation.pine;tests/fixtures/runtime/label_control_flow.pine
 label.delete	partial	label id deletion snapshots only; deleting deleted or na labels is no-op; ids are not reused and labels have a 500-object runtime limit; other drawing families unsupported	tests/fixtures/runtime/label_delete.pine
+line.new	partial	bar-index x1/x2 and numeric y1/y2 creation snapshots only; line mutation, deletion, optional style fields, and other drawing families unsupported	tests/fixtures/runtime/line_new.pine
 color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 color.rgb	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
 color.r	supported	fixture-derived executable subset	tests/fixtures/runtime/colors.pine
@@ -300,7 +301,7 @@ array.*	partial	float/int/bool/string/color array creation, array.from inference
 import	unsupported	library imports out of Phase 1	tests/fixtures/sema/unsupported_import.pine
 strategy.*	unsupported	broker emulation out of current scope	tests/fixtures/sema/unsupported_strategy.pine
 alert/alertcondition	unsupported	alerts out of Phase 1	tests/fixtures/sema/unsupported_alert.pine
-unsupported label methods/line/box/table/polyline	unsupported	label methods beyond the supported label creation/mutation/deletion subset plus line, box, table, and polyline object systems are not implemented	tests/fixtures/sema/unsupported_drawing.pine
+unsupported label/line methods/box/table/polyline	unsupported	label methods beyond the supported label creation/mutation/deletion subset, line methods beyond line.new, and box, table, and polyline object systems are not implemented	tests/fixtures/sema/unsupported_drawing.pine
 series history offsets	partial	series int offsets are evaluated at runtime with full-history retention up to the runtime cap	tests/fixtures/runtime/series_history_offset.pine
 non-int history offsets	unsupported	dynamic offsets must evaluate from an integer expression	tests/fixtures/sema/unsupported_dynamic_history.pine
 negative history offsets	unsupported	history offsets must be non-negative	tests/fixtures/sema/unsupported_negative_history.pine

@@ -17,6 +17,9 @@
   realtime rollback, and drawing side effects inside user-defined functions are
   rejected under the existing side-effect policy. Unsupported coordinate modes
   and other drawing families remain unsupported.
+- Added minimal `line.new` support with deterministic line ids and sparse public
+  `lines` creation snapshots for bar-index/price coordinates. Line mutation,
+  deletion, limits, and optional style fields remain unsupported.
 - Closed Phase K release infrastructure with public `schemaVersion: 1` output
   contracts for CLI, Python, and WASM public machine-readable outputs.
 - Moved CLI and WASM runtime JSON onto shared runtime serialization helpers,

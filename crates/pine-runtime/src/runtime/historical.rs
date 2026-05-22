@@ -58,7 +58,9 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) hlines: Vec<HLineOutput>,
     pub(crate) fills: Vec<FillOutput>,
     pub(crate) labels: Vec<LabelOutput>,
+    pub(crate) lines: Vec<LineOutput>,
     pub(crate) next_label_id: u32,
+    pub(crate) next_line_id: u32,
 }
 
 pub fn run_historical(program: &HirProgram, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
@@ -128,7 +130,9 @@ impl<'a> HistoricalRuntime<'a> {
             hlines: Vec::new(),
             fills: Vec::new(),
             labels: Vec::new(),
+            lines: Vec::new(),
             next_label_id: 1,
+            next_line_id: 1,
         }
     }
 
@@ -223,6 +227,7 @@ impl<'a> HistoricalRuntime<'a> {
             hlines: self.hlines.clone(),
             fills: self.fills.clone(),
             labels: self.labels.clone(),
+            lines: self.lines.clone(),
             diagnostics: Vec::new(),
         }
     }
@@ -386,6 +391,16 @@ impl<'a> HistoricalRuntime<'a> {
             .iter()
             .map(|label| label.snapshots.capacity())
             .sum::<usize>();
+        let line_snapshots = self
+            .lines
+            .iter()
+            .map(|line| line.snapshots.len())
+            .sum::<usize>();
+        let line_snapshot_capacity = self
+            .lines
+            .iter()
+            .map(|line| line.snapshots.capacity())
+            .sum::<usize>();
 
         RuntimeProfile {
             bars: self.bars,
@@ -453,6 +468,10 @@ impl<'a> HistoricalRuntime<'a> {
             label_snapshots,
             label_capacity: self.labels.capacity(),
             label_snapshot_capacity,
+            lines: self.lines.len(),
+            line_snapshots,
+            line_capacity: self.lines.capacity(),
+            line_snapshot_capacity,
         }
     }
 

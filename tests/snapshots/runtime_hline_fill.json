@@ -1,1 +1,1 @@
-{"schemaVersion":2,"plots":[{"id":7,"values":[null,2.25,3.75,5.25]}],"plotChars":[],"plotShapes":[],"plotArrows":[],"plotBars":[],"plotCandles":[],"bgColors":[],"barColors":[],"hlines":[{"id":10,"price":2}],"fills":[{"id":11,"firstId":7,"secondId":10}],"labels":[],"diagnostics":[]}
+{"schemaVersion":2,"plots":[{"id":7,"values":[null,2.25,3.75,5.25]}],"plotChars":[],"plotShapes":[],"plotArrows":[],"plotBars":[],"plotCandles":[],"bgColors":[],"barColors":[],"hlines":[{"id":10,"price":2}],"fills":[{"id":11,"firstId":7,"secondId":10}],"labels":[],"lines":[],"diagnostics":[]}

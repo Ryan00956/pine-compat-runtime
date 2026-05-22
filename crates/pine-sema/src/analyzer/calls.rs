@@ -127,6 +127,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "label.set_size"
             | "label.set_tooltip"
             | "label.delete"
+            | "line.new"
     ) || name == "input"
         || name.starts_with("input.")
 }

@@ -386,6 +386,43 @@ fn rejects_unimplemented_label_methods() {
 }
 
 #[test]
+fn accepts_minimal_line_new() {
+    let analysis = analyze(
+        "id = line.new(bar_index - 1, low, bar_index, high)\nother = line.new(x1=0, y1=open, x2=bar_index, y2=close)\nplot(close)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "line.new")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_unimplemented_line_methods() {
+    let analysis = analyze("line.set_xy1(na, bar_index, close)\nplot(close)\n");
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "line.set_xy1"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_input_history_offset() {
     let analysis = analyze("len = input.int(1, \"Length\")\nx = close[len]\n");
 

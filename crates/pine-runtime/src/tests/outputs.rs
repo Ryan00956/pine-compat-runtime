@@ -77,6 +77,40 @@ plot(close)
 }
 
 #[test]
+fn collects_line_new_snapshots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("lines")
+line.new(bar_index, low, bar_index, high)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.lines.len(), 3);
+    assert!(result.labels.is_empty());
+    for (index, line) in result.lines.iter().enumerate() {
+        assert_eq!(line.id, index as u32 + 1);
+        assert_eq!(line.snapshots.len(), 1);
+        let snapshot = &line.snapshots[0];
+        assert_eq!(snapshot.bar_index, index);
+        assert!(snapshot.exists);
+        assert_eq!(snapshot.x1, PineValue::Int(index as i64));
+        assert_eq!(snapshot.y1, PineValue::Float(index as f64 + 1.0));
+        assert_eq!(snapshot.x2, PineValue::Int(index as i64));
+        assert_eq!(snapshot.y2, PineValue::Float(index as f64 + 1.0));
+    }
+}
+
+#[test]
 fn collects_label_new_options() {
     let source = SourceFile::new(
         "test.pine",
