@@ -415,6 +415,7 @@ pub fn run_historical_profiled(
 pub struct HistoricalRuntime<'a> {
     program: &'a HirProgram,
     bars: usize,
+    historical_end: Option<usize>,
     current_bar_update_kind: BarUpdateKind,
     series_store: SeriesStore,
     series_retention: SeriesRetention,
@@ -711,6 +712,7 @@ impl<'a> HistoricalRuntime<'a> {
         Self {
             program,
             bars: 0,
+            historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
             series_store: SeriesStore::new(),
             series_retention: SeriesRetention::from_program(program),
@@ -777,11 +779,16 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     pub fn append_bars(&mut self, bars: &[Bar]) -> Result<(), RuntimeError> {
-        for bar in bars {
-            self.append_bar(*bar)?;
-        }
-
-        Ok(())
+        let previous_historical_end = self.historical_end;
+        self.historical_end = Some(self.bars + bars.len());
+        let result = (|| {
+            for bar in bars {
+                self.append_bar_with_kind(*bar, BarUpdateKind::Historical)?;
+            }
+            Ok(())
+        })();
+        self.historical_end = previous_historical_end;
+        result
     }
 
     pub fn append_bar(&mut self, bar: Bar) -> Result<(), RuntimeError> {
@@ -1487,6 +1494,15 @@ impl<'a> HistoricalRuntime<'a> {
     fn eval_builtin_value(&self, name: &str) -> PineValue {
         if name == "barstate.isfirst" {
             return PineValue::Bool(self.bars == 0);
+        }
+        if name == "barstate.islast" {
+            let is_last = match self.current_bar_update_kind {
+                BarUpdateKind::Historical => self
+                    .historical_end
+                    .is_none_or(|historical_end| self.bars + 1 == historical_end),
+                BarUpdateKind::Forming | BarUpdateKind::Confirmed => true,
+            };
+            return PineValue::Bool(is_last);
         }
         if name == "barstate.isconfirmed" {
             return PineValue::Bool(matches!(
@@ -12778,6 +12794,7 @@ plot(e)
             "test.pine",
             r#"indicator("barstate")
 plot(barstate.isfirst ? 1 : 0)
+plot(barstate.islast ? 1 : 0)
 plot(barstate.isconfirmed ? 1 : 0)
 plot(barstate.ishistory ? 1 : 0)
 plot(barstate.isrealtime ? 1 : 0)
@@ -12797,12 +12814,37 @@ plot(session.ispostmarket ? 1 : 0)
             .expect("runtime result");
 
         assert_values_close(&result.plots[0].values, &[1.0, 0.0, 0.0]);
-        assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[1].values, &[0.0, 0.0, 1.0]);
         assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
-        assert_values_close(&result.plots[3].values, &[0.0, 0.0, 0.0]);
-        assert_values_close(&result.plots[4].values, &[1.0, 1.0, 1.0]);
-        assert_values_close(&result.plots[5].values, &[0.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[3].values, &[1.0, 1.0, 1.0]);
+        assert_values_close(&result.plots[4].values, &[0.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[5].values, &[1.0, 1.0, 1.0]);
         assert_values_close(&result.plots[6].values, &[0.0, 0.0, 0.0]);
+        assert_values_close(&result.plots[7].values, &[0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn append_bar_treats_current_open_ended_historical_bar_as_last() {
+        let source = SourceFile::new(
+            "test.pine",
+            r#"indicator("barstate append")
+plot(barstate.islast ? 1 : 0)
+"#,
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{:?}",
+            analysis.diagnostics
+        );
+
+        let hir = analysis.hir.expect("HIR");
+        let mut runtime = HistoricalRuntime::new(&hir);
+        runtime.append_bar(bar(1.0)).expect("first append");
+        runtime.append_bar(bar(2.0)).expect("second append");
+        let result = runtime.result();
+
+        assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
     }
 
     #[test]
@@ -12882,6 +12924,7 @@ plot(value)
 plot(barstate.isconfirmed ? close : 0)
 plot(barstate.ishistory ? close : 0)
 plot(barstate.isrealtime ? close : 0)
+plot(barstate.islast ? close : 0)
 "#,
         );
         let analysis = analyze_source(&source);
@@ -12899,6 +12942,7 @@ plot(barstate.isrealtime ? close : 0)
         assert_values_close(&confirmed.plots[0].values, &[1.0]);
         assert_values_close(&confirmed.plots[1].values, &[1.0]);
         assert_values_close(&confirmed.plots[2].values, &[0.0]);
+        assert_values_close(&confirmed.plots[3].values, &[1.0]);
 
         let forming = runtime
             .update(BarUpdate::forming(bar(2.0)))
@@ -12906,6 +12950,7 @@ plot(barstate.isrealtime ? close : 0)
         assert_values_close(&forming.plots[0].values, &[1.0, 0.0]);
         assert_values_close(&forming.plots[1].values, &[1.0, 0.0]);
         assert_values_close(&forming.plots[2].values, &[0.0, 2.0]);
+        assert_values_close(&forming.plots[3].values, &[1.0, 2.0]);
 
         let confirmed = runtime
             .update(BarUpdate::confirmed(bar(3.0)))
@@ -12913,6 +12958,7 @@ plot(barstate.isrealtime ? close : 0)
         assert_values_close(&confirmed.plots[0].values, &[1.0, 3.0]);
         assert_values_close(&confirmed.plots[1].values, &[1.0, 0.0]);
         assert_values_close(&confirmed.plots[2].values, &[0.0, 3.0]);
+        assert_values_close(&confirmed.plots[3].values, &[1.0, 3.0]);
     }
 
     #[test]

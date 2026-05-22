@@ -92,12 +92,16 @@ Bar state:
 
 ```text
 barstate.isfirst -> series bool
+barstate.islast -> series bool
 barstate.isconfirmed -> series bool
 barstate.ishistory -> series bool
 barstate.isrealtime -> series bool
 ```
 
 `barstate.isfirst` is `true` only when `bar_index == 0`.
+`barstate.islast` is `true` on the last known bar in finite historical batch
+execution and on current realtime updates. Open-ended `append_bar` historical
+updates treat the appended bar as the latest known bar.
 `barstate.isconfirmed` is `true` for historical and confirmed updates, and
 `false` for forming realtime updates.
 `barstate.ishistory` is `true` for historical updates. `barstate.isrealtime`

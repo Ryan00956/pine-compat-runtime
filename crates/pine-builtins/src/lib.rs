@@ -3757,6 +3757,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Bool),
     ),
     (
+        "barstate.islast",
+        PineType::new(Qualifier::Series, ValueKind::Bool),
+    ),
+    (
         "barstate.isconfirmed",
         PineType::new(Qualifier::Series, ValueKind::Bool),
     ),

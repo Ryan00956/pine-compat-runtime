@@ -23,6 +23,7 @@ fn runtime_fixtures_match_incremental_append_execution() {
         }
 
         let text = fs::read_to_string(&path).expect("fixture should be readable");
+        let has_islast = text.contains("barstate.islast");
         let source = SourceFile::new(path.display().to_string(), text);
         let analysis = analyze_source(&source);
         assert!(
@@ -35,10 +36,16 @@ fn runtime_fixtures_match_incremental_append_execution() {
 
         let full = run_historical(&hir, &bars).expect("full execution should succeed");
         let mut runtime = HistoricalRuntime::new(&hir);
-        for bar in bars.iter().copied() {
+        if has_islast {
             runtime
-                .append_bar(bar)
+                .append_bars(&bars)
                 .expect("append execution should succeed");
+        } else {
+            for bar in bars.iter().copied() {
+                runtime
+                    .append_bar(bar)
+                    .expect("append execution should succeed");
+            }
         }
         let incremental = runtime.result();
 

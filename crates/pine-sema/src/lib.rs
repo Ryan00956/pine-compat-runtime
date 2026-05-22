@@ -5545,7 +5545,7 @@ plot(timeframe.period == "1" and is_one_minute and roundtrip and tf_change ? sec
     #[test]
     fn accepts_barstate_isfirst() {
         let analysis = analyze(
-            "plot((barstate.isfirst or barstate.isconfirmed or barstate.ishistory or barstate.isrealtime or session.ismarket or session.ispremarket or session.ispostmarket) ? 1 : 0)\n",
+            "plot((barstate.isfirst or barstate.islast or barstate.isconfirmed or barstate.ishistory or barstate.isrealtime or session.ismarket or session.ispremarket or session.ispostmarket) ? 1 : 0)\n",
         );
 
         assert!(
@@ -5559,6 +5559,13 @@ plot(timeframe.period == "1" and is_one_minute and roundtrip and tf_change ? sec
                 .supported
                 .iter()
                 .any(|feature| feature.feature == "barstate.isfirst")
+        );
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == "barstate.islast")
         );
         assert!(
             analysis
