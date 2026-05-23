@@ -100,8 +100,17 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "session.ispremarket" || name == "session.ispostmarket" {
             return PineValue::Bool(false);
         }
+        if name == "syminfo.tickerid" {
+            return PineValue::String(self.request_environment.chart().symbol().to_owned());
+        }
         if name == "timeframe.period" {
-            return PineValue::String(DEFAULT_CHART_TIMEFRAME.to_owned());
+            return PineValue::String(
+                self.request_environment
+                    .chart()
+                    .timeframe()
+                    .value()
+                    .to_owned(),
+            );
         }
         if name == "timeframe.isseconds" {
             return PineValue::Bool(false);

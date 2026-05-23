@@ -215,12 +215,20 @@ Utility:
 - selected `math.*`, `str.*`, and UTC time helpers listed in
   [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md)
 
+Request data:
+
+- `request.security(syminfo.tickerid, timeframe.period, expression)` for the
+  current chart context only. The requested expression must be scalar and
+  side-effect free; this identity subset does not perform host data-provider
+  lookup or multi-timeframe alignment.
+
 ## Explicitly Unsupported in Phase 1
 
 The analyzer should reject these with clear diagnostics:
 
 - `strategy.*`
-- `request.*`
+- `request.*` variants outside the narrow same-context `request.security`
+  identity subset
 - `alert` and `alertcondition`
 - `library`, `import`, and `export`
 - unsupported array element types, matrices, and maps
@@ -247,7 +255,7 @@ The analyzer should return a machine-readable report:
   "unsupported": [
     {
       "feature": "request.security",
-      "reason": "Multi-timeframe data requests are not supported in phase 1",
+      "reason": "Only same-context request.security identity requests are supported in phase 1",
       "span": "..."
     }
   ]

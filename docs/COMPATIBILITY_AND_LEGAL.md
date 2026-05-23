@@ -84,8 +84,9 @@ Runs all Pine scripts exactly like TradingView.
 Unsupported features should be reported explicitly:
 
 ```text
-`request.security` is not supported in this runtime phase because external
-multi-timeframe data requests are outside the current execution model.
+`request.security` currently supports only same-context identity requests;
+external multi-symbol and multi-timeframe data requests are outside the current
+execution model.
 ```
 
 This is both better UX and a better compatibility boundary.
@@ -97,4 +98,3 @@ from TradingView or any other provider by default.
 
 Host applications may provide their own data adapters, but those adapters are
 outside the core runtime.
-

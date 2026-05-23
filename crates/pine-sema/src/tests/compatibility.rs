@@ -26,7 +26,26 @@ fn reports_supported_phase_1_calls() {
 }
 
 #[test]
-fn rejects_request_namespace() {
+fn accepts_same_context_request_security() {
+    let analysis = analyze("plot(request.security(syminfo.tickerid, timeframe.period, close))\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn rejects_cross_context_request_security() {
     let analysis = analyze("x = request.security(\"AAPL\", \"D\", close)\n");
 
     assert_eq!(analysis.compatibility.unsupported.len(), 1);
@@ -35,6 +54,34 @@ fn rejects_request_namespace() {
         "request.security"
     );
     assert_eq!(analysis.diagnostics[0].code, "E_UNSUPPORTED_FEATURE");
+}
+
+#[test]
+fn rejects_request_security_side_effect_expression() {
+    let analysis =
+        analyze("x = request.security(syminfo.tickerid, timeframe.period, plot(close))\n");
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "request.security"
+    );
+    assert!(
+        analysis.compatibility.unsupported[0]
+            .reason
+            .contains("side-effecting requested expressions")
+    );
+}
+
+#[test]
+fn rejects_other_request_variants() {
+    let analysis = analyze("x = request.financial(syminfo.tickerid, \"TOTAL_REVENUE\", \"FQ\")\n");
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "request.financial"
+    );
 }
 
 #[test]

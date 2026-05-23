@@ -59,6 +59,7 @@ mod tests {
                 || signature.name.starts_with("line.")
                 || signature.name.starts_with("box.")
                 || signature.name.starts_with("table.")
+                || signature.name == "request.security"
             {
                 "partial"
             } else {

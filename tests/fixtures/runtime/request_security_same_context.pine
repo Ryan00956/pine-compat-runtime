@@ -1,0 +1,7 @@
+indicator("request.security same context")
+
+identity = request.security(syminfo.tickerid, timeframe.period, close + open)
+history = request.security(syminfo.tickerid, timeframe.period, na(close[1]) ? close : close[1])
+
+plot(identity)
+plot(history)

@@ -19,6 +19,9 @@ impl<'a> HistoricalRuntime<'a> {
         if let Some(result) = self.eval_drawing_call(callee, call_site_id, args) {
             return result;
         }
+        if let Some(result) = self.eval_request_call(callee, args) {
+            return result;
+        }
         if let Some(result) = self.eval_color_call(callee, args) {
             return result;
         }

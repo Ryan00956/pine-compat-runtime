@@ -183,6 +183,19 @@ The current subset assumes a fixed default chart timeframe of `1` minute, so
 `timeframe.isminutes` and `timeframe.isintraday` return `true`, and
 `timeframe.isseconds`, `timeframe.isdaily`, `timeframe.isweekly`,
 `timeframe.ismonthly`, and `timeframe.isdwm` return `false`.
+
+Request helpers:
+
+```text
+request.security(symbol: simple string, timeframe: simple string, expression: any)
+  -> series type matching expression
+```
+
+Only the same-context identity form is executable in the current subset:
+`request.security(syminfo.tickerid, timeframe.period, expression)`. The
+expression must be scalar and side-effect free. Provider-backed symbol/timeframe
+requests, optional parameters, barmerge behavior, gaps, lookahead, and
+lower-timeframe array requests remain unsupported.
 `timeframe.in_seconds()` returns `60`.
 Explicit timeframe strings support Pine-style seconds (`1S`, `5S`, `10S`,
 `15S`, `30S`, `45S`), minutes (`1` through `1440`), days (`D`/`1D` through

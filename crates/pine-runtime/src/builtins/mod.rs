@@ -5,6 +5,7 @@ pub(crate) mod colors;
 pub(crate) mod drawings;
 pub(crate) mod math;
 pub(crate) mod outputs;
+pub(crate) mod requests;
 pub(crate) mod strings;
 pub(crate) mod ta;
 pub(crate) mod time;

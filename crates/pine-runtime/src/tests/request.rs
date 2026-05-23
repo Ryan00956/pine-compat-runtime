@@ -6,10 +6,11 @@ use pine_syntax::SourceFile;
 use super::*;
 
 fn runtime_program() -> pine_ir::HirProgram {
-    let source = SourceFile::new(
-        "test.pine",
-        "indicator(\"request scaffold\")\nplot(close)\n",
-    );
+    compile_program("indicator(\"request scaffold\")\nplot(close)\n")
+}
+
+fn compile_program(text: &str) -> pine_ir::HirProgram {
+    let source = SourceFile::new("test.pine", text);
     let analysis = analyze_source(&source);
     assert!(
         analysis.diagnostics.is_empty(),
@@ -138,4 +139,42 @@ fn realtime_runtime_carries_custom_request_environment_through_rollback() {
         runtime.request_environment().chart().timeframe().value(),
         "D"
     );
+}
+
+#[test]
+fn request_security_same_context_returns_expression_series() {
+    let program = compile_program(
+        "indicator(\"request identity\")\nplot(request.security(syminfo.tickerid, timeframe.period, close + open))\n",
+    );
+    let result = run_historical(
+        &program,
+        &[bar_ohlc(1.0, 2.0, 0.5, 4.0), bar_ohlc(3.0, 5.0, 2.0, 8.0)],
+    )
+    .expect("same-context request.security should run");
+
+    assert_values_close(&result.plots[0].values, &[5.0, 11.0]);
+}
+
+#[test]
+fn request_security_same_context_supports_history_and_na_helpers() {
+    let program = compile_program(
+        "indicator(\"request history\")\nvalue = request.security(syminfo.tickerid, timeframe.period, na(close[1]) ? close : close[1])\nplot(value)\n",
+    );
+    let result = run_historical(&program, &[bar(10.0), bar(12.0), bar(15.0)])
+        .expect("same-context request.security history expression should run");
+
+    assert_values_close(&result.plots[0].values, &[10.0, 10.0, 12.0]);
+}
+
+#[test]
+fn request_security_uses_runtime_chart_metadata_for_identity_check() {
+    let program = compile_program(
+        "indicator(\"request custom chart\")\nplot(request.security(syminfo.tickerid, timeframe.period, close))\n",
+    );
+    let runtime = HistoricalRuntime::with_request_environment(&program, custom_environment());
+    let result = runtime
+        .run(&[timed_bar(0, 9.0), timed_bar(86_400_000, 11.0)])
+        .expect("custom chart metadata should satisfy same-context identity");
+
+    assert_values_close(&result.plots[0].values, &[9.0, 11.0]);
 }

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added the first `request.security` executable subset:
+  `request.security(syminfo.tickerid, timeframe.period, expression)` returns the
+  scalar side-effect-free expression in the current chart context. Provider-backed
+  multi-symbol, multi-timeframe, optional parameter, gaps/lookahead, and lower
+  timeframe request behavior remains unsupported.
 - Started Phase E drawing-object infrastructure by bumping the public
   machine-readable contract to `schemaVersion: 2` and adding the
   top-level `labels` output across CLI JSON, Python dictionaries, and WASM JSON.

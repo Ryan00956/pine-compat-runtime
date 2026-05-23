@@ -228,6 +228,10 @@ impl Analyzer {
             return None;
         };
 
+        if name.starts_with("request.") {
+            return self.analyze_request_call(&name, callee.span, args);
+        }
+
         let arg_types: Vec<_> = args
             .iter()
             .map(|arg| self.analyze_expr(&arg.value))
