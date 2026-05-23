@@ -40,6 +40,8 @@ Realtime execution needs explicit state partitions:
 - persistent `var` state
 - future intrabar `varip` state
 - callsite state for TA functions
+- immutable request provider data
+- deterministic request result cache
 
 Rollback semantics must specify which partition is restored and which partition
 survives repeated forming updates.
@@ -79,8 +81,17 @@ Each forming update starts from the confirmed snapshot. This rolls back:
 - `var` updates made during the previous forming execution
 - callsite state changes made during the previous forming execution
 - array storage mutations made during the previous forming execution
-- label and line creation, mutation, and deletion snapshots made during the
+- label, line, box, and table creation, mutation, deletion, and cell snapshots
+  made during the previous forming execution
+- request cache entries and requested-context runtime state created during the
   previous forming execution
+
+Request provider data is immutable and shared through the runtime request
+environment. Repeated forming updates may reuse the same provider object, but
+requested-context evaluation and cache population are part of the runtime state
+that rolls back with the forming snapshot. This keeps provider-backed
+`request.security` deterministic across historical, forming, and confirmed
+updates.
 
 Confirmed and historical updates replace the confirmed snapshot and clear the
 forming snapshot.
@@ -105,10 +116,10 @@ produce incorrect realtime behavior.
 Phase 7 now defines the model and implements rollback for repeated forming
 updates. Realtime fixtures cover temporary output rollback, drawing-object
 lifecycle rollback for labels, lines, boxes, and tables, `var` rollback,
-stateful TA callsite rollback inside conditional branches, array rollback, and
-dynamic history reads from confirmed history during forming updates. `varip`
-remains rejected until its intrabar persistence semantics are implemented
-precisely.
+stateful TA callsite rollback inside conditional branches, array rollback,
+request provider immutability and cache rollback, and dynamic history reads from
+confirmed history during forming updates. `varip` remains rejected until its
+intrabar persistence semantics are implemented precisely.
 
 Next work:
 

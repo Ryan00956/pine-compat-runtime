@@ -13,7 +13,8 @@ able to integrate it through adapters.
 - Implement a clean-room Pine-compatible indicator runtime.
 - Prioritize semantic correctness over early breadth.
 - Support bar-by-bar time-series execution, historical references, `na`, `var`,
-  inputs, and plotting side effects.
+  inputs, plotting and selected drawing side effects, and fixture-backed
+  request data.
 - Expose stable Rust, CLI, Python, and WASM entry points for the supported
   subset.
 - Produce a host-neutral output model that charting applications can adapt.
@@ -26,7 +27,7 @@ able to integrate it through adapters.
 - This is not a copy of TradingView's compiler, runtime, services, data, UI, or
   private APIs.
 - The first releases will not attempt full Pine Script compatibility.
-- Strategy backtesting, multi-timeframe data requests, object drawing systems,
+- Strategy backtesting, broad request families, advanced drawing systems,
   alerts, and libraries are out of scope for the initial runtime.
 
 ## Design Documents
@@ -41,6 +42,7 @@ able to integrate it through adapters.
 - [Diagnostic Codes](docs/DIAGNOSTIC_CODES.md)
 - [Release Notes](docs/RELEASE_NOTES.md)
 - [Phase K Execution Plan](docs/PHASE_K_EXECUTION_PLAN.md)
+- [Phase F Request Platform Audit](docs/PHASE_F_AUDIT.md)
 - [Next Language Expansion Playbook](docs/NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md)
 - [Task Breakdown](docs/TASK_BREAKDOWN.md)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
@@ -54,8 +56,8 @@ pine-compat-runtime/
     pine-syntax/       lexer, parser, AST, source spans, diagnostics
     pine-sema/         scope resolution, type and qualifier analysis
     pine-ir/           HIR, MIR, and bytecode definitions
-    pine-runtime/      bar-by-bar VM, series store, state store
-    pine-builtins/     ta, math, input, plot, color, time
+    pine-runtime/      bar-by-bar VM, series store, state store, request data
+    pine-builtins/     ta, math, input, plot, color, time, request
     pine-cli/          command line runner and analyzer
     pine-python/       PyO3 and maturin Python bindings
     pine-wasm/         browser and host WASM bindings
@@ -87,16 +89,18 @@ source.pine + bars.csv
 The supported executable subset includes indicator scripts, historical
 bar-by-bar execution, constant and guarded dynamic integer history offsets,
 `if`/`else` blocks, `switch`, partial `for`/`while` loops, `var`, block-local
-declarations, `na`, `nz`, `input.*` defval execution, output calls, partial
-typed arrays, common `ta.*` functions, selected `math.*` and `str.*` functions,
-user-defined functions, named colors, color helpers, tuple returns,
-incremental append execution, realtime forming-bar rollback, Python bindings,
-and a thin WASM binding.
+declarations, `na`, `nz`, `input.*` defval execution, output calls, selected
+drawing objects, partial typed arrays, common `ta.*` functions, selected
+`math.*` and `str.*` functions, partial `request.security`, user-defined
+functions, named colors, color helpers, tuple returns, incremental append
+execution, realtime forming-bar rollback, Python bindings, and a thin WASM
+binding.
 
 The runtime intentionally rejects unsupported features such as `strategy.*`,
-`request.*`, alerts, imports, drawing objects, unsupported collection families
-and element types, recursive functions, function side effects, and `varip`
-intrabar persistence.
+request variants outside the narrow `request.security` subset, alerts, imports,
+advanced drawing families and methods, unsupported collection families and
+element types, recursive functions, function side effects, and `varip` intrabar
+persistence.
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes; skipped bars commit `na` for series values that were not
 evaluated on that bar.

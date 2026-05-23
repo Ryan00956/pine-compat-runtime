@@ -212,7 +212,8 @@ exists.
 Request support must cite request-specific fixtures. The conformance validator
 rejects supported or partial `request.*` rows that only point at unrelated
 runtime fixtures, so public request claims stay tied to request host-data,
-semantic, or runtime coverage.
+semantic, or runtime coverage. The closed Phase F request boundary and
+maintenance tails are summarized in `docs/PHASE_F_AUDIT.md`.
 
 Current CLI output:
 

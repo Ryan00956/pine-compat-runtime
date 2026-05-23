@@ -199,6 +199,38 @@ Drawing side effects inside user-defined functions are rejected under the same
 side-effect boundary as output calls and array mutation until UDF object
 semantics are deliberately expanded.
 
+## Request Data
+
+`request.security` is supported only for the matrix-backed subset. The runtime
+does not fetch data. Hosts inject immutable requested bar streams through the
+request provider contract, keyed by symbol and timeframe, and the runtime
+validates duplicate keys plus sorted unique bar times before execution.
+
+Same-context requests whose symbol and timeframe match the chart metadata
+evaluate the requested expression in the chart context. Provider-backed
+same-or-higher-timeframe requests evaluate the supported scalar expression in an
+isolated requested-context runtime over the provider bars. Requested-context
+state is separate from chart-context state: history buffers, `ta.*` callsite
+state, `var` storage, arrays, drawing objects, and outputs do not leak between
+the two contexts.
+
+Requested-context results are cached deterministically by callsite, requested
+symbol, requested timeframe, and expression identity for the duration of one
+runtime execution. Repeated identical calls reuse that cache instead of
+mutating provider data or chart state.
+
+Same-timeframe provider requests require an exact requested-bar timestamp
+match. Higher-timeframe provider requests use the default `gaps_off` and
+`lookahead_off` subset: a requested value is visible only after the requested
+bar has closed relative to the current chart bar, missing confirmed requested
+bars forward-fill the last confirmed requested value, and chart bars before the
+first confirmed requested bar return `na`.
+
+Lower-timeframe `request.security`, `request.security_lower_tf`, optional
+parameters, explicit gaps/lookahead, advanced request families, provider local
+aliases, UDF calls, output/drawing side effects, input declarations, and array
+mutation inside requested expressions remain unsupported.
+
 ### `varip`
 
 `varip` requires precise realtime tick semantics. It is rejected until intrabar

@@ -26,6 +26,9 @@
   injection, plus conformance validation that prevents partial `request.*`
   claims without request-specific fixtures. WASM request dataset injection
   remains a documented temporary gap.
+- Closed Phase F with `docs/PHASE_F_AUDIT.md`, fixture-backed request matrix
+  rows, same-or-higher-timeframe request contract coverage across Rust, CLI,
+  and Python, and a documented WASM provider-data gap.
 - Started Phase E drawing-object infrastructure by bumping the public
   machine-readable contract to `schemaVersion: 2` and adding the
   top-level `labels` output across CLI JSON, Python dictionaries, and WASM JSON.
