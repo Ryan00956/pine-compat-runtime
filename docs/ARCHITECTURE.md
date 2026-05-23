@@ -108,6 +108,15 @@ does not yet expose request dataset injection; scripts requiring provider data
 fail with the shared missing-request-data runtime error until a JSON host shape
 is added.
 
+Provider-backed `request.security` expressions are evaluated in a separate
+requested-context `HistoricalRuntime` over the immutable provider bars, then
+cached by callsite, requested symbol, requested timeframe, and HIR expression
+identity. That keeps requested history, `ta.*` callsite state, `var` storage,
+arrays, and drawing state isolated from the chart runtime. Slice 4 intentionally
+uses the lowered HIR expression debug identity as the cache expression marker;
+future widening that rewrites request expressions should replace it with an
+explicit request-expression id.
+
 Realtime execution uses explicit bar update kinds for historical, forming, and
 confirmed bars. See [`REALTIME_MODEL.md`](REALTIME_MODEL.md).
 

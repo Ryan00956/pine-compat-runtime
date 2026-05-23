@@ -5,6 +5,7 @@ mod timeframe;
 
 pub use bars::validate_requested_bars;
 pub use chart::ChartContext;
+pub(crate) use provider::RequestCacheKey;
 pub use provider::{
     InMemoryRequestDataProvider, NoRequestDataProvider, RequestDataError, RequestDataProvider,
     RequestEnvironment, RequestKey,

@@ -31,6 +31,17 @@ fn timed_bar(time: i64, close: f64) -> Bar {
     }
 }
 
+fn timed_ohlcv(time: i64, open: f64, high: f64, low: f64, close: f64, volume: f64) -> Bar {
+    Bar {
+        time,
+        open,
+        high,
+        low,
+        close,
+        volume,
+    }
+}
+
 fn custom_environment() -> RequestEnvironment {
     let timeframe = RequestTimeframe::parse("D").expect("daily timeframe");
     let chart = ChartContext::new("NYSE:IBM", timeframe.clone());
@@ -219,6 +230,129 @@ fn request_security_reads_same_timeframe_external_symbol_from_provider() {
         .expect("external request data should run");
 
     assert_values_close(&result.plots[0].values, &[20.0, 21.0]);
+}
+
+#[test]
+fn request_security_evaluates_provider_arithmetic_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request arithmetic\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, open + close))\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 100.0, 101.0, 99.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 110.0, 111.0, 109.0, 21.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 5.0), timed_bar(60_000, 6.0)])
+        .expect("provider arithmetic should run");
+
+    assert_values_close(&result.plots[0].values, &[120.0, 131.0]);
+}
+
+#[test]
+fn request_security_evaluates_provider_history_references() {
+    let program = compile_program(
+        "indicator(\"request history\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close[1]))\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 22.0),
+            timed_bar(120_000, 24.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 6.0),
+            timed_bar(120_000, 7.0),
+        ])
+        .expect("provider history should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[20.0, 22.0]);
+}
+
+#[test]
+fn request_security_isolates_provider_ta_state_from_chart_state() {
+    let program = compile_program(
+        "indicator(\"request ta\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2))\nchart = ta.sma(close, 2)\nplot(provider)\nplot(chart)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 22.0),
+            timed_bar(120_000, 24.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 9.0),
+        ])
+        .expect("provider ta expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[21.0, 23.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_values_close(&result.plots[1].values[1..], &[6.0, 8.0]);
+}
+
+#[test]
+fn request_security_evaluates_provider_ema_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request ema\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, ta.ema(close, 2)))\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 23.0),
+            timed_bar(120_000, 26.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 6.0),
+            timed_bar(120_000, 7.0),
+        ])
+        .expect("provider ema expression should run");
+
+    assert_values_close(
+        &result.plots[0].values,
+        &[20.0, 22.0, 24.666_666_666_666_668],
+    );
+}
+
+#[test]
+fn request_security_caches_requested_context_values_by_callsite() {
+    let program = compile_program(
+        "indicator(\"request cache\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2)))\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 22.0),
+            timed_bar(120_000, 24.0),
+        ],
+    );
+    let mut runtime = HistoricalRuntime::with_request_environment(&program, environment);
+
+    runtime
+        .append_bar(timed_bar(0, 5.0))
+        .expect("first bar should run");
+    assert_eq!(runtime.request_cache.len(), 1);
+    runtime
+        .append_bar(timed_bar(60_000, 7.0))
+        .expect("second bar should run");
+    assert_eq!(runtime.request_cache.len(), 1);
 }
 
 #[test]

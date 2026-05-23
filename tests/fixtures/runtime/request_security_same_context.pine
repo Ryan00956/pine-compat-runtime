@@ -2,6 +2,10 @@ indicator("request.security same context")
 
 identity = request.security(syminfo.tickerid, timeframe.period, close + open)
 history = request.security(syminfo.tickerid, timeframe.period, na(close[1]) ? close : close[1])
+sma = request.security(syminfo.tickerid, timeframe.period, ta.sma(close, 2))
+ema = request.security(syminfo.tickerid, timeframe.period, ta.ema(close, 2))
 
 plot(identity)
 plot(history)
+plot(sma)
+plot(ema)

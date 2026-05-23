@@ -64,6 +64,46 @@ fn accepts_provider_backed_same_timeframe_request_security_source() {
 }
 
 #[test]
+fn accepts_provider_backed_same_timeframe_request_security_expression() {
+    let analysis =
+        analyze("plot(request.security(\"NYSE:IBM\", timeframe.period, close + open))\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_provider_backed_same_timeframe_request_security_ta() {
+    let analysis =
+        analyze("plot(request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2)))\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_cross_context_request_security() {
     let analysis = analyze("x = request.security(\"AAPL\", \"D\", close)\n");
 
@@ -76,8 +116,21 @@ fn rejects_cross_context_request_security() {
 }
 
 #[test]
-fn rejects_provider_request_security_complex_expression_before_request_context_cache() {
-    let analysis = analyze("x = request.security(\"NYSE:IBM\", timeframe.period, close + open)\n");
+fn rejects_provider_request_security_unsupported_call() {
+    let analysis =
+        analyze("x = request.security(\"NYSE:IBM\", timeframe.period, math.max(close, open))\n");
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "request.security"
+    );
+}
+
+#[test]
+fn rejects_provider_request_security_local_variable_expression() {
+    let analysis =
+        analyze("src = close\nx = request.security(\"NYSE:IBM\", timeframe.period, src)\n");
 
     assert_eq!(analysis.compatibility.unsupported.len(), 1);
     assert_eq!(

@@ -27,6 +27,7 @@ pub use output::model::{
     RuntimeDiagnostic, RuntimeResult,
 };
 pub use profile::{RuntimeProfile, RuntimeProfiledResult};
+pub(crate) use request::RequestCacheKey;
 pub use request::{
     ChartContext, InMemoryRequestDataProvider, NoRequestDataProvider, RequestDataError,
     RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe, RequestTimeframeError,

@@ -5,12 +5,18 @@
 - Added the first `request.security` executable subset:
   `request.security(syminfo.tickerid, timeframe.period, expression)` returns the
   scalar side-effect-free expression in the current chart context.
-- Added same-timeframe host dataset injection for direct OHLCV
-  `request.security("SYMBOL", timeframe.period, source)` lookups in Rust runtime,
-  CLI `--request-bars SYMBOL:TIMEFRAME=bars.csv`, and Python `request_bars`
-  dictionaries. WASM request dataset injection remains a documented temporary
-  gap; multi-timeframe, optional parameter, gaps/lookahead, lower timeframe, and
-  provider-backed complex requested expressions remain unsupported.
+- Added same-timeframe host dataset injection for
+  `request.security("SYMBOL", timeframe.period, expression)` lookups in Rust
+  runtime, CLI `--request-bars SYMBOL:TIMEFRAME=bars.csv`, and Python
+  `request_bars` dictionaries. WASM request dataset injection remains a
+  documented temporary gap; multi-timeframe, optional parameter,
+  gaps/lookahead, and lower timeframe requests remain unsupported.
+- Widened same-timeframe provider-backed `request.security` to evaluate scalar
+  requested expressions in an isolated requested context with deterministic
+  callsite caching. The supported provider expression subset now includes direct
+  OHLCV/time sources, pure arithmetic and ternaries, history references, `na`,
+  `nz`, `ta.sma`, and `ta.ema`; provider local aliases, side effects, and
+  unsupported calls are rejected during semantic analysis where possible.
 - Started Phase E drawing-object infrastructure by bumping the public
   machine-readable contract to `schemaVersion: 2` and adding the
   top-level `labels` output across CLI JSON, Python dictionaries, and WASM JSON.

@@ -138,7 +138,7 @@ Unsupported fixtures are first-class tests.
 Examples:
 
 - unsupported `request.security` variants outside the same-context identity and
-  same-timeframe direct-source provider subset
+  same-timeframe scalar-expression provider subset
 - `strategy.entry`
 - unsupported collection families or unsupported array variants
 - unsupported label and line methods
@@ -198,7 +198,7 @@ input.int            supported
 ta.sma               supported
 ta.ema               supported
 ta.rsi               supported    fixture-derived executable subset
-request.security     partial      same-context identity and same-timeframe provider direct-source subset only
+request.security     partial      same-context identity and same-timeframe provider scalar-expression subset only
 strategy.*           unsupported  out of project scope for now
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.*            unsupported  request families beyond the narrow request.security subsets

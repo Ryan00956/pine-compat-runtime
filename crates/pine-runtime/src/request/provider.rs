@@ -1,5 +1,7 @@
 use std::{collections::HashMap, fmt, sync::Arc};
 
+use pine_ir::CallSiteId;
+
 use crate::Bar;
 
 use super::{ChartContext, RequestTimeframe, bars::validate_requested_bars};
@@ -27,6 +29,31 @@ impl RequestKey {
     #[must_use]
     pub fn timeframe(&self) -> &RequestTimeframe {
         &self.timeframe
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) struct RequestCacheKey {
+    call_site_id: CallSiteId,
+    symbol: String,
+    timeframe: String,
+    expression: String,
+}
+
+impl RequestCacheKey {
+    #[must_use]
+    pub(crate) fn new(
+        call_site_id: CallSiteId,
+        symbol: impl Into<String>,
+        timeframe: impl Into<String>,
+        expression: impl Into<String>,
+    ) -> Self {
+        Self {
+            call_site_id,
+            symbol: symbol.into(),
+            timeframe: timeframe.into(),
+            expression: expression.into(),
+        }
     }
 }
 

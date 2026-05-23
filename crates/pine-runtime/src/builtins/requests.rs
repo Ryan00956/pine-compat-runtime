@@ -1,4 +1,4 @@
-use pine_ir::{HirCallArg, HirExpr, HirExprKind};
+use pine_ir::{CallSiteId, HirCallArg, HirExpr};
 
 use crate::*;
 
@@ -6,15 +6,20 @@ impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_request_call(
         &mut self,
         callee: &str,
+        call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
         Some(match callee {
-            "request.security" => self.eval_request_security(args),
+            "request.security" => self.eval_request_security(call_site_id, args),
             _ => return None,
         })
     }
 
-    fn eval_request_security(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+    fn eval_request_security(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
         if args.len() != 3 {
             return Err(RuntimeError {
                 message: format!("request.security expects 3 argument(s), got {}", args.len()),
@@ -44,7 +49,7 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         if symbol != chart.symbol() {
-            return self.eval_provider_security(&symbol, &timeframe, &args[2].value);
+            return self.eval_provider_security(call_site_id, &symbol, &timeframe, &args[2].value);
         }
 
         self.eval_expr(&args[2].value)
@@ -52,64 +57,93 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn eval_provider_security(
         &mut self,
+        call_site_id: CallSiteId,
         symbol: &str,
         timeframe: &str,
         expression: &HirExpr,
     ) -> Result<PineValue, RuntimeError> {
-        let source_name = self
-            .request_source_name(expression)
-            .ok_or_else(|| RuntimeError {
-                message:
-                    "request.security provider execution supports only direct OHLCV expressions"
-                        .to_owned(),
-            })?;
         let timeframe = RequestTimeframe::parse(timeframe).map_err(|err| RuntimeError {
             message: err.to_string(),
         })?;
         let key = RequestKey::new(symbol, timeframe);
-        let requested_bars = self
-            .request_environment
-            .provider()
-            .bars(&key)
-            .map_err(|err| RuntimeError {
-                message: err.to_string(),
-            })?;
         let current_time = self
             .current_bar
             .map(|bar| bar.time)
             .ok_or_else(|| RuntimeError {
                 message: "request.security has no current chart bar".to_owned(),
             })?;
-        let Some(requested_bar) = requested_bars.iter().find(|bar| bar.time == current_time) else {
-            return Ok(PineValue::Na);
-        };
-        Ok(match source_name.as_str() {
-            "open" => PineValue::Float(requested_bar.open),
-            "high" => PineValue::Float(requested_bar.high),
-            "low" => PineValue::Float(requested_bar.low),
-            "close" => PineValue::Float(requested_bar.close),
-            "volume" => PineValue::Float(requested_bar.volume),
-            "time" => PineValue::Int(requested_bar.time),
-            _ => PineValue::Na,
-        })
-    }
 
-    fn request_source_name(&self, expression: &HirExpr) -> Option<String> {
-        match &expression.kind {
-            HirExprKind::Symbol(symbol_id) => self
-                .program
-                .symbols
-                .iter()
-                .find(|symbol| symbol.id == *symbol_id)
-                .map(|symbol| symbol.name.as_str())
-                .filter(|name| is_request_source_name(name))
-                .map(str::to_owned),
-            HirExprKind::Builtin(name) if is_request_source_name(name) => Some(name.to_owned()),
-            _ => None,
+        let cache_key = RequestCacheKey::new(
+            call_site_id,
+            key.symbol(),
+            key.timeframe().value(),
+            format!("{:?}", expression.kind),
+        );
+        if !self.request_cache.contains_key(&cache_key) {
+            let requested_bars = self
+                .request_environment
+                .provider()
+                .bars(&key)
+                .map_err(|err| RuntimeError {
+                    message: err.to_string(),
+                })?;
+            let requested_values = self.evaluate_requested_values(requested_bars, expression)?;
+            self.request_cache
+                .insert(cache_key.clone(), requested_values);
         }
-    }
-}
 
-fn is_request_source_name(name: &str) -> bool {
-    matches!(name, "open" | "high" | "low" | "close" | "volume" | "time")
+        Ok(self
+            .request_cache
+            .get(&cache_key)
+            .and_then(|requested_values| {
+                requested_values
+                    .iter()
+                    .find(|(time, _)| *time == current_time)
+                    .map(|(_, value)| value.clone())
+            })
+            .unwrap_or(PineValue::Na))
+    }
+
+    fn evaluate_requested_values(
+        &self,
+        requested_bars: &[Bar],
+        expression: &HirExpr,
+    ) -> Result<Vec<(i64, PineValue)>, RuntimeError> {
+        let mut runtime = HistoricalRuntime::with_request_environment(
+            self.program,
+            self.request_environment.clone(),
+        );
+        let mut values = Vec::with_capacity(requested_bars.len());
+        for bar in requested_bars {
+            values.push((
+                bar.time,
+                runtime.eval_requested_bar_expression(*bar, expression)?,
+            ));
+        }
+        Ok(values)
+    }
+
+    fn eval_requested_bar_expression(
+        &mut self,
+        bar: Bar,
+        expression: &HirExpr,
+    ) -> Result<PineValue, RuntimeError> {
+        let bar_index = self.bars;
+        self.current_bar_update_kind = BarUpdateKind::Historical;
+        self.current_bar_is_new = true;
+        self.current_bar = Some(bar);
+        self.series_store.set_current_bar(bar_index);
+        self.current_symbols.clear();
+        self.current_series.clear();
+        self.set_builtin_symbols(&bar, bar_index)?;
+
+        let value = self.eval_expr(expression)?;
+        self.commit_current_series()?;
+        self.previous_bar_time = Some(bar.time);
+        self.bars += 1;
+        self.current_bar_update_kind = BarUpdateKind::Historical;
+        self.current_bar_is_new = true;
+        self.current_bar = None;
+        Ok(value)
+    }
 }

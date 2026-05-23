@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) and provider-backed same-timeframe direct OHLCV expressions are supported; multi-timeframe, optional parameters, and side-effecting requested expressions are not implemented";
+const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) and provider-backed same-timeframe scalar expressions are supported; multi-timeframe, optional parameters, and side-effecting requested expressions are not implemented";
 
 impl Analyzer {
     pub(crate) fn analyze_request_call(
@@ -68,20 +68,16 @@ impl Analyzer {
         if expression_type.is_none_or(|pine_type| !is_request_scalar_type(pine_type)) {
             unsupported = true;
         }
-        let pure_scalar_expression = args
-            .get(2)
-            .is_some_and(|arg| request_expression_is_pure_scalar(&arg.value));
-        if !pure_scalar_expression {
+        let supported_expression = args.get(2).is_some_and(|arg| {
+            if provider_symbol {
+                request_expression_is_provider_scalar(&arg.value)
+            } else {
+                request_expression_is_pure_scalar(&arg.value)
+            }
+        });
+        if !supported_expression {
             unsupported = true;
         }
-        if provider_symbol
-            && args
-                .get(2)
-                .is_none_or(|arg| !request_expression_is_direct_source(&arg.value))
-        {
-            unsupported = true;
-        }
-
         if unsupported {
             self.unsupported(
                 "request.security",
@@ -93,15 +89,6 @@ impl Analyzer {
 
         expression_type.map(series_request_type)
     }
-}
-
-fn request_expression_is_direct_source(expr: &Expr) -> bool {
-    expr_name(expr).is_some_and(|name| {
-        matches!(
-            name.as_str(),
-            "open" | "high" | "low" | "close" | "volume" | "time"
-        )
-    })
 }
 
 fn series_request_type(pine_type: PineType) -> PineType {
@@ -143,7 +130,7 @@ fn request_expression_is_pure_scalar(expr: &Expr) -> bool {
             let Some(name) = expr_name(callee) else {
                 return false;
             };
-            matches!(name.as_str(), "na" | "nz")
+            matches!(name.as_str(), "na" | "nz" | "ta.sma" | "ta.ema")
                 && args
                     .iter()
                     .all(|arg| arg.name.is_none() && request_expression_is_pure_scalar(&arg.value))
@@ -161,4 +148,56 @@ fn request_expression_is_pure_scalar(expr: &Expr) -> bool {
         }
         ExprKind::Tuple(_) | ExprKind::For { .. } => false,
     }
+}
+
+fn request_expression_is_provider_scalar(expr: &Expr) -> bool {
+    match &expr.kind {
+        ExprKind::Literal(_) => true,
+        ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => expr_name(expr)
+            .as_deref()
+            .is_some_and(is_request_provider_source_name),
+        ExprKind::Unary { expr, .. } => request_expression_is_provider_scalar(expr),
+        ExprKind::Binary { left, right, .. } => {
+            request_expression_is_provider_scalar(left)
+                && request_expression_is_provider_scalar(right)
+        }
+        ExprKind::Ternary {
+            condition,
+            then_expr,
+            else_expr,
+        } => {
+            request_expression_is_provider_scalar(condition)
+                && request_expression_is_provider_scalar(then_expr)
+                && request_expression_is_provider_scalar(else_expr)
+        }
+        ExprKind::History { expr, offset } => {
+            request_expression_is_provider_scalar(expr)
+                && request_expression_is_provider_scalar(offset)
+        }
+        ExprKind::Call { callee, args } => {
+            let Some(name) = expr_name(callee) else {
+                return false;
+            };
+            matches!(name.as_str(), "na" | "nz" | "ta.sma" | "ta.ema")
+                && args.iter().all(|arg| {
+                    arg.name.is_none() && request_expression_is_provider_scalar(&arg.value)
+                })
+        }
+        ExprKind::Switch { selector, arms } => {
+            selector
+                .as_deref()
+                .is_none_or(request_expression_is_provider_scalar)
+                && arms.iter().all(|arm| {
+                    arm.condition
+                        .as_ref()
+                        .is_none_or(request_expression_is_provider_scalar)
+                        && request_expression_is_provider_scalar(&arm.result)
+                })
+        }
+        ExprKind::Tuple(_) | ExprKind::For { .. } => false,
+    }
+}
+
+fn is_request_provider_source_name(name: &str) -> bool {
+    matches!(name, "open" | "high" | "low" | "close" | "volume" | "time")
 }
