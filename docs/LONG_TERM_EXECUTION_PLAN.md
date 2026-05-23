@@ -420,24 +420,29 @@ Acceptance criteria:
 
 ## Phase I: `varip` and Intrabar Persistence
 
+Status: closed for the fixture-backed claimed subset. See
+`docs/PHASE_I_AUDIT.md`.
+
 Goal: implement intrabar persistence only after realtime update semantics are
 fully specified.
 
 Execution playbook: `docs/PHASE_I_EXECUTION_PLAN.md`.
 
-Scope:
+Delivered scope:
 
 - `varip` declaration analysis.
 - Intrabar storage distinct from confirmed-bar `var` storage.
 - Interaction with forming-bar rollback.
-- Interaction with arrays and object ids.
+- Interaction with scalar typed-array ids and backing contents.
 
-Acceptance criteria:
+Maintenance tails:
 
-- Repeated forming updates preserve `varip` state while rolling back ordinary
-  `var` state as designed.
-- Historical-only execution has a documented `varip` behavior.
-- `varip` fixtures cover scalar values, arrays, and future object ids.
+- Drawing object ids remain rejected for `varip` until object-store handoff rules
+  are designed.
+- Tuple `varip`, maps, matrices, UDTs, imports, object arrays, generic arrays,
+  and other value families remain outside the Phase I claim.
+- Realtime behavior is covered in Rust runtime fixtures; CLI, Python, and WASM
+  continue to expose historical compile/analyze/run host surfaces.
 
 ## Phase J: Libraries, Imports, User Types, and Methods
 

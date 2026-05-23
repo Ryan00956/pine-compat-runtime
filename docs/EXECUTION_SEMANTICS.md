@@ -272,7 +272,8 @@ mutation inside requested expressions remain unsupported.
 Scalar and scalar typed-array `varip` declarations use the intrabar persistence
 model described above. Drawing object ids are rejected before runtime because
 their object stores are not part of the `varip` handoff; tuples and other value
-families remain rejected until their realtime state partitions are designed.
+families remain rejected until their realtime state partitions are designed. The
+closed Phase I boundary for this subset is recorded in `docs/PHASE_I_AUDIT.md`.
 
 ## User-Defined Functions
 

@@ -264,3 +264,8 @@ The current scalar typed-array subset is summarized in
 `docs/ARRAY_STAGE_AUDIT.md`. Keep `array.*` marked `partial` until the deferred
 generic, object, UDT, map/matrix, history, and slice-aliasing semantics are
 designed and fixture-backed.
+
+The current `varip` subset is summarized in `docs/PHASE_I_AUDIT.md`. Keep
+`varip` marked `partial` until drawing object ids, tuples, maps, matrices, UDTs,
+imports, object arrays, generic arrays, and other value families have designed
+rollback semantics and fixture coverage.

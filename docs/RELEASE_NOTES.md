@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Phase I with `docs/PHASE_I_AUDIT.md`, fixture-backed scalar and scalar
+  typed-array `varip` conformance rows, host-surface review for CLI/Python/WASM
+  historical paths, and explicit maintenance tails for drawing ids, tuples,
+  maps, matrices, UDTs, imports, and unimplemented value families.
 - Added the scalar and scalar typed-array `varip` executable subset: global and
   local int/float/bool/string/color/`na` declarations now behave like `var`
   during historical execution and preserve intrabar state across repeated

@@ -127,13 +127,14 @@ being approximated.
 
 ## Current Status
 
-Phase 7 now defines the model and implements rollback for repeated forming
-updates. Realtime fixtures cover temporary output rollback, drawing-object
-lifecycle rollback for labels, lines, boxes, and tables, `var` rollback,
-scalar and scalar typed-array `varip` intrabar persistence, stateful TA callsite
-rollback inside conditional branches, array rollback, request provider
-immutability and cache rollback, and dynamic history reads from confirmed
-history during forming updates.
+Phase 7 defines the model and implements rollback for repeated forming updates.
+Phase I closes the fixture-backed scalar and scalar typed-array `varip` subset
+described in `docs/PHASE_I_AUDIT.md`. Realtime fixtures cover temporary output
+rollback, drawing-object lifecycle rollback for labels, lines, boxes, and
+tables, `var` rollback, scalar and scalar typed-array `varip` intrabar
+persistence, stateful TA callsite rollback inside conditional branches, array
+rollback, request provider immutability and cache rollback, and dynamic history
+reads from confirmed history during forming updates.
 
 Next work:
 

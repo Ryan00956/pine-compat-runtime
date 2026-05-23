@@ -67,7 +67,8 @@ Phase 1 executable subset:
   bool, string, and color arrays; scalar declarations have local declaration-site
   storage, UDF callsite-local storage, and realtime intrabar persistence, while
   supported array ids retain their backing contents across repeated forming
-  updates
+  updates; the closed Phase I boundary is summarized in
+  `docs/PHASE_I_AUDIT.md`
 - user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions
 - constant history offsets and guarded dynamic integer history offsets
