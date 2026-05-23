@@ -37,35 +37,37 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
 
+        let requested_timeframe =
+            RequestTimeframe::parse(&timeframe).map_err(|err| RuntimeError {
+                message: err.to_string(),
+            })?;
         let chart = self.request_environment.chart();
-        if timeframe != chart.timeframe().value() {
-            return Err(RuntimeError {
-                message: format!(
-                    "request.security supports only current chart symbol `{}` timeframe `{}`",
-                    chart.symbol(),
-                    chart.timeframe().value()
-                ),
-            });
+        let chart_symbol = chart.symbol().to_owned();
+        let chart_timeframe = chart.timeframe().clone();
+
+        if symbol == chart_symbol && requested_timeframe == chart_timeframe {
+            return self.eval_expr(&args[2].value);
         }
 
-        if symbol != chart.symbol() {
-            return self.eval_provider_security(call_site_id, &symbol, &timeframe, &args[2].value);
-        }
-
-        self.eval_expr(&args[2].value)
+        self.eval_provider_security(
+            call_site_id,
+            &symbol,
+            requested_timeframe,
+            &chart_timeframe,
+            &args[2].value,
+        )
     }
 
     fn eval_provider_security(
         &mut self,
         call_site_id: CallSiteId,
         symbol: &str,
-        timeframe: &str,
+        requested_timeframe: RequestTimeframe,
+        chart_timeframe: &RequestTimeframe,
         expression: &HirExpr,
     ) -> Result<PineValue, RuntimeError> {
-        let timeframe = RequestTimeframe::parse(timeframe).map_err(|err| RuntimeError {
-            message: err.to_string(),
-        })?;
-        let key = RequestKey::new(symbol, timeframe);
+        validate_provider_timeframe(symbol, &requested_timeframe, chart_timeframe)?;
+        let key = RequestKey::new(symbol, requested_timeframe.clone());
         let current_time = self
             .current_bar
             .map(|bar| bar.time)
@@ -92,16 +94,18 @@ impl<'a> HistoricalRuntime<'a> {
                 .insert(cache_key.clone(), requested_values);
         }
 
-        Ok(self
+        let requested_values = self
             .request_cache
             .get(&cache_key)
-            .and_then(|requested_values| {
-                requested_values
-                    .iter()
-                    .find(|(time, _)| *time == current_time)
-                    .map(|(_, value)| value.clone())
-            })
-            .unwrap_or(PineValue::Na))
+            .ok_or_else(|| RuntimeError {
+                message: "request.security requested context cache was not populated".to_owned(),
+            })?;
+        Ok(align_requested_value(
+            requested_values,
+            current_time,
+            &requested_timeframe,
+            chart_timeframe,
+        ))
     }
 
     fn evaluate_requested_values(
@@ -146,4 +150,54 @@ impl<'a> HistoricalRuntime<'a> {
         self.current_bar = None;
         Ok(value)
     }
+}
+
+fn validate_provider_timeframe(
+    symbol: &str,
+    requested_timeframe: &RequestTimeframe,
+    chart_timeframe: &RequestTimeframe,
+) -> Result<(), RuntimeError> {
+    if requested_timeframe.seconds() < chart_timeframe.seconds() {
+        return Err(RuntimeError {
+            message: format!(
+                "request.security lower timeframe requests are not supported for symbol `{symbol}` timeframe `{}` on chart timeframe `{}`",
+                requested_timeframe.value(),
+                chart_timeframe.value()
+            ),
+        });
+    }
+    if requested_timeframe.seconds() % chart_timeframe.seconds() != 0 {
+        return Err(RuntimeError {
+            message: format!(
+                "request.security requested timeframe `{}` must be an integer multiple of chart timeframe `{}`",
+                requested_timeframe.value(),
+                chart_timeframe.value()
+            ),
+        });
+    }
+    Ok(())
+}
+
+fn align_requested_value(
+    requested_values: &[(i64, PineValue)],
+    current_time: i64,
+    requested_timeframe: &RequestTimeframe,
+    chart_timeframe: &RequestTimeframe,
+) -> PineValue {
+    if requested_timeframe.seconds() == chart_timeframe.seconds() {
+        return requested_values
+            .iter()
+            .find(|(time, _)| *time == current_time)
+            .map(|(_, value)| value.clone())
+            .unwrap_or(PineValue::Na);
+    }
+
+    let chart_close = current_time.saturating_add(chart_timeframe.seconds().saturating_mul(1000));
+    let requested_duration = requested_timeframe.seconds().saturating_mul(1000);
+    requested_values
+        .iter()
+        .take_while(|(time, _)| time.saturating_add(requested_duration) <= chart_close)
+        .last()
+        .map(|(_, value)| value.clone())
+        .unwrap_or(PineValue::Na)
 }

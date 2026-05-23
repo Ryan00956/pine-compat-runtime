@@ -117,6 +117,13 @@ uses the lowered HIR expression debug identity as the cache expression marker;
 future widening that rewrites request expressions should replace it with an
 explicit request-expression id.
 
+For higher-timeframe provider requests, alignment uses the default
+`lookahead_off`/`gaps_off` subset: same-timeframe requests still require an
+exact requested-bar timestamp match, while coarser requested bars are visible
+only after their requested bar close is not later than the current chart bar
+close. Missing higher-timeframe bars forward-fill the last confirmed requested
+value; chart bars before the first confirmed requested bar return `na`.
+
 Realtime execution uses explicit bar update kinds for historical, forming, and
 confirmed bars. See [`REALTIME_MODEL.md`](REALTIME_MODEL.md).
 

@@ -58,6 +58,20 @@ fn external_symbol_environment(symbol: &str, bars: Vec<Bar>) -> RequestEnvironme
     RequestEnvironment::new(ChartContext::default(), Arc::new(provider))
 }
 
+fn external_symbol_environment_with_timeframe(
+    symbol: &str,
+    timeframe: &str,
+    bars: Vec<Bar>,
+) -> RequestEnvironment {
+    let key = RequestKey::new(
+        symbol,
+        RequestTimeframe::parse(timeframe).expect("request timeframe"),
+    );
+    let provider =
+        InMemoryRequestDataProvider::from_streams([(key, bars)]).expect("valid request bars");
+    RequestEnvironment::new(ChartContext::default(), Arc::new(provider))
+}
+
 #[test]
 fn request_timeframe_parses_supported_subset() {
     let default = RequestTimeframe::parse("").expect("default timeframe");
@@ -328,6 +342,121 @@ fn request_security_evaluates_provider_ema_in_requested_context() {
         &result.plots[0].values,
         &[20.0, 22.0, 24.666_666_666_666_668],
     );
+}
+
+#[test]
+fn request_security_aligns_higher_timeframe_without_future_values() {
+    let program = compile_program(
+        "indicator(\"request htf\")\nplot(request.security(\"NYSE:IBM\", \"5\", close))\n",
+    );
+    let environment = external_symbol_environment_with_timeframe(
+        "NYSE:IBM",
+        "5",
+        vec![timed_bar(0, 100.0), timed_bar(300_000, 200.0)],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(240_000, 3.0),
+            timed_bar(300_000, 4.0),
+            timed_bar(540_000, 5.0),
+        ])
+        .expect("higher timeframe request should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&result.plots[0].values[2..], &[100.0, 100.0, 200.0]);
+}
+
+#[test]
+fn request_security_higher_timeframe_gap_fills_last_confirmed_value() {
+    let program = compile_program(
+        "indicator(\"request htf gap\")\nplot(request.security(\"NYSE:IBM\", \"5\", close))\n",
+    );
+    let environment = external_symbol_environment_with_timeframe(
+        "NYSE:IBM",
+        "5",
+        vec![timed_bar(0, 100.0), timed_bar(900_000, 300.0)],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(240_000, 1.0),
+            timed_bar(600_000, 2.0),
+            timed_bar(1_140_000, 3.0),
+        ])
+        .expect("higher timeframe gap fill should run");
+
+    assert_values_close(&result.plots[0].values, &[100.0, 100.0, 300.0]);
+}
+
+#[test]
+fn request_security_higher_timeframe_supports_chart_symbol_provider_data() {
+    let program = compile_program(
+        "indicator(\"request chart htf\")\nplot(request.security(syminfo.tickerid, \"5\", close + open))\n",
+    );
+    let key = RequestKey::new(
+        "NASDAQ:AAPL",
+        RequestTimeframe::parse("5").expect("five minute timeframe"),
+    );
+    let provider = InMemoryRequestDataProvider::from_streams([(
+        key,
+        vec![timed_ohlcv(0, 10.0, 11.0, 9.0, 100.0, 1.0)],
+    )])
+    .expect("valid request bars");
+    let environment = RequestEnvironment::new(ChartContext::default(), Arc::new(provider));
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(240_000, 1.0)])
+        .expect("chart-symbol higher timeframe provider request should run");
+
+    assert_values_close(&result.plots[0].values, &[110.0]);
+}
+
+#[test]
+fn request_security_rejects_lower_timeframe_provider_requests() {
+    let program = compile_program(
+        "indicator(\"request ltf\")\nplot(request.security(\"NYSE:IBM\", \"30S\", close))\n",
+    );
+    let runtime =
+        HistoricalRuntime::with_request_environment(&program, RequestEnvironment::default());
+    let error = runtime
+        .run(&[timed_bar(0, 1.0)])
+        .expect_err("lower timeframe should fail");
+
+    assert_eq!(
+        error.message,
+        "request.security lower timeframe requests are not supported for symbol `NYSE:IBM` timeframe `30S` on chart timeframe `1`"
+    );
+}
+
+#[test]
+fn realtime_request_security_higher_timeframe_uses_confirmed_requested_bars() {
+    let program = compile_program(
+        "indicator(\"request realtime htf\")\nplot(request.security(\"NYSE:IBM\", \"5\", close))\n",
+    );
+    let mut runtime = RealtimeRuntime::with_request_environment(
+        &program,
+        external_symbol_environment_with_timeframe(
+            "NYSE:IBM",
+            "5",
+            vec![timed_bar(0, 100.0), timed_bar(300_000, 200.0)],
+        ),
+    );
+
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 1.0)))
+        .expect("historical update");
+    let first_forming = runtime
+        .update(BarUpdate::forming(timed_bar(240_000, 2.0)))
+        .expect("forming update");
+    let second_forming = runtime
+        .update(BarUpdate::forming(timed_bar(240_000, 3.0)))
+        .expect("second forming update");
+
+    assert_eq!(first_forming.plots[0].values[0], PineValue::Na);
+    assert_values_close(&first_forming.plots[0].values[1..], &[100.0]);
+    assert_eq!(second_forming.plots[0].values[0], PineValue::Na);
+    assert_values_close(&second_forming.plots[0].values[1..], &[100.0]);
 }
 
 #[test]

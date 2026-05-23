@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) and provider-backed same-timeframe scalar expressions are supported; multi-timeframe, optional parameters, and side-effecting requested expressions are not implemented";
+const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) and provider-backed same-or-higher-timeframe scalar expressions are supported; optional parameters, lower-timeframe requests, and side-effecting requested expressions are not implemented";
 
 impl Analyzer {
     pub(crate) fn analyze_request_call(
@@ -57,10 +57,13 @@ impl Analyzer {
         if !same_context_symbol && !provider_symbol {
             unsupported = true;
         }
-        let current_timeframe = args
+        let same_chart_timeframe = args
             .get(1)
             .is_some_and(|arg| expr_name(&arg.value).as_deref() == Some("timeframe.period"));
-        if !current_timeframe {
+        let literal_timeframe = args.get(1).is_some_and(|arg| {
+            matches!(&arg.value.kind, ExprKind::Literal(Literal::String(value)) if !value.trim().is_empty())
+        });
+        if !same_chart_timeframe && !literal_timeframe {
             unsupported = true;
         }
 
@@ -69,7 +72,7 @@ impl Analyzer {
             unsupported = true;
         }
         let supported_expression = args.get(2).is_some_and(|arg| {
-            if provider_symbol {
+            if provider_symbol || literal_timeframe {
                 request_expression_is_provider_scalar(&arg.value)
             } else {
                 request_expression_is_pure_scalar(&arg.value)

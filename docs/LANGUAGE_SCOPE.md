@@ -220,11 +220,15 @@ Request data:
 - `request.security(syminfo.tickerid, timeframe.period, expression)` for the
   current chart context only. The requested expression must be scalar and
   side-effect-free.
-- `request.security("SYMBOL", timeframe.period, expression)` for host-provided
-  same-timeframe bars. The provider expression subset includes direct
+- `request.security("SYMBOL", timeframe, expression)` and
+  `request.security(syminfo.tickerid, timeframe, expression)` for host-provided
+  same-or-higher-timeframe bars. The provider expression subset includes direct
   OHLCV/time sources, pure arithmetic and ternaries, history references, `na`,
   `nz`, `ta.sma`, and `ta.ema`; local variable aliases inside provider
-  expressions are not part of this subset. CLI hosts pass these bars with
+  expressions are not part of this subset. Higher-timeframe alignment uses
+  default `gaps_off` and `lookahead_off`: only confirmed requested bars are
+  visible, and missing requested bars forward-fill the last confirmed value.
+  CLI hosts pass these bars with
   `--request-bars SYMBOL:TIMEFRAME=bars.csv`; Python hosts pass
   `request_bars={"SYMBOL:TIMEFRAME": bars}`. WASM request dataset injection is a
   documented temporary gap.
@@ -234,7 +238,7 @@ Request data:
 The analyzer should reject these with clear diagnostics:
 
 - `strategy.*`
-- `request.*` variants outside the narrow same-context and same-timeframe
+- `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
 - `alert` and `alertcondition`
 - `library`, `import`, and `export`
@@ -242,7 +246,8 @@ The analyzer should reject these with clear diagnostics:
 - user-defined types
 - non-array methods
 - label, line, box, table, polyline objects
-- multi-symbol or multi-timeframe data loading
+- general multi-symbol or multi-timeframe data loading outside the documented
+  `request.security` provider subset
 - broker emulation and order execution
 - realtime-only `varip` semantics
 
@@ -262,7 +267,7 @@ The analyzer should return a machine-readable report:
   "unsupported": [
     {
       "feature": "request.security",
-      "reason": "Only same-context identity and same-timeframe scalar provider requests are supported in phase 1",
+      "reason": "Only same-context identity and same-or-higher-timeframe scalar provider requests are supported in phase 1",
       "span": "..."
     }
   ]

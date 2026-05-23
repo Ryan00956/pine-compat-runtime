@@ -195,16 +195,19 @@ The current executable subset has two forms:
 
 - `request.security(syminfo.tickerid, timeframe.period, expression)` evaluates a
   scalar side-effect-free expression in the chart context.
-- `request.security("SYMBOL", timeframe.period, expression)` evaluates a scalar
-  side-effect-free expression over host-provided same-timeframe bars. The
-  supported provider expression subset includes direct OHLCV/time sources, pure
-  arithmetic and ternaries, history references, `na`, `nz`, `ta.sma`, and
-  `ta.ema`.
+- `request.security("SYMBOL", timeframe, expression)` and
+  `request.security(syminfo.tickerid, timeframe, expression)` evaluate scalar
+  side-effect-free expressions over host-provided same-or-higher-timeframe bars.
+  The supported provider expression subset includes direct OHLCV/time sources,
+  pure arithmetic and ternaries, history references, `na`, `nz`, `ta.sma`, and
+  `ta.ema`. Higher-timeframe alignment uses default `gaps_off` and
+  `lookahead_off`: only confirmed requested bars are visible, and missing
+  requested bars forward-fill the last confirmed value.
 
-Higher timeframe requests, lower timeframe requests, provider expression local
-variable aliases, UDF calls, output/drawing side effects, input declarations,
-array mutation, optional parameters, barmerge behavior, gaps, and lookahead
-remain unsupported.
+Lower timeframe requests, provider expression local variable aliases, UDF calls,
+output/drawing side effects, input declarations, array mutation, optional
+parameters, non-default barmerge behavior, explicit gaps, and lookahead remain
+unsupported.
 `timeframe.in_seconds()` returns `60`.
 Explicit timeframe strings support Pine-style seconds (`1S`, `5S`, `10S`,
 `15S`, `30S`, `45S`), minutes (`1` through `1440`), days (`D`/`1D` through

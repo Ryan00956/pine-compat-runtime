@@ -85,8 +85,9 @@ Unsupported features should be reported explicitly:
 
 ```text
 `request.security` currently supports only same-context identity requests and
-same-timeframe host-provided scalar requested expressions over injected bars;
-multi-timeframe data requests are outside the current execution model.
+same-or-higher-timeframe host-provided scalar requested expressions over
+injected bars; lower-timeframe requests and general multi-timeframe data loading
+are outside the current execution model.
 ```
 
 This is both better UX and a better compatibility boundary.

@@ -1,5 +1,4 @@
 //@version=5
 indicator("Unsupported request")
-x = request.security("AAPL", "D", close)
+x = request.security(syminfo.tickerid, timeframe.period, plot(close))
 plot(x)
-
