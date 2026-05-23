@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) is supported; multi-symbol, multi-timeframe, optional parameters, and side-effecting requested expressions are not implemented";
+const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) and provider-backed same-timeframe direct OHLCV expressions are supported; multi-timeframe, optional parameters, and side-effecting requested expressions are not implemented";
 
 impl Analyzer {
     pub(crate) fn analyze_request_call(
@@ -48,16 +48,19 @@ impl Analyzer {
             ));
         }
 
-        if args
+        let same_context_symbol = args
             .first()
-            .is_none_or(|arg| expr_name(&arg.value).as_deref() != Some("syminfo.tickerid"))
-        {
+            .is_some_and(|arg| expr_name(&arg.value).as_deref() == Some("syminfo.tickerid"));
+        let provider_symbol = args.first().is_some_and(|arg| {
+            matches!(&arg.value.kind, ExprKind::Literal(Literal::String(value)) if !value.trim().is_empty())
+        });
+        if !same_context_symbol && !provider_symbol {
             unsupported = true;
         }
-        if args
+        let current_timeframe = args
             .get(1)
-            .is_none_or(|arg| expr_name(&arg.value).as_deref() != Some("timeframe.period"))
-        {
+            .is_some_and(|arg| expr_name(&arg.value).as_deref() == Some("timeframe.period"));
+        if !current_timeframe {
             unsupported = true;
         }
 
@@ -65,9 +68,16 @@ impl Analyzer {
         if expression_type.is_none_or(|pine_type| !is_request_scalar_type(pine_type)) {
             unsupported = true;
         }
-        if args
+        let pure_scalar_expression = args
             .get(2)
-            .is_none_or(|arg| !request_expression_is_pure_scalar(&arg.value))
+            .is_some_and(|arg| request_expression_is_pure_scalar(&arg.value));
+        if !pure_scalar_expression {
+            unsupported = true;
+        }
+        if provider_symbol
+            && args
+                .get(2)
+                .is_none_or(|arg| !request_expression_is_direct_source(&arg.value))
         {
             unsupported = true;
         }
@@ -83,6 +93,15 @@ impl Analyzer {
 
         expression_type.map(series_request_type)
     }
+}
+
+fn request_expression_is_direct_source(expr: &Expr) -> bool {
+    expr_name(expr).is_some_and(|name| {
+        matches!(
+            name.as_str(),
+            "open" | "high" | "low" | "close" | "volume" | "time"
+        )
+    })
 }
 
 fn series_request_type(pine_type: PineType) -> PineType {

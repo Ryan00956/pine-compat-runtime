@@ -102,6 +102,11 @@ bar streams through the shared request provider contract. The default runtime
 environment keeps the existing fixed chart metadata and no-request provider so
 current `HistoricalRuntime::new`, `RealtimeRuntime::new`, and `run_historical`
 call sites keep their behavior until request execution is explicitly enabled.
+CLI uses repeated `--request-bars SYMBOL:TIMEFRAME=bars.csv` options and Python
+accepts a `request_bars` dictionary with the same `SYMBOL:TIMEFRAME` keys. WASM
+does not yet expose request dataset injection; scripts requiring provider data
+fail with the shared missing-request-data runtime error until a JSON host shape
+is added.
 
 Realtime execution uses explicit bar update kinds for historical, forming, and
 confirmed bars. See [`REALTIME_MODEL.md`](REALTIME_MODEL.md).
@@ -252,14 +257,14 @@ Python:
 from pine_compat import compile_script
 
 program = compile_script(source)
-result = program.run(bars, inputs={"length": 20})
+result = program.run(bars, request_bars={"NYSE:IBM:1": requested_bars})
 ```
 
 CLI:
 
 ```bash
 pine-compat analyze script.pine
-pine-compat run script.pine --bars bars.csv --out result.json
+pine-compat run script.pine --bars bars.csv --request-bars NYSE:IBM:1=ibm.csv
 ```
 
 ## Output Model

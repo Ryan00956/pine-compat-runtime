@@ -45,6 +45,25 @@ fn accepts_same_context_request_security() {
 }
 
 #[test]
+fn accepts_provider_backed_same_timeframe_request_security_source() {
+    let analysis = analyze("plot(request.security(\"NYSE:IBM\", timeframe.period, close))\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_cross_context_request_security() {
     let analysis = analyze("x = request.security(\"AAPL\", \"D\", close)\n");
 
@@ -54,6 +73,17 @@ fn rejects_cross_context_request_security() {
         "request.security"
     );
     assert_eq!(analysis.diagnostics[0].code, "E_UNSUPPORTED_FEATURE");
+}
+
+#[test]
+fn rejects_provider_request_security_complex_expression_before_request_context_cache() {
+    let analysis = analyze("x = request.security(\"NYSE:IBM\", timeframe.period, close + open)\n");
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "request.security"
+    );
 }
 
 #[test]

@@ -84,9 +84,9 @@ Runs all Pine scripts exactly like TradingView.
 Unsupported features should be reported explicitly:
 
 ```text
-`request.security` currently supports only same-context identity requests;
-external multi-symbol and multi-timeframe data requests are outside the current
-execution model.
+`request.security` currently supports only same-context identity requests and
+same-timeframe host-provided direct OHLCV source lookups; multi-timeframe data
+requests are outside the current execution model.
 ```
 
 This is both better UX and a better compatibility boundary.

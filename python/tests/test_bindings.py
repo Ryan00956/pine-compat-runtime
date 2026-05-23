@@ -63,6 +63,56 @@ def test_run_script_compiles_and_executes():
     assert result["plots"][0]["values"] == [2, 2, 3]
 
 
+def test_run_script_accepts_request_bars():
+    result = pine_compat.run_script(
+        'indicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n',
+        BARS,
+        {
+            "NYSE:IBM:1": [
+                {
+                    "time": 0,
+                    "open": 10.0,
+                    "high": 11.0,
+                    "low": 9.0,
+                    "close": 20.0,
+                    "volume": 100.0,
+                },
+                {
+                    "time": 1,
+                    "open": 11.0,
+                    "high": 12.0,
+                    "low": 10.0,
+                    "close": 21.0,
+                    "volume": 100.0,
+                },
+                {
+                    "time": 2,
+                    "open": 12.0,
+                    "high": 13.0,
+                    "low": 11.0,
+                    "close": 22.0,
+                    "volume": 100.0,
+                },
+            ],
+        },
+    )
+
+    assert result["plots"][0]["values"] == [20.0, 21.0, 22.0]
+
+
+def test_run_script_reports_missing_request_bars():
+    program = pine_compat.compile_script(
+        'indicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n'
+    )
+
+    try:
+        program.run(BARS)
+    except ValueError as error:
+        assert "missing request data for symbol `NYSE:IBM` timeframe `1`" in str(error)
+    else:
+        raise AssertionError("missing request data should fail")
+
+
 def test_run_script_returns_label_outputs():
     result = pine_compat.run_script(
         'indicator("labels")\nif bar_index == 0\n    label_id = label.new(bar_index, high, "start")\nplot(close)\n',

@@ -40,6 +40,13 @@ fn custom_environment() -> RequestEnvironment {
     RequestEnvironment::new(chart, Arc::new(provider))
 }
 
+fn external_symbol_environment(symbol: &str, bars: Vec<Bar>) -> RequestEnvironment {
+    let key = RequestKey::new(symbol, RequestTimeframe::default());
+    let provider =
+        InMemoryRequestDataProvider::from_streams([(key, bars)]).expect("valid request bars");
+    RequestEnvironment::new(ChartContext::default(), Arc::new(provider))
+}
+
 #[test]
 fn request_timeframe_parses_supported_subset() {
     let default = RequestTimeframe::parse("").expect("default timeframe");
@@ -99,6 +106,24 @@ fn in_memory_provider_validates_and_returns_requested_bars() {
     assert_eq!(
         provider.bars(&key).expect("requested bars"),
         bars.as_slice()
+    );
+}
+
+#[test]
+fn in_memory_provider_rejects_duplicate_request_keys() {
+    let key = RequestKey::new(
+        "NYSE:IBM",
+        RequestTimeframe::parse("D").expect("daily timeframe"),
+    );
+    let error = InMemoryRequestDataProvider::from_streams([
+        (key.clone(), vec![timed_bar(0, 10.0)]),
+        (key, vec![timed_bar(86_400_000, 11.0)]),
+    ])
+    .expect_err("duplicate request key should fail");
+
+    assert_eq!(
+        error.to_string(),
+        "duplicate request data for symbol `NYSE:IBM` timeframe `D`"
     );
 }
 
@@ -177,4 +202,65 @@ fn request_security_uses_runtime_chart_metadata_for_identity_check() {
         .expect("custom chart metadata should satisfy same-context identity");
 
     assert_values_close(&result.plots[0].values, &[9.0, 11.0]);
+}
+
+#[test]
+fn request_security_reads_same_timeframe_external_symbol_from_provider() {
+    let program = compile_program(
+        "indicator(\"request external\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![timed_bar(0, 20.0), timed_bar(60_000, 21.0)],
+    );
+    let runtime = HistoricalRuntime::with_request_environment(&program, environment);
+    let result = runtime
+        .run(&[timed_bar(0, 5.0), timed_bar(60_000, 6.0)])
+        .expect("external request data should run");
+
+    assert_values_close(&result.plots[0].values, &[20.0, 21.0]);
+}
+
+#[test]
+fn request_security_reports_missing_external_dataset() {
+    let program = compile_program(
+        "indicator(\"request missing\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
+    );
+    let runtime =
+        HistoricalRuntime::with_request_environment(&program, RequestEnvironment::default());
+    let error = runtime
+        .run(&[timed_bar(0, 5.0)])
+        .expect_err("missing provider data should fail");
+
+    assert_eq!(
+        error.message,
+        "missing request data for symbol `NYSE:IBM` timeframe `1`"
+    );
+}
+
+#[test]
+fn realtime_request_security_reuses_immutable_provider_data_during_rollback() {
+    let program = compile_program(
+        "indicator(\"request realtime\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
+    );
+    let mut runtime = RealtimeRuntime::with_request_environment(
+        &program,
+        external_symbol_environment(
+            "NYSE:IBM",
+            vec![timed_bar(0, 20.0), timed_bar(60_000, 21.0)],
+        ),
+    );
+
+    runtime
+        .update(BarUpdate::historical(timed_bar(0, 5.0)))
+        .expect("historical update");
+    let first_forming = runtime
+        .update(BarUpdate::forming(timed_bar(60_000, 6.0)))
+        .expect("forming update");
+    let second_forming = runtime
+        .update(BarUpdate::forming(timed_bar(60_000, 7.0)))
+        .expect("second forming update");
+
+    assert_values_close(&first_forming.plots[0].values, &[20.0, 21.0]);
+    assert_values_close(&second_forming.plots[0].values, &[20.0, 21.0]);
 }

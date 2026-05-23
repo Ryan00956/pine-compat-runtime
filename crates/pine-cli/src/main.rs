@@ -31,7 +31,7 @@ fn run() -> Result<(), String> {
 }
 
 pub(crate) fn usage() -> String {
-    "usage: pine-compat <analyze|fmt-ast> <script.pine>\n       pine-compat run <script.pine> --bars <bars.csv> [--profile]\n       pine-compat matrix [--format text|json]".to_owned()
+    "usage: pine-compat <analyze|fmt-ast> <script.pine>\n       pine-compat run <script.pine> --bars <bars.csv> [--request-bars SYMBOL:TIMEFRAME=bars.csv]... [--profile]\n       pine-compat matrix [--format text|json]".to_owned()
 }
 
 #[cfg(test)]

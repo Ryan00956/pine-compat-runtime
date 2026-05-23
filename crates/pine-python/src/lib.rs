@@ -1,5 +1,8 @@
 use pine_ir::HirProgram;
-use pine_runtime::{Bar, PUBLIC_OUTPUT_SCHEMA_VERSION, PineValue, run_historical};
+use pine_runtime::{
+    Bar, ChartContext, InMemoryRequestDataProvider, PUBLIC_OUTPUT_SCHEMA_VERSION, PineValue,
+    RequestEnvironment, RequestKey, RequestTimeframe, run_historical_with_request_environment,
+};
 use pine_sema::{Analysis, analyze_source};
 use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 use pyo3::exceptions::PyValueError;
@@ -14,10 +17,17 @@ struct PyProgram {
 
 #[pymethods]
 impl PyProgram {
-    fn run(&self, py: Python<'_>, bars: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    #[pyo3(signature = (bars, request_bars=None))]
+    fn run(
+        &self,
+        py: Python<'_>,
+        bars: &Bound<'_, PyAny>,
+        request_bars: Option<&Bound<'_, PyAny>>,
+    ) -> PyResult<Py<PyAny>> {
         let bars = parse_bars(bars)?;
-        let result =
-            run_historical(&self.hir, &bars).map_err(|err| PyValueError::new_err(err.message))?;
+        let request_environment = parse_request_environment(request_bars)?;
+        let result = run_historical_with_request_environment(&self.hir, &bars, request_environment)
+            .map_err(|err| PyValueError::new_err(err.message))?;
         runtime_result_to_py(py, &result)
     }
 }
@@ -46,10 +56,15 @@ fn analyze_script(py: Python<'_>, source: &str) -> PyResult<Py<PyAny>> {
     analysis_to_py(py, &source_file, &analysis)
 }
 
-#[pyfunction]
-fn run_script(py: Python<'_>, source: &str, bars: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+#[pyfunction(signature = (source, bars, request_bars=None))]
+fn run_script(
+    py: Python<'_>,
+    source: &str,
+    bars: &Bound<'_, PyAny>,
+    request_bars: Option<&Bound<'_, PyAny>>,
+) -> PyResult<Py<PyAny>> {
     let program = compile_script(source)?;
-    program.run(py, bars)
+    program.run(py, bars, request_bars)
 }
 
 #[pymodule]
@@ -68,6 +83,45 @@ fn parse_bars(bars: &Bound<'_, PyAny>) -> PyResult<Vec<Bar>> {
         parsed.push(parse_bar(&item)?);
     }
     Ok(parsed)
+}
+
+fn parse_request_environment(
+    request_bars: Option<&Bound<'_, PyAny>>,
+) -> PyResult<RequestEnvironment> {
+    let Some(request_bars) = request_bars else {
+        return Ok(RequestEnvironment::default());
+    };
+    let dict = request_bars.cast::<PyDict>().map_err(|_| {
+        PyValueError::new_err("request_bars must be a dict mapping SYMBOL:TIMEFRAME to bars")
+    })?;
+    let mut streams = Vec::with_capacity(dict.len());
+    for (key, value) in dict {
+        let key: String = key.extract()?;
+        let request_key = parse_request_key(&key)?;
+        streams.push((request_key, parse_bars(&value)?));
+    }
+    let provider = InMemoryRequestDataProvider::from_streams(streams)
+        .map_err(|err| PyValueError::new_err(err.to_string()))?;
+    Ok(RequestEnvironment::new(
+        ChartContext::default(),
+        std::sync::Arc::new(provider),
+    ))
+}
+
+fn parse_request_key(key: &str) -> PyResult<RequestKey> {
+    let Some((symbol, timeframe)) = key.rsplit_once(':') else {
+        return Err(PyValueError::new_err(
+            "request_bars keys must use SYMBOL:TIMEFRAME",
+        ));
+    };
+    if symbol.trim().is_empty() {
+        return Err(PyValueError::new_err(
+            "request_bars symbol must not be empty",
+        ));
+    }
+    let timeframe =
+        RequestTimeframe::parse(timeframe).map_err(|err| PyValueError::new_err(err.to_string()))?;
+    Ok(RequestKey::new(symbol.trim(), timeframe))
 }
 
 fn parse_bar(item: &Bound<'_, PyAny>) -> PyResult<Bar> {

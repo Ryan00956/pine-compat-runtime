@@ -33,7 +33,10 @@ pub use request::{
     validate_requested_bars,
 };
 pub use retention::HistoryRetentionMode;
-pub use runtime::historical::{HistoricalRuntime, run_historical, run_historical_profiled};
+pub use runtime::historical::{
+    HistoricalRuntime, run_historical, run_historical_profiled,
+    run_historical_profiled_with_request_environment, run_historical_with_request_environment,
+};
 pub use runtime::realtime::RealtimeRuntime;
 pub use series::SeriesStore;
 pub use value::PineValue;

@@ -191,11 +191,17 @@ request.security(symbol: simple string, timeframe: simple string, expression: an
   -> series type matching expression
 ```
 
-Only the same-context identity form is executable in the current subset:
-`request.security(syminfo.tickerid, timeframe.period, expression)`. The
-expression must be scalar and side-effect free. Provider-backed symbol/timeframe
-requests, optional parameters, barmerge behavior, gaps, lookahead, and
-lower-timeframe array requests remain unsupported.
+The current executable subset has two forms:
+
+- `request.security(syminfo.tickerid, timeframe.period, expression)` evaluates a
+  scalar side-effect-free expression in the chart context.
+- `request.security("SYMBOL", timeframe.period, source)` reads the same
+  timestamp from a host-provided dataset for a direct source expression:
+  `open`, `high`, `low`, `close`, `volume`, or `time`.
+
+Higher timeframe requests, lower timeframe requests, provider-backed complex
+expressions, optional parameters, barmerge behavior, gaps, and lookahead remain
+unsupported.
 `timeframe.in_seconds()` returns `60`.
 Explicit timeframe strings support Pine-style seconds (`1S`, `5S`, `10S`,
 `15S`, `30S`, `45S`), minutes (`1` through `1440`), days (`D`/`1D` through

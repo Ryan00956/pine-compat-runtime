@@ -33,6 +33,7 @@ impl RequestKey {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RequestDataError {
     MissingData { symbol: String, timeframe: String },
+    DuplicateKey { symbol: String, timeframe: String },
     DuplicateBars { time: i64 },
     UnsortedBars { previous_time: i64, time: i64 },
 }
@@ -44,6 +45,12 @@ impl fmt::Display for RequestDataError {
                 write!(
                     formatter,
                     "missing request data for symbol `{symbol}` timeframe `{timeframe}`"
+                )
+            }
+            Self::DuplicateKey { symbol, timeframe } => {
+                write!(
+                    formatter,
+                    "duplicate request data for symbol `{symbol}` timeframe `{timeframe}`"
                 )
             }
             Self::DuplicateBars { time } => {
@@ -91,6 +98,12 @@ impl InMemoryRequestDataProvider {
 
     pub fn insert(&mut self, key: RequestKey, bars: Vec<Bar>) -> Result<(), RequestDataError> {
         validate_requested_bars(&bars)?;
+        if self.streams.contains_key(&key) {
+            return Err(RequestDataError::DuplicateKey {
+                symbol: key.symbol().to_owned(),
+                timeframe: key.timeframe().value().to_owned(),
+            });
+        }
         self.streams.insert(key, bars);
         Ok(())
     }

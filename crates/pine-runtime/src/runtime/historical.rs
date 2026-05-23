@@ -11,6 +11,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) historical_end: Option<usize>,
     pub(crate) current_bar_update_kind: BarUpdateKind,
     pub(crate) current_bar_is_new: bool,
+    pub(crate) current_bar: Option<Bar>,
     pub(crate) request_environment: RequestEnvironment,
     pub(crate) series_store: SeriesStore,
     pub(crate) series_retention: SeriesRetention,
@@ -72,11 +73,27 @@ pub fn run_historical(program: &HirProgram, bars: &[Bar]) -> Result<RuntimeResul
     HistoricalRuntime::new(program).run(bars)
 }
 
+pub fn run_historical_with_request_environment(
+    program: &HirProgram,
+    bars: &[Bar],
+    request_environment: RequestEnvironment,
+) -> Result<RuntimeResult, RuntimeError> {
+    HistoricalRuntime::with_request_environment(program, request_environment).run(bars)
+}
+
 pub fn run_historical_profiled(
     program: &HirProgram,
     bars: &[Bar],
 ) -> Result<RuntimeProfiledResult, RuntimeError> {
     HistoricalRuntime::new(program).run_profiled(bars)
+}
+
+pub fn run_historical_profiled_with_request_environment(
+    program: &HirProgram,
+    bars: &[Bar],
+    request_environment: RequestEnvironment,
+) -> Result<RuntimeProfiledResult, RuntimeError> {
+    HistoricalRuntime::with_request_environment(program, request_environment).run_profiled(bars)
 }
 
 impl<'a> HistoricalRuntime<'a> {
@@ -96,6 +113,7 @@ impl<'a> HistoricalRuntime<'a> {
             historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
             current_bar_is_new: true,
+            current_bar: None,
             request_environment,
             series_store: SeriesStore::new(),
             series_retention: SeriesRetention::from_program(program),
@@ -211,6 +229,7 @@ impl<'a> HistoricalRuntime<'a> {
         let bar_index = self.bars;
         self.current_bar_update_kind = update_kind;
         self.current_bar_is_new = is_new_bar;
+        self.current_bar = Some(bar);
         self.series_store.set_current_bar(bar_index);
         self.current_symbols.clear();
         self.current_series.clear();
@@ -233,6 +252,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.bars += 1;
         self.current_bar_update_kind = BarUpdateKind::Historical;
         self.current_bar_is_new = true;
+        self.current_bar = None;
         Ok(())
     }
 
