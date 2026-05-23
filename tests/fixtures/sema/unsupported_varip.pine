@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported varip")
-varip x = 0
-plot(x)
-
+if close > open
+    varip x = 0
+    plot(x)

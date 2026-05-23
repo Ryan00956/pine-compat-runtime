@@ -109,7 +109,7 @@ mod tests {
         assert!(
             entries
                 .iter()
-                .any(|entry| entry.feature == "varip" && entry.status == "unsupported")
+                .any(|entry| entry.feature == "varip" && entry.status == "partial")
         );
     }
 
@@ -200,7 +200,6 @@ mod tests {
     fn matrix_includes_known_unsupported_platform_families() {
         let entries = conformance_entries();
         for feature in [
-            "varip",
             "request.*",
             "import",
             "strategy.*",

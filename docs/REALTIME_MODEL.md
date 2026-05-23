@@ -102,24 +102,30 @@ forming snapshot.
 is temporary; the next forming update starts again from the last confirmed
 snapshot. A confirmed update persists the new `var` value.
 
-`varip` is rejected. It requires state that persists across repeated intrabar
-updates while still interacting correctly with bar confirmation and historical
-series commits. That is a separate state partition from `var`, and it is not
-implemented yet.
+Global scalar `varip` declarations are supported as a separate intrabar
+persistence path. The first forming update for a bar starts from the confirmed
+snapshot. Later forming updates for that same bar seed global scalar `varip`
+slots from the previous forming update while keeping ordinary `var`, arrays,
+drawing objects, outputs, request caches, callsite state, and history reads on
+the confirmed rollback path. A confirmed update also seeds from the latest
+forming `varip` slots before executing, then stores the resulting values in the
+confirmed snapshot for the next bar.
 
-The semantic analyzer rejects `varip` before HIR lowering with a compatibility
-diagnostic. This avoids silently approximating `varip` with `var`, which would
-produce incorrect realtime behavior.
+Historical execution treats the supported global scalar `varip` subset like
+`var` because historical bars have one committed evaluation. Local `varip`,
+arrays held by `varip`, drawing object ids, tuples, and other non-scalar value
+families remain rejected with compatibility diagnostics instead of being
+approximated.
 
 ## Current Status
 
 Phase 7 now defines the model and implements rollback for repeated forming
 updates. Realtime fixtures cover temporary output rollback, drawing-object
-lifecycle rollback for labels, lines, boxes, and tables, `var` rollback,
-stateful TA callsite rollback inside conditional branches, array rollback,
-request provider immutability and cache rollback, and dynamic history reads from
-confirmed history during forming updates. `varip` remains rejected until its
-intrabar persistence semantics are implemented precisely.
+lifecycle rollback for labels, lines, boxes, and tables, `var` rollback, global
+scalar `varip` intrabar persistence, stateful TA callsite rollback inside
+conditional branches, array rollback, request provider immutability and cache
+rollback, and dynamic history reads from confirmed history during forming
+updates.
 
 Next work:
 

@@ -45,6 +45,61 @@ fn accepts_same_context_request_security() {
 }
 
 #[test]
+fn accepts_global_scalar_varip_declaration() {
+    let analysis = analyze("varip x = 0\nx := x + 1\nplot(x)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "varip")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    let hir = analysis.hir.expect("varip script should lower");
+    let symbol = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "x")
+        .expect("x symbol should exist");
+    assert_eq!(symbol.persistence, PersistenceKind::Varip);
+    assert_eq!(symbol.var_slot_id, Some(VarSlotId(0)));
+}
+
+#[test]
+fn rejects_local_varip_declaration() {
+    let analysis = analyze("if close > open\n    varip x = 0\n    plot(x)\n");
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(analysis.compatibility.unsupported[0].feature, "varip");
+    assert!(
+        analysis.compatibility.unsupported[0]
+            .reason
+            .contains("local varip declarations")
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_array_varip_declaration() {
+    let analysis = analyze("varip values = array.new_float(0)\nplot(array.size(values))\n");
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(analysis.compatibility.unsupported[0].feature, "varip");
+    assert!(
+        analysis.compatibility.unsupported[0]
+            .reason
+            .contains("global scalar")
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_provider_backed_same_timeframe_request_security_source() {
     let analysis = analyze("plot(request.security(\"NYSE:IBM\", timeframe.period, close))\n");
 

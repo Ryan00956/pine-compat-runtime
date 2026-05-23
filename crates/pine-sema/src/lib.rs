@@ -16,8 +16,8 @@ mod prelude {
     pub(crate) use pine_builtins::{Accepts, BuiltinSignature, ReturnSpec};
     pub(crate) use pine_ir::{
         HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirHistoryOffset, HirLiteral, HirProgram,
-        HirStmt, HirStmtKind, HirSwitchArm, HirSymbol, HirUnaryOp, PineType, Qualifier, SymbolId,
-        ValueKind,
+        HirStmt, HirStmtKind, HirSwitchArm, HirSymbol, HirUnaryOp, PersistenceKind, PineType,
+        Qualifier, SymbolId, ValueKind,
     };
     pub(crate) use pine_syntax::{
         BinaryOp, CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Literal, Program, Severity,
@@ -34,7 +34,7 @@ mod prelude {
     };
     pub(crate) use crate::analyzer::functions::resolve_udf_arg_indices;
     pub(crate) use crate::analyzer::unsupported::{
-        VARIP_UNSUPPORTED_REASON, unsupported_syntax_reason,
+        VARIP_LOCAL_UNSUPPORTED_REASON, VARIP_VALUE_UNSUPPORTED_REASON, unsupported_syntax_reason,
     };
     pub(crate) use crate::compatibility::{FeatureUse, UnsupportedFeature};
     pub(crate) use crate::history::{infer_history_requirements, infer_max_bars_back};

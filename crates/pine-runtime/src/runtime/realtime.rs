@@ -43,6 +43,9 @@ impl<'a> RealtimeRuntime<'a> {
             BarUpdateKind::Confirmed => {
                 let is_new_bar = self.forming.is_none();
                 let mut runtime = self.confirmed.clone();
+                if let Some(previous_forming) = &self.forming {
+                    runtime.seed_intrabar_persistence_from(previous_forming);
+                }
                 runtime.append_bar_with_context(update.bar, update.kind, is_new_bar)?;
                 self.confirmed = runtime;
                 self.forming = None;
@@ -51,6 +54,9 @@ impl<'a> RealtimeRuntime<'a> {
             BarUpdateKind::Forming => {
                 let is_new_bar = self.forming.is_none();
                 let mut runtime = self.confirmed.clone();
+                if let Some(previous_forming) = &self.forming {
+                    runtime.seed_intrabar_persistence_from(previous_forming);
+                }
                 runtime.append_bar_with_context(update.bar, update.kind, is_new_bar)?;
                 let result = runtime.result();
                 self.forming = Some(runtime);

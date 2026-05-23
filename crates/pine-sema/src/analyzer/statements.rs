@@ -133,24 +133,19 @@ impl Analyzer {
                 }
             }
             StmtKind::Decl { mode, name, value } => {
-                if matches!(mode, pine_syntax::DeclMode::Varip) {
-                    self.unsupported("varip", VARIP_UNSUPPORTED_REASON, statement.span);
-                }
                 let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
-                let var_slot_id = if matches!(mode, pine_syntax::DeclMode::Var) {
-                    Some(self.alloc_var_slot())
-                } else {
-                    None
-                };
+                let (persistence, var_slot_id) =
+                    self.declaration_persistence(*mode, value_type, statement.span);
                 let symbol = if self.block_depth > 0 || self.function_depth > 0 {
-                    self.define_local_symbol(
+                    self.define_local_symbol_with_persistence(
                         name,
                         value_type,
+                        persistence,
                         var_slot_id,
                         self.function_depth == 0,
                     )
                 } else {
-                    self.define_symbol(name, value_type, var_slot_id)
+                    self.define_symbol_with_persistence(name, value_type, persistence, var_slot_id)
                 };
                 self.bind_symbol(name, statement.span, symbol);
             }
@@ -185,6 +180,33 @@ impl Analyzer {
             }
             StmtKind::Unsupported { feature } => {
                 self.unsupported(feature, unsupported_syntax_reason(feature), statement.span);
+            }
+        }
+    }
+
+    fn declaration_persistence(
+        &mut self,
+        mode: pine_syntax::DeclMode,
+        value_type: PineType,
+        span: Span,
+    ) -> (PersistenceKind, Option<pine_ir::VarSlotId>) {
+        match mode {
+            pine_syntax::DeclMode::Normal => (PersistenceKind::None, None),
+            pine_syntax::DeclMode::Var => (PersistenceKind::Var, Some(self.alloc_var_slot())),
+            pine_syntax::DeclMode::Varip => {
+                if self.block_depth > 0 || self.function_depth > 0 {
+                    self.unsupported("varip", VARIP_LOCAL_UNSUPPORTED_REASON, span);
+                    return (PersistenceKind::None, None);
+                }
+                if !is_supported_global_varip_value(value_type.kind) {
+                    self.unsupported("varip", VARIP_VALUE_UNSUPPORTED_REASON, span);
+                    return (PersistenceKind::None, None);
+                }
+                self.compatibility.supported.push(FeatureUse {
+                    feature: "varip".to_owned(),
+                    span,
+                });
+                (PersistenceKind::Varip, Some(self.alloc_var_slot()))
             }
         }
     }
@@ -232,4 +254,16 @@ impl Analyzer {
             }
         }
     }
+}
+
+fn is_supported_global_varip_value(kind: ValueKind) -> bool {
+    matches!(
+        kind,
+        ValueKind::Int
+            | ValueKind::Float
+            | ValueKind::Bool
+            | ValueKind::String
+            | ValueKind::Color
+            | ValueKind::Na
+    )
 }

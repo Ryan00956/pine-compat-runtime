@@ -1,0 +1,17 @@
+indicator("varip scalar")
+varip counter = 0
+varip total = 1.5
+varip enabled = true
+varip label = "ok"
+varip tint = #00FF00
+varip empty = na
+
+counter := counter + 1
+total := total + 0.5
+
+plot(counter)
+plot(total)
+plot(enabled ? counter : 0)
+plot(label == "ok" ? counter : 0)
+plot(tint == #00FF00 ? counter : 0)
+plot(na(empty) ? counter : 0)

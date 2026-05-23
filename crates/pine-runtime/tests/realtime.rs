@@ -69,6 +69,41 @@ fn var_rollback_fixture_restores_confirmed_state_between_forming_updates() {
 }
 
 #[test]
+fn varip_scalar_fixture_persists_intrabar_state_between_forming_updates() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/varip_scalar.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[1.0]);
+    assert_values(&result.plots[1].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&result.plots[1].values, &[1.0, 2.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should retain varip state");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&result.plots[1].values, &[1.0, 3.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit varip state");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&result.plots[1].values, &[1.0, 4.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(5.0)))
+        .expect("next forming update should start from confirmed varip state");
+    assert_values(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+    assert_values(&result.plots[1].values, &[1.0, 4.0, 5.0]);
+}
+
+#[test]
 fn conditional_ta_fixture_rolls_back_callsite_state_between_forming_updates() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/conditional_ta_rollback.pine");
 

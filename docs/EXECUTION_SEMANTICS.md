@@ -115,6 +115,30 @@ runtime store before executing a forming update, so array mutations and copies
 made during a forming update do not leak into the confirmed store until a
 confirmed update is committed.
 
+### `varip`
+
+```pine
+varip ticks = 0
+```
+
+The current executable `varip` subset is limited to global scalar
+`int`/`float`/`bool`/`string`/`color`/`na` declarations. Historical execution
+treats this subset like `var`: the declaration initializes once and
+reassignment persists across committed bars.
+
+Realtime forming-bar execution differs from ordinary `var`. A first forming
+update for a bar starts from the last confirmed runtime state. Repeated forming
+updates for that same bar carry global scalar `varip` slots forward from the
+previous forming update while ordinary `var`, outputs, arrays, drawing objects,
+request caches, callsite state, and history reads continue to roll back to the
+confirmed baseline. A confirmed update also seeds from the latest forming
+`varip` values before executing and then commits the resulting values into the
+confirmed runtime for the next bar.
+
+Local `varip`, arrays held by `varip`, drawing object ids, tuples, and other
+value families remain unsupported until their declaration-site, backing-store,
+and rollback rules are explicitly designed.
+
 Array bounds are stable in the current subset: `array.get`, `array.set`,
 `array.insert`, and `array.remove` support negative indexes from the array end.
 Indexes outside the current length make `array.get` and `array.remove` return
@@ -233,9 +257,10 @@ mutation inside requested expressions remain unsupported.
 
 ### `varip`
 
-`varip` requires precise realtime tick semantics. It is rejected until intrabar
-persistence is implemented as a separate realtime state partition. It must not
-be approximated with `var`.
+Global scalar `varip` declarations use the intrabar persistence model described
+above. Local `varip`, arrays held by `varip`, drawing object ids, tuples, and
+other value families remain rejected until their realtime state partitions are
+designed.
 
 ## User-Defined Functions
 

@@ -1,0 +1,9 @@
+indicator("varip scalar realtime")
+var normal = 0
+varip intrabar = 0
+
+normal := normal + 1
+intrabar := intrabar + 1
+
+plot(normal)
+plot(intrabar)

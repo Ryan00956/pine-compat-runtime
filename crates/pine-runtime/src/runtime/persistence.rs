@@ -25,6 +25,14 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
+    pub(crate) fn seed_intrabar_persistence_from(&mut self, previous: &Self) {
+        for var_slot_id in self.persistent_slots_for_kind(PersistenceKind::Varip) {
+            if let Some(value) = previous.var_store.get(&var_slot_id).cloned() {
+                self.var_store.insert(var_slot_id, value);
+            }
+        }
+    }
+
     pub(crate) fn persistent_slot_for_symbol(
         &self,
         symbol_id: SymbolId,
@@ -41,5 +49,14 @@ impl<'a> HistoricalRuntime<'a> {
                 .var_slot_id
                 .map(|var_slot_id| (symbol.persistence, var_slot_id)),
         }
+    }
+
+    fn persistent_slots_for_kind(&self, kind: PersistenceKind) -> Vec<VarSlotId> {
+        self.program
+            .symbols
+            .iter()
+            .filter(|symbol| symbol.persistence == kind)
+            .filter_map(|symbol| symbol.var_slot_id)
+            .collect()
     }
 }

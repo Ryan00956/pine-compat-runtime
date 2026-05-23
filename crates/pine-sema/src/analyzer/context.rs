@@ -50,9 +50,24 @@ impl Analyzer {
         pine_type: PineType,
         var_slot_id: Option<VarSlotId>,
     ) -> SymbolInfo {
+        self.define_symbol_with_persistence(
+            name,
+            pine_type,
+            persistence_kind_for_slot(var_slot_id),
+            var_slot_id,
+        )
+    }
+
+    pub(crate) fn define_symbol_with_persistence(
+        &mut self,
+        name: &str,
+        pine_type: PineType,
+        persistence: PersistenceKind,
+        var_slot_id: Option<VarSlotId>,
+    ) -> SymbolInfo {
         if let Some(existing) = self.scope.resolve(name) {
-            let persistence = if var_slot_id.is_some() {
-                PersistenceKind::Var
+            let persistence = if persistence != PersistenceKind::None {
+                persistence
             } else {
                 existing.persistence
             };
@@ -73,7 +88,7 @@ impl Analyzer {
             id: self.alloc_symbol(),
             pine_type,
             series_id: self.series_id_for_type(pine_type),
-            persistence: persistence_kind_for_slot(var_slot_id),
+            persistence,
             var_slot_id,
         };
         self.scope.define_global(name, info);
@@ -87,12 +102,29 @@ impl Analyzer {
         var_slot_id: Option<VarSlotId>,
         lower: bool,
     ) -> SymbolInfo {
+        self.define_local_symbol_with_persistence(
+            name,
+            pine_type,
+            persistence_kind_for_slot(var_slot_id),
+            var_slot_id,
+            lower,
+        )
+    }
+
+    pub(crate) fn define_local_symbol_with_persistence(
+        &mut self,
+        name: &str,
+        pine_type: PineType,
+        persistence: PersistenceKind,
+        var_slot_id: Option<VarSlotId>,
+        lower: bool,
+    ) -> SymbolInfo {
         let series_id = self.series_id_for_type(pine_type);
         let info = SymbolInfo {
             id: self.alloc_symbol(),
             pine_type,
             series_id,
-            persistence: persistence_kind_for_slot(var_slot_id),
+            persistence,
             var_slot_id,
         };
         self.scope.define_local(name, info, lower);
