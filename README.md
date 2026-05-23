@@ -41,6 +41,7 @@ able to integrate it through adapters.
 - [Conformance](docs/CONFORMANCE.md)
 - [Diagnostic Codes](docs/DIAGNOSTIC_CODES.md)
 - [Release Notes](docs/RELEASE_NOTES.md)
+- [Phase I Execution Plan](docs/PHASE_I_EXECUTION_PLAN.md)
 - [Phase K Execution Plan](docs/PHASE_K_EXECUTION_PLAN.md)
 - [Phase F Request Platform Audit](docs/PHASE_F_AUDIT.md)
 - [Next Language Expansion Playbook](docs/NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md)

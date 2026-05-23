@@ -423,6 +423,8 @@ Acceptance criteria:
 Goal: implement intrabar persistence only after realtime update semantics are
 fully specified.
 
+Execution playbook: `docs/PHASE_I_EXECUTION_PLAN.md`.
+
 Scope:
 
 - `varip` declaration analysis.
