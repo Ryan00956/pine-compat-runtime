@@ -119,9 +119,11 @@ inside `if`, `for`, `while`, and UDF bodies initialize only when first reached;
 each lowered scalar UDF callsite has independent storage. Branch-local
 scalar-array `varip` declaration sites initialize on first reach, but array
 mutation inside UDFs remains rejected by the existing function side-effect
-rules. Drawing object ids, tuples, and value families outside the scalar and
-scalar typed-array subset remain rejected with compatibility diagnostics
-instead of being approximated.
+rules. Drawing object ids are rejected for `varip` before runtime because
+retaining only an id would become dangling when the label, line, box, or table
+object store rolls back. Tuples and value families outside the scalar and scalar
+typed-array subset remain rejected with compatibility diagnostics instead of
+being approximated.
 
 ## Current Status
 

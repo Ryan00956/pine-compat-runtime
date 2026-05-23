@@ -145,9 +145,11 @@ Skipped local declaration sites do not initialize before their first executed
 reach. `array.copy` returns an independent array id, and a `varip` slot that is
 reassigned to that copy retains the copied backing store across repeated forming
 updates without aliasing the source. Array mutation inside UDFs remains rejected
-by the existing function side-effect rules. Drawing object ids, tuples, and
-other value families remain unsupported until their declaration-site,
-backing-store, and rollback rules are explicitly designed.
+by the existing function side-effect rules. Drawing object ids are rejected for
+`varip`: retaining only the id would be unsafe while label, line, box, and table
+object stores continue to roll back between forming updates. Tuples and other
+value families remain unsupported until their declaration-site, backing-store,
+and rollback rules are explicitly designed.
 
 Array bounds are stable in the current subset: `array.get`, `array.set`,
 `array.insert`, and `array.remove` support negative indexes from the array end.
@@ -268,8 +270,9 @@ mutation inside requested expressions remain unsupported.
 ### `varip`
 
 Scalar and scalar typed-array `varip` declarations use the intrabar persistence
-model described above. Drawing object ids, tuples, and other value families
-remain rejected until their realtime state partitions are designed.
+model described above. Drawing object ids are rejected before runtime because
+their object stores are not part of the `varip` handoff; tuples and other value
+families remain rejected until their realtime state partitions are designed.
 
 ## User-Defined Functions
 

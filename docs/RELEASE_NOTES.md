@@ -9,7 +9,8 @@
   retain their backing contents across repeated forming updates, including
   branch-local declaration sites and `array.copy` boundaries. Array mutation
   inside UDFs remains rejected by existing function side-effect rules. Drawing
-  ids, tuples, and other value families remain unsupported.
+  ids are rejected with a dedicated diagnostic because object stores still roll
+  back; tuples and other value families remain unsupported.
 - Added the first `request.security` executable subset:
   `request.security(syminfo.tickerid, timeframe.period, expression)` returns the
   scalar side-effect-free expression in the current chart context.

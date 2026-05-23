@@ -34,7 +34,7 @@ mod prelude {
     };
     pub(crate) use crate::analyzer::functions::resolve_udf_arg_indices;
     pub(crate) use crate::analyzer::unsupported::{
-        VARIP_VALUE_UNSUPPORTED_REASON, unsupported_syntax_reason,
+        VARIP_DRAWING_UNSUPPORTED_REASON, VARIP_VALUE_UNSUPPORTED_REASON, unsupported_syntax_reason,
     };
     pub(crate) use crate::compatibility::{FeatureUse, UnsupportedFeature};
     pub(crate) use crate::history::{infer_history_requirements, infer_max_bars_back};

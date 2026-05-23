@@ -1,5 +1,6 @@
 use crate::prelude::*;
 
+pub(crate) const VARIP_DRAWING_UNSUPPORTED_REASON: &str = "varip drawing object ids are not supported; retaining only an id would be unsafe while drawing object stores roll back between forming updates";
 pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently supports scalar int, float, bool, string, color, na, and scalar typed-array declarations only; drawing ids, tuples, and other value families are not implemented";
 
 pub(crate) fn unsupported_syntax_reason(feature: &str) -> &'static str {

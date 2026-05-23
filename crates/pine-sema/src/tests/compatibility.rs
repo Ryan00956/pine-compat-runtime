@@ -151,6 +151,44 @@ fn rejects_tuple_varip_declaration() {
 }
 
 #[test]
+fn rejects_drawing_id_varip_declarations() {
+    for source in [
+        "varip id = label.new(bar_index, high, \"x\")\nplot(close)\n",
+        "varip id = line.new(bar_index, low, bar_index, high)\nplot(close)\n",
+        "varip id = box.new(bar_index, high, bar_index, low)\nplot(close)\n",
+        "varip id = table.new(position.top_right, 1, 1)\nplot(close)\n",
+    ] {
+        let analysis = analyze(source);
+
+        assert_eq!(analysis.compatibility.unsupported.len(), 1, "{source}");
+        assert_eq!(analysis.compatibility.unsupported[0].feature, "varip");
+        assert!(
+            analysis.compatibility.unsupported[0]
+                .reason
+                .contains("drawing object ids"),
+            "{:?}",
+            analysis.compatibility.unsupported
+        );
+        assert!(analysis.hir.is_none());
+    }
+}
+
+#[test]
+fn rejects_reassigning_drawing_id_into_na_varip() {
+    let analysis = analyze("varip id = na\nid := label.new(bar_index, high, \"x\")\nplot(close)\n");
+
+    assert!(analysis.hir.is_none());
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_ASSIGN_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+}
+
+#[test]
 fn accepts_provider_backed_same_timeframe_request_security_source() {
     let analysis = analyze("plot(request.security(\"NYSE:IBM\", timeframe.period, close))\n");
 

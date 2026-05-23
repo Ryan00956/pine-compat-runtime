@@ -67,6 +67,23 @@ fn reports_unsupported_varip_fixture() {
 }
 
 #[test]
+fn reports_unsupported_varip_drawing_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/unsupported_varip_drawing.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(analysis.compatibility.unsupported[0].feature, "varip");
+    assert!(
+        analysis.compatibility.unsupported[0]
+            .reason
+            .contains("drawing object ids")
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn reports_unsupported_strategy_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy.pine",

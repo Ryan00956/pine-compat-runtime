@@ -194,6 +194,10 @@ impl Analyzer {
             pine_syntax::DeclMode::Normal => (PersistenceKind::None, None),
             pine_syntax::DeclMode::Var => (PersistenceKind::Var, Some(self.alloc_var_slot())),
             pine_syntax::DeclMode::Varip => {
+                if is_drawing_id_value(value_type.kind) {
+                    self.unsupported("varip", VARIP_DRAWING_UNSUPPORTED_REASON, span);
+                    return (PersistenceKind::None, None);
+                }
                 if !is_supported_varip_value(value_type.kind) {
                     self.unsupported("varip", VARIP_VALUE_UNSUPPORTED_REASON, span);
                     return (PersistenceKind::None, None);
@@ -272,5 +276,12 @@ fn is_supported_varip_array(kind: ValueKind) -> bool {
             | ValueKind::BoolArray
             | ValueKind::StringArray
             | ValueKind::ColorArray
+    )
+}
+
+fn is_drawing_id_value(kind: ValueKind) -> bool {
+    matches!(
+        kind,
+        ValueKind::Label | ValueKind::Line | ValueKind::Box | ValueKind::Table
     )
 }

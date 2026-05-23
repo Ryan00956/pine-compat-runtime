@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported varip drawing")
+varip id = label.new(bar_index, high, "x")
+plot(close)
