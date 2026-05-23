@@ -2,11 +2,12 @@
 
 ## Unreleased
 
-- Added the first `varip` executable subset: global scalar
+- Added the scalar `varip` executable subset: global and local
   int/float/bool/string/color/`na` declarations now behave like `var` during
   historical execution and preserve intrabar state across repeated realtime
-  forming updates. Local `varip`, arrays, drawing ids, tuples, and other value
-  families remain unsupported.
+  forming updates. Local declaration sites inside `if`, `for`, `while`, and UDF
+  callsites have independent storage. Arrays, drawing ids, tuples, and other
+  value families remain unsupported.
 - Added the first `request.security` executable subset:
   `request.security(syminfo.tickerid, timeframe.period, expression)` returns the
   scalar side-effect-free expression in the current chart context.
@@ -386,15 +387,15 @@ consumer-visible output change is documented with snapshot updates.
   bounds for dynamic history.
 - `color.*` named constants: supports the current common registry only.
 - `realtime forming rollback`: covers output, supported drawing objects, `var`,
-  global scalar `varip`, callsite, array, and dynamic history rollback.
+  scalar `varip`, callsite, array, and dynamic history rollback.
 
 ### Explicitly Unsupported
 
 The analyzer rejects these boundaries with diagnostics instead of approximating
 them silently:
 
-- local `varip`, `varip` arrays, `varip` drawing ids, tuple `varip`, and other
-  non-scalar `varip` value families.
+- `varip` arrays, `varip` drawing ids, tuple `varip`, and other non-scalar
+  `varip` value families.
 - `request.*` multi-symbol and multi-timeframe data requests.
 - `strategy.*` broker emulation and backtesting.
 - Generic arrays, object arrays, user-defined type arrays, matrices, maps, and

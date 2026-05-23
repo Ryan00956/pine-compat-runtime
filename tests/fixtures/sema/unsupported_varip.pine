@@ -1,5 +1,4 @@
 //@version=5
 indicator("Unsupported varip")
-if close > open
-    varip x = 0
-    plot(x)
+varip values = array.new_float(0)
+plot(array.size(values))

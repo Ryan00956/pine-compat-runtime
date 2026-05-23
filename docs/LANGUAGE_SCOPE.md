@@ -62,8 +62,9 @@ Phase 1 executable subset:
 - branch/loop interactions for `if` inside loops, loops inside `if`, `switch`
   inside loops, and loops inside UDF block bodies
 - normal and tuple declarations scoped to an `if`/`else` branch
-- global scalar `varip` declarations for int, float, bool, string, color, and
-  `na`, with historical var-like execution and realtime intrabar persistence
+- global and local scalar `varip` declarations for int, float, bool, string,
+  color, and `na`, with historical var-like execution, local declaration-site
+  storage, UDF callsite-local storage, and realtime intrabar persistence
 - user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions
 - constant history offsets and guarded dynamic integer history offsets
@@ -253,8 +254,8 @@ The analyzer should reject these with clear diagnostics:
 - general multi-symbol or multi-timeframe data loading outside the documented
   `request.security` provider subset
 - broker emulation and order execution
-- local `varip`, `varip` arrays, `varip` drawing ids, tuple `varip`, and other
-  non-scalar `varip` value families
+- `varip` arrays, `varip` drawing ids, tuple `varip`, and other non-scalar
+  `varip` value families
 
 Longer-term work for these unsupported areas is tracked in
 [`LONG_TERM_EXECUTION_PLAN.md`](LONG_TERM_EXECUTION_PLAN.md).

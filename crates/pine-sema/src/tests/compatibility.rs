@@ -72,17 +72,30 @@ fn accepts_global_scalar_varip_declaration() {
 }
 
 #[test]
-fn rejects_local_varip_declaration() {
-    let analysis = analyze("if close > open\n    varip x = 0\n    plot(x)\n");
+fn accepts_local_scalar_varip_declaration() {
+    let analysis = analyze("if close > open\n    varip x = 0\n    x := x + 1\n    plot(x)\n");
 
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(analysis.compatibility.unsupported[0].feature, "varip");
     assert!(
-        analysis.compatibility.unsupported[0]
-            .reason
-            .contains("local varip declarations")
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "varip")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    let hir = analysis.hir.expect("local varip script should lower");
+    let symbol = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "x")
+        .expect("x symbol should exist");
+    assert_eq!(symbol.persistence, PersistenceKind::Varip);
+    assert_eq!(symbol.var_slot_id, Some(VarSlotId(0)));
 }
 
 #[test]
@@ -94,7 +107,7 @@ fn rejects_array_varip_declaration() {
     assert!(
         analysis.compatibility.unsupported[0]
             .reason
-            .contains("global scalar")
+            .contains("scalar")
     );
     assert!(analysis.hir.is_none());
 }

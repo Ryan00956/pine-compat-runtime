@@ -121,6 +121,51 @@ plot(out)
 }
 
 #[test]
+fn runs_local_varip_with_var_like_historical_state() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("local varip")
+branch_out = 0
+if close >= 3
+    varip branch_count = 0
+    branch_count := branch_count + 1
+    branch_out := branch_count
+plot(branch_out)
+
+for_out = 0
+for i = 0 to 1
+    varip for_count = 0
+    for_count := for_count + 1
+    for_out := for_count
+plot(for_out)
+
+while_out = 0
+j = 0
+while j < 2
+    varip while_count = 0
+    while_count := while_count + 1
+    while_out := while_count
+    j := j + 1
+plot(while_out)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(&result.plots[0].values, &[0.0, 0.0, 1.0, 2.0]);
+    assert_values_close(&result.plots[1].values, &[2.0, 4.0, 6.0, 8.0]);
+    assert_values_close(&result.plots[2].values, &[2.0, 4.0, 6.0, 8.0]);
+}
+
+#[test]
 fn runs_udf_local_var_independently_per_callsite() {
     let source = SourceFile::new(
         "test.pine",
@@ -144,6 +189,34 @@ plot(counter() + counter())
 
     assert_eq!(result.plots.len(), 1);
     assert_values_close(&result.plots[0].values, &[2.0, 4.0, 6.0]);
+}
+
+#[test]
+fn runs_udf_local_varip_independently_per_callsite() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("udf varip")
+bump(step) =>
+    varip value = 0
+    value := value + step
+    value
+plot(bump(1))
+plot(bump(10))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[10.0, 20.0, 30.0]);
 }
 
 #[test]

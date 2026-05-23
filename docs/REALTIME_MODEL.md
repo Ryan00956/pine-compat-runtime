@@ -102,26 +102,27 @@ forming snapshot.
 is temporary; the next forming update starts again from the last confirmed
 snapshot. A confirmed update persists the new `var` value.
 
-Global scalar `varip` declarations are supported as a separate intrabar
+Scalar `varip` declarations are supported as a separate intrabar
 persistence path. The first forming update for a bar starts from the confirmed
-snapshot. Later forming updates for that same bar seed global scalar `varip`
+snapshot. Later forming updates for that same bar seed scalar `varip`
 slots from the previous forming update while keeping ordinary `var`, arrays,
 drawing objects, outputs, request caches, callsite state, and history reads on
 the confirmed rollback path. A confirmed update also seeds from the latest
 forming `varip` slots before executing, then stores the resulting values in the
 confirmed snapshot for the next bar.
 
-Historical execution treats the supported global scalar `varip` subset like
-`var` because historical bars have one committed evaluation. Local `varip`,
-arrays held by `varip`, drawing object ids, tuples, and other non-scalar value
-families remain rejected with compatibility diagnostics instead of being
-approximated.
+Historical execution treats the supported scalar `varip` subset like `var`
+because historical bars have one committed evaluation. Local declaration sites
+inside `if`, `for`, `while`, and UDF bodies initialize only when first reached;
+each lowered UDF callsite has independent storage. Arrays held by `varip`,
+drawing object ids, tuples, and other non-scalar value families remain rejected
+with compatibility diagnostics instead of being approximated.
 
 ## Current Status
 
 Phase 7 now defines the model and implements rollback for repeated forming
 updates. Realtime fixtures cover temporary output rollback, drawing-object
-lifecycle rollback for labels, lines, boxes, and tables, `var` rollback, global
+lifecycle rollback for labels, lines, boxes, and tables, `var` rollback,
 scalar `varip` intrabar persistence, stateful TA callsite rollback inside
 conditional branches, array rollback, request provider immutability and cache
 rollback, and dynamic history reads from confirmed history during forming

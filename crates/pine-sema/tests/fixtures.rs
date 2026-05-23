@@ -61,7 +61,7 @@ fn reports_unsupported_varip_fixture() {
     assert!(
         analysis.compatibility.unsupported[0]
             .reason
-            .contains("local varip declarations")
+            .contains("arrays")
     );
     assert!(analysis.hir.is_none());
 }

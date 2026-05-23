@@ -104,6 +104,65 @@ fn varip_scalar_fixture_persists_intrabar_state_between_forming_updates() {
 }
 
 #[test]
+fn varip_local_fixture_persists_intrabar_state_per_declaration_site() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/varip_local.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[0.0]);
+    assert_values(&result.plots[1].values, &[2.0]);
+    assert_values(&result.plots[2].values, &[2.0]);
+    assert_values(&result.plots[3].values, &[1.0]);
+    assert_values(&result.plots[4].values, &[10.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update with skipped branch should run");
+    assert_values(&result.plots[0].values, &[0.0, 0.0]);
+    assert_values(&result.plots[1].values, &[2.0, 4.0]);
+    assert_values(&result.plots[2].values, &[2.0, 4.0]);
+    assert_values(&result.plots[3].values, &[1.0, 2.0]);
+    assert_values(&result.plots[4].values, &[10.0, 20.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("first reached branch should initialize after skipped updates");
+    assert_values(&result.plots[0].values, &[0.0, 1.0]);
+    assert_values(&result.plots[1].values, &[2.0, 6.0]);
+    assert_values(&result.plots[2].values, &[2.0, 6.0]);
+    assert_values(&result.plots[3].values, &[1.0, 3.0]);
+    assert_values(&result.plots[4].values, &[10.0, 30.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(4.0)))
+        .expect("second reached branch should retain intrabar state");
+    assert_values(&result.plots[0].values, &[0.0, 2.0]);
+    assert_values(&result.plots[1].values, &[2.0, 8.0]);
+    assert_values(&result.plots[2].values, &[2.0, 8.0]);
+    assert_values(&result.plots[3].values, &[1.0, 4.0]);
+    assert_values(&result.plots[4].values, &[10.0, 40.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(5.0)))
+        .expect("confirmed update should commit local varip state");
+    assert_values(&result.plots[0].values, &[0.0, 3.0]);
+    assert_values(&result.plots[1].values, &[2.0, 10.0]);
+    assert_values(&result.plots[2].values, &[2.0, 10.0]);
+    assert_values(&result.plots[3].values, &[1.0, 5.0]);
+    assert_values(&result.plots[4].values, &[10.0, 50.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(6.0)))
+        .expect("next forming update should start from confirmed local varip state");
+    assert_values(&result.plots[0].values, &[0.0, 3.0, 4.0]);
+    assert_values(&result.plots[1].values, &[2.0, 10.0, 12.0]);
+    assert_values(&result.plots[2].values, &[2.0, 10.0, 12.0]);
+    assert_values(&result.plots[3].values, &[1.0, 5.0, 6.0]);
+    assert_values(&result.plots[4].values, &[10.0, 50.0, 60.0]);
+}
+
+#[test]
 fn conditional_ta_fixture_rolls_back_callsite_state_between_forming_updates() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/conditional_ta_rollback.pine");
 

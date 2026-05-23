@@ -1,0 +1,32 @@
+indicator("varip local")
+
+branch_out = 0
+if close >= 3
+    varip branch_count = 0
+    branch_count := branch_count + 1
+    branch_out := branch_count
+plot(branch_out)
+
+for_out = 0
+for i = 0 to 1
+    varip for_count = 0
+    for_count := for_count + 1
+    for_out := for_count
+plot(for_out)
+
+while_out = 0
+j = 0
+while j < 2
+    varip while_count = 0
+    while_count := while_count + 1
+    while_out := while_count
+    j := j + 1
+plot(while_out)
+
+bump(step) =>
+    varip value = 0
+    value := value + step
+    value
+
+plot(bump(1))
+plot(bump(10))

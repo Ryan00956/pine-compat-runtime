@@ -121,23 +121,27 @@ confirmed update is committed.
 varip ticks = 0
 ```
 
-The current executable `varip` subset is limited to global scalar
-`int`/`float`/`bool`/`string`/`color`/`na` declarations. Historical execution
-treats this subset like `var`: the declaration initializes once and
-reassignment persists across committed bars.
+The current executable `varip` subset supports global and local scalar
+`int`/`float`/`bool`/`string`/`color`/`na` declarations. Local declaration
+sites inside `if`, `for`, `while`, and user-defined function bodies use the
+same declaration-site storage model as local `var`; each lowered UDF callsite
+gets independent storage. Historical execution treats this subset like `var`:
+the declaration initializes once when first reached and reassignment persists
+across committed bars.
 
 Realtime forming-bar execution differs from ordinary `var`. A first forming
 update for a bar starts from the last confirmed runtime state. Repeated forming
-updates for that same bar carry global scalar `varip` slots forward from the
+updates for that same bar carry scalar `varip` slots forward from the
 previous forming update while ordinary `var`, outputs, arrays, drawing objects,
 request caches, callsite state, and history reads continue to roll back to the
 confirmed baseline. A confirmed update also seeds from the latest forming
 `varip` values before executing and then commits the resulting values into the
 confirmed runtime for the next bar.
 
-Local `varip`, arrays held by `varip`, drawing object ids, tuples, and other
-value families remain unsupported until their declaration-site, backing-store,
-and rollback rules are explicitly designed.
+Skipped local declaration sites do not initialize before their first executed
+reach. Arrays held by `varip`, drawing object ids, tuples, and other value
+families remain unsupported until their declaration-site, backing-store, and
+rollback rules are explicitly designed.
 
 Array bounds are stable in the current subset: `array.get`, `array.set`,
 `array.insert`, and `array.remove` support negative indexes from the array end.
@@ -257,10 +261,9 @@ mutation inside requested expressions remain unsupported.
 
 ### `varip`
 
-Global scalar `varip` declarations use the intrabar persistence model described
-above. Local `varip`, arrays held by `varip`, drawing object ids, tuples, and
-other value families remain rejected until their realtime state partitions are
-designed.
+Scalar `varip` declarations use the intrabar persistence model described above.
+Arrays held by `varip`, drawing object ids, tuples, and other value families
+remain rejected until their realtime state partitions are designed.
 
 ## User-Defined Functions
 

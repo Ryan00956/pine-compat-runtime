@@ -1,7 +1,6 @@
 use crate::prelude::*;
 
-pub(crate) const VARIP_LOCAL_UNSUPPORTED_REASON: &str = "local varip declarations are not implemented; current varip support is global scalar declarations only";
-pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently supports global scalar int, float, bool, string, color, and na declarations only; arrays, drawing ids, tuples, and other value families are not implemented";
+pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently supports scalar int, float, bool, string, color, and na declarations only; arrays, drawing ids, tuples, and other value families are not implemented";
 
 pub(crate) fn unsupported_syntax_reason(feature: &str) -> &'static str {
     match feature {

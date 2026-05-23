@@ -194,11 +194,7 @@ impl Analyzer {
             pine_syntax::DeclMode::Normal => (PersistenceKind::None, None),
             pine_syntax::DeclMode::Var => (PersistenceKind::Var, Some(self.alloc_var_slot())),
             pine_syntax::DeclMode::Varip => {
-                if self.block_depth > 0 || self.function_depth > 0 {
-                    self.unsupported("varip", VARIP_LOCAL_UNSUPPORTED_REASON, span);
-                    return (PersistenceKind::None, None);
-                }
-                if !is_supported_global_varip_value(value_type.kind) {
+                if !is_supported_varip_value(value_type.kind) {
                     self.unsupported("varip", VARIP_VALUE_UNSUPPORTED_REASON, span);
                     return (PersistenceKind::None, None);
                 }
@@ -256,7 +252,7 @@ impl Analyzer {
     }
 }
 
-fn is_supported_global_varip_value(kind: ValueKind) -> bool {
+fn is_supported_varip_value(kind: ValueKind) -> bool {
     matches!(
         kind,
         ValueKind::Int
