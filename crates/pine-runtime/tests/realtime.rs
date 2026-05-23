@@ -269,6 +269,71 @@ fn array_rollback_fixture_restores_confirmed_store_between_forming_updates() {
 }
 
 #[test]
+fn varip_array_fixture_persists_intrabar_backing_store_between_forming_updates() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/varip_array.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_values(&result.plots[0].values, &[1.0]);
+    assert_values(&result.plots[1].values, &[1.0]);
+    assert_values(&result.plots[2].values, &[2.0]);
+    assert_values(&result.plots[3].values, &[1.0]);
+    assert_values(&result.plots[4].values, &[2.0]);
+    assert_values(&result.plots[5].values, &[0.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_values(&result.plots[0].values, &[1.0, 2.0]);
+    assert_values(&result.plots[1].values, &[1.0, 2.0]);
+    assert_values(&result.plots[2].values, &[2.0, 3.0]);
+    assert_values(&result.plots[3].values, &[1.0, 2.0]);
+    assert_values(&result.plots[4].values, &[2.0, 3.0]);
+    assert_values(&result.plots[5].values, &[0.0, 0.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should retain varip array state");
+    assert_values(&result.plots[0].values, &[1.0, 3.0]);
+    assert_values(&result.plots[1].values, &[1.0, 2.0]);
+    assert_values(&result.plots[2].values, &[2.0, 4.0]);
+    assert_values(&result.plots[3].values, &[1.0, 3.0]);
+    assert_values(&result.plots[4].values, &[2.0, 4.0]);
+    assert_values(&result.plots[5].values, &[0.0, 1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(4.0)))
+        .expect("third forming update should keep retaining varip array state");
+    assert_values(&result.plots[0].values, &[1.0, 4.0]);
+    assert_values(&result.plots[1].values, &[1.0, 2.0]);
+    assert_values(&result.plots[2].values, &[2.0, 5.0]);
+    assert_values(&result.plots[3].values, &[1.0, 4.0]);
+    assert_values(&result.plots[4].values, &[2.0, 5.0]);
+    assert_values(&result.plots[5].values, &[0.0, 2.0]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(5.0)))
+        .expect("confirmed update should commit varip array state");
+    assert_values(&result.plots[0].values, &[1.0, 5.0]);
+    assert_values(&result.plots[1].values, &[1.0, 2.0]);
+    assert_values(&result.plots[2].values, &[2.0, 6.0]);
+    assert_values(&result.plots[3].values, &[1.0, 5.0]);
+    assert_values(&result.plots[4].values, &[2.0, 6.0]);
+    assert_values(&result.plots[5].values, &[0.0, 3.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(6.0)))
+        .expect("next forming update should start from confirmed varip array state");
+    assert_values(&result.plots[0].values, &[1.0, 5.0, 6.0]);
+    assert_values(&result.plots[1].values, &[1.0, 2.0, 3.0]);
+    assert_values(&result.plots[2].values, &[2.0, 6.0, 7.0]);
+    assert_values(&result.plots[3].values, &[1.0, 5.0, 6.0]);
+    assert_values(&result.plots[4].values, &[2.0, 6.0, 7.0]);
+    assert_values(&result.plots[5].values, &[0.0, 3.0, 4.0]);
+}
+
+#[test]
 fn dynamic_history_fixture_rolls_back_forming_history() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/dynamic_history_rollback.pine");
 

@@ -93,15 +93,16 @@ bar-by-bar execution, constant and guarded dynamic integer history offsets,
 declarations, `na`, `nz`, `input.*` defval execution, output calls, selected
 drawing objects, partial typed arrays, common `ta.*` functions, selected
 `math.*` and `str.*` functions, partial `request.security`, user-defined
-functions, named colors, color helpers, tuple returns, scalar `varip`,
+functions, named colors, color helpers, tuple returns, scalar and scalar
+typed-array `varip`,
 incremental append execution, realtime forming-bar rollback, Python bindings,
 and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as `strategy.*`,
 request variants outside the narrow `request.security` subset, alerts, imports,
 advanced drawing families and methods, unsupported collection families and
-element types, recursive functions, function side effects, and non-scalar
-`varip` forms such as arrays, drawing ids, and tuples.
+element types, recursive functions, function side effects, and unsupported
+`varip` value families such as drawing ids and tuples.
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes; skipped bars commit `na` for series values that were not
 evaluated on that bar.

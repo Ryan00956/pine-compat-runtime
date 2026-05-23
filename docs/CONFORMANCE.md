@@ -143,8 +143,8 @@ Examples:
 - unsupported collection families or unsupported array variants
 - unsupported label and line methods
 - imports
-- unsupported `varip` forms such as arrays, drawing ids, tuples, and other
-  non-scalar value families
+- unsupported `varip` forms such as drawing ids, tuples, and value families
+  outside the scalar and scalar typed-array subset
 - non-integer or negative history offsets
 - unsupported function side effects, including drawing side effects
 

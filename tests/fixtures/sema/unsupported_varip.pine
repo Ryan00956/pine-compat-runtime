@@ -1,4 +1,4 @@
 //@version=5
 indicator("Unsupported varip")
-varip values = array.new_float(0)
-plot(array.size(values))
+varip values = [1, 2]
+plot(close)

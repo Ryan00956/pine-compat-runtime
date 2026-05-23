@@ -99,15 +99,53 @@ fn accepts_local_scalar_varip_declaration() {
 }
 
 #[test]
-fn rejects_array_varip_declaration() {
-    let analysis = analyze("varip values = array.new_float(0)\nplot(array.size(values))\n");
+fn accepts_scalar_array_varip_declarations() {
+    let analysis = analyze(
+        r#"varip floats = array.new_float(0)
+varip ints = array.new_int(0)
+varip flags = array.new_bool(0)
+varip words = array.new_string(0)
+varip colors = array.new_color(0)
+plot(array.size(floats) + array.size(ints) + array.size(flags) + array.size(words) + array.size(colors))
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    let hir = analysis.hir.expect("array varip script should lower");
+    let symbols: Vec<_> = hir
+        .symbols
+        .iter()
+        .filter(|symbol| {
+            matches!(
+                symbol.name.as_str(),
+                "floats" | "ints" | "flags" | "words" | "colors"
+            )
+        })
+        .collect();
+    assert_eq!(symbols.len(), 5);
+    assert!(
+        symbols
+            .iter()
+            .all(|symbol| symbol.persistence == PersistenceKind::Varip)
+    );
+    assert!(symbols.iter().all(|symbol| symbol.var_slot_id.is_some()));
+}
+
+#[test]
+fn rejects_tuple_varip_declaration() {
+    let analysis = analyze("varip values = [1, 2]\nplot(close)\n");
 
     assert_eq!(analysis.compatibility.unsupported.len(), 1);
     assert_eq!(analysis.compatibility.unsupported[0].feature, "varip");
     assert!(
         analysis.compatibility.unsupported[0]
             .reason
-            .contains("scalar")
+            .contains("tuples")
     );
     assert!(analysis.hir.is_none());
 }

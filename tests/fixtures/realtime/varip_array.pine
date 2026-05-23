@@ -1,0 +1,27 @@
+indicator("varip array realtime")
+
+varip values = array.new_int()
+values.push(1)
+plot(values.size())
+
+var normal = array.new_int()
+normal.push(1)
+plot(normal.size())
+
+varip copy = array.copy(values)
+copy.push(10)
+plot(copy.size())
+plot(values.size())
+
+varip open_copy = array.new_int()
+if barstate.isnew
+    open_copy := array.copy(values)
+open_copy.push(7)
+plot(open_copy.size())
+
+branch_out = close - close
+if close >= 3
+    varip branch = array.new_int()
+    branch.push(1)
+    branch_out := branch.size()
+plot(branch_out)

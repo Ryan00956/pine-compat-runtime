@@ -61,7 +61,7 @@ fn reports_unsupported_varip_fixture() {
     assert!(
         analysis.compatibility.unsupported[0]
             .reason
-            .contains("arrays")
+            .contains("tuples")
     );
     assert!(analysis.hir.is_none());
 }

@@ -589,6 +589,45 @@ plot(method_copy.get(0))
 }
 
 #[test]
+fn runs_varip_array_with_var_like_historical_state() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("varip arrays")
+varip values = array.new_int()
+values.push(1)
+plot(values.size())
+
+varip copy = array.copy(values)
+copy.push(10)
+plot(copy.size())
+plot(values.size())
+
+branch_out = close - close
+if close >= 3
+    varip branch = array.new_int()
+    branch.push(1)
+    branch_out := branch.size()
+plot(branch_out)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 4);
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0, 4.0]);
+    assert_values_close(&result.plots[1].values, &[2.0, 3.0, 4.0, 5.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 2.0, 3.0, 4.0]);
+    assert_values_close(&result.plots[3].values, &[0.0, 0.0, 1.0, 2.0]);
+}
+
+#[test]
 fn runs_array_search_operations() {
     let source = SourceFile::new(
         "test.pine",

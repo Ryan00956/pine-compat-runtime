@@ -122,26 +122,32 @@ varip ticks = 0
 ```
 
 The current executable `varip` subset supports global and local scalar
-`int`/`float`/`bool`/`string`/`color`/`na` declarations. Local declaration
+`int`/`float`/`bool`/`string`/`color`/`na` declarations plus scalar typed-array
+ids for float, int, bool, string, and color arrays. Local scalar declaration
 sites inside `if`, `for`, `while`, and user-defined function bodies use the
-same declaration-site storage model as local `var`; each lowered UDF callsite
-gets independent storage. Historical execution treats this subset like `var`:
-the declaration initializes once when first reached and reassignment persists
-across committed bars.
+same declaration-site storage model as local `var`; each lowered scalar UDF
+callsite gets independent storage. Historical execution treats this subset like
+`var`: the declaration initializes once when first reached and reassignment
+persists across committed bars.
 
 Realtime forming-bar execution differs from ordinary `var`. A first forming
 update for a bar starts from the last confirmed runtime state. Repeated forming
-updates for that same bar carry scalar `varip` slots forward from the
-previous forming update while ordinary `var`, outputs, arrays, drawing objects,
+updates for that same bar carry `varip` slots forward from the previous forming
+update. When a carried `varip` value is a supported array id, the referenced
+backing array contents and element kind are copied from the previous forming
+runtime as well. Ordinary `var`, outputs, non-`varip` arrays, drawing objects,
 request caches, callsite state, and history reads continue to roll back to the
 confirmed baseline. A confirmed update also seeds from the latest forming
 `varip` values before executing and then commits the resulting values into the
 confirmed runtime for the next bar.
 
 Skipped local declaration sites do not initialize before their first executed
-reach. Arrays held by `varip`, drawing object ids, tuples, and other value
-families remain unsupported until their declaration-site, backing-store, and
-rollback rules are explicitly designed.
+reach. `array.copy` returns an independent array id, and a `varip` slot that is
+reassigned to that copy retains the copied backing store across repeated forming
+updates without aliasing the source. Array mutation inside UDFs remains rejected
+by the existing function side-effect rules. Drawing object ids, tuples, and
+other value families remain unsupported until their declaration-site,
+backing-store, and rollback rules are explicitly designed.
 
 Array bounds are stable in the current subset: `array.get`, `array.set`,
 `array.insert`, and `array.remove` support negative indexes from the array end.
@@ -261,8 +267,8 @@ mutation inside requested expressions remain unsupported.
 
 ### `varip`
 
-Scalar `varip` declarations use the intrabar persistence model described above.
-Arrays held by `varip`, drawing object ids, tuples, and other value families
+Scalar and scalar typed-array `varip` declarations use the intrabar persistence
+model described above. Drawing object ids, tuples, and other value families
 remain rejected until their realtime state partitions are designed.
 
 ## User-Defined Functions

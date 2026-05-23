@@ -261,5 +261,16 @@ fn is_supported_varip_value(kind: ValueKind) -> bool {
             | ValueKind::String
             | ValueKind::Color
             | ValueKind::Na
+    ) || is_supported_varip_array(kind)
+}
+
+fn is_supported_varip_array(kind: ValueKind) -> bool {
+    matches!(
+        kind,
+        ValueKind::FloatArray
+            | ValueKind::IntArray
+            | ValueKind::BoolArray
+            | ValueKind::StringArray
+            | ValueKind::ColorArray
     )
 }
