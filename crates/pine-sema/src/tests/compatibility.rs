@@ -203,6 +203,17 @@ fn rejects_other_request_variants() {
 }
 
 #[test]
+fn rejects_request_security_lower_tf_api() {
+    let analysis = analyze("x = request.security_lower_tf(\"NYSE:IBM\", \"30S\", close)\n");
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "request.security_lower_tf"
+    );
+}
+
+#[test]
 fn compile_cache_reuses_analysis_for_identical_source() {
     let source = SourceFile::new("test.pine", "plot(close)\n");
     let mut cache = CompileCache::new();

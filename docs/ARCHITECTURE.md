@@ -123,6 +123,11 @@ exact requested-bar timestamp match, while coarser requested bars are visible
 only after their requested bar close is not later than the current chart bar
 close. Missing higher-timeframe bars forward-fill the last confirmed requested
 value; chart bars before the first confirmed requested bar return `na`.
+Lower-timeframe `request.security` alignment is intentionally not implemented
+in this phase slice because it needs a separate rule for selecting intrabars
+inside each chart bar and bounded storage for multiple requested bars per chart
+bar. The array-returning `request.security_lower_tf` API remains unsupported
+until typed array return shapes and host JSON bindings are designed together.
 
 Realtime execution uses explicit bar update kinds for historical, forming, and
 confirmed bars. See [`REALTIME_MODEL.md`](REALTIME_MODEL.md).

@@ -18,6 +18,10 @@
   sources, pure arithmetic and ternaries, history references, `na`, `nz`,
   `ta.sma`, and `ta.ema`; provider local aliases, side effects, and unsupported
   calls are rejected during semantic analysis where possible.
+- Documented the lower-timeframe request boundary: lower-timeframe
+  `request.security` remains runtime-rejected with a stable error, and
+  `request.security_lower_tf` remains unsupported until typed array return
+  semantics and host output shapes are designed.
 - Started Phase E drawing-object infrastructure by bumping the public
   machine-readable contract to `schemaVersion: 2` and adding the
   top-level `labels` output across CLI JSON, Python dictionaries, and WASM JSON.

@@ -208,6 +208,8 @@ Lower timeframe requests, provider expression local variable aliases, UDF calls,
 output/drawing side effects, input declarations, array mutation, optional
 parameters, non-default barmerge behavior, explicit gaps, and lookahead remain
 unsupported.
+`request.security_lower_tf` is unsupported; it returns arrays in Pine and is not
+claimed until typed array return semantics and host output shapes are designed.
 `timeframe.in_seconds()` returns `60`.
 Explicit timeframe strings support Pine-style seconds (`1S`, `5S`, `10S`,
 `15S`, `30S`, `45S`), minutes (`1` through `1440`), days (`D`/`1D` through

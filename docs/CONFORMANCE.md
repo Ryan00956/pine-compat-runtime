@@ -201,6 +201,7 @@ ta.rsi               supported    fixture-derived executable subset
 request.security     partial      same-context identity and same-or-higher-timeframe provider scalar-expression subset only
 strategy.*           unsupported  out of project scope for now
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
+request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
 import               unsupported  out of Phase 1 scope
 ```

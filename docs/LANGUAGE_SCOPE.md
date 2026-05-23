@@ -240,6 +240,8 @@ The analyzer should reject these with clear diagnostics:
 - `strategy.*`
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
+- `request.security_lower_tf`; lower-timeframe array-returning request APIs need
+  typed array return semantics and host output shapes before support is claimed
 - `alert` and `alertcondition`
 - `library`, `import`, and `export`
 - unsupported array element types, matrices, and maps

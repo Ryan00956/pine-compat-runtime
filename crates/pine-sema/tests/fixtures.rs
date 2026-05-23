@@ -24,6 +24,15 @@ fn reports_unsupported_request_fixture() {
 }
 
 #[test]
+fn reports_unsupported_request_lower_tf_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_request_lower_tf.pine",
+        "request.security_lower_tf",
+        "multi-symbol and multi-timeframe data requests",
+    );
+}
+
+#[test]
 fn accepts_provider_request_context_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/request_security_provider_context.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
