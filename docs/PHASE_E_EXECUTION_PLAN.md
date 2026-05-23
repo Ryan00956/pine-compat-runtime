@@ -9,10 +9,9 @@ small, mergeable slices. Each slice should leave the workspace shippable and
 should keep the compatibility matrix, public output schema, Python binding, and
 WASM JSON contract in lockstep.
 
-## Current Starting Point
+## Original Starting Point
 
-The repository is ready to start Phase E, but it does not yet have drawing
-object infrastructure:
+This was the repository state when Phase E started:
 
 - `tests/fixtures/conformance.tsv` marks `label/line/box/table/polyline` as
   `unsupported`.
@@ -74,13 +73,13 @@ a new runtime subsystem, not permission to grow another crate-level monolith.
   signature changes, runtime object storage, output contract changes, fixtures,
   and docs should be easy to inspect independently.
 
-## Suggested Module Layout
+## Implemented Module Layout
 
-Use the existing crate boundaries. Phase E should not add a new crate unless a
-later review proves that an object boundary must be enforced across package
-dependencies.
+Phase E used the existing crate boundaries. Future drawing maintenance should
+not add a new crate unless a later review proves that an object boundary must be
+enforced across package dependencies.
 
-Recommended first-pass layout:
+Current layout:
 
 ```text
 crates/pine-ir/src/lib.rs
@@ -88,29 +87,26 @@ crates/pine-ir/src/lib.rs
 
 crates/pine-builtins/src/
    namespaces/drawings.rs       label.*, line.*, box.*, table.*, polyline.* signatures
-   constants/drawings.rs        xloc.*, yloc.*, label.style_*, line.style_*, position.*
+   constants/strings.rs         xloc.*, yloc.*, label.style_*, line.style_*, position.*
 
 crates/pine-runtime/src/
    value.rs                     PineValue object id variants only
-   objects/
-      mod.rs                     shared object ids, limits, store facade
-      labels.rs                  label state, creation, mutation, deletion
-      lines.rs                   line state, creation, mutation, deletion
-      boxes.rs                   box state, creation, mutation, deletion
-      tables.rs                  table state and cell storage
+   runtime/historical.rs        object vectors, next ids, profile aggregation
    output/
       model.rs                   RuntimeResult top-level fields and small re-exports
       drawings.rs                public drawing snapshot structs
-      drawings_json.rs           drawing JSON helpers used by output/json.rs
+      json.rs                    drawing JSON helpers with the shared output serializer
    builtins/
       drawings.rs                dispatch for drawing built-ins
       drawings/
          labels.rs                label.new, label.set_*, label.delete evaluation
          lines.rs                 line.new, line.set_*, line.delete evaluation
+         boxes.rs                 box.new, box.set_*, box.delete evaluation
+         tables.rs                table.new and table.cell evaluation
 
 crates/pine-sema/src/analyzer/
-   calls.rs                     keep generic call plumbing here
-   objects.rs                   drawing side-effect policy if call logic grows
+   calls.rs                     drawing signatures, constants, and side-effect gate plumbing
+   unsupported.rs               unsupported drawing subset diagnostics
 ```
 
 Ownership notes:
@@ -119,12 +115,12 @@ Ownership notes:
   they should not contain object lifecycle rules.
 - `pine-builtins` should own signatures and accepted argument shapes, not
   runtime behavior.
-- `pine-runtime::objects` should own object stores, id allocation, limits, and
-  mutation semantics.
-- `pine-runtime::output` should own public snapshot structs and serialization,
-  not mutable runtime storage.
-- `pine-runtime::builtins::drawings` should translate evaluated call arguments
-  into operations on the object store.
+- `pine-runtime::output` owns public snapshot structs and serialization, not
+   call evaluation.
+- `pine-runtime::builtins::drawings` owns family-specific lifecycle behavior.
+- `runtime/historical.rs` currently owns the small object vectors and id
+   counters. If drawing state grows beyond the current scalar-id stores, split it
+   into a dedicated object store module before adding more object families.
 - `pine-sema` should continue to be the gate for unsupported object methods,
   unsafe side-effect contexts, and argument/type diagnostics.
 - `lib.rs` files should remain facades that declare modules and re-export public

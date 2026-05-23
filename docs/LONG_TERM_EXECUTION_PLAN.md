@@ -353,6 +353,8 @@ Suggested first slice:
 Goal: support external data requests only after the runtime has a clear data
 provider abstraction.
 
+Execution playbook: `docs/PHASE_F_EXECUTION_PLAN.md`.
+
 Scope:
 
 - Design a host data-provider API for symbols and timeframes.
