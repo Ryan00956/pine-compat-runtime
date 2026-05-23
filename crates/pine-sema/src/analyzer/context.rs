@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use pine_ir::{CallSiteId, PineType, Qualifier, SeriesId, SymbolId, VarSlotId};
+use pine_ir::{CallSiteId, PersistenceKind, PineType, Qualifier, SeriesId, SymbolId, VarSlotId};
 use pine_syntax::{Diagnostic, FunctionBody, Program, Severity, Span};
 
 use crate::analysis::Analysis;
@@ -51,11 +51,17 @@ impl Analyzer {
         var_slot_id: Option<VarSlotId>,
     ) -> SymbolInfo {
         if let Some(existing) = self.scope.resolve(name) {
+            let persistence = if var_slot_id.is_some() {
+                PersistenceKind::Var
+            } else {
+                existing.persistence
+            };
             let updated = SymbolInfo {
                 pine_type,
                 series_id: existing
                     .series_id
                     .or_else(|| self.series_id_for_type(pine_type)),
+                persistence,
                 var_slot_id: existing.var_slot_id.or(var_slot_id),
                 ..existing
             };
@@ -67,6 +73,7 @@ impl Analyzer {
             id: self.alloc_symbol(),
             pine_type,
             series_id: self.series_id_for_type(pine_type),
+            persistence: persistence_kind_for_slot(var_slot_id),
             var_slot_id,
         };
         self.scope.define_global(name, info);
@@ -85,6 +92,7 @@ impl Analyzer {
             id: self.alloc_symbol(),
             pine_type,
             series_id,
+            persistence: persistence_kind_for_slot(var_slot_id),
             var_slot_id,
         };
         self.scope.define_local(name, info, lower);
@@ -96,6 +104,7 @@ impl Analyzer {
             id: self.alloc_symbol(),
             pine_type: original.pine_type,
             series_id: self.series_id_for_type(original.pine_type),
+            persistence: original.persistence,
             var_slot_id: original.var_slot_id.map(|_| self.alloc_var_slot()),
         };
         self.scope.add_lower_symbol(name, info);
@@ -107,6 +116,7 @@ impl Analyzer {
             id: self.alloc_symbol(),
             pine_type,
             series_id: self.series_id_for_type(pine_type),
+            persistence: PersistenceKind::None,
             var_slot_id: None,
         };
         self.scope.add_lower_symbol(name, info);
@@ -173,5 +183,13 @@ impl Analyzer {
         self.diagnostics
             .iter()
             .any(|diagnostic| diagnostic.severity == Severity::Error)
+    }
+}
+
+fn persistence_kind_for_slot(var_slot_id: Option<VarSlotId>) -> PersistenceKind {
+    if var_slot_id.is_some() {
+        PersistenceKind::Var
+    } else {
+        PersistenceKind::None
     }
 }

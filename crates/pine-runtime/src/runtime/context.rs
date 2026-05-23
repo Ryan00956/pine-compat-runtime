@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 use chrono::{Datelike, Timelike};
-use pine_ir::{SeriesId, SymbolId, VarSlotId};
+use pine_ir::{SeriesId, SymbolId};
 
 use crate::builtins::time::{dayofweek_value, timeframe_seconds, utc_datetime_from_millis};
 use crate::*;
@@ -282,32 +282,6 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         finite_float_or_na(((bar.close - bar.open) / range) * bar.volume)
-    }
-
-    pub(crate) fn eval_decl(
-        &mut self,
-        symbol: SymbolId,
-        value: &HirExpr,
-    ) -> Result<PineValue, RuntimeError> {
-        let Some(var_slot_id) = self.var_slot_for_symbol(symbol) else {
-            return self.eval_expr(value);
-        };
-
-        if let Some(value) = self.var_store.get(&var_slot_id).cloned() {
-            Ok(value)
-        } else {
-            let value = self.eval_expr(value)?;
-            self.var_store.insert(var_slot_id, value.clone());
-            Ok(value)
-        }
-    }
-
-    pub(crate) fn var_slot_for_symbol(&self, symbol_id: SymbolId) -> Option<VarSlotId> {
-        self.program
-            .symbols
-            .iter()
-            .find(|symbol| symbol.id == symbol_id)
-            .and_then(|symbol| symbol.var_slot_id)
     }
 
     pub(crate) fn series_id_for_symbol(&self, symbol_id: SymbolId) -> Option<SeriesId> {

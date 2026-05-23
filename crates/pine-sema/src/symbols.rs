@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use pine_ir::{PineType, Qualifier, SeriesId, SymbolId, ValueKind};
+use pine_ir::{PersistenceKind, PineType, Qualifier, SeriesId, SymbolId, ValueKind};
 
 use crate::resolver::SymbolInfo;
 
@@ -57,6 +57,7 @@ pub(crate) fn initial_symbols() -> HashMap<String, SymbolInfo> {
                     } else {
                         None
                     },
+                    persistence: PersistenceKind::None,
                     var_slot_id: None,
                 },
             )

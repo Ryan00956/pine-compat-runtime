@@ -115,7 +115,27 @@ fn lowers_var_declaration_to_var_slot() {
         .iter()
         .find(|symbol| symbol.name == "x")
         .expect("x symbol should exist");
+    assert_eq!(symbol.persistence, PersistenceKind::Var);
     assert_eq!(symbol.var_slot_id, Some(VarSlotId(0)));
+}
+
+#[test]
+fn lowers_plain_declaration_without_persistence() {
+    let analysis = analyze("x = 0\nplot(x)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("valid script should lower to HIR");
+    let symbol = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "x")
+        .expect("x symbol should exist");
+    assert_eq!(symbol.persistence, PersistenceKind::None);
+    assert_eq!(symbol.var_slot_id, None);
 }
 
 #[test]

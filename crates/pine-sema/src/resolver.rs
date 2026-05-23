@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use pine_ir::{HirSymbol, PineType, SeriesId, SymbolId, VarSlotId};
+use pine_ir::{HirSymbol, PersistenceKind, PineType, SeriesId, SymbolId, VarSlotId};
 use pine_syntax::Span;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -8,6 +8,7 @@ pub(crate) struct SymbolInfo {
     pub(crate) id: SymbolId,
     pub(crate) pine_type: PineType,
     pub(crate) series_id: Option<SeriesId>,
+    pub(crate) persistence: PersistenceKind,
     pub(crate) var_slot_id: Option<VarSlotId>,
 }
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -119,6 +120,7 @@ impl ScopeResolver {
                 name: name.clone(),
                 pine_type: symbol.pine_type,
                 series_id: symbol.series_id,
+                persistence: symbol.persistence,
                 var_slot_id: symbol.var_slot_id,
             })
             .collect()

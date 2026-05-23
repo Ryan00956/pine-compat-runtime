@@ -52,9 +52,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
             HirStmtKind::Reassign { symbol, value } => {
                 let value = self.eval_expr(value)?;
-                if let Some(var_slot_id) = self.var_slot_for_symbol(*symbol) {
-                    self.var_store.insert(var_slot_id, value.clone());
-                }
+                self.assign_persistent_symbol(*symbol, value.clone());
                 self.set_symbol_value(*symbol, value);
             }
             HirStmtKind::TupleDecl { symbols, value } => {

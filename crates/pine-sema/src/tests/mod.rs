@@ -1,5 +1,5 @@
 use crate::{Analysis, CompileCache, CompileCacheStats, analyze_source};
-use pine_ir::{HirStmtKind, VarSlotId};
+use pine_ir::{HirStmtKind, PersistenceKind, VarSlotId};
 use pine_syntax::SourceFile;
 
 fn analyze(text: &str) -> Analysis {

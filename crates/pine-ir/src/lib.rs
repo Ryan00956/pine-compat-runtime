@@ -13,6 +13,13 @@ pub struct VarSlotId(pub u32);
 pub struct SymbolId(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PersistenceKind {
+    None,
+    Var,
+    Varip,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Qualifier {
     Const,
     Input,
@@ -87,6 +94,7 @@ pub struct HirSymbol {
     pub name: String,
     pub pine_type: PineType,
     pub series_id: Option<SeriesId>,
+    pub persistence: PersistenceKind,
     pub var_slot_id: Option<VarSlotId>,
 }
 

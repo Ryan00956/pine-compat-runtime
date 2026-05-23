@@ -1,6 +1,6 @@
 //! Historical runtime scaffolding.
 
-use pine_ir::{CallSiteId, HirExpr, SeriesId, SymbolId, VarSlotId};
+use pine_ir::{CallSiteId, HirExpr, PersistenceKind, SeriesId, SymbolId, VarSlotId};
 
 mod algorithms;
 mod bar;
