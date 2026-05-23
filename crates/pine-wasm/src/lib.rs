@@ -11,18 +11,19 @@ pub struct WasmProgram {
 
 #[wasm_bindgen(js_name = compileScript)]
 pub fn compile_script(source: &str) -> Result<WasmProgram, JsValue> {
+    compile_program(source).map_err(|err| JsValue::from_str(&err))
+}
+
+fn compile_program(source: &str) -> Result<WasmProgram, String> {
     let source_file = SourceFile::new("<wasm>", source);
     let analysis = analyze_source(&source_file);
     if !analysis.diagnostics.is_empty() {
-        return Err(JsValue::from_str(&format_diagnostics(
-            &source_file,
-            &analysis.diagnostics,
-        )));
+        return Err(format_diagnostics(&source_file, &analysis.diagnostics));
     }
 
     let hir = analysis
         .hir
-        .ok_or_else(|| JsValue::from_str("analysis did not produce executable HIR"))?;
+        .ok_or_else(|| "analysis did not produce executable HIR".to_string())?;
     Ok(WasmProgram { hir })
 }
 
@@ -35,17 +36,28 @@ pub fn analyze_script(source: &str) -> String {
 
 #[wasm_bindgen(js_name = runScriptCsv)]
 pub fn run_script_csv(source: &str, bars_csv: &str) -> Result<String, JsValue> {
-    let program = compile_script(source)?;
-    program.run_csv(bars_csv)
+    run_script_csv_internal(source, bars_csv).map_err(|err| JsValue::from_str(&err))
+}
+
+fn run_script_csv_internal(source: &str, bars_csv: &str) -> Result<String, String> {
+    let program = compile_program(source)?;
+    program.run_csv_internal(bars_csv)
 }
 
 #[wasm_bindgen]
 impl WasmProgram {
     #[wasm_bindgen(js_name = runCsv)]
     pub fn run_csv(&self, bars_csv: &str) -> Result<String, JsValue> {
-        let bars = parse_bars_csv(bars_csv).map_err(|err| JsValue::from_str(&err))?;
+        self.run_csv_internal(bars_csv)
+            .map_err(|err| JsValue::from_str(&err))
+    }
+}
+
+impl WasmProgram {
+    fn run_csv_internal(&self, bars_csv: &str) -> Result<String, String> {
+        let bars = parse_bars_csv(bars_csv)?;
         let result = run_historical(&self.hir, &bars)
-            .map_err(|err| JsValue::from_str(&format!("runtime failed: {}", err.message)))?;
+            .map_err(|err| format!("runtime failed: {}", err.message))?;
         Ok(public_runtime_result_json(&result))
     }
 }
@@ -209,71 +221,4 @@ fn json_escape(value: &str) -> String {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use std::{env, fs, path::PathBuf};
-
-    #[test]
-    fn analyzes_script_to_json() {
-        let output = analyze_script("indicator(\"demo\")\nplot(close)\n");
-
-        assert!(output.contains("\"schemaVersion\":2"));
-        assert!(output.contains("\"executable\":true"));
-        assert!(output.contains("\"feature\":\"plot\""));
-    }
-
-    #[test]
-    fn runs_script_from_csv_to_json() {
-        let output = run_script_csv(
-            "indicator(\"demo\")\nplot(close)\n",
-            "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
-        )
-        .expect("script should run");
-
-        assert!(output.contains("\"schemaVersion\":2"));
-        assert!(output.contains("\"values\":[1,2]"));
-        assert!(output.contains("\"plotChars\":[]"));
-        assert!(output.contains("\"plotShapes\":[]"));
-        assert!(output.contains("\"plotArrows\":[]"));
-        assert!(output.contains("\"plotBars\":[]"));
-        assert!(output.contains("\"plotCandles\":[]"));
-        assert!(output.contains("\"labels\":[]"));
-        assert!(output.contains("\"lines\":[]"));
-        assert!(output.contains("\"boxes\":[]"));
-        assert!(output.contains("\"tables\":[]"));
-    }
-
-    #[test]
-    fn analysis_outputs_match_golden_snapshots() {
-        assert_snapshot(
-            "analysis_supported.json",
-            &analyze_script(include_str!(
-                "../../../tests/fixtures/runtime/snapshot_plot.pine"
-            )),
-        );
-        assert_snapshot(
-            "analysis_unsupported.json",
-            &analyze_script(include_str!(
-                "../../../tests/fixtures/sema/unsupported_request.pine"
-            )),
-        );
-    }
-
-    fn assert_snapshot(name: &str, actual: &str) {
-        let snapshot_path = workspace_dir().join("tests/snapshots").join(name);
-        if env::var_os("UPDATE_SNAPSHOTS").is_some() {
-            fs::create_dir_all(snapshot_path.parent().expect("snapshot parent"))
-                .expect("create snapshot dir");
-            fs::write(&snapshot_path, format!("{actual}\n")).expect("write snapshot");
-            return;
-        }
-
-        let expected = fs::read_to_string(&snapshot_path)
-            .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
-        assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");
-    }
-
-    fn workspace_dir() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
-    }
-}
+mod tests;

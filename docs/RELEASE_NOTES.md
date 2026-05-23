@@ -22,6 +22,10 @@
   `request.security` remains runtime-rejected with a stable error, and
   `request.security_lower_tf` remains unsupported until typed array return
   semantics and host output shapes are designed.
+- Added cross-host request contract fixtures for CLI and Python request dataset
+  injection, plus conformance validation that prevents partial `request.*`
+  claims without request-specific fixtures. WASM request dataset injection
+  remains a documented temporary gap.
 - Started Phase E drawing-object infrastructure by bumping the public
   machine-readable contract to `schemaVersion: 2` and adding the
   top-level `labels` output across CLI JSON, Python dictionaries, and WASM JSON.

@@ -31,6 +31,11 @@ struct RequestBarsSpec {
 }
 
 fn run_with_options(options: &RunOptions) -> Result<(), String> {
+    println!("{}", run_json_with_options(options)?);
+    Ok(())
+}
+
+fn run_json_with_options(options: &RunOptions) -> Result<String, String> {
     let text = fs::read_to_string(&options.path)
         .map_err(|err| format!("failed to read {}: {err}", options.path))?;
     let source = SourceFile::new(&options.path, text);
@@ -61,16 +66,15 @@ fn run_with_options(options: &RunOptions) -> Result<(), String> {
         let result =
             run_historical_profiled_with_request_environment(&hir, &bars, request_environment)
                 .map_err(|err| format!("runtime failed: {}", err.message))?;
-        println!(
-            "{}",
-            public_runtime_profiled_result_json(&result.result, &result.profile)
-        );
+        Ok(public_runtime_profiled_result_json(
+            &result.result,
+            &result.profile,
+        ))
     } else {
         let result = run_historical_with_request_environment(&hir, &bars, request_environment)
             .map_err(|err| format!("runtime failed: {}", err.message))?;
-        println!("{}", public_runtime_result_json(&result));
+        Ok(public_runtime_result_json(&result))
     }
-    Ok(())
 }
 
 fn parse_options(args: &[String]) -> Result<RunOptions, String> {
@@ -155,6 +159,15 @@ fn request_environment_from_specs(specs: &[RequestBarsSpec]) -> Result<RequestEn
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::PathBuf;
+
+    fn workspace_path(path: &str) -> String {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../..")
+            .join(path)
+            .display()
+            .to_string()
+    }
 
     #[test]
     fn parses_request_bars_spec_with_exchange_prefixed_symbol() {
@@ -209,5 +222,31 @@ mod tests {
 
         assert!(error.contains("duplicate request data for symbol `NYSE:IBM` timeframe `1`"));
         let _ = fs::remove_file(path);
+    }
+
+    #[test]
+    fn runs_request_bars_integration_fixture() {
+        let options = RunOptions {
+            path: workspace_path("tests/fixtures/request/request_security_host.pine"),
+            bars_path: workspace_path("tests/fixtures/request/chart_1m.csv"),
+            profile: false,
+            request_bars: vec![
+                parse_request_bars_spec(&format!(
+                    "NYSE:IBM:1={}",
+                    workspace_path("tests/fixtures/request/ibm_1m.csv")
+                ))
+                .expect("same timeframe request bars"),
+                parse_request_bars_spec(&format!(
+                    "NYSE:IBM:5={}",
+                    workspace_path("tests/fixtures/request/ibm_5m.csv")
+                ))
+                .expect("higher timeframe request bars"),
+            ],
+        };
+
+        let output = run_json_with_options(&options).expect("request integration fixture");
+
+        assert!(output.contains("\"values\":[30,32,34,36,38]"));
+        assert!(output.contains("\"values\":[null,null,100,100,200]"));
     }
 }

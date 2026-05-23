@@ -74,6 +74,7 @@ pub(crate) fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixE
         }
 
         validate_status_fixture_paths(line_number, feature, status, &fixtures)?;
+        validate_request_fixture_paths(line_number, feature, status, &fixtures)?;
 
         entries.push(MatrixEntry {
             feature: feature.to_owned(),
@@ -84,6 +85,23 @@ pub(crate) fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixE
     }
 
     Ok(entries)
+}
+
+fn validate_request_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    status: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if feature.starts_with("request.")
+        && matches!(status, "supported" | "partial")
+        && !fixtures.iter().any(|fixture| fixture.contains("request"))
+    {
+        return Err(format!(
+            "line {line_number}: {status} request feature `{feature}` must reference request fixture coverage"
+        ));
+    }
+    Ok(())
 }
 
 fn validate_status_fixture_paths(
@@ -98,6 +116,7 @@ fn validate_status_fixture_paths(
                 fixture.starts_with("tests/fixtures/runtime/")
                     || fixture.starts_with("tests/fixtures/realtime/")
                     || fixture.starts_with("tests/fixtures/syntax/")
+                    || fixture.starts_with("tests/fixtures/request/")
                     || fixture.starts_with("tests/fixtures/sema/supported_")
                     || fixture.starts_with("tests/fixtures/regressions/")
             }) {

@@ -106,7 +106,14 @@ CLI uses repeated `--request-bars SYMBOL:TIMEFRAME=bars.csv` options and Python
 accepts a `request_bars` dictionary with the same `SYMBOL:TIMEFRAME` keys. WASM
 does not yet expose request dataset injection; scripts requiring provider data
 fail with the shared missing-request-data runtime error until a JSON host shape
-is added.
+is added. The cross-host request fixture can be exercised with:
+
+```text
+cargo run -p pine-cli -- run tests/fixtures/request/request_security_host.pine \
+  --bars tests/fixtures/request/chart_1m.csv \
+  --request-bars NYSE:IBM:1=tests/fixtures/request/ibm_1m.csv \
+  --request-bars NYSE:IBM:5=tests/fixtures/request/ibm_5m.csv
+```
 
 Provider-backed `request.security` expressions are evaluated in a separate
 requested-context `HistoricalRuntime` over the immutable provider bars, then

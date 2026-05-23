@@ -187,6 +187,16 @@ mod tests {
     }
 
     #[test]
+    fn rejects_request_claims_without_request_fixtures() {
+        let error = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\nrequest.security\tpartial\tnotes\ttests/fixtures/runtime/io.pine\n",
+        )
+        .expect_err("request feature should require request fixture coverage");
+
+        assert!(error.contains("must reference request fixture coverage"));
+    }
+
+    #[test]
     fn matrix_includes_known_unsupported_platform_families() {
         let entries = conformance_entries();
         for feature in [

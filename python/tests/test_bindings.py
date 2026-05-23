@@ -1,4 +1,5 @@
 import pine_compat
+from pathlib import Path
 
 
 BARS = [
@@ -25,6 +26,26 @@ RUNTIME_RESULT_KEYS = {
     "tables",
     "diagnostics",
 }
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def fixture_bars(path):
+    rows = []
+    lines = (ROOT / path).read_text().strip().splitlines()
+    for line in lines[1:]:
+        time, open_, high, low, close, volume = line.split(",")
+        rows.append(
+            {
+                "time": int(time),
+                "open": float(open_),
+                "high": float(high),
+                "low": float(low),
+                "close": float(close),
+                "volume": float(volume),
+            }
+        )
+    return rows
 
 
 def test_analyze_script_reports_executable_script():
@@ -98,6 +119,21 @@ def test_run_script_accepts_request_bars():
     )
 
     assert result["plots"][0]["values"] == [20.0, 21.0, 22.0]
+
+
+def test_run_script_request_fixture_matches_cli_contract():
+    source = (ROOT / "tests/fixtures/request/request_security_host.pine").read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/request/chart_1m.csv"),
+        {
+            "NYSE:IBM:1": fixture_bars("tests/fixtures/request/ibm_1m.csv"),
+            "NYSE:IBM:5": fixture_bars("tests/fixtures/request/ibm_5m.csv"),
+        },
+    )
+
+    assert result["plots"][0]["values"] == [30.0, 32.0, 34.0, 36.0, 38.0]
+    assert result["plots"][1]["values"] == [None, None, 100.0, 100.0, 200.0]
 
 
 def test_run_script_reports_missing_request_bars():
