@@ -94,6 +94,15 @@ Responsibilities:
 
 The runtime should be deterministic for a fixed program, data set, and inputs.
 
+Phase F introduces a host-neutral request data boundary before enabling
+`request.*` execution. Core runtime code owns chart metadata, request keys,
+timeframe parsing, requested-bar validation, and provider error shapes, but it
+must not fetch network data or read host files. Hosts supply immutable requested
+bar streams through the shared request provider contract. The default runtime
+environment keeps the existing fixed chart metadata and no-request provider so
+current `HistoricalRuntime::new`, `RealtimeRuntime::new`, and `run_historical`
+call sites keep their behavior until request execution is explicitly enabled.
+
 Realtime execution uses explicit bar update kinds for historical, forming, and
 confirmed bars. See [`REALTIME_MODEL.md`](REALTIME_MODEL.md).
 

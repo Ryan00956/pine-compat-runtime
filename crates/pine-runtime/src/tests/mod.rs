@@ -11,6 +11,7 @@ mod builtins_ta_flow;
 mod builtins_time;
 mod outputs;
 mod realtime;
+mod request;
 mod runtime_control_flow;
 mod runtime_core;
 mod runtime_history;

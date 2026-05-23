@@ -8,6 +8,7 @@ mod builtins;
 mod error;
 mod output;
 mod profile;
+mod request;
 mod retention;
 mod runtime;
 mod series;
@@ -26,6 +27,11 @@ pub use output::model::{
     RuntimeDiagnostic, RuntimeResult,
 };
 pub use profile::{RuntimeProfile, RuntimeProfiledResult};
+pub use request::{
+    ChartContext, InMemoryRequestDataProvider, NoRequestDataProvider, RequestDataError,
+    RequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe, RequestTimeframeError,
+    validate_requested_bars,
+};
 pub use retention::HistoryRetentionMode;
 pub use runtime::historical::{HistoricalRuntime, run_historical, run_historical_profiled};
 pub use runtime::realtime::RealtimeRuntime;

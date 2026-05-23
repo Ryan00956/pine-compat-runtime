@@ -9,10 +9,26 @@ pub struct RealtimeRuntime<'a> {
 impl<'a> RealtimeRuntime<'a> {
     #[must_use]
     pub fn new(program: &'a HirProgram) -> Self {
+        Self::with_request_environment(program, RequestEnvironment::default())
+    }
+
+    #[must_use]
+    pub fn with_request_environment(
+        program: &'a HirProgram,
+        request_environment: RequestEnvironment,
+    ) -> Self {
         Self {
-            confirmed: HistoricalRuntime::new(program),
+            confirmed: HistoricalRuntime::with_request_environment(program, request_environment),
             forming: None,
         }
+    }
+
+    #[must_use]
+    pub fn request_environment(&self) -> &RequestEnvironment {
+        self.forming
+            .as_ref()
+            .unwrap_or(&self.confirmed)
+            .request_environment()
     }
 
     pub fn update(&mut self, update: BarUpdate) -> Result<RuntimeResult, RuntimeError> {

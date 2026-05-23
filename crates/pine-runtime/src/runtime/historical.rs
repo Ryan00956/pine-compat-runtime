@@ -11,6 +11,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) historical_end: Option<usize>,
     pub(crate) current_bar_update_kind: BarUpdateKind,
     pub(crate) current_bar_is_new: bool,
+    pub(crate) request_environment: RequestEnvironment,
     pub(crate) series_store: SeriesStore,
     pub(crate) series_retention: SeriesRetention,
     pub(crate) current_symbols: HashMap<SymbolId, PineValue>,
@@ -81,12 +82,21 @@ pub fn run_historical_profiled(
 impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn new(program: &'a HirProgram) -> Self {
+        Self::with_request_environment(program, RequestEnvironment::default())
+    }
+
+    #[must_use]
+    pub fn with_request_environment(
+        program: &'a HirProgram,
+        request_environment: RequestEnvironment,
+    ) -> Self {
         Self {
             program,
             bars: 0,
             historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
             current_bar_is_new: true,
+            request_environment,
             series_store: SeriesStore::new(),
             series_retention: SeriesRetention::from_program(program),
             current_symbols: HashMap::new(),
@@ -142,6 +152,11 @@ impl<'a> HistoricalRuntime<'a> {
             next_box_id: 1,
             next_table_id: 1,
         }
+    }
+
+    #[must_use]
+    pub fn request_environment(&self) -> &RequestEnvironment {
+        &self.request_environment
     }
 
     pub(crate) fn run(mut self, bars: &[Bar]) -> Result<RuntimeResult, RuntimeError> {
