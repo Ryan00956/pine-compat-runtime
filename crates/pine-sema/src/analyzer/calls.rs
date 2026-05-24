@@ -52,10 +52,6 @@ const TABLE_POSITIONS: &[&str] = &[
     "position.bottom_right",
 ];
 
-fn has_alert_placeholder(value: &str) -> bool {
-    value.contains("{{") && value.contains("}}")
-}
-
 pub(crate) fn expr_name(expr: &Expr) -> Option<String> {
     match &expr.kind {
         ExprKind::Identifier(name) => Some(name.clone()),
@@ -478,41 +474,6 @@ impl Analyzer {
         self.validate_indicator_args(signature, args);
         self.validate_alert_args(signature, args);
         self.validate_label_new_args(signature, args);
-    }
-
-    pub(crate) fn validate_alert_args(&mut self, signature: &BuiltinSignature, args: &[CallArg]) {
-        if !matches!(signature.name, "alert" | "alertcondition") {
-            return;
-        }
-
-        for (index, arg) in args.iter().enumerate() {
-            let Some(param_name) = self
-                .resolve_param(signature, index, arg)
-                .map(|param| param.name)
-            else {
-                continue;
-            };
-
-            if signature.name == "alert" && param_name == "freq" {
-                self.unsupported(
-                    "alert_frequency",
-                    "alert frequency modes are not supported in the current alert subset",
-                    arg.span,
-                );
-            }
-
-            if matches!(param_name, "message" | "title")
-                && const_string_value(&arg.value)
-                    .as_deref()
-                    .is_some_and(has_alert_placeholder)
-            {
-                self.unsupported(
-                    "alert_placeholders",
-                    "alert placeholder interpolation is not supported in the current alert subset",
-                    arg.span,
-                );
-            }
-        }
     }
 
     pub(crate) fn validate_label_new_args(

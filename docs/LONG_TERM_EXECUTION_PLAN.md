@@ -40,6 +40,10 @@ Implemented or partially implemented:
   helpers, and `ta.*` functions. The main built-in coverage pass is closed in
   `docs/PHASE_D_AUDIT.md`; further built-in work should be maintenance unless
   a later phase needs it.
+- Partial alert events for `alertcondition()` and `alert()` with a versioned
+  public `alerts` runtime output. The Phase H alert subset is closed in
+  `docs/PHASE_H_AUDIT.md`; frequency modes, placeholders, host delivery, and
+  strategy alerts remain out of scope.
 - CLI, Python, and WASM surfaces for the supported runtime result model.
 
 Remaining work falls into the phases below.
@@ -402,17 +406,31 @@ Acceptance criteria:
 
 ## Phase H: Alerts
 
+Status: closed for the fixture-backed claimed subset. See
+`docs/PHASE_H_AUDIT.md`.
+
 Goal: support alert surfaces after series and condition evaluation semantics
 are stable.
 
 Execution playbook: `docs/PHASE_H_EXECUTION_PLAN.md`.
 
-Scope:
+Delivered scope:
 
-- `alertcondition`.
-- `alert`.
-- Message templating if supported.
-- Historical evaluation versus realtime triggering policy.
+- `alertcondition(condition, title, message)` with bool-compatible conditions
+  and const-string title/message values.
+- `alert(message)` with const-string messages.
+- Deterministic public runtime alert events in `schemaVersion: 3`.
+- Historical, incremental, and realtime rollback fixture coverage.
+- Stable diagnostics for frequency modes, placeholders, side-effect contexts,
+  and requested-context alert side effects.
+
+Maintenance tails:
+
+- Alert frequency modes and placeholder interpolation need a dedicated design
+  before support is claimed.
+- Host-side alert delivery APIs are not part of the current runtime host
+  surfaces.
+- Strategy alerts remain blocked on Phase G strategy runtime semantics.
 
 Acceptance criteria:
 
@@ -501,14 +519,13 @@ Recommended order from the current state:
 1. Phase E: drawing objects.
 2. Phase F: `request.*` and multi-timeframe data.
 3. Phase I: `varip`.
-4. Phase H: alerts.
-5. Phase J: libraries, user types, and methods.
-6. Phase K maintenance only when release contracts, snapshots, or matrix gates
+4. Phase J: libraries, user types, and methods.
+5. Phase K maintenance only when release contracts, snapshots, or matrix gates
    need tightening.
-7. Phase G: strategy runtime.
-8. Phase B/C maintenance when new work exposes collection, history, or
+6. Phase G: strategy runtime.
+7. Phase B/C maintenance when new work exposes collection, history, or
    qualifier gaps.
-9. Phase D maintenance for small fixture-backed built-in compatibility fixes.
+8. Phase D maintenance for small fixture-backed built-in compatibility fixes.
 
 This order keeps the project useful for indicator execution while delaying
 features that require new host APIs, object lifetimes, or broker simulation.
