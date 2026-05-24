@@ -207,6 +207,7 @@ mod tests {
             "import",
             "strategy.*",
             "alert frequency",
+            "alert placeholders",
             "unsupported label/line/box/table methods",
             "polyline.*",
             "non-int history offsets",

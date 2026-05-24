@@ -44,7 +44,8 @@ strings. Runtime output serializes `title` as the alert event `source` and
 
 `alert(message)` is supported for const-string messages only. It emits an event
 whenever execution reaches the call and serializes `source` as `alert`.
-Frequency arguments remain unsupported until a deterministic policy is designed.
+TradingView-style `{{...}}` placeholder interpolation and frequency arguments
+remain unsupported until deterministic policies are designed.
 
 Alert conditions execute like ordinary reached statements in global flow,
 including supported `if`, `switch`, `for`, and `while` bodies. This is a

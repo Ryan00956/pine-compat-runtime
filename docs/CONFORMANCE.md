@@ -100,7 +100,8 @@ commits an event. Repeated forming updates recompute alert events from the
 confirmed snapshot, so abandoned forming events are neither retained nor
 duplicated, and a confirmed update matches the equivalent historical execution
 where the same final bar data is available. Alert frequency modes remain
-unsupported.
+unsupported. TradingView-style `{{...}}` alert placeholder interpolation is
+also unsupported; supported alert messages are serialized literally.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field

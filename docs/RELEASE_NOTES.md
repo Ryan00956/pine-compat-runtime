@@ -365,8 +365,8 @@ consumer-visible output change is documented with snapshot updates.
   `alert(message)` is partially supported for const-string messages. Reached
   true conditions and reached alert calls emit deterministic `{id, barIndex,
   time, message, source}` events in program order; forming realtime events roll
-  back until confirmed. Alert frequency modes remain unsupported until
-  deterministic frequency semantics are designed.
+  back until confirmed. Alert frequency modes and TradingView-style placeholder
+  interpolation remain unsupported until deterministic semantics are designed.
 - The compatibility matrix source of truth is
   `tests/fixtures/conformance.tsv`; generated text and JSON matrix output must
   remain fixture-backed.

@@ -333,8 +333,9 @@ barcolor(color: color-compatible, title?: const string, offset?: simple int, edi
 evaluates to `true`. `title` is serialized as event `source`; `message` is
 serialized as event `message`. `alert` emits whenever execution reaches the
 call and serializes `source` as `alert`. Dynamic message/title strings,
-optional alert frequency parameters, and alert side effects inside UDF or
-requested-context expressions are not part of the current subset.
+TradingView-style `{{...}}` placeholder interpolation, optional alert frequency
+parameters, and alert side effects inside UDF or requested-context expressions
+are not part of the current subset.
 
 `color-compatible` should initially accept:
 

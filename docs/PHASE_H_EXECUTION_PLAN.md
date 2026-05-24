@@ -522,6 +522,8 @@ Exit criteria:
 - Message values in public alert events are deterministic and snapshot-backed.
 - Frequency behavior, if supported, has historical and realtime fixtures.
 - Unsupported placeholders and frequency modes fail with precise diagnostics.
+  The selected Phase H policy is to reject TradingView-style `{{...}}`
+  placeholders rather than serialize them as interpolated values.
 - Public output schema changes are intentional and snapshot-backed.
 
 Verification:

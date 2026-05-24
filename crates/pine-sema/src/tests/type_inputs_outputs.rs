@@ -225,6 +225,30 @@ alert("Reached", freq="once")
 }
 
 #[test]
+fn rejects_alert_placeholders() {
+    let analysis = analyze(
+        r#"alert("{{close}}")
+alertcondition(true, "Title", "{{ticker}}")
+"#,
+    );
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "alert_placeholders")
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("placeholder interpolation"))
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_alert_side_effects_inside_functions() {
     let analysis = analyze(
         r#"f() =>

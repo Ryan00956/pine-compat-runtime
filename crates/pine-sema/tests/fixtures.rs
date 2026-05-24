@@ -129,6 +129,15 @@ fn reports_unsupported_alert_fixture() {
 }
 
 #[test]
+fn reports_unsupported_alert_placeholder_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_alert_placeholder.pine",
+        "alert_placeholders",
+        "placeholder interpolation",
+    );
+}
+
+#[test]
 fn reports_unsupported_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_function_side_effect.pine",
