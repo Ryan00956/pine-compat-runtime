@@ -54,10 +54,13 @@ Runtime snapshots should be normalized JSON:
 The snapshot format should avoid host-specific charting details.
 
 Every machine-readable public output must include top-level `schemaVersion`.
-The version value comes from the shared runtime contract constant and must match
-across CLI JSON, Python dictionaries, and WASM JSON. The text-only CLI
-`analyze` output is diagnostic console output and is not part of the
-machine-readable schema until a JSON mode is added.
+Runtime outputs use `PUBLIC_RUNTIME_SCHEMA_VERSION`; analysis outputs use
+`PUBLIC_ANALYSIS_SCHEMA_VERSION`; matrix JSON uses
+`PUBLIC_MATRIX_SCHEMA_VERSION`. The current values are all `2`, but they are
+separate contracts so a future runtime-only field does not force analysis or
+matrix schema changes. The text-only CLI `analyze` output is diagnostic console
+output and is not part of the machine-readable schema until a JSON mode is
+added.
 
 CLI and WASM runtime JSON must be generated through the shared runtime contract
 helper so field names and nesting cannot drift. Python returns native
@@ -90,7 +93,8 @@ rename, omitted `schemaVersion`, or matrix shape change should fail tests. To
 refresh snapshots after an intentional public-output change, run:
 
 ```text
-UPDATE_SNAPSHOTS=1 cargo test -p pine-cli golden_snapshot
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli matrix_output_matches_golden_snapshot
 UPDATE_SNAPSHOTS=1 cargo test -p pine-wasm analysis_outputs_match_golden_snapshots
 cargo test --workspace
 ```
@@ -227,8 +231,8 @@ The generated matrix is derived from `tests/fixtures/conformance.tsv`. Each row
 declares a feature, status, notes, and one or more fixture paths that back the
 claim. CLI tests verify that every matrix entry references at least one existing
 fixture. The text matrix includes the fixture paths, and the JSON matrix exposes
-top-level `schemaVersion` plus a `features` array whose entries expose fixture
-paths as `fixtures`.
+top-level matrix `schemaVersion` plus a `features` array whose entries expose
+fixture paths as `fixtures`.
 
 Conformance metadata is validated before matrix output is trusted:
 

@@ -322,11 +322,18 @@ The core output must remain host-neutral:
 }
 ```
 
-The `schemaVersion` field is owned by the shared runtime contract and is exposed
-unchanged by CLI JSON, Python dictionaries, and WASM JSON. `schemaVersion: 2`
-adds top-level drawing-object fields. Host integrations can adapt
-this model into their charting or API format, but should preserve the schema
-version when they forward machine-readable results.
+The runtime `schemaVersion` field is owned by
+`PUBLIC_RUNTIME_SCHEMA_VERSION` and is exposed unchanged by CLI runtime JSON,
+Python runtime dictionaries, and WASM runtime JSON. `schemaVersion: 2` adds
+top-level drawing-object fields. Host integrations can adapt this model into
+their charting or API format, but should preserve the runtime schema version
+when they forward machine-readable runtime results.
+
+Machine-readable analysis and matrix outputs use separate schema ownership:
+`PUBLIC_ANALYSIS_SCHEMA_VERSION` for WASM/Python analysis reports and
+`PUBLIC_MATRIX_SCHEMA_VERSION` for CLI matrix JSON. The current values are all
+`2`, but they can now evolve independently when a future runtime-only output
+field does not affect analysis or matrix contracts.
 
 Drawing-object outputs use sparse snapshot families. The Phase E drawing
 contract reserves `labels`, `lines`, `boxes`, and `tables`, whose entries have
@@ -350,5 +357,5 @@ The `pine-runtime` crate owns the shared runtime-result JSON helpers used by the
 CLI and WASM bindings. Python keeps explicit dictionary conversion code because
 it returns native Python objects, but its top-level runtime result keys are
 tested against the same public contract. Analysis reports and compatibility
-matrix JSON remain host-specific contracts until a later infrastructure slice
-chooses to share them.
+matrix JSON keep distinct schema constants even where their current field shapes
+remain host-owned.

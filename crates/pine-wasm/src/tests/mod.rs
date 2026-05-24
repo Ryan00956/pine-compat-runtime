@@ -1,11 +1,15 @@
 use super::*;
+use pine_runtime::{PUBLIC_ANALYSIS_SCHEMA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION};
 use std::{env, fs, path::PathBuf};
 
 #[test]
 fn analyzes_script_to_json() {
     let output = analyze_script("indicator(\"demo\")\nplot(close)\n");
 
-    assert!(output.contains("\"schemaVersion\":2"));
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_ANALYSIS_SCHEMA_VERSION
+    )));
     assert!(output.contains("\"executable\":true"));
     assert!(output.contains("\"feature\":\"plot\""));
 }
@@ -18,7 +22,10 @@ fn runs_script_from_csv_to_json() {
     )
     .expect("script should run");
 
-    assert!(output.contains("\"schemaVersion\":2"));
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
     assert!(output.contains("\"values\":[1,2]"));
     assert!(output.contains("\"plotChars\":[]"));
     assert!(output.contains("\"plotShapes\":[]"));

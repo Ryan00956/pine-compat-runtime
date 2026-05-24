@@ -1,7 +1,8 @@
 use pine_ir::HirProgram;
 use pine_runtime::{
-    Bar, ChartContext, InMemoryRequestDataProvider, PUBLIC_OUTPUT_SCHEMA_VERSION, PineValue,
-    RequestEnvironment, RequestKey, RequestTimeframe, run_historical_with_request_environment,
+    Bar, ChartContext, InMemoryRequestDataProvider, PUBLIC_ANALYSIS_SCHEMA_VERSION,
+    PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue, RequestEnvironment, RequestKey, RequestTimeframe,
+    run_historical_with_request_environment,
 };
 use pine_sema::{Analysis, analyze_source};
 use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
@@ -168,7 +169,7 @@ where
 
 fn analysis_to_py(py: Python<'_>, source: &SourceFile, analysis: &Analysis) -> PyResult<Py<PyAny>> {
     let output = PyDict::new(py);
-    output.set_item("schemaVersion", PUBLIC_OUTPUT_SCHEMA_VERSION)?;
+    output.set_item("schemaVersion", PUBLIC_ANALYSIS_SCHEMA_VERSION)?;
     output.set_item("languageVersion", analysis.compatibility.language_version)?;
     output.set_item(
         "diagnostics",
@@ -239,7 +240,7 @@ fn runtime_result_to_py(
     result: &pine_runtime::RuntimeResult,
 ) -> PyResult<Py<PyAny>> {
     let output = PyDict::new(py);
-    output.set_item("schemaVersion", PUBLIC_OUTPUT_SCHEMA_VERSION)?;
+    output.set_item("schemaVersion", PUBLIC_RUNTIME_SCHEMA_VERSION)?;
     output.set_item("plots", plots_to_py(py, &result.plots)?)?;
     output.set_item("plotChars", plot_chars_to_py(py, &result.plot_chars)?)?;
     output.set_item("plotShapes", plot_shapes_to_py(py, &result.plot_shapes)?)?;

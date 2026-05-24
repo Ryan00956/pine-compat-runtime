@@ -42,7 +42,8 @@ mod tests {
         MatrixEntry, conformance_entries, try_conformance_entries_from_tsv, validate_fixture_paths,
     };
     use pine_runtime::{
-        HistoryRetentionMode, RuntimeProfile, RuntimeResult, public_runtime_profiled_result_json,
+        HistoryRetentionMode, PUBLIC_MATRIX_SCHEMA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION,
+        RuntimeProfile, RuntimeResult, public_runtime_profiled_result_json,
         public_runtime_result_json, run_historical,
     };
     use pine_sema::analyze_source;
@@ -249,7 +250,10 @@ mod tests {
 
         assert_eq!(
             output,
-            r#"{"schemaVersion":2,"features":[{"feature":"request.*","status":"unsupported","notes":"multi-symbol","fixtures":["tests/fixtures/sema/unsupported_request.pine"]}]}"#
+            format!(
+                r#"{{"schemaVersion":{},"features":[{{"feature":"request.*","status":"unsupported","notes":"multi-symbol","fixtures":["tests/fixtures/sema/unsupported_request.pine"]}}]}}"#,
+                PUBLIC_MATRIX_SCHEMA_VERSION
+            )
         );
     }
 
@@ -275,7 +279,10 @@ mod tests {
 
         let output = public_runtime_result_json(&result);
 
-        assert!(output.starts_with(r#"{"schemaVersion":2,"#));
+        assert!(output.starts_with(&format!(
+            r#"{{"schemaVersion":{},"#,
+            PUBLIC_RUNTIME_SCHEMA_VERSION
+        )));
         assert!(output.contains(r#""labels":[]"#));
         assert!(output.contains(r#""lines":[]"#));
         assert!(output.contains(r#""boxes":[]"#));
@@ -385,7 +392,10 @@ mod tests {
 
         let output = public_runtime_profiled_result_json(&result, &profile);
 
-        assert!(output.starts_with(r#"{"schemaVersion":2,"#));
+        assert!(output.starts_with(&format!(
+            r#"{{"schemaVersion":{},"#,
+            PUBLIC_RUNTIME_SCHEMA_VERSION
+        )));
         assert!(output.contains(r#""profile""#));
         assert!(output.contains(r#""bars":3"#));
         assert!(output.contains(r#""seriesValues":6"#));

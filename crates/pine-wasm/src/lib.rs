@@ -1,5 +1,7 @@
 use pine_ir::HirProgram;
-use pine_runtime::{Bar, PUBLIC_OUTPUT_SCHEMA_VERSION, public_runtime_result_json, run_historical};
+use pine_runtime::{
+    Bar, PUBLIC_ANALYSIS_SCHEMA_VERSION, public_runtime_result_json, run_historical,
+};
 use pine_sema::{Analysis, analyze_source};
 use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 use wasm_bindgen::prelude::*;
@@ -106,7 +108,7 @@ fn parse_column<T: std::str::FromStr>(
 }
 
 fn analysis_json(source: &SourceFile, analysis: &Analysis) -> String {
-    let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_OUTPUT_SCHEMA_VERSION);
+    let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_ANALYSIS_SCHEMA_VERSION);
     output.push_str("\"languageVersion\":");
     match analysis.compatibility.language_version {
         Some(version) => output.push_str(&version.to_string()),

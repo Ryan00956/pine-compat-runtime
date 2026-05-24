@@ -2,12 +2,12 @@ use crate::{HistoryRetentionMode, PineValue, RuntimeProfile};
 
 use super::drawings::{BoxOutput, LabelOutput, LineOutput, TableOutput};
 use super::model::{
-    ColorSeries, FillOutput, HLineOutput, PUBLIC_OUTPUT_SCHEMA_VERSION, PlotArrowSeries,
+    ColorSeries, FillOutput, HLineOutput, PUBLIC_RUNTIME_SCHEMA_VERSION, PlotArrowSeries,
     PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeResult,
 };
 
 pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
-    let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_OUTPUT_SCHEMA_VERSION);
+    let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_RUNTIME_SCHEMA_VERSION);
     output.push_str("\"plots\":");
     output.push_str(&plots_json(&result.plots));
     output.push_str(",\"plotChars\":");

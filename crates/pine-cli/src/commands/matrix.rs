@@ -1,4 +1,4 @@
-use pine_runtime::PUBLIC_OUTPUT_SCHEMA_VERSION;
+use pine_runtime::PUBLIC_MATRIX_SCHEMA_VERSION;
 
 use crate::conformance::{MatrixEntry, conformance_entries};
 use crate::json::json_escape;
@@ -64,7 +64,7 @@ pub(crate) fn matrix_text(entries: &[MatrixEntry]) -> String {
 pub(crate) fn matrix_json(entries: &[MatrixEntry]) -> String {
     let mut output = format!(
         "{{\"schemaVersion\":{},\"features\":[",
-        PUBLIC_OUTPUT_SCHEMA_VERSION
+        PUBLIC_MATRIX_SCHEMA_VERSION
     );
     for (index, entry) in entries.iter().enumerate() {
         if index > 0 {

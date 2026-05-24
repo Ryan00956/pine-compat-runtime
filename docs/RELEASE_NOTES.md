@@ -340,8 +340,11 @@ Compatibility claims are backed by `tests/fixtures/conformance.tsv`; run
 `pine-compat matrix` or `pine-compat matrix --format json` to inspect the
 feature-level matrix and its fixture paths.
 
-Machine-readable public outputs use top-level `schemaVersion`. The current
-release contract is `schemaVersion: 2`; increment it only when an intentional
+Machine-readable public outputs use top-level `schemaVersion`. Runtime,
+analysis, and matrix outputs now have separate schema constants:
+`PUBLIC_RUNTIME_SCHEMA_VERSION`, `PUBLIC_ANALYSIS_SCHEMA_VERSION`, and
+`PUBLIC_MATRIX_SCHEMA_VERSION`. The current value for each contract remains
+`schemaVersion: 2`; increment only the affected contract when an intentional
 consumer-visible output change is documented with snapshot updates.
 
 ### Runtime Surfaces

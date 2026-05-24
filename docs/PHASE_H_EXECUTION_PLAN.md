@@ -12,9 +12,9 @@ crates must remain deterministic: they should record alert events for a fixed
 program and bar stream, while hosts decide whether and how to deliver those
 events outside the runtime.
 
-## Current Starting Point
+## Original Starting Point
 
-This is the repository state before Phase H starts:
+This was the repository state before Phase H started:
 
 - `tests/fixtures/conformance.tsv` marks `alert/alertcondition` as
   `unsupported` with the fixture `tests/fixtures/sema/unsupported_alert.pine`.
@@ -24,9 +24,9 @@ This is the repository state before Phase H starts:
 - `pine-runtime::RuntimeResult` has no alert event output field.
 - CLI, Python, and WASM expose `schemaVersion: 2` runtime outputs with plots,
   drawing objects, diagnostics, and no alert event array.
-- `PUBLIC_OUTPUT_SCHEMA_VERSION` is currently a broad machine-readable public
-  output version, not a runtime-only version. It is reused by CLI matrix JSON,
-  WASM analysis JSON, Python analysis dictionaries, and runtime outputs.
+- `PUBLIC_OUTPUT_SCHEMA_VERSION` was a broad machine-readable public output
+  version, not a runtime-only version. It was reused by CLI matrix JSON, WASM
+  analysis JSON, Python analysis dictionaries, and runtime outputs.
 - Realtime rollback is fixture-backed for outputs, drawing objects, `var`,
   callsite state, arrays, dynamic history, request caches, and `varip`.
 - Existing golden JSON snapshots catch public runtime output shape changes.
@@ -169,15 +169,12 @@ alerts: [
 
 Schema rule:
 
+- Slice 0 chose split schema constants: `PUBLIC_RUNTIME_SCHEMA_VERSION`,
+  `PUBLIC_ANALYSIS_SCHEMA_VERSION`, and `PUBLIC_MATRIX_SCHEMA_VERSION`.
 - If `alerts` is added as a new top-level runtime output field, update the
   public schema contract deliberately.
-- If the project keeps one shared `PUBLIC_OUTPUT_SCHEMA_VERSION`, prefer moving
-  from `schemaVersion: 2` to `schemaVersion: 3` in Slice 0, with runtime JSON,
-  CLI matrix JSON, WASM analysis JSON, Python analysis/runtime dictionaries,
-  snapshots, docs, and release notes updated together.
-- If the project wants only runtime outputs to change, split the schema version
-  constants before adding `alerts`, then document ownership for runtime,
-  analysis, and matrix schemas.
+- Runtime-only alert output fields should now update the runtime schema
+  contract without forcing matrix or analysis schema changes.
 - Do not add host-specific alert keys to only one public surface.
 
 ## Semantics Direction
@@ -254,14 +251,11 @@ Steps:
    - Python analysis dictionaries.
    - Python runtime dictionaries.
    - Golden JSON snapshots under `tests/snapshots/`.
-2. Choose one schema strategy:
-   - keep the single shared public schema version and bump all
-     machine-readable outputs to `schemaVersion: 3`, or
-   - split runtime, analysis, and matrix schema constants before adding
-     runtime-only alert fields.
+2. Choose one schema strategy. Phase H chose to split runtime, analysis, and
+   matrix schema constants before adding runtime-only alert fields.
 3. If keeping one shared version, update all schema assertions and snapshots in
    the same change, including matrix and analysis snapshots.
-4. If splitting constants, document the ownership boundary in
+4. After splitting constants, document the ownership boundary in
    `docs/ARCHITECTURE.md` and `docs/CONFORMANCE.md`, then update tests so each
    output family asserts the intended version.
 5. Update `docs/RELEASE_NOTES.md` with the schema decision and migration impact.

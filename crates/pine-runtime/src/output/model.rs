@@ -2,7 +2,10 @@ use crate::PineValue;
 
 use super::drawings::{BoxOutput, LabelOutput, LineOutput, TableOutput};
 
-pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = 2;
+pub const PUBLIC_RUNTIME_SCHEMA_VERSION: u32 = 2;
+pub const PUBLIC_ANALYSIS_SCHEMA_VERSION: u32 = 2;
+pub const PUBLIC_MATRIX_SCHEMA_VERSION: u32 = 2;
+pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = PUBLIC_RUNTIME_SCHEMA_VERSION;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RuntimeResult {
