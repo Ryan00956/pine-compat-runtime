@@ -100,7 +100,12 @@ forming snapshot.
 Forming `RuntimeResult` values include the current forming bar's alert events
 so hosts can inspect the live update result. Those events are not visible
 through `confirmed_result()` and are discarded by the next forming update unless
-a confirmed update commits an alert event for that bar.
+a confirmed update commits an alert event for that bar. Repeated forming
+updates recompute alerts from the confirmed snapshot: if the first forming
+update triggers multiple alert sites and a later forming update triggers fewer
+or none, only the latest forming result contains alert events. A confirming
+update commits the events produced by that confirmed execution and is expected
+to match equivalent historical execution for the same final bar data.
 
 ## `var` and `varip`
 

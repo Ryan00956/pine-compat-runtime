@@ -96,7 +96,11 @@ message)` with bool-compatible conditions and const-string title/message, plus
 reached alert calls emit `{id, barIndex, time, message, source}` events in
 program order; false and `na` alert conditions emit nothing. Forming realtime
 events are visible in the forming result and roll back until a confirmed update
-commits an event. Alert frequency modes remain unsupported.
+commits an event. Repeated forming updates recompute alert events from the
+confirmed snapshot, so abandoned forming events are neither retained nor
+duplicated, and a confirmed update matches the equivalent historical execution
+where the same final bar data is available. Alert frequency modes remain
+unsupported.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field

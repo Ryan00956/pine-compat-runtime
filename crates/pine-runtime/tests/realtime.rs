@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf};
 
-use pine_runtime::{Bar, BarUpdate, PineValue, RealtimeRuntime};
+use pine_runtime::{AlertEvent, Bar, BarUpdate, PineValue, RealtimeRuntime, run_historical};
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
@@ -99,6 +99,63 @@ fn alert_fixture_rolls_back_forming_events() {
         .expect("confirmed update should commit alert event");
     assert_eq!(result.alerts.len(), 2);
     assert_eq!(runtime.confirmed_result().alerts.len(), 2);
+}
+
+#[test]
+fn alert_policy_fixture_recomputes_forming_events_and_commits_confirmed_state() {
+    let fixture = "tests/fixtures/realtime/alert_policy.pine";
+    let mut runtime = runtime_for_fixture(fixture);
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_alerts(&result.alerts, &[]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("forming update should expose current forming alert events");
+    assert_alerts(
+        &result.alerts,
+        &[
+            (1, "alert", "Above one"),
+            (1, "alert", "Above two"),
+            (1, "Above two condition", "Condition above two"),
+        ],
+    );
+    assert_alerts(&runtime.confirmed_result().alerts, &[]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("second forming update should drop abandoned alert events");
+    assert_alerts(&result.alerts, &[(1, "alert", "Above one")]);
+    assert_alerts(&runtime.confirmed_result().alerts, &[]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(0.0)))
+        .expect("third forming update should drop all abandoned alert events");
+    assert_alerts(&result.alerts, &[]);
+    assert_alerts(&runtime.confirmed_result().alerts, &[]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit alert events");
+    assert_alerts(
+        &result.alerts,
+        &[
+            (1, "alert", "Above one"),
+            (1, "alert", "Above two"),
+            (1, "Above two condition", "Condition above two"),
+        ],
+    );
+    assert_eq!(runtime.confirmed_result().alerts, result.alerts);
+
+    let hir = hir_for_fixture(fixture);
+    let historical = run_historical(&hir, &[bar(1.0), bar(4.0)])
+        .expect("equivalent historical execution should run");
+    assert_eq!(
+        alert_summaries(&result.alerts),
+        alert_summaries(&historical.alerts)
+    );
 }
 
 #[test]
@@ -644,6 +701,11 @@ fn table_fixture_rolls_back_forming_cell_changes() {
 }
 
 fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {
+    let hir = hir_for_fixture(path);
+    RealtimeRuntime::new(Box::leak(Box::new(hir)))
+}
+
+fn hir_for_fixture(path: &str) -> pine_ir::HirProgram {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");
     let source = SourceFile::new(path.display().to_string(), text);
@@ -654,8 +716,7 @@ fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {
         path.display(),
         analysis.diagnostics
     );
-    let hir = analysis.hir.expect("fixture should lower to HIR");
-    RealtimeRuntime::new(Box::leak(Box::new(hir)))
+    analysis.hir.expect("fixture should lower to HIR")
 }
 
 fn bar(close: f64) -> Bar {
@@ -684,4 +745,33 @@ fn assert_values(actual: &[PineValue], expected: &[f64]) {
             "expected {expected}, got {actual}"
         );
     }
+}
+
+fn assert_alerts(actual: &[AlertEvent], expected: &[(usize, &str, &str)]) {
+    let actual: Vec<_> = actual
+        .iter()
+        .map(|event| {
+            (
+                event.bar_index,
+                event.source.as_str(),
+                event.message.as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(actual, expected);
+}
+
+fn alert_summaries(alerts: &[AlertEvent]) -> Vec<(u32, usize, i64, &str, &str)> {
+    alerts
+        .iter()
+        .map(|event| {
+            (
+                event.id,
+                event.bar_index,
+                event.time,
+                event.source.as_str(),
+                event.message.as_str(),
+            )
+        })
+        .collect()
 }

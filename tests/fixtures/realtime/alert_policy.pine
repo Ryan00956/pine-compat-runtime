@@ -1,0 +1,10 @@
+//@version=5
+indicator("Alert realtime policy")
+
+if close > 1
+    alert("Above one")
+
+if close > 2
+    alert("Above two")
+
+alertcondition(close > 2, "Above two condition", "Condition above two")

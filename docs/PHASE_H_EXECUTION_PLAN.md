@@ -477,7 +477,8 @@ Steps:
 
 Exit criteria:
 
-- Repeated forming updates cannot leak stale alert events.
+- Repeated forming updates cannot leak stale alert events, including when later
+  forming updates trigger fewer alert sites or none.
 - Confirmed realtime updates produce the same final alert event state as the
   equivalent historical execution where applicable.
 - Runtime docs describe whether forming alert events are visible or suppressed.

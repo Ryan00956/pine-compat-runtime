@@ -362,7 +362,9 @@ Alert events are flat runtime events rather than sparse snapshots. Historical
 execution appends events in program order when an `alertcondition` call is
 reached and true, or when an `alert` call is reached. Realtime forming events
 live in the forming runtime snapshot and are discarded on rollback unless a
-confirmed update emits the same event.
+confirmed update emits the same event. Forming `RuntimeResult` values expose
+the currently recomputed forming events, but `confirmed_result()` only exposes
+events committed by historical or confirmed updates.
 
 The `pine-runtime` crate owns the shared runtime-result JSON helpers used by the
 CLI and WASM bindings. Python keeps explicit dictionary conversion code because
