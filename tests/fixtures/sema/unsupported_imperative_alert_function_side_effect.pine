@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported imperative alert function side effect")
+f() =>
+    alert("Fn")
+    close
+plot(f())

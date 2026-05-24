@@ -354,6 +354,23 @@ fn rejects_request_security_alertcondition_side_effect_expression() {
 }
 
 #[test]
+fn rejects_request_security_alert_side_effect_expression() {
+    let analysis =
+        analyze("x = request.security(syminfo.tickerid, timeframe.period, alert(\"A\"))\n");
+
+    assert_eq!(analysis.compatibility.unsupported.len(), 1);
+    assert_eq!(
+        analysis.compatibility.unsupported[0].feature,
+        "request.security"
+    );
+    assert!(
+        analysis.compatibility.unsupported[0]
+            .reason
+            .contains("side-effecting requested expressions")
+    );
+}
+
+#[test]
 fn rejects_other_request_variants() {
     let analysis = analyze("x = request.financial(syminfo.tickerid, \"TOTAL_REVENUE\", \"FQ\")\n");
 

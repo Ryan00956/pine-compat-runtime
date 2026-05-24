@@ -1,0 +1,3 @@
+//@version=5
+indicator("Alert realtime")
+alert("Realtime alert")

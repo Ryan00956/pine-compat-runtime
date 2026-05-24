@@ -54,6 +54,36 @@ alertcondition(bar_index == 1, "Second", "second")
     assert!(result.alerts.iter().all(|event| event.bar_index == 1));
 }
 
+#[test]
+fn collects_alert_events_when_execution_reaches_call() {
+    let result = run_alert_script(
+        r#"indicator("alerts")
+alert("Every")
+if bar_index == 1
+    alert("Branch")
+if bar_index == 2
+    for i = 0 to 1
+        alert("Loop")
+"#,
+        &timed_bars(&[1.0, 2.0, 3.0]),
+    );
+
+    assert_eq!(result.alerts.len(), 6);
+    assert_eq!(result.alerts[0].source, "alert");
+    assert_eq!(result.alerts[0].message, "Every");
+    assert_eq!(result.alerts[0].bar_index, 0);
+    assert_eq!(result.alerts[1].message, "Every");
+    assert_eq!(result.alerts[1].bar_index, 1);
+    assert_eq!(result.alerts[2].message, "Branch");
+    assert_eq!(result.alerts[2].bar_index, 1);
+    assert_eq!(result.alerts[3].message, "Every");
+    assert_eq!(result.alerts[3].bar_index, 2);
+    assert_eq!(result.alerts[4].message, "Loop");
+    assert_eq!(result.alerts[4].bar_index, 2);
+    assert_eq!(result.alerts[5].message, "Loop");
+    assert_eq!(result.alerts[5].bar_index, 2);
+}
+
 fn run_alert_script(source: &str, bars: &[Bar]) -> RuntimeResult {
     let source = SourceFile::new("alerts.pine", source);
     let analysis = analyze_source(&source);

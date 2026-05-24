@@ -42,6 +42,10 @@ for a narrow declarative subset. `condition` accepts bool-compatible values;
 strings. Runtime output serializes `title` as the alert event `source` and
 `message` as the alert event `message`.
 
+`alert(message)` is supported for const-string messages only. It emits an event
+whenever execution reaches the call and serializes `source` as `alert`.
+Frequency arguments remain unsupported until a deterministic policy is designed.
+
 Alert conditions execute like ordinary reached statements in global flow,
 including supported `if`, `switch`, `for`, and `while` bodies. This is a
 deliberate runtime-event model for the current subset, not a global-only
@@ -54,11 +58,10 @@ update starts again from the confirmed snapshot, so abandoned forming alert
 events disappear. Only historical and confirmed updates become part of the
 confirmed result.
 
-`alert()` remains unsupported until frequency semantics are designed. Alert
-side effects inside user-defined functions, user-defined function arguments,
-and requested-context expressions are rejected under the same side-effect
-boundary as output calls, drawing calls, input declarations, and array
-mutation.
+Alert side effects inside user-defined functions, user-defined function
+arguments, and requested-context expressions are rejected under the same
+side-effect boundary as output calls, drawing calls, input declarations, and
+array mutation.
 
 ## Variables
 

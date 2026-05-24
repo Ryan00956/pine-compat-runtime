@@ -70,6 +70,38 @@ fn alertcondition_fixture_rolls_back_forming_events() {
 }
 
 #[test]
+fn alert_fixture_rolls_back_forming_events() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/alert_rollback.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_eq!(result.alerts.len(), 1);
+    assert_eq!(result.alerts[0].bar_index, 0);
+    assert_eq!(result.alerts[0].message, "Realtime alert");
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_eq!(result.alerts.len(), 2);
+    assert_eq!(result.alerts[1].bar_index, 1);
+    assert_eq!(runtime.confirmed_result().alerts.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back alert event");
+    assert_eq!(result.alerts.len(), 2);
+    assert_eq!(result.alerts[1].bar_index, 1);
+    assert_eq!(runtime.confirmed_result().alerts.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit alert event");
+    assert_eq!(result.alerts.len(), 2);
+    assert_eq!(runtime.confirmed_result().alerts.len(), 2);
+}
+
+#[test]
 fn var_rollback_fixture_restores_confirmed_state_between_forming_updates() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/var_rollback.pine");
 

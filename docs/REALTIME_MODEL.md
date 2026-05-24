@@ -83,7 +83,7 @@ Each forming update starts from the confirmed snapshot. This rolls back:
 - array storage mutations made during the previous forming execution
 - label, line, box, and table creation, mutation, deletion, and cell snapshots
   made during the previous forming execution
-- `alertcondition` events made during the previous forming execution
+- alert events made during the previous forming execution
 - request cache entries and requested-context runtime state created during the
   previous forming execution
 
@@ -97,11 +97,10 @@ updates.
 Confirmed and historical updates replace the confirmed snapshot and clear the
 forming snapshot.
 
-Forming `RuntimeResult` values include the current forming bar's
-`alertcondition` events so hosts can inspect the live update result. Those
-events are not visible through `confirmed_result()` and are discarded by the
-next forming update unless a confirmed update commits an alert event for that
-bar.
+Forming `RuntimeResult` values include the current forming bar's alert events
+so hosts can inspect the live update result. Those events are not visible
+through `confirmed_result()` and are discarded by the next forming update unless
+a confirmed update commits an alert event for that bar.
 
 ## `var` and `varip`
 
@@ -136,10 +135,10 @@ being approximated.
 
 Phase 7 defines the model and implements rollback for repeated forming updates.
 Phase I closes the fixture-backed scalar and scalar typed-array `varip` subset
-described in `docs/PHASE_I_AUDIT.md`. Phase H adds fixture-backed
-`alertcondition` forming event rollback. Realtime fixtures cover temporary
-output rollback, alert event rollback, drawing-object lifecycle rollback for
-labels, lines, boxes, and tables, `var` rollback, scalar and scalar typed-array
+described in `docs/PHASE_I_AUDIT.md`. Phase H adds fixture-backed alert forming
+event rollback. Realtime fixtures cover temporary output rollback, alert event
+rollback, drawing-object lifecycle rollback for labels, lines, boxes, and
+tables, `var` rollback, scalar and scalar typed-array
 `varip` intrabar persistence, stateful TA callsite rollback inside conditional
 branches, array rollback, request provider immutability and cache rollback, and
 dynamic history reads from confirmed history during forming updates.

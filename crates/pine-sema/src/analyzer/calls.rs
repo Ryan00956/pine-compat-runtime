@@ -129,6 +129,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
     matches!(
         name,
         "indicator"
+            | "alert"
             | "alertcondition"
             | "plot"
             | "hline"
@@ -243,7 +244,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "indicator, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alertcondition, and drawing calls are not supported inside user-defined functions",
+                    "indicator, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, and drawing calls are not supported inside user-defined functions",
                     callee.span,
                 );
             }
@@ -471,7 +472,30 @@ impl Analyzer {
         self.validate_array_concat_args(signature, args, arg_types);
         self.validate_array_from_args(signature, args, arg_types);
         self.validate_indicator_args(signature, args);
+        self.validate_alert_args(signature, args);
         self.validate_label_new_args(signature, args);
+    }
+
+    pub(crate) fn validate_alert_args(&mut self, signature: &BuiltinSignature, args: &[CallArg]) {
+        if signature.name != "alert" {
+            return;
+        }
+
+        for (index, arg) in args.iter().enumerate() {
+            let is_freq = arg.name.as_deref() == Some("freq")
+                || (arg.name.is_none()
+                    && signature
+                        .params
+                        .get(index)
+                        .is_some_and(|param| param.name == "freq"));
+            if is_freq {
+                self.unsupported(
+                    "alert_frequency",
+                    "alert frequency modes are not supported in the current alert subset",
+                    arg.span,
+                );
+            }
+        }
     }
 
     pub(crate) fn validate_label_new_args(

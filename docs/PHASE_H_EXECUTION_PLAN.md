@@ -153,8 +153,8 @@ Initial alert event fields should be intentionally small:
 - `barIndex`: zero-based chart bar index where the event was produced.
 - `time`: chart bar timestamp for the event.
 - `message`: normalized string message.
-- `source`: one of the supported alert surfaces, such as `alertcondition` or
-  `alert`.
+- `source`: the alert condition title for `alertcondition`, or `alert` for the
+  imperative `alert()` subset.
 
 Later fields may include frequency, condition title, realtime update kind, or
 host routing metadata only after they have clear public semantics and snapshots.

@@ -11,9 +11,20 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
         Some(match callee {
+            "alert" => self.eval_alert(call_site_id, args),
             "alertcondition" => self.eval_alertcondition(call_site_id, args),
             _ => return None,
         })
+    }
+
+    fn eval_alert(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let message = self.alert_string_arg("alert", args, 0, "message")?;
+        self.push_alert_event(call_site_id, "alert".to_owned(), message);
+        Ok(PineValue::Void)
     }
 
     fn eval_alertcondition(
@@ -31,8 +42,13 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         }
 
-        let source = self.alert_string_arg(args, 1, "title")?;
-        let message = self.alert_string_arg(args, 2, "message")?;
+        let source = self.alert_string_arg("alertcondition", args, 1, "title")?;
+        let message = self.alert_string_arg("alertcondition", args, 2, "message")?;
+        self.push_alert_event(call_site_id, source, message);
+        Ok(PineValue::Void)
+    }
+
+    fn push_alert_event(&mut self, call_site_id: CallSiteId, source: String, message: String) {
         let time = self.current_bar.map_or(0, |bar| bar.time);
         self.alerts.push(AlertEvent {
             id: call_site_id.0,
@@ -41,24 +57,24 @@ impl<'a> HistoricalRuntime<'a> {
             message,
             source,
         });
-        Ok(PineValue::Void)
     }
 
     fn alert_string_arg(
         &mut self,
+        callee: &str,
         args: &[HirCallArg],
         index: usize,
         name: &str,
     ) -> Result<String, RuntimeError> {
         let Some(expr) = call_arg_expr(args, index, name) else {
             return Err(RuntimeError {
-                message: format!("alertcondition missing {name} argument"),
+                message: format!("{callee} missing {name} argument"),
             });
         };
         match self.eval_expr(expr)? {
             PineValue::String(value) => Ok(value),
             value => Err(RuntimeError {
-                message: format!("alertcondition {name} evaluated to {value:?}"),
+                message: format!("{callee} {name} evaluated to {value:?}"),
             }),
         }
     }

@@ -179,6 +179,72 @@ fn accepts_alertcondition_const_string_subset() {
 }
 
 #[test]
+fn accepts_alert_const_string_subset() {
+    let analysis = analyze(
+        r#"alert("Reached")
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "alert")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_alert_dynamic_message_and_frequency() {
+    let analysis = analyze(
+        r#"message = input.string("Reached", "Message")
+alert(message)
+alert("Reached", freq="once")
+"#,
+    );
+
+    assert!(analysis.diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == "E_CALL_ARG_TYPE"
+            && diagnostic.message.contains("argument `message`")
+            && diagnostic.message.contains("Input String")
+    }));
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "alert_frequency")
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_alert_side_effects_inside_functions() {
+    let analysis = analyze(
+        r#"f() =>
+    alert("Fn")
+    close
+plot(f())
+"#,
+    );
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "function_side_effect")
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_alertcondition_dynamic_messages() {
     let analysis = analyze(
         r#"title = input.string("Up", "Title")

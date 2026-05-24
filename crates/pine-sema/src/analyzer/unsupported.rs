@@ -29,8 +29,6 @@ impl Analyzer {
             Some("multi-symbol and multi-timeframe data requests are not supported in Phase 1")
         } else if name.starts_with("array.") {
             Some("this array function is not supported in the current partial array subset")
-        } else if name == "alert" {
-            Some("alerts are not supported in Phase 1")
         } else if name.starts_with("label.")
             || name.starts_with("line.")
             || name.starts_with("box.")

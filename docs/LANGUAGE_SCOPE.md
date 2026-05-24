@@ -78,6 +78,7 @@ Phase 1 executable subset:
   `bgcolor`, `barcolor`, `hline`, and `fill`
 - `alertcondition(condition, title, message)` with bool-compatible conditions
   and const-string title/message only
+- `alert(message)` with const-string messages only
 - `na`, `nz`
 - common `ta.*` helpers listed in
   [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md), including moving averages,
@@ -198,6 +199,7 @@ TA namespace:
 Plotting:
 
 - `alertcondition`
+- `alert`
 - `plot`
 - `plotchar`
 - `plotshape`
@@ -252,7 +254,7 @@ The analyzer should reject these with clear diagnostics:
   provider-backed `request.security` subsets
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need
   typed array return semantics and host output shapes before support is claimed
-- `alert` and `alertcondition`
+- unsupported alert frequency modes
 - `library`, `import`, and `export`
 - unsupported array element types, matrices, and maps
 - user-defined types

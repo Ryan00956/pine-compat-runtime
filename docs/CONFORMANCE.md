@@ -90,12 +90,13 @@ fixture-backed point-object and point-array design; see
 `docs/PHASE_E_POLYLINE_GATE.md`.
 
 Phase H reserves `alerts` as a top-level runtime key in `schemaVersion: 3`.
-The first supported alert subset is `alertcondition(condition, title, message)`
-with bool-compatible conditions and const-string title/message. Reached true
-conditions emit `{id, barIndex, time, message, source}` events in program
-order; false and `na` conditions emit nothing. Forming realtime events are
-visible in the forming result and roll back until a confirmed update commits an
-event. Imperative `alert()` remains unsupported.
+The first supported alert subsets are `alertcondition(condition, title,
+message)` with bool-compatible conditions and const-string title/message, plus
+`alert(message)` with const-string messages. Reached true alert conditions and
+reached alert calls emit `{id, barIndex, time, message, source}` events in
+program order; false and `na` alert conditions emit nothing. Forming realtime
+events are visible in the forming result and roll back until a confirmed update
+commits an event. Alert frequency modes remain unsupported.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field
@@ -215,6 +216,7 @@ ta.ema               supported
 ta.rsi               supported    fixture-derived executable subset
 request.security     partial      same-context identity and same-or-higher-timeframe provider scalar-expression subset only
 alertcondition       partial      bool-compatible condition plus const-string title/message runtime events
+alert                partial      const-string message runtime events when execution reaches the call
 strategy.*           unsupported  out of project scope for now
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented

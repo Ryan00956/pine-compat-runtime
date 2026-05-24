@@ -361,11 +361,12 @@ consumer-visible output change is documented with snapshot updates.
   helper.
 - Runtime outputs include an `alerts` array for Phase H alert events.
   `alertcondition(condition, title, message)` is partially supported for
-  bool-compatible conditions and const-string title/message. Reached true
-  conditions emit deterministic `{id, barIndex, time, message, source}` events
-  in program order; forming realtime events roll back until confirmed.
-  Imperative `alert()` remains unsupported until deterministic frequency
-  semantics are designed.
+  bool-compatible conditions and const-string title/message, and
+  `alert(message)` is partially supported for const-string messages. Reached
+  true conditions and reached alert calls emit deterministic `{id, barIndex,
+  time, message, source}` events in program order; forming realtime events roll
+  back until confirmed. Alert frequency modes remain unsupported until
+  deterministic frequency semantics are designed.
 - The compatibility matrix source of truth is
   `tests/fixtures/conformance.tsv`; generated text and JSON matrix output must
   remain fixture-backed.
@@ -404,7 +405,7 @@ consumer-visible output change is documented with snapshot updates.
 - `max_bars_back`: supports indicator-level constant non-negative retention
   bounds for dynamic history.
 - `color.*` named constants: supports the current common registry only.
-- `realtime forming rollback`: covers output, `alertcondition` events,
+- `realtime forming rollback`: covers output, alert events,
   supported drawing objects, `var`, scalar and scalar typed-array `varip`,
   callsite, array, and dynamic history rollback.
 
@@ -421,12 +422,12 @@ them silently:
   deferred collection semantics that are not fixture-backed in the current
   `array.*` partial subset.
 - Imports and external libraries.
-- Imperative `alert()` calls and alert frequency controls.
+- Alert frequency controls.
 - Advanced drawing object methods and unsupported `polyline.*` point-list
   object systems.
 - Per-variable `max_bars_back` declarations and inference.
 - Recursive user-defined functions.
-- User-defined function side effects, including output calls, alertcondition,
+- User-defined function side effects, including output calls, alerts,
   input declarations, indicator declarations, array mutation, global
   reassignment, and passing side-effecting calls as UDF arguments.
 

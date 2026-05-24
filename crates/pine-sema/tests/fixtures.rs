@@ -123,8 +123,8 @@ fn reports_unsupported_import_fixture() {
 fn reports_unsupported_alert_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_alert.pine",
-        "alert",
-        "alerts",
+        "alert_frequency",
+        "frequency modes",
     );
 }
 
@@ -161,6 +161,15 @@ fn reports_unsupported_alert_function_side_effect_fixture() {
         "tests/fixtures/sema/unsupported_alert_function_side_effect.pine",
         "function_side_effect",
         "alertcondition",
+    );
+}
+
+#[test]
+fn reports_unsupported_imperative_alert_function_side_effect_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_imperative_alert_function_side_effect.pine",
+        "function_side_effect",
+        "alert",
     );
 }
 
