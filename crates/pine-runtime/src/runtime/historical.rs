@@ -64,6 +64,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) lines: Vec<LineOutput>,
     pub(crate) boxes: Vec<BoxOutput>,
     pub(crate) tables: Vec<TableOutput>,
+    pub(crate) alerts: Vec<AlertEvent>,
     pub(crate) next_label_id: u32,
     pub(crate) next_line_id: u32,
     pub(crate) next_box_id: u32,
@@ -167,6 +168,7 @@ impl<'a> HistoricalRuntime<'a> {
             lines: Vec::new(),
             boxes: Vec::new(),
             tables: Vec::new(),
+            alerts: Vec::new(),
             next_label_id: 1,
             next_line_id: 1,
             next_box_id: 1,
@@ -275,6 +277,7 @@ impl<'a> HistoricalRuntime<'a> {
             lines: self.lines.clone(),
             boxes: self.boxes.clone(),
             tables: self.tables.clone(),
+            alerts: self.alerts.clone(),
             diagnostics: Vec::new(),
         }
     }

@@ -32,7 +32,7 @@ Runtime snapshots should be normalized JSON:
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "plots": [],
   "plotChars": [],
   "plotShapes": [],
@@ -47,6 +47,7 @@ Runtime snapshots should be normalized JSON:
   "lines": [],
   "boxes": [],
   "tables": [],
+  "alerts": [],
   "diagnostics": []
 }
 ```
@@ -56,11 +57,12 @@ The snapshot format should avoid host-specific charting details.
 Every machine-readable public output must include top-level `schemaVersion`.
 Runtime outputs use `PUBLIC_RUNTIME_SCHEMA_VERSION`; analysis outputs use
 `PUBLIC_ANALYSIS_SCHEMA_VERSION`; matrix JSON uses
-`PUBLIC_MATRIX_SCHEMA_VERSION`. The current values are all `2`, but they are
-separate contracts so a future runtime-only field does not force analysis or
-matrix schema changes. The text-only CLI `analyze` output is diagnostic console
-output and is not part of the machine-readable schema until a JSON mode is
-added.
+`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is currently `schemaVersion: 3`
+because the top-level `alerts` array is reserved; analysis and matrix JSON
+remain `schemaVersion: 2`. The contracts are separate so runtime-only fields do
+not force analysis or matrix schema changes. The text-only CLI `analyze` output
+is diagnostic console output and is not part of the machine-readable schema
+until a JSON mode is added.
 
 CLI and WASM runtime JSON must be generated through the shared runtime contract
 helper so field names and nesting cannot drift. Python returns native
@@ -86,6 +88,12 @@ methods out of the supported matrix until they have fixtures and public-output
 coverage. `polyline.*` remains explicitly unsupported because it needs a
 fixture-backed point-object and point-array design; see
 `docs/PHASE_E_POLYLINE_GATE.md`.
+
+Phase H reserves `alerts` as a top-level runtime key in `schemaVersion: 3`.
+Slice 1 only guarantees an empty event array while `alert` and
+`alertcondition` remain unsupported. Do not add alert events to the supported
+matrix until semantic analysis, runtime behavior, snapshots, docs, and fixtures
+agree on the claimed subset.
 
 Checked-in golden JSON snapshots live in `tests/snapshots/`. Snapshot tests are
 strict string comparisons against deterministic compact JSON; a public field

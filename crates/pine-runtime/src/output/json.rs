@@ -1,5 +1,6 @@
 use crate::{HistoryRetentionMode, PineValue, RuntimeProfile};
 
+use super::alerts::AlertEvent;
 use super::drawings::{BoxOutput, LabelOutput, LineOutput, TableOutput};
 use super::model::{
     ColorSeries, FillOutput, HLineOutput, PUBLIC_RUNTIME_SCHEMA_VERSION, PlotArrowSeries,
@@ -36,6 +37,8 @@ pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
     output.push_str(&boxes_json(&result.boxes));
     output.push_str(",\"tables\":");
     output.push_str(&tables_json(&result.tables));
+    output.push_str(",\"alerts\":");
+    output.push_str(&alerts_json(&result.alerts));
     output.push_str(",\"diagnostics\":[]");
     output.push('}');
     output
@@ -577,6 +580,25 @@ fn tables_json(tables: &[TableOutput]) -> String {
             output.push_str("]}");
         }
         output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
+fn alerts_json(alerts: &[AlertEvent]) -> String {
+    let mut output = String::from("[");
+    for (index, alert) in alerts.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"id\":{},\"barIndex\":{},\"time\":{},\"message\":\"{}\",\"source\":\"{}\"}}",
+            alert.id,
+            alert.bar_index,
+            alert.time,
+            json_escape(&alert.message),
+            json_escape(&alert.source)
+        ));
     }
     output.push(']');
     output

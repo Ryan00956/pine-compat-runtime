@@ -303,7 +303,7 @@ The core output must remain host-neutral:
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "plots": [],
   "plotChars": [],
   "plotShapes": [],
@@ -318,22 +318,24 @@ The core output must remain host-neutral:
   "lines": [],
   "boxes": [],
   "tables": [],
+  "alerts": [],
   "diagnostics": []
 }
 ```
 
 The runtime `schemaVersion` field is owned by
 `PUBLIC_RUNTIME_SCHEMA_VERSION` and is exposed unchanged by CLI runtime JSON,
-Python runtime dictionaries, and WASM runtime JSON. `schemaVersion: 2` adds
-top-level drawing-object fields. Host integrations can adapt this model into
-their charting or API format, but should preserve the runtime schema version
-when they forward machine-readable runtime results.
+Python runtime dictionaries, and WASM runtime JSON. `schemaVersion: 2` added
+top-level drawing-object fields, and `schemaVersion: 3` reserves the top-level
+`alerts` event array. Host integrations can adapt this model into their
+charting or API format, but should preserve the runtime schema version when they
+forward machine-readable runtime results.
 
 Machine-readable analysis and matrix outputs use separate schema ownership:
 `PUBLIC_ANALYSIS_SCHEMA_VERSION` for WASM/Python analysis reports and
-`PUBLIC_MATRIX_SCHEMA_VERSION` for CLI matrix JSON. The current values are all
-`2`, but they can now evolve independently when a future runtime-only output
-field does not affect analysis or matrix contracts.
+`PUBLIC_MATRIX_SCHEMA_VERSION` for CLI matrix JSON. Runtime is currently `3`;
+analysis and matrix remain `2`. These contracts can evolve independently when a
+runtime-only output field does not affect analysis or matrix contracts.
 
 Drawing-object outputs use sparse snapshot families. The Phase E drawing
 contract reserves `labels`, `lines`, `boxes`, and `tables`, whose entries have

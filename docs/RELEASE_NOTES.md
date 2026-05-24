@@ -343,7 +343,8 @@ feature-level matrix and its fixture paths.
 Machine-readable public outputs use top-level `schemaVersion`. Runtime,
 analysis, and matrix outputs now have separate schema constants:
 `PUBLIC_RUNTIME_SCHEMA_VERSION`, `PUBLIC_ANALYSIS_SCHEMA_VERSION`, and
-`PUBLIC_MATRIX_SCHEMA_VERSION`. The current value for each contract remains
+`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is now `schemaVersion: 3` with a
+reserved top-level `alerts` array. Analysis and matrix outputs remain
 `schemaVersion: 2`; increment only the affected contract when an intentional
 consumer-visible output change is documented with snapshot updates.
 
@@ -358,6 +359,9 @@ consumer-visible output change is documented with snapshot updates.
 - Public JSON/dictionary outputs for CLI, Python, and WASM expose
   `schemaVersion`; CLI and WASM runtime JSON share the same runtime contract
   helper.
+- Runtime outputs include an `alerts` array reserved for Phase H alert events;
+  `alert` and `alertcondition` remain unsupported until their fixture-backed
+  behavior is implemented.
 - The compatibility matrix source of truth is
   `tests/fixtures/conformance.tsv`; generated text and JSON matrix output must
   remain fixture-backed.

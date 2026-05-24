@@ -274,6 +274,7 @@ mod tests {
             lines: vec![],
             boxes: vec![],
             tables: vec![],
+            alerts: vec![],
             diagnostics: vec![],
         };
 
@@ -287,6 +288,7 @@ mod tests {
         assert!(output.contains(r#""lines":[]"#));
         assert!(output.contains(r#""boxes":[]"#));
         assert!(output.contains(r#""tables":[]"#));
+        assert!(output.contains(r#""alerts":[]"#));
         assert!(output.contains(r#""diagnostics":[]"#));
     }
 
@@ -307,6 +309,7 @@ mod tests {
             lines: vec![],
             boxes: vec![],
             tables: vec![],
+            alerts: vec![],
             diagnostics: vec![],
         };
         let profile = RuntimeProfile {

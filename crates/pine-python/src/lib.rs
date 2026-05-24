@@ -255,6 +255,7 @@ fn runtime_result_to_py(
     output.set_item("lines", lines_to_py(py, &result.lines)?)?;
     output.set_item("boxes", boxes_to_py(py, &result.boxes)?)?;
     output.set_item("tables", tables_to_py(py, &result.tables)?)?;
+    output.set_item("alerts", alerts_to_py(py, &result.alerts)?)?;
     output.set_item("diagnostics", PyList::empty(py))?;
     Ok(output.into_any().unbind())
 }
@@ -546,6 +547,20 @@ fn table_cells_to_py(
         item.set_item("text", value_to_py(py, &cell.text)?)?;
         item.set_item("bgColor", value_to_py(py, &cell.bg_color)?)?;
         item.set_item("textColor", value_to_py(py, &cell.text_color)?)?;
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
+fn alerts_to_py(py: Python<'_>, alerts: &[pine_runtime::AlertEvent]) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for alert in alerts {
+        let item = PyDict::new(py);
+        item.set_item("id", alert.id)?;
+        item.set_item("barIndex", alert.bar_index)?;
+        item.set_item("time", alert.time)?;
+        item.set_item("message", &alert.message)?;
+        item.set_item("source", &alert.source)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())

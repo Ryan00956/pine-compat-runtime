@@ -36,6 +36,7 @@ fn runs_script_from_csv_to_json() {
     assert!(output.contains("\"lines\":[]"));
     assert!(output.contains("\"boxes\":[]"));
     assert!(output.contains("\"tables\":[]"));
+    assert!(output.contains("\"alerts\":[]"));
 }
 
 #[test]

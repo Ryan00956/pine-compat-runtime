@@ -317,6 +317,7 @@ Verification:
 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
 cargo test -p pine-wasm
 maturin build --manifest-path crates/pine-python/Cargo.toml --out dist
+python3 -m pip install --force-reinstall dist/*.whl
 python3 -m pytest python/tests
 cargo test --workspace
 ```

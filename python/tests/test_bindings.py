@@ -24,6 +24,7 @@ RUNTIME_RESULT_KEYS = {
     "lines",
     "boxes",
     "tables",
+    "alerts",
     "diagnostics",
 }
 
@@ -64,12 +65,13 @@ def test_compile_script_returns_program_with_run_method():
     program = pine_compat.compile_script('indicator("demo")\nplot(close)\n')
     result = program.run(BARS)
 
-    assert result["schemaVersion"] == 2
+    assert result["schemaVersion"] == 3
     assert set(result) == RUNTIME_RESULT_KEYS
     assert result["labels"] == []
     assert result["lines"] == []
     assert result["boxes"] == []
     assert result["tables"] == []
+    assert result["alerts"] == []
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
     assert result["diagnostics"] == []
 
@@ -80,7 +82,7 @@ def test_run_script_compiles_and_executes():
         BARS,
     )
 
-    assert result["schemaVersion"] == 2
+    assert result["schemaVersion"] == 3
     assert result["plots"][0]["values"] == [2, 2, 3]
 
 

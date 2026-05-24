@@ -16,6 +16,7 @@ mod value;
 
 pub use bar::{Bar, BarUpdate, BarUpdateKind};
 pub use error::RuntimeError;
+pub use output::alerts::AlertEvent;
 pub use output::drawings::{
     BoxOutput, BoxSnapshot, LabelOutput, LabelSnapshot, LineOutput, LineSnapshot,
     TableCellSnapshot, TableOutput, TableSnapshot,
