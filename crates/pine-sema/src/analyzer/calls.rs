@@ -129,6 +129,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
     matches!(
         name,
         "indicator"
+            | "alertcondition"
             | "plot"
             | "hline"
             | "fill"
@@ -242,7 +243,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "indicator, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, and drawing calls are not supported inside user-defined functions",
+                    "indicator, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alertcondition, and drawing calls are not supported inside user-defined functions",
                     callee.span,
                 );
             }

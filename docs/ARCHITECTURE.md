@@ -327,9 +327,11 @@ The runtime `schemaVersion` field is owned by
 `PUBLIC_RUNTIME_SCHEMA_VERSION` and is exposed unchanged by CLI runtime JSON,
 Python runtime dictionaries, and WASM runtime JSON. `schemaVersion: 2` added
 top-level drawing-object fields, and `schemaVersion: 3` reserves the top-level
-`alerts` event array. Host integrations can adapt this model into their
-charting or API format, but should preserve the runtime schema version when they
-forward machine-readable runtime results.
+`alerts` event array. Phase H's initial event shape is `{id, barIndex, time,
+message, source}` for the narrow `alertcondition` subset, where `source` is the
+const title and `message` is the const message. Host integrations can adapt
+this model into their charting or API format, but should preserve the runtime
+schema version when they forward machine-readable runtime results.
 
 Machine-readable analysis and matrix outputs use separate schema ownership:
 `PUBLIC_ANALYSIS_SCHEMA_VERSION` for WASM/Python analysis reports and
@@ -354,6 +356,12 @@ snapshot for families with deletion; deleting `na` or an already deleted
 drawing object is a no-op; ids are not reused. The historical runtime caps
 labels, lines, and boxes at 500 objects, caps tables at 50 objects, and caps a
 single table at 1000 cells.
+
+Alert events are flat runtime events rather than sparse snapshots. Historical
+execution appends events in program order when an `alertcondition` call is
+reached and its condition is true. Realtime forming events live in the forming
+runtime snapshot and are discarded on rollback unless a confirmed update emits
+the same event.
 
 The `pine-runtime` crate owns the shared runtime-result JSON helpers used by the
 CLI and WASM bindings. Python keeps explicit dictionary conversion code because

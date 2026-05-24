@@ -157,6 +157,64 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
 }
 
 #[test]
+fn accepts_alertcondition_const_string_subset() {
+    let analysis = analyze(
+        r#"alertcondition(close > open, "Up", "Close is above open")
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "alertcondition")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_alertcondition_dynamic_messages() {
+    let analysis = analyze(
+        r#"title = input.string("Up", "Title")
+alertcondition(close > open, title, "Message")
+"#,
+    );
+
+    assert!(analysis.diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == "E_CALL_ARG_TYPE"
+            && diagnostic.message.contains("argument `title`")
+            && diagnostic.message.contains("Input String")
+    }));
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_alertcondition_side_effects_inside_functions() {
+    let analysis = analyze(
+        r#"f() =>
+    alertcondition(true, "Fn", "Message")
+    close
+plot(f())
+"#,
+    );
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "function_side_effect")
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_plotchar() {
     let analysis = analyze(
         "plotchar(close > open, title=\"Marker\", char=\"x\", color=color.green, location=location.abovebar, offset=1, text=\"Up\", textcolor=color.white, editable=true, size=size.small, show_last=5, display=display.all)\nplot(close)\n",

@@ -1,0 +1,3 @@
+//@version=5
+indicator("Alertcondition realtime")
+alertcondition(close > 1, "Above one", "Close is above one")

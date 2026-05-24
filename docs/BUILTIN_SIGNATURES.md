@@ -295,6 +295,9 @@ Rules:
 ## Plotting
 
 ```text
+alertcondition(condition: bool-compatible, title: const string, message: const string)
+  -> void
+
 plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: simple int, style?: const string, trackprice?: const bool, histbase?: numeric, offset?: simple int, join?: const bool, editable?: const bool, show_last?: simple int, display?: const string, format?: const string, precision?: simple int, force_overlay?: const bool)
   -> plot
 
@@ -322,6 +325,12 @@ fill(plot1: plot-or-hline, plot2: plot-or-hline, color?: color-compatible, title
 bgcolor(color: color-compatible, title?: const string, offset?: simple int, editable?: const bool, show_last?: simple int, display?: const string) -> void
 barcolor(color: color-compatible, title?: const string, offset?: simple int, editable?: const bool, show_last?: simple int, display?: const string) -> void
 ```
+
+`alertcondition` emits a runtime alert event when its reached condition
+evaluates to `true`. `title` is serialized as event `source`; `message` is
+serialized as event `message`. Dynamic message/title strings, optional alert
+parameters, `alert()`, and alert side effects inside UDF or requested-context
+expressions are not part of the current subset.
 
 `color-compatible` should initially accept:
 

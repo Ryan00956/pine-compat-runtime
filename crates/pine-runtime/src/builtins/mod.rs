@@ -1,3 +1,4 @@
+pub(crate) mod alerts;
 pub(crate) mod args;
 pub(crate) mod arrays;
 pub(crate) mod casts;

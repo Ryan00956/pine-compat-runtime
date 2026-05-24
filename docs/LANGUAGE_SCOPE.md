@@ -76,6 +76,8 @@ Phase 1 executable subset:
 - `input.*`
 - `plot`, `plotchar`, `plotshape`, `plotarrow`, `plotbar`, `plotcandle`,
   `bgcolor`, `barcolor`, `hline`, and `fill`
+- `alertcondition(condition, title, message)` with bool-compatible conditions
+  and const-string title/message only
 - `na`, `nz`
 - common `ta.*` helpers listed in
   [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md), including moving averages,
@@ -147,10 +149,10 @@ range2(hi, lo) =>
 ```
 
 Named arguments are supported for user-defined functions. Block bodies must end
-with an expression. Recursive functions, output side effects inside functions,
-global reassignment inside functions, and side-effecting calls as UDF arguments
-are rejected in the current executable subset. UDF arguments are evaluated once
-into callsite-local temporaries.
+with an expression. Recursive functions, output/drawing/alert side effects
+inside functions, global reassignment inside functions, and side-effecting
+calls as UDF arguments are rejected in the current executable subset. UDF
+arguments are evaluated once into callsite-local temporaries.
 
 ## Initial Built-Ins
 
@@ -195,6 +197,7 @@ TA namespace:
 
 Plotting:
 
+- `alertcondition`
 - `plot`
 - `plotchar`
 - `plotshape`

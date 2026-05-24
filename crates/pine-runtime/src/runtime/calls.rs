@@ -13,6 +13,9 @@ impl<'a> HistoricalRuntime<'a> {
         if let Some(result) = self.eval_variable_call(callee, call_site_id, args) {
             return result;
         }
+        if let Some(result) = self.eval_alert_call(callee, call_site_id, args) {
+            return result;
+        }
         if let Some(result) = self.eval_output_call(callee, call_site_id, args) {
             return result;
         }

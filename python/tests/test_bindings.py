@@ -86,6 +86,30 @@ def test_run_script_compiles_and_executes():
     assert result["plots"][0]["values"] == [2, 2, 3]
 
 
+def test_run_script_returns_alertcondition_events():
+    result = pine_compat.run_script(
+        'indicator("alerts")\nalertcondition(close > 1, "Above", "Close is above one")\n',
+        BARS,
+    )
+
+    assert result["alerts"] == [
+        {
+            "id": 1,
+            "barIndex": 1,
+            "time": 1,
+            "message": "Close is above one",
+            "source": "Above",
+        },
+        {
+            "id": 1,
+            "barIndex": 2,
+            "time": 2,
+            "message": "Close is above one",
+            "source": "Above",
+        },
+    ]
+
+
 def test_run_script_accepts_request_bars():
     result = pine_compat.run_script(
         'indicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n',

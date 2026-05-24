@@ -61,6 +61,7 @@ mod tests {
                 || signature.name.starts_with("box.")
                 || signature.name.starts_with("table.")
                 || signature.name == "request.security"
+                || signature.name == "alertcondition"
             {
                 "partial"
             } else {
@@ -204,7 +205,7 @@ mod tests {
             "request.*",
             "import",
             "strategy.*",
-            "alert/alertcondition",
+            "alert",
             "unsupported label/line/box/table methods",
             "polyline.*",
             "non-int history offsets",
@@ -455,6 +456,10 @@ mod tests {
             (
                 "runtime_color_outputs.json",
                 "tests/fixtures/runtime/color_outputs.pine",
+            ),
+            (
+                "runtime_alertcondition.json",
+                "tests/fixtures/runtime/alertcondition.pine",
             ),
             ("runtime_hline_fill.json", "tests/fixtures/runtime/io.pine"),
             (

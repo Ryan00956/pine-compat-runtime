@@ -34,6 +34,32 @@ rollback, and later `varip` behavior. This should be a separate milestone.
 The first public releases should either reject realtime-only features or mark
 them as approximate.
 
+## Alert Events
+
+`alertcondition(condition, title, message)` is a supported runtime side effect
+for a narrow declarative subset. `condition` accepts bool-compatible values;
+`false` and `na` do not emit an event. `title` and `message` must be const
+strings. Runtime output serializes `title` as the alert event `source` and
+`message` as the alert event `message`.
+
+Alert conditions execute like ordinary reached statements in global flow,
+including supported `if`, `switch`, `for`, and `while` bodies. This is a
+deliberate runtime-event model for the current subset, not a global-only
+declaration model. Multiple triggering alert sites on the same bar are emitted
+in program order and use deterministic callsite ids.
+
+Realtime forming updates expose alert events for the current forming result,
+but those events are part of the forming runtime snapshot. A later forming
+update starts again from the confirmed snapshot, so abandoned forming alert
+events disappear. Only historical and confirmed updates become part of the
+confirmed result.
+
+`alert()` remains unsupported until frequency semantics are designed. Alert
+side effects inside user-defined functions, user-defined function arguments,
+and requested-context expressions are rejected under the same side-effect
+boundary as output calls, drawing calls, input declarations, and array
+mutation.
+
 ## Variables
 
 ### Normal Declarations
@@ -264,8 +290,8 @@ first confirmed requested bar return `na`.
 
 Lower-timeframe `request.security`, `request.security_lower_tf`, optional
 parameters, explicit gaps/lookahead, advanced request families, provider local
-aliases, UDF calls, output/drawing side effects, input declarations, and array
-mutation inside requested expressions remain unsupported.
+aliases, UDF calls, output/drawing/alert side effects, input declarations, and
+array mutation inside requested expressions remain unsupported.
 
 ### `varip`
 
@@ -305,10 +331,10 @@ Multi-statement function bodies execute local statements and return the final
 expression. Local declarations and reassignments inside function block bodies
 are scoped to the function callsite. A local declaration or loop counter can
 shadow a parameter without changing references that were already resolved to
-that parameter. Recursive functions, output side effects and drawing side
-effects inside functions, global reassignment inside functions, and
-side-effecting calls as UDF arguments are rejected in the current executable
-subset.
+that parameter. Recursive functions, output side effects, drawing side effects,
+and alert side effects inside functions, global reassignment inside functions,
+and side-effecting calls as UDF arguments are rejected in the current
+executable subset.
 
 ## Series and History References
 

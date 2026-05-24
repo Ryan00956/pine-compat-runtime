@@ -1,3 +1,4 @@
+mod alerts;
 mod arrays;
 mod builtins_colors;
 mod builtins_core;

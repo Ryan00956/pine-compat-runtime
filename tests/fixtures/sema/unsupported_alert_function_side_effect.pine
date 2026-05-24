@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported alert function side effect")
+f() =>
+    alertcondition(true, "Fn", "Message")
+    close
+plot(f())

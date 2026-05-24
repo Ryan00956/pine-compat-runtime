@@ -359,9 +359,13 @@ consumer-visible output change is documented with snapshot updates.
 - Public JSON/dictionary outputs for CLI, Python, and WASM expose
   `schemaVersion`; CLI and WASM runtime JSON share the same runtime contract
   helper.
-- Runtime outputs include an `alerts` array reserved for Phase H alert events;
-  `alert` and `alertcondition` remain unsupported until their fixture-backed
-  behavior is implemented.
+- Runtime outputs include an `alerts` array for Phase H alert events.
+  `alertcondition(condition, title, message)` is partially supported for
+  bool-compatible conditions and const-string title/message. Reached true
+  conditions emit deterministic `{id, barIndex, time, message, source}` events
+  in program order; forming realtime events roll back until confirmed.
+  Imperative `alert()` remains unsupported until deterministic frequency
+  semantics are designed.
 - The compatibility matrix source of truth is
   `tests/fixtures/conformance.tsv`; generated text and JSON matrix output must
   remain fixture-backed.
@@ -400,9 +404,9 @@ consumer-visible output change is documented with snapshot updates.
 - `max_bars_back`: supports indicator-level constant non-negative retention
   bounds for dynamic history.
 - `color.*` named constants: supports the current common registry only.
-- `realtime forming rollback`: covers output, supported drawing objects, `var`,
-  scalar and scalar typed-array `varip`, callsite, array, and dynamic history
-  rollback.
+- `realtime forming rollback`: covers output, `alertcondition` events,
+  supported drawing objects, `var`, scalar and scalar typed-array `varip`,
+  callsite, array, and dynamic history rollback.
 
 ### Explicitly Unsupported
 
@@ -417,14 +421,14 @@ them silently:
   deferred collection semantics that are not fixture-backed in the current
   `array.*` partial subset.
 - Imports and external libraries.
-- Alerts and alert conditions.
+- Imperative `alert()` calls and alert frequency controls.
 - Advanced drawing object methods and unsupported `polyline.*` point-list
   object systems.
 - Per-variable `max_bars_back` declarations and inference.
 - Recursive user-defined functions.
-- User-defined function side effects, including output calls, input
-  declarations, indicator declarations, array mutation, global reassignment,
-  and passing side-effecting calls as UDF arguments.
+- User-defined function side effects, including output calls, alertcondition,
+  input declarations, indicator declarations, array mutation, global
+  reassignment, and passing side-effecting calls as UDF arguments.
 
 ### Verification
 

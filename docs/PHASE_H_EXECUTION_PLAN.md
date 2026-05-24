@@ -204,8 +204,9 @@ Start with deterministic historical event recording:
 Recommended initial realtime policy:
 
 - Historical and confirmed realtime updates may produce visible alert events.
-- Forming updates roll back alert events like other runtime outputs unless a
-  later slice explicitly claims intrabar alert delivery.
+- Slice 2 selected visible forming events: a `RealtimeRuntime::update(Forming)`
+  result includes alert events from that current forming evaluation.
+- Forming updates roll back alert events like other runtime outputs.
 - No alert event should survive from an abandoned forming update after the next
   forming update recomputes the same bar.
 
@@ -347,10 +348,9 @@ Steps:
 4. Document whether `alertcondition` is accepted only at global scope or as a
    runtime event-producing statement in branches/loops. If branches or loops
    are accepted, add conformance notes that make this deliberate.
-5. Pick the initial realtime policy before adding the runtime append helper:
-   - either suppress/strip forming alert events until confirmed updates, or
-   - return current forming events from `RealtimeRuntime` while proving they
-     roll back and do not survive abandoned forming updates.
+5. Use the selected initial realtime policy: return current forming events from
+   `RealtimeRuntime` while proving they roll back and do not survive abandoned
+   forming updates.
 6. Add runtime evaluation that appends one event when `condition` is true for a
    bar.
 7. Assign deterministic alert-site ids through existing output/callsite id
