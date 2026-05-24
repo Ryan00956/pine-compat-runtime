@@ -405,6 +405,8 @@ Acceptance criteria:
 Goal: support alert surfaces after series and condition evaluation semantics
 are stable.
 
+Execution playbook: `docs/PHASE_H_EXECUTION_PLAN.md`.
+
 Scope:
 
 - `alertcondition`.
