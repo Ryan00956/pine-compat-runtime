@@ -45,6 +45,7 @@ pub enum ValueKind {
     BoolArray,
     StringArray,
     ColorArray,
+    UserType,
     Tuple,
     Na,
     Void,
@@ -177,6 +178,13 @@ pub enum HirExprKind {
         result: Box<HirExpr>,
     },
     Tuple(Vec<HirExpr>),
+    UserTypeConstruct {
+        fields: Vec<HirExpr>,
+    },
+    FieldAccess {
+        value: Box<HirExpr>,
+        index: usize,
+    },
     Block {
         statements: Vec<HirStmt>,
         result: Box<HirExpr>,

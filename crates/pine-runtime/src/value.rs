@@ -12,6 +12,7 @@ pub enum PineValue {
     Box(u32),
     Table(u32),
     Array(u32),
+    UserType(Vec<PineValue>),
     Tuple(Vec<PineValue>),
     Na,
     Void,

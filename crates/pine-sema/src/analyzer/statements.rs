@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 impl Analyzer {
     pub(crate) fn analyze_program(&mut self, program: &Program) {
+        self.register_user_types(program);
         self.register_functions(program);
         for statement in &program.statements {
             self.analyze_stmt(statement);
@@ -34,11 +35,17 @@ impl Analyzer {
                 );
             }
             StmtKind::UserType(_) => {
-                self.unsupported(
-                    "user-defined types",
-                    unsupported_syntax_reason("user-defined types"),
-                    statement.span,
-                );
+                if self.block_depth > 0 || self.function_depth > 0 {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_UDT_DECL_LOCATION",
+                        "user-defined type declarations must be top-level",
+                        statement.span,
+                    ));
+                }
+                self.compatibility.supported.push(FeatureUse {
+                    feature: "user-defined types".to_owned(),
+                    span: statement.span,
+                });
             }
             StmtKind::Method(_) => {
                 self.unsupported(
@@ -181,6 +188,9 @@ impl Analyzer {
                 } else {
                     self.define_symbol_with_persistence(name, value_type, persistence, var_slot_id)
                 };
+                if let Some(type_name) = self.expr_user_type_name(value) {
+                    self.mark_symbol_user_type(symbol, type_name);
+                }
                 self.bind_symbol(name, statement.span, symbol);
             }
             StmtKind::Reassign { name, value } => {
@@ -203,6 +213,17 @@ impl Analyzer {
                     value_type,
                 ) {
                     self.validate_assignment(name, target_type, value_type, statement.span);
+                    if target_type.kind == ValueKind::UserType
+                        && let Some(symbol) = self.scope.resolve(name)
+                        && let Some(target_type_name) = self.symbol_user_types.get(&symbol.id)
+                        && self.expr_user_type_name(value).as_ref() != Some(target_type_name)
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_UDT_ASSIGN_TYPE",
+                            format!("cannot assign a different user-defined type to `{name}`"),
+                            statement.span,
+                        ));
+                    }
                     self.update_symbol_type(name, value_type);
                 }
                 if let Some(symbol) = self.scope.resolve(name) {

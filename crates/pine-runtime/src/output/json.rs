@@ -617,7 +617,7 @@ fn value_json(value: &PineValue) -> String {
         | PineValue::Line(value)
         | PineValue::Box(value)
         | PineValue::Table(value) => value.to_string(),
-        PineValue::Tuple(values) => {
+        PineValue::UserType(values) | PineValue::Tuple(values) => {
             let mut output = String::from("[");
             for (index, value) in values.iter().enumerate() {
                 if index > 0 {

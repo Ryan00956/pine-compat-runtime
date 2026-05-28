@@ -73,6 +73,12 @@ expressions, and pure exported functions. Library declarations, imported UDTs,
 imported methods, re-exports, remote lookup, and side-effecting exported
 functions remain outside the supported matrix.
 
+Local user-defined types are partial. The supported subset is limited to
+top-level `type` declarations with scalar int/float/bool/string/color fields,
+`Type.new(...)` construction, and field reads on local values. Field mutation,
+history references on UDT values, UDT fields, UDT arrays, imported UDTs, and
+methods remain outside the supported matrix.
+
 Hosts may pass library source text into semantic analysis as future graph input:
 
 - CLI accepts repeated `--library-source KEY=path.pine` options for `analyze`
@@ -254,6 +260,7 @@ array.*              partial      float/int/bool/string/color creation and from 
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
 import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only
+user-defined types   partial      local scalar-field type declarations, Type.new constructors, and field reads only
 ```
 
 The matrix should be generated from conformance metadata once the test harness

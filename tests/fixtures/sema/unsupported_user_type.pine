@@ -1,4 +1,4 @@
 //@version=5
 type Point
     float x
-    float y
+    Point parent

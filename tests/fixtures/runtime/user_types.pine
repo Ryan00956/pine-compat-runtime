@@ -1,0 +1,8 @@
+//@version=5
+indicator("User-defined types")
+type Point
+    float x
+    float y
+
+p = Point.new(close, open)
+plot(p.x + p.y)

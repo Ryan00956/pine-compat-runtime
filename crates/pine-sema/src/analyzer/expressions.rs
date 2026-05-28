@@ -16,7 +16,10 @@ impl Analyzer {
                 self.check_feature_expr(expr);
                 self.resolve_symbol(name, expr.span)
             }
-            ExprKind::QualifiedName(_) => {
+            ExprKind::QualifiedName(parts) => {
+                if let Some(field) = self.resolve_user_type_field_access(parts, expr.span) {
+                    return Some(field.pine_type);
+                }
                 let name = expr_name(expr)?;
                 self.resolve_qualified_value(&name, expr.span)
             }
@@ -68,11 +71,22 @@ impl Analyzer {
                 }
                 Some(pine_builtins::tuple_return_type())
             }
-            ExprKind::Call { callee, args } => self.analyze_call(callee, args),
+            ExprKind::Call { callee, args } => self.analyze_call(callee, args, expr.span),
             ExprKind::History { expr, offset } => {
                 let value_type = self.analyze_expr(expr);
                 let offset_type = self.analyze_expr(offset);
                 self.validate_history_offset(offset, offset_type);
+                if matches!(
+                    value_type.map(|pine_type| pine_type.kind),
+                    Some(ValueKind::UserType)
+                ) {
+                    self.unsupported(
+                        "user-defined type history",
+                        "history references on user-defined type values are not supported in Phase J Slice 6",
+                        expr.span,
+                    );
+                    return None;
+                }
                 value_type.map(|value_type| PineType::new(Qualifier::Series, value_type.kind))
             }
         }
@@ -492,7 +506,14 @@ impl Analyzer {
                         .map(|symbol| symbol.pine_type)
                 })
                 .or_else(|| self.scope.resolve(name).map(|symbol| symbol.pine_type)),
-            ExprKind::QualifiedName(_) => {
+            ExprKind::QualifiedName(parts) => {
+                if let Some(pine_type) = self.type_of_bound_user_type_field_access(parts, expr.span)
+                {
+                    return Some(pine_type);
+                }
+                if let Some(pine_type) = self.type_of_user_type_field_access(parts) {
+                    return Some(pine_type);
+                }
                 let name = expr_name(expr)?;
                 pine_builtins::named_color(&name)
                     .map(|_| PineType::new(Qualifier::Const, ValueKind::Color))
@@ -574,7 +595,9 @@ impl Analyzer {
                     .map(|arg| self.type_of_expr_with_params(&arg.value, param_types))
                     .collect();
                 let name = expr_name(callee)?;
-                if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
+                if let Some(pine_type) = self.type_of_user_type_constructor(&name, args) {
+                    Some(pine_type)
+                } else if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
                     if is_ta_vwap_bands_call(&name, args) {
                         return Some(pine_builtins::tuple_return_type());
                     }

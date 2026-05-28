@@ -52,6 +52,15 @@ improved over time, but codes should remain stable once published.
 - `E_FUNCTION_PARAM`: user-defined function parameter list is invalid.
 - `E_FUNCTION_RETURN`: user-defined function block does not end with an
   expression.
+- `E_UDT_ASSIGN_TYPE`: reassignment changed a local user-defined type identity.
+- `E_UDT_CONSTRUCTOR_ARG`: user-defined type constructor arguments do not match
+  declared fields.
+- `E_UDT_DECL_LOCATION`: user-defined type declaration is not top-level.
+- `E_UDT_DUPLICATE`: duplicate user-defined type declaration.
+- `E_UDT_FIELD_DUPLICATE`: duplicate field in a user-defined type declaration.
+- `E_UDT_FIELD_TYPE`: unsupported or unknown user-defined type field type.
+- `E_UDT_UNKNOWN_FIELD`: field read references a field not declared on the
+  receiver's user-defined type.
 - `E_IMPORT_CYCLE`: import dependency graph contains a cycle.
 - `E_IMPORT_ALIAS_REQUIRED`: an import used by the executable subset omitted
   the required alias.

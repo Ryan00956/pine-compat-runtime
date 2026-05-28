@@ -143,12 +143,19 @@ fn reports_unsupported_export_fixture() {
 }
 
 #[test]
-fn reports_unsupported_user_type_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_user_type.pine",
-        "user-defined types",
-        "user-defined types",
+fn reports_unsupported_user_type_field_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/unsupported_user_type.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| { diagnostic.code == "E_UDT_FIELD_TYPE" })
     );
+    assert!(analysis.hir.is_none());
 }
 
 #[test]

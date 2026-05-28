@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Phase J Slice 6 local user-defined type support for top-level scalar
+  field declarations, `Type.new(...)` constructors, and field reads. UDT
+  history references, field mutation, nested UDT fields, arrays of UDTs,
+  imported UDTs, and user-defined methods remain unsupported.
 - Added Phase J Slice 5 host parity for imported functions. CLI integration
   fixtures now run the import subset through `--library-source`, Python binding
   tests cover imported function execution through `library_sources`, and WASM

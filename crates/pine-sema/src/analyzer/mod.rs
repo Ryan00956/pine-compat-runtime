@@ -6,3 +6,4 @@ pub(crate) mod functions;
 pub(crate) mod requests;
 pub(crate) mod statements;
 pub(crate) mod unsupported;
+pub(crate) mod user_types;

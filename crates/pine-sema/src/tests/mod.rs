@@ -15,3 +15,4 @@ mod type_arrays;
 mod type_core;
 mod type_inputs_outputs;
 mod type_ta;
+mod user_types;

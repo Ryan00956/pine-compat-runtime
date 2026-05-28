@@ -17,6 +17,7 @@ mod request;
 mod runtime_control_flow;
 mod runtime_core;
 mod runtime_history;
+mod user_types;
 
 use super::*;
 

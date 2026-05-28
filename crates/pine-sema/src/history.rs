@@ -126,7 +126,10 @@ pub(crate) fn max_bars_back_from_expr(expr: &HirExpr) -> Option<u32> {
             .or_else(|| step.as_deref().and_then(max_bars_back_from_expr))
             .or_else(|| infer_max_bars_back(statements))
             .or_else(|| max_bars_back_from_expr(result)),
-        HirExprKind::Tuple(items) => items.iter().find_map(max_bars_back_from_expr),
+        HirExprKind::Tuple(items) | HirExprKind::UserTypeConstruct { fields: items } => {
+            items.iter().find_map(max_bars_back_from_expr)
+        }
+        HirExprKind::FieldAccess { value, .. } => max_bars_back_from_expr(value),
         HirExprKind::Block { statements, result } => {
             infer_max_bars_back(statements).or_else(|| max_bars_back_from_expr(result))
         }
@@ -252,6 +255,12 @@ impl HistoryRequirementCollector {
                     self.visit_expr(item);
                 }
             }
+            HirExprKind::UserTypeConstruct { fields } => {
+                for field in fields {
+                    self.visit_expr(field);
+                }
+            }
+            HirExprKind::FieldAccess { value, .. } => self.visit_expr(value),
             HirExprKind::Block { statements, result } => {
                 self.visit_stmts(statements);
                 self.visit_expr(result);

@@ -38,6 +38,7 @@ mod prelude {
     pub(crate) use crate::analyzer::unsupported::{
         VARIP_DRAWING_UNSUPPORTED_REASON, VARIP_VALUE_UNSUPPORTED_REASON, unsupported_syntax_reason,
     };
+    pub(crate) use crate::analyzer::user_types::UserTypeInfo;
     pub(crate) use crate::compatibility::{FeatureUse, UnsupportedFeature};
     pub(crate) use crate::history::{infer_history_requirements, infer_max_bars_back};
     pub(crate) use crate::resolver::{SymbolInfo, binding_key};

@@ -273,7 +273,25 @@ impl Analyzer {
             ExprKind::Identifier(name) => {
                 HirExprKind::Symbol(self.bound_symbol(name, expr.span)?.id)
             }
-            ExprKind::QualifiedName(parts) => HirExprKind::Builtin(parts.join(".")),
+            ExprKind::QualifiedName(parts) => {
+                if let Some(field) = self.type_of_bound_user_type_field_access(parts, expr.span) {
+                    let access = self.user_type_field_access_for_lowering(parts, expr.span)?;
+                    let receiver_symbol = self.bound_symbol(&access.receiver, expr.span)?;
+                    return Some(HirExpr {
+                        pine_type: field,
+                        series_id,
+                        kind: HirExprKind::FieldAccess {
+                            value: Box::new(HirExpr {
+                                kind: HirExprKind::Symbol(receiver_symbol.id),
+                                pine_type: receiver_symbol.pine_type,
+                                series_id: receiver_symbol.series_id,
+                            }),
+                            index: access.index,
+                        },
+                    });
+                }
+                HirExprKind::Builtin(parts.join("."))
+            }
             ExprKind::Unary { op, expr } => HirExprKind::Unary {
                 op: lower_unary_op(*op),
                 expr: Box::new(self.lower_expr_with_params(expr, param_exprs, param_types)?),
@@ -378,6 +396,21 @@ impl Analyzer {
             ),
             ExprKind::Call { callee, args } => {
                 let name = expr_name(callee)?;
+                if let Some(constructor) = self.user_type_constructor_for_lowering(&name, args) {
+                    return Some(HirExpr {
+                        pine_type,
+                        series_id,
+                        kind: HirExprKind::UserTypeConstruct {
+                            fields: constructor
+                                .field_args
+                                .iter()
+                                .map(|arg| {
+                                    self.lower_expr_with_params(arg, param_exprs, param_types)
+                                })
+                                .collect::<Option<_>>()?,
+                        },
+                    });
+                }
                 if self.functions.contains_key(&name) {
                     return self.lower_udf_call(&name, args, param_exprs, param_types);
                 }

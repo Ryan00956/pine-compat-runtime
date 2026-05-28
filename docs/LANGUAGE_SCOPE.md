@@ -262,8 +262,11 @@ The analyzer should reject these with clear diagnostics:
   re-exports, imported UDTs, imported methods, and side-effecting exported
   functions remain rejected
 - unsupported array element types, matrices, and maps
-- user-defined types and user-defined methods; Phase J Slice 0 rejects the
-  declaration forms before any type identity or receiver dispatch is claimed
+- user-defined type forms outside the local scalar-field subset; Phase J
+  accepts top-level `type` declarations with int/float/bool/string/color
+  fields, `Type.new(...)` construction, and local field reads only
+- user-defined methods; Phase J still rejects method declarations before
+  receiver dispatch is claimed
 - non-array method calls; these currently remain ordinary receiver/type
   diagnostics rather than a conformance-matrix feature row
 - label, line, box, table, polyline objects

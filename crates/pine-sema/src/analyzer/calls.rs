@@ -220,7 +220,12 @@ pub(crate) fn is_ta_vwap_bands_call(name: &str, args: &[CallArg]) -> bool {
 }
 
 impl Analyzer {
-    pub(crate) fn analyze_call(&mut self, callee: &Expr, args: &[CallArg]) -> Option<PineType> {
+    pub(crate) fn analyze_call(
+        &mut self,
+        callee: &Expr,
+        args: &[CallArg],
+        span: Span,
+    ) -> Option<PineType> {
         let Some(name) = expr_name(callee) else {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_TARGET",
@@ -232,6 +237,10 @@ impl Analyzer {
 
         if name.starts_with("request.") {
             return self.analyze_request_call(&name, callee.span, args);
+        }
+
+        if let Some(constructor) = self.user_type_constructor(&name, args, span) {
+            return Some(constructor.pine_type);
         }
 
         let arg_types: Vec<_> = args

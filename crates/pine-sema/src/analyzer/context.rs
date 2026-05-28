@@ -5,6 +5,7 @@ use pine_syntax::{Diagnostic, FunctionBody, Program, Severity, Span};
 
 use crate::analysis::Analysis;
 use crate::compatibility::CompatibilityReport;
+use crate::prelude::UserTypeInfo;
 use crate::resolver::{BindingKey, ScopeResolver, SymbolInfo};
 
 pub(crate) struct Analyzer {
@@ -14,6 +15,9 @@ pub(crate) struct Analyzer {
     pub(crate) bindings: HashMap<BindingKey, SymbolInfo>,
     pub(crate) lower_symbol_overrides: Vec<HashMap<SymbolId, SymbolInfo>>,
     pub(crate) functions: HashMap<String, FunctionInfo>,
+    pub(crate) user_types: HashMap<String, UserTypeInfo>,
+    pub(crate) symbol_user_types: HashMap<SymbolId, String>,
+    pub(crate) expr_user_types: HashMap<(usize, usize), String>,
     pub(crate) function_stack: Vec<String>,
     pub(crate) next_symbol_id: u32,
     pub(crate) next_series_id: u32,

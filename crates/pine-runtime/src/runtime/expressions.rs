@@ -55,6 +55,21 @@ impl<'a> HistoricalRuntime<'a> {
                     .map(|item| self.eval_expr(item))
                     .collect::<Result<_, _>>()?,
             ),
+            HirExprKind::UserTypeConstruct { fields } => PineValue::UserType(
+                fields
+                    .iter()
+                    .map(|field| self.eval_expr(field))
+                    .collect::<Result<_, _>>()?,
+            ),
+            HirExprKind::FieldAccess { value, index } => match self.eval_expr(value)? {
+                PineValue::UserType(fields) => fields.get(*index).cloned().unwrap_or(PineValue::Na),
+                PineValue::Na => PineValue::Na,
+                _ => {
+                    return Err(RuntimeError {
+                        message: "field access receiver is not a user-defined value".to_owned(),
+                    });
+                }
+            },
             HirExprKind::Block { statements, result } => {
                 for statement in statements {
                     match self.eval_stmt(statement)? {
