@@ -20,10 +20,25 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
-pub(crate) const SIGNATURES: &[BuiltinSignature] = &[BuiltinSignature {
-    name: "strategy.entry",
-    phase: BuiltinPhase::Phase1Core,
-    params: STRATEGY_ENTRY_PARAMS,
-    returns: ReturnSpec::Fixed(VOID),
-    variadic: false,
+const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::SimpleString,
+    optional: false,
 }];
+
+pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
+    BuiltinSignature {
+        name: "strategy.entry",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_ENTRY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.close",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CLOSE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+];

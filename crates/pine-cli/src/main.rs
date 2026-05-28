@@ -64,6 +64,7 @@ mod tests {
                 || signature.name == "request.security"
                 || signature.name == "strategy"
                 || signature.name == "strategy.entry"
+                || signature.name == "strategy.close"
                 || signature.name == "alert"
                 || signature.name == "alertcondition"
             {
@@ -568,6 +569,10 @@ mod tests {
             (
                 "runtime_strategy_entry.json",
                 "tests/fixtures/runtime/strategy_entry.pine",
+            ),
+            (
+                "runtime_strategy_close.json",
+                "tests/fixtures/runtime/strategy_close.pine",
             ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));

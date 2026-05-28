@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Phase G Slice 4 minimal `strategy.close` support. Strategy scripts can
+  fully close an existing long entry at the current bar close and receive a
+  deterministic closed-trade record with entry/exit bars, prices, quantity, and
+  profit; missing or repeated closes are no-ops.
 - Added Phase G Slice 3 minimal `strategy.entry` support. Strategy scripts can
   open one long market position with `strategy.entry(id, strategy.long, qty=...)`
   filled at the current bar close; repeated entries are ignored under the

@@ -302,10 +302,7 @@ fn strategy_result_to_py(
 ) -> PyResult<Py<PyAny>> {
     let output = PyDict::new(py);
     output.set_item("orders", strategy_orders_to_py(py, &strategy.orders)?)?;
-    output.set_item(
-        "trades",
-        empty_strategy_list_to_py(py, strategy.trades.len())?,
-    )?;
+    output.set_item("trades", strategy_trades_to_py(py, &strategy.trades)?)?;
     output.set_item("position", strategy_position_to_py(py, &strategy.position)?)?;
     output.set_item(
         "equity",
@@ -315,6 +312,27 @@ fn strategy_result_to_py(
         "diagnostics",
         empty_strategy_list_to_py(py, strategy.diagnostics.len())?,
     )?;
+    Ok(output.into_any().unbind())
+}
+
+fn strategy_trades_to_py(
+    py: Python<'_>,
+    trades: &[pine_runtime::StrategyTrade],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for trade in trades {
+        let item = PyDict::new(py);
+        item.set_item("id", &trade.id)?;
+        item.set_item("entryBarIndex", trade.entry_bar_index)?;
+        item.set_item("exitBarIndex", trade.exit_bar_index)?;
+        item.set_item("entryTime", trade.entry_time)?;
+        item.set_item("exitTime", trade.exit_time)?;
+        item.set_item("entryPrice", trade.entry_price)?;
+        item.set_item("exitPrice", trade.exit_price)?;
+        item.set_item("qty", trade.qty)?;
+        item.set_item("profit", trade.profit)?;
+        output.append(item)?;
+    }
     Ok(output.into_any().unbind())
 }
 

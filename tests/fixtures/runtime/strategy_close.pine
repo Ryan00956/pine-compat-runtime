@@ -1,0 +1,7 @@
+//@version=5
+strategy("Close strategy", overlay=true)
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 2
+    strategy.close("L")
+plot(close)

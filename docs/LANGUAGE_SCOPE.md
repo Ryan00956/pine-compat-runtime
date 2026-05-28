@@ -77,6 +77,8 @@ Phase 1 executable subset:
   output
 - `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
   filled at the current bar close for one net long position without pyramiding
+- `strategy.close(id)` in strategy-mode scripts only, closing the full matching
+  long position at the current bar close and recording a closed trade
 - `input.*`
 - `plot`, `plotchar`, `plotshape`, `plotarrow`, `plotbar`, `plotcandle`,
   `bgcolor`, `barcolor`, `hline`, and `fill`
@@ -256,8 +258,8 @@ The analyzer should reject these with clear diagnostics:
 
 - strategy order functions and reporting helpers outside the narrow
   `strategy.entry(id, strategy.long, qty=...)` subset, including
-  `strategy.exit`, `strategy.order`, `strategy.close`, short entries,
-  stop/limit orders, pyramiding, and `strategy.*` variables
+  `strategy.exit`, `strategy.order`, short entries, stop/limit orders,
+  pyramiding, partial closes, and `strategy.*` variables
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need

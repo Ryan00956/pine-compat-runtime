@@ -68,6 +68,22 @@ fn runs_strategy_entry_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_close_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        "strategy(\"demo\")\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close(\"L\")\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+    )
+    .expect("strategy close script should run");
+
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":1,\"exitTime\":2,\"entryPrice\":2,\"exitPrice\":3,\"qty\":2,\"profit\":2}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"
+    ));
+}
+
+#[test]
 fn request_host_data_is_documented_wasm_gap() {
     let message = run_script_csv_internal(
         "indicator(\"request\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",

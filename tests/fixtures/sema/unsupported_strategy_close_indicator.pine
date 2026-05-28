@@ -1,0 +1,3 @@
+//@version=5
+indicator("Strategy close in indicator")
+strategy.close("L")

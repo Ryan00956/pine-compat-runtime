@@ -613,7 +613,7 @@ fn strategy_json(strategy: &StrategyResult) -> String {
     format!(
         "{{\"orders\":{},\"trades\":{},\"position\":{},\"equity\":{},\"diagnostics\":{}}}",
         strategy_orders_json(&strategy.orders),
-        empty_strategy_items_json(&strategy.trades),
+        strategy_trades_json(&strategy.trades),
         strategy_position_json(&strategy.position),
         empty_strategy_items_json(&strategy.equity),
         runtime_diagnostics_json(&strategy.diagnostics)
@@ -640,6 +640,29 @@ fn strategy_orders_json(orders: &[crate::StrategyOrderEvent]) -> String {
     output
 }
 
+fn strategy_trades_json(trades: &[crate::StrategyTrade]) -> String {
+    let mut output = String::from("[");
+    for (index, trade) in trades.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"id\":\"{}\",\"entryBarIndex\":{},\"exitBarIndex\":{},\"entryTime\":{},\"exitTime\":{},\"entryPrice\":{},\"exitPrice\":{},\"qty\":{},\"profit\":{}}}",
+            json_escape(&trade.id),
+            trade.entry_bar_index,
+            trade.exit_bar_index,
+            trade.entry_time,
+            trade.exit_time,
+            trade.entry_price,
+            trade.exit_price,
+            trade.qty,
+            trade.profit
+        ));
+    }
+    output.push(']');
+    output
+}
+
 fn strategy_position_json(position: &[crate::StrategyPositionSnapshot]) -> String {
     let mut output = String::from("[");
     for (index, snapshot) in position.iter().enumerate() {
@@ -648,11 +671,17 @@ fn strategy_position_json(position: &[crate::StrategyPositionSnapshot]) -> Strin
         }
         output.push_str(&format!(
             "{{\"barIndex\":{},\"size\":{},\"avgPrice\":{}}}",
-            snapshot.bar_index, snapshot.size, snapshot.avg_price
+            snapshot.bar_index,
+            snapshot.size,
+            option_f64_json(snapshot.avg_price)
         ));
     }
     output.push(']');
     output
+}
+
+fn option_f64_json(value: Option<f64>) -> String {
+    value.map_or_else(|| "null".to_owned(), |value| value.to_string())
 }
 
 fn empty_strategy_items_json<T>(items: &[T]) -> &'static str {

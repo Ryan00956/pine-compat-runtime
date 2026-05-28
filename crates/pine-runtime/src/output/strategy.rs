@@ -19,14 +19,24 @@ pub struct StrategyOrderEvent {
     pub price: f64,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct StrategyTrade;
+#[derive(Debug, Clone, PartialEq)]
+pub struct StrategyTrade {
+    pub id: String,
+    pub entry_bar_index: usize,
+    pub exit_bar_index: usize,
+    pub entry_time: i64,
+    pub exit_time: i64,
+    pub entry_price: f64,
+    pub exit_price: f64,
+    pub qty: f64,
+    pub profit: f64,
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct StrategyPositionSnapshot {
     pub bar_index: usize,
     pub size: f64,
-    pub avg_price: f64,
+    pub avg_price: Option<f64>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

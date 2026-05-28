@@ -87,7 +87,7 @@ fn reports_unsupported_varip_drawing_fixture() {
 fn reports_unsupported_strategy_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy.pine",
-        &["strategy.close"],
+        &["strategy.exit"],
     );
 }
 
@@ -123,7 +123,7 @@ fn accepts_supported_strategy_declaration_fixture() {
 fn reports_unsupported_strategy_order_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_orders.pine",
-        &["strategy.exit", "strategy.close", "strategy.order"],
+        &["strategy.exit", "strategy.order"],
     );
 }
 
@@ -180,6 +180,38 @@ fn reports_strategy_entry_qty_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_entry_qty.pine",
         "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn accepts_supported_strategy_close_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_close.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.close")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn reports_strategy_close_indicator_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_close_indicator.pine",
+        "E_STRATEGY_MODE",
     );
 }
 

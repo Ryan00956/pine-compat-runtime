@@ -28,12 +28,14 @@ na" marker while it waits for contextual type information.
 
 A script may have at most one top-level declaration call. `indicator(...)`
 selects indicator mode and `strategy(...)` selects strategy mode. Phase G
-initially accepts `strategy(...)` plus a narrow `strategy.entry` subset.
+initially accepts `strategy(...)` plus narrow `strategy.entry` and
+`strategy.close` subsets.
 `strategy.entry(id, strategy.long, qty=...)` is a strategy-mode side effect
-only; it is rejected in indicator scripts and user-defined functions. Short
-entries, stop/limit orders, exits, broker settings, realtime strategy handoff,
-and strategy metrics remain unsupported until later slices define those
-contracts.
+only; `strategy.close(id)` closes the full matching long position at the
+current bar close. Both calls are rejected in indicator scripts and
+user-defined functions. Short entries, stop/limit orders, `strategy.exit`,
+`strategy.order`, broker settings, realtime strategy handoff, and strategy
+metrics remain unsupported until later slices define those contracts.
 
 `indicator(...)` and `strategy(...)` declarations are mutually exclusive and
 must be top-level. Declaration calls inside functions or local blocks are

@@ -41,7 +41,8 @@ Strategy-mode runtime results include a `strategy` object with `orders`,
 `trades`, `position`, `equity`, and `diagnostics` arrays. Indicator-mode
 runtime results do not include this key.
 
-The current order subset is `strategy.entry(id, strategy.long, qty=...)`.
+The current order subset is `strategy.entry(id, strategy.long, qty=...)` and
+`strategy.close(id)`.
 When execution reaches the call in a strategy-mode script, the runtime fills a
 long market entry at the current bar close and records an order event plus a
 position snapshot. Only one net long position is supported; repeated entry
@@ -49,11 +50,18 @@ calls while a position is open are ignored under the current no-pyramiding
 rule. `qty` must be positive, and non-positive runtime quantities are reported
 in the strategy diagnostics array.
 
+`strategy.close(id)` closes the full matching long position at the current bar
+close. It records a closed trade with entry/exit bar indexes, entry/exit times,
+entry/exit prices, quantity, and `profit = (exit_price - entry_price) * qty`,
+then appends a flat position snapshot with `size = 0` and `avgPrice = null`.
+If no position is open, the id does not match the open entry, or the position
+has already been closed, the close call is a no-op.
+
 The strategy contract is host-independent and exposed consistently by CLI JSON,
-Python dictionaries, and WASM JSON. Short entries, exits, stop/limit orders,
-trade ledger updates, equity accounting, strategy reporting variables, and
-realtime strategy handoff remain unsupported until later Phase G slices define
-and fixture those semantics.
+Python dictionaries, and WASM JSON. Short entries, `strategy.exit`,
+`strategy.order`, stop/limit orders, partial exits, equity accounting, strategy
+reporting variables, and realtime strategy handoff remain unsupported until
+later Phase G slices define and fixture those semantics.
 
 ## Alert Events
 

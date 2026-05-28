@@ -180,6 +180,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "table.new"
             | "table.cell"
             | "strategy.entry"
+            | "strategy.close"
     ) || name == "input"
         || name.starts_with("input.")
 }
@@ -338,19 +339,21 @@ impl Analyzer {
         span: Span,
         args: &[CallArg],
     ) {
-        if name != "strategy.entry" {
+        if !matches!(name, "strategy.entry" | "strategy.close") {
             return;
         }
 
         if !matches!(self.script_declaration, Some((ScriptMode::Strategy, _))) {
             self.diagnostics.push(Diagnostic::error(
                 "E_STRATEGY_MODE",
-                "`strategy.entry` is only supported in scripts declared with strategy(...)",
+                format!("`{name}` is only supported in scripts declared with strategy(...)"),
                 span,
             ));
         }
 
-        self.validate_strategy_entry_args(args);
+        if name == "strategy.entry" {
+            self.validate_strategy_entry_args(args);
+        }
     }
 
     pub(crate) fn analyze_method_call(

@@ -417,6 +417,10 @@ Initial scope:
   otherwise.
 - Closed-trade records with entry/exit bar, prices, quantity, and profit.
 
+Implementation decision: Slice 4 closes the full matching long position at the
+current bar close. Missing ids, mismatched ids, and repeated closes are no-op
+events, not runtime errors.
+
 Steps:
 
 1. Add the `strategy.close` signature for the accepted subset.

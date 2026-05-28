@@ -12,6 +12,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Option<Result<PineValue, RuntimeError>> {
         Some(match callee {
             "strategy.entry" => self.eval_strategy_entry(args),
+            "strategy.close" => self.eval_strategy_close(args),
             _ => return None,
         })
     }
@@ -44,6 +45,25 @@ impl<'a> HistoricalRuntime<'a> {
 
         self.strategy_broker
             .entry_long(id, self.bars, bar.time, bar.close, qty);
+        Ok(PineValue::Void)
+    }
+
+    fn eval_strategy_close(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(bar) = self.current_bar else {
+            return Err(RuntimeError {
+                message: "`strategy.close` requires an active bar".to_owned(),
+            });
+        };
+        let Some(id_expr) = call_arg_expr(args, 0, "id") else {
+            return Ok(PineValue::Void);
+        };
+        let id = match self.eval_expr(id_expr)? {
+            PineValue::String(value) => value,
+            _ => return Ok(PineValue::Void),
+        };
+
+        self.strategy_broker
+            .close_long(id, self.bars, bar.time, bar.close);
         Ok(PineValue::Void)
     }
 }

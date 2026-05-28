@@ -118,6 +118,31 @@ def test_run_script_returns_strategy_entry_contract():
     ]
 
 
+def test_run_script_returns_strategy_close_trade_contract():
+    result = pine_compat.run_script(
+        'strategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close("L")\n',
+        BARS,
+    )
+
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 1,
+            "exitBarIndex": 2,
+            "entryTime": 1,
+            "exitTime": 2,
+            "entryPrice": 2.0,
+            "exitPrice": 3.0,
+            "qty": 2.0,
+            "profit": 2.0,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 0.0, "avgPrice": None},
+    ]
+
+
 def test_analyze_script_accepts_library_sources_without_import_use():
     report = pine_compat.analyze_script(
         'indicator("root")\nplot(close)\n',
