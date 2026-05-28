@@ -12,6 +12,18 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.openprofit",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
+        "strategy.netprofit",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
+        "strategy.equity",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "barstate.isfirst",
         PineType::new(Qualifier::Series, ValueKind::Bool),
     ),

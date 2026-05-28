@@ -373,7 +373,7 @@ Slice 1 implementation record:
   supported market entry and close calls mutate the broker immediately, later
   statements on the same bar observe the updated position values.
 - The variables remain rejected in indicator scripts and requested-context
-  expressions. Profit/equity variables remain unsupported until Slice 2.
+  expressions. Profit/equity variables were left for Slice 2.
 - No runtime JSON, Python dictionary, or WASM JSON schema fields were added;
   host coverage observes the variables through ordinary plot outputs.
 
@@ -437,6 +437,26 @@ Exit criteria:
 - Profit values are deterministic across Rust runtime, CLI, Python, and WASM.
 - Docs clearly state what is and is not included in each profit variable.
 - Existing strategy output snapshots remain stable unless deliberately updated.
+
+Slice 2 implementation record:
+
+- `strategy.openprofit`, `strategy.netprofit`, and `strategy.equity` are
+  accepted as strategy-mode-only historical series float values.
+- `strategy.openprofit` is `0` when flat and marks the current long position to
+  the current close while long.
+- `strategy.netprofit` is cumulative realized closed-trade profit only and does
+  not include current open profit.
+- `strategy.equity` is `initial_capital + strategy.netprofit +
+  strategy.openprofit` in the current long-only broker subset.
+- Values are read from `BrokerState` at expression-evaluation time. Later
+  statements on the same bar observe supported entry/close mutations
+  immediately.
+- The variables remain rejected in indicator scripts and requested-context
+  expressions.
+- The existing public strategy equity snapshot field `netProfit` remains
+  `equity - initial_capital`, so it can include open profit while a position is
+  open. No runtime JSON, Python dictionary, or WASM JSON schema fields were
+  added.
 
 Verification:
 

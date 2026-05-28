@@ -178,6 +178,22 @@ def test_run_script_returns_strategy_position_state_plots():
     ]
 
 
+def test_run_script_returns_strategy_profit_state_plots():
+    result = pine_compat.run_script(
+        'strategy("demo", initial_capital=1000)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\n',
+        BARS,
+    )
+
+    assert result["plots"] == [
+        {"id": 1, "values": [0.0, 0.0, 2.0]},
+        {"id": 2, "values": [0.0, 0.0, 0.0]},
+        {"id": 3, "values": [1000.0, 1000.0, 1002.0]},
+        {"id": 5, "values": [0.0, 0.0, 2.0]},
+        {"id": 6, "values": [0.0, 0.0, 0.0]},
+        {"id": 7, "values": [1000.0, 1000.0, 1002.0]},
+    ]
+
+
 def test_run_script_returns_strategy_close_trade_contract():
     result = pine_compat.run_script(
         'strategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close("L")\n',

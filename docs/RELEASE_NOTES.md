@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added Phase L Slice 2 profit and equity state variables. Strategy-mode
+  historical scripts can read and plot `strategy.openprofit`,
+  `strategy.netprofit`, and `strategy.equity` for the current long-only broker
+  subset. Expression-time `strategy.netprofit` is realized closed-trade profit
+  only; the existing public strategy snapshot field `netProfit` remains
+  `equity - initial_capital` and can include open profit while a position is
+  open.
 - Added Phase L Slice 1 position state variables. Strategy-mode historical
   scripts can read and plot `strategy.position_size` and
   `strategy.position_avg_price`; values follow the current long-only broker

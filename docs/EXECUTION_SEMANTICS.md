@@ -62,24 +62,31 @@ has already been closed, the close call is a no-op.
 After each historical bar, strategy mode appends an equity snapshot with
 `barIndex`, `cash`, `marketValue`, `equity`, and `netProfit`. Open long
 positions are marked to the current bar close, `equity = cash + marketValue`,
-and `netProfit = equity - initial_capital`. The current subset has no
-commission, slippage, margin, percent sizing, currency conversion, partial
-exits, or pyramiding.
+and the snapshot field `netProfit = equity - initial_capital`, so that public
+output field includes current open profit while a long position is open. The
+expression variable `strategy.netprofit` is narrower: it is cumulative realized
+closed-trade profit only and excludes current open profit. The current subset
+has no commission, slippage, margin, percent sizing, currency conversion,
+partial exits, or pyramiding.
 
 Strategy-mode scripts can read `strategy.position_size` and
-`strategy.position_avg_price` as historical series floats. In the current
-long-only subset, `strategy.position_size` is `0` when flat and positive while
-long. `strategy.position_avg_price` is `na` when flat and the current average
-entry price while long. Supported `strategy.entry` and `strategy.close` calls
+`strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`, and
+`strategy.equity` as historical series floats. In the current long-only subset,
+`strategy.position_size` is `0` when flat and positive while long.
+`strategy.position_avg_price` is `na` when flat and the current average entry
+price while long. `strategy.openprofit` is `(close - avg_price) * size` while
+long and `0` when flat. `strategy.netprofit` sums realized closed-trade profit.
+`strategy.equity` equals `initial_capital + strategy.netprofit +
+strategy.openprofit`. Supported `strategy.entry` and `strategy.close` calls
 mutate broker state immediately, so later statements on the same bar see the
-updated position values.
+updated strategy state values.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit`,
-`strategy.order`, stop/limit orders, strategy reporting variables beyond the
-first position variables, requested-context strategy state, and realtime strategy
-handoff remain unsupported until later Phase L or strategy-maintenance slices
-define and fixture those semantics.
+`strategy.order`, stop/limit orders, strategy reporting helpers beyond the
+supported position/profit/equity variables, requested-context strategy state,
+and realtime strategy handoff remain unsupported until later Phase L or
+strategy-maintenance slices define and fixture those semantics.
 
 ## Alert Events
 

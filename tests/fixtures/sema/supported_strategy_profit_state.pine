@@ -1,0 +1,5 @@
+//@version=5
+strategy("Supported strategy profit state")
+plot(strategy.openprofit)
+plot(strategy.netprofit)
+plot(strategy.equity)

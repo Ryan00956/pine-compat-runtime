@@ -82,10 +82,14 @@ Phase L adds the first read-only strategy state variables for historical
 strategy-mode scripts. `strategy.position_size` is a series float that is `0`
 when flat and positive for the current long-only position. `strategy.position_avg_price`
 is a series float that is `na` when flat and the current average entry price
-when long. Both variables reflect supported `strategy.entry` and
-`strategy.close` calls immediately for later statements on the same bar. They do
-not change the public runtime JSON shape because scripts observe them through
-ordinary outputs such as `plot`.
+when long. `strategy.openprofit` is unrealized profit for the current long
+position marked to the current close and is `0` when flat. `strategy.netprofit`
+is cumulative realized closed-trade profit only, excluding any current open
+profit. `strategy.equity` is `initial_capital + strategy.netprofit +
+strategy.openprofit` in the current subset. These variables reflect supported
+`strategy.entry` and `strategy.close` calls immediately for later statements on
+the same bar. They do not change the public runtime JSON shape because scripts
+observe them through ordinary outputs such as `plot`.
 
 ## Source Graph Host Contract
 
@@ -232,8 +236,8 @@ Examples:
   with missing or repeated closes treated as no-op
 - minimal strategy equity snapshots with bar-close mark-to-market accounting,
   with broader broker settings and strategy reporting variables unsupported
-- unsupported strategy state variables beyond `strategy.position_size` and
-  `strategy.position_avg_price`, plus unknown `strategy.*` reporting helpers
+- unsupported strategy reporting helpers beyond the supported position,
+  profit, and equity variables, plus unknown `strategy.*` reporting helpers
 - unsupported collection families or unsupported array variants
 - unsupported label and line methods
 - unsupported import variants outside the host-provided alias/exported
@@ -303,7 +307,10 @@ strategy.close       partial      full long-position close at current bar close;
 strategy equity      partial      per-bar cash, marketValue, equity, and netProfit snapshots
 strategy.position_size partial    current long-only position size series in strategy-mode scripts only
 strategy.position_avg_price partial current long-only average entry price series, na when flat, in strategy-mode scripts only
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close, rich order types, and strategy state/reporting variables beyond the first position variables are not implemented
+strategy.openprofit partial       current long-only unrealized profit series, 0 when flat, in strategy-mode scripts only
+strategy.netprofit  partial       cumulative realized closed-trade profit series, excluding current open profit, in strategy-mode scripts only
+strategy.equity     partial       initial_capital plus realized net profit plus current open profit series in strategy-mode scripts only
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close, rich order types, and strategy reporting helpers beyond the supported position/profit/equity variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

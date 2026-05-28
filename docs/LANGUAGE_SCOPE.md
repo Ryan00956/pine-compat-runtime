@@ -84,6 +84,11 @@ Phase 1 executable subset:
 - `strategy.position_size` and `strategy.position_avg_price` in strategy-mode
   historical scripts only, as read-only series floats that update immediately
   after supported entry/close calls; average price is `na` when flat
+- `strategy.openprofit`, `strategy.netprofit`, and `strategy.equity` in
+  strategy-mode historical scripts only, as read-only series floats for the
+  long-only broker subset; open profit uses current close mark-to-market,
+  net profit is realized closed-trade profit only, and equity is initial
+  capital plus realized and open profit
 - `input.*`
 - `plot`, `plotchar`, `plotshape`, `plotarrow`, `plotbar`, `plotcandle`,
   `bgcolor`, `barcolor`, `hline`, and `fill`
@@ -265,9 +270,9 @@ The analyzer should reject these with clear diagnostics:
   `strategy.entry(id, strategy.long, qty=...)` and `strategy.close(id)`
   subsets, including `strategy.exit`, `strategy.order`, short entries,
   stop/limit orders, pyramiding, partial closes, broker settings beyond
-  positive const numeric `initial_capital`, `strategy.*` variables beyond
-  `strategy.position_size`/`strategy.position_avg_price`, and requested-context
-  strategy state
+  positive const numeric `initial_capital`, `strategy.*` variables beyond the
+  supported position/profit/equity state subset, and requested-context strategy
+  state
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need

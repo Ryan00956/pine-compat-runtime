@@ -234,33 +234,22 @@ fn accepts_supported_strategy_close_fixture() {
 
 #[test]
 fn accepts_supported_strategy_position_state_fixture() {
-    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_position_state.pine");
-    let text = fs::read_to_string(&path).expect("fixture should be readable");
-    let source = SourceFile::new(path.display().to_string(), text);
-    let analysis = analyze_source(&source);
+    assert_strategy_state_supported_fixture(
+        "tests/fixtures/sema/supported_strategy_position_state.pine",
+        &["strategy.position_size", "strategy.position_avg_price"],
+    );
+}
 
-    assert!(
-        analysis.diagnostics.is_empty(),
-        "{} diagnostics: {:?}",
-        path.display(),
-        analysis.diagnostics
+#[test]
+fn accepts_supported_strategy_profit_state_fixture() {
+    assert_strategy_state_supported_fixture(
+        "tests/fixtures/sema/supported_strategy_profit_state.pine",
+        &[
+            "strategy.openprofit",
+            "strategy.netprofit",
+            "strategy.equity",
+        ],
     );
-    assert!(analysis.compatibility.unsupported.is_empty());
-    assert!(
-        analysis
-            .compatibility
-            .supported
-            .iter()
-            .any(|supported| supported.feature == "strategy.position_size")
-    );
-    assert!(
-        analysis
-            .compatibility
-            .supported
-            .iter()
-            .any(|supported| supported.feature == "strategy.position_avg_price")
-    );
-    assert!(analysis.hir.is_some());
 }
 
 #[test]
@@ -668,15 +657,43 @@ fn assert_strategy_state_mode_fixture(path: &str) {
     assert!(analysis.hir.is_none());
 }
 
+fn assert_strategy_state_supported_fixture(path: &str, variables: &[&str]) {
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    for variable in variables {
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == *variable),
+            "{} supported features: {:?}",
+            path.display(),
+            analysis.compatibility.supported
+        );
+    }
+    assert!(analysis.hir.is_some());
+}
+
 fn assert_strategy_state_unsupported_fixture(path: &str) {
     let path = workspace_fixture(path);
     let text = fs::read_to_string(&path).expect("fixture should be readable");
     let source = SourceFile::new(path.display().to_string(), text);
     let analysis = analyze_source(&source);
     let variables = [
-        "strategy.openprofit",
-        "strategy.netprofit",
-        "strategy.equity",
+        "strategy.closedtrades",
+        "strategy.opentrades",
+        "strategy.max_drawdown",
     ];
 
     for variable in variables {
@@ -687,7 +704,7 @@ fn assert_strategy_state_unsupported_fixture(path: &str) {
                 .iter()
                 .any(|unsupported| {
                     unsupported.feature == variable
-                        && unsupported.reason.contains("strategy state variables")
+                        && unsupported.reason.contains("broker emulation")
                 }),
             "{} unsupported features: {:?}",
             path.display(),

@@ -142,6 +142,19 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "strategy.position_avg_price" {
             return self.strategy_broker.position_avg_price_value();
         }
+        if name == "strategy.openprofit" {
+            return self.current_bar.map_or(PineValue::Na, |bar| {
+                PineValue::Float(self.strategy_broker.open_profit(bar.close))
+            });
+        }
+        if name == "strategy.netprofit" {
+            return PineValue::Float(self.strategy_broker.realized_profit());
+        }
+        if name == "strategy.equity" {
+            return self.current_bar.map_or(PineValue::Na, |bar| {
+                PineValue::Float(self.strategy_broker.equity_value(bar.close))
+            });
+        }
         if name == "ta.accdist" {
             return self.accdist_current.clone();
         }

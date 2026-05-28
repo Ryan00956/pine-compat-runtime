@@ -582,6 +582,10 @@ mod tests {
                 "runtime_strategy_position_state.json",
                 "tests/fixtures/runtime/strategy_position_state.pine",
             ),
+            (
+                "runtime_strategy_profit_state.json",
+                "tests/fixtures/runtime/strategy_profit_state.pine",
+            ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));
         }
