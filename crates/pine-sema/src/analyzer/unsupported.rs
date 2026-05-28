@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 pub(crate) const VARIP_DRAWING_UNSUPPORTED_REASON: &str = "varip drawing object ids are not supported; retaining only an id would be unsafe while drawing object stores roll back between forming updates";
-pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently supports scalar int, float, bool, string, color, na, and scalar typed-array declarations only; drawing ids, tuples, and other value families are not implemented";
+pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently supports scalar int, float, bool, string, color, na, and scalar typed-array declarations only; drawing ids, tuples, UDTs, and other value families are not implemented";
 
 pub(crate) fn unsupported_syntax_reason(feature: &str) -> &'static str {
     match feature {
@@ -10,6 +10,9 @@ pub(crate) fn unsupported_syntax_reason(feature: &str) -> &'static str {
         "export" => "export declarations are not supported in Phase J Slice 0",
         "user-defined types" => "user-defined types are not supported in Phase J Slice 0",
         "user-defined methods" => "user-defined methods are not supported in Phase J Slice 0",
+        "user-defined type field mutation" => {
+            "user-defined type field mutation is not supported; Phase J UDT values are immutable in the current subset"
+        }
         "function" => "unsupported user-defined function syntax",
         "for" => "unsupported for loop syntax",
         _ => "syntax is not supported in Phase 1",

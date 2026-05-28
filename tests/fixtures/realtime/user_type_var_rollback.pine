@@ -1,0 +1,9 @@
+//@version=5
+indicator("User type var rollback")
+type Point
+    float x
+
+var p = Point.new(close)
+if close > p.x
+    p := Point.new(close)
+plot(p.x)

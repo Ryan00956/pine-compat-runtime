@@ -160,6 +160,31 @@ impl Parser {
                     kind: StmtKind::Reassign { name, value },
                 });
             }
+
+            if self.nth_at(1, TokenKind::Dot)
+                && self
+                    .tokens
+                    .get(self.pos + 2)
+                    .is_some_and(|token| matches!(token.kind, TokenKind::Identifier(_)))
+                && self.nth_at(3, TokenKind::ColonEq)
+            {
+                let end = self
+                    .tokens
+                    .get(self.pos + 2)
+                    .map_or(start, |token| token.span);
+                while !self.at(TokenKind::Newline)
+                    && !self.at(TokenKind::Dedent)
+                    && !self.at(TokenKind::Eof)
+                {
+                    self.bump();
+                }
+                return Some(Stmt {
+                    span: start.merge(end),
+                    kind: StmtKind::Unsupported {
+                        feature: "user-defined type field mutation".to_owned(),
+                    },
+                });
+            }
         } else if mode.is_some() {
             self.error_here("E_PARSE_DECL", "expected identifier after declaration mode");
             return None;

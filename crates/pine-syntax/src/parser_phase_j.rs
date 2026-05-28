@@ -450,4 +450,14 @@ mod tests {
                 .any(|diagnostic| diagnostic.code == "E_PARSE_IMPORT")
         );
     }
+
+    #[test]
+    fn parses_field_mutation_as_unsupported_boundary() {
+        let parsed = parse("p.x := 1\n");
+
+        let StmtKind::Unsupported { feature } = &parsed.program.statements[0].kind else {
+            panic!("expected unsupported field mutation");
+        };
+        assert_eq!(feature, "user-defined type field mutation");
+    }
 }

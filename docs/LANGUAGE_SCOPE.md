@@ -264,7 +264,10 @@ The analyzer should reject these with clear diagnostics:
 - unsupported array element types, matrices, and maps
 - user-defined type forms outside the local scalar-field subset; Phase J
   accepts top-level `type` declarations with int/float/bool/string/color
-  fields, `Type.new(...)` construction, and local field reads only
+  fields, `Type.new(...)` construction, local field reads, ordinary variables,
+  and `var` persistence only; UDT values are immutable, and field mutation,
+  `varip`, UDT history references, UDT fields, UDT arrays, and imported UDTs
+  remain rejected
 - user-defined methods; Phase J still rejects method declarations before
   receiver dispatch is claimed
 - non-array method calls; these currently remain ordinary receiver/type

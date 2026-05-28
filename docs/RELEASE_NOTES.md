@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Clarified Phase J Slice 7 UDT storage semantics. Local UDT values are
+  immutable, may be stored in ordinary variables and `var`, and roll back with
+  confirmed `var` state during realtime forming updates. UDT `varip`, history
+  references, and field mutation remain diagnostic-only unsupported forms.
 - Added Phase J Slice 6 local user-defined type support for top-level scalar
   field declarations, `Type.new(...)` constructors, and field reads. UDT
   history references, field mutation, nested UDT fields, arrays of UDTs,

@@ -159,6 +159,24 @@ fn reports_unsupported_user_type_field_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_type_varip_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_user_type_varip.pine",
+        "varip",
+        "other value families",
+    );
+}
+
+#[test]
+fn reports_unsupported_user_type_field_mutation_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_user_type_field_mutation.pine",
+        "user-defined type field mutation",
+        "immutable",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_method.pine",

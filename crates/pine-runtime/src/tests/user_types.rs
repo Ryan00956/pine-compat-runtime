@@ -58,3 +58,28 @@ if close > open
         vec![PineValue::Float(2.0), PineValue::Na]
     );
 }
+
+#[test]
+fn var_user_type_values_persist_historically() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("udt var")
+type Point
+    float x
+var p = Point.new(close)
+plot(p.x)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
+}

@@ -102,3 +102,42 @@ fn rejects_block_local_user_type_declarations() {
     );
     assert!(analysis.hir.is_none());
 }
+
+#[test]
+fn rejects_varip_user_type_declarations() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+varip p = Point.new(close)
+"#,
+    );
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| { feature.feature == "varip" })
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_user_type_field_mutation() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+p = Point.new(close)
+p.x := 1
+"#,
+    );
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| { feature.feature == "user-defined type field mutation" })
+    );
+    assert!(analysis.hir.is_none());
+}
