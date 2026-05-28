@@ -13,6 +13,41 @@ impl Analyzer {
             StmtKind::Expr(expr) => {
                 self.analyze_expr(expr);
             }
+            StmtKind::Import(_) => {
+                self.unsupported(
+                    "import",
+                    unsupported_syntax_reason("import"),
+                    statement.span,
+                );
+            }
+            StmtKind::Library(_) => {
+                self.unsupported(
+                    "library",
+                    unsupported_syntax_reason("library"),
+                    statement.span,
+                );
+            }
+            StmtKind::Export(_) => {
+                self.unsupported(
+                    "export",
+                    unsupported_syntax_reason("export"),
+                    statement.span,
+                );
+            }
+            StmtKind::UserType(_) => {
+                self.unsupported(
+                    "user-defined types",
+                    unsupported_syntax_reason("user-defined types"),
+                    statement.span,
+                );
+            }
+            StmtKind::Method(_) => {
+                self.unsupported(
+                    "user-defined methods",
+                    unsupported_syntax_reason("user-defined methods"),
+                    statement.span,
+                );
+            }
             StmtKind::If {
                 condition,
                 then_branch,

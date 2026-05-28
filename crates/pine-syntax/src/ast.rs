@@ -21,6 +21,11 @@ pub struct Stmt {
 #[derive(Debug, Clone, PartialEq)]
 pub enum StmtKind {
     Expr(Expr),
+    Import(ImportDecl),
+    Library(LibraryDecl),
+    Export(ExportDecl),
+    UserType(UserTypeDecl),
+    Method(MethodDecl),
     If {
         condition: Expr,
         then_branch: Vec<Stmt>,
@@ -60,6 +65,77 @@ pub enum StmtKind {
     Unsupported {
         feature: String,
     },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ImportDecl {
+    pub key: String,
+    pub key_span: Span,
+    pub alias: Option<ImportAlias>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ImportAlias {
+    pub name: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LibraryDecl {
+    pub name: Option<String>,
+    pub name_span: Option<Span>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ExportDecl {
+    pub item: ExportItem,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExportItem {
+    Function {
+        name: String,
+        params: Vec<String>,
+        body: FunctionBody,
+        span: Span,
+    },
+    Const {
+        name: String,
+        value: Expr,
+        span: Span,
+    },
+    Unknown {
+        span: Span,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UserTypeDecl {
+    pub name: String,
+    pub name_span: Span,
+    pub fields: Vec<UserTypeField>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct UserTypeField {
+    pub type_name: String,
+    pub name: String,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MethodDecl {
+    pub name: String,
+    pub name_span: Span,
+    pub params: Vec<MethodParam>,
+    pub body: FunctionBody,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MethodParam {
+    pub type_name: String,
+    pub name: String,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Phase J Slice 2 parser structure for imports, library declarations,
+  export declarations, user-defined type declarations, and user-defined method
+  declarations. These nodes now preserve import keys, aliases, declaration
+  names, fields, method parameters, bodies, and spans for future source-graph
+  analysis, while semantic analysis still rejects every Phase J declaration
+  family with the existing unsupported diagnostics.
 - Added Phase J Slice 1 source graph scaffolding: `AnalysisInput`,
   deterministic source ids, normalized library source keys, duplicate/invalid
   key rejection, and compile-cache keys that include host-provided library

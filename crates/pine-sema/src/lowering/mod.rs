@@ -218,7 +218,12 @@ impl Analyzer {
                     .collect::<Option<_>>()?,
                 value: self.lower_expr_with_params(value, param_exprs, param_types)?,
             },
-            StmtKind::Function { .. } => return None,
+            StmtKind::Function { .. }
+            | StmtKind::Import(_)
+            | StmtKind::Library(_)
+            | StmtKind::Export(_)
+            | StmtKind::UserType(_)
+            | StmtKind::Method(_) => return None,
             StmtKind::Unsupported { .. } => return None,
         };
 

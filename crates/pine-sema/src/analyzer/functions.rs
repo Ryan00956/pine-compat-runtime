@@ -122,6 +122,11 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                     }
                     StmtKind::For { .. } | StmtKind::While { .. } => true,
                     StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
+                    StmtKind::Import(_)
+                    | StmtKind::Library(_)
+                    | StmtKind::Export(_)
+                    | StmtKind::UserType(_)
+                    | StmtKind::Method(_) => false,
                     StmtKind::Unsupported { .. } => false,
                 })
         }
@@ -150,6 +155,11 @@ pub(crate) fn statement_contains_output_or_declaration_call(statement: &Stmt) ->
         }
         StmtKind::For { .. } | StmtKind::While { .. } => true,
         StmtKind::Break | StmtKind::Continue | StmtKind::Function { .. } => false,
+        StmtKind::Import(_)
+        | StmtKind::Library(_)
+        | StmtKind::Export(_)
+        | StmtKind::UserType(_)
+        | StmtKind::Method(_) => false,
         StmtKind::Unsupported { .. } => false,
     }
 }
