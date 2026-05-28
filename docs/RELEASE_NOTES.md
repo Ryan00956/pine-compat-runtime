@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Locked Phase L Slice 0 strategy state-variable boundaries. Known Phase L
+  strategy variables now have fixture-backed pre-implementation diagnostics, and
+  broad `strategy.*` remains unsupported for unimplemented state/reporting
+  helpers.
 - Closed Phase G for the first fixture-backed strategy runtime subset. The
   audit records the supported declaration, long entry, full close, trade,
   position, and equity surface plus explicit maintenance tails for richer order

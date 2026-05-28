@@ -1,5 +1,17 @@
 use crate::prelude::*;
 
+const PHASE_L_STRATEGY_STATE_VARIABLES: &[&str] = &[
+    "strategy.position_size",
+    "strategy.position_avg_price",
+    "strategy.openprofit",
+    "strategy.netprofit",
+    "strategy.equity",
+];
+
+pub(crate) fn is_phase_l_strategy_state_variable(name: &str) -> bool {
+    PHASE_L_STRATEGY_STATE_VARIABLES.contains(&name)
+}
+
 impl Analyzer {
     pub(crate) fn validate_script_declaration_call(
         &mut self,
@@ -86,6 +98,24 @@ impl Analyzer {
         if name == "strategy.entry" {
             self.validate_strategy_entry_args(args);
         }
+    }
+
+    pub(crate) fn validate_strategy_state_variable(&mut self, name: &str, span: Span) -> bool {
+        if !is_phase_l_strategy_state_variable(name) {
+            return false;
+        }
+
+        if !matches!(self.script_declaration, Some((ScriptMode::Strategy, _))) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_STRATEGY_MODE",
+                format!("`{name}` is only supported in scripts declared with strategy(...)"),
+                span,
+            ));
+            return true;
+        }
+
+        self.unsupported(name, STRATEGY_STATE_UNSUPPORTED_REASON, span);
+        true
     }
 
     pub(crate) fn validate_strategy_entry_args(&mut self, args: &[CallArg]) {

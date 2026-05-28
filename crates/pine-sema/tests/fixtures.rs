@@ -241,6 +241,28 @@ fn reports_strategy_close_indicator_fixture() {
 }
 
 #[test]
+fn reports_strategy_state_indicator_fixture() {
+    assert_strategy_state_mode_fixture(
+        "tests/fixtures/sema/unsupported_strategy_state_indicator.pine",
+    );
+}
+
+#[test]
+fn reports_strategy_state_variables_fixture() {
+    assert_strategy_state_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_strategy_state_variables.pine",
+    );
+}
+
+#[test]
+fn reports_unknown_strategy_variable_fixture() {
+    assert_strategy_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_strategy_unknown_variable.pine",
+        &["strategy.future_metric"],
+    );
+}
+
+#[test]
 fn reports_unsupported_strategy_duplicate_declaration_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_duplicate_declaration.pine",
@@ -572,6 +594,73 @@ fn assert_strategy_unsupported_fixture(path: &str, features: &[&str]) {
             .diagnostics
             .iter()
             .all(|diagnostic| diagnostic.code != "E_UNKNOWN_FUNCTION"),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+fn assert_strategy_state_mode_fixture(path: &str) {
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    let variables = [
+        "strategy.position_size",
+        "strategy.position_avg_price",
+        "strategy.openprofit",
+        "strategy.netprofit",
+        "strategy.equity",
+    ];
+
+    for variable in variables {
+        assert!(
+            analysis.diagnostics.iter().any(|diagnostic| {
+                diagnostic.code == "E_STRATEGY_MODE" && diagnostic.message.contains(variable)
+            }),
+            "{} diagnostics: {:?}",
+            path.display(),
+            analysis.diagnostics
+        );
+    }
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_none());
+}
+
+fn assert_strategy_state_unsupported_fixture(path: &str) {
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+    let variables = [
+        "strategy.position_size",
+        "strategy.position_avg_price",
+        "strategy.openprofit",
+        "strategy.netprofit",
+        "strategy.equity",
+    ];
+
+    for variable in variables {
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|unsupported| {
+                    unsupported.feature == variable
+                        && unsupported.reason.contains("strategy state variables")
+                }),
+            "{} unsupported features: {:?}",
+            path.display(),
+            analysis.compatibility.unsupported
+        );
+    }
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .all(|diagnostic| diagnostic.code != "E_UNKNOWN_SYMBOL"),
         "{} diagnostics: {:?}",
         path.display(),
         analysis.diagnostics

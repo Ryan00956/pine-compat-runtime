@@ -69,8 +69,8 @@ exits, or pyramiding.
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit`,
 `strategy.order`, stop/limit orders, strategy reporting variables, and realtime
-strategy handoff remain unsupported until later Phase G slices define and
-fixture those semantics.
+strategy handoff remain unsupported until later Phase L or strategy-maintenance
+slices define and fixture those semantics.
 
 ## Alert Events
 

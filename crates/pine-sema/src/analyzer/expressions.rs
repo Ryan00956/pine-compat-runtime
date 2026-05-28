@@ -263,6 +263,9 @@ impl Analyzer {
     }
 
     pub(crate) fn resolve_qualified_value(&mut self, name: &str, span: Span) -> Option<PineType> {
+        if self.validate_strategy_state_variable(name, span) {
+            return None;
+        }
         if pine_builtins::named_color(name).is_some() {
             self.compatibility.supported.push(FeatureUse {
                 feature: name.to_owned(),

@@ -222,6 +222,8 @@ Examples:
   with missing or repeated closes treated as no-op
 - minimal strategy equity snapshots with bar-close mark-to-market accounting,
   with broader broker settings and strategy reporting variables unsupported
+- unsupported strategy state variables such as `strategy.position_size` and
+  unknown `strategy.*` reporting helpers until the Phase L state subset lands
 - unsupported collection families or unsupported array variants
 - unsupported label and line methods
 - unsupported import variants outside the host-provided alias/exported
@@ -289,7 +291,7 @@ strategy             partial      declaration plus strategy-mode runtime result;
 strategy.entry       partial      long market entry at current bar close; one net long position; no pyramiding
 strategy.close       partial      full long-position close at current bar close; closed trade output
 strategy equity      partial      per-bar cash, marketValue, equity, and netProfit snapshots
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close, rich order types, and reporting variables are not implemented
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close, rich order types, and strategy state/reporting variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

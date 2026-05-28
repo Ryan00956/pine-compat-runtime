@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unknown strategy variable")
+plot(strategy.future_metric)
