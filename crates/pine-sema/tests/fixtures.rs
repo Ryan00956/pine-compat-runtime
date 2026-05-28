@@ -111,12 +111,17 @@ fn reports_unsupported_array_fixture() {
 }
 
 #[test]
-fn reports_unsupported_import_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_import.pine",
-        "import",
-        "library imports",
-    );
+fn reports_import_fixture_missing_host_library() {
+    let path = workspace_fixture("tests/fixtures/sema/unsupported_import.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(analysis.diagnostics.iter().any(|diagnostic| {
+        diagnostic.code == "E_IMPORT_MISSING_LIBRARY"
+            || diagnostic.code == "E_IMPORT_ALIAS_REQUIRED"
+    }));
+    assert!(analysis.hir.is_none());
 }
 
 #[test]

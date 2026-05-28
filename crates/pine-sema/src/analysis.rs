@@ -25,9 +25,7 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
 
 pub fn analyze_input(input: &AnalysisInput) -> Analysis {
     let module_validation = validate_modules(input);
-    let graph = input.source_graph();
-    let source = graph.root().source();
-    let parsed = parse_source(source);
+    let parsed = parse_source(input.root());
     let mut analyzer = Analyzer {
         diagnostics: {
             let mut diagnostics = module_validation.diagnostics;
@@ -41,7 +39,7 @@ pub fn analyze_input(input: &AnalysisInput) -> Analysis {
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
         bindings: HashMap::new(),
         lower_symbol_overrides: Vec::new(),
-        functions: HashMap::new(),
+        functions: module_validation.imported_functions,
         function_stack: Vec::new(),
         next_symbol_id: initial_symbol_count(),
         next_series_id: initial_series_count(),
@@ -51,6 +49,6 @@ pub fn analyze_input(input: &AnalysisInput) -> Analysis {
         function_depth: 0,
         loop_depth: 0,
     };
-    analyzer.analyze_program(&parsed.program);
-    analyzer.finish(&parsed.program)
+    analyzer.analyze_program(&module_validation.root_program);
+    analyzer.finish(&module_validation.root_program)
 }

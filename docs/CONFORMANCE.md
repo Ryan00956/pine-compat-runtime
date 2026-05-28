@@ -66,10 +66,12 @@ until a JSON mode is added.
 
 ## Source Graph Host Contract
 
-Phase J Slice 1 adds a host-neutral source graph scaffold without changing
-conformance claims. Import statements remain unsupported, so
-`tests/fixtures/conformance.tsv` must not gain supported import/library rows
-from this slice alone.
+Phase J adds a host-neutral source graph scaffold and a narrow executable
+import subset. `tests/fixtures/conformance.tsv` marks `import` as `partial`
+only for host-provided exact-key imports with aliases, exported const
+expressions, and pure exported functions. Library declarations, imported UDTs,
+imported methods, re-exports, remote lookup, and side-effecting exported
+functions remain outside the supported matrix.
 
 Hosts may pass library source text into semantic analysis as future graph input:
 
@@ -79,7 +81,7 @@ Hosts may pass library source text into semantic analysis as future graph input:
   `analyze_script`, and `run_script`.
 - WASM remains a documented temporary gap for library source injection; it uses
   the shared root-source `AnalysisInput` path but exposes no library-source JSON
-  argument yet.
+  argument yet, so root imports report missing-host-library diagnostics there.
 
 Core crates must not perform filesystem, network, clock, or host registry I/O
 for library resolution. Library source keys are deterministic host-provided
@@ -186,7 +188,8 @@ Examples:
 - `strategy.entry`
 - unsupported collection families or unsupported array variants
 - unsupported label and line methods
-- imports
+- unsupported import variants outside the host-provided alias/exported
+  const/pure-function subset
 - unsupported `varip` forms such as drawing ids, tuples, and value families
   outside the scalar and scalar typed-array subset
 - non-integer or negative history offsets
@@ -250,7 +253,7 @@ strategy.*           unsupported  out of project scope for now
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
-import               unsupported  out of Phase 1 scope
+import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only
 ```
 
 The matrix should be generated from conformance metadata once the test harness

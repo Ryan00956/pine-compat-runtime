@@ -98,15 +98,18 @@ drawing objects, partial typed arrays, common `ta.*` functions, selected
 `math.*` and `str.*` functions, partial `request.security`, user-defined
 functions, named colors, color helpers, tuple returns, scalar and scalar
 typed-array `varip`, partial `alertcondition`/`alert` runtime events,
+host-provided exact-key imports for exported const expressions and pure
+exported functions,
 incremental append execution, realtime forming-bar rollback, Python bindings,
 and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as `strategy.*`,
 request variants outside the narrow `request.security` subset, alert frequency
-modes and placeholder interpolation, imports, advanced drawing families and
-methods, unsupported collection families and element types, recursive
-functions, function side effects, and unsupported `varip` value families such
-as drawing ids and tuples.
+modes and placeholder interpolation, remote library lookup, re-exports,
+imported UDTs, imported methods, side-effecting exported library functions,
+advanced drawing families and methods, unsupported collection families and
+element types, recursive functions, function side effects, and unsupported
+`varip` value families such as drawing ids and tuples.
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes; skipped bars commit `na` for series values that were not
 evaluated on that bar.
@@ -119,11 +122,11 @@ Run a script against CSV bars:
 cargo run -p pine-cli -- run tests/fixtures/runtime/macd.pine --bars tests/fixtures/runtime/bars.csv
 ```
 
-Library source text can be passed as Phase J graph input without enabling
-imports:
+Library source text can be passed as Phase J graph input for the exact-key
+import subset:
 
 ```text
-cargo run -p pine-cli -- analyze script.pine --library-source user/lib/1=lib.pine
+cargo run -p pine-cli -- run script.pine --bars bars.csv --library-source user/lib/1=lib.pine
 ```
 
 Print the compatibility matrix:
@@ -146,7 +149,7 @@ result = program.run([
 ])
 ```
 
-Python can also pass Phase J library source text for future source graph use:
+Python can also pass Phase J library source text:
 
 ```python
 report = pine_compat.analyze_script(
@@ -172,7 +175,8 @@ The optional WASM crate exposes a thin `wasm-bindgen` API:
 - `Program.runCsv(barsCsv)`
 
 Library source injection is not exposed in WASM yet; root imports still report
-unsupported import diagnostics.
+missing-host-library diagnostics unless a host-provided source JSON contract is
+added in a later slice.
 
 Build-check it with:
 

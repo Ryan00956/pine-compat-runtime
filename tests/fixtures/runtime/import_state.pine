@@ -1,0 +1,3 @@
+indicator("Import state fixture")
+import user/lib/1 as lib
+plot(lib.counter() + lib.counter())

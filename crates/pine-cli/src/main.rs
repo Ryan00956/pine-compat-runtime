@@ -205,7 +205,6 @@ mod tests {
         let entries = conformance_entries();
         for feature in [
             "request.*",
-            "import",
             "strategy.*",
             "alert frequency",
             "alert placeholders",
@@ -221,6 +220,20 @@ mod tests {
                 "{feature} should remain explicitly unsupported in matrix"
             );
         }
+    }
+
+    #[test]
+    fn matrix_includes_partial_import_subset() {
+        let entries = conformance_entries();
+        assert!(entries.iter().any(|entry| {
+            entry.feature == "import"
+                && entry.status == "partial"
+                && entry.notes.contains("exported const expressions")
+                && entry
+                    .fixtures
+                    .iter()
+                    .any(|fixture| fixture == "tests/fixtures/libraries/import_lib.pine")
+        }));
     }
 
     #[test]

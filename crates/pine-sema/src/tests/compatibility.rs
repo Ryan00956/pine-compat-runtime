@@ -514,7 +514,6 @@ fn import_reports_missing_library_source() {
 
     let codes = diagnostic_codes(&analysis);
     assert!(codes.contains(&"E_IMPORT_MISSING_LIBRARY"), "{codes:?}");
-    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
 }
 
 #[test]
@@ -583,6 +582,77 @@ fn import_reports_unknown_export_and_private_access() {
     let codes = diagnostic_codes(&analysis);
     assert!(codes.contains(&"E_IMPORT_UNKNOWN_EXPORT"), "{codes:?}");
     assert!(codes.contains(&"E_IMPORT_PRIVATE_SYMBOL"), "{codes:?}");
+}
+
+#[test]
+fn import_accepts_exported_constant_and_pure_function_subset() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1 as lib\nplot(lib.scale(close) + lib.offset)\n",
+        vec![(
+            "user/lib/1",
+            "library(\"lib\")\nexport offset = 2\nexport scale(value) => value * offset\n",
+        )],
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn import_reports_missing_alias_for_executable_subset() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1\nplot(close)\n",
+        vec![("user/lib/1", "library(\"lib\")\nexport value = 1\n")],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_ALIAS_REQUIRED"), "{codes:?}");
+}
+
+#[test]
+fn import_rejects_exported_series_constant() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1 as lib\nplot(close)\n",
+        vec![("user/lib/1", "library(\"lib\")\nexport value = close\n")],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_CONST_VALUE"), "{codes:?}");
+}
+
+#[test]
+fn import_rejects_exported_function_side_effects() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1 as lib\nplot(close)\n",
+        vec![(
+            "user/lib/1",
+            "library(\"lib\")\nexport draw(value) => plot(value)\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(
+        codes.contains(&"E_IMPORT_FUNCTION_SIDE_EFFECT"),
+        "{codes:?}"
+    );
+}
+
+#[test]
+fn import_rejects_recursive_exported_functions() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1 as lib\nplot(lib.loop(close))\n",
+        vec![(
+            "user/lib/1",
+            "library(\"lib\")\nexport loop(value) => value > 0 ? loop(value - 1) : value\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_RECURSIVE_FUNCTION"), "{codes:?}");
 }
 
 #[test]

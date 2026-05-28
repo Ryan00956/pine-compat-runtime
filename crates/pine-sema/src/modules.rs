@@ -1,15 +1,27 @@
 use std::collections::{HashMap, HashSet};
 
+use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{
-    Diagnostic, ExportItem, Expr, ExprKind, FunctionBody, Program, Span, Stmt, StmtKind,
-    parse_source,
+    BinaryOp, Diagnostic, ExportItem, Expr, ExprKind, FunctionBody, ImportDecl, Program, Span,
+    Stmt, StmtKind, UnaryOp, parse_source,
 };
 
+use crate::analyzer::context::FunctionInfo;
+use crate::analyzer::functions::{
+    contains_output_or_declaration_call, statement_contains_output_or_declaration_call,
+};
 use crate::source_graph::{AnalysisInput, SourceId};
+
+#[path = "modules_rewrite.rs"]
+mod modules_rewrite;
+
+use modules_rewrite::{RewriteContext, rewrite_expr, rewrite_function_body, rewrite_program};
 
 #[derive(Debug)]
 pub(crate) struct ModuleValidation {
     pub(crate) diagnostics: Vec<Diagnostic>,
+    pub(crate) root_program: Program,
+    pub(crate) imported_functions: HashMap<String, FunctionInfo>,
 }
 
 #[derive(Debug)]
@@ -17,8 +29,24 @@ struct ModuleInfo {
     id: SourceId,
     key: Option<String>,
     program: Program,
-    exports: HashMap<String, Span>,
+    exports: HashMap<String, ExportInfo>,
     private_symbols: HashSet<String>,
+    functions: HashMap<String, FunctionInfo>,
+    constants: HashMap<String, Expr>,
+}
+
+#[derive(Debug, Clone)]
+enum ExportInfo {
+    Function { span: Span },
+    Const { value: Expr, span: Span },
+}
+
+impl ExportInfo {
+    fn span(&self) -> Span {
+        match self {
+            ExportInfo::Function { span } | ExportInfo::Const { span, .. } => *span,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -33,12 +61,15 @@ pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
     let mut diagnostics = Vec::new();
     let mut modules = Vec::with_capacity(graph.libraries().len() + 1);
     let root_parse = parse_source(graph.root().source());
+    let root_program = root_parse.program;
     modules.push(ModuleInfo {
         id: graph.root().id(),
         key: None,
-        program: root_parse.program,
+        program: root_program.clone(),
         exports: HashMap::new(),
         private_symbols: HashSet::new(),
+        functions: HashMap::new(),
+        constants: HashMap::new(),
     });
 
     let mut library_index = HashMap::new();
@@ -51,6 +82,8 @@ pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
             program: parsed.program,
             exports: HashMap::new(),
             private_symbols: HashSet::new(),
+            functions: HashMap::new(),
+            constants: HashMap::new(),
         };
         collect_library_declarations(&mut module, &mut diagnostics);
         if let Some(key) = &module.key {
@@ -63,27 +96,87 @@ pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
     validate_library_imports(&modules, &library_index, &mut diagnostics);
     detect_import_cycles(&modules, &library_index, &mut diagnostics);
 
-    ModuleValidation { diagnostics }
+    let import_plan = build_import_plan(&modules, &library_index, &mut diagnostics);
+    let root_program = rewrite_program(&root_program, &import_plan.root_rewrites);
+
+    ModuleValidation {
+        diagnostics,
+        root_program,
+        imported_functions: import_plan.imported_functions,
+    }
 }
 
 fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<Diagnostic>) {
     let mut library_declarations = 0;
-    for statement in &module.program.statements {
+    for statement in module.program.statements.clone() {
         match &statement.kind {
             StmtKind::Library(_) => library_declarations += 1,
-            StmtKind::Export(export) => {
-                if let Some((name, span)) = export_name(&export.item)
-                    && let Some(existing) = module.exports.insert(name.clone(), span)
-                {
-                    diagnostics.push(Diagnostic::error(
-                        "E_IMPORT_DUPLICATE_EXPORT",
-                        format!("duplicate export `{name}`"),
-                        existing.merge(span),
-                    ));
+            StmtKind::Export(export) => match &export.item {
+                ExportItem::Function {
+                    name,
+                    params,
+                    body,
+                    span,
+                } => {
+                    register_export(
+                        module,
+                        name,
+                        ExportInfo::Function { span: *span },
+                        diagnostics,
+                    );
+                    if function_body_has_side_effect(body) {
+                        diagnostics.push(Diagnostic::error(
+                            "E_IMPORT_FUNCTION_SIDE_EFFECT",
+                            format!("exported function `{name}` contains unsupported side effects"),
+                            *span,
+                        ));
+                    }
+                    module.functions.insert(
+                        name.clone(),
+                        FunctionInfo {
+                            params: params.clone(),
+                            body: body.clone(),
+                            span: *span,
+                        },
+                    );
                 }
-            }
-            StmtKind::Function { name, .. } | StmtKind::Decl { name, .. } => {
+                ExportItem::Const { name, value, span } => {
+                    register_export(
+                        module,
+                        name,
+                        ExportInfo::Const {
+                            value: value.clone(),
+                            span: *span,
+                        },
+                        diagnostics,
+                    );
+                    if !is_const_import_expr(value) {
+                        diagnostics.push(Diagnostic::error(
+                            "E_IMPORT_CONST_VALUE",
+                            format!("exported constant `{name}` must be a const expression"),
+                            value.span,
+                        ));
+                    }
+                    module.constants.insert(name.clone(), value.clone());
+                }
+                ExportItem::Unknown { .. } => {}
+            },
+            StmtKind::Function { name, params, body } => {
                 module.private_symbols.insert(name.clone());
+                module.functions.insert(
+                    name.clone(),
+                    FunctionInfo {
+                        params: params.clone(),
+                        body: body.clone(),
+                        span: statement.span,
+                    },
+                );
+            }
+            StmtKind::Decl { name, value, .. } => {
+                module.private_symbols.insert(name.clone());
+                if is_const_import_expr(value) {
+                    module.constants.insert(name.clone(), value.clone());
+                }
             }
             _ => {}
         }
@@ -94,6 +187,21 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
             "E_IMPORT_INVALID_LIBRARY",
             "library source must contain exactly one library declaration",
             first_statement_span(&module.program).unwrap_or_else(|| Span::new(0, 0)),
+        ));
+    }
+}
+
+fn register_export(
+    module: &mut ModuleInfo,
+    name: &str,
+    export: ExportInfo,
+    diagnostics: &mut Vec<Diagnostic>,
+) {
+    if let Some(existing) = module.exports.insert(name.to_owned(), export.clone()) {
+        diagnostics.push(Diagnostic::error(
+            "E_IMPORT_DUPLICATE_EXPORT",
+            format!("duplicate export `{name}`"),
+            existing.span().merge(export.span()),
         ));
     }
 }
@@ -114,9 +222,18 @@ fn validate_root_imports(
                 import.span,
             ));
         }
-        if let Some((alias, alias_span)) = &import.alias
-            && let Some(previous) = aliases.insert(alias.clone(), *alias_span)
-        {
+        let Some((alias, alias_span)) = &import.alias else {
+            diagnostics.push(Diagnostic::error(
+                "E_IMPORT_ALIAS_REQUIRED",
+                format!(
+                    "import `{}` requires an alias in the supported subset",
+                    import.key
+                ),
+                import.span,
+            ));
+            continue;
+        };
+        if let Some(previous) = aliases.insert(alias.clone(), *alias_span) {
             diagnostics.push(Diagnostic::error(
                 "E_IMPORT_DUPLICATE_ALIAS",
                 format!("duplicate import alias `{alias}`"),
@@ -181,15 +298,9 @@ fn validate_alias_access(
             let module = &modules[*module_index];
             let symbol = &parts[1];
             if module.exports.contains_key(symbol) {
-                diagnostics.push(Diagnostic::error(
-                    "E_IMPORT_UNSUPPORTED_EXECUTION",
-                    format!(
-                        "imported symbol `{}` is not executable yet",
-                        parts.join(".")
-                    ),
-                    expr.span,
-                ));
-            } else if module.private_symbols.contains(symbol) {
+                return;
+            }
+            if module.private_symbols.contains(symbol) || module.functions.contains_key(symbol) {
                 diagnostics.push(Diagnostic::error(
                     "E_IMPORT_PRIVATE_SYMBOL",
                     format!("`{}` is not exported by `{}`", parts.join("."), key),
@@ -260,6 +371,170 @@ fn visit_module(
     visited.insert(module.id);
 }
 
+#[derive(Default)]
+struct ImportPlan {
+    root_rewrites: RewriteContext,
+    imported_functions: HashMap<String, FunctionInfo>,
+}
+
+fn build_import_plan(
+    modules: &[ModuleInfo],
+    library_index: &HashMap<String, usize>,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> ImportPlan {
+    let mut plan = ImportPlan::default();
+    for import in imports_in_program(&modules[0].program) {
+        let Some((alias, _)) = import.alias else {
+            continue;
+        };
+        let Some(module_index) = library_index.get(&import.key) else {
+            continue;
+        };
+        let module = &modules[*module_index];
+        let module_context = rewrite_context_for_module(&alias, module);
+
+        for (name, export) in &module.exports {
+            match export {
+                ExportInfo::Const { value, .. } => {
+                    plan.root_rewrites.constants.insert(
+                        format!("{alias}.{name}"),
+                        rewrite_expr(value, &module_context),
+                    );
+                }
+                ExportInfo::Function { .. } => {
+                    plan.root_rewrites
+                        .function_targets
+                        .insert(format!("{alias}.{name}"), format!("{alias}.{name}"));
+                }
+            }
+        }
+
+        for (name, function) in &module.functions {
+            let key = module_function_key(&alias, module, name);
+            let body = rewrite_function_body(&function.body, &module_context);
+            if name_is_exported_function(module, name) || module.private_symbols.contains(name) {
+                plan.imported_functions.insert(
+                    key,
+                    FunctionInfo {
+                        params: function.params.clone(),
+                        body,
+                        span: function.span,
+                    },
+                );
+            } else {
+                diagnostics.push(Diagnostic::error(
+                    "E_IMPORT_UNKNOWN_EXPORT",
+                    format!("unknown imported function `{name}`"),
+                    function.span,
+                ));
+            }
+        }
+    }
+    plan
+}
+
+fn rewrite_context_for_module(alias: &str, module: &ModuleInfo) -> RewriteContext {
+    let mut context = RewriteContext::default();
+    for (name, value) in &module.constants {
+        context.constants.insert(name.clone(), value.clone());
+        context
+            .constants
+            .insert(format!("{alias}.{name}"), value.clone());
+    }
+    for name in module.functions.keys() {
+        context
+            .function_targets
+            .insert(name.clone(), module_function_key(alias, module, name));
+        context.function_targets.insert(
+            format!("{alias}.{name}"),
+            module_function_key(alias, module, name),
+        );
+    }
+    context
+}
+
+fn module_function_key(alias: &str, module: &ModuleInfo, name: &str) -> String {
+    if name_is_exported_function(module, name) {
+        format!("{alias}.{name}")
+    } else {
+        format!("__import_{alias}_{name}")
+    }
+}
+
+fn name_is_exported_function(module: &ModuleInfo, name: &str) -> bool {
+    matches!(module.exports.get(name), Some(ExportInfo::Function { .. }))
+}
+
+fn is_const_import_expr(expr: &Expr) -> bool {
+    match &expr.kind {
+        ExprKind::Literal(_) => true,
+        ExprKind::QualifiedName(parts) => const_qualified_type(&parts.join(".")).is_some(),
+        ExprKind::Unary { op, expr } => {
+            matches!(op, UnaryOp::Plus | UnaryOp::Minus | UnaryOp::Not)
+                && is_const_import_expr(expr)
+        }
+        ExprKind::Binary { op, left, right } => {
+            matches!(
+                op,
+                BinaryOp::Add
+                    | BinaryOp::Sub
+                    | BinaryOp::Mul
+                    | BinaryOp::Div
+                    | BinaryOp::Mod
+                    | BinaryOp::Eq
+                    | BinaryOp::NotEq
+                    | BinaryOp::Gt
+                    | BinaryOp::Gte
+                    | BinaryOp::Lt
+                    | BinaryOp::Lte
+                    | BinaryOp::And
+                    | BinaryOp::Or
+            ) && is_const_import_expr(left)
+                && is_const_import_expr(right)
+        }
+        ExprKind::Ternary {
+            condition,
+            then_expr,
+            else_expr,
+        } => {
+            is_const_import_expr(condition)
+                && is_const_import_expr(then_expr)
+                && is_const_import_expr(else_expr)
+        }
+        ExprKind::Call { .. }
+        | ExprKind::For { .. }
+        | ExprKind::Switch { .. }
+        | ExprKind::Tuple(_)
+        | ExprKind::History { .. }
+        | ExprKind::Identifier(_) => false,
+    }
+}
+
+fn const_qualified_type(name: &str) -> Option<PineType> {
+    if pine_builtins::named_color(name).is_some() {
+        return Some(PineType::new(Qualifier::Const, ValueKind::Color));
+    }
+    if pine_builtins::named_float_constant(name).is_some() {
+        return Some(PineType::new(Qualifier::Const, ValueKind::Float));
+    }
+    if pine_builtins::named_int_constant(name).is_some() {
+        return Some(PineType::new(Qualifier::Const, ValueKind::Int));
+    }
+    if pine_builtins::named_string_constant(name).is_some() {
+        return Some(PineType::new(Qualifier::Const, ValueKind::String));
+    }
+    None
+}
+
+fn function_body_has_side_effect(body: &FunctionBody) -> bool {
+    match body {
+        FunctionBody::Expr(expr) => contains_output_or_declaration_call(expr),
+        FunctionBody::Block(statements) => statements
+            .iter()
+            .any(statement_contains_output_or_declaration_call),
+    }
+}
+
 fn imports_in_program(program: &Program) -> Vec<ImportRef> {
     program
         .statements
@@ -268,24 +543,19 @@ fn imports_in_program(program: &Program) -> Vec<ImportRef> {
             let StmtKind::Import(import) = &statement.kind else {
                 return None;
             };
-            Some(ImportRef {
-                key: import.key.clone(),
-                alias: import
-                    .alias
-                    .as_ref()
-                    .map(|alias| (alias.name.clone(), alias.span)),
-                span: statement.span,
-            })
+            Some(import_ref(import, statement.span))
         })
         .collect()
 }
 
-fn export_name(item: &ExportItem) -> Option<(String, Span)> {
-    match item {
-        ExportItem::Function { name, span, .. } | ExportItem::Const { name, span, .. } => {
-            Some((name.clone(), *span))
-        }
-        ExportItem::Unknown { .. } => None,
+fn import_ref(import: &ImportDecl, span: Span) -> ImportRef {
+    ImportRef {
+        key: import.key.clone(),
+        alias: import
+            .alias
+            .as_ref()
+            .map(|alias| (alias.name.clone(), alias.span)),
+        span,
     }
 }
 

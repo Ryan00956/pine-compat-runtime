@@ -355,7 +355,7 @@ mod tests {
     }
 
     #[test]
-    fn parses_import_as_unsupported_statement() {
+    fn parses_import_declaration() {
         let parsed = parse("import user/library/1 as lib\nindicator(\"Demo\")\n");
 
         assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);

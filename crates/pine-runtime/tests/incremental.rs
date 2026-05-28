@@ -1,7 +1,10 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use pine_runtime::{Bar, HistoricalRuntime, run_historical};
-use pine_sema::analyze_source;
+use pine_sema::{Analysis, AnalysisInput, analyze_input, analyze_source};
 use pine_syntax::SourceFile;
 
 fn workspace_fixture(path: &str) -> PathBuf {
@@ -24,8 +27,7 @@ fn runtime_fixtures_match_incremental_append_execution() {
 
         let text = fs::read_to_string(&path).expect("fixture should be readable");
         let has_islast = text.contains("barstate.islast");
-        let source = SourceFile::new(path.display().to_string(), text);
-        let analysis = analyze_source(&source);
+        let analysis = analyze_fixture(&path, text);
         assert!(
             analysis.diagnostics.is_empty(),
             "{} diagnostics: {:?}",
@@ -59,6 +61,25 @@ fn runtime_fixtures_match_incremental_append_execution() {
     }
 
     assert!(checked >= 7, "expected runtime fixtures to be checked");
+}
+
+fn analyze_fixture(path: &Path, text: String) -> Analysis {
+    let source = SourceFile::new(path.display().to_string(), text.clone());
+    if !text.contains("import user/lib/1") {
+        return analyze_source(&source);
+    }
+
+    let library_path = workspace_fixture("tests/fixtures/libraries/import_lib.pine");
+    let library_text = fs::read_to_string(&library_path).expect("import library fixture");
+    let input = AnalysisInput::with_library_sources(
+        source,
+        vec![(
+            "user/lib/1".to_owned(),
+            SourceFile::new(library_path.display().to_string(), library_text),
+        )],
+    )
+    .expect("import fixture input");
+    analyze_input(&input)
 }
 
 fn load_bars(path: &PathBuf) -> Vec<Bar> {

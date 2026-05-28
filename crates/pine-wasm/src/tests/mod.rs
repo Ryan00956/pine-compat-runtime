@@ -59,7 +59,8 @@ fn library_source_injection_is_documented_wasm_gap() {
 
     assert!(output.contains("\"executable\":false"));
     assert!(output.contains("\"feature\":\"import\""));
-    assert!(output.contains("library imports are not supported in Phase 1"));
+    assert!(output.contains("\"code\":\"E_IMPORT_MISSING_LIBRARY\""));
+    assert!(output.contains("\"code\":\"E_IMPORT_ALIAS_REQUIRED\""));
 }
 
 #[test]

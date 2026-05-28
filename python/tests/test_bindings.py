@@ -76,7 +76,7 @@ def test_compile_script_returns_program_with_run_method():
     assert result["diagnostics"] == []
 
 
-def test_analyze_script_accepts_library_sources_without_enabling_imports():
+def test_analyze_script_accepts_library_sources_without_import_use():
     report = pine_compat.analyze_script(
         'indicator("root")\nplot(close)\n',
         library_sources={"user/lib/1": 'library("lib")\n'},
@@ -86,17 +86,28 @@ def test_analyze_script_accepts_library_sources_without_enabling_imports():
     assert report["diagnostics"] == []
 
 
-def test_compile_script_keeps_import_unsupported_with_library_source():
+def test_compile_script_requires_import_alias_for_library_source():
     try:
         pine_compat.compile_script(
             'import user/lib/1\nindicator("root")\n',
             library_sources={"user/lib/1": 'library("lib")\n'},
         )
     except ValueError as error:
-        assert "E_UNSUPPORTED_FEATURE" in str(error)
-        assert "library imports are not supported in Phase 1" in str(error)
+        assert "E_IMPORT_ALIAS_REQUIRED" in str(error)
     else:
-        raise AssertionError("import should remain unsupported")
+        raise AssertionError("unaliased import should fail")
+
+
+def test_run_script_accepts_imported_pure_function_subset():
+    result = pine_compat.run_script(
+        'indicator("root")\nimport user/lib/1 as lib\nplot(lib.scale(close) + lib.offset)\n',
+        BARS,
+        library_sources={
+            "user/lib/1": 'library("lib")\nexport offset = 2\nexport scale(value) => value * offset\n'
+        },
+    )
+
+    assert result["plots"][0]["values"] == [4.0, 6.0, 8.0]
 
 
 def test_compile_script_rejects_invalid_library_source_key():
@@ -121,7 +132,7 @@ def test_run_script_compiles_and_executes():
     assert result["plots"][0]["values"] == [2, 2, 3]
 
 
-def test_run_script_accepts_library_sources_without_enabling_imports():
+def test_run_script_accepts_library_sources_without_import_use():
     result = pine_compat.run_script(
         'indicator("root")\nplot(close)\n',
         BARS,

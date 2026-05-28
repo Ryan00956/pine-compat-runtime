@@ -2,26 +2,31 @@
 
 ## Unreleased
 
+- Added Phase J Slice 4 executable import subset. Host-provided exact-key
+  imports with aliases can now use exported const expressions and pure exported
+  functions through `alias.name`; imported functions reuse existing UDF
+  lowering/runtime behavior, including independent callsite state. The import
+  conformance row is now `partial`; unaliased imports, missing host sources,
+  private or unknown exports, non-const exported constants, side-effecting
+  exported functions, re-exports, imported UDTs, and imported methods remain
+  rejected.
 - Added Phase J Slice 3 module graph validation while keeping imports
   non-executable. Analysis now validates host-provided library sources for
   missing import keys, duplicate root aliases, invalid library declarations,
   duplicate exports, dependency cycles, unknown exports, and private symbol
-  access. Successful alias/export lookup still reports imported execution as
-  unsupported until the first executable import subset is selected.
+  access.
 - Added Phase J Slice 2 parser structure for imports, library declarations,
   export declarations, user-defined type declarations, and user-defined method
   declarations. These nodes now preserve import keys, aliases, declaration
   names, fields, method parameters, bodies, and spans for future source-graph
-  analysis, while semantic analysis still rejects every Phase J declaration
-  family with the existing unsupported diagnostics.
+  analysis.
 - Added Phase J Slice 1 source graph scaffolding: `AnalysisInput`,
   deterministic source ids, normalized library source keys, duplicate/invalid
   key rejection, and compile-cache keys that include host-provided library
   source text. CLI now accepts repeated `--library-source KEY=path.pine`
   options for `analyze` and `run`; Python accepts `library_sources` dictionaries
   on `compile_script`, `analyze_script`, and `run_script`. WASM library source
-  injection remains a documented temporary gap, and root `import` statements
-  still report unsupported diagnostics.
+  injection remains a documented temporary gap.
 - Started Phase J Slice 0 by locking the diagnostic-only boundary for
   `library`, `export`, user-defined type declarations, and user-defined method
   declarations with unsupported sema fixtures and conformance rows. Non-array

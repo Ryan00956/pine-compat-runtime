@@ -14,11 +14,10 @@ impl Analyzer {
                 self.analyze_expr(expr);
             }
             StmtKind::Import(_) => {
-                self.unsupported(
-                    "import",
-                    unsupported_syntax_reason("import"),
-                    statement.span,
-                );
+                self.compatibility.supported.push(FeatureUse {
+                    feature: "import".to_owned(),
+                    span: statement.span,
+                });
             }
             StmtKind::Library(_) => {
                 self.unsupported(

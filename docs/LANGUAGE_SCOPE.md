@@ -256,8 +256,11 @@ The analyzer should reject these with clear diagnostics:
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need
   typed array return semantics and host output shapes before support is claimed
 - unsupported alert frequency modes and alert placeholder interpolation
-- `library`, `import`, and `export`; Phase J Slice 0 keeps these
-  diagnostic-only with sema fixtures and conformance rows
+- `library` and root `export` declarations; `import` is partial for
+  host-provided exact-key aliases that expose exported const expressions and
+  pure exported functions, while unaliased imports, missing host sources,
+  re-exports, imported UDTs, imported methods, and side-effecting exported
+  functions remain rejected
 - unsupported array element types, matrices, and maps
 - user-defined types and user-defined methods; Phase J Slice 0 rejects the
   declaration forms before any type identity or receiver dispatch is claimed

@@ -61,20 +61,22 @@ Responsibilities:
 The analyzer is the boundary where unsupported features should become explicit
 diagnostics instead of runtime surprises.
 
-Phase J introduces a source graph scaffold before executable imports. Public
-semantic analysis can now be driven by `AnalysisInput`, which contains a root
-`SourceFile` and an optional deterministic list of host-provided library
-sources. `SourceGraph` assigns stable `SourceId` values with root source id `0`
-and library source ids sorted by import key, while each source unit keeps a
-diagnostic display name. Library keys are normalized by trimming outer
-whitespace, reject empty or whitespace/control-containing keys, and duplicate
-keys are rejected before analysis. This model is intentionally host-neutral:
-core crates do not read files, fetch network data, consult clocks, or resolve
-library names outside the host-provided map.
+Phase J introduces a source graph scaffold and the first executable import
+subset. Public semantic analysis can now be driven by `AnalysisInput`, which
+contains a root `SourceFile` and an optional deterministic list of
+host-provided library sources. `SourceGraph` assigns stable `SourceId` values
+with root source id `0` and library source ids sorted by import key, while each
+source unit keeps a diagnostic display name. Library keys are normalized by
+trimming outer whitespace, reject empty or whitespace/control-containing keys,
+and duplicate keys are rejected before analysis. This model is intentionally
+host-neutral: core crates do not read files, fetch network data, consult
+clocks, or resolve library names outside the host-provided map.
 
-Import statements still produce the existing unsupported diagnostics in this
-slice. Library source text is accepted only as future graph input and cache-key
-material; it is not parsed as an import target or executed.
+The executable subset accepts exact-key `import ... as alias` when the host
+provides the matching library source. Exported const expressions are inlined,
+and exported pure functions are lowered through the existing UDF path under
+alias-qualified call targets. Runtime execution still receives a fully lowered
+HIR program; it does not resolve imports or inspect source graphs.
 
 ### `pine-ir`
 
@@ -319,9 +321,9 @@ pine-compat run script.pine --bars bars.csv \
 
 The WASM API currently remains single-source for library inputs. It routes
 through the same `AnalysisInput` root-source path, but it does not yet expose a
-JSON object for library source injection. Root imports therefore continue to
-report unsupported import diagnostics in WASM until a deterministic JSON host
-shape is added.
+JSON object for library source injection. Root imports therefore report
+missing-host-library diagnostics in WASM until a deterministic JSON host shape
+is added.
 
 ## Output Model
 

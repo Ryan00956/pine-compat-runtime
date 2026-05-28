@@ -51,16 +51,20 @@ improved over time, but codes should remain stable once published.
 - `E_FUNCTION_RETURN`: user-defined function block does not end with an
   expression.
 - `E_IMPORT_CYCLE`: import dependency graph contains a cycle.
+- `E_IMPORT_ALIAS_REQUIRED`: an import used by the executable subset omitted
+  the required alias.
+- `E_IMPORT_CONST_VALUE`: an exported library constant is not a const
+  expression in the supported import subset.
 - `E_IMPORT_DUPLICATE_ALIAS`: root imports reuse the same alias.
 - `E_IMPORT_DUPLICATE_EXPORT`: a library exports the same name more than once.
+- `E_IMPORT_FUNCTION_SIDE_EFFECT`: an exported library function uses side
+  effects that are not supported in imported functions.
 - `E_IMPORT_INVALID_LIBRARY`: host-provided library source does not contain
   exactly one library declaration.
 - `E_IMPORT_MISSING_LIBRARY`: an import key has no host-provided source.
 - `E_IMPORT_PRIVATE_SYMBOL`: root code accessed a non-exported library symbol.
 - `E_IMPORT_UNKNOWN_EXPORT`: root code accessed an export that the library does
   not declare.
-- `E_IMPORT_UNSUPPORTED_EXECUTION`: imported symbol resolution succeeded, but
-  executable imports are not enabled in the current subset.
 - `E_RECURSIVE_FUNCTION`: recursive user-defined function call is not supported.
 - `E_OPERATOR_TYPE`: operator does not accept the operand types.
 - `E_TUPLE_ARITY`: tuple assignment target count does not match value count.

@@ -67,7 +67,16 @@ impl Analyzer {
     pub(crate) fn lower_program(&mut self, program: &Program) -> Option<HirProgram> {
         let mut statements = Vec::new();
         for statement in &program.statements {
-            if matches!(statement.kind, StmtKind::Function { .. }) {
+            if matches!(
+                statement.kind,
+                StmtKind::Function { .. }
+                    | StmtKind::Import(_)
+                    | StmtKind::Library(_)
+                    | StmtKind::Export(_)
+                    | StmtKind::UserType(_)
+                    | StmtKind::Method(_)
+                    | StmtKind::Unsupported { .. }
+            ) {
                 continue;
             }
             statements.push(self.lower_stmt(statement)?);

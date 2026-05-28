@@ -1,0 +1,7 @@
+library("Import library fixture")
+export offset = 2
+export scale(value) => value * offset
+export counter() =>
+    var value = 0
+    value := value + 1
+    value
