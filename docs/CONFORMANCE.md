@@ -236,11 +236,13 @@ Examples:
 - unsupported `request.security` variants outside the same-context identity and
   same-or-higher-timeframe scalar-expression provider subset
 - unsupported strategy declaration contexts and strategy order functions such as
-  `strategy.order`; `strategy.exit` limit, profit, loss, trailing, partial
-  quantity, combined stop/limit, and missing-entry forms remain fixture-backed
+  `strategy.order`; `strategy.exit` profit, loss, trailing, partial quantity,
+  combined stop/limit, and missing-entry forms remain fixture-backed
   unsupported cases. Stop-only `strategy.exit(id, from_entry, stop=price)` and
   limit-only `strategy.exit(id, from_entry, limit=price)` are the narrow
-  supported Phase M subsets for the current one-net-long broker.
+  supported Phase M subsets for the current one-net-long broker. Combined
+  stop/limit exits remain unsupported because same-bar high/low crossings need
+  an explicit intrabar precedence policy before compatibility can be claimed.
 - minimal `strategy.entry` long market entries in strategy-mode scripts, with
   unsupported short/stop/limit/indicator-mode variants fixture-backed; entries
   may omit `qty` only when the strategy declaration configures the fixed default

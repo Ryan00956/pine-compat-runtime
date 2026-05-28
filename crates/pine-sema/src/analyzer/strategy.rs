@@ -286,7 +286,7 @@ impl Analyzer {
         if has_stop && has_limit {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARG_NAME",
-                "`strategy.exit` combined stop and limit exits are not supported in Phase M Slice 4",
+                "`strategy.exit` combined stop and limit exits are not supported in Phase M Slice 5",
                 args.iter()
                     .find(|arg| arg.name.as_deref() == Some("limit"))
                     .or_else(|| args.get(3))

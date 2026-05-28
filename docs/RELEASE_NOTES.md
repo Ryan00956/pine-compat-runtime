@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Phase M Slice 5 with combined stop/limit exits intentionally
+  unsupported. Stop-only and limit-only exits remain the supported deterministic
+  subsets; combined brackets need an explicit same-bar high/low precedence
+  policy before compatibility can be claimed.
 - Added Phase M Slice 4 limit-exit fills. The supported `strategy.exit` subset
   now includes `strategy.exit(id, from_entry, limit=price)` for full-position
   long exits, triggering on later historical bars when `high >= limit` and

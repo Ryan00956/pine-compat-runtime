@@ -382,11 +382,12 @@ Fill this section during Slice 0 before accepting any positive
 `strategy.exit` support. Later slices should update it only when an
 implementation result deliberately differs from the recorded decision.
 
-- First supported form: `strategy.exit(id, from_entry, stop=price)` for the
-  current one-net-long broker model.
-- Combined stop plus limit: unsupported initially. Slice 5 may either keep the
-  combined form unsupported or define fixture-backed same-bar precedence before
-  claiming support.
+- First supported forms: `strategy.exit(id, from_entry, stop=price)` and
+  `strategy.exit(id, from_entry, limit=price)` for the current one-net-long
+  broker model.
+- Combined stop plus limit: unsupported in Phase M. Slice 5 keeps the combined
+  form rejected because a single historical bar can cross both `high >= limit`
+  and `low <= stop` without fixture-backed intrabar path precedence.
 - Required `from_entry`: required for the first subset. The call targets the
   currently open supported long entry; orphan pre-entry exits are not supported.
 - `id` and `from_entry` qualifier requirements: both must follow the existing
@@ -408,9 +409,9 @@ implementation result deliberately differs from the recorded decision.
   first subset, matching the current `strategy.close` trade identity. The exit
   id remains internal unless a later public-contract slice deliberately adds a
   field.
-- Public order event policy for exit fills: no visible exit order event in the
-  first subset. `orders` continues to expose entry events only; closed trades,
-  position snapshots, and equity snapshots prove exit fills.
+- Public order event policy for exit fills: filled Phase M exits append a
+  visible `StrategyOrderEvent` with the exit id and `strategy.exit` direction,
+  while `StrategyTrade.id` remains the source entry id.
 - Runtime schema version decision: no public output shape change is planned for
   the first subset, so `PUBLIC_RUNTIME_SCHEMA_VERSION` remains unchanged unless
   a later slice adds fields or pending-order output.
@@ -688,6 +689,12 @@ Exit criteria:
 - Combined stop/limit behavior is either explicitly unsupported or fully
   fixture-backed.
 - There is no implicit same-bar ambiguity in the supported matrix.
+
+Slice 5 decision: keep combined stop/limit exits unsupported for Phase M.
+The stop-only and limit-only subsets are deterministic because each has a
+single trigger condition and fill price. A combined bracket can hit both sides
+on one historical bar, and this runtime does not model intrabar price path
+precedence. The existing negative fixture remains the compatibility boundary.
 
 Verification:
 
