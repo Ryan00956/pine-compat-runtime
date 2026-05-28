@@ -73,6 +73,11 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn eval_strategy_exit(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(_bar) = self.current_bar else {
+            return Err(RuntimeError {
+                message: "`strategy.exit` requires an active bar".to_owned(),
+            });
+        };
         let Some(id_expr) = call_arg_expr(args, 0, "id") else {
             return Ok(PineValue::Void);
         };
@@ -83,10 +88,17 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
 
-        let _ = self.eval_expr(id_expr)?;
-        let _ = self.eval_expr(from_entry_expr)?;
-        let _ = self.eval_expr(stop_expr)?;
-        self.strategy_broker.diagnose_exit_placeholder();
+        let id = match self.eval_expr(id_expr)? {
+            PineValue::String(value) => value,
+            _ => return Ok(PineValue::Void),
+        };
+        let from_entry = match self.eval_expr(from_entry_expr)? {
+            PineValue::String(value) => value,
+            _ => return Ok(PineValue::Void),
+        };
+        let stop_price = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
+        self.strategy_broker
+            .place_exit_stop(id, from_entry, stop_price, self.bars);
         Ok(PineValue::Void)
     }
 }

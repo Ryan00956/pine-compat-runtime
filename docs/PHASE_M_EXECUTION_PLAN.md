@@ -541,6 +541,13 @@ cargo test -p pine-runtime strategy
 cargo test --workspace
 ```
 
+Slice 2 implementation note: repeated `strategy.entry` calls that are ignored
+because the long-only broker already has an open position leave any existing
+pending exit untouched. The only lifecycle events that mutate pending exits in
+Slice 2 are accepted `strategy.exit` calls, which place or replace one pending
+stop for the matching current entry id, and `strategy.close(id)`, which cancels
+the pending exit for the closed entry.
+
 ## Slice 3: Stop Exit Runtime Fill
 
 Goal: implement the first filled `strategy.exit` behavior for long stop exits.

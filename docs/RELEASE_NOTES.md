@@ -2,10 +2,15 @@
 
 ## Unreleased
 
+- Added Phase M Slice 2 broker-owned pending state for stop-only
+  `strategy.exit`. Accepted calls now place or replace one internal pending
+  stop for the matching current long entry, `strategy.close(id)` cancels that
+  pending exit, and missing or mismatched entries produce a stable strategy
+  diagnostic without changing the public runtime output shape.
 - Added Phase M Slice 1 semantic staging for stop-only `strategy.exit`. The
   analyzer accepts `strategy.exit(id, from_entry, stop=price)` in strategy-mode
-  scripts, keeps unsupported exit variants diagnostic-only, and runtime dispatch
-  returns a stable strategy diagnostic until broker-owned pending exits land.
+  scripts and keeps unsupported exit variants diagnostic-only before executable
+  fills are claimed.
 - Locked Phase M Slice 0 strategy-exit boundaries. The decision record selects
   stop-only `strategy.exit` as the first executable target, keeps combined,
   requested-context, and function-side-effect exit forms fixture-backed

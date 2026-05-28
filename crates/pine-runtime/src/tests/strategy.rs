@@ -274,7 +274,7 @@ if bar_index == 2
 }
 
 #[test]
-fn strategy_exit_stop_placeholder_records_strategy_diagnostic() {
+fn strategy_exit_stop_stages_pending_exit_without_public_fill() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"strategy("exit")
@@ -296,11 +296,33 @@ strategy.exit("XL", "L", stop=low)
     assert!(strategy.trades.is_empty());
     assert_eq!(strategy.position.len(), 1);
     assert_eq!(strategy.equity.len(), 1);
-    assert_eq!(strategy.diagnostics.len(), 1);
-    assert_eq!(
-        strategy.diagnostics[0].code,
-        "E_STRATEGY_EXIT_UNIMPLEMENTED"
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
+fn strategy_exit_stop_without_matching_entry_records_strategy_diagnostic() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit")
+strategy.exit("XL", "L", stop=low)
+"#,
     );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(2.0)]).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert!(strategy.orders.is_empty());
+    assert!(strategy.trades.is_empty());
+    assert!(strategy.position.is_empty());
+    assert_eq!(strategy.equity.len(), 1);
+    assert_eq!(strategy.diagnostics.len(), 1);
+    assert_eq!(strategy.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
 }
 
 #[test]

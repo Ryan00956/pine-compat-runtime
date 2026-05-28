@@ -10,6 +10,14 @@ fn normalize_zero(value: f64) -> f64 {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+struct PendingExit {
+    id: String,
+    from_entry: String,
+    stop_price: f64,
+    last_update_bar_index: usize,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct BrokerState {
     initial_capital: f64,
     cash: f64,
@@ -23,6 +31,7 @@ pub struct BrokerState {
     position: Vec<StrategyPositionSnapshot>,
     equity: Vec<StrategyEquitySnapshot>,
     diagnostics: Vec<RuntimeDiagnostic>,
+    pending_exit: Option<PendingExit>,
 }
 
 impl Default for BrokerState {
@@ -47,6 +56,7 @@ impl BrokerState {
             position: Vec::new(),
             equity: Vec::new(),
             diagnostics: Vec::new(),
+            pending_exit: None,
         }
     }
 
@@ -99,6 +109,7 @@ impl BrokerState {
         let entry_price = self.avg_price;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
+        self.cancel_exit_for_entry(&id);
         self.trades.push(StrategyTrade {
             id,
             entry_bar_index,
@@ -124,11 +135,50 @@ impl BrokerState {
         });
     }
 
-    pub(crate) fn diagnose_exit_placeholder(&mut self) {
-        self.diagnostics.push(RuntimeDiagnostic {
-            code: "E_STRATEGY_EXIT_UNIMPLEMENTED".to_owned(),
-            message: "`strategy.exit` is semantically accepted for stop exits, but pending exit fills are not implemented yet".to_owned(),
+    pub(crate) fn place_exit_stop(
+        &mut self,
+        id: String,
+        from_entry: String,
+        stop_price: f64,
+        bar_index: usize,
+    ) {
+        if !stop_price.is_finite() {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_EXIT_PRICE".to_owned(),
+                message: "`strategy.exit` stop price must be finite".to_owned(),
+            });
+            return;
+        }
+        if self.position_size <= 0.0 || self.entry_id.as_deref() != Some(from_entry.as_str()) {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_EXIT_ENTRY".to_owned(),
+                message: "`strategy.exit` from_entry must match the current long entry".to_owned(),
+            });
+            return;
+        }
+
+        self.pending_exit = Some(PendingExit {
+            id,
+            from_entry,
+            stop_price,
+            last_update_bar_index: bar_index,
         });
+    }
+
+    pub(crate) fn cancel_exit_for_entry(&mut self, entry_id: &str) {
+        if self
+            .pending_exit
+            .as_ref()
+            .is_some_and(|pending_exit| pending_exit.from_entry == entry_id)
+        {
+            self.pending_exit = None;
+        }
+    }
+
+    #[cfg(test)]
+    #[must_use]
+    fn pending_exit_count(&self) -> usize {
+        usize::from(self.pending_exit.is_some())
     }
 
     pub(crate) fn record_equity(&mut self, bar_index: usize, close: f64) {
@@ -186,5 +236,107 @@ impl BrokerState {
             equity: self.equity.clone(),
             diagnostics: self.diagnostics.clone(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn broker_with_long_entry() -> BrokerState {
+        let mut broker = BrokerState::new(100_000.0);
+        broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0);
+        broker
+    }
+
+    #[test]
+    fn place_exit_while_flat_records_diagnostic_without_pending_state() {
+        let mut broker = BrokerState::new(100_000.0);
+
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+        assert_eq!(broker.pending_exit_count(), 0);
+        assert_eq!(broker.diagnostics.len(), 1);
+        assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    }
+
+    #[test]
+    fn place_exit_while_long_records_pending_stop() {
+        let mut broker = broker_with_long_entry();
+
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+        assert_eq!(broker.pending_exit_count(), 1);
+        assert_eq!(
+            broker.pending_exit,
+            Some(PendingExit {
+                id: "XL".to_owned(),
+                from_entry: "L".to_owned(),
+                stop_price: 95.0,
+                last_update_bar_index: 0,
+            })
+        );
+        assert!(broker.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn place_exit_replaces_existing_pending_stop() {
+        let mut broker = broker_with_long_entry();
+
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+        broker.place_exit_stop("XL2".to_owned(), "L".to_owned(), 90.0, 1);
+
+        assert_eq!(broker.pending_exit_count(), 1);
+        assert_eq!(
+            broker.pending_exit,
+            Some(PendingExit {
+                id: "XL2".to_owned(),
+                from_entry: "L".to_owned(),
+                stop_price: 90.0,
+                last_update_bar_index: 1,
+            })
+        );
+    }
+
+    #[test]
+    fn close_long_cancels_matching_pending_exit() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+        broker.close_long("L".to_owned(), 1, 20, 110.0);
+
+        assert_eq!(broker.pending_exit_count(), 0);
+        assert_eq!(broker.trades.len(), 1);
+    }
+
+    #[test]
+    fn mismatched_entry_id_records_diagnostic_without_pending_state() {
+        let mut broker = broker_with_long_entry();
+
+        broker.place_exit_stop("XL".to_owned(), "OTHER".to_owned(), 95.0, 0);
+
+        assert_eq!(broker.pending_exit_count(), 0);
+        assert_eq!(broker.diagnostics.len(), 1);
+        assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    }
+
+    #[test]
+    fn repeated_entry_noop_leaves_pending_exit_untouched() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+        broker.entry_long("L2".to_owned(), 1, 20, 105.0, 1.0);
+
+        assert_eq!(broker.pending_exit_count(), 1);
+        assert_eq!(
+            broker.pending_exit.as_ref().map(|pending_exit| {
+                (
+                    pending_exit.id.as_str(),
+                    pending_exit.from_entry.as_str(),
+                    pending_exit.stop_price,
+                )
+            }),
+            Some(("XL", "L", 95.0))
+        );
     }
 }
