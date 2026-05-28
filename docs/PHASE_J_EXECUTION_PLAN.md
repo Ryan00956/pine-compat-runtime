@@ -1,26 +1,37 @@
 # Phase J Execution Plan
 
+Status: archived. Phase J is closed for the fixture-backed claimed subset; see
+`docs/PHASE_J_AUDIT.md` for the authoritative current support boundary,
+verification evidence, and maintenance tails.
+
+This document is the historical execution playbook that guided Phase J. Do not
+use it as the next implementation plan. The repository has already advanced
+past the original starting point: `import`, local user-defined types, and local
+user-defined methods are now partial fixture-backed claims in
+`tests/fixtures/conformance.tsv`.
+
 Phase J adds libraries, imports, user-defined types, and non-array methods after
 the indicator runtime has stable execution, public output contracts, drawing
 snapshots, request-provider behavior, alert events, and intrabar persistence.
-Execute it in small, mergeable slices. Each slice should leave the workspace
-shippable and should keep syntax, semantic analysis, source graph behavior,
-runtime execution, fixtures, host APIs, conformance metadata, docs, and
-snapshots in lockstep.
+It was executed in small, mergeable slices. Each slice left the workspace
+shippable and kept syntax, semantic analysis, source graph behavior, runtime
+execution, fixtures, host APIs, conformance metadata, docs, and snapshots in
+lockstep.
 
 Phase J is a source-graph and type-system phase. It must not become a package
 manager, network registry, or TradingView library mirror. Core crates remain
 deterministic: hosts provide all source text, and the compiler/runtime only
 parses, resolves, analyzes, lowers, caches, and executes that fixed source set.
 
-Phase J starts with Slice 0 only. Do not start source graph plumbing, host
-library-source inputs, or executable imports until the unsupported Phase J
-families have stable diagnostics, negative fixtures, conformance rows, and
-documentation.
+The original execution started with Slice 0 only. Source graph plumbing,
+host library-source inputs, and executable imports were intentionally delayed
+until the unsupported Phase J families had stable diagnostics, negative
+fixtures, conformance rows, and documentation.
 
-## Current Starting Point
+## Original Starting Point
 
-This is the repository state before Phase J starts:
+This was the repository state before Phase J started. It is preserved for audit
+context and is not the current repository state:
 
 - `tests/fixtures/conformance.tsv` marks `import` as `unsupported` with the
   fixture `tests/fixtures/sema/unsupported_import.pine`.
@@ -268,6 +279,8 @@ acceptance criteria:
 
 ## Slice 0: Phase J Boundary and Diagnostic Inventory
 
+Status: completed by `614cd37 Document Phase J unsupported boundaries`.
+
 Goal: document and fixture the unsupported Phase J boundary before accepting
 new syntax, source graph behavior, host-source inputs, or executable imports.
 
@@ -305,8 +318,9 @@ Steps:
    forms.
 8. Update `docs/LANGUAGE_SCOPE.md`, `docs/SEMANTIC_MODEL.md`, and release notes
    with the selected Phase J starting boundary.
-9. Confirm README and the long-term plan link to this execution plan and agree
-   that the next implementation target is Slice 0.
+9. Confirm README and the long-term plan link to this execution plan and agreed
+   that the next implementation target was Slice 0 at the original Phase J
+   start.
 
 Exit criteria:
 
@@ -320,10 +334,9 @@ Exit criteria:
 - Existing import unsupported behavior remains stable or improves only by
   tightening the same unsupported-feature boundary.
 - No executable import, library, UDT, or user-defined method support is claimed.
-- README and long-term planning docs are already linked to this playbook and do
-  not imply that Slice 1 or executable imports should start before Slice 0
-  closes.
-- The next implementation slice can safely change one boundary without
+- README and long-term planning docs linked to this playbook and did not imply
+  that Slice 1 or executable imports should start before Slice 0 closed.
+- The next implementation slice could safely change one boundary without
   accidentally widening another.
 
 Verification:
@@ -337,6 +350,8 @@ cargo test --workspace
 ```
 
 ## Slice 1: Source Graph and Library Host Contract Scaffold
+
+Status: completed by `d2c7321 Add Phase J source graph scaffold`.
 
 Goal: add deterministic source graph data structures and host-source contracts
 without accepting imports.
@@ -389,6 +404,8 @@ cargo test --workspace
 
 ## Slice 2: Parse Library, Export, and Import Declarations
 
+Status: completed by `5d5d7ed Parse Phase J declarations structurally`.
+
 Goal: represent Phase J declarations in the AST with stable spans while keeping
 them diagnostic-only.
 
@@ -429,6 +446,8 @@ cargo test --workspace
 
 ## Slice 3: Module Resolution and Export Visibility
 
+Status: completed by `d088977 Validate Phase J module graph`.
+
 Goal: resolve imports against host-provided source graph data while keeping
 imported execution disabled.
 
@@ -468,6 +487,8 @@ cargo test --workspace
 ```
 
 ## Slice 4: Exported Constants and Pure Imported Functions
+
+Status: completed by `7417bb1 Support pure Phase J imports`.
 
 Goal: support the first executable import subset without introducing new
 runtime state semantics.
@@ -529,6 +550,8 @@ cargo test --workspace
 
 ## Slice 5: Cross-Host Library Source Injection
 
+Status: completed by `56d7284 Expose Phase J import host inputs`.
+
 Goal: make the imported-function subset usable through CLI, Python, and WASM
 without duplicating source graph logic.
 
@@ -566,6 +589,8 @@ cargo test --workspace
 ```
 
 ## Slice 6: User-Defined Type Syntax and Scalar Constructors
+
+Status: completed by `1850dda Support local scalar UDTs`.
 
 Goal: add the first local UDT subset without imports or methods.
 
@@ -619,6 +644,8 @@ cargo test --workspace
 
 ## Slice 7: UDT Persistence, History, and Field Mutation Boundary
 
+Status: completed by `1bcf60d Define UDT persistence boundary`.
+
 Goal: decide how UDT values interact with existing series, `var`, `varip`, and
 rollback semantics before broadening UDT claims.
 
@@ -657,6 +684,8 @@ cargo test --workspace
 ```
 
 ## Slice 8: User-Defined Methods on Local UDTs
+
+Status: completed by `4e870cf Support UDT methods`.
 
 Goal: support the first non-array user-defined method subset after UDT receiver
 typing is stable.
@@ -710,6 +739,10 @@ cargo test --workspace
 
 ## Slice 9: Imported UDTs and Methods
 
+Status: completed by `5b8aa1d Lock imported UDT method boundary`.
+Imported UDT identity and imported methods were kept as explicit maintenance
+tails rather than added to the Phase J support claim.
+
 Goal: combine the imported-function and local-UDT subsets only after both are
 stable independently.
 
@@ -749,6 +782,8 @@ cargo test --workspace
 ```
 
 ## Slice 10: Closeout Audit and Roadmap Alignment
+
+Status: completed by `a7e7d81 Close Phase J audit`.
 
 Goal: close Phase J for the claimed subset and record remaining maintenance
 tails.
@@ -812,16 +847,16 @@ scripts/verify.sh
 - Phase J audit records completed slices, verification command results,
   supported surface, and maintenance tails.
 
-## Suggested Commit Order
+## Actual Commit Order
 
 1. `Document Phase J unsupported boundaries`
 2. `Add source graph contract scaffold`
 3. `Parse Phase J declarations`
-4. `Resolve library imports diagnostic-only`
-5. `Support pure imported functions`
+4. `Validate Phase J module graph`
+5. `Support pure Phase J imports`
 6. `Expose library source host inputs`
 7. `Support local scalar UDTs`
 8. `Define UDT persistence boundary`
 9. `Support UDT methods`
-10. `Support imported UDT methods`
+10. `Lock imported UDT method boundary`
 11. `Close Phase J audit`
