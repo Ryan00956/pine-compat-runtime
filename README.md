@@ -28,8 +28,8 @@ able to integrate it through adapters.
   private APIs.
 - The first releases will not attempt full Pine Script compatibility.
 - Strategy backtesting, broad request families, advanced drawing systems,
-  host-delivered alert services, and libraries are out of scope for the initial
-  runtime.
+  host-delivered alert services, and full remote library registry behavior are
+  out of scope for the initial runtime.
 
 ## Design Documents
 
@@ -44,6 +44,7 @@ able to integrate it through adapters.
 - [Release Notes](docs/RELEASE_NOTES.md)
 - [Phase I Execution Plan](docs/PHASE_I_EXECUTION_PLAN.md)
 - [Phase J Execution Plan](docs/PHASE_J_EXECUTION_PLAN.md)
+- [Phase J Libraries/User Types Audit](docs/PHASE_J_AUDIT.md)
 - [Phase K Execution Plan](docs/PHASE_K_EXECUTION_PLAN.md)
 - [Phase F Request Platform Audit](docs/PHASE_F_AUDIT.md)
 - [Phase H Alert Audit](docs/PHASE_H_AUDIT.md)
@@ -96,10 +97,10 @@ bar-by-bar execution, constant and guarded dynamic integer history offsets,
 declarations, `na`, `nz`, `input.*` defval execution, output calls, selected
 drawing objects, partial typed arrays, common `ta.*` functions, selected
 `math.*` and `str.*` functions, partial `request.security`, user-defined
-functions, named colors, color helpers, tuple returns, scalar and scalar
-typed-array `varip`, partial `alertcondition`/`alert` runtime events,
-host-provided exact-key imports for exported const expressions and pure
-exported functions,
+functions, local scalar-field user-defined types, pure local UDT methods, named
+colors, color helpers, tuple returns, scalar and scalar typed-array `varip`,
+partial `alertcondition`/`alert` runtime events, host-provided exact-key
+imports for exported const expressions and pure exported functions,
 incremental append execution, realtime forming-bar rollback, Python bindings,
 and a thin WASM binding.
 

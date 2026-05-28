@@ -78,6 +78,14 @@ and exported pure functions are lowered through the existing UDF path under
 alias-qualified call targets. Runtime execution still receives a fully lowered
 HIR program; it does not resolve imports or inspect source graphs.
 
+The Phase J UDT/method subset is intentionally root-local. Semantic analysis
+records local scalar-field type declarations, constructor calls, field reads,
+and pure UDT methods before lowering. UDT values lower to immutable runtime
+values, and local UDT methods lower through the same inlined body machinery as
+ordinary UDF calls with the receiver passed as the first internal parameter.
+Imported UDT identity and imported method tables are not part of the current
+source-graph contract.
+
 ### `pine-ir`
 
 Owns host-independent intermediate representations.

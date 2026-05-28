@@ -193,13 +193,22 @@ helpers may also be called with method syntax on float and int arrays.
 string arrays.
 `every/some` may also be called with method syntax on float, int, and bool
 arrays.
-Non-array method calls are not part of the executable method subset. Until
-Phase J designs user-defined method declarations, receiver typing, and method
-dispatch, non-array receivers continue to fail with receiver/type diagnostics
-rather than a compatibility-matrix method claim.
-Float
-arrays accept int or float values and store them as
-floats. Int arrays accept int values. Bool arrays accept bool values. String
+Local user-defined types are part of the executable Phase J subset only for
+top-level scalar `int`/`float`/`bool`/`string`/`color` fields. `Type.new(...)`
+constructs immutable runtime values, field reads are typed from the local UDT
+declaration, and ordinary variables plus `var` may hold those values. UDT
+history references, field mutation, `varip`, nested UDT fields, UDT arrays, and
+imported UDT identity remain outside the claim.
+
+Pure user-defined methods are supported for local UDT receivers with scalar
+parameters. The receiver is analyzed as the first internal argument and the
+method body lowers through the existing inlined UDF path, so callsite state and
+side-effect checks follow the local function rules. Methods with side effects,
+recursion, unsupported parameter families, unknown receivers, and imported
+method tables remain rejected. Non-array method calls outside the local UDT
+method subset continue to fail with receiver/type diagnostics.
+Float arrays accept int or float values and store them as floats. Int arrays
+accept int values. Bool arrays accept bool values. String
 arrays accept string values. Color arrays accept color values. Other array
 constructors and unsupported `array.*` functions are rejected. Array assignment
 and UDF argument binding pass the runtime array id by reference. `array.copy`

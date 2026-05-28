@@ -271,8 +271,9 @@ The analyzer should reject these with clear diagnostics:
 - user-defined method forms outside pure local-UDT receiver methods with scalar
   parameters; side effects, recursion, imported methods, unknown receivers, and
   unsupported parameter families remain rejected
-- non-array method calls; these currently remain ordinary receiver/type
-  diagnostics rather than a conformance-matrix feature row
+- non-array method calls outside the local UDT method subset; unsupported
+  receiver families remain ordinary receiver/type diagnostics rather than a
+  widened method claim
 - label, line, box, table, polyline objects
 - general multi-symbol or multi-timeframe data loading outside the documented
   `request.security` provider subset

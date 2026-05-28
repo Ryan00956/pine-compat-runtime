@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Closed Phase J for the fixture-backed libraries/imports/user-types/methods
+  subset. The closeout audit records supported host-provided import behavior,
+  local scalar UDTs, pure local UDT methods, and explicit maintenance tails.
 - Locked Phase J Slice 9 imported UDT/method boundaries. Imported UDT identity
   and imported methods remain unsupported maintenance tails while source-graph
   imports continue to support exported constants and pure functions only.
@@ -17,7 +20,7 @@
 - Added Phase J Slice 6 local user-defined type support for top-level scalar
   field declarations, `Type.new(...)` constructors, and field reads. UDT
   history references, field mutation, nested UDT fields, arrays of UDTs,
-  imported UDTs, and user-defined methods remain unsupported.
+  imported UDTs, and advanced method forms remain unsupported.
 - Added Phase J Slice 5 host parity for imported functions. CLI integration
   fixtures now run the import subset through `--library-source`, Python binding
   tests cover imported function execution through `library_sources`, and WASM
@@ -47,13 +50,13 @@
   key rejection, and compile-cache keys that include host-provided library
   source text. CLI now accepts repeated `--library-source KEY=path.pine`
   options for `analyze` and `run`; Python accepts `library_sources` dictionaries
-  on `compile_script`, `analyze_script`, and `run_script`. WASM library source
-  injection remains a documented temporary gap.
+  on `compile_script`, `analyze_script`, and `run_script`; WASM parity is
+  covered by the later Slice 5 host contract.
 - Started Phase J Slice 0 by locking the diagnostic-only boundary for
   `library`, `export`, user-defined type declarations, and user-defined method
-  declarations with unsupported sema fixtures and conformance rows. Non-array
-  method calls remain ordinary receiver/type diagnostics until Phase J designs
-  receiver typing and method dispatch.
+  declarations with unsupported sema fixtures and conformance rows. Method
+  calls outside later fixture-backed array and local UDT method subsets remain
+  ordinary receiver/type diagnostics.
 - Closed Phase I with `docs/PHASE_I_AUDIT.md`, fixture-backed scalar and scalar
   typed-array `varip` conformance rows, host-surface review for CLI/Python/WASM
   historical paths, and explicit maintenance tails for drawing ids, tuples,

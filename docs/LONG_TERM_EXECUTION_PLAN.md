@@ -44,6 +44,11 @@ Implemented or partially implemented:
   public `alerts` runtime output. The Phase H alert subset is closed in
   `docs/PHASE_H_AUDIT.md`; frequency modes, placeholders, host delivery, and
   strategy alerts remain out of scope.
+- Phase J libraries/user types are closed for the fixture-backed claimed
+  subset in `docs/PHASE_J_AUDIT.md`: host-provided exact-key imports expose
+  exported const expressions and pure exported functions, local scalar-field
+  UDTs support construction, field reads, ordinary variables, and `var`
+  persistence, and pure local UDT methods are supported.
 - CLI, Python, and WASM surfaces for the supported runtime result model.
 
 Remaining work falls into the phases below.
@@ -466,17 +471,31 @@ Maintenance tails:
 
 ## Phase J: Libraries, Imports, User Types, and Methods
 
+Status: closed for the fixture-backed claimed subset. See
+`docs/PHASE_J_AUDIT.md`.
+
 Goal: support larger Pine programs after the core runtime model has matured.
 
 Execution playbook: `docs/PHASE_J_EXECUTION_PLAN.md`.
 
-Scope:
+Delivered scope:
 
-- `import`, `library`, and `export`.
-- Module resolution and host-provided library sources.
-- User-defined types.
-- Non-array methods.
-- Method dispatch and receiver typing.
+- Host-neutral `AnalysisInput` and deterministic `SourceGraph`.
+- CLI, Python, and WASM host-supplied library source maps.
+- Exact-key `import ... as alias` for exported const expressions and pure
+  exported functions.
+- Local scalar-field user-defined types with `Type.new(...)`, field reads,
+  ordinary variables, and `var` persistence.
+- Pure methods on local UDT receivers with scalar parameters.
+
+Maintenance tails:
+
+- Remote registry lookup, version resolution, re-exports, wildcard/unaliased
+  imports, imported UDT identity, imported methods, private exported UDTs, and
+  advanced library visibility remain unsupported.
+- UDT field mutation, UDT history references, `varip` UDTs, nested UDT fields,
+  UDT arrays, recursive UDTs, method side effects, recursive methods, generic
+  methods, and strategy-library interactions remain unsupported.
 
 Risks:
 
@@ -518,8 +537,9 @@ Acceptance criteria:
 
 Recommended order from the current state:
 
-1. Phase J: libraries, user types, and methods.
-2. Phase G: strategy runtime.
+1. Phase G: strategy runtime.
+2. Phase J maintenance only when a small, fixture-backed change widens the
+   already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
    already claimed drawing, request, alert, or `varip` subset.
 4. Phase K maintenance only when release contracts, snapshots, or matrix gates

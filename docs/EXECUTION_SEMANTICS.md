@@ -64,6 +64,20 @@ arguments, and requested-context expressions are rejected under the same
 side-effect boundary as output calls, drawing calls, input declarations, and
 array mutation.
 
+## Libraries And Imports
+
+Imports are resolved before runtime execution. Hosts may provide exact-key
+library source text to semantic analysis; the core builds a deterministic
+source graph, validates library declarations and aliases, then lowers the root
+program. Exported const expressions are inlined into the root, and exported pure
+functions lower through the same inlined UDF machinery as local functions.
+Runtime execution receives one lowered HIR program and performs no filesystem,
+network, registry, or library lookup.
+
+The executable import subset intentionally excludes remote lookup, re-exports,
+unaliased imports, side-effecting exported functions, imported UDT identity,
+and imported methods.
+
 ## Variables
 
 ### Normal Declarations
@@ -144,6 +158,21 @@ current element values. Realtime forming-bar rollback clones the confirmed
 runtime store before executing a forming update, so array mutations and copies
 made during a forming update do not leak into the confirmed store until a
 confirmed update is committed.
+
+For local user-defined types, `Type.new(...)` creates an immutable runtime value
+containing the supported scalar field values in declaration order. Field reads
+return the stored scalar value. Normal declarations allocate a fresh UDT value
+when reached on each bar; `var` UDT declarations preserve the last confirmed
+UDT value across bars and roll back during realtime forming updates like other
+ordinary `var` values. Field mutation, UDT history references, UDT `varip`,
+nested UDT fields, UDT arrays, and imported UDT values are rejected before
+runtime execution.
+
+Pure local UDT methods execute as receiver functions. The receiver value is
+passed as the first internal argument and the method body is evaluated through
+the same lowered expression path as a local UDF body. Method side effects,
+recursive methods, unsupported parameter families, unknown receivers, and
+imported methods are rejected during semantic analysis.
 
 ### `varip`
 
