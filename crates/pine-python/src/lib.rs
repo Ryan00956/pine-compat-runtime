@@ -307,8 +307,22 @@ fn strategy_result_to_py(
     output.set_item("equity", strategy_equity_to_py(py, &strategy.equity)?)?;
     output.set_item(
         "diagnostics",
-        empty_strategy_list_to_py(py, strategy.diagnostics.len())?,
+        strategy_diagnostics_to_py(py, &strategy.diagnostics)?,
     )?;
+    Ok(output.into_any().unbind())
+}
+
+fn strategy_diagnostics_to_py(
+    py: Python<'_>,
+    diagnostics: &[pine_runtime::RuntimeDiagnostic],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for diagnostic in diagnostics {
+        let item = PyDict::new(py);
+        item.set_item("code", &diagnostic.code)?;
+        item.set_item("message", &diagnostic.message)?;
+        output.append(item)?;
+    }
     Ok(output.into_any().unbind())
 }
 
@@ -381,11 +395,6 @@ fn strategy_equity_to_py(
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
-}
-
-fn empty_strategy_list_to_py(py: Python<'_>, len: usize) -> PyResult<Py<PyAny>> {
-    debug_assert_eq!(len, 0);
-    Ok(PyList::empty(py).into_any().unbind())
 }
 
 fn plots_to_py(py: Python<'_>, plots: &[pine_runtime::PlotSeries]) -> PyResult<Py<PyAny>> {

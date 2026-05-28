@@ -194,6 +194,20 @@ def test_run_script_returns_strategy_close_trade_contract():
     }
 
 
+def test_run_script_returns_strategy_runtime_diagnostics():
+    result = pine_compat.run_script(
+        'strategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',
+        BARS,
+    )
+
+    assert result["strategy"]["diagnostics"] == [
+        {
+            "code": "E_STRATEGY_QTY",
+            "message": "`strategy.entry` quantity must be positive",
+        }
+    ]
+
+
 def test_analyze_script_accepts_library_sources_without_import_use():
     report = pine_compat.analyze_script(
         'indicator("root")\nplot(close)\n',
