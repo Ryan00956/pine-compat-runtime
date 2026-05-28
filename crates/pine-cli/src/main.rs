@@ -65,12 +65,11 @@ mod tests {
                 || signature.name == "strategy"
                 || signature.name == "strategy.entry"
                 || signature.name == "strategy.close"
+                || signature.name == "strategy.exit"
                 || signature.name == "alert"
                 || signature.name == "alertcondition"
             {
                 "partial"
-            } else if signature.name == "strategy.exit" {
-                "unsupported"
             } else {
                 "supported"
             };
@@ -583,6 +582,10 @@ mod tests {
             (
                 "runtime_strategy_close.json",
                 "tests/fixtures/runtime/strategy_close.pine",
+            ),
+            (
+                "runtime_strategy_exit_stop.json",
+                "tests/fixtures/runtime/strategy_exit_stop.pine",
             ),
             (
                 "runtime_strategy_equity.json",

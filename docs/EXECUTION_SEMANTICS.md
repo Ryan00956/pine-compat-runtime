@@ -93,15 +93,21 @@ mutation such as `strategy.position_size := ...` is rejected because strategy
 state variables are read-only.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
-Python dictionaries, and WASM JSON. Short entries, `strategy.exit`,
-`strategy.order`, stop/limit orders, strategy reporting helpers beyond the
-supported position/profit/equity variables, requested-context strategy state,
-strategy state mutation, and realtime strategy handoff remain unsupported until
-later Phase L or strategy-maintenance slices define and fixture those semantics.
-The Phase L `strategy.exit` design gate does not add pending order records,
-partial fill fields, or exit reason fields to the public strategy result; those
-schema questions remain tied to a future fixture-backed fill policy.
-The closed Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`.
+Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants
+beyond the supported stop-only subset, `strategy.order`, rich stop/limit order
+families, strategy reporting helpers beyond the supported
+position/profit/equity variables, requested-context strategy state, strategy
+state mutation, and realtime strategy handoff remain unsupported until later
+strategy-maintenance slices define and fixture those semantics. Phase M
+adds a narrow stop-only `strategy.exit(id, from_entry, stop=price)` subset for
+the current one-net-long broker: accepted calls create or replace one pending
+full-position stop for the matching current entry, the stop is not eligible on
+the bar where it is created or replaced, and a later historical bar with
+`low <= stop` fills at the stop price. A filled stop appends a `strategy.exit`
+order event, records a closed trade under the source entry id, clears the
+position, and updates the normal position/equity snapshots. Phase M does not
+add public pending-order records, partial fill fields, or exit reason fields.
+The prior Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`.
 
 ## Alert Events
 

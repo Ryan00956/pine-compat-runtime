@@ -36,14 +36,18 @@ numeric `N`.
 `strategy.entry(id, strategy.long, qty=...)` is a strategy-mode side effect;
 `qty` may be omitted only when the fixed default quantity subset is configured,
 and explicit `qty` overrides the declaration default. `strategy.close(id)`
-closes the full matching long position at the current bar close. Both calls are
+closes the full matching long position at the current bar close.
+`strategy.exit(id, from_entry, stop=price)` supports the current long-only
+full-position stop subset: it creates or replaces one pending stop for the
+matching entry, ignores same-bar triggers on newly created or replaced stops,
+and fills on a later historical bar when `low <= stop`. These calls are
 rejected in indicator scripts and user-defined functions. Short entries,
-stop/limit orders, `strategy.exit`, `strategy.order`, broker settings beyond
-`initial_capital` and fixed default quantity, realtime strategy handoff, and
-strategy metrics beyond the Phase L position/profit/equity variables remain
-unsupported until later slices define those contracts. The current
-`strategy.exit` design gate keeps pending orders, stop/limit fill policy,
-partial exits, and exit-specific output fields outside the semantic model.
+`strategy.exit` limit/combined/profit/loss/trailing/partial variants,
+`strategy.order`, broker settings beyond `initial_capital` and fixed default
+quantity, realtime strategy handoff, and strategy metrics beyond the Phase L
+position/profit/equity variables remain unsupported until later slices define
+those contracts. Phase M keeps pending-order records, partial fill fields, and
+exit reason fields outside the public output model.
 
 `indicator(...)` and `strategy(...)` declarations are mutually exclusive and
 must be top-level. Declaration calls inside functions or local blocks are

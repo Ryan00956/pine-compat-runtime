@@ -157,6 +157,14 @@ impl BrokerState {
             return;
         }
 
+        if self.pending_exit.as_ref().is_some_and(|pending_exit| {
+            pending_exit.id == id
+                && pending_exit.from_entry == from_entry
+                && pending_exit.stop_price == stop_price
+        }) {
+            return;
+        }
+
         self.pending_exit = Some(PendingExit {
             id,
             from_entry,
@@ -173,6 +181,65 @@ impl BrokerState {
         {
             self.pending_exit = None;
         }
+    }
+
+    pub(crate) fn evaluate_pending_exits(&mut self, bar_index: usize, time: i64, low: f64) {
+        let Some(pending_exit) = self.pending_exit.clone() else {
+            return;
+        };
+        if pending_exit.last_update_bar_index >= bar_index {
+            return;
+        }
+        if self.position_size <= 0.0
+            || self.entry_id.as_deref() != Some(pending_exit.from_entry.as_str())
+        {
+            self.pending_exit = None;
+            return;
+        }
+        if low <= pending_exit.stop_price {
+            self.fill_pending_stop_exit(pending_exit, bar_index, time);
+        }
+    }
+
+    fn fill_pending_stop_exit(&mut self, pending_exit: PendingExit, bar_index: usize, time: i64) {
+        let qty = self.position_size;
+        let entry_price = self.avg_price;
+        let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
+        let entry_time = self.entry_time.unwrap_or(time);
+        let exit_price = pending_exit.stop_price;
+
+        self.orders.push(StrategyOrderEvent {
+            id: pending_exit.id,
+            bar_index,
+            time,
+            direction: "strategy.exit".to_owned(),
+            qty,
+            price: exit_price,
+        });
+        self.trades.push(StrategyTrade {
+            id: pending_exit.from_entry,
+            entry_bar_index,
+            exit_bar_index: bar_index,
+            entry_time,
+            exit_time: time,
+            entry_price,
+            exit_price,
+            qty,
+            profit: (exit_price - entry_price) * qty,
+        });
+
+        self.cash += qty * exit_price;
+        self.position_size = 0.0;
+        self.avg_price = 0.0;
+        self.entry_id = None;
+        self.entry_bar_index = None;
+        self.entry_time = None;
+        self.pending_exit = None;
+        self.position.push(StrategyPositionSnapshot {
+            bar_index,
+            size: 0.0,
+            avg_price: None,
+        });
     }
 
     #[cfg(test)]
@@ -338,5 +405,69 @@ mod tests {
             }),
             Some(("XL", "L", 95.0))
         );
+    }
+
+    #[test]
+    fn pending_stop_is_not_eligible_on_creation_bar() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+        broker.evaluate_pending_exits(0, 10, 90.0);
+
+        assert_eq!(broker.pending_exit_count(), 1);
+        assert!(broker.trades.is_empty());
+        assert_eq!(broker.position_size, 2.0);
+    }
+
+    #[test]
+    fn pending_stop_fills_on_later_crossing_bar() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+        broker.evaluate_pending_exits(1, 20, 94.0);
+
+        assert_eq!(broker.pending_exit_count(), 0);
+        assert_eq!(broker.orders.len(), 2);
+        assert_eq!(broker.orders[1].id, "XL");
+        assert_eq!(broker.orders[1].direction, "strategy.exit");
+        assert_eq!(broker.orders[1].price, 95.0);
+        assert_eq!(broker.trades.len(), 1);
+        assert_eq!(broker.trades[0].id, "L");
+        assert_eq!(broker.trades[0].exit_bar_index, 1);
+        assert_eq!(broker.trades[0].exit_price, 95.0);
+        assert_eq!(broker.trades[0].profit, -10.0);
+        assert_eq!(broker.position_size, 0.0);
+        assert_eq!(broker.position.last().unwrap().avg_price, None);
+    }
+
+    #[test]
+    fn unchanged_repeated_exit_keeps_original_eligibility_bar() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 1);
+
+        broker.evaluate_pending_exits(1, 20, 94.0);
+
+        assert_eq!(broker.pending_exit_count(), 0);
+        assert_eq!(broker.trades.len(), 1);
+        assert_eq!(broker.trades[0].exit_price, 95.0);
+    }
+
+    #[test]
+    fn changed_repeated_exit_replaces_price_and_delays_eligibility() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 90.0, 1);
+
+        broker.evaluate_pending_exits(1, 20, 89.0);
+
+        assert_eq!(broker.pending_exit_count(), 1);
+        assert!(broker.trades.is_empty());
+
+        broker.evaluate_pending_exits(2, 30, 89.0);
+
+        assert_eq!(broker.pending_exit_count(), 0);
+        assert_eq!(broker.trades.len(), 1);
+        assert_eq!(broker.trades[0].exit_price, 90.0);
     }
 }

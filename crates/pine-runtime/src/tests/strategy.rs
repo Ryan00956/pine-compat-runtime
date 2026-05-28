@@ -326,6 +326,211 @@ strategy.exit("XL", "L", stop=low)
 }
 
 #[test]
+fn strategy_exit_stop_fills_on_later_low_crossing_bar() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XL", "L", stop=9)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [
+        Bar {
+            time: 10,
+            open: 10.0,
+            high: 10.0,
+            low: 8.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 20,
+            open: 11.0,
+            high: 12.0,
+            low: 8.0,
+            close: 11.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "XL");
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].direction, "strategy.exit");
+    assert_eq!(strategy.orders[1].qty, 2.0);
+    assert_eq!(strategy.orders[1].price, 9.0);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].id, "L");
+    assert_eq!(strategy.trades[0].entry_bar_index, 0);
+    assert_eq!(strategy.trades[0].exit_bar_index, 1);
+    assert_eq!(strategy.trades[0].entry_price, 10.0);
+    assert_eq!(strategy.trades[0].exit_price, 9.0);
+    assert_eq!(strategy.trades[0].qty, 2.0);
+    assert_eq!(strategy.trades[0].profit, -2.0);
+    assert_eq!(strategy.position.len(), 2);
+    assert_eq!(strategy.position[1].size, 0.0);
+    assert_eq!(strategy.equity[1].cash, 99_998.0);
+    assert_eq!(strategy.equity[1].market_value, 0.0);
+    assert_eq!(strategy.equity[1].net_profit, -2.0);
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
+fn strategy_exit_stop_not_reached_keeps_position_open() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+    strategy.exit("XL", "L", stop=9)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [
+        Bar {
+            time: 10,
+            open: 10.0,
+            high: 10.0,
+            low: 10.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 20,
+            open: 11.0,
+            high: 12.0,
+            low: 10.0,
+            close: 11.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert!(strategy.trades.is_empty());
+    assert_eq!(strategy.position.len(), 1);
+    assert_eq!(strategy.equity[1].market_value, 11.0);
+    assert_eq!(strategy.equity[1].net_profit, 1.0);
+}
+
+#[test]
+fn strategy_exit_stop_replacement_uses_updated_stop_on_later_bar() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+    strategy.exit("XL", "L", stop=8)
+if bar_index == 1
+    strategy.exit("XL", "L", stop=9)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [
+        Bar {
+            time: 10,
+            open: 10.0,
+            high: 10.0,
+            low: 10.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 20,
+            open: 10.0,
+            high: 10.0,
+            low: 8.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 30,
+            open: 10.0,
+            high: 10.0,
+            low: 8.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].exit_bar_index, 2);
+    assert_eq!(strategy.trades[0].exit_price, 9.0);
+    assert_eq!(strategy.orders[1].price, 9.0);
+}
+
+#[test]
+fn strategy_close_cancels_pending_stop_before_evaluation() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+    strategy.exit("XL", "L", stop=9)
+if bar_index == 1
+    strategy.close("L")
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [
+        Bar {
+            time: 10,
+            open: 10.0,
+            high: 10.0,
+            low: 10.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 20,
+            open: 11.0,
+            high: 11.0,
+            low: 8.0,
+            close: 11.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].exit_price, 11.0);
+    assert_eq!(strategy.trades[0].profit, 1.0);
+}
+
+#[test]
 fn strategy_initial_capital_and_equity_mark_open_position_to_close() {
     let source = SourceFile::new(
         "strategy.pine",

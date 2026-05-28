@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Phase M Slice 3 stop-exit fills. The supported
+  `strategy.exit(id, from_entry, stop=price)` subset now creates or replaces a
+  full-position pending stop for the matching current long entry, fills on a
+  later historical bar when `low <= stop`, records a `strategy.exit` order event
+  plus closed trade, and is covered through CLI snapshots, Python bindings, and
+  WASM JSON.
 - Added Phase M Slice 2 broker-owned pending state for stop-only
   `strategy.exit`. Accepted calls now place or replace one internal pending
   stop for the matching current long entry, `strategy.close(id)` cancels that
