@@ -308,6 +308,18 @@ impl Analyzer {
         let Some(receiver_type) = receiver_type else {
             return MethodResolution::Resolved(None);
         };
+        if receiver_type.kind == ValueKind::UserType {
+            return MethodResolution::Resolved(
+                self.analyze_user_method_call(
+                    receiver_name,
+                    method_name,
+                    callee.span,
+                    args,
+                    arg_types,
+                )
+                .unwrap_or(None),
+            );
+        }
         if !is_array_kind(receiver_type.kind) {
             self.diagnostics.push(Diagnostic::error(
                 "E_METHOD_RECEIVER_TYPE",

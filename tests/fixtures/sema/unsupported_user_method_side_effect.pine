@@ -1,0 +1,7 @@
+//@version=5
+type Point
+    float x
+
+method draw(Point p) => plot(p.x)
+p = Point.new(close)
+p.draw()

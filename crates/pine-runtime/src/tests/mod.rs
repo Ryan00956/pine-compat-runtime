@@ -11,6 +11,7 @@ mod builtins_ta_extremes;
 mod builtins_ta_flow;
 mod builtins_time;
 mod imports;
+mod methods;
 mod outputs;
 mod realtime;
 mod request;

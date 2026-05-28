@@ -32,13 +32,13 @@ mod prelude {
         is_ta_vwap_bands_call, method_call_parts, receiver_call_arg,
     };
     pub(crate) use crate::analyzer::context::{
-        Analyzer, FunctionInfo, MethodResolution, UdfArgError,
+        Analyzer, FunctionInfo, MethodInfo, MethodParamInfo, MethodResolution, UdfArgError,
     };
     pub(crate) use crate::analyzer::functions::resolve_udf_arg_indices;
     pub(crate) use crate::analyzer::unsupported::{
         VARIP_DRAWING_UNSUPPORTED_REASON, VARIP_VALUE_UNSUPPORTED_REASON, unsupported_syntax_reason,
     };
-    pub(crate) use crate::analyzer::user_types::UserTypeInfo;
+    pub(crate) use crate::analyzer::user_types::{UserTypeInfo, span_key};
     pub(crate) use crate::compatibility::{FeatureUse, UnsupportedFeature};
     pub(crate) use crate::history::{infer_history_requirements, infer_max_bars_back};
     pub(crate) use crate::resolver::{SymbolInfo, binding_key};

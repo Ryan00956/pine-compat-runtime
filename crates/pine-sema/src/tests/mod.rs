@@ -10,6 +10,7 @@ fn analyze(text: &str) -> Analysis {
 
 mod compatibility;
 mod lowering;
+mod methods;
 mod scopes;
 mod type_arrays;
 mod type_core;

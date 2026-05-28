@@ -3,6 +3,7 @@ use crate::prelude::*;
 impl Analyzer {
     pub(crate) fn analyze_program(&mut self, program: &Program) {
         self.register_user_types(program);
+        self.register_methods(program);
         self.register_functions(program);
         for statement in &program.statements {
             self.analyze_stmt(statement);
@@ -48,11 +49,17 @@ impl Analyzer {
                 });
             }
             StmtKind::Method(_) => {
-                self.unsupported(
-                    "user-defined methods",
-                    unsupported_syntax_reason("user-defined methods"),
-                    statement.span,
-                );
+                if self.block_depth > 0 || self.function_depth > 0 {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_METHOD_DECL_LOCATION",
+                        "user-defined method declarations must be top-level",
+                        statement.span,
+                    ));
+                }
+                self.compatibility.supported.push(FeatureUse {
+                    feature: "user-defined methods".to_owned(),
+                    span: statement.span,
+                });
             }
             StmtKind::If {
                 condition,

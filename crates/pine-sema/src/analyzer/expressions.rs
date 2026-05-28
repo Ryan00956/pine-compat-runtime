@@ -71,7 +71,13 @@ impl Analyzer {
                 }
                 Some(pine_builtins::tuple_return_type())
             }
-            ExprKind::Call { callee, args } => self.analyze_call(callee, args, expr.span),
+            ExprKind::Call { callee, args } => {
+                let pine_type = self.analyze_call(callee, args, expr.span);
+                if let Some(pine_type) = pine_type {
+                    self.expr_types.insert(span_key(expr.span), pine_type);
+                }
+                pine_type
+            }
             ExprKind::History { expr, offset } => {
                 let value_type = self.analyze_expr(expr);
                 let offset_type = self.analyze_expr(offset);
@@ -496,6 +502,9 @@ impl Analyzer {
         expr: &Expr,
         param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
+        if let Some(pine_type) = self.expr_types.get(&span_key(expr.span)) {
+            return Some(*pine_type);
+        }
         match &expr.kind {
             ExprKind::Literal(literal) => Some(literal_type(literal)),
             ExprKind::Identifier(name) => param_types

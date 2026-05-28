@@ -77,8 +77,12 @@ Local user-defined types are partial. The supported subset is limited to
 top-level `type` declarations with scalar int/float/bool/string/color fields,
 `Type.new(...)` construction, field reads on local values, ordinary variables,
 and `var` persistence. UDT values are immutable in this subset. Field mutation,
-`varip`, history references on UDT values, UDT fields, UDT arrays, imported
-UDTs, and methods remain outside the supported matrix.
+`varip`, history references on UDT values, UDT fields, UDT arrays, and imported
+UDTs remain outside the supported matrix.
+User-defined methods are partial for pure methods on local UDT receivers with
+scalar parameters. The receiver is passed as the first internal parameter.
+Side effects, recursion, unknown receiver types, imported methods, and
+unsupported parameter families remain outside the supported matrix.
 
 Hosts may pass library source text into semantic analysis as future graph input:
 
@@ -262,6 +266,7 @@ request.security_lower_tf unsupported lower-timeframe array-returning request AP
 request.*            unsupported  request families beyond the narrow request.security subsets
 import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only
 user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, and var persistence only
+user-defined methods partial      pure methods on local UDT receivers with scalar parameters only
 ```
 
 The matrix should be generated from conformance metadata once the test harness

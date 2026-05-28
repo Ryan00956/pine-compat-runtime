@@ -178,10 +178,26 @@ fn reports_unsupported_user_type_field_mutation_fixture() {
 
 #[test]
 fn reports_unsupported_user_method_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/unsupported_user_method.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_METHOD_RECEIVER_TYPE")
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn reports_unsupported_user_method_side_effect_fixture() {
     assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_user_method.pine",
-        "user-defined methods",
-        "user-defined methods",
+        "tests/fixtures/sema/unsupported_user_method_side_effect.pine",
+        "function_side_effect",
+        "inside user-defined functions",
     );
 }
 

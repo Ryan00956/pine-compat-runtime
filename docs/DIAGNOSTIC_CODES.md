@@ -61,6 +61,13 @@ improved over time, but codes should remain stable once published.
 - `E_UDT_FIELD_TYPE`: unsupported or unknown user-defined type field type.
 - `E_UDT_UNKNOWN_FIELD`: field read references a field not declared on the
   receiver's user-defined type.
+- `E_METHOD_ARG_TYPE`: user-defined method argument type does not match the
+  declared parameter.
+- `E_METHOD_DECL_LOCATION`: user-defined method declaration is not top-level.
+- `E_METHOD_DUPLICATE`: duplicate method declaration for the same receiver
+  type and method name.
+- `E_METHOD_PARAM`: user-defined method parameter list is invalid.
+- `E_RECURSIVE_METHOD`: recursive user-defined method call is not supported.
 - `E_IMPORT_CYCLE`: import dependency graph contains a cycle.
 - `E_IMPORT_ALIAS_REQUIRED`: an import used by the executable subset omitted
   the required alias.

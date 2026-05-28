@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Phase J Slice 8 user-defined methods for pure methods on local UDT
+  receivers with scalar parameters. Calls lower through the existing inlined
+  function-body path with the receiver as the first internal parameter; side
+  effects, recursion, imported methods, unknown receivers, and unsupported
+  parameter families remain rejected.
 - Clarified Phase J Slice 7 UDT storage semantics. Local UDT values are
   immutable, may be stored in ordinary variables and `var`, and roll back with
   confirmed `var` state during realtime forming updates. UDT `varip`, history

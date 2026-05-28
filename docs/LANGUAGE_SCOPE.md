@@ -268,8 +268,9 @@ The analyzer should reject these with clear diagnostics:
   and `var` persistence only; UDT values are immutable, and field mutation,
   `varip`, UDT history references, UDT fields, UDT arrays, and imported UDTs
   remain rejected
-- user-defined methods; Phase J still rejects method declarations before
-  receiver dispatch is claimed
+- user-defined method forms outside pure local-UDT receiver methods with scalar
+  parameters; side effects, recursion, imported methods, unknown receivers, and
+  unsupported parameter families remain rejected
 - non-array method calls; these currently remain ordinary receiver/type
   diagnostics rather than a conformance-matrix feature row
 - label, line, box, table, polyline objects
