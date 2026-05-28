@@ -4,6 +4,14 @@ use crate::namespaces::types::{SERIES_BOOL, SIMPLE_BOOL, SIMPLE_INT, SIMPLE_STRI
 
 const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     (
+        "strategy.position_size",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
+        "strategy.position_avg_price",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "barstate.isfirst",
         PineType::new(Qualifier::Series, ValueKind::Bool),
     ),

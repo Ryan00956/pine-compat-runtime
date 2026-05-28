@@ -1,0 +1,4 @@
+//@version=5
+strategy("Supported strategy position state")
+plot(strategy.position_size)
+plot(strategy.position_avg_price)

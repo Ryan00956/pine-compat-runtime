@@ -1,0 +1,12 @@
+//@version=5
+strategy("Position state strategy", overlay=true)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=2)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+if bar_index == 2
+    strategy.close("L")
+plot(strategy.position_size)
+plot(strategy.position_avg_price)

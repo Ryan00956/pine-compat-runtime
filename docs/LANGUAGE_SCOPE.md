@@ -81,6 +81,9 @@ Phase 1 executable subset:
   long position at the current bar close and recording a closed trade
 - strategy equity snapshots with per-bar `cash`, `marketValue`, `equity`, and
   `netProfit` for the supported long-only subset
+- `strategy.position_size` and `strategy.position_avg_price` in strategy-mode
+  historical scripts only, as read-only series floats that update immediately
+  after supported entry/close calls; average price is `na` when flat
 - `input.*`
 - `plot`, `plotchar`, `plotshape`, `plotarrow`, `plotbar`, `plotcandle`,
   `bgcolor`, `barcolor`, `hline`, and `fill`
@@ -262,9 +265,9 @@ The analyzer should reject these with clear diagnostics:
   `strategy.entry(id, strategy.long, qty=...)` and `strategy.close(id)`
   subsets, including `strategy.exit`, `strategy.order`, short entries,
   stop/limit orders, pyramiding, partial closes, broker settings beyond
-  positive const numeric `initial_capital`, and `strategy.*` variables; Phase L
-  starts by fixture-locking these strategy variable diagnostics before accepting
-  a first read-only state subset
+  positive const numeric `initial_capital`, `strategy.*` variables beyond
+  `strategy.position_size`/`strategy.position_avg_price`, and requested-context
+  strategy state
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need

@@ -68,6 +68,20 @@ fn runs_strategy_entry_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_position_state_from_csv_to_json() {
+    let output = run_script_csv(
+        "strategy(\"demo\")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 2\n    strategy.close(\"L\")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+    )
+    .expect("strategy position state script should run");
+
+    assert!(output.contains("\"values\":[0,0,2]"));
+    assert!(output.contains("\"values\":[null,null,2]"));
+    assert!(output.contains("\"values\":[0,2,0]"));
+    assert!(output.contains("\"values\":[null,2,null]"));
+}
+
+#[test]
 fn runs_strategy_close_from_csv_to_trade_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close(\"L\")\n",

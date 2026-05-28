@@ -578,6 +578,10 @@ mod tests {
                 "runtime_strategy_equity.json",
                 "tests/fixtures/runtime/strategy_equity.pine",
             ),
+            (
+                "runtime_strategy_position_state.json",
+                "tests/fixtures/runtime/strategy_position_state.pine",
+            ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));
         }

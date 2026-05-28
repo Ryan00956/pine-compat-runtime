@@ -112,7 +112,10 @@ fn is_request_scalar_type(pine_type: PineType) -> bool {
 
 fn request_expression_is_pure_scalar(expr: &Expr) -> bool {
     match &expr.kind {
-        ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => true,
+        ExprKind::Literal(_) | ExprKind::Identifier(_) => true,
+        ExprKind::QualifiedName(_) => expr_name(expr)
+            .as_deref()
+            .is_none_or(|name| !is_phase_l_strategy_state_variable(name)),
         ExprKind::Unary { expr, .. } => request_expression_is_pure_scalar(expr),
         ExprKind::Binary { left, right, .. } => {
             request_expression_is_pure_scalar(left) && request_expression_is_pure_scalar(right)

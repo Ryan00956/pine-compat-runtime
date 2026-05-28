@@ -1,8 +1,8 @@
 use pine_ir::DEFAULT_STRATEGY_INITIAL_CAPITAL;
 
 use crate::{
-    RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent, StrategyPositionSnapshot,
-    StrategyResult, StrategyTrade,
+    PineValue, RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent,
+    StrategyPositionSnapshot, StrategyResult, StrategyTrade,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -130,6 +130,20 @@ impl BrokerState {
             equity,
             net_profit: equity - self.initial_capital,
         });
+    }
+
+    #[must_use]
+    pub(crate) fn position_size(&self) -> f64 {
+        self.position_size
+    }
+
+    #[must_use]
+    pub(crate) fn position_avg_price_value(&self) -> PineValue {
+        if self.position_size > 0.0 {
+            PineValue::Float(self.avg_price)
+        } else {
+            PineValue::Na
+        }
     }
 
     #[must_use]

@@ -361,6 +361,22 @@ Exit criteria:
 - Public host surfaces agree on the observed plotted values.
 - No output schema changes are introduced.
 
+Slice 1 implementation record:
+
+- `strategy.position_size` and `strategy.position_avg_price` are accepted as
+  strategy-mode-only historical series float values.
+- `strategy.position_size` is `0` when flat and the current long quantity in the
+  supported long-only broker subset.
+- `strategy.position_avg_price` is `na` when flat and the current average entry
+  price while long.
+- Values are read from `BrokerState` at expression-evaluation time. Because
+  supported market entry and close calls mutate the broker immediately, later
+  statements on the same bar observe the updated position values.
+- The variables remain rejected in indicator scripts and requested-context
+  expressions. Profit/equity variables remain unsupported until Slice 2.
+- No runtime JSON, Python dictionary, or WASM JSON schema fields were added;
+  host coverage observes the variables through ordinary plot outputs.
+
 Verification:
 
 ```text

@@ -300,3 +300,89 @@ strategy.close("L")
     assert_eq!(strategy.trades[0].id, "L");
     assert_eq!(strategy.position.len(), 2);
 }
+
+#[test]
+fn strategy_position_state_variables_follow_broker_mutations() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("position state")
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=2)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+if bar_index == 2
+    strategy.close("L")
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(2.0),
+            PineValue::Na,
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[3].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+            PineValue::Na,
+        ]
+    );
+    assert_eq!(
+        result.plots[4].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[5].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(2.0),
+            PineValue::Na,
+            PineValue::Na,
+        ]
+    );
+}

@@ -66,11 +66,20 @@ and `netProfit = equity - initial_capital`. The current subset has no
 commission, slippage, margin, percent sizing, currency conversion, partial
 exits, or pyramiding.
 
+Strategy-mode scripts can read `strategy.position_size` and
+`strategy.position_avg_price` as historical series floats. In the current
+long-only subset, `strategy.position_size` is `0` when flat and positive while
+long. `strategy.position_avg_price` is `na` when flat and the current average
+entry price while long. Supported `strategy.entry` and `strategy.close` calls
+mutate broker state immediately, so later statements on the same bar see the
+updated position values.
+
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit`,
-`strategy.order`, stop/limit orders, strategy reporting variables, and realtime
-strategy handoff remain unsupported until later Phase L or strategy-maintenance
-slices define and fixture those semantics.
+`strategy.order`, stop/limit orders, strategy reporting variables beyond the
+first position variables, requested-context strategy state, and realtime strategy
+handoff remain unsupported until later Phase L or strategy-maintenance slices
+define and fixture those semantics.
 
 ## Alert Events
 

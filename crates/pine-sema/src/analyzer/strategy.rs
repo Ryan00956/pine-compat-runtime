@@ -12,6 +12,13 @@ pub(crate) fn is_phase_l_strategy_state_variable(name: &str) -> bool {
     PHASE_L_STRATEGY_STATE_VARIABLES.contains(&name)
 }
 
+pub(crate) fn is_phase_l_position_state_variable(name: &str) -> bool {
+    matches!(
+        name,
+        "strategy.position_size" | "strategy.position_avg_price"
+    )
+}
+
 impl Analyzer {
     pub(crate) fn validate_script_declaration_call(
         &mut self,
@@ -112,6 +119,10 @@ impl Analyzer {
                 span,
             ));
             return true;
+        }
+
+        if is_phase_l_position_state_variable(name) {
+            return false;
         }
 
         self.unsupported(name, STRATEGY_STATE_UNSUPPORTED_REASON, span);

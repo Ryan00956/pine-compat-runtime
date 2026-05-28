@@ -136,6 +136,12 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "timeframe.multiplier" {
             return PineValue::Int(1);
         }
+        if name == "strategy.position_size" {
+            return PineValue::Float(self.strategy_broker.position_size());
+        }
+        if name == "strategy.position_avg_price" {
+            return self.strategy_broker.position_avg_price_value();
+        }
         if name == "ta.accdist" {
             return self.accdist_current.clone();
         }

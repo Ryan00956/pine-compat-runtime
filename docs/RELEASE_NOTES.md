@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Phase L Slice 1 position state variables. Strategy-mode historical
+  scripts can read and plot `strategy.position_size` and
+  `strategy.position_avg_price`; values follow the current long-only broker
+  state and update immediately after supported entry/close calls.
 - Locked Phase L Slice 0 strategy state-variable boundaries. Known Phase L
   strategy variables now have fixture-backed pre-implementation diagnostics, and
   broad `strategy.*` remains unsupported for unimplemented state/reporting

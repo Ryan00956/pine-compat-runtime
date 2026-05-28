@@ -35,6 +35,7 @@ mod prelude {
         Analyzer, FunctionInfo, MethodInfo, MethodParamInfo, MethodResolution, UdfArgError,
     };
     pub(crate) use crate::analyzer::functions::resolve_udf_arg_indices;
+    pub(crate) use crate::analyzer::strategy::is_phase_l_strategy_state_variable;
     pub(crate) use crate::analyzer::unsupported::{
         STRATEGY_STATE_UNSUPPORTED_REASON, VARIP_DRAWING_UNSUPPORTED_REASON,
         VARIP_VALUE_UNSUPPORTED_REASON, unsupported_strategy_reason, unsupported_syntax_reason,

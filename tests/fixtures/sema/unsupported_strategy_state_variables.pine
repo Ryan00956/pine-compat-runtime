@@ -1,7 +1,5 @@
 //@version=5
 strategy("Unsupported strategy state variables")
-plot(strategy.position_size)
-plot(strategy.position_avg_price)
 plot(strategy.openprofit)
 plot(strategy.netprofit)
 plot(strategy.equity)

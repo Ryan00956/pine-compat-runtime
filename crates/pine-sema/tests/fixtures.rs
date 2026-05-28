@@ -233,6 +233,37 @@ fn accepts_supported_strategy_close_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_position_state_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_position_state.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.position_size")
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.position_avg_price")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn reports_strategy_close_indicator_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_close_indicator.pine",
@@ -259,6 +290,15 @@ fn reports_unknown_strategy_variable_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_unknown_variable.pine",
         &["strategy.future_metric"],
+    );
+}
+
+#[test]
+fn reports_request_strategy_state_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_request_strategy_state.pine",
+        "request.security",
+        "same-context request.security",
     );
 }
 
@@ -634,8 +674,6 @@ fn assert_strategy_state_unsupported_fixture(path: &str) {
     let source = SourceFile::new(path.display().to_string(), text);
     let analysis = analyze_source(&source);
     let variables = [
-        "strategy.position_size",
-        "strategy.position_avg_price",
         "strategy.openprofit",
         "strategy.netprofit",
         "strategy.equity",
