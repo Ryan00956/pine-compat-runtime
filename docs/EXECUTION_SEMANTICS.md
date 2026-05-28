@@ -36,17 +36,24 @@ them as approximate.
 
 ## Strategy Mode
 
-`strategy(...)` selects strategy mode for historical execution, but the current
-Phase G subset has no executable order functions. Strategy-mode runtime results
-include an empty `strategy` object with `orders`, `trades`, `position`,
-`equity`, and `diagnostics` arrays. Indicator-mode runtime results do not
-include this key.
+`strategy(...)` selects strategy mode for historical execution.
+Strategy-mode runtime results include a `strategy` object with `orders`,
+`trades`, `position`, `equity`, and `diagnostics` arrays. Indicator-mode
+runtime results do not include this key.
 
-The empty strategy contract is host-independent and exposed consistently by
-CLI JSON, Python dictionaries, and WASM JSON. Broker execution, fills, trade
-ledger updates, equity accounting, strategy reporting variables, and realtime
-strategy handoff remain unsupported until later Phase G slices define and
-fixture those semantics.
+The current order subset is `strategy.entry(id, strategy.long, qty=...)`.
+When execution reaches the call in a strategy-mode script, the runtime fills a
+long market entry at the current bar close and records an order event plus a
+position snapshot. Only one net long position is supported; repeated entry
+calls while a position is open are ignored under the current no-pyramiding
+rule. `qty` must be positive, and non-positive runtime quantities are reported
+in the strategy diagnostics array.
+
+The strategy contract is host-independent and exposed consistently by CLI JSON,
+Python dictionaries, and WASM JSON. Short entries, exits, stop/limit orders,
+trade ledger updates, equity accounting, strategy reporting variables, and
+realtime strategy handoff remain unsupported until later Phase G slices define
+and fixture those semantics.
 
 ## Alert Events
 

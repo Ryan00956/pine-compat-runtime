@@ -179,6 +179,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.delete"
             | "table.new"
             | "table.cell"
+            | "strategy.entry"
     ) || name == "input"
         || name.starts_with("input.")
 }
@@ -252,6 +253,7 @@ impl Analyzer {
         if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
             self.check_feature_name(&name, callee.span);
             self.validate_script_declaration_call(&name, callee.span);
+            self.validate_strategy_order_call(&name, callee.span, args);
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
@@ -328,6 +330,27 @@ impl Analyzer {
         }
 
         self.script_declaration = Some((mode, span));
+    }
+
+    pub(crate) fn validate_strategy_order_call(
+        &mut self,
+        name: &str,
+        span: Span,
+        args: &[CallArg],
+    ) {
+        if name != "strategy.entry" {
+            return;
+        }
+
+        if !matches!(self.script_declaration, Some((ScriptMode::Strategy, _))) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_STRATEGY_MODE",
+                "`strategy.entry` is only supported in scripts declared with strategy(...)",
+                span,
+            ));
+        }
+
+        self.validate_strategy_entry_args(args);
     }
 
     pub(crate) fn analyze_method_call(
@@ -535,6 +558,44 @@ impl Analyzer {
         self.validate_indicator_args(signature, args);
         self.validate_alert_args(signature, args);
         self.validate_label_new_args(signature, args);
+    }
+
+    pub(crate) fn validate_strategy_entry_args(&mut self, args: &[CallArg]) {
+        for (index, arg) in args.iter().enumerate() {
+            let Some(name) = arg
+                .name
+                .as_deref()
+                .or_else(|| ["id", "direction", "qty"].get(index).copied())
+            else {
+                continue;
+            };
+            match name {
+                "direction" => {
+                    let Some(direction) = const_string_value(&arg.value) else {
+                        continue;
+                    };
+                    if direction != "strategy.long" {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.entry` argument `direction` only supports strategy.long",
+                            arg.span,
+                        ));
+                    }
+                }
+                "qty" => {
+                    if let Some(qty) = const_numeric_value(&arg.value)
+                        && qty <= 0.0
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.entry` argument `qty` must be positive",
+                            arg.span,
+                        ));
+                    }
+                }
+                _ => {}
+            }
+        }
     }
 
     pub(crate) fn validate_label_new_args(

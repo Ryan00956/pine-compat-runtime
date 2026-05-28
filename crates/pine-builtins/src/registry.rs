@@ -1,6 +1,6 @@
 use crate::namespaces::types::VOID;
 use crate::namespaces::{
-    alerts, arrays, colors, core, drawings, math, outputs, requests, strings, ta, time,
+    alerts, arrays, colors, core, drawings, math, outputs, requests, strategy, strings, ta, time,
 };
 use crate::signature::{BuiltinParam, BuiltinPhase, BuiltinSignature, ReturnSpec};
 
@@ -17,6 +17,7 @@ const BUILTIN_COUNT: usize = core::SCRIPT_SIGNATURES.len()
     + alerts::SIGNATURES.len()
     + outputs::SIGNATURES.len()
     + requests::SIGNATURES.len()
+    + strategy::SIGNATURES.len()
     + drawings::SIGNATURES.len()
     + colors::SIGNATURES.len()
     + strings::SIGNATURES.len()
@@ -39,6 +40,7 @@ const fn build_phase_1_builtins() -> [BuiltinSignature; BUILTIN_COUNT] {
     index = copy_signatures(&mut builtins, index, alerts::SIGNATURES);
     index = copy_signatures(&mut builtins, index, outputs::SIGNATURES);
     index = copy_signatures(&mut builtins, index, requests::SIGNATURES);
+    index = copy_signatures(&mut builtins, index, strategy::SIGNATURES);
     index = copy_signatures(&mut builtins, index, drawings::SIGNATURES);
     index = copy_signatures(&mut builtins, index, colors::SIGNATURES);
     index = copy_signatures(&mut builtins, index, strings::SIGNATURES);
@@ -88,6 +90,15 @@ mod tests {
         let signature = get_phase_1_builtin("strategy").expect("strategy declaration signature");
         assert_eq!(signature.params[0].name, "title");
         assert_eq!(signature.params[0].accepts, crate::Accepts::ConstString);
+        assert!(!signature.variadic);
+    }
+
+    #[test]
+    fn registers_strategy_entry_signature() {
+        let signature = get_phase_1_builtin("strategy.entry").expect("strategy.entry signature");
+        assert_eq!(signature.params[0].name, "id");
+        assert_eq!(signature.params[1].name, "direction");
+        assert_eq!(signature.params[2].name, "qty");
         assert!(!signature.variadic);
     }
 }

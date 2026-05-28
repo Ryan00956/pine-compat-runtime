@@ -97,6 +97,27 @@ def test_run_script_returns_empty_strategy_contract_for_strategy_mode():
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
 
 
+def test_run_script_returns_strategy_entry_contract():
+    result = pine_compat.run_script(
+        'strategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 1,
+            "time": 1,
+            "direction": "strategy.long",
+            "qty": 2.0,
+            "price": 2.0,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0}
+    ]
+
+
 def test_analyze_script_accepts_library_sources_without_import_use():
     report = pine_compat.analyze_script(
         'indicator("root")\nplot(close)\n',

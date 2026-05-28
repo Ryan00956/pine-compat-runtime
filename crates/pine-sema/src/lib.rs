@@ -46,11 +46,11 @@ mod prelude {
     pub(crate) use crate::symbols::INITIAL_SYMBOLS;
     pub(crate) use crate::types::{
         UNKNOWN, accepts_type, array_element_return_type, array_from_return_type,
-        array_numeric_return_type, can_assign, common_kind, const_int_value, const_string_value,
-        float_return_for_arg, int_return_for_arg, is_array_kind, is_numeric, literal_type,
-        merge_result_types, numeric_result_kind, promoted_bool_type, promoted_color_type,
-        promoted_float_type, promoted_int_type, promoted_numeric_type, promoted_string_type,
-        round_return_type, series_return_for_arg, strongest_qualifier,
+        array_numeric_return_type, can_assign, common_kind, const_int_value, const_numeric_value,
+        const_string_value, float_return_for_arg, int_return_for_arg, is_array_kind, is_numeric,
+        literal_type, merge_result_types, numeric_result_kind, promoted_bool_type,
+        promoted_color_type, promoted_float_type, promoted_int_type, promoted_numeric_type,
+        promoted_string_type, round_return_type, series_return_for_arg, strongest_qualifier,
     };
 }
 

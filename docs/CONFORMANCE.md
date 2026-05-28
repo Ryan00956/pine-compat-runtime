@@ -203,8 +203,8 @@ Examples:
   same-or-higher-timeframe scalar-expression provider subset
 - unsupported strategy declaration contexts and strategy order functions such as
   `strategy.entry`, `strategy.exit`, and `strategy.close`
-- empty strategy-mode runtime output without order events, fills, positions,
-  trades, equity, or metrics
+- minimal `strategy.entry` long market entries in strategy-mode scripts, with
+  unsupported short/stop/limit/indicator-mode variants fixture-backed
 - unsupported collection families or unsupported array variants
 - unsupported label and line methods
 - unsupported import variants outside the host-provided alias/exported
@@ -268,8 +268,9 @@ ta.rsi               supported    fixture-derived executable subset
 request.security     partial      same-context identity and same-or-higher-timeframe provider scalar-expression subset only
 alertcondition       partial      bool-compatible condition plus const-string title/message runtime events
 alert                partial      const-string message runtime events when execution reaches the call
-strategy             partial      declaration plus empty runtime result; order functions and broker execution are not implemented
-strategy.*           unsupported  strategy order functions, broker emulation, and backtesting are not implemented
+strategy             partial      declaration plus strategy-mode runtime result; order functions beyond strategy.entry are not implemented
+strategy.entry       partial      long market entry at current bar close; one net long position; no pyramiding
+strategy.*           unsupported  strategy order functions beyond strategy.entry, exits, rich order types, and metrics are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

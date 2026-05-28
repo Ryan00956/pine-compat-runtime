@@ -612,12 +612,47 @@ fn alerts_json(alerts: &[AlertEvent]) -> String {
 fn strategy_json(strategy: &StrategyResult) -> String {
     format!(
         "{{\"orders\":{},\"trades\":{},\"position\":{},\"equity\":{},\"diagnostics\":{}}}",
-        empty_strategy_items_json(&strategy.orders),
+        strategy_orders_json(&strategy.orders),
         empty_strategy_items_json(&strategy.trades),
-        empty_strategy_items_json(&strategy.position),
+        strategy_position_json(&strategy.position),
         empty_strategy_items_json(&strategy.equity),
         runtime_diagnostics_json(&strategy.diagnostics)
     )
+}
+
+fn strategy_orders_json(orders: &[crate::StrategyOrderEvent]) -> String {
+    let mut output = String::from("[");
+    for (index, order) in orders.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"id\":\"{}\",\"barIndex\":{},\"time\":{},\"direction\":\"{}\",\"qty\":{},\"price\":{}}}",
+            json_escape(&order.id),
+            order.bar_index,
+            order.time,
+            json_escape(&order.direction),
+            order.qty,
+            order.price
+        ));
+    }
+    output.push(']');
+    output
+}
+
+fn strategy_position_json(position: &[crate::StrategyPositionSnapshot]) -> String {
+    let mut output = String::from("[");
+    for (index, snapshot) in position.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"barIndex\":{},\"size\":{},\"avgPrice\":{}}}",
+            snapshot.bar_index, snapshot.size, snapshot.avg_price
+        ));
+    }
+    output.push(']');
+    output
 }
 
 fn empty_strategy_items_json<T>(items: &[T]) -> &'static str {

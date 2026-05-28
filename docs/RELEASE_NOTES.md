@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Phase G Slice 3 minimal `strategy.entry` support. Strategy scripts can
+  open one long market position with `strategy.entry(id, strategy.long, qty=...)`
+  filled at the current bar close; repeated entries are ignored under the
+  current no-pyramiding rule, and short/stop/limit/indicator-mode variants
+  remain rejected by semantic diagnostics.
 - Added Phase G Slice 2 strategy runtime/output scaffolding. Strategy-mode
   scripts now return an empty `strategy` result contract with `orders`,
   `trades`, `position`, `equity`, and `diagnostics` arrays across CLI, Python,

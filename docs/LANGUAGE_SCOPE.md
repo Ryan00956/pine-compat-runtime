@@ -73,9 +73,10 @@ Phase 1 executable subset:
 - arithmetic, comparison, logical, and ternary expressions
 - constant history offsets and guarded dynamic integer history offsets
 - `indicator`
-- `strategy(...)` as a Phase G declaration subset with empty strategy-mode
-  runtime output; order functions, broker execution, and strategy metrics are
-  not executable yet
+- `strategy(...)` as a Phase G declaration subset with strategy-mode runtime
+  output
+- `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
+  filled at the current bar close for one net long position without pyramiding
 - `input.*`
 - `plot`, `plotchar`, `plotshape`, `plotarrow`, `plotbar`, `plotcandle`,
   `bgcolor`, `barcolor`, `hline`, and `fill`
@@ -253,10 +254,10 @@ Request data:
 
 The analyzer should reject these with clear diagnostics:
 
-- strategy order functions and reporting helpers such as `strategy.entry`,
-  `strategy.exit`, `strategy.order`, `strategy.close`, and `strategy.*`
-  variables; `strategy(...)` itself is partial and strategy-mode output is
-  currently an empty container only
+- strategy order functions and reporting helpers outside the narrow
+  `strategy.entry(id, strategy.long, qty=...)` subset, including
+  `strategy.exit`, `strategy.order`, `strategy.close`, short entries,
+  stop/limit orders, pyramiding, and `strategy.*` variables
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need

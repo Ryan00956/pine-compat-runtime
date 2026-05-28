@@ -170,7 +170,7 @@ impl<'a> HistoricalRuntime<'a> {
             boxes: Vec::new(),
             tables: Vec::new(),
             alerts: Vec::new(),
-            strategy_broker: BrokerState,
+            strategy_broker: BrokerState::default(),
             next_label_id: 1,
             next_line_id: 1,
             next_box_id: 1,
@@ -281,7 +281,7 @@ impl<'a> HistoricalRuntime<'a> {
             tables: self.tables.clone(),
             alerts: self.alerts.clone(),
             strategy: (self.program.script_mode == ScriptMode::Strategy)
-                .then(|| self.strategy_broker.empty_result()),
+                .then(|| self.strategy_broker.result()),
             diagnostics: Vec::new(),
         }
     }

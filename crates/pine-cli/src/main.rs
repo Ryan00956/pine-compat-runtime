@@ -63,6 +63,7 @@ mod tests {
                 || signature.name.starts_with("table.")
                 || signature.name == "request.security"
                 || signature.name == "strategy"
+                || signature.name == "strategy.entry"
                 || signature.name == "alert"
                 || signature.name == "alertcondition"
             {
@@ -563,6 +564,10 @@ mod tests {
             (
                 "runtime_strategy_empty.json",
                 "tests/fixtures/runtime/strategy_no_order.pine",
+            ),
+            (
+                "runtime_strategy_entry.json",
+                "tests/fixtures/runtime/strategy_entry.pine",
             ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));

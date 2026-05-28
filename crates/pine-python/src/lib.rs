@@ -301,18 +301,12 @@ fn strategy_result_to_py(
     strategy: &pine_runtime::StrategyResult,
 ) -> PyResult<Py<PyAny>> {
     let output = PyDict::new(py);
-    output.set_item(
-        "orders",
-        empty_strategy_list_to_py(py, strategy.orders.len())?,
-    )?;
+    output.set_item("orders", strategy_orders_to_py(py, &strategy.orders)?)?;
     output.set_item(
         "trades",
         empty_strategy_list_to_py(py, strategy.trades.len())?,
     )?;
-    output.set_item(
-        "position",
-        empty_strategy_list_to_py(py, strategy.position.len())?,
-    )?;
+    output.set_item("position", strategy_position_to_py(py, &strategy.position)?)?;
     output.set_item(
         "equity",
         empty_strategy_list_to_py(py, strategy.equity.len())?,
@@ -321,6 +315,39 @@ fn strategy_result_to_py(
         "diagnostics",
         empty_strategy_list_to_py(py, strategy.diagnostics.len())?,
     )?;
+    Ok(output.into_any().unbind())
+}
+
+fn strategy_orders_to_py(
+    py: Python<'_>,
+    orders: &[pine_runtime::StrategyOrderEvent],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for order in orders {
+        let item = PyDict::new(py);
+        item.set_item("id", &order.id)?;
+        item.set_item("barIndex", order.bar_index)?;
+        item.set_item("time", order.time)?;
+        item.set_item("direction", &order.direction)?;
+        item.set_item("qty", order.qty)?;
+        item.set_item("price", order.price)?;
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
+fn strategy_position_to_py(
+    py: Python<'_>,
+    position: &[pine_runtime::StrategyPositionSnapshot],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for snapshot in position {
+        let item = PyDict::new(py);
+        item.set_item("barIndex", snapshot.bar_index)?;
+        item.set_item("size", snapshot.size)?;
+        item.set_item("avgPrice", snapshot.avg_price)?;
+        output.append(item)?;
+    }
     Ok(output.into_any().unbind())
 }
 

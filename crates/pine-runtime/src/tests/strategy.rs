@@ -55,3 +55,79 @@ plot(close)
 
     assert!(result.strategy.is_none());
 }
+
+#[test]
+fn strategy_entry_opens_long_position_at_current_close() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("entry")
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=2)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [
+        Bar {
+            time: 10,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 20,
+            open: 2.0,
+            high: 2.0,
+            low: 2.0,
+            close: 2.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "L");
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].time, 20);
+    assert_eq!(strategy.orders[0].direction, "strategy.long");
+    assert_eq!(strategy.orders[0].qty, 2.0);
+    assert_eq!(strategy.orders[0].price, 2.0);
+    assert_eq!(strategy.position.len(), 1);
+    assert_eq!(strategy.position[0].bar_index, 1);
+    assert_eq!(strategy.position[0].size, 2.0);
+    assert_eq!(strategy.position[0].avg_price, 2.0);
+}
+
+#[test]
+fn strategy_entry_ignores_repeated_entry_without_pyramiding() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("entry")
+strategy.entry("L1", strategy.long, qty=1)
+strategy.entry("L2", strategy.long, qty=1)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)]).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "L1");
+    assert_eq!(strategy.position.len(), 1);
+}

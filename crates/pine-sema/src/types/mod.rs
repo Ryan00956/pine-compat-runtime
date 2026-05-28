@@ -17,6 +17,21 @@ pub(crate) fn const_int_value(expr: &Expr) -> Option<i64> {
         _ => None,
     }
 }
+pub(crate) fn const_numeric_value(expr: &Expr) -> Option<f64> {
+    match &expr.kind {
+        ExprKind::Literal(Literal::Int(value)) => Some(*value as f64),
+        ExprKind::Literal(Literal::Float(value)) => Some(*value),
+        ExprKind::Unary {
+            op: UnaryOp::Plus,
+            expr,
+        } => const_numeric_value(expr),
+        ExprKind::Unary {
+            op: UnaryOp::Minus,
+            expr,
+        } => const_numeric_value(expr).map(|value| -value),
+        _ => None,
+    }
+}
 pub(crate) fn const_string_value(expr: &Expr) -> Option<String> {
     match &expr.kind {
         ExprKind::Literal(Literal::String(value)) => Some(value.clone()),

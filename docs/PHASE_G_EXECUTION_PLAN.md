@@ -367,6 +367,10 @@ Initial scope:
   policy before implementation.
 - No pyramiding, reversal, commission, slippage, stop, limit, or short entries.
 
+Implementation decision: Slice 3 fills the accepted long entry immediately at
+the current bar close and treats repeated entries while a position is open as a
+no-op under the first no-pyramiding rule.
+
 Steps:
 
 1. Add `strategy.long` constant support.
