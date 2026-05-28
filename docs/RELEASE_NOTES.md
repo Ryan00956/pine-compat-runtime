@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Hardened Phase M Slice 6 strategy-exit interactions. Runtime fixtures now
+  cover exit placement through branch, switch, for, and while contexts plus
+  strategy state/history reads around an exit fill, and incremental append
+  execution checks the new fixture.
 - Closed Phase M Slice 5 with combined stop/limit exits intentionally
   unsupported. Stop-only and limit-only exits remain the supported deterministic
   subsets; combined brackets need an explicit same-bar high/low precedence

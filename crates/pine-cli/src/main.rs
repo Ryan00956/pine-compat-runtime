@@ -592,6 +592,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_limit.pine",
             ),
             (
+                "runtime_strategy_exit_interactions.json",
+                "tests/fixtures/runtime/strategy_exit_interactions.pine",
+            ),
+            (
                 "runtime_strategy_equity.json",
                 "tests/fixtures/runtime/strategy_equity.pine",
             ),
