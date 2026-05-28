@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported strategy orders")
+strategy.entry("L", "long")
+strategy.exit("XL", "L")
+strategy.close("L")

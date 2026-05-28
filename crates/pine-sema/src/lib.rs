@@ -36,7 +36,8 @@ mod prelude {
     };
     pub(crate) use crate::analyzer::functions::resolve_udf_arg_indices;
     pub(crate) use crate::analyzer::unsupported::{
-        VARIP_DRAWING_UNSUPPORTED_REASON, VARIP_VALUE_UNSUPPORTED_REASON, unsupported_syntax_reason,
+        VARIP_DRAWING_UNSUPPORTED_REASON, VARIP_VALUE_UNSUPPORTED_REASON,
+        unsupported_strategy_reason, unsupported_syntax_reason,
     };
     pub(crate) use crate::analyzer::user_types::{UserTypeInfo, span_key};
     pub(crate) use crate::compatibility::{FeatureUse, UnsupportedFeature};

@@ -85,10 +85,25 @@ fn reports_unsupported_varip_drawing_fixture() {
 
 #[test]
 fn reports_unsupported_strategy_fixture() {
-    assert_unsupported_fixture(
+    assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy.pine",
-        "strategy.close",
-        "broker emulation",
+        &["strategy.close"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_declaration_fixture() {
+    assert_strategy_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_strategy_declaration.pine",
+        &["strategy"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_order_fixture() {
+    assert_strategy_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_strategy_orders.pine",
+        &["strategy.entry", "strategy.exit", "strategy.close"],
     );
 }
 
@@ -362,6 +377,37 @@ fn assert_unsupported_fixture(path: &str, feature: &str, reason: &str) {
         "{} unsupported features: {:?}",
         path.display(),
         analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+fn assert_strategy_unsupported_fixture(path: &str, features: &[&str]) {
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    for feature in features {
+        assert!(
+            analysis
+                .compatibility
+                .unsupported
+                .iter()
+                .any(|unsupported| unsupported.feature == *feature
+                    && unsupported.reason.contains("broker emulation")),
+            "{} unsupported features: {:?}",
+            path.display(),
+            analysis.compatibility.unsupported
+        );
+    }
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .all(|diagnostic| diagnostic.code != "E_UNKNOWN_FUNCTION"),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
     );
     assert!(analysis.hir.is_none());
 }

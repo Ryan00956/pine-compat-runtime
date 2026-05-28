@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Locked Phase G Slice 0 unsupported diagnostics for the reserved strategy
+  surface. `strategy(...)`, `strategy.entry`, `strategy.exit`, and
+  `strategy.close` now use fixture-backed `E_UNSUPPORTED_FEATURE` diagnostics
+  while `strategy.*` remains unsupported in the conformance matrix.
 - Closed Phase J for the fixture-backed libraries/imports/user-types/methods
   subset. The closeout audit records supported host-provided import behavior,
   local scalar UDTs, pure local UDT methods, and explicit maintenance tails.

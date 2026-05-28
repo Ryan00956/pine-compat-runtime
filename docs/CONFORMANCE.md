@@ -201,7 +201,8 @@ Examples:
 
 - unsupported `request.security` variants outside the same-context identity and
   same-or-higher-timeframe scalar-expression provider subset
-- `strategy.entry`
+- unsupported `strategy(...)`, `strategy.entry`, `strategy.exit`, and
+  `strategy.close` forms while Phase G strategy runtime is not executable
 - unsupported collection families or unsupported array variants
 - unsupported label and line methods
 - unsupported import variants outside the host-provided alias/exported
@@ -265,7 +266,7 @@ ta.rsi               supported    fixture-derived executable subset
 request.security     partial      same-context identity and same-or-higher-timeframe provider scalar-expression subset only
 alertcondition       partial      bool-compatible condition plus const-string title/message runtime events
 alert                partial      const-string message runtime events when execution reaches the call
-strategy.*           unsupported  out of project scope for now
+strategy.*           unsupported  strategy runtime, broker emulation, and backtesting are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

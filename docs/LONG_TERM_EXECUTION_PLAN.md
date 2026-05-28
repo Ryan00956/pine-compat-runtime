@@ -389,6 +389,8 @@ Acceptance criteria:
 Goal: add `strategy.*` only as a separate runtime mode, not as a small built-in
 extension.
 
+Execution playbook: `docs/PHASE_G_EXECUTION_PLAN.md`.
+
 Scope:
 
 - Strategy declaration and settings.

@@ -281,6 +281,11 @@ impl Analyzer {
             return self.analyze_udf_call(&name, callee.span, args, &arg_types);
         }
 
+        if let Some(reason) = unsupported_strategy_reason(&name) {
+            self.unsupported(&name, reason, callee.span);
+            return None;
+        }
+
         self.check_feature_name(&name, callee.span);
         self.diagnostics.push(Diagnostic::error(
             "E_UNKNOWN_FUNCTION",
