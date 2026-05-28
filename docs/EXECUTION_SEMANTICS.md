@@ -79,14 +79,19 @@ long and `0` when flat. `strategy.netprofit` sums realized closed-trade profit.
 `strategy.equity` equals `initial_capital + strategy.netprofit +
 strategy.openprofit`. Supported `strategy.entry` and `strategy.close` calls
 mutate broker state immediately, so later statements on the same bar see the
-updated strategy state values.
+updated strategy state values. These variables can be used in the same
+already-supported expression contexts as other series floats, including
+branches, switches, loops, pure UDF arguments, and constant history references.
+Their history follows the normal per-expression series history model. Direct
+mutation such as `strategy.position_size := ...` is rejected because strategy
+state variables are read-only.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit`,
 `strategy.order`, stop/limit orders, strategy reporting helpers beyond the
 supported position/profit/equity variables, requested-context strategy state,
-and realtime strategy handoff remain unsupported until later Phase L or
-strategy-maintenance slices define and fixture those semantics.
+strategy state mutation, and realtime strategy handoff remain unsupported until
+later Phase L or strategy-maintenance slices define and fixture those semantics.
 
 ## Alert Events
 

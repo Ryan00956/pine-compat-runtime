@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Hardened Phase L Slice 3 strategy variable interactions. The supported
+  position/profit/equity state variables now have fixture-backed behavior in
+  branches, switches, loops, pure UDF arguments, constant history references,
+  incremental append execution, profile retention, and public host smoke tests;
+  mutation and requested-context usage remain rejected.
 - Added Phase L Slice 2 profit and equity state variables. Strategy-mode
   historical scripts can read and plot `strategy.openprofit`,
   `strategy.netprofit`, and `strategy.equity` for the current long-only broker

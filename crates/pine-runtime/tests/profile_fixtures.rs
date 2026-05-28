@@ -161,3 +161,33 @@ fn dynamic_history_profile_fixture_respects_max_bars_back() {
         64,
     );
 }
+
+#[test]
+fn strategy_variable_history_profile_uses_static_trimmed_history() {
+    let profile = profile_fixture("tests/fixtures/profile/strategy_variable_history.pine");
+
+    assert_eq!(profile.bars, PROFILE_BARS);
+    assert_eq!(profile.plots, 2);
+    assert_eq!(profile.plot_values, PROFILE_BARS * 2);
+    assert_eq!(
+        profile.history_retention_mode,
+        HistoryRetentionMode::StaticTrimmed
+    );
+    assert_eq!(profile.history_max_constant_offset, 1);
+    assert_eq!(profile.history_max_bars_back, None);
+    assert!(!profile.history_has_dynamic_offsets);
+    assert_eq!(profile.max_series_depth, 1);
+    assert!(profile.series_buffers >= 2);
+    assert!(
+        profile.series_values <= profile.series_buffers,
+        "constant one-bar strategy variable history should retain at most one value per buffer: {:?}",
+        profile
+    );
+    assert_capacity_within(
+        "series",
+        profile.series_capacity,
+        profile.series_values,
+        2,
+        64,
+    );
+}

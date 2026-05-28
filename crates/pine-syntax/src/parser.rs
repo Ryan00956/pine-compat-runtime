@@ -172,6 +172,11 @@ impl Parser {
                     .tokens
                     .get(self.pos + 2)
                     .map_or(start, |token| token.span);
+                let feature = if name == "strategy" {
+                    "strategy state variable mutation"
+                } else {
+                    "user-defined type field mutation"
+                };
                 while !self.at(TokenKind::Newline)
                     && !self.at(TokenKind::Dedent)
                     && !self.at(TokenKind::Eof)
@@ -181,7 +186,7 @@ impl Parser {
                 return Some(Stmt {
                     span: start.merge(end),
                     kind: StmtKind::Unsupported {
-                        feature: "user-defined type field mutation".to_owned(),
+                        feature: feature.to_owned(),
                     },
                 });
             }

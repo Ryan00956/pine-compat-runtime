@@ -1,0 +1,24 @@
+//@version=5
+strategy("Supported strategy variable interactions")
+
+scale(value) => value * 2
+
+if strategy.position_size > 0
+    plot(scale(strategy.position_size))
+else
+    plot(strategy.openprofit[1])
+
+state = switch strategy.position_size > 0
+    true => strategy.position_size
+    => strategy.netprofit
+
+sum = strategy.position_size * 0
+for i = 0 to 1
+    sum := sum + strategy.position_size
+
+j = 0
+while j < strategy.position_size
+    sum := sum + 1
+    j := j + 1
+
+plot(state + sum)

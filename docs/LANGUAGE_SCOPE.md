@@ -89,6 +89,9 @@ Phase 1 executable subset:
   long-only broker subset; open profit uses current close mark-to-market,
   net profit is realized closed-trade profit only, and equity is initial
   capital plus realized and open profit
+- fixture-backed strategy state variable interactions in already-supported
+  expression contexts: `if`, `switch`, `for`, `while`, pure UDF arguments, and
+  constant history references
 - `input.*`
 - `plot`, `plotchar`, `plotshape`, `plotarrow`, `plotbar`, `plotcandle`,
   `bgcolor`, `barcolor`, `hline`, and `fill`
@@ -271,8 +274,8 @@ The analyzer should reject these with clear diagnostics:
   subsets, including `strategy.exit`, `strategy.order`, short entries,
   stop/limit orders, pyramiding, partial closes, broker settings beyond
   positive const numeric `initial_capital`, `strategy.*` variables beyond the
-  supported position/profit/equity state subset, and requested-context strategy
-  state
+  supported position/profit/equity state subset, mutable strategy state, and
+  requested-context strategy state
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need

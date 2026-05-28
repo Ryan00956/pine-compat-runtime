@@ -95,6 +95,19 @@ fn runs_strategy_profit_state_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_variable_interactions_from_csv_to_json() {
+    let output = run_script_csv(
+        "strategy(\"demo\")\nscale(value) => value * 10\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(strategy.position_size[1])\nplot(strategy.openprofit[1])\nplot(scale(strategy.position_size))\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+    )
+    .expect("strategy variable interaction script should run");
+
+    assert!(output.contains("\"values\":[null,0,2]"));
+    assert!(output.contains("\"values\":[null,0,0]"));
+    assert!(output.contains("\"values\":[0,20,20]"));
+}
+
+#[test]
 fn runs_strategy_close_from_csv_to_trade_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close(\"L\")\n",

@@ -1,0 +1,6 @@
+//@version=5
+strategy("Unsupported strategy order function side effect")
+enter() =>
+    strategy.entry("L", strategy.long, qty=1)
+    close
+plot(enter())

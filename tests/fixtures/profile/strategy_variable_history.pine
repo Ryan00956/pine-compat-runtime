@@ -1,0 +1,6 @@
+//@version=5
+strategy("Strategy variable history profile")
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=2)
+plot(strategy.position_size[1])
+plot(strategy.openprofit[1])

@@ -473,3 +473,87 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
         ]
     );
 }
+
+#[test]
+fn strategy_variables_work_in_supported_expression_contexts() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        include_str!("../../../../tests/fixtures/runtime/strategy_variable_interactions.pine"),
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(-1.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+            PineValue::Float(-1.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(-1.0),
+            PineValue::Float(2.0),
+            PineValue::Float(4.0),
+            PineValue::Float(-1.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(4.0),
+            PineValue::Float(4.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[3].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[4].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(20.0),
+            PineValue::Float(20.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[5].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[6].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+        ]
+    );
+}

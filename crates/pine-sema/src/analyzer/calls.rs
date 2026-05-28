@@ -258,7 +258,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, and drawing calls are not supported inside user-defined functions",
+                    "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy.entry/strategy.close order calls are not supported inside user-defined functions",
                     callee.span,
                 );
             }

@@ -23,6 +23,9 @@ pub(crate) fn unsupported_syntax_reason(feature: &str) -> &'static str {
         "user-defined type field mutation" => {
             "user-defined type field mutation is not supported; Phase J UDT values are immutable in the current subset"
         }
+        "strategy state variable mutation" => {
+            "strategy state variables are read-only in the Phase L strategy subset"
+        }
         "function" => "unsupported user-defined function syntax",
         "for" => "unsupported for loop syntax",
         _ => "syntax is not supported in Phase 1",

@@ -253,6 +253,18 @@ fn accepts_supported_strategy_profit_state_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_variable_interactions_fixture() {
+    assert_strategy_state_supported_fixture(
+        "tests/fixtures/sema/supported_strategy_variable_interactions.pine",
+        &[
+            "strategy.position_size",
+            "strategy.openprofit",
+            "strategy.netprofit",
+        ],
+    );
+}
+
+#[test]
 fn reports_strategy_close_indicator_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_close_indicator.pine",
@@ -288,6 +300,15 @@ fn reports_request_strategy_state_fixture() {
         "tests/fixtures/sema/unsupported_request_strategy_state.pine",
         "request.security",
         "same-context request.security",
+    );
+}
+
+#[test]
+fn reports_strategy_state_mutation_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_strategy_state_mutation.pine",
+        "strategy state variable mutation",
+        "read-only",
     );
 }
 
@@ -496,6 +517,15 @@ fn reports_unsupported_imperative_alert_function_side_effect_fixture() {
         "tests/fixtures/sema/unsupported_imperative_alert_function_side_effect.pine",
         "function_side_effect",
         "alert",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_order_function_side_effect_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_strategy_order_function_side_effect.pine",
+        "function_side_effect",
+        "strategy.entry",
     );
 }
 

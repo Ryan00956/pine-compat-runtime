@@ -507,6 +507,19 @@ Exit criteria:
 - History and incremental execution are fixture-backed.
 - Unsupported mutation and requested-context usage remain diagnostic-only.
 
+Slice 3 implementation record:
+
+- Added fixture-backed coverage for strategy state variables in supported
+  expression contexts: `if`, `switch`, `for`, `while`, pure UDF arguments, and
+  constant history references.
+- Verified `strategy.position_size[1]` and `strategy.openprofit[1]` use the
+  normal generated-series history path and static one-bar retention.
+- Confirmed incremental append execution matches full historical execution for
+  the new runtime fixture through the existing runtime fixture sweep.
+- Added negative fixtures for direct strategy state mutation and for
+  `strategy.entry` side effects inside UDF bodies.
+- No runtime JSON, Python dictionary, or WASM JSON schema fields were added.
+
 Verification:
 
 ```text

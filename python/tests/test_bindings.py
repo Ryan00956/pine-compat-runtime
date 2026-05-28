@@ -194,6 +194,19 @@ def test_run_script_returns_strategy_profit_state_plots():
     ]
 
 
+def test_run_script_returns_strategy_variable_interaction_plots():
+    result = pine_compat.run_script(
+        'strategy("demo")\nscale(value) => value * 10\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(strategy.position_size[1])\nplot(strategy.openprofit[1])\nplot(scale(strategy.position_size))\n',
+        BARS,
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [None, 0.0, 2.0],
+        [None, 0.0, 0.0],
+        [0.0, 20.0, 20.0],
+    ]
+
+
 def test_run_script_returns_strategy_close_trade_contract():
     result = pine_compat.run_script(
         'strategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close("L")\n',
