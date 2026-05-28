@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported request strategy exit")
+plot(request.security(syminfo.tickerid, timeframe.period, strategy.exit("XL", "L", stop=low)))

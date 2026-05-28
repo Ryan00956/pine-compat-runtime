@@ -1,0 +1,6 @@
+//@version=5
+strategy("Unsupported strategy exit function side effect")
+exit_now() =>
+    strategy.exit("XL", "L", stop=low)
+    close
+plot(exit_now())

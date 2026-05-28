@@ -237,9 +237,10 @@ Examples:
   same-or-higher-timeframe scalar-expression provider subset
 - unsupported strategy declaration contexts and strategy order functions such as
   `strategy.exit` and `strategy.order`; `strategy.exit` stop, limit, profit,
-  loss, trailing, partial quantity, and missing-entry forms remain
-  fixture-backed unsupported cases until an OHLC fill policy and pending-order
-  contract are designed
+  loss, trailing, partial quantity, combined stop/limit, requested-context,
+  function-side-effect, and missing-entry forms remain fixture-backed
+  unsupported cases until an OHLC fill policy and pending-order contract are
+  designed
 - minimal `strategy.entry` long market entries in strategy-mode scripts, with
   unsupported short/stop/limit/indicator-mode variants fixture-backed; entries
   may omit `qty` only when the strategy declaration configures the fixed default
@@ -323,7 +324,7 @@ strategy.position_avg_price partial current long-only average entry price read-o
 strategy.openprofit partial       current long-only unrealized profit read-only series, 0 when flat, in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.netprofit  partial       cumulative realized closed-trade profit read-only series, excluding current open profit, in strategy-mode scripts only
 strategy.equity     partial       initial_capital plus realized net profit plus current open profit read-only series in strategy-mode scripts only
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close, strategy.exit stop/limit/profit/loss/trailing/partial/missing-entry forms, rich order types, percent/cash/contracts sizing, mutable strategy state, and strategy reporting helpers beyond the supported position/profit/equity variables are not implemented
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close, strategy.exit stop/limit/combined/profit/loss/trailing/partial/missing-entry/requested-context/function-side-effect forms, rich order types, percent/cash/contracts sizing, mutable strategy state, and strategy reporting helpers beyond the supported position/profit/equity variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

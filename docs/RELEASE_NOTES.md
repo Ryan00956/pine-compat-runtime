@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Locked Phase M Slice 0 strategy-exit boundaries. The decision record selects
+  stop-only `strategy.exit` as the first executable target, keeps combined,
+  requested-context, and function-side-effect exit forms fixture-backed
+  unsupported, and avoids public strategy schema changes before runtime support
+  lands.
 - Closed Phase L for the current strategy usability subset. The audit records
   supported strategy state variables, fixed default quantity behavior, public
   host coverage, `strategy.exit` design boundaries, remaining maintenance tails,

@@ -190,10 +190,13 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
     for path in [
         "tests/fixtures/sema/unsupported_strategy_exit_stop.pine",
         "tests/fixtures/sema/unsupported_strategy_exit_limit.pine",
+        "tests/fixtures/sema/unsupported_strategy_exit_stop_limit.pine",
         "tests/fixtures/sema/unsupported_strategy_exit_profit_loss.pine",
         "tests/fixtures/sema/unsupported_strategy_exit_trailing.pine",
         "tests/fixtures/sema/unsupported_strategy_exit_partial_quantity.pine",
         "tests/fixtures/sema/unsupported_strategy_exit_missing_entry.pine",
+        "tests/fixtures/sema/unsupported_strategy_exit_function_side_effect.pine",
+        "tests/fixtures/sema/unsupported_request_strategy_exit.pine",
     ] {
         assert_strategy_unsupported_fixture(path, &["strategy.exit"]);
     }
