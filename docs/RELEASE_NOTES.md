@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Phase M for the current fixture-backed `strategy.exit` subset. The
+  audit records supported stop-only and limit-only full-position exits,
+  unchanged public runtime `schemaVersion: 3` behavior, host coverage,
+  maintenance tails, and release-gate verification.
 - Completed Phase M Slice 7 public contract hardening without a runtime schema
   bump. Existing strategy `orders`, `trades`, `position`, `equity`, and
   `diagnostics` fields fully represent filled stop/limit exits across CLI,

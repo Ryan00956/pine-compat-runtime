@@ -569,12 +569,55 @@ Closeout evidence:
 - Unsupported strategy variants continue to produce stable diagnostics.
 - `scripts/verify.sh` passed on the Phase L closeout workspace.
 
+## Phase M: Strategy Exit and Order Lifecycle
+
+Goal: make the Phase G/L long-only strategy runtime able to express a minimal
+deterministic exit-order lifecycle before adding richer broker behavior.
+
+Status: closed for the current fixture-backed subset. Execution playbook:
+`docs/PHASE_M_EXECUTION_PLAN.md`. Closeout audit:
+`docs/PHASE_M_AUDIT.md`.
+
+Closed scope:
+
+- A design gate for the first `strategy.exit` subset before any positive
+  compatibility claim changes.
+- Strategy-mode-only `strategy.exit` support for the current one-net-long
+  broker model.
+- Full-position long stop and limit exits with explicit historical OHLC
+  trigger and fill rules.
+- Pending-exit lifecycle semantics such as replacement, close cancellation, and
+  missing-entry behavior.
+- Public host behavior synchronized across CLI, Python, and WASM through the
+  existing strategy result contract without a runtime schema bump.
+
+Closeout evidence:
+
+- `strategy.exit(id, from_entry, stop=price)` and
+  `strategy.exit(id, from_entry, limit=price)` are fixture-backed partial
+  claims in `tests/fixtures/conformance.tsv`.
+- Runtime snapshots cover stop exits, limit exits, and branch/switch/loop plus
+  strategy-state interactions.
+- Python and WASM host tests assert the representative public contracts.
+- Combined stop/limit brackets and richer broker behavior remain unsupported
+  with stable diagnostics.
+- `scripts/verify.sh` passed on the Phase M closeout workspace.
+
+Out of scope until separately designed:
+
+- Combined stop plus limit brackets, profit/loss tick helpers, missing-entry
+  pre-placement, multiple pending exits, and richer order modification rules.
+- Short exposure, reversals, pyramiding, partial exits, trailing stops,
+  commission, slippage, margin, currency conversion, strategy order namespaces,
+  strategy alerts, and realtime strategy execution.
+
 ## Backlog Priority
 
 Recommended order from the current state:
 
-1. Strategy maintenance only when a small, fixture-backed change widens the
-   already claimed Phase G/L long-only strategy subset.
+1. Phase M maintenance only when a small, fixture-backed change widens the
+   already claimed stop/limit `strategy.exit` subset or closes one documented
+   broker tail.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
@@ -585,5 +628,6 @@ Recommended order from the current state:
    qualifier gaps.
 6. Phase D maintenance for small fixture-backed built-in compatibility fixes.
 
-This order keeps the project useful for indicator execution while delaying
-features that require new host APIs, object lifetimes, or broker simulation.
+This order keeps the project useful for indicator and basic strategy execution
+while delaying features that require new host APIs, object lifetimes, or richer
+broker simulation.

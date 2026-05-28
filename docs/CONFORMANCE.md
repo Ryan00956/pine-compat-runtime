@@ -96,7 +96,19 @@ the same bar. They behave like read-only series floats in supported expression
 contexts, including branches, switches, loops, pure UDF arguments, and constant
 history references. They do not change the public runtime JSON shape because
 scripts observe them through ordinary outputs such as `plot`.
-The closed Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`.
+
+Phase M adds the first executable `strategy.exit` subset:
+`strategy.exit(id, from_entry, stop=price)` and
+`strategy.exit(id, from_entry, limit=price)` for full-position exits from the
+current one-net-long broker. Accepted exits create or replace one internal
+pending exit for the matching entry, do not trigger on the creation or
+replacement bar, and fill on a later historical bar when `low <= stop` or
+`high >= limit`. The fill uses the configured exit price and is represented by
+the existing strategy output fields. No public pending-order, partial-fill, or
+exit-reason fields are added.
+
+The closed Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`. The
+closed Phase M boundary is summarized in `docs/PHASE_M_AUDIT.md`.
 
 ## Source Graph Host Contract
 

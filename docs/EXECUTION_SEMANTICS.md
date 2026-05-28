@@ -108,7 +108,8 @@ it is created or replaced, and a later historical bar with `low <= stop` or
 order event, records a closed trade under the source entry id, clears the
 position, and updates the normal position/equity snapshots. Phase M does not
 add public pending-order records, partial fill fields, or exit reason fields.
-The prior Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`.
+The prior Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`; the
+closed Phase M exit subset is summarized in `docs/PHASE_M_AUDIT.md`.
 
 ## Alert Events
 
