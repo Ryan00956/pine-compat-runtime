@@ -1,0 +1,3 @@
+//@version=5
+strategy("No-order strategy", overlay=true)
+plot(close)

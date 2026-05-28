@@ -2,10 +2,14 @@
 
 ## Unreleased
 
+- Added Phase G Slice 2 strategy runtime/output scaffolding. Strategy-mode
+  scripts now return an empty `strategy` result contract with `orders`,
+  `trades`, `position`, `equity`, and `diagnostics` arrays across CLI, Python,
+  and WASM, while indicator output keys remain unchanged and order functions
+  remain unsupported.
 - Added Phase G Slice 1 strategy declaration scaffolding. `strategy(...)` is
   accepted as a declaration-only partial feature with strategy HIR mode
-  metadata, while strategy order functions and broker output remain
-  unsupported.
+  metadata, while strategy order functions remain unsupported.
 - Locked Phase G Slice 0 unsupported diagnostics for the reserved strategy
   surface. `strategy(...)`, `strategy.entry`, `strategy.exit`, and
   `strategy.close` now use fixture-backed `E_UNSUPPORTED_FEATURE` diagnostics

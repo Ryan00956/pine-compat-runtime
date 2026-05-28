@@ -40,6 +40,20 @@ fn runs_script_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_script_from_csv_to_empty_strategy_json() {
+    let output = run_script_csv(
+        "strategy(\"demo\")\nplot(close)\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+    )
+    .expect("strategy script should run");
+
+    assert!(output.contains("\"values\":[1,2]"));
+    assert!(output.contains(
+        "\"strategy\":{\"orders\":[],\"trades\":[],\"position\":[],\"equity\":[],\"diagnostics\":[]}"
+    ));
+}
+
+#[test]
 fn request_host_data_is_documented_wasm_gap() {
     let message = run_script_csv_internal(
         "indicator(\"request\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",

@@ -12,6 +12,7 @@ mod request;
 mod retention;
 mod runtime;
 mod series;
+mod strategy;
 mod value;
 
 pub use bar::{Bar, BarUpdate, BarUpdateKind};
@@ -28,6 +29,10 @@ pub use output::model::{
     PlotArrowSeries, PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries,
     RuntimeDiagnostic, RuntimeResult,
 };
+pub use output::strategy::{
+    StrategyEquitySnapshot, StrategyOrderEvent, StrategyPositionSnapshot, StrategyResult,
+    StrategyTrade,
+};
 pub use profile::{RuntimeProfile, RuntimeProfiledResult};
 pub(crate) use request::RequestCacheKey;
 pub use request::{
@@ -42,6 +47,7 @@ pub use runtime::historical::{
 };
 pub use runtime::realtime::RealtimeRuntime;
 pub use series::SeriesStore;
+pub use strategy::BrokerState;
 pub use value::PineValue;
 
 use algorithms::numeric::finite_float_or_na;

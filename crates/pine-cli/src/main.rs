@@ -44,7 +44,7 @@ mod tests {
     };
     use pine_runtime::{
         HistoryRetentionMode, PUBLIC_MATRIX_SCHEMA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION,
-        RuntimeProfile, RuntimeResult, public_runtime_profiled_result_json,
+        RuntimeProfile, RuntimeResult, StrategyResult, public_runtime_profiled_result_json,
         public_runtime_result_json, run_historical,
     };
     use pine_sema::analyze_source;
@@ -293,6 +293,7 @@ mod tests {
             boxes: vec![],
             tables: vec![],
             alerts: vec![],
+            strategy: None,
             diagnostics: vec![],
         };
 
@@ -308,6 +309,36 @@ mod tests {
         assert!(output.contains(r#""tables":[]"#));
         assert!(output.contains(r#""alerts":[]"#));
         assert!(output.contains(r#""diagnostics":[]"#));
+        assert!(!output.contains(r#""strategy""#));
+    }
+
+    #[test]
+    fn formats_strategy_result_json_with_empty_contract() {
+        let result = RuntimeResult {
+            plots: vec![],
+            plot_chars: vec![],
+            plot_shapes: vec![],
+            plot_arrows: vec![],
+            plot_bars: vec![],
+            plot_candles: vec![],
+            bg_colors: vec![],
+            bar_colors: vec![],
+            hlines: vec![],
+            fills: vec![],
+            labels: vec![],
+            lines: vec![],
+            boxes: vec![],
+            tables: vec![],
+            alerts: vec![],
+            strategy: Some(StrategyResult::default()),
+            diagnostics: vec![],
+        };
+
+        let output = public_runtime_result_json(&result);
+
+        assert!(output.contains(
+            r#""strategy":{"orders":[],"trades":[],"position":[],"equity":[],"diagnostics":[]}"#
+        ));
     }
 
     #[test]
@@ -328,6 +359,7 @@ mod tests {
             boxes: vec![],
             tables: vec![],
             alerts: vec![],
+            strategy: None,
             diagnostics: vec![],
         };
         let profile = RuntimeProfile {
@@ -527,6 +559,10 @@ mod tests {
             (
                 "runtime_table_cell.json",
                 "tests/fixtures/runtime/table_cell.pine",
+            ),
+            (
+                "runtime_strategy_empty.json",
+                "tests/fixtures/runtime/strategy_no_order.pine",
             ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));

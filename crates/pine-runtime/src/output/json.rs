@@ -6,6 +6,7 @@ use super::model::{
     ColorSeries, FillOutput, HLineOutput, PUBLIC_RUNTIME_SCHEMA_VERSION, PlotArrowSeries,
     PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeResult,
 };
+use super::strategy::StrategyResult;
 
 pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
     let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_RUNTIME_SCHEMA_VERSION);
@@ -39,6 +40,10 @@ pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
     output.push_str(&tables_json(&result.tables));
     output.push_str(",\"alerts\":");
     output.push_str(&alerts_json(&result.alerts));
+    if let Some(strategy) = &result.strategy {
+        output.push_str(",\"strategy\":");
+        output.push_str(&strategy_json(strategy));
+    }
     output.push_str(",\"diagnostics\":[]");
     output.push('}');
     output
@@ -598,6 +603,38 @@ fn alerts_json(alerts: &[AlertEvent]) -> String {
             alert.time,
             json_escape(&alert.message),
             json_escape(&alert.source)
+        ));
+    }
+    output.push(']');
+    output
+}
+
+fn strategy_json(strategy: &StrategyResult) -> String {
+    format!(
+        "{{\"orders\":{},\"trades\":{},\"position\":{},\"equity\":{},\"diagnostics\":{}}}",
+        empty_strategy_items_json(&strategy.orders),
+        empty_strategy_items_json(&strategy.trades),
+        empty_strategy_items_json(&strategy.position),
+        empty_strategy_items_json(&strategy.equity),
+        runtime_diagnostics_json(&strategy.diagnostics)
+    )
+}
+
+fn empty_strategy_items_json<T>(items: &[T]) -> &'static str {
+    debug_assert!(items.is_empty());
+    "[]"
+}
+
+fn runtime_diagnostics_json(diagnostics: &[crate::RuntimeDiagnostic]) -> String {
+    let mut output = String::from("[");
+    for (index, diagnostic) in diagnostics.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"code\":\"{}\",\"message\":\"{}\"}}",
+            json_escape(&diagnostic.code),
+            json_escape(&diagnostic.message)
         ));
     }
     output.push(']');

@@ -1,6 +1,6 @@
 use std::collections::{HashMap, VecDeque};
 
-use pine_ir::HirProgram;
+use pine_ir::{HirProgram, ScriptMode};
 
 use crate::*;
 
@@ -65,6 +65,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) boxes: Vec<BoxOutput>,
     pub(crate) tables: Vec<TableOutput>,
     pub(crate) alerts: Vec<AlertEvent>,
+    pub(crate) strategy_broker: BrokerState,
     pub(crate) next_label_id: u32,
     pub(crate) next_line_id: u32,
     pub(crate) next_box_id: u32,
@@ -169,6 +170,7 @@ impl<'a> HistoricalRuntime<'a> {
             boxes: Vec::new(),
             tables: Vec::new(),
             alerts: Vec::new(),
+            strategy_broker: BrokerState,
             next_label_id: 1,
             next_line_id: 1,
             next_box_id: 1,
@@ -278,6 +280,8 @@ impl<'a> HistoricalRuntime<'a> {
             boxes: self.boxes.clone(),
             tables: self.tables.clone(),
             alerts: self.alerts.clone(),
+            strategy: (self.program.script_mode == ScriptMode::Strategy)
+                .then(|| self.strategy_broker.empty_result()),
             diagnostics: Vec::new(),
         }
     }

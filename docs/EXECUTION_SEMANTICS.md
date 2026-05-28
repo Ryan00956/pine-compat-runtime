@@ -34,6 +34,20 @@ rollback, and later `varip` behavior. This should be a separate milestone.
 The first public releases should either reject realtime-only features or mark
 them as approximate.
 
+## Strategy Mode
+
+`strategy(...)` selects strategy mode for historical execution, but the current
+Phase G subset has no executable order functions. Strategy-mode runtime results
+include an empty `strategy` object with `orders`, `trades`, `position`,
+`equity`, and `diagnostics` arrays. Indicator-mode runtime results do not
+include this key.
+
+The empty strategy contract is host-independent and exposed consistently by
+CLI JSON, Python dictionaries, and WASM JSON. Broker execution, fills, trade
+ledger updates, equity accounting, strategy reporting variables, and realtime
+strategy handoff remain unsupported until later Phase G slices define and
+fixture those semantics.
+
 ## Alert Events
 
 `alertcondition(condition, title, message)` is a supported runtime side effect

@@ -4,3 +4,4 @@ pub(crate) mod collect;
 pub mod drawings;
 pub mod json;
 pub mod model;
+pub mod strategy;

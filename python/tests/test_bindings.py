@@ -28,6 +28,16 @@ RUNTIME_RESULT_KEYS = {
     "diagnostics",
 }
 
+STRATEGY_RUNTIME_RESULT_KEYS = RUNTIME_RESULT_KEYS | {"strategy"}
+
+EMPTY_STRATEGY_RESULT = {
+    "orders": [],
+    "trades": [],
+    "position": [],
+    "equity": [],
+    "diagnostics": [],
+}
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -74,6 +84,17 @@ def test_compile_script_returns_program_with_run_method():
     assert result["alerts"] == []
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
     assert result["diagnostics"] == []
+
+
+def test_run_script_returns_empty_strategy_contract_for_strategy_mode():
+    result = pine_compat.run_script(
+        'strategy("demo")\nplot(close)\n',
+        BARS,
+    )
+
+    assert set(result) == STRATEGY_RUNTIME_RESULT_KEYS
+    assert result["strategy"] == EMPTY_STRATEGY_RESULT
+    assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
 
 
 def test_analyze_script_accepts_library_sources_without_import_use():

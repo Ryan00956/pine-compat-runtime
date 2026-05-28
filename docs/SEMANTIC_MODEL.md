@@ -28,8 +28,9 @@ na" marker while it waits for contextual type information.
 
 A script may have at most one top-level declaration call. `indicator(...)`
 selects indicator mode and `strategy(...)` selects strategy mode. Phase G
-initially accepts `strategy(...)` as declaration metadata only: order functions,
-broker emulation, realtime strategy handoff, and strategy result output remain
+initially accepts `strategy(...)` as declaration metadata only: strategy-mode
+runtime results expose an empty `strategy` container, but order functions,
+broker execution, realtime strategy handoff, and strategy metrics remain
 unsupported until later slices define those contracts.
 
 `indicator(...)` and `strategy(...)` declarations are mutually exclusive and

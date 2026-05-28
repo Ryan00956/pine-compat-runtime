@@ -289,8 +289,44 @@ fn runtime_result_to_py(
     output.set_item("boxes", boxes_to_py(py, &result.boxes)?)?;
     output.set_item("tables", tables_to_py(py, &result.tables)?)?;
     output.set_item("alerts", alerts_to_py(py, &result.alerts)?)?;
+    if let Some(strategy) = &result.strategy {
+        output.set_item("strategy", strategy_result_to_py(py, strategy)?)?;
+    }
     output.set_item("diagnostics", PyList::empty(py))?;
     Ok(output.into_any().unbind())
+}
+
+fn strategy_result_to_py(
+    py: Python<'_>,
+    strategy: &pine_runtime::StrategyResult,
+) -> PyResult<Py<PyAny>> {
+    let output = PyDict::new(py);
+    output.set_item(
+        "orders",
+        empty_strategy_list_to_py(py, strategy.orders.len())?,
+    )?;
+    output.set_item(
+        "trades",
+        empty_strategy_list_to_py(py, strategy.trades.len())?,
+    )?;
+    output.set_item(
+        "position",
+        empty_strategy_list_to_py(py, strategy.position.len())?,
+    )?;
+    output.set_item(
+        "equity",
+        empty_strategy_list_to_py(py, strategy.equity.len())?,
+    )?;
+    output.set_item(
+        "diagnostics",
+        empty_strategy_list_to_py(py, strategy.diagnostics.len())?,
+    )?;
+    Ok(output.into_any().unbind())
+}
+
+fn empty_strategy_list_to_py(py: Python<'_>, len: usize) -> PyResult<Py<PyAny>> {
+    debug_assert_eq!(len, 0);
+    Ok(PyList::empty(py).into_any().unbind())
 }
 
 fn plots_to_py(py: Python<'_>, plots: &[pine_runtime::PlotSeries]) -> PyResult<Py<PyAny>> {

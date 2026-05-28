@@ -314,6 +314,11 @@ cargo test --workspace
 Goal: add the runtime and public result boundaries before accepting executable
 orders.
 
+Implementation decision: this slice exposes a strategy-mode-only empty
+`strategy` result with `orders`, `trades`, `position`, `equity`, and
+`diagnostics` arrays. Indicator-mode outputs keep their existing top-level key
+set, so `PUBLIC_RUNTIME_SCHEMA_VERSION` remains unchanged.
+
 Steps:
 
 1. Add a `pine-runtime::strategy` subsystem with empty broker state and public
