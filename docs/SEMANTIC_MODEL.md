@@ -41,7 +41,9 @@ rejected in indicator scripts and user-defined functions. Short entries,
 stop/limit orders, `strategy.exit`, `strategy.order`, broker settings beyond
 `initial_capital` and fixed default quantity, realtime strategy handoff, and
 strategy metrics beyond the Phase L position/profit/equity variables remain
-unsupported until later slices define those contracts.
+unsupported until later slices define those contracts. The current
+`strategy.exit` design gate keeps pending orders, stop/limit fill policy,
+partial exits, and exit-specific output fields outside the semantic model.
 
 `indicator(...)` and `strategy(...)` declarations are mutually exclusive and
 must be top-level. Declaration calls inside functions or local blocks are

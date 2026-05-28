@@ -649,6 +649,31 @@ Exit criteria:
 - The next executable order slice has explicit fixture requirements before
   code starts.
 
+Slice 5 design record:
+
+- Phase L keeps `strategy.exit` unsupported. No runtime fills, pending orders,
+  partial exits, public strategy output fields, Python dictionary keys, or WASM
+  JSON fields are added in this slice.
+- The first useful executable `strategy.exit` subset should be a future
+  stop/limit pending-exit slice for the existing single long entry model. It
+  must be full-position only at first: no partial quantity, no pyramiding, no
+  shorts, no multiple open entries, no trailing exits, and no repeated-order
+  modification semantics until each rule is fixture-backed.
+- A future executable slice must decide whether the public `orders` array
+  represents pending exit creation, fills only, or both before code starts. If
+  pending orders are exposed, the schema needs explicit fields for order kind,
+  linked entry id, pending/filled/canceled status, trigger prices, and optional
+  exit reason.
+- Fill policy remains the blocker. A later implementation must define exact
+  OHLC traversal behavior, same-bar creation/fill handling, gap behavior,
+  stop-vs-limit precedence when both are touched, and whether all fills are
+  bar-close-only or price-triggered.
+- Strategy state variables should update only when an exit fill mutates broker
+  position state, not when a pending exit is merely created.
+- Negative fixtures now cover `strategy.exit` stop, limit, profit/loss,
+  trailing, partial quantity, and missing-entry forms. They all remain on the
+  broad unsupported strategy-order path.
+
 Verification:
 
 ```text

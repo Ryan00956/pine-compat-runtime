@@ -186,6 +186,20 @@ fn reports_unsupported_strategy_order_fixture() {
 }
 
 #[test]
+fn reports_unsupported_strategy_exit_variant_fixtures() {
+    for path in [
+        "tests/fixtures/sema/unsupported_strategy_exit_stop.pine",
+        "tests/fixtures/sema/unsupported_strategy_exit_limit.pine",
+        "tests/fixtures/sema/unsupported_strategy_exit_profit_loss.pine",
+        "tests/fixtures/sema/unsupported_strategy_exit_trailing.pine",
+        "tests/fixtures/sema/unsupported_strategy_exit_partial_quantity.pine",
+        "tests/fixtures/sema/unsupported_strategy_exit_missing_entry.pine",
+    ] {
+        assert_strategy_unsupported_fixture(path, &["strategy.exit"]);
+    }
+}
+
+#[test]
 fn accepts_supported_strategy_entry_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_strategy_entry.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");

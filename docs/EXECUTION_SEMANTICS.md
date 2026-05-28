@@ -98,6 +98,9 @@ Python dictionaries, and WASM JSON. Short entries, `strategy.exit`,
 supported position/profit/equity variables, requested-context strategy state,
 strategy state mutation, and realtime strategy handoff remain unsupported until
 later Phase L or strategy-maintenance slices define and fixture those semantics.
+The Phase L `strategy.exit` design gate does not add pending order records,
+partial fill fields, or exit reason fields to the public strategy result; those
+schema questions remain tied to a future fixture-backed fill policy.
 
 ## Alert Events
 

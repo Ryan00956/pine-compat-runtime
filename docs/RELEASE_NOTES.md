@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Completed Phase L Slice 5 as a `strategy.exit` design gate. Stop, limit,
+  profit/loss, trailing, partial quantity, and missing-entry exit forms now have
+  explicit unsupported fixtures, and no pending-order or exit schema fields are
+  added.
 - Added Phase L Slice 4 fixed default quantity support. Strategy declarations
   now accept `default_qty_type=strategy.fixed` with positive const numeric
   `default_qty_value`; `strategy.entry(id, strategy.long)` uses that default,
