@@ -94,6 +94,8 @@ Phase 1 executable subset:
   long-only broker subset; open profit uses current close mark-to-market,
   net profit is realized closed-trade profit only, and equity is initial
   capital plus realized and open profit
+- the closed Phase L strategy usability boundary is summarized in
+  `docs/PHASE_L_AUDIT.md`
 - fixture-backed strategy state variable interactions in already-supported
   expression contexts: `if`, `switch`, `for`, `while`, pure UDF arguments, and
   constant history references

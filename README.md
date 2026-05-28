@@ -46,6 +46,8 @@ able to integrate it through adapters.
 - [Phase J Execution Plan](docs/PHASE_J_EXECUTION_PLAN.md)
 - [Phase J Libraries/User Types Audit](docs/PHASE_J_AUDIT.md)
 - [Phase K Execution Plan](docs/PHASE_K_EXECUTION_PLAN.md)
+- [Phase L Strategy Usability Execution Plan](docs/PHASE_L_EXECUTION_PLAN.md)
+- [Phase L Strategy Usability Audit](docs/PHASE_L_AUDIT.md)
 - [Phase F Request Platform Audit](docs/PHASE_F_AUDIT.md)
 - [Phase H Alert Audit](docs/PHASE_H_AUDIT.md)
 - [Next Language Expansion Playbook](docs/NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md)

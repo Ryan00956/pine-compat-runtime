@@ -541,11 +541,40 @@ Acceptance criteria:
 - Public output changes are intentional and documented.
 - Performance regressions are visible before release.
 
+## Phase L: Strategy Usability
+
+Goal: make the Phase G long-only strategy runtime easier to use before adding
+richer order types.
+
+Status: closed for the current fixture-backed subset. Execution playbook:
+`docs/PHASE_L_EXECUTION_PLAN.md`. Closeout audit: `docs/PHASE_L_AUDIT.md`.
+
+Closed scope:
+
+- Read-only strategy state variables such as `strategy.position_size`,
+  `strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`,
+  and `strategy.equity` for strategy-mode scripts.
+- Strategy variable behavior across supported expressions, control flow,
+  history, incremental append execution, and public host surfaces.
+- A design gate for fixed default quantity settings.
+- A design gate for `strategy.exit` before stop/limit or pending-order behavior
+  is accepted.
+
+Closeout evidence:
+
+- Strategy scripts can observe the broker state needed to control the current
+  long-only order subset.
+- Indicator and strategy modes remain clearly separated.
+- Public host behavior remains synchronized across CLI, Python, and WASM.
+- Unsupported strategy variants continue to produce stable diagnostics.
+- `scripts/verify.sh` passed on the Phase L closeout workspace.
+
 ## Backlog Priority
 
 Recommended order from the current state:
 
-1. Phase G: strategy runtime.
+1. Strategy maintenance only when a small, fixture-backed change widens the
+   already claimed Phase G/L long-only strategy subset.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an

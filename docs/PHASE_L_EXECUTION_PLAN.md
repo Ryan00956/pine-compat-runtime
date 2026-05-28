@@ -714,6 +714,17 @@ Exit criteria:
 - Unsupported strategy order types and broker settings remain explicit.
 - `scripts/verify.sh` passes.
 
+Slice 6 closeout record:
+
+- Phase L is closed for the current strategy usability subset.
+- `docs/PHASE_L_AUDIT.md` records completed slices, supported surface, public
+  host behavior, fixture evidence, verification results, and maintenance tails.
+- `docs/LONG_TERM_EXECUTION_PLAN.md`, `docs/CONFORMANCE.md`,
+  `docs/LANGUAGE_SCOPE.md`, `docs/EXECUTION_SEMANTICS.md`, and
+  `docs/RELEASE_NOTES.md` now point to the same Phase L boundary.
+- No runtime JSON, Python dictionary, or WASM JSON schema fields were added in
+  Slice 6.
+
 Verification:
 
 ```text

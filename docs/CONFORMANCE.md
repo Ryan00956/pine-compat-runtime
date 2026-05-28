@@ -96,6 +96,7 @@ the same bar. They behave like read-only series floats in supported expression
 contexts, including branches, switches, loops, pure UDF arguments, and constant
 history references. They do not change the public runtime JSON shape because
 scripts observe them through ordinary outputs such as `plot`.
+The closed Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`.
 
 ## Source Graph Host Contract
 

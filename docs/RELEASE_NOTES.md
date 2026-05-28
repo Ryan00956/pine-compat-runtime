@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Phase L for the current strategy usability subset. The audit records
+  supported strategy state variables, fixed default quantity behavior, public
+  host coverage, `strategy.exit` design boundaries, remaining maintenance tails,
+  and release-gate verification.
 - Completed Phase L Slice 5 as a `strategy.exit` design gate. Stop, limit,
   profit/loss, trailing, partial quantity, and missing-entry exit forms now have
   explicit unsupported fixtures, and no pending-order or exit schema fields are
