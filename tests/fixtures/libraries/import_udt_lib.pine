@@ -1,0 +1,5 @@
+library("Imported UDT fixture")
+type Point
+    float x
+
+method shift(Point p, float delta) => p.x + delta

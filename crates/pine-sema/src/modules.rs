@@ -286,7 +286,7 @@ fn validate_alias_access(
             let ExprKind::QualifiedName(parts) = &expr.kind else {
                 return;
             };
-            if parts.len() != 2 {
+            if parts.len() < 2 {
                 return;
             }
             let Some(key) = aliases.get(parts[0].as_str()) else {

@@ -83,6 +83,9 @@ User-defined methods are partial for pure methods on local UDT receivers with
 scalar parameters. The receiver is passed as the first internal parameter.
 Side effects, recursion, unknown receiver types, imported methods, and
 unsupported parameter families remain outside the supported matrix.
+Phase J Slice 9 deliberately keeps imported UDT identity and imported methods
+as a maintenance tail: exported constants/functions are source-graph scoped,
+but UDT type identity and method tables are local to the root source for now.
 
 Hosts may pass library source text into semantic analysis as future graph input:
 

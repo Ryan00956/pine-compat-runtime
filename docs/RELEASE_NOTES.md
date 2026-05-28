@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Locked Phase J Slice 9 imported UDT/method boundaries. Imported UDT identity
+  and imported methods remain unsupported maintenance tails while source-graph
+  imports continue to support exported constants and pure functions only.
 - Added Phase J Slice 8 user-defined methods for pure methods on local UDT
   receivers with scalar parameters. Calls lower through the existing inlined
   function-body path with the receiver as the first internal parameter; side

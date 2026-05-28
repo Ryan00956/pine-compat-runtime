@@ -656,6 +656,33 @@ fn import_rejects_recursive_exported_functions() {
 }
 
 #[test]
+fn import_rejects_imported_user_type_constructors() {
+    let analysis = analyze_with_libraries(
+        "import user/udt/1 as lib\np = lib.Point.new(close)\nplot(p.x)\n",
+        vec![("user/udt/1", "library(\"udt\")\ntype Point\n    float x\n")],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_UNKNOWN_EXPORT"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn import_rejects_imported_user_methods() {
+    let analysis = analyze_with_libraries(
+        "import user/methods/1 as lib\ntype Point\n    float x\np = Point.new(close)\nplot(p.shift(1))\n",
+        vec![(
+            "user/methods/1",
+            "library(\"methods\")\ntype Point\n    float x\nmethod shift(Point p, float delta) => p.x + delta\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_UNKNOWN_METHOD"), "{codes:?}");
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn compile_cache_clear_drops_entries_and_stats() {
     let source = SourceFile::new("test.pine", "plot(close)\n");
     let mut cache = CompileCache::new();
