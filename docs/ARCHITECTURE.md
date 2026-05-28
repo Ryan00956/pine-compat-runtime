@@ -61,6 +61,21 @@ Responsibilities:
 The analyzer is the boundary where unsupported features should become explicit
 diagnostics instead of runtime surprises.
 
+Phase J introduces a source graph scaffold before executable imports. Public
+semantic analysis can now be driven by `AnalysisInput`, which contains a root
+`SourceFile` and an optional deterministic list of host-provided library
+sources. `SourceGraph` assigns stable `SourceId` values with root source id `0`
+and library source ids sorted by import key, while each source unit keeps a
+diagnostic display name. Library keys are normalized by trimming outer
+whitespace, reject empty or whitespace/control-containing keys, and duplicate
+keys are rejected before analysis. This model is intentionally host-neutral:
+core crates do not read files, fetch network data, consult clocks, or resolve
+library names outside the host-provided map.
+
+Import statements still produce the existing unsupported diagnostics in this
+slice. Library source text is accepted only as future graph input and cache-key
+material; it is not parsed as an import target or executed.
+
 ### `pine-ir`
 
 Owns host-independent intermediate representations.
@@ -286,16 +301,27 @@ Python:
 ```python
 from pine_compat import compile_script
 
-program = compile_script(source)
+program = compile_script(
+    source,
+    library_sources={"user/lib/1": 'library("lib")\n'},
+)
 result = program.run(bars, request_bars={"NYSE:IBM:1": requested_bars})
 ```
 
 CLI:
 
 ```bash
-pine-compat analyze script.pine
-pine-compat run script.pine --bars bars.csv --request-bars NYSE:IBM:1=ibm.csv
+pine-compat analyze script.pine --library-source user/lib/1=lib.pine
+pine-compat run script.pine --bars bars.csv \
+  --library-source user/lib/1=lib.pine \
+  --request-bars NYSE:IBM:1=ibm.csv
 ```
+
+The WASM API currently remains single-source for library inputs. It routes
+through the same `AnalysisInput` root-source path, but it does not yet expose a
+JSON object for library source injection. Root imports therefore continue to
+report unsupported import diagnostics in WASM until a deterministic JSON host
+shape is added.
 
 ## Output Model
 

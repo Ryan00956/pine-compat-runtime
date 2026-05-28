@@ -6,6 +6,7 @@ use pine_syntax::{Diagnostic, SourceFile, parse_source};
 use crate::analyzer::context::Analyzer;
 use crate::compatibility::CompatibilityReport;
 use crate::resolver::ScopeResolver;
+use crate::source_graph::AnalysisInput;
 use crate::symbols::{
     initial_series_count, initial_symbol_count, initial_symbol_order, initial_symbols,
 };
@@ -18,6 +19,12 @@ pub struct Analysis {
 }
 
 pub fn analyze_source(source: &SourceFile) -> Analysis {
+    analyze_input(&AnalysisInput::new(source.clone()))
+}
+
+pub fn analyze_input(input: &AnalysisInput) -> Analysis {
+    let graph = input.source_graph();
+    let source = graph.root().source();
     let parsed = parse_source(source);
     let mut analyzer = Analyzer {
         diagnostics: parsed.diagnostics,

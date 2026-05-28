@@ -64,6 +64,30 @@ not force analysis or matrix schema changes. The text-only CLI `analyze` output
 is diagnostic console output and is not part of the machine-readable schema
 until a JSON mode is added.
 
+## Source Graph Host Contract
+
+Phase J Slice 1 adds a host-neutral source graph scaffold without changing
+conformance claims. Import statements remain unsupported, so
+`tests/fixtures/conformance.tsv` must not gain supported import/library rows
+from this slice alone.
+
+Hosts may pass library source text into semantic analysis as future graph input:
+
+- CLI accepts repeated `--library-source KEY=path.pine` options for `analyze`
+  and `run`. The CLI owns filesystem reads and passes source text to core.
+- Python accepts `library_sources={"KEY": "source text"}` on `compile_script`,
+  `analyze_script`, and `run_script`.
+- WASM remains a documented temporary gap for library source injection; it uses
+  the shared root-source `AnalysisInput` path but exposes no library-source JSON
+  argument yet.
+
+Core crates must not perform filesystem, network, clock, or host registry I/O
+for library resolution. Library source keys are deterministic host-provided
+identifiers: empty keys, keys containing whitespace/control characters, and
+duplicate keys are rejected before analysis. Cache keys include root source
+name/text and every host-provided library key/name/text so future import graph
+use cannot reuse stale analysis.
+
 CLI and WASM runtime JSON must be generated through the shared runtime contract
 helper so field names and nesting cannot drift. Python returns native
 dictionaries, so its binding tests assert the same top-level runtime keys and

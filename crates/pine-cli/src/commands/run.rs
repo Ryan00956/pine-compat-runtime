@@ -5,10 +5,12 @@ use pine_runtime::{
     public_runtime_profiled_result_json, public_runtime_result_json,
     run_historical_profiled_with_request_environment, run_historical_with_request_environment,
 };
-use pine_sema::analyze_source;
-use pine_syntax::SourceFile;
+use pine_sema::analyze_input;
 
 use crate::bars_csv::parse_bars_csv;
+use crate::library_sources::{
+    LibrarySourceSpec, analysis_input_from_paths, parse_library_source_spec,
+};
 use crate::usage;
 
 pub(crate) fn run(args: Vec<String>) -> Result<(), String> {
@@ -22,6 +24,7 @@ struct RunOptions {
     bars_path: String,
     profile: bool,
     request_bars: Vec<RequestBarsSpec>,
+    library_sources: Vec<LibrarySourceSpec>,
 }
 
 #[derive(Debug)]
@@ -36,10 +39,9 @@ fn run_with_options(options: &RunOptions) -> Result<(), String> {
 }
 
 fn run_json_with_options(options: &RunOptions) -> Result<String, String> {
-    let text = fs::read_to_string(&options.path)
-        .map_err(|err| format!("failed to read {}: {err}", options.path))?;
-    let source = SourceFile::new(&options.path, text);
-    let analysis = analyze_source(&source);
+    let input = analysis_input_from_paths(&options.path, &options.library_sources)?;
+    let source = input.root().clone();
+    let analysis = analyze_input(&input);
     if !analysis.diagnostics.is_empty() {
         for diagnostic in analysis.diagnostics {
             let line_col = source.line_col(diagnostic.span.start);
@@ -86,6 +88,7 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
         bars_path: String::new(),
         profile: false,
         request_bars: Vec::new(),
+        library_sources: Vec::new(),
     };
     let mut index = 1;
     while index < args.len() {
@@ -106,6 +109,15 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                     return Err(usage());
                 };
                 options.request_bars.push(parse_request_bars_spec(value)?);
+            }
+            "--library-source" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                options
+                    .library_sources
+                    .push(parse_library_source_spec(value)?);
             }
             _ => return Err(usage()),
         }
@@ -180,6 +192,24 @@ mod tests {
     }
 
     #[test]
+    fn parses_run_options_with_library_source() {
+        let options = parse_options(&[
+            "script.pine".to_owned(),
+            "--bars".to_owned(),
+            "bars.csv".to_owned(),
+            "--library-source".to_owned(),
+            "user/lib/1=lib.pine".to_owned(),
+        ])
+        .expect("run options");
+
+        assert_eq!(options.path, "script.pine");
+        assert_eq!(options.bars_path, "bars.csv");
+        assert_eq!(options.library_sources.len(), 1);
+        assert_eq!(options.library_sources[0].key, "user/lib/1");
+        assert_eq!(options.library_sources[0].path, "lib.pine");
+    }
+
+    #[test]
     fn builds_request_environment_from_csv_specs() {
         let path = std::env::temp_dir().join(format!(
             "pine-request-bars-{}-{}.csv",
@@ -230,6 +260,7 @@ mod tests {
             path: workspace_path("tests/fixtures/request/request_security_host.pine"),
             bars_path: workspace_path("tests/fixtures/request/chart_1m.csv"),
             profile: false,
+            library_sources: Vec::new(),
             request_bars: vec![
                 parse_request_bars_spec(&format!(
                     "NYSE:IBM:1={}",

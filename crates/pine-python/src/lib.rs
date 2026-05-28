@@ -4,7 +4,7 @@ use pine_runtime::{
     PUBLIC_RUNTIME_SCHEMA_VERSION, PineValue, RequestEnvironment, RequestKey, RequestTimeframe,
     run_historical_with_request_environment,
 };
-use pine_sema::{Analysis, analyze_source};
+use pine_sema::{Analysis, AnalysisInput, analyze_input};
 use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -33,10 +33,11 @@ impl PyProgram {
     }
 }
 
-#[pyfunction]
-fn compile_script(source: &str) -> PyResult<PyProgram> {
-    let source_file = SourceFile::new("<python>", source);
-    let analysis = analyze_source(&source_file);
+#[pyfunction(signature = (source, library_sources=None))]
+fn compile_script(source: &str, library_sources: Option<&Bound<'_, PyAny>>) -> PyResult<PyProgram> {
+    let input = analysis_input_from_python(source, library_sources)?;
+    let source_file = input.root().clone();
+    let analysis = analyze_input(&input);
     if !analysis.diagnostics.is_empty() {
         return Err(PyValueError::new_err(format_diagnostics(
             &source_file,
@@ -50,21 +51,27 @@ fn compile_script(source: &str) -> PyResult<PyProgram> {
     Ok(PyProgram { hir })
 }
 
-#[pyfunction]
-fn analyze_script(py: Python<'_>, source: &str) -> PyResult<Py<PyAny>> {
-    let source_file = SourceFile::new("<python>", source);
-    let analysis = analyze_source(&source_file);
+#[pyfunction(signature = (source, library_sources=None))]
+fn analyze_script(
+    py: Python<'_>,
+    source: &str,
+    library_sources: Option<&Bound<'_, PyAny>>,
+) -> PyResult<Py<PyAny>> {
+    let input = analysis_input_from_python(source, library_sources)?;
+    let source_file = input.root().clone();
+    let analysis = analyze_input(&input);
     analysis_to_py(py, &source_file, &analysis)
 }
 
-#[pyfunction(signature = (source, bars, request_bars=None))]
+#[pyfunction(signature = (source, bars, request_bars=None, library_sources=None))]
 fn run_script(
     py: Python<'_>,
     source: &str,
     bars: &Bound<'_, PyAny>,
     request_bars: Option<&Bound<'_, PyAny>>,
+    library_sources: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Py<PyAny>> {
-    let program = compile_script(source)?;
+    let program = compile_script(source, library_sources)?;
     program.run(py, bars, request_bars)
 }
 
@@ -84,6 +91,32 @@ fn parse_bars(bars: &Bound<'_, PyAny>) -> PyResult<Vec<Bar>> {
         parsed.push(parse_bar(&item)?);
     }
     Ok(parsed)
+}
+
+fn analysis_input_from_python(
+    source: &str,
+    library_sources: Option<&Bound<'_, PyAny>>,
+) -> PyResult<AnalysisInput> {
+    let root = SourceFile::new("<python>", source);
+    let Some(library_sources) = library_sources else {
+        return Ok(AnalysisInput::new(root));
+    };
+    let dict = library_sources.cast::<PyDict>().map_err(|_| {
+        PyValueError::new_err("library_sources must be a dict mapping import key to source text")
+    })?;
+    let mut sources = Vec::with_capacity(dict.len());
+    for (key, value) in dict {
+        let key: String = key.extract()?;
+        let text: String = value.extract().map_err(|_| {
+            PyValueError::new_err("library_sources values must be source text strings")
+        })?;
+        sources.push((
+            key.clone(),
+            SourceFile::new(format!("<python:{key}>"), text),
+        ));
+    }
+    AnalysisInput::with_library_sources(root, sources)
+        .map_err(|err| PyValueError::new_err(err.to_string()))
 }
 
 fn parse_request_environment(

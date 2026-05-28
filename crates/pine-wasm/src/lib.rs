@@ -2,7 +2,7 @@ use pine_ir::HirProgram;
 use pine_runtime::{
     Bar, PUBLIC_ANALYSIS_SCHEMA_VERSION, public_runtime_result_json, run_historical,
 };
-use pine_sema::{Analysis, analyze_source};
+use pine_sema::{Analysis, AnalysisInput, analyze_input};
 use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 use wasm_bindgen::prelude::*;
 
@@ -17,8 +17,9 @@ pub fn compile_script(source: &str) -> Result<WasmProgram, JsValue> {
 }
 
 fn compile_program(source: &str) -> Result<WasmProgram, String> {
-    let source_file = SourceFile::new("<wasm>", source);
-    let analysis = analyze_source(&source_file);
+    let input = analysis_input(source);
+    let source_file = input.root().clone();
+    let analysis = analyze_input(&input);
     if !analysis.diagnostics.is_empty() {
         return Err(format_diagnostics(&source_file, &analysis.diagnostics));
     }
@@ -31,8 +32,9 @@ fn compile_program(source: &str) -> Result<WasmProgram, String> {
 
 #[wasm_bindgen(js_name = analyzeScript)]
 pub fn analyze_script(source: &str) -> String {
-    let source_file = SourceFile::new("<wasm>", source);
-    let analysis = analyze_source(&source_file);
+    let input = analysis_input(source);
+    let source_file = input.root().clone();
+    let analysis = analyze_input(&input);
     analysis_json(&source_file, &analysis)
 }
 
@@ -44,6 +46,10 @@ pub fn run_script_csv(source: &str, bars_csv: &str) -> Result<String, JsValue> {
 fn run_script_csv_internal(source: &str, bars_csv: &str) -> Result<String, String> {
     let program = compile_program(source)?;
     program.run_csv_internal(bars_csv)
+}
+
+fn analysis_input(source: &str) -> AnalysisInput {
+    AnalysisInput::new(SourceFile::new("<wasm>", source))
 }
 
 #[wasm_bindgen]

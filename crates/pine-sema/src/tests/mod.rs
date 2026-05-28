@@ -1,4 +1,6 @@
-use crate::{Analysis, CompileCache, CompileCacheStats, analyze_source};
+use crate::{
+    Analysis, AnalysisInput, CompileCache, CompileCacheStats, SourceGraphError, analyze_source,
+};
 use pine_ir::{HirStmtKind, PersistenceKind, VarSlotId};
 use pine_syntax::SourceFile;
 

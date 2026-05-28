@@ -7,6 +7,7 @@ mod compatibility;
 mod history;
 mod lowering;
 mod resolver;
+mod source_graph;
 mod symbols;
 mod types;
 
@@ -50,9 +51,12 @@ mod prelude {
     };
 }
 
-pub use analysis::{Analysis, analyze_source};
+pub use analysis::{Analysis, analyze_input, analyze_source};
 pub use cache::{CompileCache, CompileCacheStats};
 pub use compatibility::{CompatibilityReport, FeatureUse, UnsupportedFeature};
+pub use source_graph::{
+    AnalysisInput, LibrarySource, SourceGraph, SourceGraphError, SourceId, SourceUnit,
+};
 
 #[cfg(test)]
 mod tests;

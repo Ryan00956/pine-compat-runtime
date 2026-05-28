@@ -4,6 +4,7 @@ mod bars_csv;
 mod commands;
 mod conformance;
 mod json;
+mod library_sources;
 
 fn main() -> ExitCode {
     match run() {
@@ -31,7 +32,7 @@ fn run() -> Result<(), String> {
 }
 
 pub(crate) fn usage() -> String {
-    "usage: pine-compat <analyze|fmt-ast> <script.pine>\n       pine-compat run <script.pine> --bars <bars.csv> [--request-bars SYMBOL:TIMEFRAME=bars.csv]... [--profile]\n       pine-compat matrix [--format text|json]".to_owned()
+    "usage: pine-compat analyze <script.pine> [--library-source KEY=path.pine]...\n       pine-compat fmt-ast <script.pine>\n       pine-compat run <script.pine> --bars <bars.csv> [--library-source KEY=path.pine]... [--request-bars SYMBOL:TIMEFRAME=bars.csv]... [--profile]\n       pine-compat matrix [--format text|json]".to_owned()
 }
 
 #[cfg(test)]

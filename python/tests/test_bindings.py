@@ -76,6 +76,41 @@ def test_compile_script_returns_program_with_run_method():
     assert result["diagnostics"] == []
 
 
+def test_analyze_script_accepts_library_sources_without_enabling_imports():
+    report = pine_compat.analyze_script(
+        'indicator("root")\nplot(close)\n',
+        library_sources={"user/lib/1": 'library("lib")\n'},
+    )
+
+    assert report["executable"] is True
+    assert report["diagnostics"] == []
+
+
+def test_compile_script_keeps_import_unsupported_with_library_source():
+    try:
+        pine_compat.compile_script(
+            'import user/lib/1\nindicator("root")\n',
+            library_sources={"user/lib/1": 'library("lib")\n'},
+        )
+    except ValueError as error:
+        assert "E_UNSUPPORTED_FEATURE" in str(error)
+        assert "library imports are not supported in Phase 1" in str(error)
+    else:
+        raise AssertionError("import should remain unsupported")
+
+
+def test_compile_script_rejects_invalid_library_source_key():
+    try:
+        pine_compat.compile_script(
+            'indicator("root")\nplot(close)\n',
+            library_sources={"user/lib 1": 'library("lib")\n'},
+        )
+    except ValueError as error:
+        assert "invalid library source key `user/lib 1`" in str(error)
+    else:
+        raise AssertionError("invalid library key should fail")
+
+
 def test_run_script_compiles_and_executes():
     result = pine_compat.run_script(
         'indicator("math")\nplot(math.max(close, 2))\n',
@@ -84,6 +119,16 @@ def test_run_script_compiles_and_executes():
 
     assert result["schemaVersion"] == 3
     assert result["plots"][0]["values"] == [2, 2, 3]
+
+
+def test_run_script_accepts_library_sources_without_enabling_imports():
+    result = pine_compat.run_script(
+        'indicator("root")\nplot(close)\n',
+        BARS,
+        library_sources={"user/lib/1": 'library("lib")\n'},
+    )
+
+    assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
 
 
 def test_run_script_returns_alertcondition_events():

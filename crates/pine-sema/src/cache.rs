@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use pine_syntax::SourceFile;
 
-use crate::analysis::{Analysis, analyze_source};
+use crate::analysis::{Analysis, analyze_input};
+use crate::source_graph::AnalysisInput;
 
 #[derive(Debug, Default, Clone)]
 pub struct CompileCache {
@@ -20,6 +21,14 @@ pub struct CompileCacheStats {
 struct CompileCacheKey {
     name: String,
     text: String,
+    libraries: Vec<CompileCacheLibraryKey>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct CompileCacheLibraryKey {
+    key: String,
+    name: String,
+    text: String,
 }
 impl CompileCache {
     #[must_use]
@@ -28,14 +37,18 @@ impl CompileCache {
     }
 
     pub fn analyze(&mut self, source: &SourceFile) -> Analysis {
-        let key = CompileCacheKey::from_source(source);
+        self.analyze_input(&AnalysisInput::new(source.clone()))
+    }
+
+    pub fn analyze_input(&mut self, input: &AnalysisInput) -> Analysis {
+        let key = CompileCacheKey::from_input(input);
         if let Some(analysis) = self.entries.get(&key) {
             self.hits += 1;
             return analysis.clone();
         }
 
         self.misses += 1;
-        let analysis = analyze_source(source);
+        let analysis = analyze_input(input);
         self.entries.insert(key, analysis.clone());
         analysis
     }
@@ -56,10 +69,19 @@ impl CompileCache {
     }
 }
 impl CompileCacheKey {
-    fn from_source(source: &SourceFile) -> Self {
+    fn from_input(input: &AnalysisInput) -> Self {
         Self {
-            name: source.name().to_owned(),
-            text: source.text().to_owned(),
+            name: input.root().name().to_owned(),
+            text: input.root().text().to_owned(),
+            libraries: input
+                .library_sources()
+                .iter()
+                .map(|library| CompileCacheLibraryKey {
+                    key: library.key().to_owned(),
+                    name: library.source().name().to_owned(),
+                    text: library.source().text().to_owned(),
+                })
+                .collect(),
         }
     }
 }

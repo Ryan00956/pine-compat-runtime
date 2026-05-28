@@ -54,6 +54,15 @@ fn request_host_data_is_documented_wasm_gap() {
 }
 
 #[test]
+fn library_source_injection_is_documented_wasm_gap() {
+    let output = analyze_script("import user/lib/1\nindicator(\"root\")\n");
+
+    assert!(output.contains("\"executable\":false"));
+    assert!(output.contains("\"feature\":\"import\""));
+    assert!(output.contains("library imports are not supported in Phase 1"));
+}
+
+#[test]
 fn analysis_outputs_match_golden_snapshots() {
     assert_snapshot(
         "analysis_supported.json",

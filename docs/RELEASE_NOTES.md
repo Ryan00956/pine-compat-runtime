@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added Phase J Slice 1 source graph scaffolding: `AnalysisInput`,
+  deterministic source ids, normalized library source keys, duplicate/invalid
+  key rejection, and compile-cache keys that include host-provided library
+  source text. CLI now accepts repeated `--library-source KEY=path.pine`
+  options for `analyze` and `run`; Python accepts `library_sources` dictionaries
+  on `compile_script`, `analyze_script`, and `run_script`. WASM library source
+  injection remains a documented temporary gap, and root `import` statements
+  still report unsupported diagnostics.
 - Started Phase J Slice 0 by locking the diagnostic-only boundary for
   `library`, `export`, user-defined type declarations, and user-defined method
   declarations with unsupported sema fixtures and conformance rows. Non-array

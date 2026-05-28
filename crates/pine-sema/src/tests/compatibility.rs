@@ -430,6 +430,60 @@ fn compile_cache_keys_by_source_name_and_text() {
 }
 
 #[test]
+fn compile_cache_keys_by_source_graph_library_sources() {
+    let root = SourceFile::new("root.pine", "plot(close)\n");
+    let library_one = SourceFile::new("lib.pine", "library(\"one\")\n");
+    let library_two = SourceFile::new("lib.pine", "library(\"two\")\n");
+    let first_input = AnalysisInput::with_library_sources(
+        root.clone(),
+        vec![("user/lib/1".to_owned(), library_one)],
+    )
+    .expect("first input");
+    let second_input =
+        AnalysisInput::with_library_sources(root, vec![("user/lib/1".to_owned(), library_two)])
+            .expect("second input");
+    let mut cache = CompileCache::new();
+
+    cache.analyze_input(&first_input);
+    cache.analyze_input(&first_input);
+    cache.analyze_input(&second_input);
+
+    assert_eq!(
+        cache.stats(),
+        CompileCacheStats {
+            entries: 2,
+            hits: 1,
+            misses: 2,
+        }
+    );
+}
+
+#[test]
+fn source_graph_input_reports_duplicate_library_key() {
+    let error = AnalysisInput::with_library_sources(
+        SourceFile::new("root.pine", "plot(close)\n"),
+        vec![
+            (
+                "user/lib/1".to_owned(),
+                SourceFile::new("one.pine", "library(\"one\")\n"),
+            ),
+            (
+                "user/lib/1".to_owned(),
+                SourceFile::new("two.pine", "library(\"two\")\n"),
+            ),
+        ],
+    )
+    .expect_err("duplicate keys should fail");
+
+    assert_eq!(
+        error,
+        SourceGraphError::DuplicateLibraryKey {
+            key: "user/lib/1".to_owned()
+        }
+    );
+}
+
+#[test]
 fn compile_cache_clear_drops_entries_and_stats() {
     let source = SourceFile::new("test.pine", "plot(close)\n");
     let mut cache = CompileCache::new();

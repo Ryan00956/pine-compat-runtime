@@ -1,17 +1,15 @@
-use std::fs;
+use pine_sema::analyze_input;
 
-use pine_sema::analyze_source;
-use pine_syntax::SourceFile;
-
+use crate::library_sources::{
+    LibrarySourceSpec, analysis_input_from_paths, parse_library_source_spec,
+};
 use crate::usage;
 
 pub(crate) fn run(args: Vec<String>) -> Result<(), String> {
-    let [path] = args.as_slice() else {
-        return Err(usage());
-    };
-    let text = fs::read_to_string(path).map_err(|err| format!("failed to read {path}: {err}"))?;
-    let source = SourceFile::new(path, text);
-    let analysis = analyze_source(&source);
+    let options = parse_options(&args)?;
+    let input = analysis_input_from_paths(&options.path, &options.library_sources)?;
+    let source = input.root().clone();
+    let analysis = analyze_input(&input);
     println!("diagnostics: {}", analysis.diagnostics.len());
     println!(
         "supported: {}, unsupported: {}",
@@ -30,4 +28,37 @@ pub(crate) fn run(args: Vec<String>) -> Result<(), String> {
         );
     }
     Ok(())
+}
+
+#[derive(Debug)]
+struct AnalyzeOptions {
+    path: String,
+    library_sources: Vec<LibrarySourceSpec>,
+}
+
+fn parse_options(args: &[String]) -> Result<AnalyzeOptions, String> {
+    let Some(path) = args.first() else {
+        return Err(usage());
+    };
+    let mut options = AnalyzeOptions {
+        path: path.clone(),
+        library_sources: Vec::new(),
+    };
+    let mut index = 1;
+    while index < args.len() {
+        match args[index].as_str() {
+            "--library-source" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                options
+                    .library_sources
+                    .push(parse_library_source_spec(value)?);
+            }
+            _ => return Err(usage()),
+        }
+        index += 1;
+    }
+    Ok(options)
 }

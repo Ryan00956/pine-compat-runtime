@@ -119,6 +119,13 @@ Run a script against CSV bars:
 cargo run -p pine-cli -- run tests/fixtures/runtime/macd.pine --bars tests/fixtures/runtime/bars.csv
 ```
 
+Library source text can be passed as Phase J graph input without enabling
+imports:
+
+```text
+cargo run -p pine-cli -- analyze script.pine --library-source user/lib/1=lib.pine
+```
+
 Print the compatibility matrix:
 
 ```text
@@ -139,6 +146,15 @@ result = program.run([
 ])
 ```
 
+Python can also pass Phase J library source text for future source graph use:
+
+```python
+report = pine_compat.analyze_script(
+    'indicator("demo")\nplot(close)\n',
+    library_sources={"user/lib/1": 'library("lib")\n'},
+)
+```
+
 Build locally in an active virtual environment with:
 
 ```text
@@ -154,6 +170,9 @@ The optional WASM crate exposes a thin `wasm-bindgen` API:
 - `analyzeScript(source)`
 - `runScriptCsv(source, barsCsv)`
 - `Program.runCsv(barsCsv)`
+
+Library source injection is not exposed in WASM yet; root imports still report
+unsupported import diagnostics.
 
 Build-check it with:
 
