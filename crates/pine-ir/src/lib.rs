@@ -20,6 +20,12 @@ pub enum PersistenceKind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScriptMode {
+    Indicator,
+    Strategy,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Qualifier {
     Const,
     Input,
@@ -66,6 +72,7 @@ impl PineType {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct HirProgram {
+    pub script_mode: ScriptMode,
     pub symbols: Vec<HirSymbol>,
     pub statements: Vec<HirStmt>,
     pub next_series_id: u32,

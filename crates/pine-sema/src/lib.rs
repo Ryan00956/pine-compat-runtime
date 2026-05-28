@@ -19,7 +19,7 @@ mod prelude {
     pub(crate) use pine_ir::{
         HirBinaryOp, HirCallArg, HirExpr, HirExprKind, HirHistoryOffset, HirLiteral, HirProgram,
         HirStmt, HirStmtKind, HirSwitchArm, HirSymbol, HirUnaryOp, PersistenceKind, PineType,
-        Qualifier, SymbolId, ValueKind,
+        Qualifier, ScriptMode, SymbolId, ValueKind,
     };
     pub(crate) use pine_syntax::{
         BinaryOp, CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Literal, Program, Severity,

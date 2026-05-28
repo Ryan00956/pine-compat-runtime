@@ -1,0 +1,3 @@
+//@version=5
+indicator("Duplicate declaration")
+strategy("Duplicate declaration")

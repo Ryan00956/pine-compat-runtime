@@ -1,0 +1,4 @@
+//@version=5
+indicator("Local strategy declaration")
+if close > open
+    strategy("Local declaration")

@@ -24,6 +24,18 @@ Initial value kinds:
 that erases useful diagnostics. The analyzer may use an internal "unknown due to
 na" marker while it waits for contextual type information.
 
+## Script Declarations
+
+A script may have at most one top-level declaration call. `indicator(...)`
+selects indicator mode and `strategy(...)` selects strategy mode. Phase G
+initially accepts `strategy(...)` as declaration metadata only: order functions,
+broker emulation, realtime strategy handoff, and strategy result output remain
+unsupported until later slices define those contracts.
+
+`indicator(...)` and `strategy(...)` declarations are mutually exclusive and
+must be top-level. Declaration calls inside functions or local blocks are
+semantic errors.
+
 ## Qualifiers
 
 Qualifiers describe how a value changes over execution:

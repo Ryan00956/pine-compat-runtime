@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Phase G Slice 1 strategy declaration scaffolding. `strategy(...)` is
+  accepted as a declaration-only partial feature with strategy HIR mode
+  metadata, while strategy order functions and broker output remain
+  unsupported.
 - Locked Phase G Slice 0 unsupported diagnostics for the reserved strategy
   surface. `strategy(...)`, `strategy.entry`, `strategy.exit`, and
   `strategy.close` now use fixture-backed `E_UNSUPPORTED_FEATURE` diagnostics

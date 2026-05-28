@@ -62,6 +62,7 @@ mod tests {
                 || signature.name.starts_with("box.")
                 || signature.name.starts_with("table.")
                 || signature.name == "request.security"
+                || signature.name == "strategy"
                 || signature.name == "alert"
                 || signature.name == "alertcondition"
             {

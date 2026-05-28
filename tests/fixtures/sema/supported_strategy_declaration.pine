@@ -1,0 +1,3 @@
+//@version=5
+strategy("Supported strategy declaration", overlay=true)
+plot(close)

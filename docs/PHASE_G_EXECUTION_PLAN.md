@@ -17,9 +17,10 @@ This is the repository state before Phase G starts:
 
 - `tests/fixtures/conformance.tsv` marks `strategy.*` as `unsupported` with the
   fixture `tests/fixtures/sema/unsupported_strategy.pine`.
-- `pine-sema` rejects `strategy.*` calls through the unsupported-feature path,
-  and Slice 0 normalizes the bare `strategy(...)` declaration to the same
-  diagnostic family while it remains unsupported.
+- At Phase G start, `pine-sema` rejected `strategy.*` calls through the
+  unsupported-feature path. Slice 0 normalizes the bare `strategy(...)`
+  declaration to the same diagnostic family before Slice 1 promotes the
+  declaration itself to a narrow partial feature.
 - `pine-builtins` registers `indicator(...)` as the supported script declaration
   builtin. It does not register `strategy(...)` or strategy order functions.
 - Syntax fixtures overwhelmingly use `indicator(...)`; the existing strategy

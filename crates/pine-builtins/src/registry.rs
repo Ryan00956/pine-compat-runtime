@@ -78,3 +78,16 @@ pub fn get_phase_1_builtin(name: &str) -> Option<&'static BuiltinSignature> {
         .iter()
         .find(|signature| signature.name == name)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn registers_strategy_declaration_signature() {
+        let signature = get_phase_1_builtin("strategy").expect("strategy declaration signature");
+        assert_eq!(signature.params[0].name, "title");
+        assert_eq!(signature.params[0].accepts, crate::Accepts::ConstString);
+        assert!(!signature.variadic);
+    }
+}

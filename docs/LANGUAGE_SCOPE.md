@@ -73,6 +73,8 @@ Phase 1 executable subset:
 - arithmetic, comparison, logical, and ternary expressions
 - constant history offsets and guarded dynamic integer history offsets
 - `indicator`
+- `strategy(...)` as a declaration-only Phase G subset; order functions,
+  broker state, and strategy result output are not executable yet
 - `input.*`
 - `plot`, `plotchar`, `plotshape`, `plotarrow`, `plotbar`, `plotcandle`,
   `bgcolor`, `barcolor`, `hline`, and `fill`
@@ -250,7 +252,9 @@ Request data:
 
 The analyzer should reject these with clear diagnostics:
 
-- `strategy.*`
+- strategy order functions and reporting helpers such as `strategy.entry`,
+  `strategy.exit`, `strategy.order`, `strategy.close`, and `strategy.*`
+  variables; `strategy(...)` itself is partial as a declaration-only feature
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need

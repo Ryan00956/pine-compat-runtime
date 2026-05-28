@@ -92,11 +92,31 @@ fn reports_unsupported_strategy_fixture() {
 }
 
 #[test]
-fn reports_unsupported_strategy_declaration_fixture() {
-    assert_strategy_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_strategy_declaration.pine",
-        &["strategy"],
+fn accepts_supported_strategy_declaration_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_declaration.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
     );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy"),
+        "{} supported features: {:?}",
+        path.display(),
+        analysis.compatibility.supported
+    );
+    let hir = analysis.hir.expect("strategy declaration should lower");
+    assert_eq!(hir.script_mode, pine_ir::ScriptMode::Strategy);
 }
 
 #[test]
@@ -104,6 +124,22 @@ fn reports_unsupported_strategy_order_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_orders.pine",
         &["strategy.entry", "strategy.exit", "strategy.close"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_duplicate_declaration_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_duplicate_declaration.pine",
+        "E_SCRIPT_DECL_DUPLICATE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_local_declaration_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_local_declaration.pine",
+        "E_SCRIPT_DECL_LOCATION",
     );
 }
 
@@ -377,6 +413,24 @@ fn assert_unsupported_fixture(path: &str, feature: &str, reason: &str) {
         "{} unsupported features: {:?}",
         path.display(),
         analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+fn assert_diagnostic_fixture(path: &str, code: &str) {
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == code),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
     );
     assert!(analysis.hir.is_none());
 }

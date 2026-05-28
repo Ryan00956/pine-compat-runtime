@@ -25,7 +25,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Option<Result<PineValue, RuntimeError>> {
         Some(match callee {
-            "indicator" => Ok(PineValue::Void),
+            "indicator" | "strategy" => Ok(PineValue::Void),
             "input" | "input.int" | "input.float" | "input.bool" | "input.color"
             | "input.string" | "input.price" | "input.time" | "input.symbol"
             | "input.timeframe" | "input.session" | "input.text_area" | "input.source" => {

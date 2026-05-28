@@ -129,6 +129,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
     matches!(
         name,
         "indicator"
+            | "strategy"
             | "alert"
             | "alertcondition"
             | "plot"
@@ -250,10 +251,11 @@ impl Analyzer {
 
         if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
             self.check_feature_name(&name, callee.span);
+            self.validate_script_declaration_call(&name, callee.span);
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "indicator, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, and drawing calls are not supported inside user-defined functions",
+                    "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, and drawing calls are not supported inside user-defined functions",
                     callee.span,
                 );
             }
@@ -293,6 +295,39 @@ impl Analyzer {
             callee.span,
         ));
         None
+    }
+
+    pub(crate) fn validate_script_declaration_call(&mut self, name: &str, span: Span) {
+        let Some(mode) = (match name {
+            "indicator" => Some(ScriptMode::Indicator),
+            "strategy" => Some(ScriptMode::Strategy),
+            _ => None,
+        }) else {
+            return;
+        };
+
+        if self.block_depth > 0 || self.function_depth > 0 {
+            self.diagnostics.push(Diagnostic::error(
+                "E_SCRIPT_DECL_LOCATION",
+                format!("`{name}` declarations must be top-level"),
+                span,
+            ));
+            return;
+        }
+
+        if let Some((existing_mode, _)) = self.script_declaration {
+            self.diagnostics.push(Diagnostic::error(
+                "E_SCRIPT_DECL_DUPLICATE",
+                format!(
+                    "script already has a {:?} declaration; only one indicator(...) or strategy(...) declaration is allowed",
+                    existing_mode
+                ),
+                span,
+            ));
+            return;
+        }
+
+        self.script_declaration = Some((mode, span));
     }
 
     pub(crate) fn analyze_method_call(

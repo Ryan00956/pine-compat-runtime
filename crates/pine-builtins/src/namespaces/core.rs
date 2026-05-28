@@ -428,6 +428,13 @@ pub(crate) const SCRIPT_SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "strategy",
+        phase: BuiltinPhase::Phase1Core,
+        params: INDICATOR_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "input",
         phase: BuiltinPhase::Phase1Core,
         params: INPUT_PARAMS,
