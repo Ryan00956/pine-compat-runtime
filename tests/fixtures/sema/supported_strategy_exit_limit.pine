@@ -1,4 +1,4 @@
 //@version=5
-strategy("Unsupported strategy exit limit")
+strategy("Supported strategy exit limit")
 strategy.entry("L", strategy.long, qty=1)
 strategy.exit("XL", "L", limit=high)

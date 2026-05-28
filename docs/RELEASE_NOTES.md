@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Phase M Slice 4 limit-exit fills. The supported `strategy.exit` subset
+  now includes `strategy.exit(id, from_entry, limit=price)` for full-position
+  long exits, triggering on later historical bars when `high >= limit` and
+  sharing the same order, trade, position, equity, CLI, Python, and WASM
+  contract as stop exits.
 - Added Phase M Slice 3 stop-exit fills. The supported
   `strategy.exit(id, from_entry, stop=price)` subset now creates or replaces a
   full-position pending stop for the matching current long entry, fills on a

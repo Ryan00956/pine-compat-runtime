@@ -531,6 +531,159 @@ if bar_index == 1
 }
 
 #[test]
+fn strategy_exit_limit_fills_on_later_high_crossing_bar() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XL", "L", limit=12)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = [
+        Bar {
+            time: 10,
+            open: 10.0,
+            high: 12.0,
+            low: 10.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 20,
+            open: 11.0,
+            high: 12.0,
+            low: 10.0,
+            close: 11.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "XL");
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].direction, "strategy.exit");
+    assert_eq!(strategy.orders[1].price, 12.0);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].id, "L");
+    assert_eq!(strategy.trades[0].exit_price, 12.0);
+    assert_eq!(strategy.trades[0].profit, 4.0);
+    assert_eq!(strategy.position[1].size, 0.0);
+    assert_eq!(strategy.equity[1].cash, 100_004.0);
+}
+
+#[test]
+fn strategy_exit_limit_not_reached_keeps_position_open() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+    strategy.exit("XL", "L", limit=12)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(11.0, 11.0, 10.0, 11.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert!(strategy.trades.is_empty());
+    assert_eq!(strategy.position.len(), 1);
+    assert_eq!(strategy.equity[1].market_value, 11.0);
+}
+
+#[test]
+fn strategy_exit_limit_replacement_uses_updated_limit_on_later_bar() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+    strategy.exit("XL", "L", limit=12)
+if bar_index == 1
+    strategy.exit("XL", "L", limit=11)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 11.0, 10.0, 10.0),
+            bar_ohlc(10.0, 11.0, 10.0, 10.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].exit_bar_index, 2);
+    assert_eq!(strategy.trades[0].exit_price, 11.0);
+}
+
+#[test]
+fn strategy_close_cancels_pending_limit_before_evaluation() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+    strategy.exit("XL", "L", limit=12)
+if bar_index == 1
+    strategy.close("L")
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(11.0, 12.0, 10.0, 11.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].exit_price, 11.0);
+}
+
+#[test]
 fn strategy_initial_capital_and_equity_mark_open_position_to_close() {
     let source = SourceFile::new(
         "strategy.pine",

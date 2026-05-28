@@ -189,10 +189,6 @@ fn reports_unsupported_strategy_order_fixture() {
 fn reports_unsupported_strategy_exit_variant_fixtures() {
     for (path, code) in [
         (
-            "tests/fixtures/sema/unsupported_strategy_exit_limit.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
             "tests/fixtures/sema/unsupported_strategy_exit_stop_limit.pine",
             "E_CALL_ARG_NAME",
         ),
@@ -226,27 +222,32 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
 }
 
 #[test]
-fn accepts_supported_strategy_exit_stop_fixture() {
-    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_exit_stop.pine");
-    let text = fs::read_to_string(&path).expect("fixture should be readable");
-    let source = SourceFile::new(path.display().to_string(), text);
-    let analysis = analyze_source(&source);
+fn accepts_supported_strategy_exit_fixtures() {
+    for fixture in [
+        "tests/fixtures/sema/supported_strategy_exit_stop.pine",
+        "tests/fixtures/sema/supported_strategy_exit_limit.pine",
+    ] {
+        let path = workspace_fixture(fixture);
+        let text = fs::read_to_string(&path).expect("fixture should be readable");
+        let source = SourceFile::new(path.display().to_string(), text);
+        let analysis = analyze_source(&source);
 
-    assert!(
-        analysis.diagnostics.is_empty(),
-        "{} diagnostics: {:?}",
-        path.display(),
-        analysis.diagnostics
-    );
-    assert!(analysis.compatibility.unsupported.is_empty());
-    assert!(
-        analysis
-            .compatibility
-            .supported
-            .iter()
-            .any(|supported| supported.feature == "strategy.exit")
-    );
-    assert!(analysis.hir.is_some());
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{} diagnostics: {:?}",
+            path.display(),
+            analysis.diagnostics
+        );
+        assert!(analysis.compatibility.unsupported.is_empty());
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == "strategy.exit")
+        );
+        assert!(analysis.hir.is_some());
+    }
 }
 
 #[test]

@@ -256,21 +256,20 @@ impl Analyzer {
     }
 
     pub(crate) fn validate_strategy_exit_args(&mut self, args: &[CallArg]) {
+        let mut has_stop = false;
+        let mut has_limit = false;
         for (index, arg) in args.iter().enumerate() {
             let Some(name) = arg
                 .name
                 .as_deref()
-                .or_else(|| ["id", "from_entry", "stop"].get(index).copied())
+                .or_else(|| ["id", "from_entry", "stop", "limit"].get(index).copied())
             else {
                 continue;
             };
             match name {
-                "id" | "from_entry" | "stop" => {}
-                "limit" => self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_NAME",
-                    "`strategy.exit` argument `limit` is not supported in Phase M Slice 1",
-                    arg.span,
-                )),
+                "id" | "from_entry" => {}
+                "stop" => has_stop = true,
+                "limit" => has_limit = true,
                 "qty" | "qty_percent" | "profit" | "loss" | "trail_price" | "trail_points"
                 | "trail_offset" | "oca_name" | "comment" | "alert_message" => {
                     self.diagnostics.push(Diagnostic::error(
@@ -283,6 +282,22 @@ impl Analyzer {
                 }
                 _ => {}
             }
+        }
+        if has_stop && has_limit {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_NAME",
+                "`strategy.exit` combined stop and limit exits are not supported in Phase M Slice 4",
+                args.iter()
+                    .find(|arg| arg.name.as_deref() == Some("limit"))
+                    .or_else(|| args.get(3))
+                    .map_or(Span::default(), |arg| arg.span),
+            ));
+        } else if !has_stop && !has_limit && args.len() >= 2 {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                "`strategy.exit` requires either `stop` or `limit`",
+                args.first().map_or(Span::default(), |arg| arg.span),
+            ));
         }
     }
 }

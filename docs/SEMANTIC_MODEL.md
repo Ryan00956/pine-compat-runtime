@@ -37,12 +37,13 @@ numeric `N`.
 `qty` may be omitted only when the fixed default quantity subset is configured,
 and explicit `qty` overrides the declaration default. `strategy.close(id)`
 closes the full matching long position at the current bar close.
-`strategy.exit(id, from_entry, stop=price)` supports the current long-only
-full-position stop subset: it creates or replaces one pending stop for the
-matching entry, ignores same-bar triggers on newly created or replaced stops,
-and fills on a later historical bar when `low <= stop`. These calls are
-rejected in indicator scripts and user-defined functions. Short entries,
-`strategy.exit` limit/combined/profit/loss/trailing/partial variants,
+`strategy.exit(id, from_entry, stop=price)` and
+`strategy.exit(id, from_entry, limit=price)` support the current long-only
+full-position exit subset: each creates or replaces one pending exit for the
+matching entry, ignores same-bar triggers on newly created or replaced exits,
+and fills on a later historical bar when `low <= stop` or `high >= limit`.
+These calls are rejected in indicator scripts and user-defined functions. Short
+entries, `strategy.exit` combined/profit/loss/trailing/partial variants,
 `strategy.order`, broker settings beyond `initial_capital` and fixed default
 quantity, realtime strategy handoff, and strategy metrics beyond the Phase L
 position/profit/equity variables remain unsupported until later slices define

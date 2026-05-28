@@ -78,7 +78,7 @@ conversion remain unsupported. Strategy mode output includes `orders`, `trades`,
 `barIndex`, `cash`, `marketValue`, `equity`, and `netProfit`, using current
 bar-close mark-to-market accounting for the long-only order subset. Commission,
 slippage, margin, percent sizing, currency conversion, pyramiding, short
-orders, `strategy.exit` limit/combined/profit/loss/trailing/partial variants,
+orders, `strategy.exit` combined/profit/loss/trailing/partial variants,
 `strategy.order`, realtime strategy handoff, and most strategy reporting
 variables remain outside the supported matrix.
 
@@ -238,8 +238,9 @@ Examples:
 - unsupported strategy declaration contexts and strategy order functions such as
   `strategy.order`; `strategy.exit` limit, profit, loss, trailing, partial
   quantity, combined stop/limit, and missing-entry forms remain fixture-backed
-  unsupported cases. Stop-only `strategy.exit(id, from_entry, stop=price)` is
-  the narrow supported Phase M subset for the current one-net-long broker.
+  unsupported cases. Stop-only `strategy.exit(id, from_entry, stop=price)` and
+  limit-only `strategy.exit(id, from_entry, limit=price)` are the narrow
+  supported Phase M subsets for the current one-net-long broker.
 - minimal `strategy.entry` long market entries in strategy-mode scripts, with
   unsupported short/stop/limit/indicator-mode variants fixture-backed; entries
   may omit `qty` only when the strategy declaration configures the fixed default
@@ -323,8 +324,8 @@ strategy.position_avg_price partial current long-only average entry price read-o
 strategy.openprofit partial       current long-only unrealized profit read-only series, 0 when flat, in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.netprofit  partial       cumulative realized closed-trade profit read-only series, excluding current open profit, in strategy-mode scripts only
 strategy.equity     partial       initial_capital plus realized net profit plus current open profit read-only series in strategy-mode scripts only
-strategy.exit       partial      stop-only strategy.exit(id, from_entry, stop=price) full-position long exits; later-bar low <= stop fills at stop price
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the stop-only strategy.exit subset, strategy.exit limit/combined/profit/loss/trailing/partial/missing-entry forms, rich order types, percent/cash/contracts sizing, mutable strategy state, and strategy reporting helpers beyond the supported position/profit/equity variables are not implemented
+strategy.exit       partial      stop-only and limit-only full-position long exits; later-bar low <= stop or high >= limit fills at the exit price
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the stop/limit-only strategy.exit subset, strategy.exit combined/profit/loss/trailing/partial/missing-entry forms, rich order types, percent/cash/contracts sizing, mutable strategy state, and strategy reporting helpers beyond the supported position/profit/equity variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

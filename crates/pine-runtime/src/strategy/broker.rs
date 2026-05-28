@@ -10,10 +10,24 @@ fn normalize_zero(value: f64) -> f64 {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+enum PendingExitTrigger {
+    Stop(f64),
+    Limit(f64),
+}
+
+impl PendingExitTrigger {
+    fn price(&self) -> f64 {
+        match self {
+            Self::Stop(price) | Self::Limit(price) => *price,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 struct PendingExit {
     id: String,
     from_entry: String,
-    stop_price: f64,
+    trigger: PendingExitTrigger,
     last_update_bar_index: usize,
 }
 
@@ -142,10 +156,40 @@ impl BrokerState {
         stop_price: f64,
         bar_index: usize,
     ) {
-        if !stop_price.is_finite() {
+        self.place_exit(
+            id,
+            from_entry,
+            PendingExitTrigger::Stop(stop_price),
+            bar_index,
+        );
+    }
+
+    pub(crate) fn place_exit_limit(
+        &mut self,
+        id: String,
+        from_entry: String,
+        limit_price: f64,
+        bar_index: usize,
+    ) {
+        self.place_exit(
+            id,
+            from_entry,
+            PendingExitTrigger::Limit(limit_price),
+            bar_index,
+        );
+    }
+
+    fn place_exit(
+        &mut self,
+        id: String,
+        from_entry: String,
+        trigger: PendingExitTrigger,
+        bar_index: usize,
+    ) {
+        if !trigger.price().is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_PRICE".to_owned(),
-                message: "`strategy.exit` stop price must be finite".to_owned(),
+                message: "`strategy.exit` price must be finite".to_owned(),
             });
             return;
         }
@@ -160,7 +204,7 @@ impl BrokerState {
         if self.pending_exit.as_ref().is_some_and(|pending_exit| {
             pending_exit.id == id
                 && pending_exit.from_entry == from_entry
-                && pending_exit.stop_price == stop_price
+                && pending_exit.trigger == trigger
         }) {
             return;
         }
@@ -168,7 +212,7 @@ impl BrokerState {
         self.pending_exit = Some(PendingExit {
             id,
             from_entry,
-            stop_price,
+            trigger,
             last_update_bar_index: bar_index,
         });
     }
@@ -183,7 +227,13 @@ impl BrokerState {
         }
     }
 
-    pub(crate) fn evaluate_pending_exits(&mut self, bar_index: usize, time: i64, low: f64) {
+    pub(crate) fn evaluate_pending_exits(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        high: f64,
+        low: f64,
+    ) {
         let Some(pending_exit) = self.pending_exit.clone() else {
             return;
         };
@@ -196,17 +246,21 @@ impl BrokerState {
             self.pending_exit = None;
             return;
         }
-        if low <= pending_exit.stop_price {
-            self.fill_pending_stop_exit(pending_exit, bar_index, time);
+        let triggered = match pending_exit.trigger {
+            PendingExitTrigger::Stop(price) => low <= price,
+            PendingExitTrigger::Limit(price) => high >= price,
+        };
+        if triggered {
+            self.fill_pending_exit(pending_exit, bar_index, time);
         }
     }
 
-    fn fill_pending_stop_exit(&mut self, pending_exit: PendingExit, bar_index: usize, time: i64) {
+    fn fill_pending_exit(&mut self, pending_exit: PendingExit, bar_index: usize, time: i64) {
         let qty = self.position_size;
         let entry_price = self.avg_price;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
-        let exit_price = pending_exit.stop_price;
+        let exit_price = pending_exit.trigger.price();
 
         self.orders.push(StrategyOrderEvent {
             id: pending_exit.id,
@@ -339,7 +393,7 @@ mod tests {
             Some(PendingExit {
                 id: "XL".to_owned(),
                 from_entry: "L".to_owned(),
-                stop_price: 95.0,
+                trigger: PendingExitTrigger::Stop(95.0),
                 last_update_bar_index: 0,
             })
         );
@@ -359,7 +413,7 @@ mod tests {
             Some(PendingExit {
                 id: "XL2".to_owned(),
                 from_entry: "L".to_owned(),
-                stop_price: 90.0,
+                trigger: PendingExitTrigger::Stop(90.0),
                 last_update_bar_index: 1,
             })
         );
@@ -400,7 +454,7 @@ mod tests {
                 (
                     pending_exit.id.as_str(),
                     pending_exit.from_entry.as_str(),
-                    pending_exit.stop_price,
+                    pending_exit.trigger.price(),
                 )
             }),
             Some(("XL", "L", 95.0))
@@ -412,7 +466,7 @@ mod tests {
         let mut broker = broker_with_long_entry();
         broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
 
-        broker.evaluate_pending_exits(0, 10, 90.0);
+        broker.evaluate_pending_exits(0, 10, 100.0, 90.0);
 
         assert_eq!(broker.pending_exit_count(), 1);
         assert!(broker.trades.is_empty());
@@ -424,7 +478,7 @@ mod tests {
         let mut broker = broker_with_long_entry();
         broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
 
-        broker.evaluate_pending_exits(1, 20, 94.0);
+        broker.evaluate_pending_exits(1, 20, 100.0, 94.0);
 
         assert_eq!(broker.pending_exit_count(), 0);
         assert_eq!(broker.orders.len(), 2);
@@ -446,7 +500,7 @@ mod tests {
         broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
         broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 1);
 
-        broker.evaluate_pending_exits(1, 20, 94.0);
+        broker.evaluate_pending_exits(1, 20, 100.0, 94.0);
 
         assert_eq!(broker.pending_exit_count(), 0);
         assert_eq!(broker.trades.len(), 1);
@@ -459,15 +513,31 @@ mod tests {
         broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
         broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 90.0, 1);
 
-        broker.evaluate_pending_exits(1, 20, 89.0);
+        broker.evaluate_pending_exits(1, 20, 100.0, 89.0);
 
         assert_eq!(broker.pending_exit_count(), 1);
         assert!(broker.trades.is_empty());
 
-        broker.evaluate_pending_exits(2, 30, 89.0);
+        broker.evaluate_pending_exits(2, 30, 100.0, 89.0);
 
         assert_eq!(broker.pending_exit_count(), 0);
         assert_eq!(broker.trades.len(), 1);
         assert_eq!(broker.trades[0].exit_price, 90.0);
+    }
+
+    #[test]
+    fn pending_limit_fills_on_later_crossing_bar() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_limit("XL".to_owned(), "L".to_owned(), 110.0, 0);
+
+        broker.evaluate_pending_exits(1, 20, 111.0, 100.0);
+
+        assert_eq!(broker.pending_exit_count(), 0);
+        assert_eq!(broker.orders.len(), 2);
+        assert_eq!(broker.orders[1].direction, "strategy.exit");
+        assert_eq!(broker.orders[1].price, 110.0);
+        assert_eq!(broker.trades.len(), 1);
+        assert_eq!(broker.trades[0].exit_price, 110.0);
+        assert_eq!(broker.trades[0].profit, 20.0);
     }
 }

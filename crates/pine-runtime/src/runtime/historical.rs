@@ -254,7 +254,7 @@ impl<'a> HistoricalRuntime<'a> {
 
         if self.program.script_mode == ScriptMode::Strategy {
             self.strategy_broker
-                .evaluate_pending_exits(bar_index, bar.time, bar.low);
+                .evaluate_pending_exits(bar_index, bar.time, bar.high, bar.low);
             self.strategy_broker.record_equity(bar_index, bar.close);
         }
         self.finalize_series_outputs();

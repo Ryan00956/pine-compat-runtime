@@ -315,6 +315,56 @@ def test_run_script_returns_strategy_exit_stop_trade_contract():
     }
 
 
+def test_run_script_returns_strategy_exit_limit_trade_contract():
+    bars = [
+        {"time": 10, "open": 10.0, "high": 10.0, "low": 10.0, "close": 10.0, "volume": 1.0},
+        {"time": 20, "open": 11.0, "high": 12.0, "low": 10.0, "close": 11.0, "volume": 1.0},
+    ]
+    result = pine_compat.run_script(
+        'strategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=2)\n    strategy.exit("XL", "L", limit=12)\n',
+        bars,
+    )
+
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 0,
+            "time": 10,
+            "direction": "strategy.long",
+            "qty": 2.0,
+            "price": 10.0,
+        },
+        {
+            "id": "XL",
+            "barIndex": 1,
+            "time": 20,
+            "direction": "strategy.exit",
+            "qty": 2.0,
+            "price": 12.0,
+        },
+    ]
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 0,
+            "exitBarIndex": 1,
+            "entryTime": 10,
+            "exitTime": 20,
+            "entryPrice": 10.0,
+            "exitPrice": 12.0,
+            "qty": 2.0,
+            "profit": 4.0,
+        }
+    ]
+    assert result["strategy"]["equity"][-1] == {
+        "barIndex": 1,
+        "cash": 100004.0,
+        "marketValue": 0.0,
+        "equity": 100004.0,
+        "netProfit": 4.0,
+    }
+
+
 def test_run_script_returns_strategy_runtime_diagnostics():
     result = pine_compat.run_script(
         'strategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',

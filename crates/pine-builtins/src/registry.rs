@@ -122,8 +122,15 @@ mod tests {
         assert_eq!(signature.params[0].name, "id");
         assert_eq!(signature.params[1].name, "from_entry");
         assert_eq!(signature.params[2].name, "stop");
+        assert!(signature.params[2].optional);
         assert_eq!(
             signature.params[2].accepts,
+            crate::Accepts::SeriesOrSimpleNumeric
+        );
+        assert_eq!(signature.params[3].name, "limit");
+        assert!(signature.params[3].optional);
+        assert_eq!(
+            signature.params[3].accepts,
             crate::Accepts::SeriesOrSimpleNumeric
         );
         assert!(!signature.variadic);

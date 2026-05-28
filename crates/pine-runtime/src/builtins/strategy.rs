@@ -84,9 +84,16 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(from_entry_expr) = call_arg_expr(args, 1, "from_entry") else {
             return Ok(PineValue::Void);
         };
-        let Some(stop_expr) = call_arg_expr(args, 2, "stop") else {
-            return Ok(PineValue::Void);
-        };
+        let stop_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("stop"))
+            .or_else(|| args.get(2).filter(|arg| arg.name.is_none()))
+            .map(|arg| &arg.value);
+        let limit_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("limit"))
+            .or_else(|| args.get(3).filter(|arg| arg.name.is_none()))
+            .map(|arg| &arg.value);
 
         let id = match self.eval_expr(id_expr)? {
             PineValue::String(value) => value,
@@ -96,9 +103,15 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String(value) => value,
             _ => return Ok(PineValue::Void),
         };
-        let stop_price = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
-        self.strategy_broker
-            .place_exit_stop(id, from_entry, stop_price, self.bars);
+        if let Some(stop_expr) = stop_expr {
+            let stop_price = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
+            self.strategy_broker
+                .place_exit_stop(id, from_entry, stop_price, self.bars);
+        } else if let Some(limit_expr) = limit_expr {
+            let limit_price = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
+            self.strategy_broker
+                .place_exit_limit(id, from_entry, limit_price, self.bars);
+        }
         Ok(PineValue::Void)
     }
 }

@@ -40,7 +40,12 @@ const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "stop",
         accepts: Accepts::SeriesOrSimpleNumeric,
-        optional: false,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "limit",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
     },
 ];
 

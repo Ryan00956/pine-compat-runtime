@@ -588,6 +588,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_stop.pine",
             ),
             (
+                "runtime_strategy_exit_limit.json",
+                "tests/fixtures/runtime/strategy_exit_limit.pine",
+            ),
+            (
                 "runtime_strategy_equity.json",
                 "tests/fixtures/runtime/strategy_equity.pine",
             ),
