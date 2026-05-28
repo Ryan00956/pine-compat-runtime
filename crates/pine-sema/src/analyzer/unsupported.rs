@@ -6,6 +6,10 @@ pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently support
 pub(crate) fn unsupported_syntax_reason(feature: &str) -> &'static str {
     match feature {
         "import" => "library imports are not supported in Phase 1",
+        "library" => "library declarations are not supported in Phase J Slice 0",
+        "export" => "export declarations are not supported in Phase J Slice 0",
+        "user-defined types" => "user-defined types are not supported in Phase J Slice 0",
+        "user-defined methods" => "user-defined methods are not supported in Phase J Slice 0",
         "function" => "unsupported user-defined function syntax",
         "for" => "unsupported for loop syntax",
         _ => "syntax is not supported in Phase 1",

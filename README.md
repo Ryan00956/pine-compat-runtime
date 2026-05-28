@@ -28,7 +28,8 @@ able to integrate it through adapters.
   private APIs.
 - The first releases will not attempt full Pine Script compatibility.
 - Strategy backtesting, broad request families, advanced drawing systems,
-  alerts, and libraries are out of scope for the initial runtime.
+  host-delivered alert services, and libraries are out of scope for the initial
+  runtime.
 
 ## Design Documents
 
@@ -42,8 +43,10 @@ able to integrate it through adapters.
 - [Diagnostic Codes](docs/DIAGNOSTIC_CODES.md)
 - [Release Notes](docs/RELEASE_NOTES.md)
 - [Phase I Execution Plan](docs/PHASE_I_EXECUTION_PLAN.md)
+- [Phase J Execution Plan](docs/PHASE_J_EXECUTION_PLAN.md)
 - [Phase K Execution Plan](docs/PHASE_K_EXECUTION_PLAN.md)
 - [Phase F Request Platform Audit](docs/PHASE_F_AUDIT.md)
+- [Phase H Alert Audit](docs/PHASE_H_AUDIT.md)
 - [Next Language Expansion Playbook](docs/NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md)
 - [Task Breakdown](docs/TASK_BREAKDOWN.md)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
@@ -58,7 +61,7 @@ pine-compat-runtime/
     pine-sema/         scope resolution, type and qualifier analysis
     pine-ir/           HIR, MIR, and bytecode definitions
     pine-runtime/      bar-by-bar VM, series store, state store, request data
-    pine-builtins/     ta, math, input, plot, color, time, request
+    pine-builtins/     ta, math, input, plot, color, time, request, alert
     pine-cli/          command line runner and analyzer
     pine-python/       PyO3 and maturin Python bindings
     pine-wasm/         browser and host WASM bindings
@@ -94,15 +97,16 @@ declarations, `na`, `nz`, `input.*` defval execution, output calls, selected
 drawing objects, partial typed arrays, common `ta.*` functions, selected
 `math.*` and `str.*` functions, partial `request.security`, user-defined
 functions, named colors, color helpers, tuple returns, scalar and scalar
-typed-array `varip`,
+typed-array `varip`, partial `alertcondition`/`alert` runtime events,
 incremental append execution, realtime forming-bar rollback, Python bindings,
 and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as `strategy.*`,
-request variants outside the narrow `request.security` subset, alerts, imports,
-advanced drawing families and methods, unsupported collection families and
-element types, recursive functions, function side effects, and unsupported
-`varip` value families such as drawing ids and tuples.
+request variants outside the narrow `request.security` subset, alert frequency
+modes and placeholder interpolation, imports, advanced drawing families and
+methods, unsupported collection families and element types, recursive
+functions, function side effects, and unsupported `varip` value families such
+as drawing ids and tuples.
 Stateful calls inside `if` blocks advance their callsite state only when the
 branch executes; skipped bars commit `na` for series values that were not
 evaluated on that bar.

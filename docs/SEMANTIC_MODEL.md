@@ -193,6 +193,10 @@ helpers may also be called with method syntax on float and int arrays.
 string arrays.
 `every/some` may also be called with method syntax on float, int, and bool
 arrays.
+Non-array method calls are not part of the executable method subset. Until
+Phase J designs user-defined method declarations, receiver typing, and method
+dispatch, non-array receivers continue to fail with receiver/type diagnostics
+rather than a compatibility-matrix method claim.
 Float
 arrays accept int or float values and store them as
 floats. Int arrays accept int values. Bool arrays accept bool values. String

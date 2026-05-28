@@ -468,6 +468,8 @@ Maintenance tails:
 
 Goal: support larger Pine programs after the core runtime model has matured.
 
+Execution playbook: `docs/PHASE_J_EXECUTION_PLAN.md`.
+
 Scope:
 
 - `import`, `library`, and `export`.
@@ -516,16 +518,15 @@ Acceptance criteria:
 
 Recommended order from the current state:
 
-1. Phase E: drawing objects.
-2. Phase F: `request.*` and multi-timeframe data.
-3. Phase I: `varip`.
-4. Phase J: libraries, user types, and methods.
-5. Phase K maintenance only when release contracts, snapshots, or matrix gates
+1. Phase J: libraries, user types, and methods.
+2. Phase G: strategy runtime.
+3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
+   already claimed drawing, request, alert, or `varip` subset.
+4. Phase K maintenance only when release contracts, snapshots, or matrix gates
    need tightening.
-6. Phase G: strategy runtime.
-7. Phase B/C maintenance when new work exposes collection, history, or
+5. Phase B/C maintenance when new work exposes collection, history, or
    qualifier gaps.
-8. Phase D maintenance for small fixture-backed built-in compatibility fixes.
+6. Phase D maintenance for small fixture-backed built-in compatibility fixes.
 
 This order keeps the project useful for indicator execution while delaying
 features that require new host APIs, object lifetimes, or broker simulation.

@@ -82,6 +82,10 @@ impl Parser {
             return Some(self.parse_unsupported_line("import"));
         }
 
+        if let Some((feature, consumes_block)) = self.phase_j_unsupported_statement() {
+            return Some(self.parse_unsupported_line_with_optional_block(feature, consumes_block));
+        }
+
         if self.at(TokenKind::If) {
             return self.parse_if_stmt();
         }
@@ -397,6 +401,64 @@ impl Parser {
             kind: StmtKind::Unsupported {
                 feature: feature.to_owned(),
             },
+        }
+    }
+
+    fn parse_unsupported_line_with_optional_block(
+        &mut self,
+        feature: &str,
+        consumes_block: bool,
+    ) -> Stmt {
+        let mut statement = self.parse_unsupported_line(feature);
+        if consumes_block
+            && self.at(TokenKind::Newline)
+            && self.nth_at(1, TokenKind::Indent)
+            && let Some(block_span) = self.skip_unsupported_indented_block()
+        {
+            statement.span = statement.span.merge(block_span);
+        }
+        statement
+    }
+
+    fn skip_unsupported_indented_block(&mut self) -> Option<Span> {
+        if !self.at(TokenKind::Newline) || !self.nth_at(1, TokenKind::Indent) {
+            return None;
+        }
+
+        self.bump();
+        let mut depth = 0_u32;
+        let mut span = self.current().span;
+        while !self.at(TokenKind::Eof) {
+            span = span.merge(self.current().span);
+            if self.at(TokenKind::Indent) {
+                depth += 1;
+                self.bump();
+                continue;
+            }
+            if self.at(TokenKind::Dedent) {
+                depth = depth.saturating_sub(1);
+                self.bump();
+                if depth == 0 {
+                    break;
+                }
+                continue;
+            }
+            self.bump();
+        }
+        Some(span)
+    }
+
+    fn phase_j_unsupported_statement(&self) -> Option<(&'static str, bool)> {
+        let TokenKind::Identifier(name) = &self.current().kind else {
+            return None;
+        };
+
+        match name.as_str() {
+            "library" if self.nth_at(1, TokenKind::LParen) => Some(("library", false)),
+            "export" => Some(("export", false)),
+            "type" if self.nth_identifier(1) => Some(("user-defined types", true)),
+            "method" if self.nth_identifier(1) => Some(("user-defined methods", false)),
+            _ => None,
         }
     }
 
@@ -841,6 +903,12 @@ impl Parser {
         })
     }
 
+    fn nth_identifier(&self, offset: usize) -> bool {
+        self.tokens
+            .get(self.pos + offset)
+            .is_some_and(|token| matches!(token.kind, TokenKind::Identifier(_)))
+    }
+
     fn current(&self) -> &Token {
         &self.tokens[self.pos]
     }
@@ -943,6 +1011,34 @@ mod tests {
             parsed.program.statements[0].kind,
             StmtKind::Unsupported { ref feature } if feature == "import"
         ));
+    }
+
+    #[test]
+    fn parses_phase_j_declarations_as_unsupported_statements() {
+        let parsed = parse(
+            "library(\"Lib\")\nexport foo() => close\ntype Point\n    float x\nmethod scale(Point p) => p\n",
+        );
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        assert_eq!(parsed.program.statements.len(), 4);
+        let features: Vec<&str> = parsed
+            .program
+            .statements
+            .iter()
+            .map(|statement| match &statement.kind {
+                StmtKind::Unsupported { feature } => feature.as_str(),
+                other => panic!("expected unsupported statement, got {other:?}"),
+            })
+            .collect();
+        assert_eq!(
+            features,
+            vec![
+                "library",
+                "export",
+                "user-defined types",
+                "user-defined methods"
+            ]
+        );
     }
 
     #[test]

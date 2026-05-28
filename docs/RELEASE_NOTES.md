@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Started Phase J Slice 0 by locking the diagnostic-only boundary for
+  `library`, `export`, user-defined type declarations, and user-defined method
+  declarations with unsupported sema fixtures and conformance rows. Non-array
+  method calls remain ordinary receiver/type diagnostics until Phase J designs
+  receiver typing and method dispatch.
 - Closed Phase I with `docs/PHASE_I_AUDIT.md`, fixture-backed scalar and scalar
   typed-array `varip` conformance rows, host-surface review for CLI/Python/WASM
   historical paths, and explicit maintenance tails for drawing ids, tuples,

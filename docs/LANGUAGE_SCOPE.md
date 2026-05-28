@@ -256,10 +256,13 @@ The analyzer should reject these with clear diagnostics:
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need
   typed array return semantics and host output shapes before support is claimed
 - unsupported alert frequency modes and alert placeholder interpolation
-- `library`, `import`, and `export`
+- `library`, `import`, and `export`; Phase J Slice 0 keeps these
+  diagnostic-only with sema fixtures and conformance rows
 - unsupported array element types, matrices, and maps
-- user-defined types
-- non-array methods
+- user-defined types and user-defined methods; Phase J Slice 0 rejects the
+  declaration forms before any type identity or receiver dispatch is claimed
+- non-array method calls; these currently remain ordinary receiver/type
+  diagnostics rather than a conformance-matrix feature row
 - label, line, box, table, polyline objects
 - general multi-symbol or multi-timeframe data loading outside the documented
   `request.security` provider subset

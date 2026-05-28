@@ -120,6 +120,62 @@ fn reports_unsupported_import_fixture() {
 }
 
 #[test]
+fn reports_unsupported_library_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_library.pine",
+        "library",
+        "library declarations",
+    );
+}
+
+#[test]
+fn reports_unsupported_export_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_export.pine",
+        "export",
+        "export declarations",
+    );
+}
+
+#[test]
+fn reports_unsupported_user_type_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_user_type.pine",
+        "user-defined types",
+        "user-defined types",
+    );
+}
+
+#[test]
+fn reports_unsupported_user_method_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_user_method.pine",
+        "user-defined methods",
+        "user-defined methods",
+    );
+}
+
+#[test]
+fn reports_non_array_method_fixture_as_receiver_diagnostic() {
+    let path = workspace_fixture("tests/fixtures/sema/unsupported_non_array_method.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_METHOD_RECEIVER_TYPE"),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn reports_unsupported_alert_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_alert.pine",
