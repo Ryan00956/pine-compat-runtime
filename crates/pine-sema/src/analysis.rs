@@ -5,6 +5,7 @@ use pine_syntax::{Diagnostic, SourceFile, parse_source};
 
 use crate::analyzer::context::Analyzer;
 use crate::compatibility::CompatibilityReport;
+use crate::modules::validate_modules;
 use crate::resolver::ScopeResolver;
 use crate::source_graph::AnalysisInput;
 use crate::symbols::{
@@ -23,11 +24,16 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
 }
 
 pub fn analyze_input(input: &AnalysisInput) -> Analysis {
+    let module_validation = validate_modules(input);
     let graph = input.source_graph();
     let source = graph.root().source();
     let parsed = parse_source(source);
     let mut analyzer = Analyzer {
-        diagnostics: parsed.diagnostics,
+        diagnostics: {
+            let mut diagnostics = module_validation.diagnostics;
+            diagnostics.extend(parsed.diagnostics);
+            diagnostics
+        },
         compatibility: CompatibilityReport {
             language_version: parsed.program.version.map(|version| version.version),
             ..CompatibilityReport::default()

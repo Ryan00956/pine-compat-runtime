@@ -483,6 +483,108 @@ fn source_graph_input_reports_duplicate_library_key() {
     );
 }
 
+fn analyze_with_libraries(root: &str, libraries: Vec<(&str, &str)>) -> Analysis {
+    let input = AnalysisInput::with_library_sources(
+        SourceFile::new("root.pine", root),
+        libraries
+            .into_iter()
+            .map(|(key, source)| {
+                (
+                    key.to_owned(),
+                    SourceFile::new(format!("{key}.pine"), source),
+                )
+            })
+            .collect(),
+    )
+    .expect("analysis input");
+    crate::analyze_input(&input)
+}
+
+fn diagnostic_codes(analysis: &Analysis) -> Vec<&str> {
+    analysis
+        .diagnostics
+        .iter()
+        .map(|diagnostic| diagnostic.code.as_str())
+        .collect()
+}
+
+#[test]
+fn import_reports_missing_library_source() {
+    let analysis = analyze_with_libraries("import user/lib/1 as lib\nplot(close)\n", vec![]);
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_MISSING_LIBRARY"), "{codes:?}");
+    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
+}
+
+#[test]
+fn import_reports_duplicate_alias() {
+    let analysis = analyze_with_libraries(
+        "import user/one/1 as lib\nimport user/two/1 as lib\nplot(close)\n",
+        vec![
+            ("user/one/1", "library(\"one\")\n"),
+            ("user/two/1", "library(\"two\")\n"),
+        ],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_DUPLICATE_ALIAS"), "{codes:?}");
+}
+
+#[test]
+fn import_reports_invalid_library_declaration() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1 as lib\nplot(close)\n",
+        vec![("user/lib/1", "export value = 1\n")],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_INVALID_LIBRARY"), "{codes:?}");
+}
+
+#[test]
+fn import_reports_duplicate_exports() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1 as lib\nplot(close)\n",
+        vec![(
+            "user/lib/1",
+            "library(\"lib\")\nexport value = 1\nexport value = 2\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_DUPLICATE_EXPORT"), "{codes:?}");
+}
+
+#[test]
+fn import_reports_dependency_cycle() {
+    let analysis = analyze_with_libraries(
+        "import user/one/1 as one\nplot(close)\n",
+        vec![
+            ("user/one/1", "library(\"one\")\nimport user/two/1 as two\n"),
+            ("user/two/1", "library(\"two\")\nimport user/one/1 as one\n"),
+        ],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_CYCLE"), "{codes:?}");
+}
+
+#[test]
+fn import_reports_unknown_export_and_private_access() {
+    let analysis = analyze_with_libraries(
+        "import user/lib/1 as lib\nplot(lib.missing)\nplot(lib.private)\n",
+        vec![(
+            "user/lib/1",
+            "library(\"lib\")\nexport value = 1\nprivate = 2\n",
+        )],
+    );
+
+    let codes = diagnostic_codes(&analysis);
+    assert!(codes.contains(&"E_IMPORT_UNKNOWN_EXPORT"), "{codes:?}");
+    assert!(codes.contains(&"E_IMPORT_PRIVATE_SYMBOL"), "{codes:?}");
+}
+
 #[test]
 fn compile_cache_clear_drops_entries_and_stats() {
     let source = SourceFile::new("test.pine", "plot(close)\n");

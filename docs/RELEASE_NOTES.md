@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Phase J Slice 3 module graph validation while keeping imports
+  non-executable. Analysis now validates host-provided library sources for
+  missing import keys, duplicate root aliases, invalid library declarations,
+  duplicate exports, dependency cycles, unknown exports, and private symbol
+  access. Successful alias/export lookup still reports imported execution as
+  unsupported until the first executable import subset is selected.
 - Added Phase J Slice 2 parser structure for imports, library declarations,
   export declarations, user-defined type declarations, and user-defined method
   declarations. These nodes now preserve import keys, aliases, declaration

@@ -6,6 +6,7 @@ mod cache;
 mod compatibility;
 mod history;
 mod lowering;
+mod modules;
 mod resolver;
 mod source_graph;
 mod symbols;
