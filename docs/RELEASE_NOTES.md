@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Phase J Slice 5 host parity for imported functions. CLI integration
+  fixtures now run the import subset through `--library-source`, Python binding
+  tests cover imported function execution through `library_sources`, and WASM
+  exposes deterministic JSON library source maps via
+  `compileScriptWithLibraries`, `analyzeScriptWithLibraries`, and
+  `runScriptCsvWithLibraries`.
 - Added Phase J Slice 4 executable import subset. Host-provided exact-key
   imports with aliases can now use exported const expressions and pure exported
   functions through `alias.name`; imported functions reuse existing UDF

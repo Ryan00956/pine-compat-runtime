@@ -28,6 +28,8 @@ improved over time, but codes should remain stable once published.
 
 ## Semantic Analysis
 
+- `E_HOST_INPUT`: a host binding rejected malformed input before semantic
+  analysis, such as invalid WASM library-source JSON.
 - `E_ASSIGN_TYPE`: reassignment type mismatch.
 - `E_BRANCH_TYPE`: ternary branch type mismatch.
 - `E_CALL_ARG_NAME`: unknown named argument.

@@ -53,14 +53,39 @@ fn request_host_data_is_documented_wasm_gap() {
     );
 }
 
+const IMPORT_SOURCE: &str =
+    "indicator(\"imports\")\nimport user/lib/1 as lib\nplot(lib.scale(close) + lib.offset)\n";
+const IMPORT_LIBRARY_JSON: &str = "{\"user/lib/1\":\"library(\\\"lib\\\")\\nexport offset = 2\\nexport scale(value) => value * offset\\n\"}";
+
 #[test]
-fn library_source_injection_is_documented_wasm_gap() {
+fn library_source_json_runs_imported_function_subset() {
+    let output = run_script_csv_with_libraries(
+        IMPORT_SOURCE,
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+        IMPORT_LIBRARY_JSON,
+    )
+    .expect("imported function subset should run");
+
+    assert!(output.contains("\"values\":[4,6]"));
+}
+
+#[test]
+fn library_source_json_reports_missing_library() {
     let output = analyze_script("import user/lib/1\nindicator(\"root\")\n");
 
     assert!(output.contains("\"executable\":false"));
     assert!(output.contains("\"feature\":\"import\""));
     assert!(output.contains("\"code\":\"E_IMPORT_MISSING_LIBRARY\""));
     assert!(output.contains("\"code\":\"E_IMPORT_ALIAS_REQUIRED\""));
+}
+
+#[test]
+fn library_source_json_reports_malformed_host_input() {
+    let output = analyze_script_with_libraries(IMPORT_SOURCE, "[]");
+
+    assert!(output.contains("\"executable\":false"));
+    assert!(output.contains("\"code\":\"E_HOST_INPUT\""));
+    assert!(output.contains("library sources must be a JSON object"));
 }
 
 #[test]

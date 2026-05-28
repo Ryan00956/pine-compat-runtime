@@ -170,13 +170,15 @@ python -m pytest python/tests
 The optional WASM crate exposes a thin `wasm-bindgen` API:
 
 - `compileScript(source)`
+- `compileScriptWithLibraries(source, librarySourcesJson)`
 - `analyzeScript(source)`
+- `analyzeScriptWithLibraries(source, librarySourcesJson)`
 - `runScriptCsv(source, barsCsv)`
+- `runScriptCsvWithLibraries(source, barsCsv, librarySourcesJson)`
 - `Program.runCsv(barsCsv)`
 
-Library source injection is not exposed in WASM yet; root imports still report
-missing-host-library diagnostics unless a host-provided source JSON contract is
-added in a later slice.
+The WASM library source argument is a deterministic JSON object mapping import
+keys to source text, for example `{"user/lib/1":"library(\"lib\")\n"}`.
 
 Build-check it with:
 

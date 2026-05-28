@@ -319,11 +319,11 @@ pine-compat run script.pine --bars bars.csv \
   --request-bars NYSE:IBM:1=ibm.csv
 ```
 
-The WASM API currently remains single-source for library inputs. It routes
-through the same `AnalysisInput` root-source path, but it does not yet expose a
-JSON object for library source injection. Root imports therefore report
-missing-host-library diagnostics in WASM until a deterministic JSON host shape
-is added.
+The WASM API exposes deterministic JSON library source injection through
+`compileScriptWithLibraries`, `analyzeScriptWithLibraries`, and
+`runScriptCsvWithLibraries`. The JSON value must be an object mapping import
+keys to source text; malformed JSON is reported as a host-input diagnostic from
+the binding layer before semantic analysis.
 
 ## Output Model
 

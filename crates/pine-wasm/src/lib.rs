@@ -6,6 +6,9 @@ use pine_sema::{Analysis, AnalysisInput, analyze_input};
 use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 use wasm_bindgen::prelude::*;
 
+mod library_sources;
+use library_sources::analysis_input_with_libraries;
+
 #[wasm_bindgen(js_name = Program)]
 pub struct WasmProgram {
     hir: HirProgram,
@@ -13,11 +16,20 @@ pub struct WasmProgram {
 
 #[wasm_bindgen(js_name = compileScript)]
 pub fn compile_script(source: &str) -> Result<WasmProgram, JsValue> {
-    compile_program(source).map_err(|err| JsValue::from_str(&err))
+    compile_program(analysis_input(source)).map_err(|err| JsValue::from_str(&err))
 }
 
-fn compile_program(source: &str) -> Result<WasmProgram, String> {
-    let input = analysis_input(source);
+#[wasm_bindgen(js_name = compileScriptWithLibraries)]
+pub fn compile_script_with_libraries(
+    source: &str,
+    library_sources_json: &str,
+) -> Result<WasmProgram, JsValue> {
+    let input = analysis_input_with_libraries(source, library_sources_json)
+        .map_err(|err| JsValue::from_str(&err))?;
+    compile_program(input).map_err(|err| JsValue::from_str(&err))
+}
+
+fn compile_program(input: AnalysisInput) -> Result<WasmProgram, String> {
     let source_file = input.root().clone();
     let analysis = analyze_input(&input);
     if !analysis.diagnostics.is_empty() {
@@ -33,6 +45,18 @@ fn compile_program(source: &str) -> Result<WasmProgram, String> {
 #[wasm_bindgen(js_name = analyzeScript)]
 pub fn analyze_script(source: &str) -> String {
     let input = analysis_input(source);
+    analyze_input_json(input)
+}
+
+#[wasm_bindgen(js_name = analyzeScriptWithLibraries)]
+pub fn analyze_script_with_libraries(source: &str, library_sources_json: &str) -> String {
+    match analysis_input_with_libraries(source, library_sources_json) {
+        Ok(input) => analyze_input_json(input),
+        Err(message) => analysis_error_json(&message),
+    }
+}
+
+fn analyze_input_json(input: AnalysisInput) -> String {
     let source_file = input.root().clone();
     let analysis = analyze_input(&input);
     analysis_json(&source_file, &analysis)
@@ -44,7 +68,27 @@ pub fn run_script_csv(source: &str, bars_csv: &str) -> Result<String, JsValue> {
 }
 
 fn run_script_csv_internal(source: &str, bars_csv: &str) -> Result<String, String> {
-    let program = compile_program(source)?;
+    let program = compile_program(analysis_input(source))?;
+    program.run_csv_internal(bars_csv)
+}
+
+#[wasm_bindgen(js_name = runScriptCsvWithLibraries)]
+pub fn run_script_csv_with_libraries(
+    source: &str,
+    bars_csv: &str,
+    library_sources_json: &str,
+) -> Result<String, JsValue> {
+    run_script_csv_with_libraries_internal(source, bars_csv, library_sources_json)
+        .map_err(|err| JsValue::from_str(&err))
+}
+
+fn run_script_csv_with_libraries_internal(
+    source: &str,
+    bars_csv: &str,
+    library_sources_json: &str,
+) -> Result<String, String> {
+    let input = analysis_input_with_libraries(source, library_sources_json)?;
+    let program = compile_program(input)?;
     program.run_csv_internal(bars_csv)
 }
 
@@ -149,6 +193,14 @@ fn analysis_json(source: &SourceFile, analysis: &Analysis) -> String {
     ));
     output.push_str("}}");
     output
+}
+
+fn analysis_error_json(message: &str) -> String {
+    format!(
+        "{{\"schemaVersion\":{},\"languageVersion\":null,\"executable\":false,\"diagnostics\":[{{\"code\":\"E_HOST_INPUT\",\"severity\":\"error\",\"message\":\"{}\",\"span\":{{\"start\":0,\"end\":0,\"line\":1,\"column\":1}}}}],\"compatibility\":{{\"supported\":[],\"unsupported\":[]}}}}",
+        PUBLIC_ANALYSIS_SCHEMA_VERSION,
+        json_escape(message)
+    )
 }
 
 fn features_json<'a>(

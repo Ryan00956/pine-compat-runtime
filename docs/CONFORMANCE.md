@@ -79,9 +79,9 @@ Hosts may pass library source text into semantic analysis as future graph input:
   and `run`. The CLI owns filesystem reads and passes source text to core.
 - Python accepts `library_sources={"KEY": "source text"}` on `compile_script`,
   `analyze_script`, and `run_script`.
-- WASM remains a documented temporary gap for library source injection; it uses
-  the shared root-source `AnalysisInput` path but exposes no library-source JSON
-  argument yet, so root imports report missing-host-library diagnostics there.
+- WASM accepts deterministic JSON library source maps on the
+  `*WithLibraries` entry points and routes them through the same shared
+  `AnalysisInput` path.
 
 Core crates must not perform filesystem, network, clock, or host registry I/O
 for library resolution. Library source keys are deterministic host-provided

@@ -280,4 +280,22 @@ mod tests {
         assert!(output.contains("\"values\":[30,32,34,36,38]"));
         assert!(output.contains("\"values\":[null,null,100,100,200]"));
     }
+
+    #[test]
+    fn runs_imported_function_with_library_source_integration_fixture() {
+        let options = RunOptions {
+            path: workspace_path("tests/fixtures/runtime/import.pine"),
+            bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+            profile: false,
+            request_bars: Vec::new(),
+            library_sources: vec![LibrarySourceSpec {
+                key: "user/lib/1".to_owned(),
+                path: workspace_path("tests/fixtures/libraries/import_lib.pine"),
+            }],
+        };
+
+        let output = run_json_with_options(&options).expect("import integration fixture");
+
+        assert!(output.contains("\"values\":[4,6,8,10]"));
+    }
 }
