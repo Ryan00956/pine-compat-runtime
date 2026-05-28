@@ -170,7 +170,7 @@ impl<'a> HistoricalRuntime<'a> {
             boxes: Vec::new(),
             tables: Vec::new(),
             alerts: Vec::new(),
-            strategy_broker: BrokerState::default(),
+            strategy_broker: BrokerState::new(program.strategy_settings.initial_capital),
             next_label_id: 1,
             next_line_id: 1,
             next_box_id: 1,
@@ -252,6 +252,9 @@ impl<'a> HistoricalRuntime<'a> {
             }
         }
 
+        if self.program.script_mode == ScriptMode::Strategy {
+            self.strategy_broker.record_equity(bar_index, bar.close);
+        }
         self.finalize_series_outputs();
         self.commit_current_series()?;
         self.previous_bar_time = Some(bar.time);

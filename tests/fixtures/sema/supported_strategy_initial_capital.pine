@@ -1,0 +1,3 @@
+//@version=5
+strategy("Strategy initial capital fixture", initial_capital=2500)
+plot(close)

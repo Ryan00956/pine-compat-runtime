@@ -39,5 +39,11 @@ pub struct StrategyPositionSnapshot {
     pub avg_price: Option<f64>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct StrategyEquitySnapshot;
+#[derive(Debug, Clone, PartialEq)]
+pub struct StrategyEquitySnapshot {
+    pub bar_index: usize,
+    pub cash: f64,
+    pub market_value: f64,
+    pub equity: f64,
+    pub net_profit: f64,
+}

@@ -304,10 +304,7 @@ fn strategy_result_to_py(
     output.set_item("orders", strategy_orders_to_py(py, &strategy.orders)?)?;
     output.set_item("trades", strategy_trades_to_py(py, &strategy.trades)?)?;
     output.set_item("position", strategy_position_to_py(py, &strategy.position)?)?;
-    output.set_item(
-        "equity",
-        empty_strategy_list_to_py(py, strategy.equity.len())?,
-    )?;
+    output.set_item("equity", strategy_equity_to_py(py, &strategy.equity)?)?;
     output.set_item(
         "diagnostics",
         empty_strategy_list_to_py(py, strategy.diagnostics.len())?,
@@ -364,6 +361,23 @@ fn strategy_position_to_py(
         item.set_item("barIndex", snapshot.bar_index)?;
         item.set_item("size", snapshot.size)?;
         item.set_item("avgPrice", snapshot.avg_price)?;
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
+fn strategy_equity_to_py(
+    py: Python<'_>,
+    equity: &[pine_runtime::StrategyEquitySnapshot],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for snapshot in equity {
+        let item = PyDict::new(py);
+        item.set_item("barIndex", snapshot.bar_index)?;
+        item.set_item("cash", snapshot.cash)?;
+        item.set_item("marketValue", snapshot.market_value)?;
+        item.set_item("equity", snapshot.equity)?;
+        item.set_item("netProfit", snapshot.net_profit)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())

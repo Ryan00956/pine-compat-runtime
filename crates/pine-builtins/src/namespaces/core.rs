@@ -27,6 +27,34 @@ const INDICATOR_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const STRATEGY_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "title",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "shorttitle",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "overlay",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "max_bars_back",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
+        optional: true,
+    },
+    BuiltinParam {
+        name: "initial_capital",
+        accepts: Accepts::ConstNumeric,
+        optional: true,
+    },
+];
+
 const INPUT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "defval",
@@ -430,7 +458,7 @@ pub(crate) const SCRIPT_SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "strategy",
         phase: BuiltinPhase::Phase1Core,
-        params: INDICATOR_PARAMS,
+        params: STRATEGY_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

@@ -38,6 +38,30 @@ EMPTY_STRATEGY_RESULT = {
     "diagnostics": [],
 }
 
+FLAT_EQUITY = [
+    {
+        "barIndex": 0,
+        "cash": 100000.0,
+        "marketValue": 0.0,
+        "equity": 100000.0,
+        "netProfit": 0.0,
+    },
+    {
+        "barIndex": 1,
+        "cash": 100000.0,
+        "marketValue": 0.0,
+        "equity": 100000.0,
+        "netProfit": 0.0,
+    },
+    {
+        "barIndex": 2,
+        "cash": 100000.0,
+        "marketValue": 0.0,
+        "equity": 100000.0,
+        "netProfit": 0.0,
+    },
+]
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -93,7 +117,10 @@ def test_run_script_returns_empty_strategy_contract_for_strategy_mode():
     )
 
     assert set(result) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["strategy"] == EMPTY_STRATEGY_RESULT
+    assert result["strategy"] == {
+        **EMPTY_STRATEGY_RESULT,
+        "equity": FLAT_EQUITY,
+    }
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
 
 
@@ -115,6 +142,23 @@ def test_run_script_returns_strategy_entry_contract():
     ]
     assert result["strategy"]["position"] == [
         {"barIndex": 1, "size": 2.0, "avgPrice": 2.0}
+    ]
+    assert result["strategy"]["equity"] == [
+        FLAT_EQUITY[0],
+        {
+            "barIndex": 1,
+            "cash": 99996.0,
+            "marketValue": 4.0,
+            "equity": 100000.0,
+            "netProfit": 0.0,
+        },
+        {
+            "barIndex": 2,
+            "cash": 99996.0,
+            "marketValue": 6.0,
+            "equity": 100002.0,
+            "netProfit": 2.0,
+        },
     ]
 
 
@@ -141,6 +185,13 @@ def test_run_script_returns_strategy_close_trade_contract():
         {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
         {"barIndex": 2, "size": 0.0, "avgPrice": None},
     ]
+    assert result["strategy"]["equity"][-1] == {
+        "barIndex": 2,
+        "cash": 100002.0,
+        "marketValue": 0.0,
+        "equity": 100002.0,
+        "netProfit": 2.0,
+    }
 
 
 def test_analyze_script_accepts_library_sources_without_import_use():

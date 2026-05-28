@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Phase G Slice 5 strategy equity snapshots and basic
+  `initial_capital` handling. Strategy declarations accept positive const
+  numeric `initial_capital`, long entry/close accounting updates cash, and the
+  public strategy result now includes per-bar `cash`, `marketValue`, `equity`,
+  and `netProfit` snapshots.
 - Added Phase G Slice 4 minimal `strategy.close` support. Strategy scripts can
   fully close an existing long entry at the current bar close and receive a
   deterministic closed-trade record with entry/exit bars, prices, quantity, and

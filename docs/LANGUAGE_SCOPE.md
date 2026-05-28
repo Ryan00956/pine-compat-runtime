@@ -74,11 +74,13 @@ Phase 1 executable subset:
 - constant history offsets and guarded dynamic integer history offsets
 - `indicator`
 - `strategy(...)` as a Phase G declaration subset with strategy-mode runtime
-  output
+  output and positive const numeric `initial_capital`
 - `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
   filled at the current bar close for one net long position without pyramiding
 - `strategy.close(id)` in strategy-mode scripts only, closing the full matching
   long position at the current bar close and recording a closed trade
+- strategy equity snapshots with per-bar `cash`, `marketValue`, `equity`, and
+  `netProfit` for the supported long-only subset
 - `input.*`
 - `plot`, `plotchar`, `plotshape`, `plotarrow`, `plotbar`, `plotcandle`,
   `bgcolor`, `barcolor`, `hline`, and `fill`

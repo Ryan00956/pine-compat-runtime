@@ -49,7 +49,7 @@ fn runs_strategy_script_from_csv_to_empty_strategy_json() {
 
     assert!(output.contains("\"values\":[1,2]"));
     assert!(output.contains(
-        "\"strategy\":{\"orders\":[],\"trades\":[],\"position\":[],\"equity\":[],\"diagnostics\":[]}"
+        "\"strategy\":{\"orders\":[],\"trades\":[],\"position\":[],\"equity\":[{\"barIndex\":0,\"cash\":100000,\"marketValue\":0,\"equity\":100000,\"netProfit\":0},{\"barIndex\":1,\"cash\":100000,\"marketValue\":0,\"equity\":100000,\"netProfit\":0}],\"diagnostics\":[]}"
     ));
 }
 

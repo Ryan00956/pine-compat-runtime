@@ -1,0 +1,3 @@
+//@version=5
+strategy("Strategy invalid initial capital fixture", initial_capital=0)
+plot(close)

@@ -28,7 +28,12 @@ plot(close)
     assert!(strategy.orders.is_empty());
     assert!(strategy.trades.is_empty());
     assert!(strategy.position.is_empty());
-    assert!(strategy.equity.is_empty());
+    assert_eq!(strategy.equity.len(), 2);
+    assert_eq!(strategy.equity[0].bar_index, 0);
+    assert_eq!(strategy.equity[0].cash, 100_000.0);
+    assert_eq!(strategy.equity[0].market_value, 0.0);
+    assert_eq!(strategy.equity[0].equity, 100_000.0);
+    assert_eq!(strategy.equity[0].net_profit, 0.0);
     assert!(strategy.diagnostics.is_empty());
     assert_eq!(
         result.plots[0].values,
@@ -105,6 +110,9 @@ plot(close)
     assert_eq!(strategy.position[0].bar_index, 1);
     assert_eq!(strategy.position[0].size, 2.0);
     assert_eq!(strategy.position[0].avg_price, Some(2.0));
+    assert_eq!(strategy.equity[1].cash, 99_996.0);
+    assert_eq!(strategy.equity[1].market_value, 4.0);
+    assert_eq!(strategy.equity[1].equity, 100_000.0);
 }
 
 #[test]
@@ -192,6 +200,78 @@ if bar_index == 2
     assert_eq!(strategy.position.len(), 2);
     assert_eq!(strategy.position[1].size, 0.0);
     assert_eq!(strategy.position[1].avg_price, None);
+    assert_eq!(strategy.equity[2].cash, 100_002.0);
+    assert_eq!(strategy.equity[2].market_value, 0.0);
+    assert_eq!(strategy.equity[2].equity, 100_002.0);
+    assert_eq!(strategy.equity[2].net_profit, 2.0);
+}
+
+#[test]
+fn strategy_initial_capital_and_equity_mark_open_position_to_close() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("equity", initial_capital=1000)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=10)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .hir
+            .as_ref()
+            .unwrap()
+            .strategy_settings
+            .initial_capital,
+        1000.0
+    );
+
+    let bars = [
+        Bar {
+            time: 10,
+            open: 10.0,
+            high: 10.0,
+            low: 10.0,
+            close: 10.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 20,
+            open: 9.0,
+            high: 9.0,
+            low: 9.0,
+            close: 9.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 30,
+            open: 12.0,
+            high: 12.0,
+            low: 12.0,
+            close: 12.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.equity.len(), 3);
+    assert_eq!(strategy.equity[0].cash, 900.0);
+    assert_eq!(strategy.equity[0].market_value, 100.0);
+    assert_eq!(strategy.equity[0].equity, 1000.0);
+    assert_eq!(strategy.equity[1].cash, 900.0);
+    assert_eq!(strategy.equity[1].market_value, 90.0);
+    assert_eq!(strategy.equity[1].equity, 990.0);
+    assert_eq!(strategy.equity[1].net_profit, -10.0);
+    assert_eq!(strategy.equity[2].cash, 900.0);
+    assert_eq!(strategy.equity[2].market_value, 120.0);
+    assert_eq!(strategy.equity[2].equity, 1020.0);
+    assert_eq!(strategy.equity[2].net_profit, 20.0);
 }
 
 #[test]

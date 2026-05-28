@@ -615,7 +615,7 @@ fn strategy_json(strategy: &StrategyResult) -> String {
         strategy_orders_json(&strategy.orders),
         strategy_trades_json(&strategy.trades),
         strategy_position_json(&strategy.position),
-        empty_strategy_items_json(&strategy.equity),
+        strategy_equity_json(&strategy.equity),
         runtime_diagnostics_json(&strategy.diagnostics)
     )
 }
@@ -680,13 +680,27 @@ fn strategy_position_json(position: &[crate::StrategyPositionSnapshot]) -> Strin
     output
 }
 
-fn option_f64_json(value: Option<f64>) -> String {
-    value.map_or_else(|| "null".to_owned(), |value| value.to_string())
+fn strategy_equity_json(equity: &[crate::StrategyEquitySnapshot]) -> String {
+    let mut output = String::from("[");
+    for (index, snapshot) in equity.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"barIndex\":{},\"cash\":{},\"marketValue\":{},\"equity\":{},\"netProfit\":{}}}",
+            snapshot.bar_index,
+            snapshot.cash,
+            snapshot.market_value,
+            snapshot.equity,
+            snapshot.net_profit
+        ));
+    }
+    output.push(']');
+    output
 }
 
-fn empty_strategy_items_json<T>(items: &[T]) -> &'static str {
-    debug_assert!(items.is_empty());
-    "[]"
+fn option_f64_json(value: Option<f64>) -> String {
+    value.map_or_else(|| "null".to_owned(), |value| value.to_string())
 }
 
 fn runtime_diagnostics_json(diagnostics: &[crate::RuntimeDiagnostic]) -> String {

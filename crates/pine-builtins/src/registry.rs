@@ -90,6 +90,8 @@ mod tests {
         let signature = get_phase_1_builtin("strategy").expect("strategy declaration signature");
         assert_eq!(signature.params[0].name, "title");
         assert_eq!(signature.params[0].accepts, crate::Accepts::ConstString);
+        assert_eq!(signature.params[4].name, "initial_capital");
+        assert_eq!(signature.params[4].accepts, crate::Accepts::ConstNumeric);
         assert!(!signature.variadic);
     }
 

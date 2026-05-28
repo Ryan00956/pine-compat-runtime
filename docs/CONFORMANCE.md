@@ -64,6 +64,19 @@ not force analysis or matrix schema changes. The text-only CLI `analyze` output
 is diagnostic console output and is not part of the machine-readable schema
 until a JSON mode is added.
 
+## Strategy Runtime Contract
+
+Phase G marks `strategy` as partial. The executable subset accepts
+`strategy(title, shorttitle, overlay, max_bars_back, initial_capital)` where
+`initial_capital` must be a positive const numeric value when provided. Strategy
+mode output includes `orders`, `trades`, `position`, `equity`, and
+`diagnostics`. Equity snapshots are emitted once per historical bar with
+`barIndex`, `cash`, `marketValue`, `equity`, and `netProfit`, using current
+bar-close mark-to-market accounting for the long-only order subset. Commission,
+slippage, margin, percent sizing, currency conversion, pyramiding, short
+orders, stop/limit orders, `strategy.exit`, `strategy.order`, realtime strategy
+handoff, and strategy reporting variables remain outside the supported matrix.
+
 ## Source Graph Host Contract
 
 Phase J adds a host-neutral source graph scaffold and a narrow executable

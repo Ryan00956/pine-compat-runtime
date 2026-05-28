@@ -253,7 +253,7 @@ impl Analyzer {
 
         if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
             self.check_feature_name(&name, callee.span);
-            self.validate_script_declaration_call(&name, callee.span);
+            self.validate_script_declaration_call(&name, callee.span, args);
             self.validate_strategy_order_call(&name, callee.span, args);
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
@@ -300,7 +300,12 @@ impl Analyzer {
         None
     }
 
-    pub(crate) fn validate_script_declaration_call(&mut self, name: &str, span: Span) {
+    pub(crate) fn validate_script_declaration_call(
+        &mut self,
+        name: &str,
+        span: Span,
+        args: &[CallArg],
+    ) {
         let Some(mode) = (match name {
             "indicator" => Some(ScriptMode::Indicator),
             "strategy" => Some(ScriptMode::Strategy),
@@ -331,6 +336,32 @@ impl Analyzer {
         }
 
         self.script_declaration = Some((mode, span));
+        if mode == ScriptMode::Strategy {
+            self.validate_strategy_declaration_args(args);
+        }
+    }
+
+    pub(crate) fn validate_strategy_declaration_args(&mut self, args: &[CallArg]) {
+        for (index, arg) in args.iter().enumerate() {
+            let is_initial_capital = arg.name.as_deref() == Some("initial_capital")
+                || (arg.name.is_none() && index == 4);
+            if !is_initial_capital {
+                continue;
+            }
+
+            let Some(initial_capital) = const_numeric_value(&arg.value) else {
+                continue;
+            };
+            if !initial_capital.is_finite() || initial_capital <= 0.0 {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`strategy` argument `initial_capital` must be positive",
+                    arg.span,
+                ));
+                continue;
+            }
+            self.strategy_settings.initial_capital = initial_capital;
+        }
     }
 
     pub(crate) fn validate_strategy_order_call(

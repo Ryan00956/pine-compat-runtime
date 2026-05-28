@@ -90,6 +90,7 @@ impl Analyzer {
             .map_or(ScriptMode::Indicator, |(mode, _)| mode);
         Some(HirProgram {
             script_mode,
+            strategy_settings: self.strategy_settings,
             symbols,
             statements,
             next_series_id: self.next_series_id,

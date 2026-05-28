@@ -25,6 +25,21 @@ pub enum ScriptMode {
     Strategy,
 }
 
+pub const DEFAULT_STRATEGY_INITIAL_CAPITAL: f64 = 100_000.0;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct StrategySettings {
+    pub initial_capital: f64,
+}
+
+impl Default for StrategySettings {
+    fn default() -> Self {
+        Self {
+            initial_capital: DEFAULT_STRATEGY_INITIAL_CAPITAL,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Qualifier {
     Const,
@@ -73,6 +88,7 @@ impl PineType {
 #[derive(Debug, Clone, PartialEq)]
 pub struct HirProgram {
     pub script_mode: ScriptMode,
+    pub strategy_settings: StrategySettings,
     pub symbols: Vec<HirSymbol>,
     pub statements: Vec<HirStmt>,
     pub next_series_id: u32,

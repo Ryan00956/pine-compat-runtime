@@ -40,6 +40,8 @@ them as approximate.
 Strategy-mode runtime results include a `strategy` object with `orders`,
 `trades`, `position`, `equity`, and `diagnostics` arrays. Indicator-mode
 runtime results do not include this key.
+`strategy(..., initial_capital=N)` accepts a positive const numeric starting
+cash value; when omitted, the runtime uses 100000.
 
 The current order subset is `strategy.entry(id, strategy.long, qty=...)` and
 `strategy.close(id)`.
@@ -57,11 +59,18 @@ then appends a flat position snapshot with `size = 0` and `avgPrice = null`.
 If no position is open, the id does not match the open entry, or the position
 has already been closed, the close call is a no-op.
 
+After each historical bar, strategy mode appends an equity snapshot with
+`barIndex`, `cash`, `marketValue`, `equity`, and `netProfit`. Open long
+positions are marked to the current bar close, `equity = cash + marketValue`,
+and `netProfit = equity - initial_capital`. The current subset has no
+commission, slippage, margin, percent sizing, currency conversion, partial
+exits, or pyramiding.
+
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit`,
-`strategy.order`, stop/limit orders, partial exits, equity accounting, strategy
-reporting variables, and realtime strategy handoff remain unsupported until
-later Phase G slices define and fixture those semantics.
+`strategy.order`, stop/limit orders, strategy reporting variables, and realtime
+strategy handoff remain unsupported until later Phase G slices define and
+fixture those semantics.
 
 ## Alert Events
 

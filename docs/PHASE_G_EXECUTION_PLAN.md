@@ -464,6 +464,13 @@ Initial scope:
 - No commission, slippage, margin, percent sizing, pyramiding, or currency
   conversion unless selected by a later slice.
 
+Implementation decision: Slice 5 accepts only positive const numeric
+`initial_capital` on `strategy(...)`. The broker tracks cash for the supported
+long-only entry/close subset and appends one equity snapshot per historical bar
+with `cash`, `marketValue`, `equity`, and `netProfit`, using the current bar
+close for mark-to-market. It does not add default quantity settings or any
+other broker setting.
+
 Steps:
 
 1. Add declaration argument validation for accepted capital/quantity settings.
