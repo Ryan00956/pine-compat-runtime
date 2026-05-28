@@ -386,6 +386,9 @@ Acceptance criteria:
 
 ## Phase G: Strategy Runtime
 
+Status: closed for the first fixture-backed partial subset. See
+`docs/PHASE_G_AUDIT.md`.
+
 Goal: add `strategy.*` only as a separate runtime mode, not as a small built-in
 extension.
 
@@ -393,11 +396,14 @@ Execution playbook: `docs/PHASE_G_EXECUTION_PLAN.md`.
 
 Scope:
 
-- Strategy declaration and settings.
-- Order placement functions.
-- Broker emulator state.
-- Position, trade, equity, commission, slippage, and pyramiding semantics.
-- Strategy output schema.
+- Strategy declaration with positive const numeric `initial_capital`.
+- Long-only `strategy.entry` and full-position `strategy.close`.
+- Broker emulator state for one net long position, realized trades, position
+  snapshots, and per-bar equity snapshots.
+- Strategy output schema across CLI, Python, and WASM.
+- Commission, slippage, margin, percent sizing, pyramiding, richer order types,
+  strategy variables, strategy alerts, and realtime broker rollback remain
+  maintenance tails.
 
 Dependencies:
 

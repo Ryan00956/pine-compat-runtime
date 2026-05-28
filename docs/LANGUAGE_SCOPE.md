@@ -259,9 +259,10 @@ Request data:
 The analyzer should reject these with clear diagnostics:
 
 - strategy order functions and reporting helpers outside the narrow
-  `strategy.entry(id, strategy.long, qty=...)` subset, including
-  `strategy.exit`, `strategy.order`, short entries, stop/limit orders,
-  pyramiding, partial closes, and `strategy.*` variables
+  `strategy.entry(id, strategy.long, qty=...)` and `strategy.close(id)`
+  subsets, including `strategy.exit`, `strategy.order`, short entries,
+  stop/limit orders, pyramiding, partial closes, broker settings beyond
+  positive const numeric `initial_capital`, and `strategy.*` variables
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets
 - `request.security_lower_tf`; lower-timeframe array-returning request APIs need

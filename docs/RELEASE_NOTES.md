@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Phase G for the first fixture-backed strategy runtime subset. The
+  audit records the supported declaration, long entry, full close, trade,
+  position, and equity surface plus explicit maintenance tails for richer order
+  types, broker settings, strategy variables, alerts, and realtime broker
+  rollback.
 - Added Phase G Slice 5 strategy equity snapshots and basic
   `initial_capital` handling. Strategy declarations accept positive const
   numeric `initial_capital`, long entry/close accounting updates cash, and the

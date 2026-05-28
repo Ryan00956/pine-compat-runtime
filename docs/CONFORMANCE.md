@@ -215,11 +215,13 @@ Examples:
 - unsupported `request.security` variants outside the same-context identity and
   same-or-higher-timeframe scalar-expression provider subset
 - unsupported strategy declaration contexts and strategy order functions such as
-  `strategy.entry`, `strategy.exit`, and `strategy.close`
+  `strategy.exit` and `strategy.order`
 - minimal `strategy.entry` long market entries in strategy-mode scripts, with
   unsupported short/stop/limit/indicator-mode variants fixture-backed
 - minimal `strategy.close` full-position closes for matching long entry ids,
   with missing or repeated closes treated as no-op
+- minimal strategy equity snapshots with bar-close mark-to-market accounting,
+  with broader broker settings and strategy reporting variables unsupported
 - unsupported collection families or unsupported array variants
 - unsupported label and line methods
 - unsupported import variants outside the host-provided alias/exported
@@ -283,10 +285,11 @@ ta.rsi               supported    fixture-derived executable subset
 request.security     partial      same-context identity and same-or-higher-timeframe provider scalar-expression subset only
 alertcondition       partial      bool-compatible condition plus const-string title/message runtime events
 alert                partial      const-string message runtime events when execution reaches the call
-strategy             partial      declaration plus strategy-mode runtime result; order functions beyond strategy.entry/strategy.close are not implemented
+strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital only
 strategy.entry       partial      long market entry at current bar close; one net long position; no pyramiding
 strategy.close       partial      full long-position close at current bar close; closed trade output
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close, rich order types, and metrics are not implemented
+strategy equity      partial      per-bar cash, marketValue, equity, and netProfit snapshots
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close, rich order types, and reporting variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
