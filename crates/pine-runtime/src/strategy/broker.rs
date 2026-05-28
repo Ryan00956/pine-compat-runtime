@@ -124,6 +124,13 @@ impl BrokerState {
         });
     }
 
+    pub(crate) fn diagnose_exit_placeholder(&mut self) {
+        self.diagnostics.push(RuntimeDiagnostic {
+            code: "E_STRATEGY_EXIT_UNIMPLEMENTED".to_owned(),
+            message: "`strategy.exit` is semantically accepted for stop exits, but pending exit fills are not implemented yet".to_owned(),
+        });
+    }
+
     pub(crate) fn record_equity(&mut self, bar_index: usize, close: f64) {
         let market_value = self.position_size * close;
         let equity = self.cash + market_value;

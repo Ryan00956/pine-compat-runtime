@@ -13,6 +13,7 @@ impl<'a> HistoricalRuntime<'a> {
         Some(match callee {
             "strategy.entry" => self.eval_strategy_entry(args),
             "strategy.close" => self.eval_strategy_close(args),
+            "strategy.exit" => self.eval_strategy_exit(args),
             _ => return None,
         })
     }
@@ -68,6 +69,24 @@ impl<'a> HistoricalRuntime<'a> {
 
         self.strategy_broker
             .close_long(id, self.bars, bar.time, bar.close);
+        Ok(PineValue::Void)
+    }
+
+    fn eval_strategy_exit(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let Some(id_expr) = call_arg_expr(args, 0, "id") else {
+            return Ok(PineValue::Void);
+        };
+        let Some(from_entry_expr) = call_arg_expr(args, 1, "from_entry") else {
+            return Ok(PineValue::Void);
+        };
+        let Some(stop_expr) = call_arg_expr(args, 2, "stop") else {
+            return Ok(PineValue::Void);
+        };
+
+        let _ = self.eval_expr(id_expr)?;
+        let _ = self.eval_expr(from_entry_expr)?;
+        let _ = self.eval_expr(stop_expr)?;
+        self.strategy_broker.diagnose_exit_placeholder();
         Ok(PineValue::Void)
     }
 }

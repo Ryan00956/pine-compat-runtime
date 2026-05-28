@@ -166,7 +166,7 @@ impl Analyzer {
         span: Span,
         args: &[CallArg],
     ) {
-        if !matches!(name, "strategy.entry" | "strategy.close") {
+        if !matches!(name, "strategy.entry" | "strategy.close" | "strategy.exit") {
             return;
         }
 
@@ -180,6 +180,8 @@ impl Analyzer {
 
         if name == "strategy.entry" {
             self.validate_strategy_entry_args(args);
+        } else if name == "strategy.exit" {
+            self.validate_strategy_exit_args(args);
         }
     }
 
@@ -250,6 +252,37 @@ impl Analyzer {
                 "`strategy.entry` requires `qty` unless strategy default_qty_type=strategy.fixed and default_qty_value are configured",
                 args.first().map_or(Span::default(), |arg| arg.span),
             ));
+        }
+    }
+
+    pub(crate) fn validate_strategy_exit_args(&mut self, args: &[CallArg]) {
+        for (index, arg) in args.iter().enumerate() {
+            let Some(name) = arg
+                .name
+                .as_deref()
+                .or_else(|| ["id", "from_entry", "stop"].get(index).copied())
+            else {
+                continue;
+            };
+            match name {
+                "id" | "from_entry" | "stop" => {}
+                "limit" => self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    "`strategy.exit` argument `limit` is not supported in Phase M Slice 1",
+                    arg.span,
+                )),
+                "qty" | "qty_percent" | "profit" | "loss" | "trail_price" | "trail_points"
+                | "trail_offset" | "oca_name" | "comment" | "alert_message" => {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_NAME",
+                        format!(
+                            "`strategy.exit` argument `{name}` is not supported in Phase M Slice 1"
+                        ),
+                        arg.span,
+                    ))
+                }
+                _ => {}
+            }
         }
     }
 }

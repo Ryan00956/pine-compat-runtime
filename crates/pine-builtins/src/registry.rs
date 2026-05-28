@@ -115,4 +115,17 @@ mod tests {
         assert_eq!(signature.params[0].name, "id");
         assert!(!signature.variadic);
     }
+
+    #[test]
+    fn registers_strategy_exit_signature() {
+        let signature = get_phase_1_builtin("strategy.exit").expect("strategy.exit signature");
+        assert_eq!(signature.params[0].name, "id");
+        assert_eq!(signature.params[1].name, "from_entry");
+        assert_eq!(signature.params[2].name, "stop");
+        assert_eq!(
+            signature.params[2].accepts,
+            crate::Accepts::SeriesOrSimpleNumeric
+        );
+        assert!(!signature.variadic);
+    }
 }

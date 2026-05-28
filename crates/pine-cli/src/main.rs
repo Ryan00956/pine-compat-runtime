@@ -69,6 +69,8 @@ mod tests {
                 || signature.name == "alertcondition"
             {
                 "partial"
+            } else if signature.name == "strategy.exit" {
+                "unsupported"
             } else {
                 "supported"
             };

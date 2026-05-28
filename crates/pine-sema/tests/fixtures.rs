@@ -85,9 +85,9 @@ fn reports_unsupported_varip_drawing_fixture() {
 
 #[test]
 fn reports_unsupported_strategy_fixture() {
-    assert_strategy_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy.pine",
-        &["strategy.exit"],
+        "E_STRATEGY_MODE",
     );
 }
 
@@ -181,25 +181,72 @@ fn reports_strategy_entry_missing_qty_without_default_fixture() {
 fn reports_unsupported_strategy_order_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_orders.pine",
-        &["strategy.exit", "strategy.order"],
+        &["strategy.order"],
     );
 }
 
 #[test]
 fn reports_unsupported_strategy_exit_variant_fixtures() {
-    for path in [
-        "tests/fixtures/sema/unsupported_strategy_exit_stop.pine",
-        "tests/fixtures/sema/unsupported_strategy_exit_limit.pine",
-        "tests/fixtures/sema/unsupported_strategy_exit_stop_limit.pine",
-        "tests/fixtures/sema/unsupported_strategy_exit_profit_loss.pine",
-        "tests/fixtures/sema/unsupported_strategy_exit_trailing.pine",
-        "tests/fixtures/sema/unsupported_strategy_exit_partial_quantity.pine",
-        "tests/fixtures/sema/unsupported_strategy_exit_missing_entry.pine",
-        "tests/fixtures/sema/unsupported_strategy_exit_function_side_effect.pine",
-        "tests/fixtures/sema/unsupported_request_strategy_exit.pine",
+    for (path, code) in [
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_limit.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_stop_limit.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_profit_loss.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_trailing.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_partial_quantity.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_missing_entry.pine",
+            "E_CALL_ARITY",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_function_side_effect.pine",
+            "E_UNSUPPORTED_FEATURE",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_request_strategy_exit.pine",
+            "E_UNSUPPORTED_FEATURE",
+        ),
     ] {
-        assert_strategy_unsupported_fixture(path, &["strategy.exit"]);
+        assert_diagnostic_fixture(path, code);
     }
+}
+
+#[test]
+fn accepts_supported_strategy_exit_stop_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_exit_stop.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.exit")
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
