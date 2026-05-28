@@ -777,6 +777,12 @@ Exit criteria:
 - Runtime schema versioning is documented either as unchanged or deliberately
   bumped.
 
+Slice 7 decision: keep `PUBLIC_RUNTIME_SCHEMA_VERSION` unchanged. Filled
+strategy exits are fully represented by the existing `orders`, `trades`,
+`position`, `equity`, and `diagnostics` strategy fields: the exit order id is
+visible in `orders`, the source entry id remains visible in `trades`, and no
+public pending-order, partial-fill, or exit-reason field is added in Phase M.
+
 Verification:
 
 ```text
