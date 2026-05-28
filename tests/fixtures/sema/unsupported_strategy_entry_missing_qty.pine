@@ -1,0 +1,3 @@
+//@version=5
+strategy("Strategy entry missing quantity")
+strategy.entry("L", strategy.long)

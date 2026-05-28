@@ -29,9 +29,6 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(direction_expr) = call_arg_expr(args, 1, "direction") else {
             return Ok(PineValue::Void);
         };
-        let Some(qty_expr) = call_arg_expr(args, 2, "qty") else {
-            return Ok(PineValue::Void);
-        };
 
         let id = match self.eval_expr(id_expr)? {
             PineValue::String(value) => value,
@@ -41,7 +38,14 @@ impl<'a> HistoricalRuntime<'a> {
         if direction != PineValue::String("strategy.long".to_owned()) {
             return Ok(PineValue::Void);
         }
-        let qty = self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN);
+        let qty = if let Some(qty_expr) = call_arg_expr(args, 2, "qty") {
+            self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN)
+        } else {
+            self.program
+                .strategy_settings
+                .default_entry_qty()
+                .unwrap_or(f64::NAN)
+        };
 
         self.strategy_broker
             .entry_long(id, self.bars, bar.time, bar.close, qty);

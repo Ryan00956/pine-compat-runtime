@@ -137,10 +137,43 @@ fn accepts_supported_strategy_initial_capital_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_default_quantity_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_default_quantity.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("strategy declaration should lower");
+    assert_eq!(hir.strategy_settings.default_entry_qty(), Some(3.0));
+}
+
+#[test]
 fn reports_strategy_initial_capital_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_initial_capital.pine",
         "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_default_quantity_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_default_quantity.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
+fn reports_strategy_entry_missing_qty_without_default_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_entry_missing_qty.pine",
+        "E_CALL_ARITY",
     );
 }
 

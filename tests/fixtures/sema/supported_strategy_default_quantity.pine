@@ -1,0 +1,4 @@
+//@version=5
+strategy("Strategy default quantity", default_qty_type=strategy.fixed, default_qty_value=3)
+strategy.entry("L", strategy.long)
+strategy.entry("E", strategy.long, qty=5)

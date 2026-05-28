@@ -141,6 +141,73 @@ strategy.entry("L2", strategy.long, qty=1)
 }
 
 #[test]
+fn strategy_entry_uses_fixed_default_qty_when_qty_is_absent() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("entry", default_qty_type=strategy.fixed, default_qty_value=3)
+if bar_index == 0
+    strategy.entry("D", strategy.long)
+if bar_index == 1
+    strategy.entry("E", strategy.long, qty=5)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .hir
+            .as_ref()
+            .unwrap()
+            .strategy_settings
+            .default_entry_qty(),
+        Some(3.0)
+    );
+
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(2.0), bar(4.0)]).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "D");
+    assert_eq!(strategy.orders[0].qty, 3.0);
+    assert_eq!(strategy.orders[0].price, 2.0);
+    assert_eq!(strategy.position[0].size, 3.0);
+    assert_eq!(strategy.equity[0].cash, 99_994.0);
+    assert_eq!(strategy.equity[0].market_value, 6.0);
+    assert_eq!(strategy.equity[1].equity, 100_006.0);
+}
+
+#[test]
+fn strategy_entry_explicit_qty_overrides_fixed_default_qty() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("entry", default_qty_type=strategy.fixed, default_qty_value=3)
+if bar_index == 0
+    strategy.entry("E", strategy.long, qty=5)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(2.0)]).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "E");
+    assert_eq!(strategy.orders[0].qty, 5.0);
+    assert_eq!(strategy.position[0].size, 5.0);
+    assert_eq!(strategy.equity[0].cash, 99_990.0);
+}
+
+#[test]
 fn strategy_close_records_closed_trade_and_flat_position() {
     let source = SourceFile::new(
         "strategy.pine",

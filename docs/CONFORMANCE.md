@@ -67,9 +67,13 @@ until a JSON mode is added.
 ## Strategy Runtime Contract
 
 Phase G marks `strategy` as partial. The executable subset accepts
-`strategy(title, shorttitle, overlay, max_bars_back, initial_capital)` where
-`initial_capital` must be a positive const numeric value when provided. Strategy
-mode output includes `orders`, `trades`, `position`, `equity`, and
+`strategy(title, shorttitle, overlay, max_bars_back, initial_capital,
+default_qty_type, default_qty_value)` where `initial_capital` must be a positive
+const numeric value when provided. Phase L accepts only
+`default_qty_type=strategy.fixed` with positive const numeric
+`default_qty_value`; percent-of-equity, cash sizing, contracts, and currency
+conversion remain unsupported. Strategy mode output includes `orders`, `trades`,
+`position`, `equity`, and
 `diagnostics`. Equity snapshots are emitted once per historical bar with
 `barIndex`, `cash`, `marketValue`, `equity`, and `netProfit`, using current
 bar-close mark-to-market accounting for the long-only order subset. Commission,
@@ -233,7 +237,9 @@ Examples:
 - unsupported strategy declaration contexts and strategy order functions such as
   `strategy.exit` and `strategy.order`
 - minimal `strategy.entry` long market entries in strategy-mode scripts, with
-  unsupported short/stop/limit/indicator-mode variants fixture-backed
+  unsupported short/stop/limit/indicator-mode variants fixture-backed; entries
+  may omit `qty` only when the strategy declaration configures the fixed default
+  quantity subset
 - minimal `strategy.close` full-position closes for matching long entry ids,
   with missing or repeated closes treated as no-op
 - minimal strategy equity snapshots with bar-close mark-to-market accounting,
@@ -304,8 +310,8 @@ ta.rsi               supported    fixture-derived executable subset
 request.security     partial      same-context identity and same-or-higher-timeframe provider scalar-expression subset only
 alertcondition       partial      bool-compatible condition plus const-string title/message runtime events
 alert                partial      const-string message runtime events when execution reaches the call
-strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital only
-strategy.entry       partial      long market entry at current bar close; one net long position; no pyramiding
+strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital and fixed default_qty subset only
+strategy.entry       partial      long market entry at current bar close; explicit positive qty or fixed default qty; one net long position; no pyramiding
 strategy.close       partial      full long-position close at current bar close; closed trade output
 strategy equity      partial      per-bar cash, marketValue, equity, and netProfit snapshots
 strategy.position_size partial    current long-only position size read-only series in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
@@ -313,7 +319,7 @@ strategy.position_avg_price partial current long-only average entry price read-o
 strategy.openprofit partial       current long-only unrealized profit read-only series, 0 when flat, in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.netprofit  partial       cumulative realized closed-trade profit read-only series, excluding current open profit, in strategy-mode scripts only
 strategy.equity     partial       initial_capital plus realized net profit plus current open profit read-only series in strategy-mode scripts only
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close, rich order types, mutable strategy state, and strategy reporting helpers beyond the supported position/profit/equity variables are not implemented
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close, rich order types, percent/cash/contracts sizing, mutable strategy state, and strategy reporting helpers beyond the supported position/profit/equity variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

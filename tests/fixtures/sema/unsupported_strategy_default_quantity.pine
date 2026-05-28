@@ -1,0 +1,3 @@
+//@version=5
+strategy("Strategy invalid default quantity", default_qty_type="strategy.percent_of_equity", default_qty_value=10)
+plot(close)

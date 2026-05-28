@@ -16,7 +16,7 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "qty",
         accepts: Accepts::SeriesOrSimpleNumeric,
-        optional: false,
+        optional: true,
     },
 ];
 

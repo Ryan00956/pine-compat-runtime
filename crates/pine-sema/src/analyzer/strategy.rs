@@ -1,5 +1,7 @@
 use crate::prelude::*;
 
+const STRATEGY_FIXED_DEFAULT_QTY_TYPE: &str = "strategy.fixed";
+
 const PHASE_L_STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.position_size",
     "strategy.position_avg_price",
@@ -59,25 +61,102 @@ impl Analyzer {
     }
 
     pub(crate) fn validate_strategy_declaration_args(&mut self, args: &[CallArg]) {
-        for (index, arg) in args.iter().enumerate() {
-            let is_initial_capital = arg.name.as_deref() == Some("initial_capital")
-                || (arg.name.is_none() && index == 4);
-            if !is_initial_capital {
-                continue;
-            }
+        let mut default_qty_type_arg = None;
+        let mut default_qty_value_arg = None;
+        let mut fixed_default_qty_type = false;
+        let mut default_qty_value = None;
 
-            let Some(initial_capital) = const_numeric_value(&arg.value) else {
+        for (index, arg) in args.iter().enumerate() {
+            let Some(name) = arg.name.as_deref().or_else(|| {
+                [
+                    "title",
+                    "shorttitle",
+                    "overlay",
+                    "max_bars_back",
+                    "initial_capital",
+                    "default_qty_type",
+                    "default_qty_value",
+                ]
+                .get(index)
+                .copied()
+            }) else {
                 continue;
             };
-            if !initial_capital.is_finite() || initial_capital <= 0.0 {
+
+            match name {
+                "initial_capital" => {
+                    let Some(initial_capital) = const_numeric_value(&arg.value) else {
+                        continue;
+                    };
+                    if !initial_capital.is_finite() || initial_capital <= 0.0 {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `initial_capital` must be positive",
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    self.strategy_settings.initial_capital = initial_capital;
+                }
+                "default_qty_type" => {
+                    default_qty_type_arg = Some(arg);
+                    let Some(default_qty_type) = const_string_value(&arg.value) else {
+                        continue;
+                    };
+                    if default_qty_type != STRATEGY_FIXED_DEFAULT_QTY_TYPE {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `default_qty_type` only supports strategy.fixed",
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    fixed_default_qty_type = true;
+                }
+                "default_qty_value" => {
+                    default_qty_value_arg = Some(arg);
+                    let Some(qty) = const_numeric_value(&arg.value) else {
+                        continue;
+                    };
+                    if !qty.is_finite() || qty <= 0.0 {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `default_qty_value` must be positive",
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    default_qty_value = Some(qty);
+                }
+                _ => {}
+            }
+        }
+
+        match (
+            fixed_default_qty_type,
+            default_qty_type_arg,
+            default_qty_value_arg,
+            default_qty_value,
+        ) {
+            (true, _, Some(_), Some(qty)) => {
+                self.strategy_settings.default_qty =
+                    Some(pine_ir::StrategyDefaultQuantity::Fixed(qty));
+            }
+            (true, Some(arg), None, _) => {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_VALUE",
-                    "`strategy` argument `initial_capital` must be positive",
+                    "`strategy` argument `default_qty_value` is required when default_qty_type=strategy.fixed",
                     arg.span,
                 ));
-                continue;
             }
-            self.strategy_settings.initial_capital = initial_capital;
+            (false, None, Some(arg), Some(_)) => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`strategy` argument `default_qty_value` requires default_qty_type=strategy.fixed",
+                    arg.span,
+                ));
+            }
+            _ => {}
         }
     }
 
@@ -127,6 +206,7 @@ impl Analyzer {
     }
 
     pub(crate) fn validate_strategy_entry_args(&mut self, args: &[CallArg]) {
+        let mut has_qty = false;
         for (index, arg) in args.iter().enumerate() {
             let Some(name) = arg
                 .name
@@ -149,6 +229,7 @@ impl Analyzer {
                     }
                 }
                 "qty" => {
+                    has_qty = true;
                     if let Some(qty) = const_numeric_value(&arg.value)
                         && qty <= 0.0
                     {
@@ -161,6 +242,14 @@ impl Analyzer {
                 }
                 _ => {}
             }
+        }
+
+        if !has_qty && self.strategy_settings.default_qty.is_none() {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                "`strategy.entry` requires `qty` unless strategy default_qty_type=strategy.fixed and default_qty_value are configured",
+                args.first().map_or(Span::default(), |arg| arg.span),
+            ));
         }
     }
 }

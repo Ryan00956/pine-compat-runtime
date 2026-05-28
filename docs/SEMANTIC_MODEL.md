@@ -29,15 +29,19 @@ na" marker while it waits for contextual type information.
 A script may have at most one top-level declaration call. `indicator(...)`
 selects indicator mode and `strategy(...)` selects strategy mode. Phase G
 accepts `strategy(...)` with the common declaration metadata subset plus
-positive const numeric `initial_capital`, and narrow `strategy.entry` and
-`strategy.close` subsets.
-`strategy.entry(id, strategy.long, qty=...)` is a strategy-mode side effect
-only; `strategy.close(id)` closes the full matching long position at the
-current bar close. Both calls are rejected in indicator scripts and
-user-defined functions. Short entries, stop/limit orders, `strategy.exit`,
-`strategy.order`, broker settings beyond `initial_capital`, realtime strategy
-handoff, and strategy metrics beyond public equity snapshots remain unsupported
-until later slices define those contracts.
+positive const numeric `initial_capital`. Phase L adds the fixed default
+quantity declaration subset:
+`default_qty_type=strategy.fixed, default_qty_value=N` with positive const
+numeric `N`.
+`strategy.entry(id, strategy.long, qty=...)` is a strategy-mode side effect;
+`qty` may be omitted only when the fixed default quantity subset is configured,
+and explicit `qty` overrides the declaration default. `strategy.close(id)`
+closes the full matching long position at the current bar close. Both calls are
+rejected in indicator scripts and user-defined functions. Short entries,
+stop/limit orders, `strategy.exit`, `strategy.order`, broker settings beyond
+`initial_capital` and fixed default quantity, realtime strategy handoff, and
+strategy metrics beyond the Phase L position/profit/equity variables remain
+unsupported until later slices define those contracts.
 
 `indicator(...)` and `strategy(...)` declarations are mutually exclusive and
 must be top-level. Declaration calls inside functions or local blocks are

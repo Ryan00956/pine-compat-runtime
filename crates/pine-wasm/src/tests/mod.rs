@@ -68,6 +68,20 @@ fn runs_strategy_entry_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_default_quantity_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        "strategy(\"demo\", default_qty_type=strategy.fixed, default_qty_value=3)\nif bar_index == 1\n    strategy.entry(\"D\", strategy.long)\nplot(strategy.position_size)\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+    )
+    .expect("strategy default quantity script should run");
+
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"D\",\"barIndex\":1,\"time\":1,\"direction\":\"strategy.long\",\"qty\":3,\"price\":2}]"
+    ));
+    assert!(output.contains("\"values\":[0,3]"));
+}
+
+#[test]
 fn runs_strategy_position_state_from_csv_to_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 2\n    strategy.close(\"L\")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\n",

@@ -53,6 +53,16 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "default_qty_type",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "default_qty_value",
+        accepts: Accepts::ConstNumeric,
+        optional: true,
+    },
 ];
 
 const INPUT_PARAMS: &[BuiltinParam] = &[

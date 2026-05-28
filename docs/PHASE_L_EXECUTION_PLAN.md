@@ -579,6 +579,22 @@ Exit criteria for implementation slice:
   runtime behavior, host surfaces, docs, and conformance metadata.
 - Explicit `qty` behavior remains unchanged.
 
+Slice 4 implementation record:
+
+- Phase L accepts the fixed default quantity subset:
+  `default_qty_type=strategy.fixed` with positive const numeric
+  `default_qty_value`.
+- `strategy.entry(id, strategy.long)` may omit `qty` only when that fixed
+  default is configured; otherwise semantic analysis reports a stable arity
+  diagnostic.
+- Explicit `qty` remains supported and overrides the declaration default.
+- `pine_ir::StrategySettings` owns the selected default quantity so CLI, Python,
+  WASM, and Rust runtime entry points share the same behavior.
+- Unsupported default quantity modes, including percent-of-equity-style string
+  values, remain rejected. Cash sizing, contracts, margin, currency conversion,
+  and percent-of-equity sizing stay outside Phase L.
+- No runtime JSON, Python dictionary, or WASM JSON schema fields were added.
+
 Verification:
 
 ```text

@@ -92,6 +92,10 @@ mod tests {
         assert_eq!(signature.params[0].accepts, crate::Accepts::ConstString);
         assert_eq!(signature.params[4].name, "initial_capital");
         assert_eq!(signature.params[4].accepts, crate::Accepts::ConstNumeric);
+        assert_eq!(signature.params[5].name, "default_qty_type");
+        assert_eq!(signature.params[5].accepts, crate::Accepts::ConstString);
+        assert_eq!(signature.params[6].name, "default_qty_value");
+        assert_eq!(signature.params[6].accepts, crate::Accepts::ConstNumeric);
         assert!(!signature.variadic);
     }
 
@@ -101,6 +105,7 @@ mod tests {
         assert_eq!(signature.params[0].name, "id");
         assert_eq!(signature.params[1].name, "direction");
         assert_eq!(signature.params[2].name, "qty");
+        assert!(signature.params[2].optional);
         assert!(!signature.variadic);
     }
 

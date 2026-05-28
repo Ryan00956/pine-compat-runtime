@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Phase L Slice 4 fixed default quantity support. Strategy declarations
+  now accept `default_qty_type=strategy.fixed` with positive const numeric
+  `default_qty_value`; `strategy.entry(id, strategy.long)` uses that default,
+  while explicit `qty` continues to override it.
 - Hardened Phase L Slice 3 strategy variable interactions. The supported
   position/profit/equity state variables now have fixture-backed behavior in
   branches, switches, loops, pure UDF arguments, constant history references,

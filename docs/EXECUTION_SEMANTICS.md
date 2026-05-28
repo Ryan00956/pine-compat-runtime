@@ -42,15 +42,21 @@ Strategy-mode runtime results include a `strategy` object with `orders`,
 runtime results do not include this key.
 `strategy(..., initial_capital=N)` accepts a positive const numeric starting
 cash value; when omitted, the runtime uses 100000.
+`strategy(..., default_qty_type=strategy.fixed, default_qty_value=N)` accepts a
+positive const numeric fixed default entry quantity. The fixed default subset is
+the only supported declaration quantity mode; percent-of-equity, cash sizing,
+contracts, margin, and currency conversion remain unsupported.
 
-The current order subset is `strategy.entry(id, strategy.long, qty=...)` and
-`strategy.close(id)`.
+The current order subset is `strategy.entry(id, strategy.long, qty=...)`,
+`strategy.entry(id, strategy.long)` when a fixed default quantity is configured,
+and `strategy.close(id)`.
 When execution reaches the call in a strategy-mode script, the runtime fills a
 long market entry at the current bar close and records an order event plus a
 position snapshot. Only one net long position is supported; repeated entry
 calls while a position is open are ignored under the current no-pyramiding
-rule. `qty` must be positive, and non-positive runtime quantities are reported
-in the strategy diagnostics array.
+rule. Explicit `qty` overrides the declaration default. The resolved quantity
+must be positive, and non-positive runtime quantities are reported in the
+strategy diagnostics array.
 
 `strategy.close(id)` closes the full matching long position at the current bar
 close. It records a closed trade with entry/exit bar indexes, entry/exit times,

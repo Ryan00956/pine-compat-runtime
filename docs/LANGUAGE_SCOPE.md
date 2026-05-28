@@ -74,9 +74,14 @@ Phase 1 executable subset:
 - constant history offsets and guarded dynamic integer history offsets
 - `indicator`
 - `strategy(...)` as a Phase G declaration subset with strategy-mode runtime
-  output and positive const numeric `initial_capital`
+  output, positive const numeric `initial_capital`, and Phase L fixed default
+  quantity settings through `default_qty_type=strategy.fixed` plus positive
+  const numeric `default_qty_value`
 - `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
   filled at the current bar close for one net long position without pyramiding
+- `strategy.entry(id, strategy.long)` in strategy-mode scripts only when the
+  declaration configures the supported fixed default quantity subset; explicit
+  `qty` continues to override the declaration default
 - `strategy.close(id)` in strategy-mode scripts only, closing the full matching
   long position at the current bar close and recording a closed trade
 - strategy equity snapshots with per-bar `cash`, `marketValue`, `equity`, and
@@ -273,7 +278,8 @@ The analyzer should reject these with clear diagnostics:
   `strategy.entry(id, strategy.long, qty=...)` and `strategy.close(id)`
   subsets, including `strategy.exit`, `strategy.order`, short entries,
   stop/limit orders, pyramiding, partial closes, broker settings beyond
-  positive const numeric `initial_capital`, `strategy.*` variables beyond the
+  positive const numeric `initial_capital` and fixed default quantity,
+  percent-of-equity/cash/contracts sizing, `strategy.*` variables beyond the
   supported position/profit/equity state subset, mutable strategy state, and
   requested-context strategy state
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe

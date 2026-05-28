@@ -93,6 +93,7 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     same_string_constant("format.volume"),
     same_string_constant("order.ascending"),
     same_string_constant("order.descending"),
+    same_string_constant("strategy.fixed"),
     same_string_constant("strategy.long"),
     NamedStringConstant {
         name: "syminfo.basecurrency",
