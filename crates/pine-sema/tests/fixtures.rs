@@ -205,6 +205,18 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
             "E_CALL_ARG_NAME",
         ),
         (
+            "tests/fixtures/sema/unsupported_strategy_exit_stop_loss.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_limit_profit.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_three_triggers.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
             "tests/fixtures/sema/unsupported_strategy_exit_profit_qty.pine",
             "E_CALL_ARG_NAME",
         ),

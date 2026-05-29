@@ -608,6 +608,29 @@ Recommended conservative outcome for Phase N:
 - Record same-bar precedence as a future design task instead of silently
   choosing a rule.
 
+Slice 7 outcome:
+
+- Phase N keeps every combined trigger form unsupported. This includes
+  `stop + limit`, `profit + loss`, `stop + profit`, `limit + loss`,
+  `stop + loss`, `limit + profit`, and three-trigger calls.
+- The broker continues to model one pending exit with one trigger price. It
+  does not create two-trigger brackets or linked child exits.
+- Same-bar high/low precedence remains deliberately undesigned for Phase N
+  because the current OHLC-only historical model cannot prove which side of a
+  bracket would have filled first.
+- Repeated bracket eligibility, one-sided bracket replacement, and
+  `strategy.close(id)` bracket cancellation remain future design questions.
+- No public exit-reason field, pending-order field, or runtime schema bump is
+  introduced for bracket behavior in Phase N.
+- Unsupported combined trigger fixtures:
+  - `tests/fixtures/sema/unsupported_strategy_exit_stop_limit.pine`
+  - `tests/fixtures/sema/unsupported_strategy_exit_profit_loss.pine`
+  - `tests/fixtures/sema/unsupported_strategy_exit_stop_profit.pine`
+  - `tests/fixtures/sema/unsupported_strategy_exit_limit_loss.pine`
+  - `tests/fixtures/sema/unsupported_strategy_exit_stop_loss.pine`
+  - `tests/fixtures/sema/unsupported_strategy_exit_limit_profit.pine`
+  - `tests/fixtures/sema/unsupported_strategy_exit_three_triggers.pine`
+
 If bracket implementation is deliberately selected after the design gate, use a
 separate follow-up slice with its own positive fixtures, broker tests, host
 tests, conformance update, and closeout evidence.

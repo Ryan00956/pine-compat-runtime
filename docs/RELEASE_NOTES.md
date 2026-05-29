@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Phase N Slice 7 as a bracket design gate. Combined trigger exits stay
+  unsupported, including stop/limit, profit/loss, mixed price/tick, and
+  three-trigger calls, because OHLC-only same-bar precedence remains a future
+  broker design task.
 - Hardened Phase N Slice 6 profit/loss exit interactions. Runtime fixtures now
   cover profit placement and later loss replacement through branch, switch, for,
   and while contexts, plus strategy state/history reads around the delayed loss
