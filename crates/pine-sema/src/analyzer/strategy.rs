@@ -2,20 +2,22 @@ use crate::prelude::*;
 
 const STRATEGY_FIXED_DEFAULT_QTY_TYPE: &str = "strategy.fixed";
 
-const PHASE_L_STRATEGY_STATE_VARIABLES: &[&str] = &[
+const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.position_size",
     "strategy.position_avg_price",
     "strategy.openprofit",
     "strategy.netprofit",
     "strategy.equity",
+    "strategy.closedtrades",
+    "strategy.opentrades",
 ];
 
-pub(crate) fn is_phase_l_strategy_state_variable(name: &str) -> bool {
-    PHASE_L_STRATEGY_STATE_VARIABLES.contains(&name)
+pub(crate) fn is_strategy_state_variable(name: &str) -> bool {
+    STRATEGY_STATE_VARIABLES.contains(&name)
 }
 
-pub(crate) fn is_phase_l_supported_strategy_state_variable(name: &str) -> bool {
-    PHASE_L_STRATEGY_STATE_VARIABLES.contains(&name)
+pub(crate) fn is_supported_strategy_state_variable(name: &str) -> bool {
+    STRATEGY_STATE_VARIABLES.contains(&name)
 }
 
 impl Analyzer {
@@ -186,7 +188,7 @@ impl Analyzer {
     }
 
     pub(crate) fn validate_strategy_state_variable(&mut self, name: &str, span: Span) -> bool {
-        if !is_phase_l_strategy_state_variable(name) {
+        if !is_strategy_state_variable(name) {
             return false;
         }
 
@@ -199,7 +201,7 @@ impl Analyzer {
             return true;
         }
 
-        if is_phase_l_supported_strategy_state_variable(name) {
+        if is_supported_strategy_state_variable(name) {
             return false;
         }
 

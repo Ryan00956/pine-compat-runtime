@@ -24,6 +24,14 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.closedtrades",
+        PineType::new(Qualifier::Series, ValueKind::Int),
+    ),
+    (
+        "strategy.opentrades",
+        PineType::new(Qualifier::Series, ValueKind::Int),
+    ),
+    (
         "barstate.isfirst",
         PineType::new(Qualifier::Series, ValueKind::Bool),
     ),
@@ -86,4 +94,21 @@ pub fn builtin_series_value_type(name: &str) -> Option<PineType> {
         .iter()
         .find(|(value_name, _)| *value_name == name)
         .map(|(_, pine_type)| *pine_type)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn registers_strategy_trade_count_series_values() {
+        assert_eq!(
+            builtin_series_value_type("strategy.closedtrades"),
+            Some(PineType::new(Qualifier::Series, ValueKind::Int))
+        );
+        assert_eq!(
+            builtin_series_value_type("strategy.opentrades"),
+            Some(PineType::new(Qualifier::Series, ValueKind::Int))
+        );
+    }
 }

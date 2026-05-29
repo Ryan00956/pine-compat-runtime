@@ -5,3 +5,5 @@ plot(request.security(syminfo.tickerid, timeframe.period, strategy.position_avg_
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.openprofit))
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.netprofit))
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.equity))
+plot(request.security(syminfo.tickerid, timeframe.period, strategy.closedtrades))
+plot(request.security(syminfo.tickerid, timeframe.period, strategy.opentrades))

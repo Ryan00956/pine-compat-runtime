@@ -1,5 +1,5 @@
 //@version=5
 strategy("Unsupported strategy state variables")
-plot(strategy.closedtrades)
-plot(strategy.opentrades)
 plot(strategy.max_drawdown)
+plot(strategy.wintrades)
+plot(strategy.losstrades)

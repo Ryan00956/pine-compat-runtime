@@ -115,7 +115,7 @@ fn request_expression_is_pure_scalar(expr: &Expr) -> bool {
         ExprKind::Literal(_) | ExprKind::Identifier(_) => true,
         ExprKind::QualifiedName(_) => expr_name(expr)
             .as_deref()
-            .is_none_or(|name| !is_phase_l_strategy_state_variable(name)),
+            .is_none_or(|name| !is_strategy_state_variable(name)),
         ExprKind::Unary { expr, .. } => request_expression_is_pure_scalar(expr),
         ExprKind::Binary { left, right, .. } => {
             request_expression_is_pure_scalar(left) && request_expression_is_pure_scalar(right)

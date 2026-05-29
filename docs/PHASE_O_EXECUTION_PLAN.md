@@ -618,12 +618,12 @@ scripts/verify.sh
 ## Phase O Completion Checklist
 
 - [x] Slice 0 decision record confirmed.
-- [ ] `strategy.closedtrades` is typed as `series int`.
-- [ ] `strategy.opentrades` is typed as `series int`.
-- [ ] Strategy-mode semantic fixtures accept both count variables.
-- [ ] Indicator-mode diagnostics reject both count variables.
-- [ ] Requested-context diagnostics reject both count variables.
-- [ ] Mutation diagnostics keep strategy state read-only.
+- [x] `strategy.closedtrades` is typed as `series int`.
+- [x] `strategy.opentrades` is typed as `series int`.
+- [x] Strategy-mode semantic fixtures accept both count variables.
+- [x] Indicator-mode diagnostics reject both count variables.
+- [x] Requested-context diagnostics reject both count variables.
+- [x] Mutation diagnostics keep strategy state read-only.
 - [ ] Broker accessors return deterministic closed/open counts.
 - [ ] Runtime variable reads use broker accessors.
 - [ ] Same-bar `strategy.close` count behavior is covered.

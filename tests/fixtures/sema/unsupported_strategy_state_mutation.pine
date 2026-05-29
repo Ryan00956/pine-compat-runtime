@@ -1,3 +1,5 @@
 //@version=5
 strategy("Unsupported strategy state mutation")
 strategy.position_size := 1
+strategy.closedtrades := 1
+strategy.opentrades := 1
