@@ -174,7 +174,10 @@ and placement live in `exits`; close/fill trade construction and position reset
 live in `fills`; equity, profit, position, and trade-count accessors live in
 `accounting`; broker-focused unit tests live in `tests`. Public strategy result
 structs remain in `pine-runtime::output::strategy`, and host bindings continue
-to map the shared runtime result without owning broker transitions.
+to map the shared runtime result without owning broker transitions. Phase Q
+records the future bracket implementation blueprint inside these ownership
+boundaries; it does not move broker behavior into built-in signatures, output
+structs, Python, or WASM.
 
 ### `pine-builtins`
 

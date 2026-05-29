@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Started Phase Q as a `strategy.exit` bracket design gate. Combined trigger
+  exits remain unsupported, but the audit now records the future one-downside
+  plus one-upside bracket subset, stop/loss-first same-bar precedence,
+  identity/replacement rules, invalid-leg behavior, fixture plan, and module
+  implementation blueprint.
+- Hardened `strategy.exit` unsupported diagnostics to use phase-neutral
+  current-subset wording and added a diagnostic-only four-trigger
+  `stop + limit + profit + loss` fixture, with conformance and matrix metadata
+  updated without widening support.
 - Implemented Phase P broker-structure maintenance. Strategy broker internals
   are split into facade, pending-exit, fill, accounting, and broker-test
   modules while preserving the existing strategy compatibility surface, public

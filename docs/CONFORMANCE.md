@@ -133,7 +133,11 @@ output contract.
 The closed Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`. The
 closed Phase M boundary is summarized in `docs/PHASE_M_AUDIT.md`. The closed
 Phase N boundary is summarized in `docs/PHASE_N_AUDIT.md`. The closed Phase O
-count-variable boundary is summarized in `docs/PHASE_O_AUDIT.md`.
+count-variable boundary is summarized in `docs/PHASE_O_AUDIT.md`. Phase P's
+structural broker split is summarized in `docs/PHASE_P_AUDIT.md`. Phase Q's
+bracket design gate is recorded in `docs/PHASE_Q_AUDIT.md`; it does not add
+runtime support for combined trigger exits or widen the `strategy.exit`
+conformance status.
 
 ## Source Graph Host Contract
 
@@ -281,7 +285,8 @@ Examples:
   `strategy.exit(id, from_entry, loss=ticks)` are the narrow supported subsets
   for the current one-net-long broker. Combined trigger exits remain
   unsupported because same-bar high/low crossings need an explicit intrabar
-  precedence policy before compatibility can be claimed.
+  precedence policy before compatibility can be claimed. Phase Q records the
+  future bracket design and keeps these unsupported fixtures diagnostic-only.
 - minimal `strategy.entry` long market entries in strategy-mode scripts, with
   unsupported short/stop/limit/indicator-mode variants fixture-backed; entries
   may omit `qty` only when the strategy declaration configures the fixed default

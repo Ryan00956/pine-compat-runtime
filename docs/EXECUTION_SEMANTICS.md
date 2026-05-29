@@ -125,7 +125,9 @@ exit reason fields. Phase O does not add public open-trade records, trade
 namespace functions, or top-level runtime schema fields. The prior Phase L
 boundary is summarized in
 `docs/PHASE_L_AUDIT.md`; the closed Phase M and Phase N exit subsets are
-summarized in `docs/PHASE_M_AUDIT.md` and `docs/PHASE_N_AUDIT.md`.
+summarized in `docs/PHASE_M_AUDIT.md` and `docs/PHASE_N_AUDIT.md`. Phase Q
+records a bracket design gate for future combined trigger support, but current
+runtime behavior remains stop-only, limit-only, profit-only, or loss-only.
 
 ## Alert Events
 

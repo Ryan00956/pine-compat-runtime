@@ -31,6 +31,9 @@ a fixture-backed behavior phase.
   broker responsibility into built-ins, output structs, Python, or WASM.
 - Slice 5 recorded why bracket design is the next small strategy maintenance
   target and ranked the larger broker/reporting tails that remain deferred.
+- Slice 6 synchronized maintainer-facing conformance, semantic, execution,
+  architecture, and release-note docs with the Phase Q design gate while
+  preserving the unsupported runtime bracket boundary.
 
 ## Slice 0 Baseline
 
@@ -510,6 +513,24 @@ Roadmap priority after Slice 5:
    exposure, rich metrics, or realtime strategy execution as incidental work
    inside the bracket path.
 
+## Slice 6 Documentation Synchronization
+
+Slice 6 kept compatibility claims conservative:
+
+- `docs/LONG_TERM_EXECUTION_PLAN.md` already tracks Phase Q as planned.
+- `docs/CONFORMANCE.md` now points to the Phase P structural audit and Phase Q
+  bracket design gate without claiming combined-trigger support.
+- `docs/SEMANTIC_MODEL.md` clarifies that combined trigger forms remain
+  diagnostic-only unsupported and that diagnostics should use current-subset
+  wording.
+- `docs/EXECUTION_SEMANTICS.md` clarifies that Phase Q records future bracket
+  design while current runtime behavior remains single-trigger only.
+- `docs/ARCHITECTURE.md` records that the future bracket blueprint stays within
+  existing broker ownership boundaries and does not move behavior into host
+  bindings or public output structs.
+- `docs/RELEASE_NOTES.md` records the Phase Q design gate and Slice 1
+  diagnostic hardening/conformance metadata update.
+
 ## Verification
 
 Slice 0 verification:
@@ -566,3 +587,13 @@ git diff --check
 ```
 
 Slice 5 verification passed on the Slice 5 workspace.
+
+Slice 6 verification:
+
+```text
+cargo test -p pine-cli conformance_metadata_references_existing_fixtures
+cargo test -p pine-cli matrix_output_matches_golden_snapshot
+git diff --check
+```
+
+Slice 6 verification passed on the Slice 6 workspace.

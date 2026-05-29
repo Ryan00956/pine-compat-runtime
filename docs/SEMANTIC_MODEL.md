@@ -58,7 +58,10 @@ strategy-mode `series int` values for the current long-only broker:
 `strategy.opentrades` is `1` while the supported long position is open and `0`
 when flat. They do not expose trade details or namespace functions. Phase M
 and Phase N keep pending-order records, partial fill fields, and exit reason
-fields outside the public output model.
+fields outside the public output model. Phase Q keeps combined trigger
+`strategy.exit` forms diagnostic-only unsupported while recording future
+bracket semantics; diagnostics should describe the current strategy subset, not
+old phase names.
 
 `indicator(...)` and `strategy(...)` declarations are mutually exclusive and
 must be top-level. Declaration calls inside functions or local blocks are
