@@ -659,7 +659,8 @@ Out of scope until separately designed:
 Goal: add the first narrow strategy reporting variables without opening a
 larger broker-simulation phase or changing the public runtime schema.
 
-Status: planned. Execution playbook: `docs/PHASE_O_EXECUTION_PLAN.md`.
+Status: implemented for the fixture-backed count variables; closeout audit
+pending. Execution playbook: `docs/PHASE_O_EXECUTION_PLAN.md`.
 
 Planned scope:
 
@@ -688,8 +689,7 @@ Out of scope until separately designed:
 
 Recommended order from the current state:
 
-1. Complete Phase O strategy reporting counts as the next narrow,
-   fixture-backed strategy maintenance slice.
+1. Close Phase O with audit evidence and the release verification gate.
 2. Strategy-exit maintenance only when a small, fixture-backed change widens the
    already claimed stop/limit/profit/loss `strategy.exit` subset or closes one
    documented broker tail.

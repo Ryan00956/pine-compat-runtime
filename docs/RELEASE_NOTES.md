@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Phase O strategy reporting count compatibility metadata and docs for
+  `strategy.closedtrades` and `strategy.opentrades`. The supported subset is
+  strategy-mode historical series int counts for the current long-only broker;
+  rich trade namespaces, public open-trade records, and broader reporting
+  metrics remain unsupported, with no runtime schema bump.
 - Closed Phase N for the current fixture-backed `strategy.exit` profit/loss
   subset. The audit records supported profit-only and loss-only tick-distance
   exits, unsupported bracket/trailing/partial forms, unchanged public runtime

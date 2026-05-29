@@ -97,6 +97,18 @@ contexts, including branches, switches, loops, pure UDF arguments, and constant
 history references. They do not change the public runtime JSON shape because
 scripts observe them through ordinary outputs such as `plot`.
 
+Phase O adds the first narrow strategy reporting count variables for
+historical strategy-mode scripts. `strategy.closedtrades` is a read-only
+series int count of closed trades recorded by the current broker state.
+`strategy.opentrades` is a read-only series int count of open trades in the
+current long-only no-pyramiding broker, so it is `1` while the supported long
+position is open and `0` when flat. Supported `strategy.close` calls update
+both counts immediately for later statements on the same bar. Pending
+`strategy.exit` fills are still evaluated after script statements on the bar,
+so script reads see the count changes on the next bar. Trade namespace
+functions, public open-trade records, rich reporting metrics, and public output
+schema changes remain out of scope.
+
 Phase M adds the first executable `strategy.exit` subset:
 `strategy.exit(id, from_entry, stop=price)` and
 `strategy.exit(id, from_entry, limit=price)` for full-position exits from the
@@ -120,7 +132,8 @@ output contract.
 
 The closed Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`. The
 closed Phase M boundary is summarized in `docs/PHASE_M_AUDIT.md`. The closed
-Phase N boundary is summarized in `docs/PHASE_N_AUDIT.md`.
+Phase N boundary is summarized in `docs/PHASE_N_AUDIT.md`. Phase O remains
+open until `docs/PHASE_O_AUDIT.md` records closeout evidence.
 
 ## Source Graph Host Contract
 
@@ -276,9 +289,11 @@ Examples:
 - minimal `strategy.close` full-position closes for matching long entry ids,
   with missing or repeated closes treated as no-op
 - minimal strategy equity snapshots with bar-close mark-to-market accounting,
-  with broader broker settings and strategy reporting variables unsupported
+  with broader broker settings and rich strategy reporting variables
+  unsupported
 - unsupported strategy reporting helpers beyond the supported position,
-  profit, and equity variables, plus unknown `strategy.*` reporting helpers
+  profit, equity, and trade-count variables, plus unknown `strategy.*`
+  reporting helpers
 - unsupported collection families or unsupported array variants
 - unsupported label and line methods
 - unsupported import variants outside the host-provided alias/exported
@@ -352,8 +367,10 @@ strategy.position_avg_price partial current long-only average entry price read-o
 strategy.openprofit partial       current long-only unrealized profit read-only series, 0 when flat, in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.netprofit  partial       cumulative realized closed-trade profit read-only series, excluding current open profit, in strategy-mode scripts only
 strategy.equity     partial       initial_capital plus realized net profit plus current open profit read-only series in strategy-mode scripts only
+strategy.closedtrades partial     closed-trade count read-only series int in strategy-mode scripts only; immediate after strategy.close and next-bar visible after pending strategy.exit fills
+strategy.opentrades partial       open-trade count read-only series int in strategy-mode scripts only; 1 for the current supported long position and 0 when flat
 strategy.exit       partial      stop-only, limit-only, profit-only, and loss-only full-position long exits; profit/loss convert positive tick distances with fixed syminfo.mintick; later-bar low <= stop/loss price or high >= limit/profit price fills at the exit price; branch/switch/loop/state/history interactions fixture-backed
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the stop/limit/profit/loss-only strategy.exit subset, strategy.exit combined trigger/trailing/partial/missing-entry forms, rich order types, percent/cash/contracts sizing, mutable strategy state, and strategy reporting helpers beyond the supported position/profit/equity variables are not implemented
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the stop/limit/profit/loss-only strategy.exit subset, strategy.exit combined trigger/trailing/partial/missing-entry forms, rich order types, percent/cash/contracts sizing, mutable strategy state, trade namespace functions, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

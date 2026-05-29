@@ -77,26 +77,34 @@ partial exits, or pyramiding.
 
 Strategy-mode scripts can read `strategy.position_size` and
 `strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`, and
-`strategy.equity` as historical series floats. In the current long-only subset,
+`strategy.equity` as historical series floats. They can also read
+`strategy.closedtrades` and `strategy.opentrades` as historical series ints in
+the current count-only reporting subset. In the current long-only subset,
 `strategy.position_size` is `0` when flat and positive while long.
 `strategy.position_avg_price` is `na` when flat and the current average entry
 price while long. `strategy.openprofit` is `(close - avg_price) * size` while
 long and `0` when flat. `strategy.netprofit` sums realized closed-trade profit.
 `strategy.equity` equals `initial_capital + strategy.netprofit +
-strategy.openprofit`. Supported `strategy.entry` and `strategy.close` calls
-mutate broker state immediately, so later statements on the same bar see the
-updated strategy state values. These variables can be used in the same
-already-supported expression contexts as other series floats, including
-branches, switches, loops, pure UDF arguments, and constant history references.
-Their history follows the normal per-expression series history model. Direct
-mutation such as `strategy.position_size := ...` is rejected because strategy
-state variables are read-only.
+strategy.openprofit`. `strategy.closedtrades` is the number of closed trades
+recorded by the broker, and `strategy.opentrades` is `1` while the supported
+long position is open and `0` when flat. Supported `strategy.entry` and
+`strategy.close` calls mutate broker state immediately, so later statements on
+the same bar see the updated strategy state values. Pending `strategy.exit`
+fills are evaluated after script statements on a historical bar, so script
+reads observe the count changes on the next bar while public strategy output
+and equity include the fill on the triggering bar. These variables can be used
+in the same already-supported expression contexts as other series values,
+including branches, switches, loops, pure UDF arguments, and constant history
+references. Their history follows the normal per-expression series history
+model. Direct mutation such as `strategy.position_size := ...` or
+`strategy.closedtrades := ...` is rejected because strategy state variables are
+read-only.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants
 beyond the supported stop/limit/profit/loss-only subset, `strategy.order`, rich
 order families, strategy reporting helpers beyond the supported
-position/profit/equity variables, requested-context strategy state, strategy
+position/profit/equity/count variables, requested-context strategy state, strategy
 state mutation, and realtime strategy handoff remain unsupported until later
 strategy-maintenance slices define and fixture those semantics. Phase M adds
 narrow stop-only `strategy.exit(id, from_entry, stop=price)` and limit-only
@@ -113,7 +121,9 @@ a later historical bar with `low <= stop/loss price` or
 `strategy.exit` order event, records a closed trade under the source entry id,
 clears the position, and updates the normal position/equity snapshots. Phase M
 and Phase N do not add public pending-order records, partial fill fields, or
-exit reason fields. The prior Phase L boundary is summarized in
+exit reason fields. Phase O does not add public open-trade records, trade
+namespace functions, or top-level runtime schema fields. The prior Phase L
+boundary is summarized in
 `docs/PHASE_L_AUDIT.md`; the closed Phase M and Phase N exit subsets are
 summarized in `docs/PHASE_M_AUDIT.md` and `docs/PHASE_N_AUDIT.md`.
 

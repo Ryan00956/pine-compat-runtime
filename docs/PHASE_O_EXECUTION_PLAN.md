@@ -632,11 +632,11 @@ scripts/verify.sh
 - [x] Runtime snapshots are refreshed intentionally.
 - [x] Incremental append execution matches full historical execution.
 - [x] CLI, Python, and WASM behavior remain synchronized.
-- [ ] Public strategy output schema remains unchanged, or any deliberate schema
+- [x] Public strategy output schema remains unchanged, or any deliberate schema
       change is reviewed and documented.
-- [ ] `tests/fixtures/conformance.tsv` claims only the fixture-backed count
+- [x] `tests/fixtures/conformance.tsv` claims only the fixture-backed count
       subset.
-- [ ] Semantic, execution, release, and long-term docs are synchronized.
+- [x] Semantic, execution, release, and long-term docs are synchronized.
 - [ ] `docs/PHASE_O_AUDIT.md` records closeout evidence.
 - [ ] `git diff --check` passes.
 - [ ] `scripts/verify.sh` passes.
