@@ -814,25 +814,25 @@ scripts/verify.sh
 
 ## Phase P Completion Checklist
 
-- [ ] Slice 0 baseline and split design are confirmed.
-- [ ] `BrokerState` remains the public strategy runtime facade.
-- [ ] `crates/pine-runtime/src/strategy/broker.rs` is moved to a broker module
+- [x] Slice 0 baseline and split design are confirmed.
+- [x] `BrokerState` remains the public strategy runtime facade.
+- [x] `crates/pine-runtime/src/strategy/broker.rs` is moved to a broker module
       directory.
-- [ ] Pending-exit types are broker-internal and extracted from the facade.
-- [ ] Exit placement and tick conversion are isolated.
-- [ ] Fill and position-reset behavior is isolated.
-- [ ] Accounting and read-only state accessors are isolated.
-- [ ] Broker tests are grouped by behavior area.
-- [ ] Existing stop/limit/profit/loss exit behavior is unchanged.
-- [ ] Existing strategy state and count variable behavior is unchanged.
-- [ ] Runtime snapshots are unchanged or any deliberate behavior fix is
+- [x] Pending-exit types are broker-internal and extracted from the facade.
+- [x] Exit placement and tick conversion are isolated.
+- [x] Fill and position-reset behavior is isolated.
+- [x] Accounting and read-only state accessors are isolated.
+- [x] Broker tests are grouped by behavior area.
+- [x] Existing stop/limit/profit/loss exit behavior is unchanged.
+- [x] Existing strategy state and count variable behavior is unchanged.
+- [x] Runtime snapshots are unchanged or any deliberate behavior fix is
       separately documented.
-- [ ] Incremental append execution matches full historical execution.
-- [ ] CLI, Python, and WASM behavior remain synchronized.
-- [ ] Public strategy output schema remains unchanged.
-- [ ] `tests/fixtures/conformance.tsv` does not claim a wider strategy surface.
-- [ ] Next strategy maintenance target is documented.
-- [ ] Release notes and roadmap are synchronized.
-- [ ] `docs/PHASE_P_AUDIT.md` records closeout evidence.
-- [ ] `git diff --check` passes.
-- [ ] `scripts/verify.sh` passes.
+- [x] Incremental append execution matches full historical execution.
+- [x] CLI, Python, and WASM behavior remain synchronized.
+- [x] Public strategy output schema remains unchanged.
+- [x] `tests/fixtures/conformance.tsv` does not claim a wider strategy surface.
+- [x] Next strategy maintenance target is documented.
+- [x] Release notes and roadmap are synchronized.
+- [x] `docs/PHASE_P_AUDIT.md` records closeout evidence.
+- [x] `git diff --check` passes.
+- [x] `scripts/verify.sh` passes.

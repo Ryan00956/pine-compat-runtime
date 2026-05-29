@@ -692,8 +692,9 @@ Goal: preserve the current fixture-backed strategy behavior while splitting
 the oversized broker implementation into smaller internal modules before any
 larger broker-simulation feature is opened.
 
-Status: implementation landed; closeout audit pending. Execution playbook:
-`docs/PHASE_P_EXECUTION_PLAN.md`.
+Status: closed for structural broker maintenance. Execution playbook:
+`docs/PHASE_P_EXECUTION_PLAN.md`; closeout audit:
+`docs/PHASE_P_AUDIT.md`.
 
 Planned scope:
 
@@ -721,12 +722,12 @@ Out of scope until separately designed:
 
 Recommended order from the current state:
 
-1. Close the Phase P audit, then use a bracket design gate as the next small
-   strategy maintenance target. Keep combined trigger exits unsupported until
-   same-bar precedence and bracket identity are explicitly designed; after
-   that, strategy-exit maintenance should proceed only when a small,
-   fixture-backed change widens the already claimed stop/limit/profit/loss
-   `strategy.exit` subset or closes one documented broker tail.
+1. Use a bracket design gate as the next small strategy maintenance target.
+   Keep combined trigger exits unsupported until same-bar precedence and
+   bracket identity are explicitly designed; after that, strategy-exit
+   maintenance should proceed only when a small, fixture-backed change widens
+   the already claimed stop/limit/profit/loss `strategy.exit` subset or closes
+   one documented broker tail.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
