@@ -1,5 +1,9 @@
 # Phase M Strategy Exit and Order Lifecycle Execution Plan
 
+Status: Phase M is closed for the current fixture-backed stop/limit
+`strategy.exit` subset. Use `docs/PHASE_M_AUDIT.md` as the closeout record
+before adding future strategy-exit maintenance work.
+
 Phase M widens the Phase G/L long-only strategy runtime from immediate market
 entry/close behavior into a small, deterministic exit-order subset. Execute it
 in small, mergeable slices. Each slice should leave the workspace shippable and
@@ -12,7 +16,7 @@ reversals, pyramiding, commission, slippage, margin, currency conversion,
 strategy alerts, or realtime strategy execution. Those features multiply broker
 state before the project has a fixture-backed pending-exit lifecycle.
 
-## Current Starting Point
+## Original Starting Point
 
 The repository has already closed Phase G and Phase L for the first
 fixture-backed strategy subset:
@@ -41,7 +45,8 @@ fixture-backed strategy subset:
 - Strategy state variables are available in strategy-mode historical scripts:
   `strategy.position_size`, `strategy.position_avg_price`,
   `strategy.openprofit`, `strategy.netprofit`, and `strategy.equity`.
-- `strategy.exit` variants are currently fixture-backed unsupported cases.
+- At Phase M start, `strategy.exit` variants were fixture-backed unsupported
+  cases.
 - Historical and incremental execution are covered for strategy runtime
   fixtures. Realtime strategy broker handoff remains unsupported.
 
@@ -546,8 +551,9 @@ Slice 2 implementation note: repeated `strategy.entry` calls that are ignored
 because the long-only broker already has an open position leave any existing
 pending exit untouched. The only lifecycle events that mutate pending exits in
 Slice 2 are accepted `strategy.exit` calls, which place or replace one pending
-stop for the matching current entry id, and `strategy.close(id)`, which cancels
-the pending exit for the closed entry.
+exit for the matching current entry id, and `strategy.close(id)`, which cancels
+the pending exit for the closed entry. Slice 4 extends the same pending-exit
+model to limit exits.
 
 ## Slice 3: Stop Exit Runtime Fill
 
@@ -719,7 +725,7 @@ Steps:
    - strategy state variables read before and after exit placement.
    - constant history references to strategy state after an exit.
 2. Add negative fixtures for UDF side-effect contexts if they are not already
-  covered.
+   covered.
 3. Add incremental append assertions for every new runtime fixture through the
    existing fixture runner.
 4. Add profile fixture coverage if pending-exit state introduces new storage

@@ -1,0 +1,4 @@
+//@version=5
+strategy("Unsupported strategy exit stop profit")
+strategy.entry("L", strategy.long, qty=1)
+strategy.exit("XL", "L", stop=low, profit=10)
