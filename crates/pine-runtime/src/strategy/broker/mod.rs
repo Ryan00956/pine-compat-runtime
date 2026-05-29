@@ -1,4 +1,8 @@
+mod exits;
+
 use pine_ir::DEFAULT_STRATEGY_INITIAL_CAPITAL;
+
+use exits::{PendingExit, PendingExitTrigger};
 
 use crate::{
     PineValue, RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent,
@@ -7,28 +11,6 @@ use crate::{
 
 fn normalize_zero(value: f64) -> f64 {
     if value == 0.0 { 0.0 } else { value }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-enum PendingExitTrigger {
-    Stop(f64),
-    Limit(f64),
-}
-
-impl PendingExitTrigger {
-    fn price(&self) -> f64 {
-        match self {
-            Self::Stop(price) | Self::Limit(price) => *price,
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq)]
-struct PendingExit {
-    id: String,
-    from_entry: String,
-    trigger: PendingExitTrigger,
-    last_update_bar_index: usize,
 }
 
 #[derive(Debug, Clone, PartialEq)]
