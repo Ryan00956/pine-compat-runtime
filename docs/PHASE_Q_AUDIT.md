@@ -22,6 +22,10 @@ a fixture-backed behavior phase.
   bracket subset should use one downside leg plus one upside leg in the current
   one-pending-exit broker, preserve public output shapes, and use a
   conservative stop/loss-first same-bar both-hit policy.
+- Slice 3 recorded the fixture inventory a later positive bracket phase must
+  add before claiming support, including semantic acceptance/rejection,
+  runtime behavior, same-bar both-hit, state timing, incremental, and host
+  smoke coverage.
 
 ## Slice 0 Baseline
 
@@ -218,6 +222,114 @@ Deferred broker tails:
 - Short exposure, reversals, commission, slippage, margin, strategy alerts, and
   realtime broker rollback remain separate larger broker phases.
 
+## Slice 3 Future Fixture Plan
+
+These fixtures are not added in Phase Q except for diagnostic-only unsupported
+coverage from Slice 1. A later positive bracket implementation phase must add
+or update this inventory before widening any conformance claim.
+
+Semantic acceptance fixtures:
+
+- `tests/fixtures/sema/supported_strategy_exit_stop_limit.pine`
+- `tests/fixtures/sema/supported_strategy_exit_stop_profit.pine`
+- `tests/fixtures/sema/supported_strategy_exit_limit_loss.pine`
+- `tests/fixtures/sema/supported_strategy_exit_profit_loss.pine`
+
+Semantic fixtures that must remain unsupported in the first future subset:
+
+- `tests/fixtures/sema/unsupported_strategy_exit_stop_loss.pine`
+- `tests/fixtures/sema/unsupported_strategy_exit_limit_profit.pine`
+- `tests/fixtures/sema/unsupported_strategy_exit_three_triggers.pine`
+- `tests/fixtures/sema/unsupported_strategy_exit_four_triggers.pine`
+- existing trailing, partial quantity, missing-entry, requested-context, and
+  UDF side-effect fixtures.
+
+Runtime fixtures for normal bracket behavior:
+
+- `tests/fixtures/runtime/strategy_exit_bracket_stop_limit_limit_fill.pine`
+  plus `tests/snapshots/runtime_strategy_exit_bracket_stop_limit_limit_fill.json`
+  for a price bracket whose upside limit leg fills on a later bar.
+- `tests/fixtures/runtime/strategy_exit_bracket_stop_limit_stop_fill.pine`
+  plus `tests/snapshots/runtime_strategy_exit_bracket_stop_limit_stop_fill.json`
+  for a price bracket whose downside stop leg fills on a later bar.
+- `tests/fixtures/runtime/strategy_exit_bracket_profit_loss_profit_fill.pine`
+  plus `tests/snapshots/runtime_strategy_exit_bracket_profit_loss_profit_fill.json`
+  for tick conversion and later upside profit fill.
+- `tests/fixtures/runtime/strategy_exit_bracket_profit_loss_loss_fill.pine`
+  plus `tests/fixtures/runtime/strategy_exit_bracket_profit_loss_loss_bars.csv`
+  and `tests/snapshots/runtime_strategy_exit_bracket_profit_loss_loss_fill.json`
+  for tick conversion and later downside loss fill.
+- `tests/fixtures/runtime/strategy_exit_bracket_mixed_pairs.pine` plus
+  `tests/snapshots/runtime_strategy_exit_bracket_mixed_pairs.json` for
+  `stop + profit` and `loss + limit` acceptance.
+
+Runtime lifecycle fixtures:
+
+- `tests/fixtures/runtime/strategy_exit_bracket_creation_bar.pine` for
+  creation-bar ineligibility when both legs would otherwise be touched.
+- `tests/fixtures/runtime/strategy_exit_bracket_repeated.pine` for unchanged
+  repeated brackets preserving the original eligibility bar.
+- `tests/fixtures/runtime/strategy_exit_bracket_replacement.pine` for changed
+  leg price resetting eligibility, single-trigger to bracket replacement, and
+  bracket to single-trigger replacement.
+- `tests/fixtures/runtime/strategy_exit_bracket_invalid_leg.pine` for invalid
+  price/tick diagnostics rejecting the whole bracket while leaving an existing
+  pending exit unchanged.
+
+Same-bar both-hit fixture:
+
+- `tests/fixtures/runtime/strategy_exit_bracket_both_hit.pine` plus
+  `tests/fixtures/runtime/strategy_exit_bracket_both_hit_bars.csv` and
+  `tests/snapshots/runtime_strategy_exit_bracket_both_hit.json`.
+- The CSV should contain a small OHLC series where a later eligible bar touches
+  both the downside and upside legs; the snapshot must prove the selected
+  stop/loss-first fill price and one-order/one-trade output.
+
+State-timing fixtures:
+
+- `tests/fixtures/runtime/strategy_exit_bracket_state.pine` plus
+  `tests/snapshots/runtime_strategy_exit_bracket_state.json`.
+- The fixture must plot or otherwise expose `strategy.position_size`,
+  `strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`,
+  `strategy.equity`, `strategy.closedtrades`, and `strategy.opentrades` before
+  fill, on the triggering bar, and on the next bar.
+
+Interaction fixtures:
+
+- `tests/fixtures/runtime/strategy_exit_bracket_interactions.pine` plus
+  `tests/snapshots/runtime_strategy_exit_bracket_interactions.json`.
+- Include branch, switch, for, while, pure UDF argument, and constant history
+  reference contexts only if the future support claim says brackets can appear
+  in the same expression/statement contexts as current single-trigger exits.
+
+Incremental coverage:
+
+- Add every new runtime fixture that mutates broker state to
+  `crates/pine-runtime/tests/incremental.rs`.
+- If a fixture needs non-default OHLC data, add a dedicated CSV and route it
+  through the existing per-fixture bars mapping.
+
+Host and snapshot coverage:
+
+- Add CLI golden snapshot entries in `crates/pine-cli/src/main.rs` for every
+  new runtime fixture and refresh only the bracket-related runtime snapshots.
+- Add WASM smoke tests for representative `stop + limit`, `profit + loss`, and
+  same-bar both-hit contracts.
+- Add Python binding smoke tests for representative `stop + limit` and
+  `profit + loss` dictionary contracts.
+- Keep the public strategy object shape unchanged in all host tests:
+  `orders`, `trades`, `position`, `equity`, and `diagnostics` only.
+
+Conformance and docs:
+
+- Only after semantic, runtime, incremental, CLI, WASM, and Python evidence is
+  in place may a future phase update `tests/fixtures/conformance.tsv`.
+- The `strategy.exit` row may stay `partial`; its notes should name the exact
+  bracket pairs accepted.
+- The `strategy.*` row should continue to list same-side pairs, three/four
+  triggers, trailing, partial, missing-entry, and richer broker behavior as
+  unsupported.
+
 ## Verification
 
 Slice 0 verification:
@@ -250,3 +362,11 @@ git diff --check
 ```
 
 Slice 2 verification passed on the Slice 2 workspace.
+
+Slice 3 verification:
+
+```text
+git diff --check
+```
+
+Slice 3 verification passed on the Slice 3 workspace.
