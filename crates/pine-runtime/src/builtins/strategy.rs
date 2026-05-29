@@ -94,6 +94,14 @@ impl<'a> HistoricalRuntime<'a> {
             .find(|arg| arg.name.as_deref() == Some("limit"))
             .or_else(|| args.get(3).filter(|arg| arg.name.is_none()))
             .map(|arg| &arg.value);
+        let profit_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("profit"))
+            .map(|arg| &arg.value);
+        let loss_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("loss"))
+            .map(|arg| &arg.value);
 
         let id = match self.eval_expr(id_expr)? {
             PineValue::String(value) => value,
@@ -111,6 +119,21 @@ impl<'a> HistoricalRuntime<'a> {
             let limit_price = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker
                 .place_exit_limit(id, from_entry, limit_price, self.bars);
+        } else if let Some(profit_expr) = profit_expr {
+            let profit_ticks = self.eval_expr(profit_expr)?.as_f64().unwrap_or(f64::NAN);
+            let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+            self.strategy_broker.place_exit_profit_ticks(
+                id,
+                from_entry,
+                profit_ticks,
+                mintick,
+                self.bars,
+            );
+        } else if let Some(loss_expr) = loss_expr {
+            let loss_ticks = self.eval_expr(loss_expr)?.as_f64().unwrap_or(f64::NAN);
+            let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+            self.strategy_broker
+                .place_exit_loss_ticks(id, from_entry, loss_ticks, mintick, self.bars);
         }
         Ok(PineValue::Void)
     }

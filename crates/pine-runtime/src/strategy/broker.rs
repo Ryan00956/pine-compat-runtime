@@ -179,7 +179,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_profit_ticks(
         &mut self,
         id: String,
@@ -199,7 +198,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_loss_ticks(
         &mut self,
         id: String,
@@ -219,7 +217,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     fn exit_tick_price_offset(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
         if !ticks.is_finite() || ticks <= 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
