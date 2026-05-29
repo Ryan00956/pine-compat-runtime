@@ -723,9 +723,11 @@ Out of scope until separately designed:
 Goal: close the `strategy.exit` combined-trigger design gap before any positive
 bracket support is claimed.
 
-Status: planned. Execution playbook: `docs/PHASE_Q_EXECUTION_PLAN.md`.
+Status: closed as a design gate. Execution playbook:
+`docs/PHASE_Q_EXECUTION_PLAN.md`; closeout audit:
+`docs/PHASE_Q_AUDIT.md`.
 
-Planned scope:
+Closed scope:
 
 - Keep combined `strategy.exit` trigger families unsupported during the design
   gate.
@@ -755,12 +757,10 @@ Out of scope until a later behavior phase:
 
 Recommended order from the current state:
 
-1. Complete Phase Q as a bracket design gate. Keep combined trigger exits
-   unsupported until same-bar precedence, bracket identity, expression
-   evaluation, and invalid-leg behavior are explicitly designed; after that,
-   strategy-exit maintenance should proceed only when a small, fixture-backed
-   change widens the already claimed stop/limit/profit/loss `strategy.exit`
-   subset or closes one documented broker tail.
+1. Use a future small positive bracket implementation phase only if it follows
+   the Phase Q decision record and fixture plan. Combined trigger exits remain
+   unsupported until that future phase lands semantic, runtime, incremental,
+   host, conformance, and closeout evidence.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an

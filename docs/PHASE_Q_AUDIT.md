@@ -1,6 +1,6 @@
 # Phase Q Audit: Strategy Exit Bracket Design Gate
 
-Status: in progress.
+Status: closed.
 
 Phase Q is a design-gate and diagnostic-hardening phase for future
 `strategy.exit` bracket support. It must not widen executable strategy
@@ -34,6 +34,8 @@ a fixture-backed behavior phase.
 - Slice 6 synchronized maintainer-facing conformance, semantic, execution,
   architecture, and release-note docs with the Phase Q design gate while
   preserving the unsupported runtime bracket boundary.
+- Slice 7 closed the audit, synchronized roadmap and execution-plan status,
+  kept conformance conservative, and ran the full release verification gate.
 
 ## Slice 0 Baseline
 
@@ -531,6 +533,60 @@ Slice 6 kept compatibility claims conservative:
 - `docs/RELEASE_NOTES.md` records the Phase Q design gate and Slice 1
   diagnostic hardening/conformance metadata update.
 
+## Phase Q Closeout
+
+Phase Q did not widen positive strategy compatibility.
+
+- `tests/fixtures/conformance.tsv` status values were not widened.
+- `strategy.exit` remains executable only for stop-only, limit-only,
+  profit-only, or loss-only full-position exits on the current one-net-long
+  broker.
+- Combined trigger runtime behavior remains unsupported in Phase Q.
+- Public runtime output remains `schemaVersion: 3`.
+- `StrategyResult`, `StrategyOrderEvent`, `StrategyTrade`,
+  `StrategyPositionSnapshot`, and `StrategyEquitySnapshot` shapes did not
+  change.
+- CLI JSON, Python dictionaries, and WASM JSON output contracts did not change.
+- No runtime snapshots were refreshed during Phase Q.
+
+Fixture evidence:
+
+- Existing combined-trigger unsupported fixtures remain referenced from
+  `tests/fixtures/conformance.tsv`.
+- Phase Q added one diagnostic-only fixture:
+  `tests/fixtures/sema/unsupported_strategy_exit_four_triggers.pine`.
+- `tests/snapshots/matrix.json` changed only to reflect the new conformance
+  metadata fixture reference.
+
+Final bracket decision record:
+
+- A future first positive bracket subset should accept exactly one downside leg
+  plus one upside leg for the current long-only broker.
+- Future supported pairs are `stop + limit`, `stop + profit`, `loss + limit`,
+  and `loss + profit`.
+- Same-side pairs `stop + loss` and `limit + profit`, plus three-trigger and
+  four-trigger calls, remain unsupported for the first future subset.
+- Profit/loss tick distances convert once at placement time using the fixed
+  default `syminfo.mintick` source.
+- Invalid bracket legs reject the whole bracket and leave any existing pending
+  exit unchanged.
+- Bracket identity includes exit id, `from_entry`, leg kinds, sides, and
+  resolved prices; unchanged repeated calls preserve eligibility, while changed
+  brackets or single/bracket replacements reset eligibility.
+- Same-bar both-hit behavior uses deterministic stop/loss-first precedence for
+  the first future long-only subset.
+- Future bracket fills use the existing one-order/one-trade public output
+  shape, without pending-order records, bracket-leg metadata, or exit-reason
+  fields.
+
+Next recommended strategy maintenance target:
+
+- If strategy work continues, open a small positive bracket implementation
+  phase using this audit as the baseline.
+- Keep missing-entry pre-placement, partial exits, multiple pending exits,
+  pyramiding, short exposure, rich metrics, public pending-order records, and
+  realtime broker rollback deferred until separate phases.
+
 ## Verification
 
 Slice 0 verification:
@@ -597,3 +653,16 @@ git diff --check
 ```
 
 Slice 6 verification passed on the Slice 6 workspace.
+
+Closeout verification:
+
+```text
+git diff --check
+scripts/verify.sh
+```
+
+Closeout verification passed on the Phase Q closeout workspace. The release
+gate covered `cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D
+warnings`, `cargo test --workspace`, `python3 scripts/check_structure.py`,
+`cargo check -p pine-wasm --target wasm32-unknown-unknown`, `maturin build`,
+wheel reinstall, and `python3 -m pytest python/tests`.

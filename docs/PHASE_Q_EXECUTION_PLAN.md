@@ -1,9 +1,9 @@
 # Phase Q Strategy Exit Bracket Design Gate Execution Plan
 
-Status: planned. Use `docs/PHASE_P_AUDIT.md` as the baseline closeout
-record for the current strategy broker structure and use
-`docs/PHASE_O_AUDIT.md` as the baseline for the current strategy reporting
-count subset.
+Status: closed. Use `docs/PHASE_Q_AUDIT.md` as the closeout record for this
+design gate, `docs/PHASE_P_AUDIT.md` as the baseline closeout record for the
+current strategy broker structure, and `docs/PHASE_O_AUDIT.md` as the baseline
+for the current strategy reporting count subset.
 
 Phase Q should decide the next `strategy.exit` bracket semantics without
 opening a larger broker-simulation phase too early. The executable target is a
@@ -827,6 +827,8 @@ git diff --check
 scripts/verify.sh
 ```
 
+Closeout verification passed on the Phase Q closeout workspace.
+
 ## Suggested Commit Order
 
 1. `Document strategy bracket design gate`
@@ -839,28 +841,28 @@ scripts/verify.sh
 
 ## Phase Q Completion Checklist
 
-- [ ] Slice 0 baseline and design-gate decision confirmed.
-- [ ] Existing combined trigger fixtures reviewed.
-- [ ] Existing broker single-trigger behavior reviewed.
-- [ ] User-visible `strategy.exit` diagnostics are phase-neutral, if code is
+- [x] Slice 0 baseline and design-gate decision confirmed.
+- [x] Existing combined trigger fixtures reviewed.
+- [x] Existing broker single-trigger behavior reviewed.
+- [x] User-visible `strategy.exit` diagnostics are phase-neutral, if code is
       touched.
-- [ ] Any new diagnostic-only fixtures are referenced conservatively.
-- [ ] `strategy.exit` remains stop-only, limit-only, profit-only, or loss-only
+- [x] Any new diagnostic-only fixtures are referenced conservatively.
+- [x] `strategy.exit` remains stop-only, limit-only, profit-only, or loss-only
       for executable behavior during Phase Q.
-- [ ] No runtime snapshots change unexpectedly.
-- [ ] No public runtime schema changes are made.
-- [ ] Future accepted bracket trigger pairs are selected or explicitly
+- [x] No runtime snapshots change unexpectedly.
+- [x] No public runtime schema changes are made.
+- [x] Future accepted bracket trigger pairs are selected or explicitly
       deferred.
-- [ ] Three-trigger and four-trigger policy is recorded.
-- [ ] Price/tick conversion timing is recorded.
-- [ ] Bracket identity and replacement rules are recorded.
-- [ ] Same-bar both-hit policy is recorded.
-- [ ] Future script-state timing after bracket fills is recorded.
-- [ ] Future public output behavior is recorded.
-- [ ] Future fixture plan is recorded.
-- [ ] Future implementation module ownership is recorded.
-- [ ] Other strategy maintenance tails remain explicitly deferred.
-- [ ] Roadmap docs are synchronized if Phase Q is added as a named phase.
-- [ ] `docs/PHASE_Q_AUDIT.md` records closeout evidence.
-- [ ] `git diff --check` passes.
-- [ ] `scripts/verify.sh` passes when required by the scope of changes.
+- [x] Three-trigger and four-trigger policy is recorded.
+- [x] Price/tick conversion timing is recorded.
+- [x] Bracket identity and replacement rules are recorded.
+- [x] Same-bar both-hit policy is recorded.
+- [x] Future script-state timing after bracket fills is recorded.
+- [x] Future public output behavior is recorded.
+- [x] Future fixture plan is recorded.
+- [x] Future implementation module ownership is recorded.
+- [x] Other strategy maintenance tails remain explicitly deferred.
+- [x] Roadmap docs are synchronized if Phase Q is added as a named phase.
+- [x] `docs/PHASE_Q_AUDIT.md` records closeout evidence.
+- [x] `git diff --check` passes.
+- [x] `scripts/verify.sh` passes when required by the scope of changes.

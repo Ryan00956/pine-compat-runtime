@@ -2,11 +2,12 @@
 
 ## Unreleased
 
-- Started Phase Q as a `strategy.exit` bracket design gate. Combined trigger
+- Closed Phase Q as a `strategy.exit` bracket design gate. Combined trigger
   exits remain unsupported, but the audit now records the future one-downside
   plus one-upside bracket subset, stop/loss-first same-bar precedence,
   identity/replacement rules, invalid-leg behavior, fixture plan, and module
-  implementation blueprint.
+  implementation blueprint, with the full release verification gate passing on
+  the closeout workspace.
 - Hardened `strategy.exit` unsupported diagnostics to use phase-neutral
   current-subset wording and added a diagnostic-only four-trigger
   `stop + limit + profit + loss` fixture, with conformance and matrix metadata
