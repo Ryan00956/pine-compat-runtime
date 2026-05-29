@@ -18,6 +18,10 @@ a fixture-backed behavior phase.
   the current strategy subset instead of old phase names, added a
   diagnostic-only four-trigger combined-exit fixture, and refreshed conformance
   metadata plus the matrix metadata snapshot without changing runtime behavior.
+- Slice 2 recorded the future bracket semantics decision: a first positive
+  bracket subset should use one downside leg plus one upside leg in the current
+  one-pending-exit broker, preserve public output shapes, and use a
+  conservative stop/loss-first same-bar both-hit policy.
 
 ## Slice 0 Baseline
 
@@ -99,6 +103,121 @@ referenced from the existing `strategy.exit` partial row and broad
 changed status. `tests/snapshots/matrix.json` was refreshed only for the
 metadata fixture-list change.
 
+## Slice 2 Bracket Decision Record
+
+Phase Q does not implement bracket behavior. These decisions define the first
+future positive bracket subset that a later behavior phase may implement with
+fixtures.
+
+Selected future first bracket subset:
+
+- Accept exactly two trigger legs: one downside leg and one upside leg for the
+  current long-only broker.
+- Downside legs are `stop=price` and `loss=ticks`.
+- Upside legs are `limit=price` and `profit=ticks`.
+- The first future subset may therefore support `stop + limit`,
+  `stop + profit`, `loss + limit`, and `loss + profit`.
+- Keep same-side pairs unsupported in the first future subset:
+  `stop + loss` and `limit + profit`.
+- Keep three-trigger and four-trigger calls unsupported for the current broker
+  model.
+
+Price and tick conversion:
+
+- Profit/loss tick distances are converted once at placement time from the
+  current `strategy.position_avg_price`.
+- Converted tick legs use the same fixed default `syminfo.mintick` source as
+  Phase N.
+- If a later pyramiding phase changes average price behavior, existing bracket
+  prices should remain fixed after placement unless that later phase explicitly
+  reopens order-repricing semantics.
+
+Expression evaluation and invalid-leg behavior:
+
+- A future implementation should evaluate only the selected bracket leg
+  expressions after `id` and `from_entry`.
+- Leg evaluation should use a broker-neutral canonical order: downside leg
+  first, then upside leg. Within each side, direct price legs (`stop`, `limit`)
+  should be handled before tick-distance legs (`loss`, `profit`) when a
+  diagnostic needs a stable ordering.
+- Runtime diagnostics for invalid prices, invalid tick distances, invalid
+  mintick, flat state, or mismatched `from_entry` happen before identity
+  comparison or replacement.
+- If either bracket leg is invalid, the whole bracket placement is rejected.
+  A valid remaining leg must not silently become a single-trigger exit.
+- Invalid bracket placement leaves any existing pending exit unchanged.
+
+Pending-exit model:
+
+- Prefer extending `PendingExitTrigger` into a single-trigger or bracket enum.
+  This keeps the existing one `pending_exit` slot and avoids implying support
+  for multiple independent pending exits.
+- Defer a pending-order collection until partial exits, multiple entries,
+  reservation behavior, or richer order reporting is in scope.
+
+Identity and replacement:
+
+- A bracket is owned by one pending exit record with `id`, `from_entry`, and
+  both leg definitions.
+- Repeating an identical bracket preserves the original eligibility bar.
+- Changing either leg kind or price resets `last_update_bar_index`, making the
+  bracket ineligible on the replacement bar.
+- Replacing a single-trigger pending exit with a bracket creates a new pending
+  exit and resets eligibility.
+- Replacing a bracket with a single-trigger exit cancels the unused leg
+  immediately and resets eligibility.
+- Changing the exit `id` for the same current `from_entry` replaces the pending
+  exit under the existing one-slot model. `from_entry` must still match the
+  current long entry.
+
+Same-bar both-hit policy:
+
+- Use deterministic stop/loss-first precedence for the first future long-only
+  bracket subset when a later eligible historical bar touches both bracket legs.
+- This is a conservative rule for historical OHLC bars without intrabar path
+  data. It avoids optimistic fills and keeps snapshots deterministic.
+- The first future subset should not emit a runtime diagnostic merely because
+  both legs were touched. A richer intrabar path model may reopen this decision
+  in a later phase.
+
+Fill output and public contract:
+
+- A bracket fill emits exactly one `strategy.exit` order event using the exit
+  id.
+- The resulting closed trade remains keyed by the source entry id.
+- The filled leg is visible only through the existing filled price and trade
+  profit fields.
+- No public pending-order record, bracket-leg metadata, or exit-reason field is
+  added in the first future subset.
+- CLI JSON, Python dictionaries, and WASM JSON keep the existing shared
+  strategy result shape and runtime `schemaVersion: 3`.
+
+State-variable timing:
+
+- Newly created or replaced brackets remain ineligible on the creation or
+  replacement bar.
+- Pending brackets are evaluated after script statements on each historical
+  bar.
+- Script reads on a triggering bar see pre-fill state.
+- Public strategy output and equity for the triggering bar include the fill
+  after pending-exit evaluation.
+- Next-bar reads see updated `strategy.position_size`,
+  `strategy.position_avg_price`, `strategy.openprofit`,
+  `strategy.netprofit`, `strategy.equity`, `strategy.closedtrades`, and
+  `strategy.opentrades`.
+
+Deferred broker tails:
+
+- Partial exits, `qty`, `qty_percent`, and reservation behavior remain
+  deferred because they require quantity allocation and partial trade
+  accounting.
+- Missing-entry pre-placement remains deferred because it requires pending
+  exits without a current position and stronger order lifecycle rules.
+- Multiple pending exits and pending-order collections remain deferred until
+  multiple entries, pyramiding, or richer order reporting is in scope.
+- Short exposure, reversals, commission, slippage, margin, strategy alerts, and
+  realtime broker rollback remain separate larger broker phases.
+
 ## Verification
 
 Slice 0 verification:
@@ -123,3 +242,11 @@ git diff --check
 ```
 
 All Slice 1 verification commands passed on the Slice 1 workspace.
+
+Slice 2 verification:
+
+```text
+git diff --check
+```
+
+Slice 2 verification passed on the Slice 2 workspace.
