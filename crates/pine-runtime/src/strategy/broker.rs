@@ -396,6 +396,20 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub fn closed_trade_count(&self) -> i64 {
+        i64::try_from(self.trades.len()).unwrap_or(i64::MAX)
+    }
+
+    #[must_use]
+    pub fn open_trade_count(&self) -> i64 {
+        if self.position_size > 0.0 && self.entry_id.is_some() {
+            1
+        } else {
+            0
+        }
+    }
+
+    #[must_use]
     pub(crate) fn position_avg_price_value(&self) -> PineValue {
         if self.position_size > 0.0 {
             PineValue::Float(self.avg_price)
@@ -424,6 +438,59 @@ mod tests {
         let mut broker = BrokerState::new(100_000.0);
         broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0);
         broker
+    }
+
+    #[test]
+    fn trade_counts_start_flat() {
+        let broker = BrokerState::new(100_000.0);
+
+        assert_eq!(broker.closed_trade_count(), 0);
+        assert_eq!(broker.open_trade_count(), 0);
+    }
+
+    #[test]
+    fn trade_counts_track_long_entry_and_no_pyramiding_noop() {
+        let mut broker = BrokerState::new(100_000.0);
+
+        broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0);
+        assert_eq!(broker.closed_trade_count(), 0);
+        assert_eq!(broker.open_trade_count(), 1);
+
+        broker.entry_long("L2".to_owned(), 1, 20, 105.0, 1.0);
+        assert_eq!(broker.closed_trade_count(), 0);
+        assert_eq!(broker.open_trade_count(), 1);
+    }
+
+    #[test]
+    fn trade_counts_track_matching_close() {
+        let mut broker = broker_with_long_entry();
+
+        broker.close_long("L".to_owned(), 1, 20, 110.0);
+
+        assert_eq!(broker.closed_trade_count(), 1);
+        assert_eq!(broker.open_trade_count(), 0);
+    }
+
+    #[test]
+    fn trade_counts_track_filled_pending_exit() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+        broker.evaluate_pending_exits(1, 20, 100.0, 94.0);
+
+        assert_eq!(broker.closed_trade_count(), 1);
+        assert_eq!(broker.open_trade_count(), 0);
+    }
+
+    #[test]
+    fn trade_counts_ignore_mismatched_close_and_exit() {
+        let mut broker = broker_with_long_entry();
+
+        broker.close_long("OTHER".to_owned(), 1, 20, 110.0);
+        broker.place_exit_stop("XL".to_owned(), "OTHER".to_owned(), 95.0, 1);
+
+        assert_eq!(broker.closed_trade_count(), 0);
+        assert_eq!(broker.open_trade_count(), 1);
     }
 
     #[test]

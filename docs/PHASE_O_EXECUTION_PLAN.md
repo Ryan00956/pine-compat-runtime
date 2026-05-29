@@ -624,7 +624,7 @@ scripts/verify.sh
 - [x] Indicator-mode diagnostics reject both count variables.
 - [x] Requested-context diagnostics reject both count variables.
 - [x] Mutation diagnostics keep strategy state read-only.
-- [ ] Broker accessors return deterministic closed/open counts.
+- [x] Broker accessors return deterministic closed/open counts.
 - [ ] Runtime variable reads use broker accessors.
 - [ ] Same-bar `strategy.close` count behavior is covered.
 - [ ] Pending-exit next-bar count behavior is covered.
