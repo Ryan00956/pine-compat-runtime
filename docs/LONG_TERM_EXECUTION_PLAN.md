@@ -659,8 +659,9 @@ Out of scope until separately designed:
 Goal: add the first narrow strategy reporting variables without opening a
 larger broker-simulation phase or changing the public runtime schema.
 
-Status: implemented for the fixture-backed count variables; closeout audit
-pending. Execution playbook: `docs/PHASE_O_EXECUTION_PLAN.md`.
+Status: closed for the fixture-backed count variables. Execution playbook:
+`docs/PHASE_O_EXECUTION_PLAN.md`; closeout audit:
+`docs/PHASE_O_AUDIT.md`.
 
 Planned scope:
 
@@ -689,19 +690,18 @@ Out of scope until separately designed:
 
 Recommended order from the current state:
 
-1. Close Phase O with audit evidence and the release verification gate.
-2. Strategy-exit maintenance only when a small, fixture-backed change widens the
+1. Strategy-exit maintenance only when a small, fixture-backed change widens the
    already claimed stop/limit/profit/loss `strategy.exit` subset or closes one
    documented broker tail.
-3. Phase J maintenance only when a small, fixture-backed change widens the
+2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
-4. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
+3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
    already claimed drawing, request, alert, or `varip` subset.
-5. Phase K maintenance only when release contracts, snapshots, or matrix gates
+4. Phase K maintenance only when release contracts, snapshots, or matrix gates
    need tightening.
-6. Phase B/C maintenance when new work exposes collection, history, or
+5. Phase B/C maintenance when new work exposes collection, history, or
    qualifier gaps.
-7. Phase D maintenance for small fixture-backed built-in compatibility fixes.
+6. Phase D maintenance for small fixture-backed built-in compatibility fixes.
 
 This order keeps the project useful for indicator and basic strategy execution
 while delaying features that require new host APIs, object lifetimes, or richer

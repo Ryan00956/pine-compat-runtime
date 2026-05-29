@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Phase O for the current fixture-backed strategy reporting count
+  subset. The audit records supported `strategy.closedtrades` and
+  `strategy.opentrades` count variables, explicit unsupported reporting
+  namespaces and rich metrics, unchanged public runtime schema, host coverage,
+  and the full release verification gate.
 - Added Phase O strategy reporting count compatibility metadata and docs for
   `strategy.closedtrades` and `strategy.opentrades`. The supported subset is
   strategy-mode historical series int counts for the current long-only broker;

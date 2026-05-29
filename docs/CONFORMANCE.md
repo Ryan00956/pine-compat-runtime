@@ -132,8 +132,8 @@ output contract.
 
 The closed Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`. The
 closed Phase M boundary is summarized in `docs/PHASE_M_AUDIT.md`. The closed
-Phase N boundary is summarized in `docs/PHASE_N_AUDIT.md`. Phase O remains
-open until `docs/PHASE_O_AUDIT.md` records closeout evidence.
+Phase N boundary is summarized in `docs/PHASE_N_AUDIT.md`. The closed Phase O
+count-variable boundary is summarized in `docs/PHASE_O_AUDIT.md`.
 
 ## Source Graph Host Contract
 

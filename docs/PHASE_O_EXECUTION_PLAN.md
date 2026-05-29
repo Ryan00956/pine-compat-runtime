@@ -1,8 +1,9 @@
 # Phase O Strategy Reporting Counts Execution Plan
 
-Status: planned; Slice 0 baseline and decision record confirmed. Use
-`docs/PHASE_N_AUDIT.md` as the baseline closeout record for the current
-strategy-exit subset.
+Status: closed for the current fixture-backed strategy reporting count subset.
+Use `docs/PHASE_N_AUDIT.md` as the baseline closeout record for the prior
+strategy-exit subset and `docs/PHASE_O_AUDIT.md` as the closeout record for
+this phase.
 
 Phase O should add the first narrow strategy reporting variables without
 opening a larger broker-simulation phase. The executable target is
@@ -637,6 +638,6 @@ scripts/verify.sh
 - [x] `tests/fixtures/conformance.tsv` claims only the fixture-backed count
       subset.
 - [x] Semantic, execution, release, and long-term docs are synchronized.
-- [ ] `docs/PHASE_O_AUDIT.md` records closeout evidence.
-- [ ] `git diff --check` passes.
-- [ ] `scripts/verify.sh` passes.
+- [x] `docs/PHASE_O_AUDIT.md` records closeout evidence.
+- [x] `git diff --check` passes.
+- [x] `scripts/verify.sh` passes.
