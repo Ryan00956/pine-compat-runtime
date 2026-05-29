@@ -229,6 +229,25 @@ def test_run_script_returns_strategy_variable_interaction_plots():
     ]
 
 
+def test_run_script_returns_strategy_trade_count_plots():
+    result = pine_compat.run_script(
+        'strategy("demo")\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=1)\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\nif bar_index == 2\n    strategy.close("L")\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\n',
+        BARS,
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0, 0, 0],
+        [0, 0, 1],
+        [0, 0, 0],
+        [0, 1, 1],
+        [0, 0, 1],
+        [0, 1, 0],
+    ]
+    assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
+    assert result["strategy"]["orders"][0]["id"] == "L"
+    assert result["strategy"]["trades"][0]["id"] == "L"
+
+
 def test_run_script_returns_strategy_close_trade_contract():
     result = pine_compat.run_script(
         'strategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close("L")\n',

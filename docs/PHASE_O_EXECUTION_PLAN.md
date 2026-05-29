@@ -631,7 +631,7 @@ scripts/verify.sh
 - [x] Constant history references are covered.
 - [x] Runtime snapshots are refreshed intentionally.
 - [x] Incremental append execution matches full historical execution.
-- [ ] CLI, Python, and WASM behavior remain synchronized.
+- [x] CLI, Python, and WASM behavior remain synchronized.
 - [ ] Public strategy output schema remains unchanged, or any deliberate schema
       change is reviewed and documented.
 - [ ] `tests/fixtures/conformance.tsv` claims only the fixture-backed count
