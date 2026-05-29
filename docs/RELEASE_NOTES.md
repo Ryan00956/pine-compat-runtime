@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Phase N Slice 4 runtime fixtures and compatibility metadata for
+  `strategy.exit(id, from_entry, profit=ticks)` and
+  `strategy.exit(id, from_entry, loss=ticks)`. Profit/loss exits convert
+  positive tick distances from the current long average entry price using the
+  fixed default `syminfo.mintick`, reuse the Phase M pending-exit lifecycle,
+  and keep combined trigger forms unsupported.
 - Closed Phase M for the current fixture-backed `strategy.exit` subset. The
   audit records supported stop-only and limit-only full-position exits,
   unchanged public runtime `schemaVersion: 3` behavior, host coverage,

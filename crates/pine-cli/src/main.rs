@@ -592,6 +592,14 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_limit.pine",
             ),
             (
+                "runtime_strategy_exit_profit.json",
+                "tests/fixtures/runtime/strategy_exit_profit.pine",
+            ),
+            (
+                "runtime_strategy_exit_loss.json",
+                "tests/fixtures/runtime/strategy_exit_loss.pine",
+            ),
+            (
                 "runtime_strategy_exit_interactions.json",
                 "tests/fixtures/runtime/strategy_exit_interactions.pine",
             ),
@@ -631,11 +639,19 @@ mod tests {
             "{fixture} diagnostics: {:?}",
             analysis.diagnostics
         );
-        let bars = parse_bars_csv(include_str!("../../../tests/fixtures/runtime/bars.csv"))
-            .expect("bars fixture");
+        let bars = parse_bars_csv(runtime_fixture_bars_csv(fixture)).expect("bars fixture");
         let result =
             run_historical(&analysis.hir.expect("fixture HIR"), &bars).expect("runtime result");
         public_runtime_result_json(&result)
+    }
+
+    fn runtime_fixture_bars_csv(fixture: &str) -> &'static str {
+        match fixture {
+            "tests/fixtures/runtime/strategy_exit_loss.pine" => {
+                include_str!("../../../tests/fixtures/runtime/strategy_exit_loss_bars.csv")
+            }
+            _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
+        }
     }
 
     fn assert_snapshot(name: &str, actual: &str) {

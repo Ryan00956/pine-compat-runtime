@@ -596,6 +596,10 @@ Closeout evidence:
 - `strategy.exit(id, from_entry, stop=price)` and
   `strategy.exit(id, from_entry, limit=price)` are fixture-backed partial
   claims in `tests/fixtures/conformance.tsv`.
+- Phase N maintenance has added fixture-backed profit/loss tick helpers:
+  `strategy.exit(id, from_entry, profit=ticks)` and
+  `strategy.exit(id, from_entry, loss=ticks)` for the same current
+  one-net-long broker subset.
 - Runtime snapshots cover stop exits, limit exits, and branch/switch/loop plus
   strategy-state interactions.
 - Python and WASM host tests assert the representative public contracts.
@@ -605,8 +609,8 @@ Closeout evidence:
 
 Out of scope until separately designed:
 
-- Combined stop plus limit brackets, profit/loss tick helpers, missing-entry
-  pre-placement, multiple pending exits, and richer order modification rules.
+- Combined trigger brackets, missing-entry pre-placement, multiple pending
+  exits, and richer order modification rules.
 - Short exposure, reversals, pyramiding, partial exits, trailing stops,
   commission, slippage, margin, currency conversion, strategy order namespaces,
   strategy alerts, and realtime strategy execution.
@@ -616,8 +620,8 @@ Out of scope until separately designed:
 Recommended order from the current state:
 
 1. Phase M maintenance only when a small, fixture-backed change widens the
-   already claimed stop/limit `strategy.exit` subset or closes one documented
-   broker tail.
+   already claimed stop/limit/profit/loss `strategy.exit` subset or closes one
+   documented broker tail.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an

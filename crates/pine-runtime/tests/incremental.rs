@@ -16,7 +16,10 @@ fn workspace_fixture(path: &str) -> PathBuf {
 #[test]
 fn runtime_fixtures_match_incremental_append_execution() {
     let fixtures_dir = workspace_fixture("tests/fixtures/runtime");
-    let bars = load_bars(&workspace_fixture("tests/fixtures/runtime/bars.csv"));
+    let default_bars = load_bars(&workspace_fixture("tests/fixtures/runtime/bars.csv"));
+    let strategy_exit_loss_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_exit_loss_bars.csv",
+    ));
     let mut checked = 0;
 
     for entry in fs::read_dir(&fixtures_dir).expect("runtime fixture dir should be readable") {
@@ -35,12 +38,18 @@ fn runtime_fixtures_match_incremental_append_execution() {
             analysis.diagnostics
         );
         let hir = analysis.hir.expect("runtime fixture should lower to HIR");
+        let bars =
+            if path.file_name().and_then(|name| name.to_str()) == Some("strategy_exit_loss.pine") {
+                &strategy_exit_loss_bars
+            } else {
+                &default_bars
+            };
 
-        let full = run_historical(&hir, &bars).expect("full execution should succeed");
+        let full = run_historical(&hir, bars).expect("full execution should succeed");
         let mut runtime = HistoricalRuntime::new(&hir);
         if has_islast {
             runtime
-                .append_bars(&bars)
+                .append_bars(bars)
                 .expect("append execution should succeed");
         } else {
             for bar in bars.iter().copied() {

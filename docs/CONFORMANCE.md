@@ -78,7 +78,7 @@ conversion remain unsupported. Strategy mode output includes `orders`, `trades`,
 `barIndex`, `cash`, `marketValue`, `equity`, and `netProfit`, using current
 bar-close mark-to-market accounting for the long-only order subset. Commission,
 slippage, margin, percent sizing, currency conversion, pyramiding, short
-orders, `strategy.exit` combined/profit/loss/trailing/partial variants,
+orders, `strategy.exit` combined trigger/trailing/partial variants,
 `strategy.order`, realtime strategy handoff, and most strategy reporting
 variables remain outside the supported matrix.
 
@@ -106,6 +106,17 @@ replacement bar, and fill on a later historical bar when `low <= stop` or
 `high >= limit`. The fill uses the configured exit price and is represented by
 the existing strategy output fields. No public pending-order, partial-fill, or
 exit-reason fields are added.
+
+Phase N adds the first `strategy.exit` tick-distance helpers:
+`strategy.exit(id, from_entry, profit=ticks)` and
+`strategy.exit(id, from_entry, loss=ticks)`. The current subset accepts one
+trigger family per call. Profit exits convert to a pending limit at
+`strategy.position_avg_price + ticks * syminfo.mintick`; loss exits convert to
+a pending stop at `strategy.position_avg_price - ticks * syminfo.mintick`.
+Ticks must evaluate to a finite positive number, and the implementation uses
+the same fixed default `syminfo.mintick` subset as `math.round_to_mintick`.
+Converted exits reuse the Phase M pending-exit lifecycle and public strategy
+output contract.
 
 The closed Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`. The
 closed Phase M boundary is summarized in `docs/PHASE_M_AUDIT.md`.
@@ -248,13 +259,15 @@ Examples:
 - unsupported `request.security` variants outside the same-context identity and
   same-or-higher-timeframe scalar-expression provider subset
 - unsupported strategy declaration contexts and strategy order functions such as
-  `strategy.order`; `strategy.exit` profit, loss, trailing, partial quantity,
-  combined stop/limit, and missing-entry forms remain fixture-backed
-  unsupported cases. Stop-only `strategy.exit(id, from_entry, stop=price)` and
-  limit-only `strategy.exit(id, from_entry, limit=price)` are the narrow
-  supported Phase M subsets for the current one-net-long broker. Combined
-  stop/limit exits remain unsupported because same-bar high/low crossings need
-  an explicit intrabar precedence policy before compatibility can be claimed.
+  `strategy.order`; `strategy.exit` combined trigger, trailing, partial
+  quantity, and missing-entry forms remain fixture-backed unsupported cases.
+  Stop-only `strategy.exit(id, from_entry, stop=price)`, limit-only
+  `strategy.exit(id, from_entry, limit=price)`, profit-only
+  `strategy.exit(id, from_entry, profit=ticks)`, and loss-only
+  `strategy.exit(id, from_entry, loss=ticks)` are the narrow supported subsets
+  for the current one-net-long broker. Combined trigger exits remain
+  unsupported because same-bar high/low crossings need an explicit intrabar
+  precedence policy before compatibility can be claimed.
 - minimal `strategy.entry` long market entries in strategy-mode scripts, with
   unsupported short/stop/limit/indicator-mode variants fixture-backed; entries
   may omit `qty` only when the strategy declaration configures the fixed default
@@ -338,8 +351,8 @@ strategy.position_avg_price partial current long-only average entry price read-o
 strategy.openprofit partial       current long-only unrealized profit read-only series, 0 when flat, in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.netprofit  partial       cumulative realized closed-trade profit read-only series, excluding current open profit, in strategy-mode scripts only
 strategy.equity     partial       initial_capital plus realized net profit plus current open profit read-only series in strategy-mode scripts only
-strategy.exit       partial      stop-only and limit-only full-position long exits; later-bar low <= stop or high >= limit fills at the exit price; branch/switch/loop/state/history interactions fixture-backed
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the stop/limit-only strategy.exit subset, strategy.exit combined/profit/loss/trailing/partial/missing-entry forms, rich order types, percent/cash/contracts sizing, mutable strategy state, and strategy reporting helpers beyond the supported position/profit/equity variables are not implemented
+strategy.exit       partial      stop-only, limit-only, profit-only, and loss-only full-position long exits; profit/loss convert positive tick distances with fixed syminfo.mintick; later-bar low <= stop/loss price or high >= limit/profit price fills at the exit price; branch/switch/loop/state/history interactions fixture-backed
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the stop/limit/profit/loss-only strategy.exit subset, strategy.exit combined trigger/trailing/partial/missing-entry forms, rich order types, percent/cash/contracts sizing, mutable strategy state, and strategy reporting helpers beyond the supported position/profit/equity variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
