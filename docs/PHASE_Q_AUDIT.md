@@ -26,6 +26,9 @@ a fixture-backed behavior phase.
   add before claiming support, including semantic acceptance/rejection,
   runtime behavior, same-bar both-hit, state timing, incremental, and host
   smoke coverage.
+- Slice 4 mapped a future first bracket implementation to the existing module
+  ownership boundaries so a later behavior phase can proceed without moving
+  broker responsibility into built-ins, output structs, Python, or WASM.
 
 ## Slice 0 Baseline
 
@@ -330,6 +333,111 @@ Conformance and docs:
   triggers, trailing, partial, missing-entry, and richer broker behavior as
   unsupported.
 
+## Slice 4 Future Implementation Blueprint
+
+Phase Q does not apply this blueprint. It records the module ownership and test
+order a later positive bracket implementation should follow.
+
+Semantic analysis:
+
+- Update `crates/pine-sema/src/analyzer/strategy.rs`.
+- Accept exactly the selected one-downside plus one-upside pairs:
+  `stop + limit`, `stop + profit`, `loss + limit`, and `loss + profit`.
+- Keep `stop + loss`, `limit + profit`, three-trigger calls, four-trigger
+  calls, trailing arguments, partial quantity arguments, and missing-entry
+  variants diagnostic-only unsupported unless a later phase explicitly widens
+  them.
+- Keep strategy-mode gating, requested-context rejection, UDF side-effect
+  rejection, and diagnostic code stability unchanged.
+
+Built-in signatures:
+
+- `crates/pine-builtins/src/namespaces/strategy.rs` already exposes optional
+  `stop`, `limit`, `profit`, and `loss` parameters for `strategy.exit`.
+- A first bracket implementation should not add new built-in parameters.
+- Pair acceptance should remain analyzer-owned, not signature-owned.
+
+Runtime call extraction:
+
+- Update `crates/pine-runtime/src/builtins/strategy.rs`.
+- Continue evaluating `id` and `from_entry` before trigger legs.
+- For supported bracket pairs, evaluate only the selected legs in the canonical
+  order from the decision record: downside then upside.
+- Convert `profit` and `loss` through the existing fixed
+  `syminfo.mintick` source before broker placement.
+- Dispatch through broker facade methods such as a future
+  `place_exit_bracket(...)`; do not expose broker internals to runtime built-in
+  extraction.
+- If bracket validation fails, preserve any existing pending exit and avoid
+  falling back to a single-trigger placement.
+
+Broker pending-exit placement:
+
+- Update `crates/pine-runtime/src/strategy/broker/exits.rs`.
+- Prefer a trigger model equivalent to:
+
+  ```text
+  PendingExitTrigger =
+      Single(ExitLeg)
+    | Bracket { downside: ExitLeg, upside: ExitLeg }
+  ```
+
+- `ExitLeg` should preserve the resolved trigger side and fill price after any
+  tick conversion. It should not preserve public-only exit-reason metadata in
+  the first subset.
+- Identity comparison should include exit `id`, `from_entry`, trigger kind,
+  leg sides, and resolved leg prices.
+- Reuse existing runtime diagnostic codes where possible:
+  `E_STRATEGY_EXIT_PRICE`, `E_STRATEGY_EXIT_TICKS`,
+  `E_STRATEGY_EXIT_MINTICK`, and `E_STRATEGY_EXIT_ENTRY`.
+- Add new diagnostic codes only if an implementation exposes a genuinely new
+  runtime error family; otherwise keep diagnostics stable.
+
+Pending-exit evaluation:
+
+- Update `crates/pine-runtime/src/strategy/broker/mod.rs`.
+- Preserve `last_update_bar_index >= bar_index` creation/replacement-bar
+  ineligibility.
+- Evaluate pending brackets after script statements, matching existing
+  pending-exit timing.
+- For eligible brackets, check downside and upside leg triggers against the
+  current bar and apply stop/loss-first precedence when both sides are touched.
+- Keep stale or mismatched pending exits cleared under the existing current
+  entry check.
+
+Fill construction:
+
+- Update `crates/pine-runtime/src/strategy/broker/fills.rs`.
+- Reuse the current one-fill path for bracket fills: one `StrategyOrderEvent`
+  with `direction: "strategy.exit"`, one `StrategyTrade`, full current long
+  quantity, cash update, flat position snapshot, and pending-exit clear.
+- The selected fill price should come from the leg chosen by trigger evaluation.
+- Do not add partial-fill, pending-order, or exit-reason output fields in the
+  first subset.
+
+Accounting and public output:
+
+- `crates/pine-runtime/src/strategy/broker/accounting.rs` should continue to
+  derive position, open profit, realized profit, equity, and trade counts from
+  broker state after fills.
+- `crates/pine-runtime/src/output/strategy.rs` should not change for the first
+  bracket subset.
+- CLI, Python, and WASM should keep consuming the shared runtime result shape
+  without host-specific bracket logic.
+
+Implementation test order:
+
+1. Semantic acceptance/rejection fixtures and `cargo test -p pine-sema strategy`.
+2. Broker unit tests for bracket placement, identity, invalid-leg handling,
+   replacement, and same-bar precedence.
+3. Runtime fixtures plus CLI golden snapshots for normal fills, lifecycle,
+   both-hit, state timing, and interactions.
+4. Incremental append coverage for every broker-mutating runtime fixture.
+5. WASM and Python smoke tests for representative public contracts.
+6. Conformance metadata, matrix snapshot, docs, release notes, and closeout
+   audit updates.
+7. Full release gate before claiming the future bracket phase complete.
+
 ## Verification
 
 Slice 0 verification:
@@ -370,3 +478,11 @@ git diff --check
 ```
 
 Slice 3 verification passed on the Slice 3 workspace.
+
+Slice 4 verification:
+
+```text
+git diff --check
+```
+
+Slice 4 verification passed on the Slice 4 workspace.
