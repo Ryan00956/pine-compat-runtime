@@ -718,16 +718,49 @@ Out of scope until separately designed:
   exits, pyramiding, short exposure, commission, slippage, margin, strategy
   alerts, and realtime strategy execution.
 
+## Phase Q: Strategy Exit Bracket Design Gate
+
+Goal: close the `strategy.exit` combined-trigger design gap before any positive
+bracket support is claimed.
+
+Status: planned. Execution playbook: `docs/PHASE_Q_EXECUTION_PLAN.md`.
+
+Planned scope:
+
+- Keep combined `strategy.exit` trigger families unsupported during the design
+  gate.
+- Harden phase-neutral diagnostics around unsupported combined trigger
+  variants.
+- Record the first future bracket subset, or explicitly defer it, before
+  implementation begins.
+- Decide bracket identity, replacement, expression-evaluation, invalid-leg, and
+  same-bar high/low both-hit semantics for the current one-net-long broker.
+- Plan the future semantic, runtime, incremental, CLI, Python, WASM, and
+  conformance fixture coverage needed before support can be claimed.
+- Keep public runtime JSON, Python dictionaries, WASM JSON, conformance
+  statuses, and runtime snapshots unchanged unless a diagnostic-only fixture or
+  documentation-only metadata update requires a conservative reference change.
+
+Out of scope until a later behavior phase:
+
+- Runtime support for combined stop/limit, profit/loss, or mixed trigger
+  brackets.
+- Public pending-order records, partial-fill fields, exit-reason fields, or a
+  runtime schema bump.
+- Partial exits, quantity reservation, missing-entry pre-placement, multiple
+  pending exits, pyramiding, short exposure, trailing stops, commission,
+  slippage, margin, strategy alerts, and realtime broker rollback.
+
 ## Backlog Priority
 
 Recommended order from the current state:
 
-1. Use a bracket design gate as the next small strategy maintenance target.
-   Keep combined trigger exits unsupported until same-bar precedence and
-   bracket identity are explicitly designed; after that, strategy-exit
-   maintenance should proceed only when a small, fixture-backed change widens
-   the already claimed stop/limit/profit/loss `strategy.exit` subset or closes
-   one documented broker tail.
+1. Complete Phase Q as a bracket design gate. Keep combined trigger exits
+   unsupported until same-bar precedence, bracket identity, expression
+   evaluation, and invalid-leg behavior are explicitly designed; after that,
+   strategy-exit maintenance should proceed only when a small, fixture-backed
+   change widens the already claimed stop/limit/profit/loss `strategy.exit`
+   subset or closes one documented broker tail.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
