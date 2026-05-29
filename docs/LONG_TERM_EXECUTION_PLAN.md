@@ -686,13 +686,42 @@ Out of scope until separately designed:
   exposure, commission, slippage, margin, strategy alerts, and realtime
   strategy execution.
 
+## Phase P: Strategy Broker Structure
+
+Goal: preserve the current fixture-backed strategy behavior while splitting
+the oversized broker implementation into smaller internal modules before any
+larger broker-simulation feature is opened.
+
+Status: planned. Execution playbook: `docs/PHASE_P_EXECUTION_PLAN.md`.
+
+Planned scope:
+
+- Keep `BrokerState` as the public strategy runtime facade exported by
+  `pine-runtime`.
+- Move the broker implementation into a module directory and extract
+  pending-exit state, exit placement, fill construction, accounting/state
+  accessors, and broker-focused tests into clear internal modules.
+- Preserve the current Phase G/L/M/N/O strategy semantics, public runtime JSON,
+  Python dictionaries, WASM JSON, conformance claims, and snapshots.
+- Record the next small strategy maintenance target after the structural split.
+
+Out of scope until separately designed:
+
+- New strategy compatibility surface.
+- Public strategy output schema changes.
+- Combined trigger brackets, partial exits, trailing stops, multiple pending
+  exits, pyramiding, short exposure, commission, slippage, margin, strategy
+  alerts, and realtime strategy execution.
+
 ## Backlog Priority
 
 Recommended order from the current state:
 
-1. Strategy-exit maintenance only when a small, fixture-backed change widens the
-   already claimed stop/limit/profit/loss `strategy.exit` subset or closes one
-   documented broker tail.
+1. Complete Phase P broker structure maintenance before opening a larger
+   strategy-exit feature; after that, strategy-exit maintenance should proceed
+   only when a small, fixture-backed change widens the already claimed
+   stop/limit/profit/loss `strategy.exit` subset or closes one documented
+   broker tail.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an

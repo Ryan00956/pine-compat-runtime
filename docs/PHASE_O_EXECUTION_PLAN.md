@@ -51,9 +51,10 @@ current strategy subset:
 - Filled exits append the existing public `strategy.orders`, `strategy.trades`,
   `strategy.position`, and `strategy.equity` data. Phase N did not add a public
   pending-order field or bump the runtime schema.
-- `tests/fixtures/sema/unsupported_strategy_state_variables.pine` currently
-  keeps `strategy.closedtrades`, `strategy.opentrades`, and
-  `strategy.max_drawdown` unsupported.
+- At the Phase O starting point,
+  `tests/fixtures/sema/unsupported_strategy_state_variables.pine` kept
+  `strategy.closedtrades`, `strategy.opentrades`, and `strategy.max_drawdown`
+  unsupported.
 
 The strategy-focused verification baseline is:
 
@@ -280,7 +281,8 @@ Slice 0 confirmation:
   `strategy.exit` subset and keeps reporting namespaces unsupported.
 - `tests/fixtures/conformance.tsv` keeps `strategy.*` unsupported beyond the
   supported order functions and position/profit/equity variables.
-- `tests/fixtures/sema/unsupported_strategy_state_variables.pine` still rejects
+- At Slice 0,
+  `tests/fixtures/sema/unsupported_strategy_state_variables.pine` still rejected
   `strategy.closedtrades`, `strategy.opentrades`, and `strategy.max_drawdown`.
 - `crates/pine-runtime/src/runtime/historical.rs` evaluates pending exits after
   script statements, matching the count timing decision.
