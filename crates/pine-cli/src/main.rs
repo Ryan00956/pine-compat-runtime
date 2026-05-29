@@ -623,6 +623,14 @@ mod tests {
                 "runtime_strategy_variable_interactions.json",
                 "tests/fixtures/runtime/strategy_variable_interactions.pine",
             ),
+            (
+                "runtime_strategy_trade_counts.json",
+                "tests/fixtures/runtime/strategy_trade_counts.pine",
+            ),
+            (
+                "runtime_strategy_exit_trade_counts.json",
+                "tests/fixtures/runtime/strategy_exit_trade_counts.pine",
+            ),
         ] {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));
         }

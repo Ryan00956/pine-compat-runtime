@@ -1,0 +1,22 @@
+//@version=5
+strategy("Trade counts")
+
+plot(strategy.closedtrades)
+plot(strategy.opentrades)
+
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=1)
+
+plot(strategy.closedtrades)
+plot(strategy.opentrades)
+
+if bar_index == 2
+    strategy.close("L")
+
+if bar_index == 3
+    strategy.close("L")
+
+plot(strategy.closedtrades)
+plot(strategy.opentrades)
+plot(strategy.closedtrades[1])
+plot(strategy.opentrades[1])

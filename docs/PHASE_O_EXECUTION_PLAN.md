@@ -629,8 +629,8 @@ scripts/verify.sh
 - [x] Same-bar `strategy.close` count behavior is covered.
 - [x] Pending-exit next-bar count behavior is covered.
 - [x] Constant history references are covered.
-- [ ] Runtime snapshots are refreshed intentionally.
-- [ ] Incremental append execution matches full historical execution.
+- [x] Runtime snapshots are refreshed intentionally.
+- [x] Incremental append execution matches full historical execution.
 - [ ] CLI, Python, and WASM behavior remain synchronized.
 - [ ] Public strategy output schema remains unchanged, or any deliberate schema
       change is reviewed and documented.
