@@ -179,6 +179,65 @@ impl BrokerState {
         );
     }
 
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_profit_ticks(
+        &mut self,
+        id: String,
+        from_entry: String,
+        ticks: f64,
+        mintick: f64,
+        bar_index: usize,
+    ) {
+        let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+            return;
+        };
+        self.place_exit(
+            id,
+            from_entry,
+            PendingExitTrigger::Limit(self.avg_price + price_offset),
+            bar_index,
+        );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_loss_ticks(
+        &mut self,
+        id: String,
+        from_entry: String,
+        ticks: f64,
+        mintick: f64,
+        bar_index: usize,
+    ) {
+        let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+            return;
+        };
+        self.place_exit(
+            id,
+            from_entry,
+            PendingExitTrigger::Stop(self.avg_price - price_offset),
+            bar_index,
+        );
+    }
+
+    #[allow(dead_code)]
+    fn exit_tick_price_offset(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
+        if !ticks.is_finite() || ticks <= 0.0 {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_EXIT_TICKS".to_owned(),
+                message: "`strategy.exit` tick distance must be finite and positive".to_owned(),
+            });
+            return None;
+        }
+        if !mintick.is_finite() || mintick <= 0.0 {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_EXIT_MINTICK".to_owned(),
+                message: "`strategy.exit` mintick must be finite and positive".to_owned(),
+            });
+            return None;
+        }
+        Some(ticks * mintick)
+    }
+
     fn place_exit(
         &mut self,
         id: String,
@@ -539,5 +598,151 @@ mod tests {
         assert_eq!(broker.trades.len(), 1);
         assert_eq!(broker.trades[0].exit_price, 110.0);
         assert_eq!(broker.trades[0].profit, 20.0);
+    }
+
+    #[test]
+    fn profit_ticks_create_limit_from_average_entry_price() {
+        let mut broker = broker_with_long_entry();
+
+        broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 0.5, 0);
+
+        assert_eq!(
+            broker.pending_exit,
+            Some(PendingExit {
+                id: "XP".to_owned(),
+                from_entry: "L".to_owned(),
+                trigger: PendingExitTrigger::Limit(105.0),
+                last_update_bar_index: 0,
+            })
+        );
+    }
+
+    #[test]
+    fn loss_ticks_create_stop_from_average_entry_price() {
+        let mut broker = broker_with_long_entry();
+
+        broker.place_exit_loss_ticks("XL".to_owned(), "L".to_owned(), 5.0, 0.5, 0);
+
+        assert_eq!(
+            broker.pending_exit,
+            Some(PendingExit {
+                id: "XL".to_owned(),
+                from_entry: "L".to_owned(),
+                trigger: PendingExitTrigger::Stop(97.5),
+                last_update_bar_index: 0,
+            })
+        );
+    }
+
+    #[test]
+    fn invalid_profit_ticks_record_diagnostic_without_changing_pending_exit() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+
+        broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 0.0, 0.01, 1);
+
+        assert_eq!(
+            broker.pending_exit,
+            Some(PendingExit {
+                id: "XS".to_owned(),
+                from_entry: "L".to_owned(),
+                trigger: PendingExitTrigger::Stop(95.0),
+                last_update_bar_index: 0,
+            })
+        );
+        assert_eq!(broker.diagnostics.len(), 1);
+        assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_TICKS");
+    }
+
+    #[test]
+    fn invalid_exit_mintick_records_diagnostic_without_changing_pending_exit() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_limit("XL".to_owned(), "L".to_owned(), 110.0, 0);
+
+        broker.place_exit_loss_ticks("XS".to_owned(), "L".to_owned(), 5.0, f64::NAN, 1);
+
+        assert_eq!(
+            broker.pending_exit,
+            Some(PendingExit {
+                id: "XL".to_owned(),
+                from_entry: "L".to_owned(),
+                trigger: PendingExitTrigger::Limit(110.0),
+                last_update_bar_index: 0,
+            })
+        );
+        assert_eq!(broker.diagnostics.len(), 1);
+        assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_MINTICK");
+    }
+
+    #[test]
+    fn profit_ticks_without_matching_entry_record_diagnostic_without_pending_state() {
+        let mut broker = broker_with_long_entry();
+
+        broker.place_exit_profit_ticks("XP".to_owned(), "OTHER".to_owned(), 10.0, 0.01, 0);
+
+        assert_eq!(broker.pending_exit_count(), 0);
+        assert_eq!(broker.diagnostics.len(), 1);
+        assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    }
+
+    #[test]
+    fn unchanged_repeated_profit_ticks_keep_original_eligibility_bar() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 1.0, 0);
+        broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 1.0, 1);
+
+        broker.evaluate_pending_exits(1, 20, 111.0, 100.0);
+
+        assert_eq!(broker.pending_exit_count(), 0);
+        assert_eq!(broker.trades.len(), 1);
+        assert_eq!(broker.trades[0].exit_price, 110.0);
+    }
+
+    #[test]
+    fn changed_repeated_profit_ticks_delay_eligibility() {
+        let mut broker = broker_with_long_entry();
+        broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 1.0, 0);
+        broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 11.0, 1.0, 1);
+
+        broker.evaluate_pending_exits(1, 20, 112.0, 100.0);
+
+        assert_eq!(broker.pending_exit_count(), 1);
+        assert!(broker.trades.is_empty());
+
+        broker.evaluate_pending_exits(2, 30, 112.0, 100.0);
+
+        assert_eq!(broker.pending_exit_count(), 0);
+        assert_eq!(broker.trades.len(), 1);
+        assert_eq!(broker.trades[0].exit_price, 111.0);
+    }
+
+    #[test]
+    fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
+        let mut broker = broker_with_long_entry();
+
+        broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+        broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 1.0, 1);
+
+        assert_eq!(
+            broker.pending_exit,
+            Some(PendingExit {
+                id: "XP".to_owned(),
+                from_entry: "L".to_owned(),
+                trigger: PendingExitTrigger::Limit(110.0),
+                last_update_bar_index: 1,
+            })
+        );
+
+        broker.place_exit_loss_ticks("XL".to_owned(), "L".to_owned(), 5.0, 1.0, 2);
+
+        assert_eq!(
+            broker.pending_exit,
+            Some(PendingExit {
+                id: "XL".to_owned(),
+                from_entry: "L".to_owned(),
+                trigger: PendingExitTrigger::Stop(95.0),
+                last_update_bar_index: 2,
+            })
+        );
     }
 }
