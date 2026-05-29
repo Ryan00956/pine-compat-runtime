@@ -692,7 +692,8 @@ Goal: preserve the current fixture-backed strategy behavior while splitting
 the oversized broker implementation into smaller internal modules before any
 larger broker-simulation feature is opened.
 
-Status: planned. Execution playbook: `docs/PHASE_P_EXECUTION_PLAN.md`.
+Status: implementation landed; closeout audit pending. Execution playbook:
+`docs/PHASE_P_EXECUTION_PLAN.md`.
 
 Planned scope:
 
@@ -703,7 +704,10 @@ Planned scope:
   accessors, and broker-focused tests into clear internal modules.
 - Preserve the current Phase G/L/M/N/O strategy semantics, public runtime JSON,
   Python dictionaries, WASM JSON, conformance claims, and snapshots.
-- Record the next small strategy maintenance target after the structural split.
+- Record the next small strategy maintenance target after the structural split:
+  a bracket design gate that keeps combined trigger exits unsupported while
+  documenting the same-bar precedence and bracket-identity decisions needed
+  before support.
 
 Out of scope until separately designed:
 
@@ -717,11 +721,12 @@ Out of scope until separately designed:
 
 Recommended order from the current state:
 
-1. Complete Phase P broker structure maintenance before opening a larger
-   strategy-exit feature; after that, strategy-exit maintenance should proceed
-   only when a small, fixture-backed change widens the already claimed
-   stop/limit/profit/loss `strategy.exit` subset or closes one documented
-   broker tail.
+1. Close the Phase P audit, then use a bracket design gate as the next small
+   strategy maintenance target. Keep combined trigger exits unsupported until
+   same-bar precedence and bracket identity are explicitly designed; after
+   that, strategy-exit maintenance should proceed only when a small,
+   fixture-backed change widens the already claimed stop/limit/profit/loss
+   `strategy.exit` subset or closes one documented broker tail.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an

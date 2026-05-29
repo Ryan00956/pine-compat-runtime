@@ -166,6 +166,16 @@ closed request boundary and maintenance tails are recorded in
 Realtime execution uses explicit bar update kinds for historical, forming, and
 confirmed bars. See [`REALTIME_MODEL.md`](REALTIME_MODEL.md).
 
+Strategy execution is owned by `pine-runtime::strategy`. `BrokerState` remains
+the runtime facade used by historical execution, runtime built-ins, strategy
+variable reads, and public result projection. Broker internals are split under
+`pine-runtime::strategy::broker`: pending-exit identity, trigger conversion,
+and placement live in `exits`; close/fill trade construction and position reset
+live in `fills`; equity, profit, position, and trade-count accessors live in
+`accounting`; broker-focused unit tests live in `tests`. Public strategy result
+structs remain in `pine-runtime::output::strategy`, and host bindings continue
+to map the shared runtime result without owning broker transitions.
+
 ### `pine-builtins`
 
 Owns built-in namespaces and functions.

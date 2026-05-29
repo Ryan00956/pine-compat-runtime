@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Implemented Phase P broker-structure maintenance. Strategy broker internals
+  are split into facade, pending-exit, fill, accounting, and broker-test
+  modules while preserving the existing strategy compatibility surface, public
+  runtime `schemaVersion: 3`, CLI/Python/WASM output shapes, and runtime
+  snapshots.
+- Recorded the next strategy maintenance target as a bracket design gate only.
+  Combined trigger exits remain unsupported until same-bar precedence, bracket
+  identity, and interaction with the current one-pending-exit model are
+  specified.
 - Closed Phase O for the current fixture-backed strategy reporting count
   subset. The audit records supported `strategy.closedtrades` and
   `strategy.opentrades` count variables, explicit unsupported reporting
