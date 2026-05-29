@@ -14,6 +14,10 @@ a fixture-backed behavior phase.
   gate, synchronized the long-term roadmap with the planned Phase Q target, and
   recorded the current unsupported combined-trigger boundary before any
   diagnostic or behavior changes.
+- Slice 1 hardened user-visible `strategy.exit` diagnostics so they describe
+  the current strategy subset instead of old phase names, added a
+  diagnostic-only four-trigger combined-exit fixture, and refreshed conformance
+  metadata plus the matrix metadata snapshot without changing runtime behavior.
 
 ## Slice 0 Baseline
 
@@ -74,6 +78,27 @@ implementation phase. The next slice should harden user-visible
 `strategy.exit` diagnostics and add a diagnostic-only four-trigger fixture
 without changing runtime behavior or public host contracts.
 
+## Slice 1 Diagnostic Boundary
+
+Slice 1 kept diagnostic codes unchanged while replacing stale Phase N/Slice 1
+wording in `validate_strategy_exit_args` with phase-neutral current-subset
+messages:
+
+- positional `profit`/`loss` rejection:
+  `` `strategy.exit` profit and loss arguments must be named arguments ``
+- unsupported option rejection:
+  `` `strategy.exit` argument `{name}` is not supported in the current strategy subset ``
+- combined trigger rejection:
+  `` `strategy.exit` combined trigger families are not supported in the current strategy subset ``
+
+The diagnostic-only fixture
+`tests/fixtures/sema/unsupported_strategy_exit_four_triggers.pine` now covers
+the maximal `stop + limit + profit + loss` trigger family directly. It is
+referenced from the existing `strategy.exit` partial row and broad
+`strategy.*` unsupported row in `tests/fixtures/conformance.tsv`; neither row
+changed status. `tests/snapshots/matrix.json` was refreshed only for the
+metadata fixture-list change.
+
 ## Verification
 
 Slice 0 verification:
@@ -85,3 +110,16 @@ git diff --check
 ```
 
 All Slice 0 verification commands passed on the Slice 0 workspace.
+
+Slice 1 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-sema strategy
+cargo test -p pine-cli conformance_metadata_references_existing_fixtures
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli matrix_output_matches_golden_snapshot
+cargo test -p pine-cli matrix_output_matches_golden_snapshot
+git diff --check
+```
+
+All Slice 1 verification commands passed on the Slice 1 workspace.

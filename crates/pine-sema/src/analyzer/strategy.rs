@@ -271,7 +271,7 @@ impl Analyzer {
                 if arg.name.is_none() {
                     self.diagnostics.push(Diagnostic::error(
                         "E_CALL_ARG_NAME",
-                        "`strategy.exit` profit and loss arguments must be named in Phase N Slice 1",
+                        "`strategy.exit` profit and loss arguments must be named arguments",
                         arg.span,
                     ));
                 }
@@ -287,7 +287,9 @@ impl Analyzer {
                 | "oca_name" | "comment" | "alert_message" => {
                     self.diagnostics.push(Diagnostic::error(
                         "E_CALL_ARG_NAME",
-                        format!("`strategy.exit` argument `{name}` is not supported in Phase N"),
+                        format!(
+                            "`strategy.exit` argument `{name}` is not supported in the current strategy subset"
+                        ),
                         arg.span,
                     ))
                 }
@@ -301,7 +303,7 @@ impl Analyzer {
         if trigger_count > 1 {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARG_NAME",
-                "`strategy.exit` combined trigger families are not supported in Phase N Slice 1",
+                "`strategy.exit` combined trigger families are not supported in the current strategy subset",
                 args.iter()
                     .find(|arg| matches!(arg.name.as_deref(), Some("limit" | "profit" | "loss")))
                     .or_else(|| args.get(3))
