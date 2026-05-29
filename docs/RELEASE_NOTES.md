@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Hardened Phase N Slice 6 profit/loss exit interactions. Runtime fixtures now
+  cover profit placement and later loss replacement through branch, switch, for,
+  and while contexts, plus strategy state/history reads around the delayed loss
+  fill.
 - Added Phase N Slice 4 runtime fixtures and compatibility metadata for
   `strategy.exit(id, from_entry, profit=ticks)` and
   `strategy.exit(id, from_entry, loss=ticks)`. Profit/loss exits convert

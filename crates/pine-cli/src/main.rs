@@ -604,6 +604,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_interactions.pine",
             ),
             (
+                "runtime_strategy_exit_profit_loss_interactions.json",
+                "tests/fixtures/runtime/strategy_exit_profit_loss_interactions.pine",
+            ),
+            (
                 "runtime_strategy_equity.json",
                 "tests/fixtures/runtime/strategy_equity.pine",
             ),
@@ -650,6 +654,9 @@ mod tests {
             "tests/fixtures/runtime/strategy_exit_loss.pine" => {
                 include_str!("../../../tests/fixtures/runtime/strategy_exit_loss_bars.csv")
             }
+            "tests/fixtures/runtime/strategy_exit_profit_loss_interactions.pine" => include_str!(
+                "../../../tests/fixtures/runtime/strategy_exit_profit_loss_interactions_bars.csv"
+            ),
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }
     }

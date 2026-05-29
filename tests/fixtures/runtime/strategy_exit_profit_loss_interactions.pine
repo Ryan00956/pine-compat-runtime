@@ -1,0 +1,36 @@
+//@version=5
+strategy("Profit loss exit interactions")
+
+trigger_ticks = switch bar_index
+    0 => 200
+    1 => 100
+    => 100
+
+use_loss = switch bar_index
+    1 => true
+    => false
+
+before_size = strategy.position_size
+before_netprofit = strategy.netprofit
+
+if bar_index == 0
+    for i = 0 to 0
+        strategy.entry("L", strategy.long, qty=2)
+    j = 0
+    while j < 1
+        strategy.exit("XP", "L", profit=trigger_ticks)
+        j := j + 1
+
+if use_loss
+    strategy.exit("XL", "L", loss=trigger_ticks)
+
+after_size = strategy.position_size
+after_netprofit = strategy.netprofit
+
+plot(before_size)
+plot(after_size)
+plot(strategy.position_size)
+plot(strategy.position_size[1])
+plot(before_netprofit)
+plot(after_netprofit)
+plot(strategy.netprofit[1])
