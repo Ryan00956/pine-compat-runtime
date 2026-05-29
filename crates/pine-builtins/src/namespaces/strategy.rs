@@ -47,6 +47,16 @@ const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SeriesOrSimpleNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "profit",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "loss",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
 ];
 
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[

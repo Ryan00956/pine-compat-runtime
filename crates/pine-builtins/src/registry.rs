@@ -133,6 +133,18 @@ mod tests {
             signature.params[3].accepts,
             crate::Accepts::SeriesOrSimpleNumeric
         );
+        assert_eq!(signature.params[4].name, "profit");
+        assert!(signature.params[4].optional);
+        assert_eq!(
+            signature.params[4].accepts,
+            crate::Accepts::SeriesOrSimpleNumeric
+        );
+        assert_eq!(signature.params[5].name, "loss");
+        assert!(signature.params[5].optional);
+        assert_eq!(
+            signature.params[5].accepts,
+            crate::Accepts::SeriesOrSimpleNumeric
+        );
         assert!(!signature.variadic);
     }
 }
