@@ -170,6 +170,40 @@ fn runs_strategy_exit_limit_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_profit_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        "strategy(\"demo\")\nif bar_index == 0\n    strategy.entry(\"L\", strategy.long, qty=2)\n    strategy.exit(\"XP\", \"L\", profit=200)\n",
+        "time,open,high,low,close,volume\n10,10,10,10,10,1\n20,11,12,10,11,1\n",
+    )
+    .expect("strategy exit profit script should run");
+
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":10,\"direction\":\"strategy.long\",\"qty\":2,\"price\":10},{\"id\":\"XP\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":12}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":10,\"exitTime\":20,\"entryPrice\":10,\"exitPrice\":12,\"qty\":2,\"profit\":4}]"
+    ));
+    assert!(output.contains("\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":10},{\"barIndex\":1,\"size\":0,\"avgPrice\":null}]"));
+}
+
+#[test]
+fn runs_strategy_exit_loss_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        "strategy(\"demo\")\nif bar_index == 0\n    strategy.entry(\"L\", strategy.long, qty=2)\n    strategy.exit(\"XL\", \"L\", loss=100)\n",
+        "time,open,high,low,close,volume\n10,10,10,10,10,1\n20,10,10,9,10,1\n",
+    )
+    .expect("strategy exit loss script should run");
+
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":10,\"direction\":\"strategy.long\",\"qty\":2,\"price\":10},{\"id\":\"XL\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":9}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":10,\"exitTime\":20,\"entryPrice\":10,\"exitPrice\":9,\"qty\":2,\"profit\":-2}]"
+    ));
+    assert!(output.contains("\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":10},{\"barIndex\":1,\"size\":0,\"avgPrice\":null}]"));
+}
+
+#[test]
 fn request_host_data_is_documented_wasm_gap() {
     let message = run_script_csv_internal(
         "indicator(\"request\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
