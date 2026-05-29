@@ -29,6 +29,8 @@ a fixture-backed behavior phase.
 - Slice 4 mapped a future first bracket implementation to the existing module
   ownership boundaries so a later behavior phase can proceed without moving
   broker responsibility into built-ins, output structs, Python, or WASM.
+- Slice 5 recorded why bracket design is the next small strategy maintenance
+  target and ranked the larger broker/reporting tails that remain deferred.
 
 ## Slice 0 Baseline
 
@@ -438,6 +440,76 @@ Implementation test order:
    audit updates.
 7. Full release gate before claiming the future bracket phase complete.
 
+## Slice 5 Scope Guard And Tail Ranking
+
+Bracket design is the next small strategy maintenance target because:
+
+- The unsupported boundary already has semantic fixtures for common combined
+  trigger forms, plus the four-trigger fixture added in Phase Q.
+- Phase P isolated pending-exit placement in `broker/exits.rs` and pending-exit
+  evaluation in `broker/mod.rs`, so bracket design maps cleanly to existing
+  ownership.
+- A first design gate and future first bracket subset can preserve the current
+  public strategy output shape; no pending-order, partial-fill, exit-reason, or
+  schema review is needed up front.
+- Same-bar high/low precedence and bracket identity were the main unresolved
+  blockers before any honest positive bracket claim could be made.
+
+Deferred strategy reporting tails:
+
+- Strategy closed-trade and open-trade namespace functions remain deferred
+  until a separate reporting design defines function names, return types,
+  indexing semantics, history behavior, and unsupported contexts.
+- Rich metrics such as max drawdown, win trades, loss trades, runup, and
+  detailed per-trade helpers remain deferred because they need richer trade and
+  equity history semantics than the current count-only subset.
+- Public open-trade records remain deferred because Phase O intentionally kept
+  open-trade data as script-visible counts, not public result objects.
+
+Deferred public schema tails:
+
+- Public pending-order records, partial-fill fields, exit-reason fields, and
+  bracket-leg metadata remain deferred until a separate schema review.
+- The first future bracket subset should keep bracket fills explainable through
+  existing order price and trade profit fields.
+
+Deferred broker lifecycle tails:
+
+- Missing-entry pre-placement remains deferred because it requires pending
+  exits without a current position, changes entry/exit lifecycle ordering, and
+  may require stronger order identity or multiple pending exits.
+- Partial exits, `qty`, `qty_percent`, and reservation behavior remain
+  deferred because they require quantity reservation, remaining-position
+  accounting, and partial trade semantics.
+- Multiple active pending exits remain deferred until multiple entries,
+  partial exits, or public pending-order reporting are deliberately opened.
+- Trailing stops remain deferred because they require per-bar trigger movement,
+  ratcheting rules, and additional lifecycle fixtures beyond fixed bracket
+  legs.
+
+Deferred larger broker phases:
+
+- Short entries, reversals, pyramiding, multiple simultaneous entries, and
+  `strategy.order` remain larger broker phases because they change the
+  one-net-long position model.
+- Commission, slippage, margin, currency conversion, cash sizing, contracts,
+  and percent-of-equity sizing remain deferred because they affect fills,
+  accounting, and strategy settings together.
+- Strategy alerts and realtime broker rollback remain deferred because they
+  cross strategy execution with host alert delivery or forming-bar rollback
+  semantics.
+
+Roadmap priority after Slice 5:
+
+1. Finish Phase Q as the design gate and close it with audit evidence.
+2. If the design remains stable, use a future small behavior phase for the
+   fixture-backed bracket subset selected here.
+3. If bracket implementation is paused, limit strategy work to diagnostic-only
+   maintenance or a separately scoped reporting/broker tail.
+4. Do not select missing-entry pre-placement, partial exits, pyramiding, short
+   exposure, rich metrics, or realtime strategy execution as incidental work
+   inside the bracket path.
+
 ## Verification
 
 Slice 0 verification:
@@ -486,3 +558,11 @@ git diff --check
 ```
 
 Slice 4 verification passed on the Slice 4 workspace.
+
+Slice 5 verification:
+
+```text
+git diff --check
+```
+
+Slice 5 verification passed on the Slice 5 workspace.
