@@ -142,6 +142,12 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "strategy.position_avg_price" {
             return self.strategy_broker.position_avg_price_value();
         }
+        if name == "strategy.closedtrades" {
+            return PineValue::Int(self.strategy_broker.closed_trade_count());
+        }
+        if name == "strategy.opentrades" {
+            return PineValue::Int(self.strategy_broker.open_trade_count());
+        }
         if name == "strategy.openprofit" {
             return self.current_bar.map_or(PineValue::Na, |bar| {
                 PineValue::Float(self.strategy_broker.open_profit(bar.close))

@@ -625,10 +625,10 @@ scripts/verify.sh
 - [x] Requested-context diagnostics reject both count variables.
 - [x] Mutation diagnostics keep strategy state read-only.
 - [x] Broker accessors return deterministic closed/open counts.
-- [ ] Runtime variable reads use broker accessors.
-- [ ] Same-bar `strategy.close` count behavior is covered.
-- [ ] Pending-exit next-bar count behavior is covered.
-- [ ] Constant history references are covered.
+- [x] Runtime variable reads use broker accessors.
+- [x] Same-bar `strategy.close` count behavior is covered.
+- [x] Pending-exit next-bar count behavior is covered.
+- [x] Constant history references are covered.
 - [ ] Runtime snapshots are refreshed intentionally.
 - [ ] Incremental append execution matches full historical execution.
 - [ ] CLI, Python, and WASM behavior remain synchronized.
