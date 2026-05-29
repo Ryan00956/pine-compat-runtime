@@ -691,6 +691,31 @@ cargo test -p pine-cli conformance_metadata_references_existing_fixtures
 git diff --check
 ```
 
+Slice 8 decision:
+
+- Next strategy maintenance target: bracket design gate only.
+- Keep every combined trigger form unsupported while documenting the decisions
+  needed before support: same-bar high/low precedence, whether stop/limit and
+  profit/loss pairs are order brackets or mutually exclusive replacements,
+  and how bracket identity interacts with the current one-pending-exit model.
+- Existing semantic fixtures already keep this unsupported boundary stable:
+  `unsupported_strategy_exit_stop_limit.pine`,
+  `unsupported_strategy_exit_profit_loss.pine`,
+  `unsupported_strategy_exit_stop_profit.pine`,
+  `unsupported_strategy_exit_limit_loss.pine`,
+  `unsupported_strategy_exit_stop_loss.pine`,
+  `unsupported_strategy_exit_limit_profit.pine`, and
+  `unsupported_strategy_exit_three_triggers.pine`.
+- Missing-entry pre-placement remains deferred because it requires deciding
+  whether broker-owned pending exits may exist without a matching current
+  entry, which would widen pending-order lifecycle semantics.
+- Rich reporting metrics remain deferred because public metric names, script
+  state semantics, and host-output expectations need a separate reporting
+  design.
+- Partial exits, pyramiding, short exposure, and realtime broker rollback
+  remain larger broker phases, not the next maintenance target.
+- No conformance status changes are made for this design gate.
+
 ## Slice 9: Documentation and Roadmap Synchronization
 
 Goal: synchronize the structural outcome with user-facing and maintainer docs.
