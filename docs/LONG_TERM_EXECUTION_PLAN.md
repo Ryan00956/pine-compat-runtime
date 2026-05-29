@@ -654,22 +654,54 @@ Out of scope until separately designed:
   commission, slippage, margin, currency conversion, strategy order namespaces,
   strategy alerts, and realtime strategy execution.
 
+## Phase O: Strategy Reporting Counts
+
+Goal: add the first narrow strategy reporting variables without opening a
+larger broker-simulation phase or changing the public runtime schema.
+
+Status: planned. Execution playbook: `docs/PHASE_O_EXECUTION_PLAN.md`.
+
+Planned scope:
+
+- Strategy-mode-only `strategy.closedtrades` as a read-only count of closed
+  trades recorded by the current broker state.
+- Strategy-mode-only `strategy.opentrades` as a read-only count of open trades
+  represented by the current long-only broker state.
+- Series integer behavior in supported expression, control-flow, pure UDF
+  argument, and constant history-reference contexts.
+- Existing Phase M/N timing rules: `strategy.close` mutates immediately for
+  subsequent reads, while pending-exit fills are evaluated after script
+  statements and become visible to script reads on the next bar.
+- No new public strategy output fields and no runtime schema bump.
+
+Out of scope until separately designed:
+
+- Strategy closed-trade and open-trade namespace functions.
+- Public open-trade records, pending-order records, partial-fill fields, and
+  exit-reason fields.
+- Rich broker metrics such as drawdown, win/loss trade counts, and runup.
+- Combined trigger brackets, partial exits, trailing stops, pyramiding, short
+  exposure, commission, slippage, margin, strategy alerts, and realtime
+  strategy execution.
+
 ## Backlog Priority
 
 Recommended order from the current state:
 
-1. Strategy-exit maintenance only when a small, fixture-backed change widens the
+1. Complete Phase O strategy reporting counts as the next narrow,
+   fixture-backed strategy maintenance slice.
+2. Strategy-exit maintenance only when a small, fixture-backed change widens the
    already claimed stop/limit/profit/loss `strategy.exit` subset or closes one
    documented broker tail.
-2. Phase J maintenance only when a small, fixture-backed change widens the
+3. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
-3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
+4. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an
    already claimed drawing, request, alert, or `varip` subset.
-4. Phase K maintenance only when release contracts, snapshots, or matrix gates
+5. Phase K maintenance only when release contracts, snapshots, or matrix gates
    need tightening.
-5. Phase B/C maintenance when new work exposes collection, history, or
+6. Phase B/C maintenance when new work exposes collection, history, or
    qualifier gaps.
-6. Phase D maintenance for small fixture-backed built-in compatibility fixes.
+7. Phase D maintenance for small fixture-backed built-in compatibility fixes.
 
 This order keeps the project useful for indicator and basic strategy execution
 while delaying features that require new host APIs, object lifetimes, or richer
