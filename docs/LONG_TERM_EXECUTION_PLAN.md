@@ -596,10 +596,6 @@ Closeout evidence:
 - `strategy.exit(id, from_entry, stop=price)` and
   `strategy.exit(id, from_entry, limit=price)` are fixture-backed partial
   claims in `tests/fixtures/conformance.tsv`.
-- Phase N maintenance has added fixture-backed profit/loss tick helpers:
-  `strategy.exit(id, from_entry, profit=ticks)` and
-  `strategy.exit(id, from_entry, loss=ticks)` for the same current
-  one-net-long broker subset.
 - Runtime snapshots cover stop exits, limit exits, and branch/switch/loop plus
   strategy-state interactions.
 - Python and WASM host tests assert the representative public contracts.
@@ -615,11 +611,54 @@ Out of scope until separately designed:
   commission, slippage, margin, currency conversion, strategy order namespaces,
   strategy alerts, and realtime strategy execution.
 
+## Phase N: Strategy Exit Profit And Loss
+
+Goal: widen the Phase M stop/limit exit lifecycle with deterministic
+entry-relative profit/loss tick helpers without adding bracket behavior or a
+new public runtime schema.
+
+Status: closed for the current fixture-backed subset. Execution playbook:
+`docs/PHASE_N_EXECUTION_PLAN.md`. Closeout audit:
+`docs/PHASE_N_AUDIT.md`.
+
+Closed scope:
+
+- A design gate for profit/loss tick helpers before any positive compatibility
+  claim changes.
+- Strategy-mode-only `strategy.exit(id, from_entry, profit=ticks)` and
+  `strategy.exit(id, from_entry, loss=ticks)` support for the current
+  one-net-long broker model.
+- Tick-distance conversion through the fixed default `syminfo.mintick` subset
+  from `strategy.position_avg_price`.
+- Reuse of the Phase M one-pending-exit lifecycle, later-bar trigger rules, and
+  public strategy output contract.
+- A bracket design gate that keeps every combined trigger form unsupported.
+
+Closeout evidence:
+
+- Stop-only, limit-only, profit-only, and loss-only `strategy.exit` calls are
+  fixture-backed partial claims in `tests/fixtures/conformance.tsv`.
+- Runtime snapshots cover profit exits, loss exits, and branch/switch/loop plus
+  strategy-state/history interactions.
+- Python and WASM host tests assert representative profit/loss public
+  contracts.
+- Combined trigger brackets, trailing stops, partial exits, and richer broker
+  behavior remain unsupported with stable diagnostics.
+- `scripts/verify.sh` passed on the Phase N closeout workspace.
+
+Out of scope until separately designed:
+
+- Combined trigger brackets, same-bar high/low precedence, missing-entry
+  pre-placement, multiple pending exits, and richer order modification rules.
+- Short exposure, reversals, pyramiding, partial exits, trailing stops,
+  commission, slippage, margin, currency conversion, strategy order namespaces,
+  strategy alerts, and realtime strategy execution.
+
 ## Backlog Priority
 
 Recommended order from the current state:
 
-1. Phase M maintenance only when a small, fixture-backed change widens the
+1. Strategy-exit maintenance only when a small, fixture-backed change widens the
    already claimed stop/limit/profit/loss `strategy.exit` subset or closes one
    documented broker tail.
 2. Phase J maintenance only when a small, fixture-backed change widens the

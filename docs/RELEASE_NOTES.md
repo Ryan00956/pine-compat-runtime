@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Phase N for the current fixture-backed `strategy.exit` profit/loss
+  subset. The audit records supported profit-only and loss-only tick-distance
+  exits, unsupported bracket/trailing/partial forms, unchanged public runtime
+  schema, host coverage, and the full release verification gate.
 - Closed Phase N Slice 7 as a bracket design gate. Combined trigger exits stay
   unsupported, including stop/limit, profit/loss, mixed price/tick, and
   three-trigger calls, because OHLC-only same-bar precedence remains a future

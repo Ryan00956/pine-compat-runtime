@@ -94,22 +94,28 @@ state variables are read-only.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants
-beyond the supported stop/limit-only subset, `strategy.order`, rich order
-families, strategy reporting helpers beyond the supported
+beyond the supported stop/limit/profit/loss-only subset, `strategy.order`, rich
+order families, strategy reporting helpers beyond the supported
 position/profit/equity variables, requested-context strategy state, strategy
 state mutation, and realtime strategy handoff remain unsupported until later
-strategy-maintenance slices define and fixture those semantics. Phase M
-adds narrow stop-only `strategy.exit(id, from_entry, stop=price)` and
-limit-only `strategy.exit(id, from_entry, limit=price)` subsets for the current
-one-net-long broker: accepted calls create or replace one pending full-position
-exit for the matching current entry, the exit is not eligible on the bar where
-it is created or replaced, and a later historical bar with `low <= stop` or
-`high >= limit` fills at the exit price. A filled exit appends a `strategy.exit`
-order event, records a closed trade under the source entry id, clears the
-position, and updates the normal position/equity snapshots. Phase M does not
-add public pending-order records, partial fill fields, or exit reason fields.
-The prior Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`; the
-closed Phase M exit subset is summarized in `docs/PHASE_M_AUDIT.md`.
+strategy-maintenance slices define and fixture those semantics. Phase M adds
+narrow stop-only `strategy.exit(id, from_entry, stop=price)` and limit-only
+`strategy.exit(id, from_entry, limit=price)` subsets for the current
+one-net-long broker. Phase N adds profit-only
+`strategy.exit(id, from_entry, profit=ticks)` and loss-only
+`strategy.exit(id, from_entry, loss=ticks)` helpers. Profit/loss exits convert
+positive tick distances from `strategy.position_avg_price` using the fixed
+default `syminfo.mintick`, then reuse the same pending-exit lifecycle: accepted
+calls create or replace one pending full-position exit for the matching current
+entry, the exit is not eligible on the bar where it is created or replaced, and
+a later historical bar with `low <= stop/loss price` or
+`high >= limit/profit price` fills at the exit price. A filled exit appends a
+`strategy.exit` order event, records a closed trade under the source entry id,
+clears the position, and updates the normal position/equity snapshots. Phase M
+and Phase N do not add public pending-order records, partial fill fields, or
+exit reason fields. The prior Phase L boundary is summarized in
+`docs/PHASE_L_AUDIT.md`; the closed Phase M and Phase N exit subsets are
+summarized in `docs/PHASE_M_AUDIT.md` and `docs/PHASE_N_AUDIT.md`.
 
 ## Alert Events
 

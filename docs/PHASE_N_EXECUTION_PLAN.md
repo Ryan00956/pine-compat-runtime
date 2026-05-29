@@ -1,8 +1,8 @@
 # Phase N Strategy Exit Maintenance Execution Plan
 
-Status: proposed next execution phase after the fixture-backed Phase M
-`strategy.exit` stop/limit subset. Use `docs/PHASE_M_AUDIT.md` as the
-baseline closeout record before starting this work.
+Status: closed for the current fixture-backed `strategy.exit` profit/loss
+subset. Use `docs/PHASE_M_AUDIT.md` as the baseline closeout record and
+`docs/PHASE_N_AUDIT.md` as the Phase N closeout record.
 
 Phase N should widen the existing long-only strategy exit lifecycle in small,
 reviewable, fixture-backed maintenance slices. The first executable target is
@@ -739,26 +739,26 @@ scripts/verify.sh
 Complete this checklist before calling Phase N closed. If an item is
 intentionally deferred, record the reason and risk in `docs/PHASE_N_AUDIT.md`.
 
-- [ ] Phase N decision record confirms supported profit/loss forms and rejected
+- [x] Phase N decision record confirms supported profit/loss forms and rejected
       combined trigger forms.
-- [ ] Positive semantic fixtures cover supported `profit` and `loss` calls.
-- [ ] Negative semantic fixtures cover mixed triggers, trailing options,
+- [x] Positive semantic fixtures cover supported `profit` and `loss` calls.
+- [x] Negative semantic fixtures cover mixed triggers, trailing options,
       partial quantity options, UDF side effects, requested-context use, and
       indicator-mode misuse.
-- [ ] Broker unit tests cover tick conversion, invalid values, missing entries,
+- [x] Broker unit tests cover tick conversion, invalid values, missing entries,
       replacement, same-bar ineligibility, and fill behavior.
-- [ ] Runtime fixtures and snapshots cover profit and loss exits.
-- [ ] Interaction fixtures cover supported branch, switch, loop, strategy
+- [x] Runtime fixtures and snapshots cover profit and loss exits.
+- [x] Interaction fixtures cover supported branch, switch, loop, strategy
       state, history, and incremental paths.
-- [ ] CLI, Python, and WASM tests assert representative public contracts.
-- [ ] `tests/fixtures/conformance.tsv` records the exact supported subset and
+- [x] CLI, Python, and WASM tests assert representative public contracts.
+- [x] `tests/fixtures/conformance.tsv` records the exact supported subset and
       keeps broad `strategy.*` unsupported.
-- [ ] Matrix snapshots are refreshed if conformance metadata changed.
-- [ ] Runtime schema version is reviewed and either unchanged with a note or
+- [x] Matrix snapshots are refreshed if conformance metadata changed.
+- [x] Runtime schema version is reviewed and either unchanged with a note or
       bumped with public snapshot updates.
-- [ ] Combined bracket support is either deliberately deferred with fixtures or
+- [x] Combined bracket support is either deliberately deferred with fixtures or
       implemented through a separate designed slice.
-- [ ] `docs/PHASE_N_AUDIT.md` records closure evidence and remaining tails.
-- [ ] Release notes and long-term planning docs are updated if needed.
-- [ ] `git diff --check` passes.
-- [ ] `scripts/verify.sh` passes.
+- [x] `docs/PHASE_N_AUDIT.md` records closure evidence and remaining tails.
+- [x] Release notes and long-term planning docs are updated if needed.
+- [x] `git diff --check` passes.
+- [x] `scripts/verify.sh` passes.
