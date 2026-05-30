@@ -17,8 +17,8 @@ impl Analyzer {
                 self.resolve_symbol(name, expr.span)
             }
             ExprKind::QualifiedName(parts) => {
-                if let Some(field) = self.resolve_user_type_field_access(parts, expr.span) {
-                    return Some(field.pine_type);
+                if let Some(field_type) = self.resolve_user_type_field_access(parts, expr.span) {
+                    return Some(field_type);
                 }
                 let name = expr_name(expr)?;
                 self.resolve_qualified_value(&name, expr.span)

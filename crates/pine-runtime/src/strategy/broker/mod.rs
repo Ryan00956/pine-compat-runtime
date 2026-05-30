@@ -69,6 +69,13 @@ impl BrokerState {
             });
             return;
         }
+        if !price.is_finite() {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.entry` fill price must be finite".to_owned(),
+            });
+            return;
+        }
         if self.position_size > 0.0 {
             return;
         }

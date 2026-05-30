@@ -1,9 +1,16 @@
 use super::{BrokerState, exits::PendingExit};
-use crate::{StrategyOrderEvent, StrategyPositionSnapshot, StrategyTrade};
+use crate::{RuntimeDiagnostic, StrategyOrderEvent, StrategyPositionSnapshot, StrategyTrade};
 
 impl BrokerState {
     pub(crate) fn close_long(&mut self, id: String, bar_index: usize, time: i64, price: f64) {
         if self.position_size <= 0.0 || self.entry_id.as_deref() != Some(id.as_str()) {
+            return;
+        }
+        if !price.is_finite() {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.close` fill price must be finite".to_owned(),
+            });
             return;
         }
 

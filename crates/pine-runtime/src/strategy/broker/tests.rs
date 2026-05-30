@@ -42,6 +42,34 @@ fn trade_counts_track_matching_close() {
 }
 
 #[test]
+fn entry_rejects_non_finite_fill_price() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.entry_long("L".to_owned(), 0, 10, f64::NAN, 2.0);
+
+    assert_eq!(broker.closed_trade_count(), 0);
+    assert_eq!(broker.open_trade_count(), 0);
+    assert!(broker.orders.is_empty());
+    assert!(broker.position.is_empty());
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_PRICE");
+}
+
+#[test]
+fn close_rejects_non_finite_fill_price_without_closing_position() {
+    let mut broker = broker_with_long_entry();
+
+    broker.close_long("L".to_owned(), 1, 20, f64::INFINITY);
+
+    assert_eq!(broker.closed_trade_count(), 0);
+    assert_eq!(broker.open_trade_count(), 1);
+    assert!(broker.trades.is_empty());
+    assert_eq!(broker.position_size, 2.0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_PRICE");
+}
+
+#[test]
 fn trade_counts_track_filled_pending_exit() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);

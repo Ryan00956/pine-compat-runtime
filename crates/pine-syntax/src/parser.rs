@@ -494,8 +494,11 @@ impl Parser {
                 continue;
             }
             if self.at(TokenKind::Question) {
-                let (_, right_bp) = (1, 0);
-                if right_bp < min_bp {
+                // The ternary `?:` operator has the lowest binding power and is
+                // right-associative, so it only binds at the top of an
+                // expression (when `min_bp == 0`).
+                const TERNARY_BINDING_POWER: u8 = 0;
+                if TERNARY_BINDING_POWER < min_bp {
                     break;
                 }
                 self.bump();

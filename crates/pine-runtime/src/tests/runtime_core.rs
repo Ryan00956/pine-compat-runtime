@@ -59,6 +59,30 @@ plot(close + x)
 }
 
 #[test]
+fn numeric_equality_uses_exact_pine_comparison() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("exact equality")
+plot(0.1 + 0.2 == 0.3 ? 99 : 1)
+plot(1 == 1.0 ? 1 : 0)
+plot(na(0 / 0) ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_values_close(&result.plots[0].values, &[1.0]);
+    assert_values_close(&result.plots[1].values, &[1.0]);
+    assert_values_close(&result.plots[2].values, &[1.0]);
+}
+
+#[test]
 fn profiles_runtime_storage() {
     let source = SourceFile::new(
         "test.pine",

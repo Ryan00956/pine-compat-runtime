@@ -51,8 +51,9 @@ fn rejects_unknown_user_type_fields_and_constructor_fields() {
     let analysis = analyze(
         r#"type Point
     float x
+ok = Point.new(1)
 p = Point.new(y = 1)
-plot(p.z)
+plot(ok.z)
 "#,
     );
 
@@ -61,6 +62,12 @@ plot(p.z)
             .diagnostics
             .iter()
             .any(|diagnostic| { diagnostic.code == "E_UDT_CONSTRUCTOR_ARG" })
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| { diagnostic.code == "E_UDT_UNKNOWN_FIELD" })
     );
     assert!(analysis.hir.is_none());
 }

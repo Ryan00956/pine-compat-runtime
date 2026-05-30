@@ -108,7 +108,11 @@ pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
 
 fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<Diagnostic>) {
     let mut library_declarations = 0;
-    for statement in module.program.statements.clone() {
+    // Temporarily move the statements out so we can iterate by reference
+    // without cloning the entire AST; the loop only mutates other fields of
+    // `module`, never `module.program.statements`.
+    let statements = std::mem::take(&mut module.program.statements);
+    for statement in &statements {
         match &statement.kind {
             StmtKind::Library(_) => library_declarations += 1,
             StmtKind::Export(export) => match &export.item {
@@ -181,6 +185,8 @@ fn collect_library_declarations(module: &mut ModuleInfo, diagnostics: &mut Vec<D
             _ => {}
         }
     }
+    // Restore the statements that were moved out above.
+    module.program.statements = statements;
 
     if module.key.is_some() && library_declarations != 1 {
         diagnostics.push(Diagnostic::error(

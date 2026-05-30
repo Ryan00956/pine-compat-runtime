@@ -195,7 +195,7 @@ fn numeric_binary(
     op: impl FnOnce(f64, f64) -> f64,
 ) -> PineValue {
     match (left.as_f64(), right.as_f64()) {
-        (Some(left), Some(right)) => PineValue::Float(op(left, right)),
+        (Some(left), Some(right)) => finite_float_or_na(op(left, right)),
         _ => PineValue::Na,
     }
 }
@@ -213,7 +213,11 @@ fn compare_binary(
 
 pub(crate) fn values_equal(left: &PineValue, right: &PineValue) -> bool {
     match (left.as_f64(), right.as_f64()) {
-        (Some(left), Some(right)) => (left - right).abs() < f64::EPSILON,
+        // Pine Script `==` performs exact numeric equality (no tolerance);
+        // the `as_f64` branch keeps cross-type comparisons such as
+        // `int == float` working without introducing an arbitrary epsilon.
+        #[allow(clippy::float_cmp)]
+        (Some(left), Some(right)) => left == right,
         _ => left == right,
     }
 }

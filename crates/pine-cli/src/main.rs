@@ -44,8 +44,8 @@ mod tests {
     };
     use pine_runtime::{
         HistoryRetentionMode, PUBLIC_MATRIX_SCHEMA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION,
-        RuntimeProfile, RuntimeResult, StrategyResult, public_runtime_profiled_result_json,
-        public_runtime_result_json, run_historical,
+        PineValue, PlotSeries, RuntimeProfile, RuntimeResult, StrategyResult,
+        public_runtime_profiled_result_json, public_runtime_result_json, run_historical,
     };
     use pine_sema::analyze_source;
     use pine_syntax::SourceFile;
@@ -279,6 +279,21 @@ mod tests {
     }
 
     #[test]
+    fn formats_matrix_json_with_escaped_control_characters() {
+        let entries = vec![MatrixEntry {
+            feature: "feature\"name".to_owned(),
+            status: "unsupported".to_owned(),
+            notes: "line\nnext\tcell".to_owned(),
+            fixtures: vec!["tests/fixtures/runtime/io.pine".to_owned()],
+        }];
+
+        let output = matrix_json(&entries);
+
+        assert!(output.contains(r#""feature":"feature\"name""#));
+        assert!(output.contains(r#""notes":"line\nnext\tcell""#));
+    }
+
+    #[test]
     fn formats_runtime_result_json_with_schema_version() {
         let result = RuntimeResult {
             plots: vec![],
@@ -313,6 +328,36 @@ mod tests {
         assert!(output.contains(r#""alerts":[]"#));
         assert!(output.contains(r#""diagnostics":[]"#));
         assert!(!output.contains(r#""strategy""#));
+    }
+
+    #[test]
+    fn formats_runtime_result_json_with_escaped_string_values() {
+        let result = RuntimeResult {
+            plots: vec![PlotSeries {
+                id: 1,
+                values: vec![PineValue::String("line\nnext\t\"quoted\"".to_owned())],
+            }],
+            plot_chars: vec![],
+            plot_shapes: vec![],
+            plot_arrows: vec![],
+            plot_bars: vec![],
+            plot_candles: vec![],
+            bg_colors: vec![],
+            bar_colors: vec![],
+            hlines: vec![],
+            fills: vec![],
+            labels: vec![],
+            lines: vec![],
+            boxes: vec![],
+            tables: vec![],
+            alerts: vec![],
+            strategy: None,
+            diagnostics: vec![],
+        };
+
+        let output = public_runtime_result_json(&result);
+
+        assert!(output.contains(r#""values":["line\nnext\t\"quoted\""]"#));
     }
 
     #[test]

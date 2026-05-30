@@ -285,16 +285,35 @@ impl<'a> Lexer<'a> {
                 }
                 b'\\' => {
                     self.pos += 1;
-                    if let Some(escaped) = self.peek_byte() {
-                        self.pos += 1;
-                        value.push(match escaped {
-                            b'n' => '\n',
-                            b't' => '\t',
-                            b'r' => '\r',
-                            b'"' => '"',
-                            b'\\' => '\\',
-                            other => other as char,
-                        });
+                    match self.peek_byte() {
+                        Some(b'n') => {
+                            self.pos += 1;
+                            value.push('\n');
+                        }
+                        Some(b't') => {
+                            self.pos += 1;
+                            value.push('\t');
+                        }
+                        Some(b'r') => {
+                            self.pos += 1;
+                            value.push('\r');
+                        }
+                        Some(b'"') => {
+                            self.pos += 1;
+                            value.push('"');
+                        }
+                        Some(b'\\') => {
+                            self.pos += 1;
+                            value.push('\\');
+                        }
+                        Some(_) => {
+                            // Unknown escape: keep the escaped character literally,
+                            // consuming a full UTF-8 scalar value.
+                            let ch = self.text[self.pos..].chars().next().unwrap_or('\u{FFFD}');
+                            self.pos += ch.len_utf8();
+                            value.push(ch);
+                        }
+                        None => {}
                     }
                 }
                 b'\n' => {
@@ -305,9 +324,12 @@ impl<'a> Lexer<'a> {
                     ));
                     return;
                 }
-                other => {
-                    self.pos += 1;
-                    value.push(other as char);
+                _ => {
+                    // Consume a full UTF-8 scalar value rather than a single
+                    // byte so multi-byte characters are preserved verbatim.
+                    let ch = self.text[self.pos..].chars().next().unwrap_or('\u{FFFD}');
+                    self.pos += ch.len_utf8();
+                    value.push(ch);
                 }
             }
         }
@@ -494,6 +516,20 @@ mod tests {
                 TokenKind::Eq,
                 TokenKind::True,
                 TokenKind::RParen,
+                TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_utf8_string_contents_and_unknown_escapes() {
+        assert_eq!(
+            kinds("label = \"中\\\\文\\好\\n\"\n"),
+            vec![
+                TokenKind::Identifier("label".to_owned()),
+                TokenKind::Eq,
+                TokenKind::String("中\\文好\n".to_owned()),
                 TokenKind::Newline,
                 TokenKind::Eof,
             ]

@@ -30,7 +30,6 @@ pub(crate) struct UdtConstructor {
 pub(crate) struct UdtFieldAccess {
     pub(crate) receiver: String,
     pub(crate) index: usize,
-    pub(crate) pine_type: PineType,
 }
 
 pub(crate) fn span_key(span: Span) -> (usize, usize) {
@@ -141,7 +140,7 @@ impl Analyzer {
         &mut self,
         parts: &[String],
         span: Span,
-    ) -> Option<UdtFieldAccess> {
+    ) -> Option<PineType> {
         if parts.len() != 2 {
             return None;
         }
@@ -150,7 +149,7 @@ impl Analyzer {
         let symbol = self.scope.resolve(receiver)?;
         let type_name = self.symbol_user_types.get(&symbol.id)?.clone();
         let user_type = self.user_types.get(&type_name)?;
-        let Some((index, field)) = user_type
+        let Some((_, field)) = user_type
             .fields
             .iter()
             .enumerate()
@@ -161,19 +160,14 @@ impl Analyzer {
                 format!("unknown field `{field_name}` on `{type_name}`"),
                 span,
             ));
-            return Some(UdtFieldAccess {
-                receiver: receiver.clone(),
-                index: 0,
-                pine_type: UNKNOWN,
-            });
+            // The receiver is a known user-defined type, so this is a field
+            // access (not a namespace lookup); short-circuit with `UNKNOWN`
+            // instead of fabricating an invalid field index.
+            return Some(UNKNOWN);
         };
         let pine_type = PineType::new(symbol.pine_type.qualifier, field.pine_type.kind);
         self.bind_symbol(receiver, span, symbol);
-        Some(UdtFieldAccess {
-            receiver: receiver.clone(),
-            index,
-            pine_type,
-        })
+        Some(pine_type)
     }
 
     pub(crate) fn type_of_user_type_field_access(&self, parts: &[String]) -> Option<PineType> {
@@ -272,15 +266,13 @@ impl Analyzer {
         let symbol = self.bound_symbol(&parts[0], span)?;
         let type_name = self.symbol_user_types.get(&symbol.id)?;
         let user_type = self.user_types.get(type_name)?;
-        let (index, field) = user_type
+        let index = user_type
             .fields
             .iter()
-            .enumerate()
-            .find(|(_, field)| field.name == parts[1])?;
+            .position(|field| field.name == parts[1])?;
         Some(UdtFieldAccess {
             receiver: parts[0].clone(),
             index,
-            pine_type: PineType::new(symbol.pine_type.qualifier, field.pine_type.kind),
         })
     }
 

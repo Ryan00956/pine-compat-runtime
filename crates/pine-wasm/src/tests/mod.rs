@@ -272,6 +272,14 @@ fn library_source_json_reports_malformed_host_input() {
 }
 
 #[test]
+fn json_escape_escapes_control_characters() {
+    assert_eq!(
+        json_escape("quote \" slash \\ newline\n tab\t bell\u{07}"),
+        "quote \\\" slash \\\\ newline\\n tab\\t bell\\u0007"
+    );
+}
+
+#[test]
 fn analysis_outputs_match_golden_snapshots() {
     assert_snapshot(
         "analysis_supported.json",

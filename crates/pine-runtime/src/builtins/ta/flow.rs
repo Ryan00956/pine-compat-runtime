@@ -963,7 +963,7 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         let value = window.extreme(mode).unwrap_or(f64::NAN);
-        Ok(PineValue::Float(value))
+        Ok(finite_float_or_na(value))
     }
 
     pub(crate) fn eval_window_extreme_offset(
@@ -1065,7 +1065,7 @@ impl<'a> HistoricalRuntime<'a> {
         length: usize,
     ) -> &RollingWindowState {
         let window = self.rolling_windows.entry(key).or_default();
-        window.push(source, length);
+        window.push(source.filter(|value| value.is_finite()), length);
         window
     }
 

@@ -305,6 +305,33 @@ plot(lo)
 }
 
 #[test]
+fn window_extremes_treat_non_finite_sources_as_na() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("non-finite extremes")
+bad = (close - close) / (close - close)
+plot(na(ta.highest(bad, 2)) ? 1 : 0)
+plot(na(ta.lowest(bad, 2)) ? 1 : 0)
+plot(na(ta.highestbars(bad, 2)) ? 1 : 0)
+plot(na(ta.lowestbars(bad, 2)) ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)]).expect("runtime result");
+
+    for plot in &result.plots {
+        assert_values_close(&plot.values, &[1.0, 1.0]);
+    }
+}
+
+#[test]
 fn runs_single_argument_extremes_over_historical_bars() {
     let source = SourceFile::new(
         "test.pine",
