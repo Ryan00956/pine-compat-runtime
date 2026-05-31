@@ -102,12 +102,12 @@ read-only.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants
-beyond the supported single-trigger plus one-downside/one-upside bracket
-subset, `strategy.order`, rich order families, strategy reporting helpers
-beyond the supported position/profit/equity/count variables, requested-context
-strategy state, strategy state mutation, and realtime strategy handoff remain
-unsupported until later strategy-maintenance slices define and fixture those
-semantics. Phase M adds narrow stop-only
+beyond the supported single-trigger, one-downside/one-upside bracket, and
+trailing-stop subset, `strategy.order`, rich order families, strategy reporting
+helpers beyond the supported position/profit/equity/count variables,
+requested-context strategy state, strategy state mutation, and realtime
+strategy handoff remain unsupported until later strategy-maintenance slices
+define and fixture those semantics. Phase M adds narrow stop-only
 `strategy.exit(id, from_entry, stop=price)` and limit-only
 `strategy.exit(id, from_entry, limit=price)` subsets for the current
 one-net-long broker. Phase N adds profit-only
@@ -115,20 +115,27 @@ one-net-long broker. Phase N adds profit-only
 `strategy.exit(id, from_entry, loss=ticks)` helpers. Phase R adds the first
 bracket subset: exactly one downside leg plus one upside leg, covering
 `stop + limit`, `stop + profit`, `loss + limit`, and `loss + profit`.
-Profit/loss exits convert positive tick distances from
+Phase S adds the first trailing subset: exactly `trail_price + trail_offset`
+and `trail_points + trail_offset`. Profit/loss and trailing tick arguments
+convert positive tick distances from
 `strategy.position_avg_price` using the fixed default `syminfo.mintick`, then
 reuse the same pending-exit lifecycle: accepted calls create or replace one
 pending full-position exit for the matching current entry, the exit is not
 eligible on the bar where it is created or replaced, and a later historical bar
 with `low <= stop/loss price` or `high >= limit/profit price` fills at the
 selected exit price. If both bracket legs are touched on the same eligible bar,
-the downside stop/loss leg fills first. A filled exit appends exactly one
-`strategy.exit` order event, records a closed trade under the source entry id,
-clears the position, and updates the normal position/equity snapshots. Phase M,
-Phase N, and Phase R do not add public pending-order records, partial fill
-fields, bracket-leg metadata, or exit reason fields. Phase O does not add
-public open-trade records, trade namespace functions, or top-level runtime
-schema fields. The prior Phase L boundary is summarized in
+the downside stop/loss leg fills first. A trailing exit activates on a later
+eligible bar when `high >= activation_price`, sets its active stop to
+`high - offset_distance`, and does not fill on the activation bar. On later
+bars, an active trailing exit fills first when `low <= active_stop`; otherwise
+the active stop ratchets upward and never decreases. A filled exit appends
+exactly one `strategy.exit` order event, records a closed trade under the source
+entry id, clears the position, and updates the normal position/equity
+snapshots. Phase M, Phase N, Phase R, and Phase S do not add public
+pending-order records, partial fill fields, bracket-leg metadata,
+trailing-state fields, or exit reason fields. Phase O does not add public
+open-trade records, trade namespace functions, or top-level runtime schema
+fields. The prior Phase L boundary is summarized in
 `docs/PHASE_L_AUDIT.md`; the closed Phase M and Phase N exit subsets are
 summarized in `docs/PHASE_M_AUDIT.md` and `docs/PHASE_N_AUDIT.md`; the Phase R
 bracket subset is summarized in `docs/PHASE_R_AUDIT.md`.

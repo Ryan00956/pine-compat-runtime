@@ -52,6 +52,7 @@ able to integrate it through adapters.
 - [Phase M Strategy Exit Audit](docs/PHASE_M_AUDIT.md)
 - [Phase R Strategy Exit Bracket Execution Plan](docs/PHASE_R_EXECUTION_PLAN.md)
 - [Phase R Strategy Exit Bracket Audit](docs/PHASE_R_AUDIT.md)
+- [Phase S Strategy Exit Trailing Stop Execution Plan](docs/PHASE_S_EXECUTION_PLAN.md)
 - [Phase F Request Platform Audit](docs/PHASE_F_AUDIT.md)
 - [Phase H Alert Audit](docs/PHASE_H_AUDIT.md)
 - [Next Language Expansion Playbook](docs/NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md)
@@ -109,13 +110,14 @@ partial `alertcondition`/`alert` runtime events, host-provided exact-key
 imports for exported const expressions and pure exported functions,
 incremental append execution, realtime forming-bar rollback, partial
 strategy-mode long entries, closes, stop/limit/profit/loss exits, the first
-one-downside/one-upside `strategy.exit` bracket subset, Python bindings, and a
-thin WASM binding.
+one-downside/one-upside `strategy.exit` bracket subset, the first trailing-stop
+`strategy.exit` subset, Python bindings, and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as strategy order
 families beyond the current `strategy.entry`/`strategy.close`/`strategy.exit`
-subset, same-side or 3+ trigger strategy exits, request variants outside the
-narrow `request.security` subset, alert frequency modes and placeholder
+subset, same-side, 3+ trigger, or invalid trailing strategy exits, request
+variants outside the narrow `request.security` subset, alert frequency modes
+and placeholder
 interpolation, remote library lookup, re-exports, imported UDTs, imported
 methods, side-effecting exported library functions, advanced drawing families
 and methods, unsupported collection families and element types, recursive

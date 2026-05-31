@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added the Phase S `strategy.exit` trailing-stop subset. Supported forms are
+  exactly `trail_price + trail_offset` and `trail_points + trail_offset` for
+  the current long-only, no-pyramiding broker. Trailing exits activate on a
+  later eligible historical bar, do not fill on the activation bar, ratchet the
+  active stop upward only, emit one existing `strategy.exit` order event and one
+  closed trade when filled, keep runtime `schemaVersion: 3`, and leave invalid
+  trailing combinations, partial exits, missing-entry pre-placement, and richer
+  broker behavior unsupported.
 - Closed Phase R for the first positive `strategy.exit` bracket subset.
   Supported brackets are exactly `stop + limit`, `stop + profit`,
   `loss + limit`, and `loss + profit` for the current long-only,

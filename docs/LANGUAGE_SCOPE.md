@@ -278,11 +278,12 @@ The analyzer should reject these with clear diagnostics:
 
 - strategy order functions and reporting helpers outside the narrow
   `strategy.entry(id, strategy.long, qty=...)`, `strategy.close(id)`, and
-  stop/limit/profit/loss-only `strategy.exit` subsets, including
-  `strategy.order`, short entries, combined trigger brackets, trailing exits,
-  partial closes, pyramiding, broker settings beyond positive const numeric
-  `initial_capital` and fixed default quantity, percent-of-equity/cash/contracts
-  sizing, `strategy.*` variables beyond the supported position/profit/equity
+  stop/limit/profit/loss, one-downside/one-upside bracket, and trailing
+  `strategy.exit` subsets, including `strategy.order`, short entries,
+  same-side or 3+ trigger exits, invalid trailing combinations, partial closes,
+  pyramiding, broker settings beyond positive const numeric `initial_capital`
+  and fixed default quantity, percent-of-equity/cash/contracts sizing,
+  `strategy.*` variables beyond the supported position/profit/equity/count
   state subset, mutable strategy state, and requested-context strategy state
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe
   provider-backed `request.security` subsets

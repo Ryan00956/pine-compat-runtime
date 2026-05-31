@@ -783,7 +783,6 @@ Closed scope:
 Out of scope until separately designed:
 
 - Same-side pairs `stop + loss` and `limit + profit`, and 3+ trigger forms.
-- Trailing stops.
 - Partial exits, `qty`, `qty_percent`, and reservation behavior.
 - Missing-entry pre-placement.
 - Multiple entries, pyramiding, short exposure, and reversals.
@@ -791,15 +790,59 @@ Out of scope until separately designed:
 - Commission, slippage, margin, richer sizing, strategy alerts, and realtime
   broker rollback for brackets.
 
+## Phase S: Strategy Exit Trailing Stop Implementation
+
+Goal: add the first deterministic `strategy.exit` trailing-stop subset without
+changing the public strategy output schema.
+
+Status: implemented for the current fixture-backed subset. Execution playbook:
+`docs/PHASE_S_EXECUTION_PLAN.md`.
+
+Closed scope:
+
+- Strategy-mode-only trailing exits for the current one-net-long,
+  no-pyramiding broker.
+- Supported forms are exactly `trail_price + trail_offset` and
+  `trail_points + trail_offset`.
+- `trail_price` is an explicit activation price. `trail_points` converts to an
+  entry-relative activation price with fixed default `syminfo.mintick`.
+  `trail_offset` converts to a fixed price distance with the same mintick
+  subset.
+- A trailing exit is one broker-owned pending full-position exit. It starts
+  inactive, is not eligible on its creation or replacement bar, activates on a
+  later eligible bar when `high >= activation`, and does not fill on the
+  activation bar.
+- Once active, the stop fills first when `low <= active_stop`; otherwise it
+  ratchets upward to `max(active_stop, high - offset_distance)` and never
+  decreases.
+- Filled trailing exits emit exactly one `strategy.exit` order event, one
+  closed trade under the source entry id, normal position/equity snapshots, and
+  no public pending-order, trailing-state, exit-reason, or schema changes.
+- Semantic, runtime, incremental, CLI, Python, WASM, conformance, and docs
+  coverage are fixture-backed.
+
+Out of scope until separately designed:
+
+- Combining trailing exits with fixed `stop`, `limit`, `profit`, or `loss`
+  triggers.
+- Calls with both `trail_price` and `trail_points`, missing `trail_offset`, or
+  no activation argument.
+- Partial exits, `qty`, `qty_percent`, and reservation behavior.
+- Missing-entry pre-placement.
+- Multiple entries, pyramiding, short exposure, and reversals.
+- Multiple pending exits and public pending-order records.
+- Commission, slippage, margin, richer sizing, strategy alerts, and realtime
+  broker rollback for trailing stops.
+
 ## Backlog Priority
 
 Recommended order from the current state:
 
 1. Keep strategy maintenance narrow and fixture-backed. The next strategy work
-   should target one deferred Phase R broker tail at a time, such as trailing
-   stops, partial exits, missing-entry pre-placement, multiple pending exits,
-   or short/pyramiding behavior, with semantic, runtime, incremental, host,
-   conformance, and closeout evidence before any compatibility claim widens.
+   should target one deferred broker tail at a time, such as partial exits,
+   missing-entry pre-placement, multiple pending exits, or short/pyramiding
+   behavior, with semantic, runtime, incremental, host, conformance, and
+   closeout evidence before any compatibility claim widens.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an

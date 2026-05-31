@@ -78,7 +78,7 @@ conversion remain unsupported. Strategy mode output includes `orders`, `trades`,
 `barIndex`, `cash`, `marketValue`, `equity`, and `netProfit`, using current
 bar-close mark-to-market accounting for the long-only order subset. Commission,
 slippage, margin, percent sizing, currency conversion, pyramiding, short
-orders, `strategy.exit` same-side/3+ trigger/trailing/partial variants,
+orders, `strategy.exit` same-side/3+ trigger/invalid trailing/partial variants,
 `strategy.order`, realtime strategy handoff, and most strategy reporting
 variables remain outside the supported matrix.
 
@@ -139,8 +139,24 @@ trade under the source entry id. If both legs are touched on the same later
 eligible historical bar, the downside stop/loss leg fills first. Public runtime
 JSON, Python dictionaries, and WASM JSON keep the existing strategy result
 shape and runtime `schemaVersion: 3`. Same-side pairs `stop + loss` and
-`limit + profit`, 3+ trigger calls, trailing stops, partial exits, and
-missing-entry pre-placement remain unsupported.
+`limit + profit`, 3+ trigger calls, partial exits, and missing-entry
+pre-placement remain unsupported.
+
+Phase S adds the first `strategy.exit` trailing-stop subset. Supported trailing
+forms are exactly `trail_price + trail_offset` and
+`trail_points + trail_offset` for the current long-only broker, with no fixed
+`stop`, `limit`, `profit`, `loss`, `qty`, or `qty_percent` arguments in the
+same call. `trail_price` is the activation price. `trail_points` converts once
+from the current average entry price using the fixed default `syminfo.mintick`;
+`trail_offset` converts once to a fixed price distance. A trailing exit starts
+inactive, is not eligible on its creation or replacement bar, activates on a
+later bar when `high >= activation`, never fills on the activation bar, then
+fills on a later bar when `low <= active_stop` before any same-bar ratchet.
+When not filled, the active stop ratchets upward to
+`max(active_stop, high - offset_distance)`. The public output stays on the
+existing strategy result shape and runtime `schemaVersion: 3`; there are no
+public trailing-state, pending-order, or exit-reason fields. Invalid trailing
+combinations remain fixture-backed unsupported.
 
 The closed Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`. The
 closed Phase M boundary is summarized in `docs/PHASE_M_AUDIT.md`. The closed
@@ -288,17 +304,20 @@ Examples:
 - unsupported `request.security` variants outside the same-context identity and
   same-or-higher-timeframe scalar-expression provider subset
 - unsupported strategy declaration contexts and strategy order functions such as
-  `strategy.order`; `strategy.exit` same-side pairs, 3+ triggers, trailing,
-  partial quantity, and missing-entry forms remain fixture-backed unsupported
-  cases.
+  `strategy.order`; `strategy.exit` same-side pairs, 3+ triggers, invalid
+  trailing combinations, partial quantity, and missing-entry forms remain
+  fixture-backed unsupported cases.
   Stop-only `strategy.exit(id, from_entry, stop=price)`, limit-only
   `strategy.exit(id, from_entry, limit=price)`, profit-only
   `strategy.exit(id, from_entry, profit=ticks)`, loss-only
   `strategy.exit(id, from_entry, loss=ticks)`, and exactly one-downside plus
   one-upside brackets (`stop + limit`, `stop + profit`, `loss + limit`,
-  `loss + profit`) are the narrow supported subsets for the current
-  one-net-long broker. Supported brackets use stop/loss-first precedence when
-  both legs are touched on the same eligible historical bar.
+  `loss + profit`), plus trailing stops (`trail_price + trail_offset` and
+  `trail_points + trail_offset`), are the narrow supported subsets for the
+  current one-net-long broker. Supported brackets use stop/loss-first
+  precedence when both legs are touched on the same eligible historical bar.
+  Supported trailing stops do not fill on the activation bar and ratchet only
+  upward after activation.
 - minimal `strategy.entry` long market entries in strategy-mode scripts, with
   unsupported short/stop/limit/indicator-mode variants fixture-backed; entries
   may omit `qty` only when the strategy declaration configures the fixed default
@@ -386,8 +405,8 @@ strategy.netprofit  partial       cumulative realized closed-trade profit read-o
 strategy.equity     partial       initial_capital plus realized net profit plus current open profit read-only series in strategy-mode scripts only
 strategy.closedtrades partial     closed-trade count read-only series int in strategy-mode scripts only; immediate after strategy.close and next-bar visible after pending strategy.exit fills
 strategy.opentrades partial       open-trade count read-only series int in strategy-mode scripts only; 1 for the current supported long position and 0 when flat
-strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, and one-downside/one-upside bracket full-position long exits; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit; profit/loss convert positive tick distances with fixed syminfo.mintick; later-bar low <= stop/loss price or high >= limit/profit price fills at the exit price; same eligible bar both-hit fills the stop/loss side first; branch/switch/loop/state/history/incremental/host interactions fixture-backed
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the supported single-trigger plus one-downside/one-upside strategy.exit subset, strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/trailing/partial/missing-entry forms, rich order types, percent/cash/contracts sizing, mutable strategy state, trade namespace functions, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count variables are not implemented
+strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, and trailing full-position long exits; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; later-bar low <= stop/loss/active trailing stop or high >= limit/profit/activation price drives fills/activation; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the supported single-trigger, one-downside/one-upside bracket, and trailing strategy.exit subset, strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/partial/missing-entry forms, rich order types, percent/cash/contracts sizing, mutable strategy state, trade namespace functions, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
