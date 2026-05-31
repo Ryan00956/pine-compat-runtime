@@ -1,6 +1,6 @@
 # Phase U Strategy Exit Partial Quantity Execution Plan
 
-Status: in progress; Slice 7 explicitly defers `qty_percent`.
+Status: in progress; Slice 8 conformance, matrix, and documentation sync is complete.
 
 Phase U should widen only the current `strategy.exit` quantity surface. It must
 not become a broader broker-simulation phase. The target is a deterministic,
@@ -917,6 +917,36 @@ cargo test -p pine-runtime strategy
 git diff --check
 ```
 
+Slice 8 decision record, 2026-05-31:
+
+- `tests/fixtures/conformance.tsv` now claims the fixed `qty` subset only after
+  semantic, runtime, snapshot, incremental, and CLI/Python/WASM host evidence
+  exists.
+- The `strategy.exit` conformance row includes the fixed `qty` runtime and
+  semantic fixtures, documents placement-time finite positive quantity
+  semantics, and keeps `qty_percent`, multiple pending exits, reservation
+  behavior, missing-entry pre-placement, unsupported trigger shapes, pyramiding,
+  shorts, and reversals out of scope.
+- The broad `strategy.*` unsupported row no longer lists now-supported fixed
+  `qty` forms as unsupported, but continues to list the remaining broker and
+  quantity tails.
+- `tests/snapshots/matrix.json` was refreshed through the matrix snapshot test.
+- `docs/CONFORMANCE.md`, `docs/LONG_TERM_EXECUTION_PLAN.md`,
+  `docs/SEMANTIC_MODEL.md`, `docs/BUILTIN_SIGNATURES.md`, and
+  `docs/RELEASE_NOTES.md` now describe the supported fixed `qty` subset and
+  the remaining unsupported tails without changing runtime `schemaVersion: 3`.
+
+Verification:
+
+```text
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli matrix_output_matches_golden_snapshot
+cargo test -p pine-cli matrix
+cargo test -p pine-cli matrix_output_matches_golden_snapshot
+cargo test -p pine-sema strategy
+cargo test -p pine-runtime strategy
+git diff --check
+```
+
 ## Slice 9: Phase U Audit And Closeout
 
 Goal: close Phase U with evidence and keep future broker work scoped.
@@ -1028,9 +1058,9 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
 - [x] CLI, Python, and WASM host tests cover one representative partial exit.
 - [x] Runtime output remains `schemaVersion: 3`.
 - [x] Public strategy result keys and item shapes remain unchanged.
-- [ ] `tests/fixtures/conformance.tsv` and `tests/snapshots/matrix.json` agree
+- [x] `tests/fixtures/conformance.tsv` and `tests/snapshots/matrix.json` agree
       with the implemented subset.
-- [ ] Maintainer docs and release notes describe the supported quantity subset
+- [x] Maintainer docs and release notes describe the supported quantity subset
       and remaining broker tails.
 - [ ] `docs/PHASE_U_AUDIT.md` records verification evidence and remaining
       strategy tails.

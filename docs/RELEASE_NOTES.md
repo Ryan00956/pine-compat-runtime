@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added Phase U fixed `strategy.exit(..., qty=...)` support for the existing
+  single-trigger, one-downside/one-upside bracket, and trailing exit subsets.
+  Fixed `qty` is evaluated at placement time, must be finite and positive,
+  fills `min(qty, position_size)`, leaves any remaining long position open at
+  the same average price, and keeps the public strategy result shape and
+  runtime `schemaVersion: 3`. `qty_percent`, quantity reservation, multiple
+  pending exits, missing-entry pre-placement, pyramiding, shorts, and richer
+  broker behavior remain unsupported.
 - Added Phase T WASM request-bars host injection for the existing
   provider-backed `request.security` subset. WASM hosts can now pass explicit
   `requestBarsJson` data through `runScriptCsvWithRequestBars`,

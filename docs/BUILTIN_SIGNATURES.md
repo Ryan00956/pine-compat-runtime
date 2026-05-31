@@ -255,11 +255,21 @@ ohlc4 = (open + high + low + close) / 4
 ```text
 indicator(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, ...)
   -> void
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric)
+  -> void
+strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric)
+  -> void
+strategy.close(id: simple string) -> void
+strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric)
+  -> void
 ```
 
 Only metadata arguments needed by the output and history-retention model should
 be accepted in Phase 1. `max_bars_back` must be non-negative when provided.
 Unsupported named arguments should produce compatibility diagnostics.
+`strategy.exit` accepts `qty` only on supported single-trigger, one-downside/
+one-upside bracket, and trailing trigger shapes. `qty_percent` and richer
+strategy order options remain unsupported.
 
 ## Inputs
 

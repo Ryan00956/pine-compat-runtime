@@ -839,7 +839,8 @@ Out of scope until separately designed:
 Goal: add the first deterministic partial-quantity `strategy.exit` subset
 without changing the public strategy output schema.
 
-Status: in progress. Execution playbook: `docs/PHASE_U_EXECUTION_PLAN.md`.
+Status: in progress; implementation and host parity are complete, with audit
+closeout pending. Execution playbook: `docs/PHASE_U_EXECUTION_PLAN.md`.
 
 Planned scope:
 
@@ -862,7 +863,7 @@ Out of scope until separately designed:
 - Multiple entries, pyramiding, short exposure, and reversals.
 - Public pending-order records, partial-fill fields, exit-reason fields, or a
   runtime schema bump.
-- `qty_percent` unless the Phase U design gate explicitly keeps it in scope.
+- `qty_percent`, which Phase U explicitly defers.
 
 ## Backlog Priority
 
