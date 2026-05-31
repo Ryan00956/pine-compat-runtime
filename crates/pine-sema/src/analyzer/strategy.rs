@@ -12,6 +12,37 @@ const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.opentrades",
 ];
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum StrategyExitArgFamily {
+    Identity,
+    DownsidePriceTrigger,
+    DownsideTickTrigger,
+    UpsidePriceTrigger,
+    UpsideTickTrigger,
+    // Phase S standalone classification only. Future positive trailing forms
+    // must pair exactly one activation argument with trail_offset and land with
+    // matching runtime placement/fill behavior.
+    TrailingActivation,
+    TrailingOffset,
+    UnsupportedOption,
+}
+
+fn strategy_exit_arg_family(name: &str) -> Option<StrategyExitArgFamily> {
+    match name {
+        "id" | "from_entry" => Some(StrategyExitArgFamily::Identity),
+        "stop" => Some(StrategyExitArgFamily::DownsidePriceTrigger),
+        "loss" => Some(StrategyExitArgFamily::DownsideTickTrigger),
+        "limit" => Some(StrategyExitArgFamily::UpsidePriceTrigger),
+        "profit" => Some(StrategyExitArgFamily::UpsideTickTrigger),
+        "trail_price" | "trail_points" => Some(StrategyExitArgFamily::TrailingActivation),
+        "trail_offset" => Some(StrategyExitArgFamily::TrailingOffset),
+        "qty" | "qty_percent" | "oca_name" | "comment" | "alert_message" => {
+            Some(StrategyExitArgFamily::UnsupportedOption)
+        }
+        _ => None,
+    }
+}
+
 pub(crate) fn is_strategy_state_variable(name: &str) -> bool {
     STRATEGY_STATE_VARIABLES.contains(&name)
 }
@@ -278,14 +309,18 @@ impl Analyzer {
                 }
                 continue;
             };
-            match name {
-                "id" | "from_entry" => {}
-                "stop" => has_stop = true,
-                "limit" => has_limit = true,
-                "profit" => has_profit = true,
-                "loss" => has_loss = true,
-                "qty" | "qty_percent" | "trail_price" | "trail_points" | "trail_offset"
-                | "oca_name" | "comment" | "alert_message" => {
+            let Some(family) = strategy_exit_arg_family(name) else {
+                continue;
+            };
+            match family {
+                StrategyExitArgFamily::Identity => {}
+                StrategyExitArgFamily::DownsidePriceTrigger => has_stop = true,
+                StrategyExitArgFamily::DownsideTickTrigger => has_loss = true,
+                StrategyExitArgFamily::UpsidePriceTrigger => has_limit = true,
+                StrategyExitArgFamily::UpsideTickTrigger => has_profit = true,
+                StrategyExitArgFamily::TrailingActivation
+                | StrategyExitArgFamily::TrailingOffset
+                | StrategyExitArgFamily::UnsupportedOption => {
                     has_unsupported_arg = true;
                     self.diagnostics.push(Diagnostic::error(
                         "E_CALL_ARG_NAME",
@@ -295,17 +330,16 @@ impl Analyzer {
                         arg.span,
                     ))
                 }
-                _ => {}
             }
         }
         let trigger_count = usize::from(has_stop)
             + usize::from(has_limit)
             + usize::from(has_profit)
             + usize::from(has_loss);
-        let downside_count = usize::from(has_stop) + usize::from(has_loss);
-        let upside_count = usize::from(has_limit) + usize::from(has_profit);
-        let supported_trigger_shape =
-            trigger_count <= 1 || (trigger_count == 2 && downside_count == 1 && upside_count == 1);
+        let downside_trigger_count = usize::from(has_stop) + usize::from(has_loss);
+        let upside_trigger_count = usize::from(has_limit) + usize::from(has_profit);
+        let supported_trigger_shape = trigger_count <= 1
+            || (trigger_count == 2 && downside_trigger_count == 1 && upside_trigger_count == 1);
         if !supported_trigger_shape {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARG_NAME",
