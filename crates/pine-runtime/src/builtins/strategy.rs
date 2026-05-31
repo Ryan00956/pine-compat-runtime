@@ -138,15 +138,16 @@ impl<'a> HistoricalRuntime<'a> {
                 return Ok(PineValue::Void);
             }
 
-            let trail_offset_expr = trail_offset_expr.expect("checked trailing offset presence");
-            let trail_offset_ticks = self
-                .eval_expr(trail_offset_expr)?
-                .as_f64()
-                .unwrap_or(f64::NAN);
             let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
             if let Some(trail_price_expr) = trail_price_expr {
                 let activation_price = self
                     .eval_expr(trail_price_expr)?
+                    .as_f64()
+                    .unwrap_or(f64::NAN);
+                let trail_offset_expr =
+                    trail_offset_expr.expect("checked trailing offset presence");
+                let trail_offset_ticks = self
+                    .eval_expr(trail_offset_expr)?
                     .as_f64()
                     .unwrap_or(f64::NAN);
                 self.strategy_broker.place_exit_trail_price(
@@ -163,6 +164,12 @@ impl<'a> HistoricalRuntime<'a> {
             if let Some(trail_points_expr) = trail_points_expr {
                 let activation_ticks = self
                     .eval_expr(trail_points_expr)?
+                    .as_f64()
+                    .unwrap_or(f64::NAN);
+                let trail_offset_expr =
+                    trail_offset_expr.expect("checked trailing offset presence");
+                let trail_offset_ticks = self
+                    .eval_expr(trail_offset_expr)?
                     .as_f64()
                     .unwrap_or(f64::NAN);
                 self.strategy_broker.place_exit_trail_points(

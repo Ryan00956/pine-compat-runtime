@@ -50,21 +50,29 @@ later historical bar when `low <= stop/loss price` or
 `high >= limit/profit price`. If both bracket legs are touched on the same
 eligible historical bar, the downside stop/loss leg fills first. Profit and
 loss use positive tick distances converted from `strategy.position_avg_price`
-with the fixed default `syminfo.mintick`. These calls are rejected in indicator
-scripts and user-defined functions. Short entries, `strategy.exit` same-side
-pairs, 3+ trigger, trailing, and partial variants, `strategy.order`, broker
-settings beyond `initial_capital` and fixed default quantity, realtime strategy
-handoff, and strategy metrics beyond the Phase L position/profit/equity
-variables remain unsupported except for the Phase O `strategy.closedtrades` and
-`strategy.opentrades` count variables. Those two variables are read-only
+with the fixed default `syminfo.mintick`. Phase S also supports exactly two
+trailing forms for the current long-only broker: `trail_price + trail_offset`
+and `trail_points + trail_offset`. `trail_price` is an explicit activation
+price, `trail_points` converts once from `strategy.position_avg_price`, and
+`trail_offset` converts once to a fixed price distance using the same fixed
+default `syminfo.mintick`; trailing exits activate on a later eligible bar,
+never fill on the activation bar, ratchet upward only, and later fill when
+`low <= active trailing stop`. These calls are rejected in indicator scripts
+and user-defined functions. Short entries, `strategy.exit` same-side pairs, 3+
+trigger or invalid trailing combinations, partial variants, `strategy.order`,
+broker settings beyond `initial_capital` and fixed default quantity, realtime
+strategy handoff, and strategy metrics beyond the Phase L
+position/profit/equity variables remain unsupported except for the Phase O
+`strategy.closedtrades` and `strategy.opentrades` count variables. Those two
+variables are read-only
 strategy-mode `series int` values for the current long-only broker:
 `strategy.closedtrades` counts closed trades recorded by broker state, and
 `strategy.opentrades` is `1` while the supported long position is open and `0`
 when flat. They do not expose trade details or namespace functions. Phase M
 and Phase N keep pending-order records, partial fill fields, and exit reason
-fields outside the public output model, and Phase R keeps that public contract
-unchanged for brackets. Diagnostics should describe the current strategy
-subset, not old phase names.
+fields outside the public output model, and Phases R and S keep that public
+contract unchanged for brackets and trailing exits. Diagnostics should describe
+the current strategy subset, not old phase names.
 
 `indicator(...)` and `strategy(...)` declarations are mutually exclusive and
 must be top-level. Declaration calls inside functions or local blocks are
