@@ -500,6 +500,78 @@ if bar_index == 0
 }
 
 #[test]
+fn strategy_exit_qty_single_trigger_forms_dispatch_partial_quantity() {
+    for (name, exit_call, high, low, expected_price) in [
+        (
+            "stop",
+            r#"strategy.exit("XQ", "L", stop=95, qty=0.75)"#,
+            100.0,
+            94.0,
+            95.0,
+        ),
+        (
+            "limit",
+            r#"strategy.exit("XQ", "L", limit=110, qty=0.75)"#,
+            111.0,
+            100.0,
+            110.0,
+        ),
+        (
+            "profit",
+            r#"strategy.exit("XQ", "L", profit=1000, qty=0.75)"#,
+            111.0,
+            100.0,
+            110.0,
+        ),
+        (
+            "loss",
+            r#"strategy.exit("XQ", "L", loss=500, qty=0.75)"#,
+            100.0,
+            94.0,
+            95.0,
+        ),
+    ] {
+        let source = SourceFile::new(
+            format!("strategy_exit_qty_{name}.pine"),
+            format!(
+                r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    {exit_call}
+"#
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{name}: {:?}",
+            analysis.diagnostics
+        );
+
+        let result = run_historical(
+            &analysis.hir.expect("HIR"),
+            &[
+                bar_ohlc(100.0, 100.0, 100.0, 100.0),
+                bar_ohlc(100.0, high, low, 100.0),
+            ],
+        )
+        .expect("runtime result");
+        let strategy = result.strategy.expect("strategy output");
+
+        assert_eq!(strategy.orders.len(), 2, "{name}");
+        assert_eq!(strategy.orders[1].id, "XQ", "{name}");
+        assert_eq!(strategy.orders[1].qty, 0.75, "{name}");
+        assert_eq!(strategy.orders[1].price, expected_price, "{name}");
+        assert_eq!(strategy.trades.len(), 1, "{name}");
+        assert_eq!(strategy.trades[0].qty, 0.75, "{name}");
+        assert_eq!(strategy.trades[0].exit_price, expected_price, "{name}");
+        assert_eq!(strategy.position[1].size, 1.25, "{name}");
+        assert_eq!(strategy.position[1].avg_price, Some(100.0), "{name}");
+        assert!(strategy.diagnostics.is_empty(), "{name}");
+    }
+}
+
+#[test]
 fn strategy_exit_stop_not_reached_keeps_position_open() {
     let source = SourceFile::new(
         "strategy.pine",
@@ -913,6 +985,117 @@ if bar_index == 0
 }
 
 #[test]
+fn strategy_exit_qty_bracket_forms_dispatch_partial_quantity() {
+    for (name, exit_call, high, low, expected_price) in [
+        (
+            "stop_limit",
+            r#"strategy.exit("BQ", "L", stop=95, limit=110, qty=0.5)"#,
+            111.0,
+            100.0,
+            110.0,
+        ),
+        (
+            "stop_profit",
+            r#"strategy.exit("BQ", "L", stop=95, profit=1000, qty=0.5)"#,
+            111.0,
+            100.0,
+            110.0,
+        ),
+        (
+            "loss_limit",
+            r#"strategy.exit("BQ", "L", loss=500, limit=110, qty=0.5)"#,
+            111.0,
+            94.0,
+            95.0,
+        ),
+        (
+            "loss_profit",
+            r#"strategy.exit("BQ", "L", loss=500, profit=1000, qty=0.5)"#,
+            111.0,
+            94.0,
+            95.0,
+        ),
+    ] {
+        let source = SourceFile::new(
+            format!("strategy_exit_qty_bracket_{name}.pine"),
+            format!(
+                r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    {exit_call}
+"#
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{name}: {:?}",
+            analysis.diagnostics
+        );
+
+        let result = run_historical(
+            &analysis.hir.expect("HIR"),
+            &[
+                bar_ohlc(100.0, 100.0, 100.0, 100.0),
+                bar_ohlc(100.0, high, low, 100.0),
+            ],
+        )
+        .expect("runtime result");
+        let strategy = result.strategy.expect("strategy output");
+
+        assert_eq!(strategy.orders.len(), 2, "{name}");
+        assert_eq!(strategy.orders[1].id, "BQ", "{name}");
+        assert_eq!(strategy.orders[1].qty, 0.5, "{name}");
+        assert_eq!(strategy.orders[1].price, expected_price, "{name}");
+        assert_eq!(strategy.trades.len(), 1, "{name}");
+        assert_eq!(strategy.trades[0].qty, 0.5, "{name}");
+        assert_eq!(strategy.trades[0].exit_price, expected_price, "{name}");
+        assert_eq!(strategy.position[1].size, 1.5, "{name}");
+        assert!(strategy.diagnostics.is_empty(), "{name}");
+    }
+}
+
+#[test]
+fn strategy_exit_qty_trailing_dispatches_partial_quantity() {
+    let source = SourceFile::new(
+        "strategy_exit_qty_trailing.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("TQ", "L", trail_points=100, trail_offset=50, qty=0.5)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(100.0, 100.0, 100.0, 100.0),
+            bar_ohlc(100.0, 102.0, 101.75, 102.0),
+            bar_ohlc(102.0, 102.0, 101.0, 101.25),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "TQ");
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].qty, 0.5);
+    assert_eq!(strategy.orders[1].price, 101.5);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].qty, 0.5);
+    assert_eq!(strategy.trades[0].exit_price, 101.5);
+    assert_eq!(strategy.position[1].size, 1.5);
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
 fn strategy_exit_bracket_invalid_downside_price_preempts_upside_tick_diagnostic() {
     let source = SourceFile::new(
         "strategy_exit_bracket_invalid_order.pine",
@@ -976,6 +1159,47 @@ if bar_index == 1
     assert_eq!(strategy.trades[0].exit_price, 120.0);
     assert_eq!(strategy.diagnostics.len(), 1);
     assert_eq!(strategy.diagnostics[0].code, "E_STRATEGY_EXIT_TICKS");
+}
+
+#[test]
+fn strategy_exit_invalid_qty_preserves_existing_pending_exit() {
+    let source = SourceFile::new(
+        "strategy_exit_invalid_qty_preserves_pending.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("KEEP", "L", limit=120)
+if bar_index == 1
+    strategy.exit("BAD", "L", stop=95, qty=0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(100.0, 100.0, 100.0, 100.0),
+            bar_ohlc(100.0, 110.0, 100.0, 100.0),
+            bar_ohlc(100.0, 121.0, 94.0, 100.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "KEEP");
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].qty, 2.0);
+    assert_eq!(strategy.orders[1].price, 120.0);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].exit_price, 120.0);
+    assert_eq!(strategy.diagnostics.len(), 1);
+    assert_eq!(strategy.diagnostics[0].code, "E_STRATEGY_EXIT_QTY");
 }
 
 #[test]

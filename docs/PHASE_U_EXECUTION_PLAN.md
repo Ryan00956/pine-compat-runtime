@@ -1,6 +1,6 @@
 # Phase U Strategy Exit Partial Quantity Execution Plan
 
-Status: in progress; Slice 3 partial fill accounting is complete.
+Status: in progress; Slice 4 atomic `qty` semantic and runtime support is complete.
 
 Phase U should widen only the current `strategy.exit` quantity surface. It must
 not become a broader broker-simulation phase. The target is a deterministic,
@@ -613,6 +613,37 @@ cargo test -p pine-runtime strategy_exit
 cargo test -p pine-sema strategy_exit
 ```
 
+Slice 4 decision record, 2026-05-31:
+
+- `strategy.exit(..., qty=...)` is now a supported semantic shape only for the
+  trigger families already supported before Phase U: single stop, limit,
+  profit, and loss exits; one-downside/one-upside brackets; and trailing
+  `trail_price + trail_offset` or `trail_points + trail_offset`.
+- `qty` is accepted by the builtin signature and semantic shape validator, but
+  it is not const-validated in the analyzer. Runtime evaluates it exactly once
+  at placement time after `id` and `from_entry`.
+- Runtime dispatch routes `qty` through fixed-quantity broker placement helpers
+  for every supported single, bracket, and trailing exit shape. Omitting `qty`
+  keeps the existing full-position placement helpers.
+- Invalid runtime quantities use `E_STRATEGY_EXIT_QTY` and preserve any
+  existing pending exit. Existing price, tick-distance, trailing, flat-state,
+  and mismatched-entry diagnostics remain broker-owned.
+- `qty_percent` remains semantic-diagnostic-only unsupported. Calls that use
+  `qty` with unsupported trigger families, invalid trailing combinations, or no
+  trigger still fail semantic shape validation instead of reaching runtime.
+- Positive semantic fixtures now cover stop, bracket, and trailing exits with
+  `qty`. Targeted runtime unit tests cover all supported single-trigger and
+  bracket quantity dispatch paths, trailing quantity dispatch, and invalid
+  quantity preservation.
+
+Verification:
+
+```text
+cargo test -p pine-builtins strategy
+cargo test -p pine-sema strategy_exit
+cargo test -p pine-runtime strategy_exit
+```
+
 ## Slice 5: Runtime Fixtures, Golden Snapshots, And Incremental Parity
 
 Goal: cover the public behavior of partial `qty` exits through the same fixture
@@ -900,7 +931,7 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
 
 - [x] Slice 0 confirms Phase U is a partial quantity phase, not a reservation
       or multiple-pending-exit phase.
-- [ ] `qty` remains diagnostic-only until the same slice opens analyzer support
+- [x] `qty` remains diagnostic-only until the same slice opens analyzer support
       and runtime dispatch.
 - [x] Slice 1 records quantity diagnostic guardrails without opening analyzer or
       runtime support.
@@ -908,11 +939,11 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
       remains closed.
 - [x] Slice 3 implements partial fill accounting behind the still-closed
       analyzer gate.
-- [ ] `strategy.exit(..., qty=...)` analyzes for every selected supported
+- [x] `strategy.exit(..., qty=...)` analyzes for every selected supported
       trigger family.
-- [ ] `qty_percent` is either implemented with full evidence or remains
+- [x] `qty_percent` is either implemented with full evidence or remains
       fixture-backed unsupported.
-- [ ] Unsupported trigger shapes with `qty` remain diagnostic-only.
+- [x] Unsupported trigger shapes with `qty` remain diagnostic-only.
 - [ ] Indicator scripts, UDF side effects, and requested-context strategy order
       calls remain rejected.
 - [x] Pending exit identity includes quantity.

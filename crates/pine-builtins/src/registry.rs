@@ -163,6 +163,12 @@ mod tests {
             signature.params[8].accepts,
             crate::Accepts::SeriesOrSimpleNumeric
         );
+        assert_eq!(signature.params[9].name, "qty");
+        assert!(signature.params[9].optional);
+        assert_eq!(
+            signature.params[9].accepts,
+            crate::Accepts::SeriesOrSimpleNumeric
+        );
         assert!(!signature.variadic);
     }
 }

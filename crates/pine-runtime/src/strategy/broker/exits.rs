@@ -9,7 +9,6 @@ pub(super) enum PendingExitTrigger {
     Trailing(PendingTrailingExit),
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(super) enum PendingExitQuantity {
     Full,
@@ -104,7 +103,6 @@ impl BrokerState {
         );
     }
 
-    #[cfg(test)]
     pub(crate) fn place_exit_stop_qty(
         &mut self,
         id: String,
@@ -155,7 +153,6 @@ impl BrokerState {
         );
     }
 
-    #[cfg(test)]
     pub(crate) fn place_exit_limit_qty(
         &mut self,
         id: String,
@@ -208,7 +205,6 @@ impl BrokerState {
         );
     }
 
-    #[cfg(test)]
     pub(crate) fn place_exit_profit_ticks_qty(
         &mut self,
         id: String,
@@ -267,7 +263,6 @@ impl BrokerState {
         );
     }
 
-    #[cfg(test)]
     pub(crate) fn place_exit_loss_ticks_qty(
         &mut self,
         id: String,
@@ -326,7 +321,6 @@ impl BrokerState {
         );
     }
 
-    #[cfg(test)]
     pub(crate) fn place_exit_bracket_qty(
         &mut self,
         id: String,
@@ -387,7 +381,6 @@ impl BrokerState {
         );
     }
 
-    #[cfg(test)]
     pub(crate) fn place_exit_trail_price_qty(
         &mut self,
         id: String,
@@ -452,7 +445,6 @@ impl BrokerState {
         );
     }
 
-    #[cfg(test)]
     pub(crate) fn place_exit_trail_points_qty(
         &mut self,
         id: String,

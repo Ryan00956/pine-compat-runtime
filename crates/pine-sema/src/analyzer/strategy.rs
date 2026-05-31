@@ -21,6 +21,7 @@ enum StrategyExitArgFamily {
     UpsideTickTrigger,
     TrailingActivation,
     TrailingOffset,
+    Quantity,
     UnsupportedOption,
 }
 
@@ -33,7 +34,8 @@ fn strategy_exit_arg_family(name: &str) -> Option<StrategyExitArgFamily> {
         "profit" => Some(StrategyExitArgFamily::UpsideTickTrigger),
         "trail_price" | "trail_points" => Some(StrategyExitArgFamily::TrailingActivation),
         "trail_offset" => Some(StrategyExitArgFamily::TrailingOffset),
-        "qty" | "qty_percent" | "oca_name" | "comment" | "alert_message" => {
+        "qty" => Some(StrategyExitArgFamily::Quantity),
+        "qty_percent" | "oca_name" | "comment" | "alert_message" => {
             Some(StrategyExitArgFamily::UnsupportedOption)
         }
         _ => None,
@@ -326,6 +328,7 @@ impl Analyzer {
                     }
                 }
                 StrategyExitArgFamily::TrailingOffset => has_trail_offset = true,
+                StrategyExitArgFamily::Quantity => {}
                 StrategyExitArgFamily::UnsupportedOption => {
                     has_unsupported_arg = true;
                     self.diagnostics.push(Diagnostic::error(
