@@ -35,6 +35,9 @@ fn runtime_fixtures_match_incremental_append_execution() {
     let strategy_exit_bracket_both_hit_bars = load_bars(&workspace_fixture(
         "tests/fixtures/runtime/strategy_exit_bracket_both_hit_bars.csv",
     ));
+    let trailing_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_exit_trailing_bars.csv",
+    ));
     let mut checked = 0;
 
     for entry in fs::read_dir(&fixtures_dir).expect("runtime fixture dir should be readable") {
@@ -68,6 +71,7 @@ fn runtime_fixtures_match_incremental_append_execution() {
                 &strategy_exit_bracket_replacement_bars
             }
             Some("strategy_exit_bracket_both_hit.pine") => &strategy_exit_bracket_both_hit_bars,
+            Some("strategy_exit_qty_trailing_partial.pine") => &trailing_bars,
             _ => &default_bars,
         };
 

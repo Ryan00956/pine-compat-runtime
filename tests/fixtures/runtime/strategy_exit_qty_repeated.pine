@@ -1,0 +1,9 @@
+//@version=5
+strategy("Exit qty repeated")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XQ", "L", limit=2, qty=0.5)
+if bar_index == 1
+    strategy.exit("XQ", "L", limit=2, qty=0.5)
+plot(strategy.position_size)
+plot(strategy.netprofit)

@@ -1,6 +1,6 @@
 # Phase U Strategy Exit Partial Quantity Execution Plan
 
-Status: in progress; Slice 4 atomic `qty` semantic and runtime support is complete.
+Status: in progress; Slice 5 runtime fixture, snapshot, and incremental parity is complete.
 
 Phase U should widen only the current `strategy.exit` quantity surface. It must
 not become a broader broker-simulation phase. The target is a deterministic,
@@ -709,6 +709,34 @@ cargo test -p pine-runtime --test incremental
 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
 ```
 
+Slice 5 decision record, 2026-05-31:
+
+- Runtime fixtures now cover partial `qty` stop, limit, bracket, and trailing
+  fills through the public fixture/snapshot pipeline.
+- Additional runtime fixtures cover over-sized `qty` clamping to a full close,
+  repeated identical quantity preserving pending-exit eligibility, changed
+  quantity replacing the pending exit, and strategy state variables after a
+  partial fill followed by a final close.
+- The new golden snapshots show partial order and trade quantities, remaining
+  position snapshots with unchanged average price, equity after realized and
+  open profit split, and unchanged top-level runtime keys with
+  `schemaVersion: 3`.
+- Incremental append parity covers the new fixtures. The partial trailing
+  fixture reuses the existing trailing OHLC CSV so activation, ratchet, and
+  later fill timing remain aligned with the established trailing tests.
+- No profile-specific fixture was added because Slice 5 did not introduce a
+  new profile storage contract beyond the existing strategy state and output
+  vectors.
+
+Verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-runtime --test incremental
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+```
+
 ## Slice 6: CLI, Python, And WASM Host Parity
 
 Goal: prove partial-exit results are host-neutral and require no binding-level
@@ -949,17 +977,17 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
 - [x] Pending exit identity includes quantity.
 - [x] Invalid `qty` values produce stable runtime diagnostics and do not
       replace existing pending exits.
-- [ ] Full exits without `qty` keep existing behavior and snapshots.
+- [x] Full exits without `qty` keep existing behavior and snapshots.
 - [x] Partial fills record partial order and trade quantities.
 - [x] Partial fills reduce remaining long position size and preserve average
       price.
 - [x] Quantity larger than the current position closes the full position.
-- [ ] Strategy state variables behave correctly after partial fills.
-- [ ] Incremental append execution matches full historical execution for new
+- [x] Strategy state variables behave correctly after partial fills.
+- [x] Incremental append execution matches full historical execution for new
       fixtures.
 - [ ] CLI, Python, and WASM host tests cover one representative partial exit.
-- [ ] Runtime output remains `schemaVersion: 3`.
-- [ ] Public strategy result keys and item shapes remain unchanged.
+- [x] Runtime output remains `schemaVersion: 3`.
+- [x] Public strategy result keys and item shapes remain unchanged.
 - [ ] `tests/fixtures/conformance.tsv` and `tests/snapshots/matrix.json` agree
       with the implemented subset.
 - [ ] Maintainer docs and release notes describe the supported quantity subset

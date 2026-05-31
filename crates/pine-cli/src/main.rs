@@ -741,6 +741,38 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_trailing_state.pine",
             ),
             (
+                "runtime_strategy_exit_qty_stop_partial.json",
+                "tests/fixtures/runtime/strategy_exit_qty_stop_partial.pine",
+            ),
+            (
+                "runtime_strategy_exit_qty_limit_partial.json",
+                "tests/fixtures/runtime/strategy_exit_qty_limit_partial.pine",
+            ),
+            (
+                "runtime_strategy_exit_qty_bracket_partial.json",
+                "tests/fixtures/runtime/strategy_exit_qty_bracket_partial.pine",
+            ),
+            (
+                "runtime_strategy_exit_qty_trailing_partial.json",
+                "tests/fixtures/runtime/strategy_exit_qty_trailing_partial.pine",
+            ),
+            (
+                "runtime_strategy_exit_qty_full_clamp.json",
+                "tests/fixtures/runtime/strategy_exit_qty_full_clamp.pine",
+            ),
+            (
+                "runtime_strategy_exit_qty_repeated.json",
+                "tests/fixtures/runtime/strategy_exit_qty_repeated.pine",
+            ),
+            (
+                "runtime_strategy_exit_qty_replacement.json",
+                "tests/fixtures/runtime/strategy_exit_qty_replacement.pine",
+            ),
+            (
+                "runtime_strategy_exit_qty_state.json",
+                "tests/fixtures/runtime/strategy_exit_qty_state.pine",
+            ),
+            (
                 "runtime_strategy_equity.json",
                 "tests/fixtures/runtime/strategy_equity.pine",
             ),
@@ -859,7 +891,8 @@ mod tests {
             | "tests/fixtures/runtime/strategy_exit_trailing_invalid.pine"
             | "tests/fixtures/runtime/strategy_exit_trailing_close_cancel.pine"
             | "tests/fixtures/runtime/strategy_exit_trailing_interactions.pine"
-            | "tests/fixtures/runtime/strategy_exit_trailing_state.pine" => {
+            | "tests/fixtures/runtime/strategy_exit_trailing_state.pine"
+            | "tests/fixtures/runtime/strategy_exit_qty_trailing_partial.pine" => {
                 include_str!("../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv")
             }
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
