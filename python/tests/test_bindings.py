@@ -492,6 +492,61 @@ def test_run_script_returns_strategy_exit_loss_trade_contract():
     }
 
 
+def test_run_script_returns_strategy_exit_bracket_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_bracket_both_hit.pine").read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_exit_bracket_both_hit_bars.csv"),
+    )
+
+    assert result["plots"][0]["values"] == [2.0, 2.0, 0.0, 0.0]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 0,
+            "time": 1,
+            "direction": "strategy.long",
+            "qty": 2.0,
+            "price": 100.0,
+        },
+        {
+            "id": "XB",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.exit",
+            "qty": 2.0,
+            "price": 95.0,
+        },
+    ]
+    assert [order["direction"] for order in result["strategy"]["orders"]].count(
+        "strategy.exit"
+    ) == 1
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 0,
+            "exitBarIndex": 1,
+            "entryTime": 1,
+            "exitTime": 2,
+            "entryPrice": 100.0,
+            "exitPrice": 95.0,
+            "qty": 2.0,
+            "profit": -10.0,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 0, "size": 2.0, "avgPrice": 100.0},
+        {"barIndex": 1, "size": 0.0, "avgPrice": None},
+    ]
+    assert result["strategy"]["equity"][-1] == {
+        "barIndex": 3,
+        "cash": 99990.0,
+        "marketValue": 0.0,
+        "equity": 99990.0,
+        "netProfit": -10.0,
+    }
+
+
 def test_run_script_returns_strategy_runtime_diagnostics():
     result = pine_compat.run_script(
         'strategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',

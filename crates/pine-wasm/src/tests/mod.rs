@@ -223,6 +223,26 @@ fn runs_strategy_exit_loss_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_bracket_fixture_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_bracket_both_hit.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_bracket_both_hit_bars.csv"),
+    )
+    .expect("strategy exit bracket fixture should run");
+
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":100},{\"id\":\"XB\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":95}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":1,\"exitTime\":2,\"entryPrice\":100,\"exitPrice\":95,\"qty\":2,\"profit\":-10}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":100},{\"barIndex\":1,\"size\":0,\"avgPrice\":null}]"
+    ));
+}
+
+#[test]
 fn request_host_data_is_documented_wasm_gap() {
     let message = run_script_csv_internal(
         "indicator(\"request\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
