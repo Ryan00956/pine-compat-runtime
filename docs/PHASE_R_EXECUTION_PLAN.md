@@ -1,10 +1,9 @@
 # Phase R Strategy Exit Bracket Implementation Execution Plan
 
-Status: open. Use `docs/PHASE_Q_AUDIT.md` as the design-gate decision record,
-`docs/PHASE_P_AUDIT.md` as the broker-structure baseline, `docs/PHASE_N_AUDIT.md`
-as the profit/loss tick-exit baseline, and `docs/PHASE_M_AUDIT.md` as the
-stop/limit pending-exit baseline. When Phase R closes, record the closeout in a
-new `docs/PHASE_R_AUDIT.md`.
+Status: closed. Closeout is recorded in `docs/PHASE_R_AUDIT.md`. This plan is
+kept as the implementation playbook used to turn `docs/PHASE_Q_AUDIT.md` into
+the first positive bracket subset on top of the `docs/PHASE_P_AUDIT.md`,
+`docs/PHASE_N_AUDIT.md`, and `docs/PHASE_M_AUDIT.md` baselines.
 
 Phase R turns the Phase Q bracket design gate into the first positive
 `strategy.exit` bracket subset. It implements exactly one downside leg plus one

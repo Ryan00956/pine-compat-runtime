@@ -170,12 +170,14 @@ Strategy execution is owned by `pine-runtime::strategy`. `BrokerState` remains
 the runtime facade used by historical execution, runtime built-ins, strategy
 variable reads, and public result projection. Broker internals are split under
 `pine-runtime::strategy::broker`: pending-exit identity, trigger conversion,
-and placement live in `exits`; close/fill trade construction and position reset
-live in `fills`; equity, profit, position, and trade-count accessors live in
-`accounting`; broker-focused unit tests live in `tests`. Public strategy result
-structs remain in `pine-runtime::output::strategy`, and host bindings continue
-to map the shared runtime result without owning broker transitions. Phase Q
-records the future bracket implementation blueprint inside these ownership
+single-trigger and bracket placement live in `exits`; pending-exit evaluation,
+including stop/loss-first bracket both-hit selection, stays in the broker
+facade; close/fill trade construction and position reset live in `fills`;
+equity, profit, position, and trade-count accessors live in `accounting`;
+broker-focused unit tests live in `tests`. Public strategy result structs
+remain in `pine-runtime::output::strategy`, and host bindings continue to map
+the shared runtime result without owning broker transitions. Phase R implements
+the first one-downside/one-upside bracket subset inside these ownership
 boundaries; it does not move broker behavior into built-in signatures, output
 structs, Python, or WASM.
 

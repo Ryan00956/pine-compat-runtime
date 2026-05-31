@@ -753,14 +753,53 @@ Out of scope until a later behavior phase:
   pending exits, pyramiding, short exposure, trailing stops, commission,
   slippage, margin, strategy alerts, and realtime broker rollback.
 
+## Phase R: Strategy Exit Bracket Implementation
+
+Goal: turn the Phase Q design gate into the first positive
+`strategy.exit` bracket subset without changing the public strategy output
+schema.
+
+Status: closed for the current fixture-backed subset. Execution playbook:
+`docs/PHASE_R_EXECUTION_PLAN.md`; closeout audit:
+`docs/PHASE_R_AUDIT.md`.
+
+Closed scope:
+
+- Strategy-mode-only brackets with exactly one downside leg plus one upside leg
+  for the current one-net-long, no-pyramiding broker.
+- Supported bracket forms are `stop + limit`, `stop + profit`, `loss + limit`,
+  and `loss + profit`.
+- A bracket is one broker-owned pending full-position exit; filling either leg
+  cancels the other leg.
+- Later-bar fills use `low <= stop/loss price` or
+  `high >= limit/profit price`. If both legs are touched on the same eligible
+  historical bar, the stop/loss side fills first.
+- Filled brackets emit exactly one `strategy.exit` order event, one closed
+  trade under the source entry id, normal position/equity snapshots, and no
+  public pending-order, bracket-leg, exit-reason, or schema changes.
+- Semantic, runtime, incremental, CLI, Python, WASM, conformance, and docs
+  coverage are fixture-backed.
+
+Out of scope until separately designed:
+
+- Same-side pairs `stop + loss` and `limit + profit`, and 3+ trigger forms.
+- Trailing stops.
+- Partial exits, `qty`, `qty_percent`, and reservation behavior.
+- Missing-entry pre-placement.
+- Multiple entries, pyramiding, short exposure, and reversals.
+- Multiple pending exits and public pending-order records.
+- Commission, slippage, margin, richer sizing, strategy alerts, and realtime
+  broker rollback for brackets.
+
 ## Backlog Priority
 
 Recommended order from the current state:
 
-1. Use a future small positive bracket implementation phase only if it follows
-   the Phase Q decision record and fixture plan. Combined trigger exits remain
-   unsupported until that future phase lands semantic, runtime, incremental,
-   host, conformance, and closeout evidence.
+1. Keep strategy maintenance narrow and fixture-backed. The next strategy work
+   should target one deferred Phase R broker tail at a time, such as trailing
+   stops, partial exits, missing-entry pre-placement, multiple pending exits,
+   or short/pyramiding behavior, with semantic, runtime, incremental, host,
+   conformance, and closeout evidence before any compatibility claim widens.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an

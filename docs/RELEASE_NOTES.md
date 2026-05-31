@@ -2,12 +2,21 @@
 
 ## Unreleased
 
-- Closed Phase Q as a `strategy.exit` bracket design gate. Combined trigger
-  exits remain unsupported, but the audit now records the future one-downside
-  plus one-upside bracket subset, stop/loss-first same-bar precedence,
-  identity/replacement rules, invalid-leg behavior, fixture plan, and module
-  implementation blueprint, with the full release verification gate passing on
-  the closeout workspace.
+- Closed Phase R for the first positive `strategy.exit` bracket subset.
+  Supported brackets are exactly `stop + limit`, `stop + profit`,
+  `loss + limit`, and `loss + profit` for the current long-only,
+  no-pyramiding broker. A bracket is one pending full-position exit, uses
+  stop/loss-first precedence when both legs are touched on the same eligible
+  historical bar, emits one `strategy.exit` order event and one closed trade,
+  keeps runtime `schemaVersion: 3`, and leaves same-side pairs, 3+ triggers,
+  trailing stops, partial exits, missing-entry pre-placement, and richer broker
+  behavior unsupported.
+- Closed Phase Q as a `strategy.exit` bracket design gate. At Phase Q close,
+  combined trigger exits remained unsupported, and the audit recorded the
+  future one-downside plus one-upside bracket subset, stop/loss-first same-bar
+  precedence, identity/replacement rules, invalid-leg behavior, fixture plan,
+  and module implementation blueprint, with the full release verification gate
+  passing on the closeout workspace.
 - Hardened `strategy.exit` unsupported diagnostics to use phase-neutral
   current-subset wording and added a diagnostic-only four-trigger
   `stop + limit + profit + loss` fixture, with conformance and matrix metadata
@@ -17,10 +26,10 @@
   modules while preserving the existing strategy compatibility surface, public
   runtime `schemaVersion: 3`, CLI/Python/WASM output shapes, and runtime
   snapshots.
-- Recorded the next strategy maintenance target as a bracket design gate only.
-  Combined trigger exits remain unsupported until same-bar precedence, bracket
-  identity, and interaction with the current one-pending-exit model are
-  specified.
+- Recorded Phase Q as the next strategy maintenance target after Phase P:
+  a bracket design gate to specify same-bar precedence, bracket identity, and
+  interaction with the current one-pending-exit model before any later support
+  claim.
 - Closed Phase O for the current fixture-backed strategy reporting count
   subset. The audit records supported `strategy.closedtrades` and
   `strategy.opentrades` count variables, explicit unsupported reporting
