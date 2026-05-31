@@ -424,6 +424,95 @@ fn pending_limit_fills_on_later_crossing_bar() {
 }
 
 #[test]
+fn pending_stop_partial_quantity_reduces_position() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("XL".to_owned(), "L".to_owned(), 95.0, 0.75, 0);
+
+    broker.evaluate_pending_exits(1, 20, 100.0, 94.0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.orders[1].qty, 0.75);
+    assert_eq!(broker.trades[0].qty, 0.75);
+    assert_eq!(broker.trades[0].profit, -3.75);
+    assert_eq!(broker.position_size, 1.25);
+    assert_eq!(broker.avg_price, 100.0);
+    assert_eq!(broker.entry_id.as_deref(), Some("L"));
+    assert_eq!(broker.entry_bar_index, Some(0));
+    assert_eq!(broker.entry_time, Some(10));
+    assert_eq!(broker.position.last().unwrap().size, 1.25);
+    assert_eq!(broker.position.last().unwrap().avg_price, Some(100.0));
+    assert_eq!(broker.open_trade_count(), 1);
+    assert_eq!(broker.closed_trade_count(), 1);
+}
+
+#[test]
+fn pending_limit_partial_quantity_reduces_position() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit_qty("XL".to_owned(), "L".to_owned(), 110.0, 0.5, 0);
+
+    broker.evaluate_pending_exits(1, 20, 111.0, 100.0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.orders[1].qty, 0.5);
+    assert_eq!(broker.trades[0].qty, 0.5);
+    assert_eq!(broker.trades[0].profit, 5.0);
+    assert_eq!(broker.position_size, 1.5);
+    assert_eq!(broker.position.last().unwrap().avg_price, Some(100.0));
+}
+
+#[test]
+fn fixed_quantity_larger_than_position_closes_full_position() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit_qty("XL".to_owned(), "L".to_owned(), 110.0, 5.0, 0);
+
+    broker.evaluate_pending_exits(1, 20, 111.0, 100.0);
+
+    assert_eq!(broker.orders[1].qty, 2.0);
+    assert_eq!(broker.trades[0].qty, 2.0);
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.avg_price, 0.0);
+    assert_eq!(broker.entry_id, None);
+    assert_eq!(broker.open_trade_count(), 0);
+    assert_eq!(broker.position.last().unwrap().avg_price, None);
+}
+
+#[test]
+fn partial_fill_then_final_exit_closes_open_trade_count() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("X1".to_owned(), "L".to_owned(), 95.0, 0.5, 0);
+    broker.evaluate_pending_exits(1, 20, 100.0, 94.0);
+
+    assert_eq!(broker.open_trade_count(), 1);
+    assert_eq!(broker.closed_trade_count(), 1);
+
+    broker.place_exit_limit("X2".to_owned(), "L".to_owned(), 110.0, 2);
+    broker.evaluate_pending_exits(3, 40, 111.0, 100.0);
+
+    assert_eq!(broker.open_trade_count(), 0);
+    assert_eq!(broker.closed_trade_count(), 2);
+    assert_eq!(broker.trades[1].qty, 1.5);
+    assert_eq!(broker.trades[1].profit, 15.0);
+}
+
+#[test]
+fn partial_fill_splits_realized_and_open_profit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit_qty("XL".to_owned(), "L".to_owned(), 110.0, 0.5, 0);
+    broker.evaluate_pending_exits(1, 20, 111.0, 100.0);
+
+    assert_eq!(broker.realized_profit(), 5.0);
+    assert_eq!(broker.open_profit(106.0), 9.0);
+    assert_eq!(broker.equity_value(106.0), 100_014.0);
+
+    broker.record_equity(1, 106.0);
+    let equity = broker.equity.last().unwrap();
+    assert_eq!(equity.cash, 99_855.0);
+    assert_eq!(equity.market_value, 159.0);
+    assert_eq!(equity.equity, 100_014.0);
+    assert_eq!(equity.net_profit, 14.0);
+}
+
+#[test]
 fn profit_ticks_create_limit_from_average_entry_price() {
     let mut broker = broker_with_long_entry();
 

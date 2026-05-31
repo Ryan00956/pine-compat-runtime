@@ -1,4 +1,7 @@
-use super::{BrokerState, exits::PendingExit};
+use super::{
+    BrokerState,
+    exits::{PendingExit, PendingExitQuantity},
+};
 use crate::{RuntimeDiagnostic, StrategyOrderEvent, StrategyPositionSnapshot, StrategyTrade};
 
 impl BrokerState {
@@ -51,7 +54,17 @@ impl BrokerState {
         time: i64,
         exit_price: f64,
     ) {
-        let qty = self.position_size;
+        let qty = match pending_exit.quantity {
+            PendingExitQuantity::Full => self.position_size,
+            PendingExitQuantity::Fixed(requested_qty) => requested_qty.min(self.position_size),
+        };
+        if !qty.is_finite() || qty <= 0.0 {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_EXIT_QTY".to_owned(),
+                message: "`strategy.exit` quantity must be finite and positive".to_owned(),
+            });
+            return;
+        }
         let entry_price = self.avg_price;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
@@ -77,16 +90,26 @@ impl BrokerState {
         });
 
         self.cash += qty * exit_price;
-        self.position_size = 0.0;
-        self.avg_price = 0.0;
-        self.entry_id = None;
-        self.entry_bar_index = None;
-        self.entry_time = None;
         self.pending_exit = None;
+        if qty >= self.position_size {
+            self.position_size = 0.0;
+            self.avg_price = 0.0;
+            self.entry_id = None;
+            self.entry_bar_index = None;
+            self.entry_time = None;
+            self.position.push(StrategyPositionSnapshot {
+                bar_index,
+                size: 0.0,
+                avg_price: None,
+            });
+            return;
+        }
+
+        self.position_size -= qty;
         self.position.push(StrategyPositionSnapshot {
             bar_index,
-            size: 0.0,
-            avg_price: None,
+            size: self.position_size,
+            avg_price: Some(self.avg_price),
         });
     }
 }

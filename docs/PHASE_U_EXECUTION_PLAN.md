@@ -1,6 +1,6 @@
 # Phase U Strategy Exit Partial Quantity Execution Plan
 
-Status: in progress; Slice 2 broker pending quantity model is complete.
+Status: in progress; Slice 3 partial fill accounting is complete.
 
 Phase U should widen only the current `strategy.exit` quantity surface. It must
 not become a broader broker-simulation phase. The target is a deterministic,
@@ -524,6 +524,19 @@ Exit criteria:
 - Analyzer still rejects user-script `strategy.exit(..., qty=...)` forms until
   Slice 4 opens the semantic and runtime path together.
 
+Slice 3 decision record, 2026-05-31:
+
+- Pending full exits keep the existing full-position reset behavior.
+- Pending fixed-quantity exits close `min(requested_qty, position_size)`.
+- Partial fills record the closed quantity in the existing order and trade
+  `qty` fields, realize profit only for that quantity, reduce live
+  `position_size`, preserve `avg_price` and entry identity, emit a remaining
+  position snapshot, and clear the filled pending exit.
+- Fixed quantities greater than the current position size clamp to a full close.
+- Broker accounting accessors now split realized and open profit after partial
+  fills while keeping open trade count at `1` until the final remaining position
+  closes.
+
 Verification:
 
 ```text
@@ -893,6 +906,8 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
       runtime support.
 - [x] Slice 2 adds internal pending-exit quantity intent while analyzer support
       remains closed.
+- [x] Slice 3 implements partial fill accounting behind the still-closed
+      analyzer gate.
 - [ ] `strategy.exit(..., qty=...)` analyzes for every selected supported
       trigger family.
 - [ ] `qty_percent` is either implemented with full evidence or remains
@@ -904,10 +919,10 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
 - [x] Invalid `qty` values produce stable runtime diagnostics and do not
       replace existing pending exits.
 - [ ] Full exits without `qty` keep existing behavior and snapshots.
-- [ ] Partial fills record partial order and trade quantities.
-- [ ] Partial fills reduce remaining long position size and preserve average
+- [x] Partial fills record partial order and trade quantities.
+- [x] Partial fills reduce remaining long position size and preserve average
       price.
-- [ ] Quantity larger than the current position closes the full position.
+- [x] Quantity larger than the current position closes the full position.
 - [ ] Strategy state variables behave correctly after partial fills.
 - [ ] Incremental append execution matches full historical execution for new
       fixtures.
