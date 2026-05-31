@@ -547,6 +547,53 @@ def test_run_script_returns_strategy_exit_bracket_fixture_contract():
     }
 
 
+def test_run_script_returns_strategy_exit_trailing_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_trail_price_fill.pine").read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
+    )
+
+    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
+    assert result["schemaVersion"] == 3
+    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 0,
+            "time": 1,
+            "direction": "strategy.long",
+            "qty": 2.0,
+            "price": 1.0,
+        },
+        {
+            "id": "XT",
+            "barIndex": 3,
+            "time": 4,
+            "direction": "strategy.exit",
+            "qty": 2.0,
+            "price": 3.5,
+        },
+    ]
+    assert [order["direction"] for order in result["strategy"]["orders"]].count(
+        "strategy.exit"
+    ) == 1
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 0,
+            "exitBarIndex": 3,
+            "entryTime": 1,
+            "exitTime": 4,
+            "entryPrice": 1.0,
+            "exitPrice": 3.5,
+            "qty": 2.0,
+            "profit": 5.0,
+        }
+    ]
+    assert result["strategy"]["diagnostics"] == []
+
+
 def test_run_script_returns_strategy_runtime_diagnostics():
     result = pine_compat.run_script(
         'strategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',

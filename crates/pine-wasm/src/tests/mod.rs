@@ -243,6 +243,27 @@ fn runs_strategy_exit_bracket_fixture_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_trailing_fixture_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trail_price_fill.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
+    )
+    .expect("strategy exit trailing fixture should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":1},{\"id\":\"XT\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":3.5}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":3,\"entryTime\":1,\"exitTime\":4,\"entryPrice\":1,\"exitPrice\":3.5,\"qty\":2,\"profit\":5}]"
+    ));
+}
+
+#[test]
 fn request_host_data_is_documented_wasm_gap() {
     let message = run_script_csv_internal(
         "indicator(\"request\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",

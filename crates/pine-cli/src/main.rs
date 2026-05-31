@@ -785,6 +785,25 @@ mod tests {
     }
 
     #[test]
+    fn strategy_exit_trailing_fixture_has_single_exit_order_and_trade() {
+        let output =
+            runtime_fixture_json("tests/fixtures/runtime/strategy_exit_trail_price_fill.pine");
+
+        assert!(output.starts_with(&format!(
+            r#"{{"schemaVersion":{},"#,
+            PUBLIC_RUNTIME_SCHEMA_VERSION
+        )));
+        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
+        assert_eq!(output.matches(r#""trades":[{"#).count(), 1);
+        assert!(output.contains(
+            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":1},{"id":"XT","barIndex":3,"time":4,"direction":"strategy.exit","qty":2,"price":3.5}]"#
+        ));
+        assert!(output.contains(
+            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":3,"entryTime":1,"exitTime":4,"entryPrice":1,"exitPrice":3.5,"qty":2,"profit":5}]"#
+        ));
+    }
+
+    #[test]
     fn matrix_output_matches_golden_snapshot() {
         assert_snapshot("matrix.json", &matrix_json(&conformance_entries()));
     }
