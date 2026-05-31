@@ -1,0 +1,4 @@
+//@version=5
+strategy("Unsupported strategy exit trailing partial quantity")
+strategy.entry("L", strategy.long, qty=1)
+strategy.exit("XL", "L", trail_points=10, trail_offset=2, qty=1)

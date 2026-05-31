@@ -262,6 +262,7 @@ impl Analyzer {
         let mut has_limit = false;
         let mut has_profit = false;
         let mut has_loss = false;
+        let mut has_unsupported_arg = false;
         for (index, arg) in args.iter().enumerate() {
             let Some(name) = arg
                 .name
@@ -285,6 +286,7 @@ impl Analyzer {
                 "loss" => has_loss = true,
                 "qty" | "qty_percent" | "trail_price" | "trail_points" | "trail_offset"
                 | "oca_name" | "comment" | "alert_message" => {
+                    has_unsupported_arg = true;
                     self.diagnostics.push(Diagnostic::error(
                         "E_CALL_ARG_NAME",
                         format!(
@@ -313,7 +315,7 @@ impl Analyzer {
                     .or_else(|| args.get(3))
                     .map_or(Span::default(), |arg| arg.span),
             ));
-        } else if trigger_count == 0 && args.len() >= 2 {
+        } else if trigger_count == 0 && args.len() >= 2 && !has_unsupported_arg {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARITY",
                 "`strategy.exit` requires one of `stop`, `limit`, `profit`, or `loss`",

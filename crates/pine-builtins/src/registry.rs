@@ -145,6 +145,24 @@ mod tests {
             signature.params[5].accepts,
             crate::Accepts::SeriesOrSimpleNumeric
         );
+        assert_eq!(signature.params[6].name, "trail_price");
+        assert!(signature.params[6].optional);
+        assert_eq!(
+            signature.params[6].accepts,
+            crate::Accepts::SeriesOrSimpleNumeric
+        );
+        assert_eq!(signature.params[7].name, "trail_points");
+        assert!(signature.params[7].optional);
+        assert_eq!(
+            signature.params[7].accepts,
+            crate::Accepts::SeriesOrSimpleNumeric
+        );
+        assert_eq!(signature.params[8].name, "trail_offset");
+        assert!(signature.params[8].optional);
+        assert_eq!(
+            signature.params[8].accepts,
+            crate::Accepts::SeriesOrSimpleNumeric
+        );
         assert!(!signature.variadic);
     }
 }

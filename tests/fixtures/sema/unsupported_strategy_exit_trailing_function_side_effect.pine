@@ -1,0 +1,6 @@
+//@version=5
+strategy("Unsupported strategy exit trailing function side effect")
+exit_now() =>
+    strategy.exit("XL", "L", trail_points=10, trail_offset=2)
+    close
+plot(exit_now())

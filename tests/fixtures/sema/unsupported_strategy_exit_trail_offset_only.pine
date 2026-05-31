@@ -1,0 +1,4 @@
+//@version=5
+strategy("Unsupported strategy exit trail offset only")
+strategy.entry("L", strategy.long, qty=1)
+strategy.exit("XL", "L", trail_offset=2)

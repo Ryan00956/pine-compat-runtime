@@ -1,0 +1,4 @@
+//@version=5
+strategy("Unsupported strategy exit trail price only")
+strategy.entry("L", strategy.long, qty=1)
+strategy.exit("XL", "L", trail_price=high)

@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported strategy exit trailing indicator")
+strategy.exit("XL", "L", trail_points=10, trail_offset=2)

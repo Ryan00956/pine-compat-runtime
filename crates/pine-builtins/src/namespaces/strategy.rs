@@ -57,6 +57,21 @@ const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SeriesOrSimpleNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "trail_price",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "trail_points",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "trail_offset",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
 ];
 
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[

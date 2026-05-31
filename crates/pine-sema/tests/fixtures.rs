@@ -221,6 +221,42 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
             "E_CALL_ARG_NAME",
         ),
         (
+            "tests/fixtures/sema/unsupported_strategy_exit_trail_price_only.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_trail_points_only.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_trail_offset_only.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_trail_price_points.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_trailing_bracket.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_trailing_partial_quantity.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_trailing_indicator.pine",
+            "E_STRATEGY_MODE",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_trailing_function_side_effect.pine",
+            "E_UNSUPPORTED_FEATURE",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_request_strategy_trailing_exit.pine",
+            "E_UNSUPPORTED_FEATURE",
+        ),
+        (
             "tests/fixtures/sema/unsupported_strategy_exit_partial_quantity.pine",
             "E_CALL_ARG_NAME",
         ),
