@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Phase T WASM request-bars host injection for the existing
+  provider-backed `request.security` subset. WASM hosts can now pass explicit
+  `requestBarsJson` data through `runScriptCsvWithRequestBars`,
+  `runScriptCsvWithLibrariesAndRequestBars`, and
+  `Program.runCsvWithRequestBars`, while request semantics, conformance status,
+  and runtime `schemaVersion: 3` remain unchanged.
 - Added the Phase S `strategy.exit` trailing-stop subset. Supported forms are
   exactly `trail_price + trail_offset` and `trail_points + trail_offset` for
   the current long-only, no-pyramiding broker. Trailing exits activate on a
@@ -244,9 +250,10 @@
 - Added same-or-higher-timeframe host dataset injection for
   `request.security("SYMBOL", timeframe, expression)` lookups in Rust
   runtime, CLI `--request-bars SYMBOL:TIMEFRAME=bars.csv`, and Python
-  `request_bars` dictionaries. WASM request dataset injection remains a
-  documented temporary gap; optional parameters, explicit gaps/lookahead, and
-  lower timeframe requests remain unsupported.
+  `request_bars` dictionaries. WASM request dataset injection was a documented
+  temporary Phase F gap and is now closed for this subset by Phase T; optional
+  parameters, explicit gaps/lookahead, and lower timeframe requests remain
+  unsupported.
 - Widened provider-backed `request.security` to evaluate scalar requested
   expressions in an isolated requested context with deterministic callsite
   caching and default higher-timeframe `gaps_off`/`lookahead_off` alignment.
@@ -260,11 +267,11 @@
   semantics and host output shapes are designed.
 - Added cross-host request contract fixtures for CLI and Python request dataset
   injection, plus conformance validation that prevents partial `request.*`
-  claims without request-specific fixtures. WASM request dataset injection
-  remains a documented temporary gap.
+  claims without request-specific fixtures. WASM request dataset injection was
+  the remaining temporary host gap until the Phase T JSON host shape.
 - Closed Phase F with `docs/PHASE_F_AUDIT.md`, fixture-backed request matrix
   rows, same-or-higher-timeframe request contract coverage across Rust, CLI,
-  and Python, and a documented WASM provider-data gap.
+  and Python, plus a documented WASM provider-data gap later closed by Phase T.
 - Started Phase E drawing-object infrastructure by bumping the public
   machine-readable contract to `schemaVersion: 2` and adding the
   top-level `labels` output across CLI JSON, Python dictionaries, and WASM JSON.

@@ -20,8 +20,9 @@ release verification in one small change.
 - Slice 3, host dataset injection:
   `d6ae062 Add request host dataset injection`.
   Rust runtime, CLI, and Python can inject provider bars through the shared
-  request contract. WASM intentionally remains diagnostic-only for provider
-  data injection.
+  request contract. At Phase F close, WASM intentionally remained
+  diagnostic-only for provider data injection; Phase T later adds the stable
+  WASM JSON host shape for the same provider-backed subset.
 - Slice 4, requested-context evaluation:
   `bd5c829 Add requested context evaluation cache`.
   Provider-backed expressions execute in an isolated requested-context runtime
@@ -38,8 +39,8 @@ release verification in one small change.
 - Slice 7, public host contract hardening:
   `f073509 Harden request host contract`.
   CLI/Python fixtures now exercise the same chart and requested datasets,
-  WASM has a documented diagnostic-only test, and conformance validation rejects
-  partial request claims without request-specific fixtures.
+  WASM had a documented diagnostic-only test at Phase F close, and conformance
+  validation rejects partial request claims without request-specific fixtures.
 
 ## Supported Surface
 
@@ -79,9 +80,11 @@ data.
 - Python callers pass a `request_bars` dictionary keyed by
   `SYMBOL:TIMEFRAME`, with each value using the same bar dictionaries as chart
   bars.
-- WASM currently exposes compile/analyze/run over one chart CSV only. Scripts
-  that require provider data fail with the shared missing-request-data runtime
-  diagnostic until a deterministic JSON request-data shape is designed.
+- WASM callers pass a `requestBarsJson` object keyed by `SYMBOL:TIMEFRAME`,
+  with each value an array of `{time, open, high, low, close, volume}` bar
+  objects, through `runScriptCsvWithRequestBars`,
+  `runScriptCsvWithLibrariesAndRequestBars`, or
+  `Program.runCsvWithRequestBars`.
 
 The public cross-host fixture is:
 
@@ -112,8 +115,9 @@ higher timeframe: na, na, 100, 100, 200
   incremental append execution, so request fixtures participate in
   full-vs-append equivalence.
 - CLI tests cover request CSV parsing and the public request fixture. Python
-  tests cover equivalent `request_bars` injection. WASM tests cover the
-  diagnostic-only provider-data gap.
+  tests cover equivalent `request_bars` injection. WASM tests cover equivalent
+  `requestBarsJson` injection for direct runs, compiled programs, and
+  library-source combined runs.
 - Matrix validation enforces that partial or supported `request.*` rows cite
   request-specific fixture coverage, and `tests/snapshots/matrix.json` includes
   the narrow `request.security` row plus unsupported lower-timeframe and broad
@@ -146,8 +150,9 @@ subsystem files are 13-191 lines, and the runtime request dispatch module is
 
 These are not blockers for closing Phase F:
 
-- WASM request dataset injection remains a deliberate host-surface gap until a
-  stable JSON request-data shape is designed and tested.
+- WASM request dataset injection has a stable Phase T JSON host shape for the
+  current provider-backed subset; future work should keep that host shape
+  synchronized if request semantics widen.
 - `request.security_lower_tf` remains unsupported until typed array return
   semantics and public host output shapes are designed together.
 - Lower-timeframe `request.security` remains runtime-rejected; no intrabar

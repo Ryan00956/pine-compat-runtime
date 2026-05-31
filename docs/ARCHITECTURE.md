@@ -127,11 +127,15 @@ bar streams through the shared request provider contract. The default runtime
 environment keeps the existing fixed chart metadata and no-request provider so
 current `HistoricalRuntime::new`, `RealtimeRuntime::new`, and `run_historical`
 call sites keep their behavior until request execution is explicitly enabled.
-CLI uses repeated `--request-bars SYMBOL:TIMEFRAME=bars.csv` options and Python
-accepts a `request_bars` dictionary with the same `SYMBOL:TIMEFRAME` keys. WASM
-does not yet expose request dataset injection; scripts requiring provider data
-fail with the shared missing-request-data runtime error until a JSON host shape
-is added. The cross-host request fixture can be exercised with:
+CLI uses repeated `--request-bars SYMBOL:TIMEFRAME=bars.csv` options, Python
+accepts a `request_bars` dictionary with the same `SYMBOL:TIMEFRAME` keys, and
+WASM accepts a deterministic request-bars JSON object through
+`runScriptCsvWithRequestBars`,
+`runScriptCsvWithLibrariesAndRequestBars`, and
+`Program.runCsvWithRequestBars`. WASM request keys use the same
+`SYMBOL:TIMEFRAME` format and split on the last colon, so exchange-prefixed
+symbols such as `NYSE:IBM:1` are valid. The cross-host request fixture can be
+exercised with:
 
 ```text
 cargo run -p pine-cli -- run tests/fixtures/request/request_security_host.pine \
@@ -347,6 +351,12 @@ The WASM API exposes deterministic JSON library source injection through
 `runScriptCsvWithLibraries`. The JSON value must be an object mapping import
 keys to source text; malformed JSON is reported as a host-input diagnostic from
 the binding layer before semantic analysis.
+WASM request data injection is exposed through `runScriptCsvWithRequestBars`,
+`runScriptCsvWithLibrariesAndRequestBars`, and
+`Program.runCsvWithRequestBars`. The `requestBarsJson` value is an object
+mapping `SYMBOL:TIMEFRAME` keys to arrays of `{time, open, high, low, close,
+volume}` bar objects. This is explicit host-provided data; the WASM crate does
+not fetch network data, read files, or discover symbols.
 
 ## Output Model
 

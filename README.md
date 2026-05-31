@@ -188,11 +188,29 @@ The optional WASM crate exposes a thin `wasm-bindgen` API:
 - `analyzeScript(source)`
 - `analyzeScriptWithLibraries(source, librarySourcesJson)`
 - `runScriptCsv(source, barsCsv)`
+- `runScriptCsvWithRequestBars(source, barsCsv, requestBarsJson)`
 - `runScriptCsvWithLibraries(source, barsCsv, librarySourcesJson)`
+- `runScriptCsvWithLibrariesAndRequestBars(source, barsCsv, librarySourcesJson, requestBarsJson)`
 - `Program.runCsv(barsCsv)`
+- `Program.runCsvWithRequestBars(barsCsv, requestBarsJson)`
 
 The WASM library source argument is a deterministic JSON object mapping import
 keys to source text, for example `{"user/lib/1":"library(\"lib\")\n"}`.
+The request-bars argument is explicit host data injection, not network fetching
+or symbol discovery. It must be a JSON object keyed by `SYMBOL:TIMEFRAME`, with
+symbols split on the last colon so exchange-prefixed keys such as
+`NYSE:IBM:1` are valid:
+
+```json
+{
+  "NYSE:IBM:1": [
+    {"time": 0, "open": 10, "high": 11, "low": 9, "close": 30, "volume": 100}
+  ],
+  "NYSE:IBM:5": [
+    {"time": 300000, "open": 100, "high": 101, "low": 99, "close": 100, "volume": 500}
+  ]
+}
+```
 
 Build-check it with:
 
