@@ -35,7 +35,7 @@ pub(super) enum PendingTrailingState {
 }
 
 impl PendingTrailingActivation {
-    fn price(&self) -> f64 {
+    pub(super) fn price(&self) -> f64 {
         match self {
             Self::Price(price) | Self::Points { price, .. } => *price,
         }

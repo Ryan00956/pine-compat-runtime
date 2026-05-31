@@ -40,6 +40,19 @@ fn trailing_points_trigger(
     })
 }
 
+fn assert_active_trailing_stop(broker: &BrokerState, expected_stop_price: f64) {
+    let pending_exit = broker.pending_exit.as_ref().expect("pending exit");
+    let PendingExitTrigger::Trailing(trailing) = &pending_exit.trigger else {
+        panic!("expected trailing pending exit");
+    };
+    assert_eq!(
+        trailing.state,
+        PendingTrailingState::Active {
+            stop_price: expected_stop_price,
+        }
+    );
+}
+
 #[test]
 fn trade_counts_start_flat() {
     let broker = BrokerState::new(100_000.0);
@@ -783,6 +796,89 @@ fn pending_bracket_no_hit_remains_pending() {
     assert!(broker.trades.is_empty());
     assert_eq!(broker.position_size, 2.0);
     assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_trailing_is_not_eligible_on_creation_bar() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+
+    broker.evaluate_pending_exits(0, 10, 110.0, 100.0);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XT".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: trailing_price_trigger(105.0, 2.0),
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.trades.is_empty());
+    assert_eq!(broker.position_size, 2.0);
+}
+
+#[test]
+fn pending_trailing_activation_does_not_fill_on_activation_bar() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+
+    broker.evaluate_pending_exits(1, 20, 110.0, 100.0);
+
+    assert_active_trailing_stop(&broker, 108.0);
+    assert!(
+        broker
+            .orders
+            .iter()
+            .all(|order| order.direction != "strategy.exit")
+    );
+    assert!(broker.trades.is_empty());
+    assert_eq!(broker.position_size, 2.0);
+}
+
+#[test]
+fn pending_trailing_ratchets_after_activation_without_filling() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+    broker.evaluate_pending_exits(1, 20, 110.0, 109.0);
+
+    broker.evaluate_pending_exits(2, 30, 113.0, 109.0);
+
+    assert_active_trailing_stop(&broker, 111.0);
+    assert!(broker.trades.is_empty());
+    assert_eq!(broker.position_size, 2.0);
+}
+
+#[test]
+fn pending_trailing_stop_never_decreases() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+    broker.evaluate_pending_exits(1, 20, 110.0, 109.0);
+
+    broker.evaluate_pending_exits(2, 30, 109.0, 108.5);
+
+    assert_active_trailing_stop(&broker, 108.0);
+    assert!(broker.trades.is_empty());
+    assert_eq!(broker.position_size, 2.0);
+}
+
+#[test]
+fn pending_trailing_active_stop_fills_before_ratchet() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+    broker.evaluate_pending_exits(1, 20, 110.0, 109.0);
+
+    broker.evaluate_pending_exits(2, 30, 115.0, 107.0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[1].id, "XT");
+    assert_eq!(broker.orders[1].direction, "strategy.exit");
+    assert_eq!(broker.orders[1].price, 108.0);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].exit_price, 108.0);
+    assert_eq!(broker.trades[0].profit, 16.0);
+    assert_eq!(broker.position_size, 0.0);
 }
 
 #[test]

@@ -4,7 +4,7 @@ mod fills;
 
 use pine_ir::DEFAULT_STRATEGY_INITIAL_CAPITAL;
 
-use exits::{PendingExit, PendingExitTrigger};
+use exits::{PendingExit, PendingExitTrigger, PendingTrailingState};
 
 use crate::{
     RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent, StrategyPositionSnapshot,
@@ -118,7 +118,7 @@ impl BrokerState {
         high: f64,
         low: f64,
     ) {
-        let Some(pending_exit) = self.pending_exit.clone() else {
+        let Some(mut pending_exit) = self.pending_exit.clone() else {
             return;
         };
         if pending_exit.last_update_bar_index >= bar_index {
@@ -130,7 +130,7 @@ impl BrokerState {
             self.pending_exit = None;
             return;
         }
-        let triggered_price = match &pending_exit.trigger {
+        let triggered_price = match &mut pending_exit.trigger {
             PendingExitTrigger::Stop(price) if low <= *price => Some(*price),
             PendingExitTrigger::Limit(price) if high >= *price => Some(*price),
             PendingExitTrigger::Bracket { downside, upside } => {
@@ -142,6 +142,29 @@ impl BrokerState {
                     None
                 }
             }
+            PendingExitTrigger::Trailing(trailing) => match &mut trailing.state {
+                PendingTrailingState::Inactive => {
+                    if high >= trailing.spec.activation.price() {
+                        trailing.state = PendingTrailingState::Active {
+                            stop_price: high - trailing.spec.offset_price_distance,
+                        };
+                        self.pending_exit = Some(pending_exit);
+                    }
+                    return;
+                }
+                PendingTrailingState::Active { stop_price } => {
+                    if low <= *stop_price {
+                        Some(*stop_price)
+                    } else {
+                        let next_stop = high - trailing.spec.offset_price_distance;
+                        if next_stop > *stop_price {
+                            *stop_price = next_stop;
+                            self.pending_exit = Some(pending_exit);
+                        }
+                        return;
+                    }
+                }
+            },
             _ => None,
         };
         if let Some(exit_price) = triggered_price {
