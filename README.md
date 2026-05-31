@@ -53,6 +53,7 @@ able to integrate it through adapters.
 - [Phase R Strategy Exit Bracket Execution Plan](docs/PHASE_R_EXECUTION_PLAN.md)
 - [Phase R Strategy Exit Bracket Audit](docs/PHASE_R_AUDIT.md)
 - [Phase S Strategy Exit Trailing Stop Execution Plan](docs/PHASE_S_EXECUTION_PLAN.md)
+- [Phase T WASM Request Provider Execution Plan](docs/PHASE_T_EXECUTION_PLAN.md)
 - [Phase F Request Platform Audit](docs/PHASE_F_AUDIT.md)
 - [Phase H Alert Audit](docs/PHASE_H_AUDIT.md)
 - [Next Language Expansion Playbook](docs/NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md)
