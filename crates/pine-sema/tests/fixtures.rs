@@ -288,6 +288,8 @@ fn accepts_supported_strategy_exit_fixtures() {
         "tests/fixtures/sema/supported_strategy_exit_stop_profit.pine",
         "tests/fixtures/sema/supported_strategy_exit_loss_limit.pine",
         "tests/fixtures/sema/supported_strategy_exit_loss_profit.pine",
+        "tests/fixtures/sema/supported_strategy_exit_trail_price.pine",
+        "tests/fixtures/sema/supported_strategy_exit_trail_points.pine",
     ] {
         let path = workspace_fixture(fixture);
         let text = fs::read_to_string(&path).expect("fixture should be readable");

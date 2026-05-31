@@ -19,9 +19,6 @@ enum StrategyExitArgFamily {
     DownsideTickTrigger,
     UpsidePriceTrigger,
     UpsideTickTrigger,
-    // Phase S standalone classification only. Future positive trailing forms
-    // must pair exactly one activation argument with trail_offset and land with
-    // matching runtime placement/fill behavior.
     TrailingActivation,
     TrailingOffset,
     UnsupportedOption,
@@ -293,6 +290,9 @@ impl Analyzer {
         let mut has_limit = false;
         let mut has_profit = false;
         let mut has_loss = false;
+        let mut has_trail_price = false;
+        let mut has_trail_points = false;
+        let mut has_trail_offset = false;
         let mut has_unsupported_arg = false;
         for (index, arg) in args.iter().enumerate() {
             let Some(name) = arg
@@ -318,9 +318,15 @@ impl Analyzer {
                 StrategyExitArgFamily::DownsideTickTrigger => has_loss = true,
                 StrategyExitArgFamily::UpsidePriceTrigger => has_limit = true,
                 StrategyExitArgFamily::UpsideTickTrigger => has_profit = true,
-                StrategyExitArgFamily::TrailingActivation
-                | StrategyExitArgFamily::TrailingOffset
-                | StrategyExitArgFamily::UnsupportedOption => {
+                StrategyExitArgFamily::TrailingActivation => {
+                    if name == "trail_price" {
+                        has_trail_price = true;
+                    } else {
+                        has_trail_points = true;
+                    }
+                }
+                StrategyExitArgFamily::TrailingOffset => has_trail_offset = true,
+                StrategyExitArgFamily::UnsupportedOption => {
                     has_unsupported_arg = true;
                     self.diagnostics.push(Diagnostic::error(
                         "E_CALL_ARG_NAME",
@@ -336,6 +342,48 @@ impl Analyzer {
             + usize::from(has_limit)
             + usize::from(has_profit)
             + usize::from(has_loss);
+        let trailing_activation_count =
+            usize::from(has_trail_price) + usize::from(has_trail_points);
+        let has_trailing_args = trailing_activation_count > 0 || has_trail_offset;
+        if has_trailing_args {
+            if trigger_count > 0 {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    "`strategy.exit` cannot combine trailing exits with fixed stop, limit, profit, or loss triggers in the current strategy subset",
+                    args.iter()
+                        .find(|arg| {
+                            matches!(
+                                arg.name.as_deref(),
+                                Some(
+                                    "stop"
+                                        | "limit"
+                                        | "profit"
+                                        | "loss"
+                                        | "trail_price"
+                                        | "trail_points"
+                                        | "trail_offset"
+                                )
+                            )
+                        })
+                        .map_or(Span::default(), |arg| arg.span),
+                ));
+            }
+            if trailing_activation_count != 1 || !has_trail_offset {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_NAME",
+                    "`strategy.exit` trailing exits require exactly one of `trail_price` or `trail_points` plus `trail_offset`",
+                    args.iter()
+                        .find(|arg| {
+                            matches!(
+                                arg.name.as_deref(),
+                                Some("trail_price" | "trail_points" | "trail_offset")
+                            )
+                        })
+                        .map_or(Span::default(), |arg| arg.span),
+                ));
+            }
+            return;
+        }
         let downside_trigger_count = usize::from(has_stop) + usize::from(has_loss);
         let upside_trigger_count = usize::from(has_limit) + usize::from(has_profit);
         let supported_trigger_shape = trigger_count <= 1

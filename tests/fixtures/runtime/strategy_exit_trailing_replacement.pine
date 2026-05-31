@@ -1,0 +1,9 @@
+//@version=5
+strategy("Trailing replacement")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XT", "L", trail_price=2.5, trail_offset=50)
+if bar_index == 2
+    strategy.exit("XT", "L", trail_price=4.5, trail_offset=50)
+plot(strategy.position_size)
+plot(strategy.netprofit)

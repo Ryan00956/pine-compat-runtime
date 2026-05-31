@@ -1,0 +1,9 @@
+//@version=5
+strategy("Trailing invalid")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XT", "L", trail_price=2.5, trail_offset=50)
+if bar_index == 1
+    strategy.exit("BAD", "L", trail_price=2.5, trail_offset=0)
+plot(strategy.position_size)
+plot(strategy.netprofit)

@@ -701,6 +701,46 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_bracket_interactions.pine",
             ),
             (
+                "runtime_strategy_exit_trail_price_fill.json",
+                "tests/fixtures/runtime/strategy_exit_trail_price_fill.pine",
+            ),
+            (
+                "runtime_strategy_exit_trail_points_fill.json",
+                "tests/fixtures/runtime/strategy_exit_trail_points_fill.pine",
+            ),
+            (
+                "runtime_strategy_exit_trailing_activation_bar.json",
+                "tests/fixtures/runtime/strategy_exit_trailing_activation_bar.pine",
+            ),
+            (
+                "runtime_strategy_exit_trailing_ratchet.json",
+                "tests/fixtures/runtime/strategy_exit_trailing_ratchet.pine",
+            ),
+            (
+                "runtime_strategy_exit_trailing_repeated.json",
+                "tests/fixtures/runtime/strategy_exit_trailing_repeated.pine",
+            ),
+            (
+                "runtime_strategy_exit_trailing_replacement.json",
+                "tests/fixtures/runtime/strategy_exit_trailing_replacement.pine",
+            ),
+            (
+                "runtime_strategy_exit_trailing_invalid.json",
+                "tests/fixtures/runtime/strategy_exit_trailing_invalid.pine",
+            ),
+            (
+                "runtime_strategy_exit_trailing_close_cancel.json",
+                "tests/fixtures/runtime/strategy_exit_trailing_close_cancel.pine",
+            ),
+            (
+                "runtime_strategy_exit_trailing_interactions.json",
+                "tests/fixtures/runtime/strategy_exit_trailing_interactions.pine",
+            ),
+            (
+                "runtime_strategy_exit_trailing_state.json",
+                "tests/fixtures/runtime/strategy_exit_trailing_state.pine",
+            ),
+            (
                 "runtime_strategy_equity.json",
                 "tests/fixtures/runtime/strategy_equity.pine",
             ),
@@ -791,6 +831,18 @@ mod tests {
             "tests/fixtures/runtime/strategy_exit_bracket_both_hit.pine" => include_str!(
                 "../../../tests/fixtures/runtime/strategy_exit_bracket_both_hit_bars.csv"
             ),
+            "tests/fixtures/runtime/strategy_exit_trail_price_fill.pine"
+            | "tests/fixtures/runtime/strategy_exit_trail_points_fill.pine"
+            | "tests/fixtures/runtime/strategy_exit_trailing_activation_bar.pine"
+            | "tests/fixtures/runtime/strategy_exit_trailing_ratchet.pine"
+            | "tests/fixtures/runtime/strategy_exit_trailing_repeated.pine"
+            | "tests/fixtures/runtime/strategy_exit_trailing_replacement.pine"
+            | "tests/fixtures/runtime/strategy_exit_trailing_invalid.pine"
+            | "tests/fixtures/runtime/strategy_exit_trailing_close_cancel.pine"
+            | "tests/fixtures/runtime/strategy_exit_trailing_interactions.pine"
+            | "tests/fixtures/runtime/strategy_exit_trailing_state.pine" => {
+                include_str!("../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv")
+            }
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }
     }
