@@ -1,3 +1,6 @@
+use super::exits::{
+    PendingTrailingActivation, PendingTrailingExit, PendingTrailingSpec, PendingTrailingState,
+};
 use super::*;
 
 fn pending_exit_count(broker: &BrokerState) -> usize {
@@ -8,6 +11,33 @@ fn broker_with_long_entry() -> BrokerState {
     let mut broker = BrokerState::new(100_000.0);
     broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0);
     broker
+}
+
+fn trailing_price_trigger(activation_price: f64, offset_price_distance: f64) -> PendingExitTrigger {
+    PendingExitTrigger::Trailing(PendingTrailingExit {
+        spec: PendingTrailingSpec {
+            activation: PendingTrailingActivation::Price(activation_price),
+            offset_price_distance,
+        },
+        state: PendingTrailingState::Inactive,
+    })
+}
+
+fn trailing_points_trigger(
+    ticks: f64,
+    activation_price: f64,
+    offset_price_distance: f64,
+) -> PendingExitTrigger {
+    PendingExitTrigger::Trailing(PendingTrailingExit {
+        spec: PendingTrailingSpec {
+            activation: PendingTrailingActivation::Points {
+                ticks,
+                price: activation_price,
+            },
+            offset_price_distance,
+        },
+        state: PendingTrailingState::Inactive,
+    })
 }
 
 #[test]
@@ -342,6 +372,162 @@ fn bracket_tick_helpers_resolve_prices_from_average_entry_price() {
         })
     );
     assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn place_exit_trail_price_records_pending_trailing_exit() {
+    let mut broker = broker_with_long_entry();
+
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XT".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: trailing_price_trigger(105.0, 2.0),
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn place_exit_trail_points_records_entry_relative_activation() {
+    let mut broker = broker_with_long_entry();
+
+    broker.place_exit_trail_points("XT".to_owned(), "L".to_owned(), 10.0, 4.0, 0.5, 0);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XT".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: trailing_points_trigger(10.0, 105.0, 2.0),
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn trailing_while_flat_records_diagnostic_without_pending_state() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+}
+
+#[test]
+fn invalid_trailing_activation_price_records_diagnostic_without_changing_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), f64::NAN, 4.0, 0.5, 1);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XS".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Stop(95.0),
+            last_update_bar_index: 0,
+        })
+    );
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_PRICE");
+}
+
+#[test]
+fn invalid_trailing_offset_ticks_record_diagnostic_without_changing_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 0.0, 0.5, 1);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XS".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Stop(95.0),
+            last_update_bar_index: 0,
+        })
+    );
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_TICKS");
+}
+
+#[test]
+fn unchanged_repeated_trailing_keeps_original_eligibility_bar() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 1);
+
+    assert_eq!(
+        broker.pending_exit.as_ref().unwrap().last_update_bar_index,
+        0
+    );
+}
+
+#[test]
+fn unchanged_repeated_trailing_preserves_active_state() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+    let pending = broker.pending_exit.as_mut().expect("trailing pending exit");
+    let PendingExitTrigger::Trailing(trailing) = &mut pending.trigger else {
+        panic!("expected trailing pending exit");
+    };
+    trailing.state = PendingTrailingState::Active { stop_price: 103.0 };
+
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 1);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XT".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Trailing(PendingTrailingExit {
+                spec: PendingTrailingSpec {
+                    activation: PendingTrailingActivation::Price(105.0),
+                    offset_price_distance: 2.0,
+                },
+                state: PendingTrailingState::Active { stop_price: 103.0 },
+            }),
+            last_update_bar_index: 0,
+        })
+    );
+}
+
+#[test]
+fn changed_repeated_trailing_replaces_spec_and_delays_eligibility() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 106.0, 4.0, 0.5, 1);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XT".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: trailing_price_trigger(106.0, 2.0),
+            last_update_bar_index: 1,
+        })
+    );
+}
+
+#[test]
+fn close_long_cancels_matching_trailing_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+
+    broker.close_long("L".to_owned(), 1, 20, 110.0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.trades.len(), 1);
 }
 
 #[test]

@@ -5,7 +5,46 @@ use crate::RuntimeDiagnostic;
 pub(super) enum PendingExitTrigger {
     Stop(f64),
     Limit(f64),
-    Bracket { downside: f64, upside: f64 },
+    Bracket {
+        downside: f64,
+        upside: f64,
+    },
+    #[allow(dead_code)]
+    Trailing(PendingTrailingExit),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub(super) struct PendingTrailingExit {
+    pub(super) spec: PendingTrailingSpec,
+    pub(super) state: PendingTrailingState,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub(super) struct PendingTrailingSpec {
+    pub(super) activation: PendingTrailingActivation,
+    pub(super) offset_price_distance: f64,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq)]
+pub(super) enum PendingTrailingActivation {
+    Price(f64),
+    Points { ticks: f64, price: f64 },
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq)]
+pub(super) enum PendingTrailingState {
+    Inactive,
+    Active { stop_price: f64 },
+}
+
+impl PendingTrailingActivation {
+    fn price(&self) -> f64 {
+        match self {
+            Self::Price(price) | Self::Points { price, .. } => *price,
+        }
+    }
 }
 
 impl PendingExitTrigger {
@@ -13,6 +52,17 @@ impl PendingExitTrigger {
         match self {
             Self::Stop(price) | Self::Limit(price) => price.is_finite(),
             Self::Bracket { downside, upside } => downside.is_finite() && upside.is_finite(),
+            Self::Trailing(trailing) => {
+                trailing.spec.activation.price().is_finite()
+                    && trailing.spec.offset_price_distance.is_finite()
+            }
+        }
+    }
+
+    fn placement_equivalent(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Trailing(left), Self::Trailing(right)) => left.spec == right.spec,
+            _ => self == other,
         }
     }
 }
@@ -113,6 +163,80 @@ impl BrokerState {
         );
     }
 
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_trail_price(
+        &mut self,
+        id: String,
+        from_entry: String,
+        activation_price: f64,
+        offset_ticks: f64,
+        mintick: f64,
+        bar_index: usize,
+    ) {
+        let Some(offset_price_distance) = self.exit_tick_price_offset(offset_ticks, mintick) else {
+            return;
+        };
+        self.place_exit_trailing(
+            id,
+            from_entry,
+            PendingTrailingActivation::Price(activation_price),
+            offset_price_distance,
+            bar_index,
+        );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_trail_points(
+        &mut self,
+        id: String,
+        from_entry: String,
+        activation_ticks: f64,
+        offset_ticks: f64,
+        mintick: f64,
+        bar_index: usize,
+    ) {
+        let Some(activation_price_offset) = self.exit_tick_price_offset(activation_ticks, mintick)
+        else {
+            return;
+        };
+        let Some(offset_price_distance) = self.exit_tick_price_offset(offset_ticks, mintick) else {
+            return;
+        };
+        self.place_exit_trailing(
+            id,
+            from_entry,
+            PendingTrailingActivation::Points {
+                ticks: activation_ticks,
+                price: self.avg_price + activation_price_offset,
+            },
+            offset_price_distance,
+            bar_index,
+        );
+    }
+
+    #[allow(dead_code)]
+    fn place_exit_trailing(
+        &mut self,
+        id: String,
+        from_entry: String,
+        activation: PendingTrailingActivation,
+        offset_price_distance: f64,
+        bar_index: usize,
+    ) {
+        self.place_exit(
+            id,
+            from_entry,
+            PendingExitTrigger::Trailing(PendingTrailingExit {
+                spec: PendingTrailingSpec {
+                    activation,
+                    offset_price_distance,
+                },
+                state: PendingTrailingState::Inactive,
+            }),
+            bar_index,
+        );
+    }
+
     pub(crate) fn exit_profit_price_from_ticks(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
         self.exit_tick_price_offset(ticks, mintick)
             .map(|price_offset| self.avg_price + price_offset)
@@ -166,7 +290,7 @@ impl BrokerState {
         if self.pending_exit.as_ref().is_some_and(|pending_exit| {
             pending_exit.id == id
                 && pending_exit.from_entry == from_entry
-                && pending_exit.trigger == trigger
+                && pending_exit.trigger.placement_equivalent(&trigger)
         }) {
             return;
         }
