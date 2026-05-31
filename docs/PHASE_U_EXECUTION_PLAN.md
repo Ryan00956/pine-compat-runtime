@@ -1,6 +1,6 @@
 # Phase U Strategy Exit Partial Quantity Execution Plan
 
-Status: in progress; Slice 5 runtime fixture, snapshot, and incremental parity is complete.
+Status: in progress; Slice 6 CLI, Python, and WASM host parity is complete.
 
 Phase U should widen only the current `strategy.exit` quantity surface. It must
 not become a broader broker-simulation phase. The target is a deterministic,
@@ -783,6 +783,29 @@ python3 -m pip install --force-reinstall dist/*.whl
 python3 -m pytest python/tests
 ```
 
+Slice 6 decision record, 2026-05-31:
+
+- CLI, Python, and WASM host tests now use the same representative partial
+  quantity fixture, `strategy_exit_qty_stop_partial.pine`.
+- Host assertions check the existing public strategy contract only: partial
+  `strategy.exit` order quantity, partial trade quantity and profit, remaining
+  position snapshot with unchanged average price, no pending-order or
+  remaining-quantity fields, and runtime `schemaVersion: 3`.
+- No host binding owns broker accounting logic. The Python and WASM tests
+  exercise the shared runtime result contract exposed through their existing
+  serialization layers.
+
+Verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-cli strategy
+cargo test -p pine-wasm strategy
+maturin build --manifest-path crates/pine-python/Cargo.toml --out dist
+python3 -m pip install --force-reinstall dist/*.whl
+python3 -m pytest python/tests
+```
+
 ## Slice 7: Optional `qty_percent` Follow-Up
 
 Goal: decide whether to support `qty_percent` in Phase U after `qty` is stable.
@@ -985,7 +1008,7 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
 - [x] Strategy state variables behave correctly after partial fills.
 - [x] Incremental append execution matches full historical execution for new
       fixtures.
-- [ ] CLI, Python, and WASM host tests cover one representative partial exit.
+- [x] CLI, Python, and WASM host tests cover one representative partial exit.
 - [x] Runtime output remains `schemaVersion: 3`.
 - [x] Public strategy result keys and item shapes remain unchanged.
 - [ ] `tests/fixtures/conformance.tsv` and `tests/snapshots/matrix.json` agree

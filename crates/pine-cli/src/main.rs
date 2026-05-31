@@ -836,6 +836,29 @@ mod tests {
     }
 
     #[test]
+    fn strategy_exit_qty_fixture_has_partial_order_trade_and_remaining_position() {
+        let output =
+            runtime_fixture_json("tests/fixtures/runtime/strategy_exit_qty_stop_partial.pine");
+
+        assert!(output.starts_with(&format!(
+            r#"{{"schemaVersion":{},"#,
+            PUBLIC_RUNTIME_SCHEMA_VERSION
+        )));
+        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
+        assert!(output.contains(
+            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":1},{"id":"XQ","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.75,"price":2.5}]"#
+        ));
+        assert!(output.contains(
+            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":1,"entryTime":1,"exitTime":2,"entryPrice":1,"exitPrice":2.5,"qty":0.75,"profit":1.125}]"#
+        ));
+        assert!(output.contains(
+            r#""position":[{"barIndex":0,"size":2,"avgPrice":1},{"barIndex":1,"size":1.25,"avgPrice":1}]"#
+        ));
+        assert!(!output.contains("pending"));
+        assert!(!output.contains("remainingQty"));
+    }
+
+    #[test]
     fn matrix_output_matches_golden_snapshot() {
         assert_snapshot("matrix.json", &matrix_json(&conformance_entries()));
     }
