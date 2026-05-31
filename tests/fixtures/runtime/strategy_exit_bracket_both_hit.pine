@@ -1,0 +1,6 @@
+//@version=5
+strategy("Bracket both hit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XB", "L", stop=95, limit=110)
+plot(strategy.position_size)

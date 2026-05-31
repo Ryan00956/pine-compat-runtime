@@ -1,0 +1,8 @@
+//@version=5
+strategy("Bracket invalid leg")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("KEEP", "L", limit=3)
+if bar_index == 1
+    strategy.exit("BAD", "L", stop=0.5, profit=0)
+plot(strategy.position_size)

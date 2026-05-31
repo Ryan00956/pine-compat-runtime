@@ -23,6 +23,18 @@ fn runtime_fixtures_match_incremental_append_execution() {
     let strategy_exit_profit_loss_interactions_bars = load_bars(&workspace_fixture(
         "tests/fixtures/runtime/strategy_exit_profit_loss_interactions_bars.csv",
     ));
+    let strategy_exit_bracket_loss_profit_loss_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_bars.csv",
+    ));
+    let strategy_exit_bracket_mixed_pairs_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_exit_bracket_mixed_pairs_bars.csv",
+    ));
+    let strategy_exit_bracket_replacement_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_exit_bracket_replacement_bars.csv",
+    ));
+    let strategy_exit_bracket_both_hit_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_exit_bracket_both_hit_bars.csv",
+    ));
     let mut checked = 0;
 
     for entry in fs::read_dir(&fixtures_dir).expect("runtime fixture dir should be readable") {
@@ -46,6 +58,16 @@ fn runtime_fixtures_match_incremental_append_execution() {
             Some("strategy_exit_profit_loss_interactions.pine") => {
                 &strategy_exit_profit_loss_interactions_bars
             }
+            Some("strategy_exit_bracket_loss_profit_loss_fill.pine") => {
+                &strategy_exit_bracket_loss_profit_loss_bars
+            }
+            Some("strategy_exit_bracket_mixed_pairs.pine") => {
+                &strategy_exit_bracket_mixed_pairs_bars
+            }
+            Some("strategy_exit_bracket_replacement.pine") => {
+                &strategy_exit_bracket_replacement_bars
+            }
+            Some("strategy_exit_bracket_both_hit.pine") => &strategy_exit_bracket_both_hit_bars,
             _ => &default_bars,
         };
 

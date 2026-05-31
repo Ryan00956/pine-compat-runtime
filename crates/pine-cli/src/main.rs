@@ -653,6 +653,54 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_profit_loss_interactions.pine",
             ),
             (
+                "runtime_strategy_exit_bracket_stop_limit_limit_fill.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_stop_limit_limit_fill.pine",
+            ),
+            (
+                "runtime_strategy_exit_bracket_stop_limit_stop_fill.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_stop_limit_stop_fill.pine",
+            ),
+            (
+                "runtime_strategy_exit_bracket_loss_profit_profit_fill.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_loss_profit_profit_fill.pine",
+            ),
+            (
+                "runtime_strategy_exit_bracket_loss_profit_loss_fill.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_fill.pine",
+            ),
+            (
+                "runtime_strategy_exit_bracket_mixed_pairs.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_mixed_pairs.pine",
+            ),
+            (
+                "runtime_strategy_exit_bracket_creation_bar.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_creation_bar.pine",
+            ),
+            (
+                "runtime_strategy_exit_bracket_repeated.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_repeated.pine",
+            ),
+            (
+                "runtime_strategy_exit_bracket_replacement.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_replacement.pine",
+            ),
+            (
+                "runtime_strategy_exit_bracket_invalid_leg.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_invalid_leg.pine",
+            ),
+            (
+                "runtime_strategy_exit_bracket_both_hit.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_both_hit.pine",
+            ),
+            (
+                "runtime_strategy_exit_bracket_state.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_state.pine",
+            ),
+            (
+                "runtime_strategy_exit_bracket_interactions.json",
+                "tests/fixtures/runtime/strategy_exit_bracket_interactions.pine",
+            ),
+            (
                 "runtime_strategy_equity.json",
                 "tests/fixtures/runtime/strategy_equity.pine",
             ),
@@ -709,6 +757,24 @@ mod tests {
             }
             "tests/fixtures/runtime/strategy_exit_profit_loss_interactions.pine" => include_str!(
                 "../../../tests/fixtures/runtime/strategy_exit_profit_loss_interactions_bars.csv"
+            ),
+            "tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_fill.pine" => {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_bars.csv"
+                )
+            }
+            "tests/fixtures/runtime/strategy_exit_bracket_mixed_pairs.pine" => {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_exit_bracket_mixed_pairs_bars.csv"
+                )
+            }
+            "tests/fixtures/runtime/strategy_exit_bracket_replacement.pine" => {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_exit_bracket_replacement_bars.csv"
+                )
+            }
+            "tests/fixtures/runtime/strategy_exit_bracket_both_hit.pine" => include_str!(
+                "../../../tests/fixtures/runtime/strategy_exit_bracket_both_hit_bars.csv"
             ),
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }

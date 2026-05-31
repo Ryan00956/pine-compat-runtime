@@ -1,0 +1,10 @@
+//@version=5
+strategy("Bracket mixed pairs")
+if bar_index == 0
+    strategy.entry("L1", strategy.long, qty=2)
+    strategy.exit("XP", "L1", stop=95, profit=500)
+if bar_index == 3
+    strategy.entry("L2", strategy.long, qty=1)
+    strategy.exit("XL", "L2", loss=500, limit=205)
+plot(strategy.position_size)
+plot(strategy.netprofit)
