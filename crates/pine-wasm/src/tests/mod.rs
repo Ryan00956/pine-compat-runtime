@@ -322,6 +322,43 @@ fn request_host_data_reports_missing_request_key() {
     );
 }
 
+#[test]
+fn run_csv_with_request_bars_matches_direct_request_api() {
+    let direct_output = run_script_csv_with_request_bars(
+        REQUEST_HOST_SOURCE,
+        REQUEST_HOST_CHART_CSV,
+        REQUEST_HOST_BARS_JSON,
+    )
+    .expect("direct request fixture should run");
+    let program = compile_script(REQUEST_HOST_SOURCE).expect("request fixture should compile");
+
+    let compiled_output = program
+        .run_csv_with_request_bars(REQUEST_HOST_CHART_CSV, REQUEST_HOST_BARS_JSON)
+        .expect("compiled request fixture should run");
+    let repeated_output = program
+        .run_csv_with_request_bars(REQUEST_HOST_CHART_CSV, REQUEST_HOST_BARS_JSON)
+        .expect("compiled request fixture should run again");
+
+    assert_eq!(compiled_output, direct_output);
+    assert_eq!(repeated_output, direct_output);
+}
+
+#[test]
+fn run_csv_with_request_bars_reports_missing_request_key() {
+    let program = compile_script(REQUEST_HOST_SOURCE).expect("request fixture should compile");
+    let message = program
+        .run_csv_with_request_bars_internal(
+            REQUEST_HOST_CHART_CSV,
+            REQUEST_HOST_BARS_MISSING_HIGHER_JSON,
+        )
+        .expect_err("missing requested key should fail");
+
+    assert!(
+        message.contains("missing request data for symbol `NYSE:IBM` timeframe `5`"),
+        "{message}"
+    );
+}
+
 const IMPORT_SOURCE: &str =
     "indicator(\"imports\")\nimport user/lib/1 as lib\nplot(lib.scale(close) + lib.offset)\n";
 const IMPORT_LIBRARY_JSON: &str = "{\"user/lib/1\":\"library(\\\"lib\\\")\\nexport offset = 2\\nexport scale(value) => value * offset\\n\"}";

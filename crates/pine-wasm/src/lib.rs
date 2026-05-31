@@ -126,11 +126,30 @@ impl WasmProgram {
         self.run_csv_internal(bars_csv)
             .map_err(|err| JsValue::from_str(&err))
     }
+
+    #[wasm_bindgen(js_name = runCsvWithRequestBars)]
+    pub fn run_csv_with_request_bars(
+        &self,
+        bars_csv: &str,
+        request_bars_json: &str,
+    ) -> Result<String, JsValue> {
+        self.run_csv_with_request_bars_internal(bars_csv, request_bars_json)
+            .map_err(|err| JsValue::from_str(&err))
+    }
 }
 
 impl WasmProgram {
     fn run_csv_internal(&self, bars_csv: &str) -> Result<String, String> {
         self.run_csv_with_request_environment_internal(bars_csv, RequestEnvironment::default())
+    }
+
+    fn run_csv_with_request_bars_internal(
+        &self,
+        bars_csv: &str,
+        request_bars_json: &str,
+    ) -> Result<String, String> {
+        let request_environment = request_environment_from_json(request_bars_json)?;
+        self.run_csv_with_request_environment_internal(bars_csv, request_environment)
     }
 
     fn run_csv_with_request_environment_internal(
