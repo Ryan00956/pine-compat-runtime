@@ -50,6 +50,7 @@ able to integrate it through adapters.
 - [Phase L Strategy Usability Audit](docs/PHASE_L_AUDIT.md)
 - [Phase M Strategy Exit Execution Plan](docs/PHASE_M_EXECUTION_PLAN.md)
 - [Phase M Strategy Exit Audit](docs/PHASE_M_AUDIT.md)
+- [Phase R Strategy Exit Bracket Execution Plan](docs/PHASE_R_EXECUTION_PLAN.md)
 - [Phase F Request Platform Audit](docs/PHASE_F_AUDIT.md)
 - [Phase H Alert Audit](docs/PHASE_H_AUDIT.md)
 - [Next Language Expansion Playbook](docs/NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md)
