@@ -103,10 +103,10 @@ fn strategy_exit_args_mut(program: &mut HirProgram) -> &mut Vec<HirCallArg> {
     }
 
     fn find_in_expr(expr: &mut HirExpr) -> Option<&mut Vec<HirCallArg>> {
-        if let HirExprKind::Call { callee, args, .. } = &mut expr.kind {
-            if callee == "strategy.exit" {
-                return Some(args);
-            }
+        if let HirExprKind::Call { callee, args, .. } = &mut expr.kind
+            && callee == "strategy.exit"
+        {
+            return Some(args);
         }
         None
     }

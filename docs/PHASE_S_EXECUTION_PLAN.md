@@ -1,10 +1,7 @@
 # Phase S Strategy Exit Trailing Stop Execution Plan
 
-Status: planned. Phase S is the next narrow strategy-maintenance phase after
-`docs/PHASE_R_AUDIT.md`. It should start as a trailing-stop design gate and
-only move into positive runtime support after the design decisions, fixtures,
-diagnostics, public contract expectations, conformance metadata, and closeout
-criteria below are agreed in the repository.
+Status: closed for the current fixture-backed trailing-stop subset. See
+`docs/PHASE_S_AUDIT.md` for the closeout evidence.
 
 Phase S should not become a broader broker-simulation phase. It should widen
 only the current `strategy.exit` surface by adding one deterministic,
