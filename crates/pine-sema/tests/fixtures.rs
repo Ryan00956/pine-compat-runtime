@@ -189,22 +189,6 @@ fn reports_unsupported_strategy_order_fixture() {
 fn reports_unsupported_strategy_exit_variant_fixtures() {
     for (path, code) in [
         (
-            "tests/fixtures/sema/unsupported_strategy_exit_stop_limit.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_profit_loss.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_stop_profit.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_limit_loss.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
             "tests/fixtures/sema/unsupported_strategy_exit_stop_loss.pine",
             "E_CALL_ARG_NAME",
         ),
@@ -264,6 +248,10 @@ fn accepts_supported_strategy_exit_fixtures() {
         "tests/fixtures/sema/supported_strategy_exit_limit.pine",
         "tests/fixtures/sema/supported_strategy_exit_profit.pine",
         "tests/fixtures/sema/supported_strategy_exit_loss.pine",
+        "tests/fixtures/sema/supported_strategy_exit_stop_limit.pine",
+        "tests/fixtures/sema/supported_strategy_exit_stop_profit.pine",
+        "tests/fixtures/sema/supported_strategy_exit_loss_limit.pine",
+        "tests/fixtures/sema/supported_strategy_exit_loss_profit.pine",
     ] {
         let path = workspace_fixture(fixture);
         let text = fs::read_to_string(&path).expect("fixture should be readable");

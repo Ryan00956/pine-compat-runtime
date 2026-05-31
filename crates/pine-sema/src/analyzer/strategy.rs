@@ -300,7 +300,11 @@ impl Analyzer {
             + usize::from(has_limit)
             + usize::from(has_profit)
             + usize::from(has_loss);
-        if trigger_count > 1 {
+        let downside_count = usize::from(has_stop) + usize::from(has_loss);
+        let upside_count = usize::from(has_limit) + usize::from(has_profit);
+        let supported_trigger_shape =
+            trigger_count <= 1 || (trigger_count == 2 && downside_count == 1 && upside_count == 1);
+        if !supported_trigger_shape {
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARG_NAME",
                 "`strategy.exit` combined trigger families are not supported in the current strategy subset",

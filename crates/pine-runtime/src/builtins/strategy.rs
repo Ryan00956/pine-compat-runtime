@@ -111,7 +111,74 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String(value) => value,
             _ => return Ok(PineValue::Void),
         };
-        if let Some(stop_expr) = stop_expr {
+        let has_downside = stop_expr.is_some() || loss_expr.is_some();
+        let has_upside = limit_expr.is_some() || profit_expr.is_some();
+
+        if has_downside && has_upside {
+            let downside_price = if let Some(stop_expr) = stop_expr {
+                let stop_price = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
+                if !stop_price.is_finite() {
+                    self.strategy_broker.place_exit_bracket(
+                        id,
+                        from_entry,
+                        stop_price,
+                        f64::NAN,
+                        self.bars,
+                    );
+                    return Ok(PineValue::Void);
+                }
+                stop_price
+            } else if let Some(loss_expr) = loss_expr {
+                let loss_ticks = self.eval_expr(loss_expr)?.as_f64().unwrap_or(f64::NAN);
+                let mintick =
+                    pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+                let Some(loss_price) = self
+                    .strategy_broker
+                    .exit_loss_price_from_ticks(loss_ticks, mintick)
+                else {
+                    return Ok(PineValue::Void);
+                };
+                loss_price
+            } else {
+                return Ok(PineValue::Void);
+            };
+
+            let upside_price = if let Some(limit_expr) = limit_expr {
+                let limit_price = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
+                if !limit_price.is_finite() {
+                    self.strategy_broker.place_exit_bracket(
+                        id,
+                        from_entry,
+                        downside_price,
+                        limit_price,
+                        self.bars,
+                    );
+                    return Ok(PineValue::Void);
+                }
+                limit_price
+            } else if let Some(profit_expr) = profit_expr {
+                let profit_ticks = self.eval_expr(profit_expr)?.as_f64().unwrap_or(f64::NAN);
+                let mintick =
+                    pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+                let Some(profit_price) = self
+                    .strategy_broker
+                    .exit_profit_price_from_ticks(profit_ticks, mintick)
+                else {
+                    return Ok(PineValue::Void);
+                };
+                profit_price
+            } else {
+                return Ok(PineValue::Void);
+            };
+
+            self.strategy_broker.place_exit_bracket(
+                id,
+                from_entry,
+                downside_price,
+                upside_price,
+                self.bars,
+            );
+        } else if let Some(stop_expr) = stop_expr {
             let stop_price = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker
                 .place_exit_stop(id, from_entry, stop_price, self.bars);

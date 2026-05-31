@@ -728,6 +728,77 @@ if bar_index == 0
 }
 
 #[test]
+fn strategy_exit_bracket_forms_dispatch_to_bracket_pending_exit() {
+    for (name, exit_call, high, low, expected_price) in [
+        (
+            "stop_limit",
+            r#"strategy.exit("XB", "L", stop=95, limit=110)"#,
+            111.0,
+            100.0,
+            110.0,
+        ),
+        (
+            "stop_profit",
+            r#"strategy.exit("XB", "L", stop=95, profit=1000)"#,
+            111.0,
+            100.0,
+            110.0,
+        ),
+        (
+            "loss_limit",
+            r#"strategy.exit("XB", "L", loss=500, limit=110)"#,
+            111.0,
+            94.0,
+            95.0,
+        ),
+        (
+            "loss_profit",
+            r#"strategy.exit("XB", "L", loss=500, profit=1000)"#,
+            111.0,
+            94.0,
+            95.0,
+        ),
+    ] {
+        let source = SourceFile::new(
+            format!("strategy_exit_bracket_{name}.pine"),
+            format!(
+                r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    {exit_call}
+"#
+            ),
+        );
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{name}: {:?}",
+            analysis.diagnostics
+        );
+
+        let result = run_historical(
+            &analysis.hir.expect("HIR"),
+            &[
+                bar_ohlc(100.0, 100.0, 100.0, 100.0),
+                bar_ohlc(100.0, high, low, 100.0),
+            ],
+        )
+        .expect("runtime result");
+        let strategy = result.strategy.expect("strategy output");
+
+        assert_eq!(strategy.orders.len(), 2, "{name}");
+        assert_eq!(strategy.orders[1].id, "XB", "{name}");
+        assert_eq!(strategy.orders[1].bar_index, 1, "{name}");
+        assert_eq!(strategy.orders[1].direction, "strategy.exit", "{name}");
+        assert_eq!(strategy.orders[1].price, expected_price, "{name}");
+        assert_eq!(strategy.trades.len(), 1, "{name}");
+        assert_eq!(strategy.trades[0].id, "L", "{name}");
+        assert_eq!(strategy.trades[0].exit_price, expected_price, "{name}");
+        assert!(strategy.diagnostics.is_empty(), "{name}");
+    }
+}
+
+#[test]
 fn strategy_close_cancels_pending_limit_before_evaluation() {
     let source = SourceFile::new(
         "strategy.pine",

@@ -5,11 +5,7 @@ use crate::RuntimeDiagnostic;
 pub(super) enum PendingExitTrigger {
     Stop(f64),
     Limit(f64),
-    #[allow(dead_code)]
-    Bracket {
-        downside: f64,
-        upside: f64,
-    },
+    Bracket { downside: f64, upside: f64 },
 }
 
 impl PendingExitTrigger {
@@ -98,7 +94,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_bracket(
         &mut self,
         id: String,
