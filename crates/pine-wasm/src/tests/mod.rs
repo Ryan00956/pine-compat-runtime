@@ -263,16 +263,61 @@ fn runs_strategy_exit_trailing_fixture_from_csv_to_trade_json() {
     ));
 }
 
+const REQUEST_HOST_SOURCE: &str =
+    include_str!("../../../../tests/fixtures/request/request_security_host.pine");
+const REQUEST_HOST_CHART_CSV: &str =
+    include_str!("../../../../tests/fixtures/request/chart_1m.csv");
+const REQUEST_HOST_BARS_JSON: &str = r#"{
+  "NYSE:IBM:1": [
+    {"time":0,"open":10,"high":11,"low":9,"close":20,"volume":100},
+    {"time":60000,"open":11,"high":12,"low":10,"close":21,"volume":100},
+    {"time":240000,"open":12,"high":13,"low":11,"close":22,"volume":100},
+    {"time":300000,"open":13,"high":14,"low":12,"close":23,"volume":100},
+    {"time":540000,"open":14,"high":15,"low":13,"close":24,"volume":100}
+  ],
+  "NYSE:IBM:5": [
+    {"time":0,"open":90,"high":110,"low":80,"close":100,"volume":1000},
+    {"time":300000,"open":190,"high":210,"low":180,"close":200,"volume":1000}
+  ]
+}"#;
+const REQUEST_HOST_BARS_MISSING_HIGHER_JSON: &str = r#"{
+  "NYSE:IBM:1": [
+    {"time":0,"open":10,"high":11,"low":9,"close":20,"volume":100},
+    {"time":60000,"open":11,"high":12,"low":10,"close":21,"volume":100},
+    {"time":240000,"open":12,"high":13,"low":11,"close":22,"volume":100},
+    {"time":300000,"open":13,"high":14,"low":12,"close":23,"volume":100},
+    {"time":540000,"open":14,"high":15,"low":13,"close":24,"volume":100}
+  ]
+}"#;
+
 #[test]
-fn request_host_data_is_documented_wasm_gap() {
-    let message = run_script_csv_internal(
-        "indicator(\"request\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
+fn request_host_data_runs_through_direct_wasm_api() {
+    let output = run_script_csv_with_request_bars(
+        REQUEST_HOST_SOURCE,
+        REQUEST_HOST_CHART_CSV,
+        REQUEST_HOST_BARS_JSON,
     )
-    .expect_err("wasm has no request dataset injection yet");
+    .expect("request fixture should run through direct WASM API");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert!(output.contains("\"values\":[30,32,34,36,38]"));
+    assert!(output.contains("\"values\":[null,null,100,100,200]"));
+}
+
+#[test]
+fn request_host_data_reports_missing_request_key() {
+    let message = run_script_csv_with_request_bars_internal(
+        REQUEST_HOST_SOURCE,
+        REQUEST_HOST_CHART_CSV,
+        REQUEST_HOST_BARS_MISSING_HIGHER_JSON,
+    )
+    .expect_err("missing requested key should fail");
 
     assert!(
-        message.contains("missing request data for symbol `NYSE:IBM` timeframe `1`"),
+        message.contains("missing request data for symbol `NYSE:IBM` timeframe `5`"),
         "{message}"
     );
 }

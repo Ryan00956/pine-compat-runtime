@@ -1,15 +1,16 @@
 use pine_ir::HirProgram;
 use pine_runtime::{
-    Bar, PUBLIC_ANALYSIS_SCHEMA_VERSION, public_runtime_result_json, run_historical,
+    Bar, PUBLIC_ANALYSIS_SCHEMA_VERSION, RequestEnvironment, public_runtime_result_json,
+    run_historical_with_request_environment,
 };
 use pine_sema::{Analysis, AnalysisInput, analyze_input};
 use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 use wasm_bindgen::prelude::*;
 
 mod library_sources;
-#[allow(dead_code)]
 mod request_bars;
 use library_sources::analysis_input_with_libraries;
+use request_bars::request_environment_from_json;
 
 #[wasm_bindgen(js_name = Program)]
 pub struct WasmProgram {
@@ -74,6 +75,26 @@ fn run_script_csv_internal(source: &str, bars_csv: &str) -> Result<String, Strin
     program.run_csv_internal(bars_csv)
 }
 
+#[wasm_bindgen(js_name = runScriptCsvWithRequestBars)]
+pub fn run_script_csv_with_request_bars(
+    source: &str,
+    bars_csv: &str,
+    request_bars_json: &str,
+) -> Result<String, JsValue> {
+    run_script_csv_with_request_bars_internal(source, bars_csv, request_bars_json)
+        .map_err(|err| JsValue::from_str(&err))
+}
+
+fn run_script_csv_with_request_bars_internal(
+    source: &str,
+    bars_csv: &str,
+    request_bars_json: &str,
+) -> Result<String, String> {
+    let program = compile_program(analysis_input(source))?;
+    let request_environment = request_environment_from_json(request_bars_json)?;
+    program.run_csv_with_request_environment_internal(bars_csv, request_environment)
+}
+
 #[wasm_bindgen(js_name = runScriptCsvWithLibraries)]
 pub fn run_script_csv_with_libraries(
     source: &str,
@@ -109,8 +130,16 @@ impl WasmProgram {
 
 impl WasmProgram {
     fn run_csv_internal(&self, bars_csv: &str) -> Result<String, String> {
+        self.run_csv_with_request_environment_internal(bars_csv, RequestEnvironment::default())
+    }
+
+    fn run_csv_with_request_environment_internal(
+        &self,
+        bars_csv: &str,
+        request_environment: RequestEnvironment,
+    ) -> Result<String, String> {
         let bars = parse_bars_csv(bars_csv)?;
-        let result = run_historical(&self.hir, &bars)
+        let result = run_historical_with_request_environment(&self.hir, &bars, request_environment)
             .map_err(|err| format!("runtime failed: {}", err.message))?;
         Ok(public_runtime_result_json(&result))
     }
