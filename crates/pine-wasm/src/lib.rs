@@ -7,6 +7,8 @@ use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 use wasm_bindgen::prelude::*;
 
 mod library_sources;
+#[allow(dead_code)]
+mod request_bars;
 use library_sources::analysis_input_with_libraries;
 
 #[wasm_bindgen(js_name = Program)]
