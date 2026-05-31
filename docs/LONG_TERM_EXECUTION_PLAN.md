@@ -834,6 +834,36 @@ Out of scope until separately designed:
 - Commission, slippage, margin, richer sizing, strategy alerts, and realtime
   broker rollback for trailing stops.
 
+## Phase U: Strategy Exit Partial Quantity
+
+Goal: add the first deterministic partial-quantity `strategy.exit` subset
+without changing the public strategy output schema.
+
+Status: in progress. Execution playbook: `docs/PHASE_U_EXECUTION_PLAN.md`.
+
+Planned scope:
+
+- Strategy-mode-only `strategy.exit(..., qty=...)` for the current
+  one-net-long, no-pyramiding, one-pending-exit broker.
+- Support `qty` on the currently supported single-trigger, bracket, and
+  trailing exit forms.
+- Evaluate `qty` at placement time, require finite positive values, and clamp
+  filled quantity to the current open position size.
+- Partial fills record one strategy exit order event and one closed trade for
+  the filled quantity, leave any remaining long position open at the same
+  average price, and keep the existing strategy result shape and runtime
+  `schemaVersion: 3`.
+
+Out of scope until separately designed:
+
+- Quantity reservation across multiple exits.
+- Multiple independent pending exits.
+- Missing-entry pre-placement.
+- Multiple entries, pyramiding, short exposure, and reversals.
+- Public pending-order records, partial-fill fields, exit-reason fields, or a
+  runtime schema bump.
+- `qty_percent` unless the Phase U design gate explicitly keeps it in scope.
+
 ## Backlog Priority
 
 Recommended order from the current state:
