@@ -394,6 +394,20 @@ Exit criteria:
 - Unsupported trigger-family diagnostics remain stable and documented.
 - No runtime behavior or compatibility claim is widened.
 
+Slice 1 decision record, 2026-05-31:
+
+- `qty` and `qty_percent` remain semantic diagnostics for every user-visible
+  `strategy.exit` shape.
+- Quantity diagnostics are emitted for quantity arguments even when the same
+  call also contains an unsupported trigger family. Trigger-family diagnostics
+  may be emitted alongside quantity diagnostics; this keeps both boundaries
+  visible without allowing HIR lowering.
+- Negative fixtures now cover `qty` on an otherwise-supported stop exit,
+  deferred `qty_percent`, and `qty` combined with a same-side unsupported trigger
+  pair.
+- Analyzer support and runtime dispatch remain unopened until the atomic support
+  slice.
+
 Verification:
 
 ```text
@@ -861,6 +875,8 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
       or multiple-pending-exit phase.
 - [ ] `qty` remains diagnostic-only until the same slice opens analyzer support
       and runtime dispatch.
+- [x] Slice 1 records quantity diagnostic guardrails without opening analyzer or
+      runtime support.
 - [ ] `strategy.exit(..., qty=...)` analyzes for every selected supported
       trigger family.
 - [ ] `qty_percent` is either implemented with full evidence or remains

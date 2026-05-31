@@ -213,6 +213,18 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
             "E_CALL_ARG_NAME",
         ),
         (
+            "tests/fixtures/sema/unsupported_strategy_exit_qty_stop.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_qty_percent.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_qty_same_side.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
             "tests/fixtures/sema/unsupported_strategy_exit_trailing.pine",
             "E_CALL_ARG_NAME",
         ),
@@ -275,6 +287,25 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
     ] {
         assert_diagnostic_fixture(path, code);
     }
+}
+
+#[test]
+fn reports_strategy_exit_quantity_guardrail_messages() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_exit_qty_stop.pine",
+        &["`strategy.exit` argument `qty` is not supported"],
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_exit_qty_percent.pine",
+        &["`strategy.exit` argument `qty_percent` is not supported"],
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_exit_qty_same_side.pine",
+        &[
+            "`strategy.exit` argument `qty` is not supported",
+            "`strategy.exit` combined trigger families are not supported",
+        ],
+    );
 }
 
 #[test]
@@ -804,6 +835,26 @@ fn assert_diagnostic_fixture(path: &str, code: &str) {
         path.display(),
         analysis.diagnostics
     );
+    assert!(analysis.hir.is_none());
+}
+
+fn assert_diagnostic_messages(path: &str, messages: &[&str]) {
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    for message in messages {
+        assert!(
+            analysis
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.message.contains(message)),
+            "{} diagnostics: {:?}",
+            path.display(),
+            analysis.diagnostics
+        );
+    }
     assert!(analysis.hir.is_none());
 }
 

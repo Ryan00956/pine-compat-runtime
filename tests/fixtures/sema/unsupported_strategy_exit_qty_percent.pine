@@ -1,0 +1,4 @@
+//@version=5
+strategy("Unsupported strategy exit quantity percent")
+strategy.entry("L", strategy.long, qty=2)
+strategy.exit("XL", "L", stop=low, qty_percent=50)
