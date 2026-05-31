@@ -297,6 +297,233 @@ fn loss_ticks_create_stop_from_average_entry_price() {
 }
 
 #[test]
+fn place_exit_bracket_records_pending_bracket() {
+    let mut broker = broker_with_long_entry();
+
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XB".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Bracket {
+                downside: 95.0,
+                upside: 110.0,
+            },
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn bracket_tick_helpers_resolve_prices_from_average_entry_price() {
+    let mut broker = broker_with_long_entry();
+
+    let downside = broker
+        .exit_loss_price_from_ticks(5.0, 0.5)
+        .expect("loss ticks should resolve");
+    let upside = broker
+        .exit_profit_price_from_ticks(10.0, 0.5)
+        .expect("profit ticks should resolve");
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), downside, upside, 0);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XB".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Bracket {
+                downside: 97.5,
+                upside: 105.0,
+            },
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn invalid_bracket_downside_price_records_diagnostic_without_changing_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), f64::NAN, 110.0, 1);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XS".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Stop(95.0),
+            last_update_bar_index: 0,
+        })
+    );
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_PRICE");
+}
+
+#[test]
+fn invalid_bracket_upside_price_records_diagnostic_without_changing_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit("XL".to_owned(), "L".to_owned(), 110.0, 0);
+
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, f64::INFINITY, 1);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XL".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Limit(110.0),
+            last_update_bar_index: 0,
+        })
+    );
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_PRICE");
+}
+
+#[test]
+fn invalid_bracket_ticks_record_diagnostic_without_changing_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+
+    let price = broker.exit_profit_price_from_ticks(0.0, 0.01);
+
+    assert_eq!(price, None);
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XS".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Stop(95.0),
+            last_update_bar_index: 0,
+        })
+    );
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_TICKS");
+}
+
+#[test]
+fn invalid_bracket_mintick_records_diagnostic_without_changing_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit("XL".to_owned(), "L".to_owned(), 110.0, 0);
+
+    let price = broker.exit_loss_price_from_ticks(5.0, f64::NAN);
+
+    assert_eq!(price, None);
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XL".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Limit(110.0),
+            last_update_bar_index: 0,
+        })
+    );
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_MINTICK");
+}
+
+#[test]
+fn bracket_while_flat_records_diagnostic_without_pending_state() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+}
+
+#[test]
+fn bracket_with_mismatched_entry_records_diagnostic_without_changing_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+
+    broker.place_exit_bracket("XB".to_owned(), "OTHER".to_owned(), 95.0, 110.0, 1);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XS".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Stop(95.0),
+            last_update_bar_index: 0,
+        })
+    );
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+}
+
+#[test]
+fn unchanged_repeated_bracket_keeps_original_eligibility_bar() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 1);
+
+    assert_eq!(
+        broker.pending_exit.as_ref().unwrap().last_update_bar_index,
+        0
+    );
+}
+
+#[test]
+fn changed_repeated_bracket_replaces_price_and_delays_eligibility() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 94.0, 110.0, 1);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XB".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Bracket {
+                downside: 94.0,
+                upside: 110.0,
+            },
+            last_update_bar_index: 1,
+        })
+    );
+}
+
+#[test]
+fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
+    let mut broker = broker_with_long_entry();
+
+    broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 1);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XB".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Bracket {
+                downside: 95.0,
+                upside: 110.0,
+            },
+            last_update_bar_index: 1,
+        })
+    );
+
+    broker.place_exit_limit("XL".to_owned(), "L".to_owned(), 111.0, 2);
+
+    assert_eq!(
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XL".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Limit(111.0),
+            last_update_bar_index: 2,
+        })
+    );
+}
+
+#[test]
 fn invalid_profit_ticks_record_diagnostic_without_changing_pending_exit() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);

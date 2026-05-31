@@ -133,6 +133,7 @@ impl BrokerState {
         let triggered = match pending_exit.trigger {
             PendingExitTrigger::Stop(price) => low <= price,
             PendingExitTrigger::Limit(price) => high >= price,
+            PendingExitTrigger::Bracket { .. } => false,
         };
         if triggered {
             self.fill_pending_exit(pending_exit, bar_index, time);

@@ -5,12 +5,27 @@ use crate::RuntimeDiagnostic;
 pub(super) enum PendingExitTrigger {
     Stop(f64),
     Limit(f64),
+    #[allow(dead_code)]
+    Bracket {
+        downside: f64,
+        upside: f64,
+    },
 }
 
 impl PendingExitTrigger {
     pub(super) fn price(&self) -> f64 {
         match self {
             Self::Stop(price) | Self::Limit(price) => *price,
+            Self::Bracket { .. } => {
+                panic!("bracket pending exits require an explicitly selected leg price")
+            }
+        }
+    }
+
+    fn prices_are_finite(&self) -> bool {
+        match self {
+            Self::Stop(price) | Self::Limit(price) => price.is_finite(),
+            Self::Bracket { downside, upside } => downside.is_finite() && upside.is_finite(),
         }
     }
 }
@@ -62,13 +77,13 @@ impl BrokerState {
         mintick: f64,
         bar_index: usize,
     ) {
-        let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+        let Some(limit_price) = self.exit_profit_price_from_ticks(ticks, mintick) else {
             return;
         };
         self.place_exit(
             id,
             from_entry,
-            PendingExitTrigger::Limit(self.avg_price + price_offset),
+            PendingExitTrigger::Limit(limit_price),
             bar_index,
         );
     }
@@ -81,15 +96,45 @@ impl BrokerState {
         mintick: f64,
         bar_index: usize,
     ) {
-        let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+        let Some(stop_price) = self.exit_loss_price_from_ticks(ticks, mintick) else {
             return;
         };
         self.place_exit(
             id,
             from_entry,
-            PendingExitTrigger::Stop(self.avg_price - price_offset),
+            PendingExitTrigger::Stop(stop_price),
             bar_index,
         );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_bracket(
+        &mut self,
+        id: String,
+        from_entry: String,
+        downside_price: f64,
+        upside_price: f64,
+        bar_index: usize,
+    ) {
+        self.place_exit(
+            id,
+            from_entry,
+            PendingExitTrigger::Bracket {
+                downside: downside_price,
+                upside: upside_price,
+            },
+            bar_index,
+        );
+    }
+
+    pub(crate) fn exit_profit_price_from_ticks(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
+        self.exit_tick_price_offset(ticks, mintick)
+            .map(|price_offset| self.avg_price + price_offset)
+    }
+
+    pub(crate) fn exit_loss_price_from_ticks(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
+        self.exit_tick_price_offset(ticks, mintick)
+            .map(|price_offset| self.avg_price - price_offset)
     }
 
     fn exit_tick_price_offset(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
@@ -117,7 +162,7 @@ impl BrokerState {
         trigger: PendingExitTrigger,
         bar_index: usize,
     ) {
-        if !trigger.price().is_finite() {
+        if !trigger.prices_are_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_PRICE".to_owned(),
                 message: "`strategy.exit` price must be finite".to_owned(),
