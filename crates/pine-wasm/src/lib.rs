@@ -1,14 +1,17 @@
 use pine_ir::HirProgram;
 use pine_runtime::{
-    Bar, PUBLIC_ANALYSIS_SCHEMA_VERSION, RequestEnvironment, public_runtime_result_json,
-    run_historical_with_request_environment,
+    Bar, RequestEnvironment, public_runtime_result_json, run_historical_with_request_environment,
 };
-use pine_sema::{Analysis, AnalysisInput, analyze_input};
-use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
+use pine_sema::{AnalysisInput, analyze_input};
+use pine_syntax::SourceFile;
 use wasm_bindgen::prelude::*;
 
+mod analysis_json;
 mod library_sources;
 mod request_bars;
+#[cfg(test)]
+use analysis_json::json_escape;
+use analysis_json::{analysis_error_json, analyze_input_json, format_diagnostics};
 use library_sources::analysis_input_with_libraries;
 use request_bars::request_environment_from_json;
 
@@ -57,12 +60,6 @@ pub fn analyze_script_with_libraries(source: &str, library_sources_json: &str) -
         Ok(input) => analyze_input_json(input),
         Err(message) => analysis_error_json(&message),
     }
-}
-
-fn analyze_input_json(input: AnalysisInput) -> String {
-    let source_file = input.root().clone();
-    let analysis = analyze_input(&input);
-    analysis_json(&source_file, &analysis)
 }
 
 #[wasm_bindgen(js_name = runScriptCsv)]
@@ -233,145 +230,6 @@ fn parse_column<T: std::str::FromStr>(
             line_index + 1
         )
     })
-}
-
-fn analysis_json(source: &SourceFile, analysis: &Analysis) -> String {
-    let mut output = format!("{{\"schemaVersion\":{},", PUBLIC_ANALYSIS_SCHEMA_VERSION);
-    output.push_str("\"languageVersion\":");
-    match analysis.compatibility.language_version {
-        Some(version) => output.push_str(&version.to_string()),
-        None => output.push_str("null"),
-    }
-    output.push_str(",\"executable\":");
-    output.push_str(if analysis.hir.is_some() {
-        "true"
-    } else {
-        "false"
-    });
-    output.push_str(",\"diagnostics\":");
-    output.push_str(&diagnostics_json(source, &analysis.diagnostics));
-    output.push_str(",\"compatibility\":{");
-    output.push_str("\"supported\":");
-    output.push_str(&features_json(
-        source,
-        analysis
-            .compatibility
-            .supported
-            .iter()
-            .map(|feature| (&feature.feature, None, feature.span)),
-    ));
-    output.push_str(",\"unsupported\":");
-    output.push_str(&features_json(
-        source,
-        analysis
-            .compatibility
-            .unsupported
-            .iter()
-            .map(|feature| (&feature.feature, Some(&feature.reason), feature.span)),
-    ));
-    output.push_str("}}");
-    output
-}
-
-fn analysis_error_json(message: &str) -> String {
-    format!(
-        "{{\"schemaVersion\":{},\"languageVersion\":null,\"executable\":false,\"diagnostics\":[{{\"code\":\"E_HOST_INPUT\",\"severity\":\"error\",\"message\":\"{}\",\"span\":{{\"start\":0,\"end\":0,\"line\":1,\"column\":1}}}}],\"compatibility\":{{\"supported\":[],\"unsupported\":[]}}}}",
-        PUBLIC_ANALYSIS_SCHEMA_VERSION,
-        json_escape(message)
-    )
-}
-
-fn features_json<'a>(
-    source: &SourceFile,
-    features: impl Iterator<Item = (&'a String, Option<&'a String>, Span)>,
-) -> String {
-    let mut output = String::from("[");
-    for (index, (feature, reason, span)) in features.enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!("{{\"feature\":\"{}\"", json_escape(feature)));
-        if let Some(reason) = reason {
-            output.push_str(&format!(",\"reason\":\"{}\"", json_escape(reason)));
-        }
-        output.push_str(",\"span\":");
-        output.push_str(&span_json(source, span));
-        output.push('}');
-    }
-    output.push(']');
-    output
-}
-
-fn diagnostics_json(source: &SourceFile, diagnostics: &[Diagnostic]) -> String {
-    let mut output = String::from("[");
-    for (index, diagnostic) in diagnostics.iter().enumerate() {
-        if index > 0 {
-            output.push(',');
-        }
-        output.push_str(&format!(
-            "{{\"code\":\"{}\",\"severity\":\"{}\",\"message\":\"{}\",\"span\":{}}}",
-            json_escape(&diagnostic.code),
-            severity_name(diagnostic.severity),
-            json_escape(&diagnostic.message),
-            span_json(source, diagnostic.span)
-        ));
-    }
-    output.push(']');
-    output
-}
-
-fn span_json(source: &SourceFile, span: Span) -> String {
-    let line_col = source.line_col(span.start);
-    format!(
-        "{{\"start\":{},\"end\":{},\"line\":{},\"column\":{}}}",
-        span.start, span.end, line_col.line, line_col.column
-    )
-}
-
-fn severity_name(severity: Severity) -> &'static str {
-    match severity {
-        Severity::Error => "error",
-        Severity::Warning => "warning",
-        Severity::Info => "info",
-    }
-}
-
-fn format_diagnostics(source: &SourceFile, diagnostics: &[Diagnostic]) -> String {
-    diagnostics
-        .iter()
-        .map(|diagnostic| {
-            let line_col = source.line_col(diagnostic.span.start);
-            format!(
-                "{}:{:?}:{}:{}: {}",
-                diagnostic.code,
-                diagnostic.severity,
-                line_col.line,
-                line_col.column,
-                diagnostic.message
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
-}
-
-fn json_escape(value: &str) -> String {
-    let mut escaped = String::with_capacity(value.len());
-    for ch in value.chars() {
-        match ch {
-            '"' => escaped.push_str("\\\""),
-            '\\' => escaped.push_str("\\\\"),
-            '\n' => escaped.push_str("\\n"),
-            '\r' => escaped.push_str("\\r"),
-            '\t' => escaped.push_str("\\t"),
-            '\u{08}' => escaped.push_str("\\b"),
-            '\u{0C}' => escaped.push_str("\\f"),
-            ch if (ch as u32) < 0x20 => {
-                escaped.push_str(&format!("\\u{:04x}", ch as u32));
-            }
-            ch => escaped.push(ch),
-        }
-    }
-    escaped
 }
 
 #[cfg(test)]

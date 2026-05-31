@@ -1,6 +1,6 @@
 # Phase T WASM Request Provider Execution Plan
 
-Status: planned.
+Status: closed.
 
 Phase T closes the remaining Phase F host-surface gap by adding deterministic
 WASM request-bar dataset injection for the already supported provider-backed
@@ -491,22 +491,22 @@ Use this order unless a discovered blocker requires reordering:
 Complete this checklist before treating Phase T as closed. If an item is
 intentionally deferred, record the reason and risk in `docs/PHASE_T_AUDIT.md`.
 
-- [ ] WASM parses request-bars JSON into the shared `RequestEnvironment`.
-- [ ] WASM accepts exchange-prefixed symbols by splitting request keys on the
+- [x] WASM parses request-bars JSON into the shared `RequestEnvironment`.
+- [x] WASM accepts exchange-prefixed symbols by splitting request keys on the
       last colon.
-- [ ] WASM rejects malformed request-bars JSON with stable host-input errors.
-- [ ] WASM reuses shared requested-bar validation for duplicate and unsorted
+- [x] WASM rejects malformed request-bars JSON with stable host-input errors.
+- [x] WASM reuses shared requested-bar validation for duplicate and unsorted
       bars.
-- [ ] `runScriptCsvWithRequestBars` runs the shared request fixture.
-- [ ] `Program.runCsvWithRequestBars` runs the shared request fixture.
-- [ ] Library-source injection and request-bars injection work together.
-- [ ] The previous documented WASM provider-data gap test has been replaced by
+- [x] `runScriptCsvWithRequestBars` runs the shared request fixture.
+- [x] `Program.runCsvWithRequestBars` runs the shared request fixture.
+- [x] Library-source injection and request-bars injection work together.
+- [x] The previous documented WASM provider-data gap test has been replaced by
       positive host parity coverage.
-- [ ] README documents the request-bars JSON shape and exported WASM APIs.
-- [ ] Architecture, Phase F audit, and release notes agree with the new host
+- [x] README documents the request-bars JSON shape and exported WASM APIs.
+- [x] Architecture, Phase F audit, and release notes agree with the new host
       surface.
-- [ ] Runtime output remains `schemaVersion: 3`.
-- [ ] `request.security_lower_tf` and broad `request.*` remain unsupported.
-- [ ] `docs/PHASE_T_AUDIT.md` records verification evidence and remaining
+- [x] Runtime output remains `schemaVersion: 3`.
+- [x] `request.security_lower_tf` and broad `request.*` remain unsupported.
+- [x] `docs/PHASE_T_AUDIT.md` records verification evidence and remaining
       request tails.
-- [ ] `scripts/verify.sh` passes.
+- [x] `scripts/verify.sh` passes.
