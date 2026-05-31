@@ -799,6 +799,106 @@ if bar_index == 0
 }
 
 #[test]
+fn strategy_exit_bracket_invalid_downside_price_preempts_upside_tick_diagnostic() {
+    let source = SourceFile::new(
+        "strategy_exit_bracket_invalid_order.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XB", "L", stop=close / (close - close), profit=0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(100.0)]).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert!(strategy.trades.is_empty());
+    assert_eq!(strategy.diagnostics.len(), 1);
+    assert_eq!(strategy.diagnostics[0].code, "E_STRATEGY_EXIT_PRICE");
+}
+
+#[test]
+fn strategy_exit_invalid_bracket_preserves_existing_pending_exit() {
+    let source = SourceFile::new(
+        "strategy_exit_bracket_invalid_preserves_pending.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("KEEP", "L", limit=120)
+if bar_index == 1
+    strategy.exit("BAD", "L", stop=95, profit=0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(100.0, 100.0, 100.0, 100.0),
+            bar_ohlc(100.0, 110.0, 100.0, 100.0),
+            bar_ohlc(100.0, 121.0, 100.0, 100.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].id, "KEEP");
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].price, 120.0);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].exit_price, 120.0);
+    assert_eq!(strategy.diagnostics.len(), 1);
+    assert_eq!(strategy.diagnostics[0].code, "E_STRATEGY_EXIT_TICKS");
+}
+
+#[test]
+fn strategy_exit_bracket_runtime_json_uses_existing_strategy_shape() {
+    let source = SourceFile::new(
+        "strategy_exit_bracket_json_shape.pine",
+        r#"strategy("exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XB", "L", stop=95, limit=110)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(100.0, 100.0, 100.0, 100.0),
+            bar_ohlc(100.0, 111.0, 100.0, 100.0),
+        ],
+    )
+    .expect("runtime result");
+    let output = public_runtime_result_json(&result);
+
+    assert!(output.contains(r#""strategy":{"orders":"#));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("bracket"));
+    assert!(!output.contains("leg"));
+    assert!(!output.contains("exitReason"));
+}
+
+#[test]
 fn strategy_close_cancels_pending_limit_before_evaluation() {
     let source = SourceFile::new(
         "strategy.pine",
