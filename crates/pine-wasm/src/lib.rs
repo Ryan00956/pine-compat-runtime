@@ -115,6 +115,34 @@ fn run_script_csv_with_libraries_internal(
     program.run_csv_internal(bars_csv)
 }
 
+#[wasm_bindgen(js_name = runScriptCsvWithLibrariesAndRequestBars)]
+pub fn run_script_csv_with_libraries_and_request_bars(
+    source: &str,
+    bars_csv: &str,
+    library_sources_json: &str,
+    request_bars_json: &str,
+) -> Result<String, JsValue> {
+    run_script_csv_with_libraries_and_request_bars_internal(
+        source,
+        bars_csv,
+        library_sources_json,
+        request_bars_json,
+    )
+    .map_err(|err| JsValue::from_str(&err))
+}
+
+fn run_script_csv_with_libraries_and_request_bars_internal(
+    source: &str,
+    bars_csv: &str,
+    library_sources_json: &str,
+    request_bars_json: &str,
+) -> Result<String, String> {
+    let input = analysis_input_with_libraries(source, library_sources_json)?;
+    let program = compile_program(input)?;
+    let request_environment = request_environment_from_json(request_bars_json)?;
+    program.run_csv_with_request_environment_internal(bars_csv, request_environment)
+}
+
 fn analysis_input(source: &str) -> AnalysisInput {
     AnalysisInput::new(SourceFile::new("<wasm>", source))
 }

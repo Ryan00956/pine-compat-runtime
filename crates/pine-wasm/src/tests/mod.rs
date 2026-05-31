@@ -361,6 +361,7 @@ fn run_csv_with_request_bars_reports_missing_request_key() {
 
 const IMPORT_SOURCE: &str =
     "indicator(\"imports\")\nimport user/lib/1 as lib\nplot(lib.scale(close) + lib.offset)\n";
+const IMPORT_REQUEST_SOURCE: &str = "indicator(\"import request\")\nimport user/lib/1 as lib\nsame = request.security(\"NYSE:IBM\", timeframe.period, open + close)\nhigher = request.security(\"NYSE:IBM\", \"5\", close)\nplot(lib.scale(same))\nplot(higher + lib.offset)\n";
 const IMPORT_LIBRARY_JSON: &str = "{\"user/lib/1\":\"library(\\\"lib\\\")\\nexport offset = 2\\nexport scale(value) => value * offset\\n\"}";
 
 #[test]
@@ -373,6 +374,46 @@ fn library_source_json_runs_imported_function_subset() {
     .expect("imported function subset should run");
 
     assert!(output.contains("\"values\":[4,6]"));
+}
+
+#[test]
+fn library_source_json_combines_with_request_bars() {
+    let output = run_script_csv_with_libraries_and_request_bars(
+        IMPORT_REQUEST_SOURCE,
+        REQUEST_HOST_CHART_CSV,
+        IMPORT_LIBRARY_JSON,
+        REQUEST_HOST_BARS_JSON,
+    )
+    .expect("import plus request fixture should run");
+
+    assert!(output.contains("\"values\":[60,64,68,72,76]"));
+    assert!(output.contains("\"values\":[null,null,102,102,202]"));
+}
+
+#[test]
+fn library_source_json_combined_api_reports_library_input_errors() {
+    let message = run_script_csv_with_libraries_and_request_bars_internal(
+        IMPORT_REQUEST_SOURCE,
+        REQUEST_HOST_CHART_CSV,
+        "[]",
+        REQUEST_HOST_BARS_JSON,
+    )
+    .expect_err("malformed library JSON should fail");
+
+    assert!(message.contains("library sources must be a JSON object"));
+}
+
+#[test]
+fn library_source_json_combined_api_reports_request_input_errors() {
+    let message = run_script_csv_with_libraries_and_request_bars_internal(
+        IMPORT_REQUEST_SOURCE,
+        REQUEST_HOST_CHART_CSV,
+        IMPORT_LIBRARY_JSON,
+        "[]",
+    )
+    .expect_err("malformed request bars JSON should fail");
+
+    assert!(message.contains("request bars must be a JSON object"));
 }
 
 #[test]
