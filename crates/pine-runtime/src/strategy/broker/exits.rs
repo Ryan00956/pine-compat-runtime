@@ -5,11 +5,7 @@ use crate::RuntimeDiagnostic;
 pub(super) enum PendingExitTrigger {
     Stop(f64),
     Limit(f64),
-    Bracket {
-        downside: f64,
-        upside: f64,
-    },
-    #[allow(dead_code)]
+    Bracket { downside: f64, upside: f64 },
     Trailing(PendingTrailingExit),
 }
 
@@ -25,7 +21,6 @@ pub(super) struct PendingTrailingSpec {
     pub(super) offset_price_distance: f64,
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub(super) enum PendingTrailingActivation {
     Price(f64),
@@ -163,7 +158,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_trail_price(
         &mut self,
         id: String,
@@ -185,7 +179,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_trail_points(
         &mut self,
         id: String,
@@ -214,7 +207,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     fn place_exit_trailing(
         &mut self,
         id: String,

@@ -102,6 +102,18 @@ impl<'a> HistoricalRuntime<'a> {
             .iter()
             .find(|arg| arg.name.as_deref() == Some("loss"))
             .map(|arg| &arg.value);
+        let trail_price_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("trail_price"))
+            .map(|arg| &arg.value);
+        let trail_points_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("trail_points"))
+            .map(|arg| &arg.value);
+        let trail_offset_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("trail_offset"))
+            .map(|arg| &arg.value);
 
         let id = match self.eval_expr(id_expr)? {
             PineValue::String(value) => value,
@@ -113,6 +125,59 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let has_downside = stop_expr.is_some() || loss_expr.is_some();
         let has_upside = limit_expr.is_some() || profit_expr.is_some();
+        let has_fixed_exit = has_downside || has_upside;
+        let has_trailing_activation = trail_price_expr.is_some() || trail_points_expr.is_some();
+        let has_trailing = has_trailing_activation || trail_offset_expr.is_some();
+
+        if has_trailing {
+            let has_single_trailing_activation =
+                trail_price_expr.is_some() != trail_points_expr.is_some();
+            let is_trailing_only =
+                !has_fixed_exit && has_single_trailing_activation && trail_offset_expr.is_some();
+            if !is_trailing_only {
+                return Ok(PineValue::Void);
+            }
+
+            let trail_offset_expr = trail_offset_expr.expect("checked trailing offset presence");
+            let trail_offset_ticks = self
+                .eval_expr(trail_offset_expr)?
+                .as_f64()
+                .unwrap_or(f64::NAN);
+            let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+            if let Some(trail_price_expr) = trail_price_expr {
+                let activation_price = self
+                    .eval_expr(trail_price_expr)?
+                    .as_f64()
+                    .unwrap_or(f64::NAN);
+                self.strategy_broker.place_exit_trail_price(
+                    id,
+                    from_entry,
+                    activation_price,
+                    trail_offset_ticks,
+                    mintick,
+                    self.bars,
+                );
+                return Ok(PineValue::Void);
+            }
+
+            if let Some(trail_points_expr) = trail_points_expr {
+                let activation_ticks = self
+                    .eval_expr(trail_points_expr)?
+                    .as_f64()
+                    .unwrap_or(f64::NAN);
+                self.strategy_broker.place_exit_trail_points(
+                    id,
+                    from_entry,
+                    activation_ticks,
+                    trail_offset_ticks,
+                    mintick,
+                    self.bars,
+                );
+                return Ok(PineValue::Void);
+            }
+
+            return Ok(PineValue::Void);
+        }
 
         if has_downside && has_upside {
             let downside_price = if let Some(stop_expr) = stop_expr {

@@ -1,4 +1,7 @@
-use pine_ir::ScriptMode;
+use pine_ir::{
+    HirCallArg, HirExpr, HirExprKind, HirLiteral, HirProgram, HirStmt, HirStmtKind, PineType,
+    Qualifier, ScriptMode, ValueKind,
+};
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
@@ -59,6 +62,56 @@ plot(close)
     let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
 
     assert!(result.strategy.is_none());
+}
+
+fn const_float_arg(name: &str, value: f64) -> HirCallArg {
+    HirCallArg {
+        name: Some(name.to_owned()),
+        value: HirExpr {
+            kind: HirExprKind::Literal(HirLiteral::Float(value)),
+            pine_type: PineType::new(Qualifier::Const, ValueKind::Float),
+            series_id: None,
+        },
+    }
+}
+
+fn strategy_exit_args_mut(program: &mut HirProgram) -> &mut Vec<HirCallArg> {
+    fn find_in_stmts(statements: &mut [HirStmt]) -> Option<&mut Vec<HirCallArg>> {
+        for statement in statements {
+            match &mut statement.kind {
+                HirStmtKind::Expr(expr) => {
+                    if let Some(args) = find_in_expr(expr) {
+                        return Some(args);
+                    }
+                }
+                HirStmtKind::If {
+                    then_branch,
+                    else_branch,
+                    ..
+                } => {
+                    if let Some(args) = find_in_stmts(then_branch) {
+                        return Some(args);
+                    }
+                    if let Some(args) = find_in_stmts(else_branch) {
+                        return Some(args);
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    fn find_in_expr(expr: &mut HirExpr) -> Option<&mut Vec<HirCallArg>> {
+        if let HirExprKind::Call { callee, args, .. } = &mut expr.kind {
+            if callee == "strategy.exit" {
+                return Some(args);
+            }
+        }
+        None
+    }
+
+    find_in_stmts(&mut program.statements).expect("strategy.exit call")
 }
 
 #[test]
@@ -323,6 +376,67 @@ strategy.exit("XL", "L", stop=low)
     assert_eq!(strategy.equity.len(), 1);
     assert_eq!(strategy.diagnostics.len(), 1);
     assert_eq!(strategy.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+}
+
+#[test]
+fn strategy_exit_trailing_hir_dispatches_to_broker_validation() {
+    let source = SourceFile::new(
+        "strategy_exit_trailing_dispatch_hir.pine",
+        r#"strategy("exit")
+strategy.exit("XT", "L", stop=95)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut hir = analysis.hir.expect("HIR");
+    let args = strategy_exit_args_mut(&mut hir);
+    let stop_arg = args
+        .iter_mut()
+        .find(|arg| arg.name.as_deref() == Some("stop"))
+        .expect("stop arg");
+    stop_arg.name = Some("trail_price".to_owned());
+    args.push(const_float_arg("trail_offset", 50.0));
+
+    let result = run_historical(&hir, &[bar(100.0)]).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert!(strategy.orders.is_empty());
+    assert!(strategy.trades.is_empty());
+    assert!(strategy.position.is_empty());
+    assert_eq!(strategy.diagnostics.len(), 1);
+    assert_eq!(strategy.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+}
+
+#[test]
+fn strategy_exit_malformed_trailing_hir_is_guarded_before_fixed_exit() {
+    let source = SourceFile::new(
+        "strategy_exit_trailing_guard_hir.pine",
+        r#"strategy("exit")
+strategy.exit("XT", "L", stop=95)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut hir = analysis.hir.expect("HIR");
+    let args = strategy_exit_args_mut(&mut hir);
+    args.push(const_float_arg("trail_price", 100.0));
+    args.push(const_float_arg("trail_offset", 50.0));
+
+    let result = run_historical(&hir, &[bar(100.0)]).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert!(strategy.orders.is_empty());
+    assert!(strategy.trades.is_empty());
+    assert!(strategy.position.is_empty());
+    assert!(strategy.diagnostics.is_empty());
 }
 
 #[test]
