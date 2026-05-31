@@ -5,6 +5,7 @@ mod fills;
 use pine_ir::DEFAULT_STRATEGY_INITIAL_CAPITAL;
 
 use exits::{PendingExit, PendingExitTrigger, PendingTrailingState};
+pub(crate) use exits::{TrailPointsExitSpec, TrailPriceExitSpec};
 
 use crate::{
     RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent, StrategyPositionSnapshot,

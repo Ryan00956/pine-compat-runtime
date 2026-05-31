@@ -839,8 +839,9 @@ Out of scope until separately designed:
 Goal: add the first deterministic partial-quantity `strategy.exit` subset
 without changing the public strategy output schema.
 
-Status: in progress; implementation and host parity are complete, with audit
-closeout pending. Execution playbook: `docs/PHASE_U_EXECUTION_PLAN.md`.
+Status: closed for the current fixture-backed fixed `qty` partial-exit subset.
+See `docs/PHASE_U_AUDIT.md`. Execution playbook:
+`docs/PHASE_U_EXECUTION_PLAN.md`.
 
 Planned scope:
 
@@ -870,10 +871,10 @@ Out of scope until separately designed:
 Recommended order from the current state:
 
 1. Keep strategy maintenance narrow and fixture-backed. The next strategy work
-   should target one deferred broker tail at a time, such as partial exits,
-   missing-entry pre-placement, multiple pending exits, or short/pyramiding
-   behavior, with semantic, runtime, incremental, host, conformance, and
-   closeout evidence before any compatibility claim widens.
+   should target one deferred broker tail at a time, such as `qty_percent`,
+   quantity reservation, missing-entry pre-placement, multiple pending exits, or
+   short/pyramiding behavior, with semantic, runtime, incremental, host,
+   conformance, and closeout evidence before any compatibility claim widens.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an

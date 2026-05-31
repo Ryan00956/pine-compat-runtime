@@ -1,6 +1,6 @@
 use super::exits::{
     PendingExitQuantity, PendingTrailingActivation, PendingTrailingExit, PendingTrailingSpec,
-    PendingTrailingState,
+    PendingTrailingState, TrailPointsExitSpec, TrailPriceExitSpec,
 };
 use super::*;
 
@@ -236,14 +236,34 @@ fn fixed_quantity_is_stored_on_supported_pending_exit_families() {
     );
 
     let mut broker = broker_with_long_entry();
-    broker.place_exit_trail_price_qty("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 1.0, 0);
+    broker.place_exit_trail_price_qty(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPriceExitSpec {
+            activation_price: 105.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        1.0,
+        0,
+    );
     assert_eq!(
         broker.pending_exit.as_ref().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
     let mut broker = broker_with_long_entry();
-    broker.place_exit_trail_points_qty("XT".to_owned(), "L".to_owned(), 10.0, 4.0, 0.5, 1.0, 0);
+    broker.place_exit_trail_points_qty(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPointsExitSpec {
+            activation_ticks: 10.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        1.0,
+        0,
+    );
     assert_eq!(
         broker.pending_exit.as_ref().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)

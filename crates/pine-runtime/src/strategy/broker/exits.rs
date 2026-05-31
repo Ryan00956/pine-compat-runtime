@@ -15,6 +15,20 @@ pub(super) enum PendingExitQuantity {
     Fixed(f64),
 }
 
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct TrailPriceExitSpec {
+    pub(crate) activation_price: f64,
+    pub(crate) offset_ticks: f64,
+    pub(crate) mintick: f64,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct TrailPointsExitSpec {
+    pub(crate) activation_ticks: f64,
+    pub(crate) offset_ticks: f64,
+    pub(crate) mintick: f64,
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct PendingTrailingExit {
     pub(super) spec: PendingTrailingSpec,
@@ -373,9 +387,11 @@ impl BrokerState {
         self.place_exit_trail_price_quantity(
             id,
             from_entry,
-            activation_price,
-            offset_ticks,
-            mintick,
+            TrailPriceExitSpec {
+                activation_price,
+                offset_ticks,
+                mintick,
+            },
             PendingExitQuantity::Full,
             bar_index,
         );
@@ -385,18 +401,14 @@ impl BrokerState {
         &mut self,
         id: String,
         from_entry: String,
-        activation_price: f64,
-        offset_ticks: f64,
-        mintick: f64,
+        spec: TrailPriceExitSpec,
         qty: f64,
         bar_index: usize,
     ) {
         self.place_exit_trail_price_quantity(
             id,
             from_entry,
-            activation_price,
-            offset_ticks,
-            mintick,
+            spec,
             PendingExitQuantity::Fixed(qty),
             bar_index,
         );
@@ -406,19 +418,19 @@ impl BrokerState {
         &mut self,
         id: String,
         from_entry: String,
-        activation_price: f64,
-        offset_ticks: f64,
-        mintick: f64,
+        spec: TrailPriceExitSpec,
         quantity: PendingExitQuantity,
         bar_index: usize,
     ) {
-        let Some(offset_price_distance) = self.exit_tick_price_offset(offset_ticks, mintick) else {
+        let Some(offset_price_distance) =
+            self.exit_tick_price_offset(spec.offset_ticks, spec.mintick)
+        else {
             return;
         };
         self.place_exit_trailing(
             id,
             from_entry,
-            PendingTrailingActivation::Price(activation_price),
+            PendingTrailingActivation::Price(spec.activation_price),
             offset_price_distance,
             quantity,
             bar_index,
@@ -437,9 +449,11 @@ impl BrokerState {
         self.place_exit_trail_points_quantity(
             id,
             from_entry,
-            activation_ticks,
-            offset_ticks,
-            mintick,
+            TrailPointsExitSpec {
+                activation_ticks,
+                offset_ticks,
+                mintick,
+            },
             PendingExitQuantity::Full,
             bar_index,
         );
@@ -449,18 +463,14 @@ impl BrokerState {
         &mut self,
         id: String,
         from_entry: String,
-        activation_ticks: f64,
-        offset_ticks: f64,
-        mintick: f64,
+        spec: TrailPointsExitSpec,
         qty: f64,
         bar_index: usize,
     ) {
         self.place_exit_trail_points_quantity(
             id,
             from_entry,
-            activation_ticks,
-            offset_ticks,
-            mintick,
+            spec,
             PendingExitQuantity::Fixed(qty),
             bar_index,
         );
@@ -470,24 +480,25 @@ impl BrokerState {
         &mut self,
         id: String,
         from_entry: String,
-        activation_ticks: f64,
-        offset_ticks: f64,
-        mintick: f64,
+        spec: TrailPointsExitSpec,
         quantity: PendingExitQuantity,
         bar_index: usize,
     ) {
-        let Some(activation_price_offset) = self.exit_tick_price_offset(activation_ticks, mintick)
+        let Some(activation_price_offset) =
+            self.exit_tick_price_offset(spec.activation_ticks, spec.mintick)
         else {
             return;
         };
-        let Some(offset_price_distance) = self.exit_tick_price_offset(offset_ticks, mintick) else {
+        let Some(offset_price_distance) =
+            self.exit_tick_price_offset(spec.offset_ticks, spec.mintick)
+        else {
             return;
         };
         self.place_exit_trailing(
             id,
             from_entry,
             PendingTrailingActivation::Points {
-                ticks: activation_ticks,
+                ticks: spec.activation_ticks,
                 price: self.avg_price + activation_price_offset,
             },
             offset_price_distance,

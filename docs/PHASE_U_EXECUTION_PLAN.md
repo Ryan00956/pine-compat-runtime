@@ -1,6 +1,6 @@
 # Phase U Strategy Exit Partial Quantity Execution Plan
 
-Status: in progress; Slice 8 conformance, matrix, and documentation sync is complete.
+Status: closed; Phase U audit and release verification are complete.
 
 Phase U should widen only the current `strategy.exit` quantity surface. It must
 not become a broader broker-simulation phase. The target is a deterministic,
@@ -1007,6 +1007,19 @@ git diff --check
 scripts/verify.sh
 ```
 
+Slice 9 decision record, 2026-05-31:
+
+- `docs/PHASE_U_AUDIT.md` records the closed fixed `qty` subset, evidence, host
+  parity, unchanged public output schema, and remaining broker tails.
+- Phase U is closed for fixed absolute `qty` on the already supported
+  single-trigger, one-downside/one-upside bracket, and trailing exit families.
+- `qty_percent`, reservation behavior, multiple pending exits,
+  missing-entry pre-placement, pyramiding, shorts, reversals, richer order
+  APIs, broker costs, alerts, and realtime rollback remain separate future
+  work.
+- Runtime output remains `schemaVersion: 3`.
+- The final closeout gate is `scripts/verify.sh`.
+
 ## Recommended Execution Order
 
 Use this order unless a discovered blocker requires reordering:
@@ -1042,7 +1055,7 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
 - [x] `qty_percent` is either implemented with full evidence or remains
       fixture-backed unsupported.
 - [x] Unsupported trigger shapes with `qty` remain diagnostic-only.
-- [ ] Indicator scripts, UDF side effects, and requested-context strategy order
+- [x] Indicator scripts, UDF side effects, and requested-context strategy order
       calls remain rejected.
 - [x] Pending exit identity includes quantity.
 - [x] Invalid `qty` values produce stable runtime diagnostics and do not
@@ -1062,6 +1075,6 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
       with the implemented subset.
 - [x] Maintainer docs and release notes describe the supported quantity subset
       and remaining broker tails.
-- [ ] `docs/PHASE_U_AUDIT.md` records verification evidence and remaining
+- [x] `docs/PHASE_U_AUDIT.md` records verification evidence and remaining
       strategy tails.
-- [ ] `scripts/verify.sh` passes.
+- [x] `scripts/verify.sh` passes.

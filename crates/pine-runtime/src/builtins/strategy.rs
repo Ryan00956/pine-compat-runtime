@@ -1,6 +1,7 @@
 use pine_ir::{CallSiteId, HirCallArg};
 
 use crate::builtins::args::call_arg_expr;
+use crate::strategy::{TrailPointsExitSpec, TrailPriceExitSpec};
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -163,9 +164,11 @@ impl<'a> HistoricalRuntime<'a> {
                     self.strategy_broker.place_exit_trail_price_qty(
                         id,
                         from_entry,
-                        activation_price,
-                        trail_offset_ticks,
-                        mintick,
+                        TrailPriceExitSpec {
+                            activation_price,
+                            offset_ticks: trail_offset_ticks,
+                            mintick,
+                        },
                         qty,
                         self.bars,
                     );
@@ -197,9 +200,11 @@ impl<'a> HistoricalRuntime<'a> {
                     self.strategy_broker.place_exit_trail_points_qty(
                         id,
                         from_entry,
-                        activation_ticks,
-                        trail_offset_ticks,
-                        mintick,
+                        TrailPointsExitSpec {
+                            activation_ticks,
+                            offset_ticks: trail_offset_ticks,
+                            mintick,
+                        },
                         qty,
                         self.bars,
                     );
