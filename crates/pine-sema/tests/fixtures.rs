@@ -213,6 +213,10 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
             "E_CALL_ARG_NAME",
         ),
         (
+            "tests/fixtures/sema/unsupported_strategy_exit_qty_and_qty_percent.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
             "tests/fixtures/sema/unsupported_strategy_exit_qty_same_side.pine",
             "E_CALL_ARG_NAME",
         ),
@@ -281,6 +285,10 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
 fn reports_strategy_exit_quantity_guardrail_messages() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_exit_qty_percent.pine",
+        &["`strategy.exit` argument `qty_percent` is not supported"],
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_exit_qty_and_qty_percent.pine",
         &["`strategy.exit` argument `qty_percent` is not supported"],
     );
     assert_diagnostic_messages(

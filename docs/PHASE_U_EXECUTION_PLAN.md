@@ -1,6 +1,6 @@
 # Phase U Strategy Exit Partial Quantity Execution Plan
 
-Status: in progress; Slice 6 CLI, Python, and WASM host parity is complete.
+Status: in progress; Slice 7 explicitly defers `qty_percent`.
 
 Phase U should widen only the current `strategy.exit` quantity surface. It must
 not become a broader broker-simulation phase. The target is a deterministic,
@@ -852,6 +852,23 @@ cargo test -p pine-runtime strategy_exit
 cargo test -p pine-cli strategy
 cargo test -p pine-wasm strategy
 python3 -m pytest python/tests
+```
+
+Slice 7 decision record, 2026-05-31:
+
+- `qty_percent` is explicitly deferred from Phase U behavior. Supporting it
+  would require a separate conformance claim and the same semantic, runtime,
+  snapshot, incremental, and host evidence level as fixed `qty`.
+- `qty_percent` remains semantic-diagnostic-only unsupported, including calls
+  that also specify supported fixed `qty`. No precedence rule is introduced.
+- Negative semantic fixtures now cover both `qty_percent` alone and the
+  combined `qty + qty_percent` form.
+
+Verification:
+
+```text
+cargo test -p pine-sema strategy_exit
+cargo test -p pine-runtime strategy_exit
 ```
 
 ## Slice 8: Conformance, Matrix, And Documentation Sync
