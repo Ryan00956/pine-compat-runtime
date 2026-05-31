@@ -1,6 +1,6 @@
 # Phase U Strategy Exit Partial Quantity Execution Plan
 
-Status: in progress; Slice 0 baseline lock is complete.
+Status: in progress; Slice 2 broker pending quantity model is complete.
 
 Phase U should widen only the current `strategy.exit` quantity surface. It must
 not become a broader broker-simulation phase. The target is a deterministic,
@@ -454,6 +454,20 @@ Exit criteria:
   new broker quantity path is not yet a public compatibility claim.
 - No public output fields change.
 
+Slice 2 decision record, 2026-05-31:
+
+- `PendingExit` now carries `PendingExitQuantity::Full` or
+  `PendingExitQuantity::Fixed(f64)`.
+- Existing placement helpers continue to create `Full` pending exits, preserving
+  the current full-position behavior for all public runtime paths.
+- Internal fixed-quantity placement helpers exist for every currently supported
+  trigger family, but analyzer guardrails still keep user-script `qty` calls
+  diagnostic-only until the atomic support slice.
+- Quantity participates in pending-exit placement identity. Repeating the same
+  quantity preserves eligibility; changing quantity replaces the pending exit.
+- Invalid fixed quantities produce `E_STRATEGY_EXIT_QTY` and leave existing
+  pending state unchanged.
+
 Verification:
 
 ```text
@@ -877,6 +891,8 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
       and runtime dispatch.
 - [x] Slice 1 records quantity diagnostic guardrails without opening analyzer or
       runtime support.
+- [x] Slice 2 adds internal pending-exit quantity intent while analyzer support
+      remains closed.
 - [ ] `strategy.exit(..., qty=...)` analyzes for every selected supported
       trigger family.
 - [ ] `qty_percent` is either implemented with full evidence or remains
@@ -884,8 +900,8 @@ intentionally deferred, record the reason and risk in `docs/PHASE_U_AUDIT.md`.
 - [ ] Unsupported trigger shapes with `qty` remain diagnostic-only.
 - [ ] Indicator scripts, UDF side effects, and requested-context strategy order
       calls remain rejected.
-- [ ] Pending exit identity includes quantity.
-- [ ] Invalid `qty` values produce stable runtime diagnostics and do not
+- [x] Pending exit identity includes quantity.
+- [x] Invalid `qty` values produce stable runtime diagnostics and do not
       replace existing pending exits.
 - [ ] Full exits without `qty` keep existing behavior and snapshots.
 - [ ] Partial fills record partial order and trade quantities.
