@@ -13,15 +13,6 @@ pub(super) enum PendingExitTrigger {
 }
 
 impl PendingExitTrigger {
-    pub(super) fn price(&self) -> f64 {
-        match self {
-            Self::Stop(price) | Self::Limit(price) => *price,
-            Self::Bracket { .. } => {
-                panic!("bracket pending exits require an explicitly selected leg price")
-            }
-        }
-    }
-
     fn prices_are_finite(&self) -> bool {
         match self {
             Self::Stop(price) | Self::Limit(price) => price.is_finite(),

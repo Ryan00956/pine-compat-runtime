@@ -130,13 +130,22 @@ impl BrokerState {
             self.pending_exit = None;
             return;
         }
-        let triggered = match pending_exit.trigger {
-            PendingExitTrigger::Stop(price) => low <= price,
-            PendingExitTrigger::Limit(price) => high >= price,
-            PendingExitTrigger::Bracket { .. } => false,
+        let triggered_price = match &pending_exit.trigger {
+            PendingExitTrigger::Stop(price) if low <= *price => Some(*price),
+            PendingExitTrigger::Limit(price) if high >= *price => Some(*price),
+            PendingExitTrigger::Bracket { downside, upside } => {
+                if low <= *downside {
+                    Some(*downside)
+                } else if high >= *upside {
+                    Some(*upside)
+                } else {
+                    None
+                }
+            }
+            _ => None,
         };
-        if triggered {
-            self.fill_pending_exit(pending_exit, bar_index, time);
+        if let Some(exit_price) = triggered_price {
+            self.fill_pending_exit(pending_exit, bar_index, time, exit_price);
         }
     }
 

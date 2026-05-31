@@ -171,14 +171,13 @@ fn repeated_entry_noop_leaves_pending_exit_untouched() {
 
     assert_eq!(pending_exit_count(&broker), 1);
     assert_eq!(
-        broker.pending_exit.as_ref().map(|pending_exit| {
-            (
-                pending_exit.id.as_str(),
-                pending_exit.from_entry.as_str(),
-                pending_exit.trigger.price(),
-            )
-        }),
-        Some(("XL", "L", 95.0))
+        broker.pending_exit,
+        Some(PendingExit {
+            id: "XL".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Stop(95.0),
+            last_update_bar_index: 0,
+        })
     );
 }
 
@@ -521,6 +520,83 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
             last_update_bar_index: 2,
         })
     );
+}
+
+#[test]
+fn pending_bracket_is_not_eligible_on_creation_bar() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
+
+    broker.evaluate_pending_exits(0, 10, 111.0, 94.0);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert!(broker.trades.is_empty());
+    assert_eq!(broker.position_size, 2.0);
+}
+
+#[test]
+fn pending_bracket_downside_only_hit_fills_at_downside_price() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
+
+    broker.evaluate_pending_exits(1, 20, 109.0, 94.0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[1].id, "XB");
+    assert_eq!(broker.orders[1].direction, "strategy.exit");
+    assert_eq!(broker.orders[1].price, 95.0);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].exit_price, 95.0);
+    assert_eq!(broker.trades[0].profit, -10.0);
+    assert_eq!(broker.position_size, 0.0);
+}
+
+#[test]
+fn pending_bracket_upside_only_hit_fills_at_upside_price() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
+
+    broker.evaluate_pending_exits(1, 20, 111.0, 96.0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[1].id, "XB");
+    assert_eq!(broker.orders[1].direction, "strategy.exit");
+    assert_eq!(broker.orders[1].price, 110.0);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].exit_price, 110.0);
+    assert_eq!(broker.trades[0].profit, 20.0);
+    assert_eq!(broker.position_size, 0.0);
+}
+
+#[test]
+fn pending_bracket_both_hit_fills_at_downside_price_without_diagnostic() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
+
+    broker.evaluate_pending_exits(1, 20, 111.0, 94.0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[1].price, 95.0);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].exit_price, 95.0);
+    assert_eq!(broker.trades[0].profit, -10.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_bracket_no_hit_remains_pending() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
+
+    broker.evaluate_pending_exits(1, 20, 109.0, 96.0);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert!(broker.trades.is_empty());
+    assert_eq!(broker.position_size, 2.0);
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]

@@ -49,12 +49,12 @@ impl BrokerState {
         pending_exit: PendingExit,
         bar_index: usize,
         time: i64,
+        exit_price: f64,
     ) {
         let qty = self.position_size;
         let entry_price = self.avg_price;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
-        let exit_price = pending_exit.trigger.price();
 
         self.orders.push(StrategyOrderEvent {
             id: pending_exit.id,
