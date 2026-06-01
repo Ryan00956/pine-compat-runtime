@@ -15,6 +15,14 @@ pub(super) enum PendingExitQuantity {
     Fixed(f64),
 }
 
+#[allow(dead_code)]
+#[derive(Debug, Clone, Copy)]
+enum ExitQuantityRequest {
+    Full,
+    Fixed(f64),
+    Percent(f64),
+}
+
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct TrailPriceExitSpec {
     pub(crate) activation_price: f64,
@@ -91,6 +99,12 @@ impl PendingExitQuantity {
     }
 }
 
+impl ExitQuantityRequest {
+    fn has_invalid_fixed_quantity(self) -> bool {
+        matches!(self, Self::Fixed(qty) if !PendingExitQuantity::Fixed(qty).is_valid())
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct PendingExit {
     pub(super) id: String,
@@ -112,7 +126,7 @@ impl BrokerState {
             id,
             from_entry,
             stop_price,
-            PendingExitQuantity::Full,
+            ExitQuantityRequest::Full,
             bar_index,
         );
     }
@@ -129,7 +143,25 @@ impl BrokerState {
             id,
             from_entry,
             stop_price,
-            PendingExitQuantity::Fixed(qty),
+            ExitQuantityRequest::Fixed(qty),
+            bar_index,
+        );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_stop_qty_percent(
+        &mut self,
+        id: String,
+        from_entry: String,
+        stop_price: f64,
+        qty_percent: f64,
+        bar_index: usize,
+    ) {
+        self.place_exit_stop_quantity(
+            id,
+            from_entry,
+            stop_price,
+            ExitQuantityRequest::Percent(qty_percent),
             bar_index,
         );
     }
@@ -139,7 +171,7 @@ impl BrokerState {
         id: String,
         from_entry: String,
         stop_price: f64,
-        quantity: PendingExitQuantity,
+        quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
         self.place_exit(
@@ -162,7 +194,7 @@ impl BrokerState {
             id,
             from_entry,
             limit_price,
-            PendingExitQuantity::Full,
+            ExitQuantityRequest::Full,
             bar_index,
         );
     }
@@ -179,7 +211,25 @@ impl BrokerState {
             id,
             from_entry,
             limit_price,
-            PendingExitQuantity::Fixed(qty),
+            ExitQuantityRequest::Fixed(qty),
+            bar_index,
+        );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_limit_qty_percent(
+        &mut self,
+        id: String,
+        from_entry: String,
+        limit_price: f64,
+        qty_percent: f64,
+        bar_index: usize,
+    ) {
+        self.place_exit_limit_quantity(
+            id,
+            from_entry,
+            limit_price,
+            ExitQuantityRequest::Percent(qty_percent),
             bar_index,
         );
     }
@@ -189,7 +239,7 @@ impl BrokerState {
         id: String,
         from_entry: String,
         limit_price: f64,
-        quantity: PendingExitQuantity,
+        quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
         self.place_exit(
@@ -214,7 +264,7 @@ impl BrokerState {
             from_entry,
             ticks,
             mintick,
-            PendingExitQuantity::Full,
+            ExitQuantityRequest::Full,
             bar_index,
         );
     }
@@ -233,7 +283,27 @@ impl BrokerState {
             from_entry,
             ticks,
             mintick,
-            PendingExitQuantity::Fixed(qty),
+            ExitQuantityRequest::Fixed(qty),
+            bar_index,
+        );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_profit_ticks_qty_percent(
+        &mut self,
+        id: String,
+        from_entry: String,
+        ticks: f64,
+        mintick: f64,
+        qty_percent: f64,
+        bar_index: usize,
+    ) {
+        self.place_exit_profit_ticks_quantity(
+            id,
+            from_entry,
+            ticks,
+            mintick,
+            ExitQuantityRequest::Percent(qty_percent),
             bar_index,
         );
     }
@@ -244,7 +314,7 @@ impl BrokerState {
         from_entry: String,
         ticks: f64,
         mintick: f64,
-        quantity: PendingExitQuantity,
+        quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
         let Some(limit_price) = self.exit_profit_price_from_ticks(ticks, mintick) else {
@@ -272,7 +342,7 @@ impl BrokerState {
             from_entry,
             ticks,
             mintick,
-            PendingExitQuantity::Full,
+            ExitQuantityRequest::Full,
             bar_index,
         );
     }
@@ -291,7 +361,27 @@ impl BrokerState {
             from_entry,
             ticks,
             mintick,
-            PendingExitQuantity::Fixed(qty),
+            ExitQuantityRequest::Fixed(qty),
+            bar_index,
+        );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_loss_ticks_qty_percent(
+        &mut self,
+        id: String,
+        from_entry: String,
+        ticks: f64,
+        mintick: f64,
+        qty_percent: f64,
+        bar_index: usize,
+    ) {
+        self.place_exit_loss_ticks_quantity(
+            id,
+            from_entry,
+            ticks,
+            mintick,
+            ExitQuantityRequest::Percent(qty_percent),
             bar_index,
         );
     }
@@ -302,7 +392,7 @@ impl BrokerState {
         from_entry: String,
         ticks: f64,
         mintick: f64,
-        quantity: PendingExitQuantity,
+        quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
         let Some(stop_price) = self.exit_loss_price_from_ticks(ticks, mintick) else {
@@ -330,7 +420,7 @@ impl BrokerState {
             from_entry,
             downside_price,
             upside_price,
-            PendingExitQuantity::Full,
+            ExitQuantityRequest::Full,
             bar_index,
         );
     }
@@ -349,7 +439,27 @@ impl BrokerState {
             from_entry,
             downside_price,
             upside_price,
-            PendingExitQuantity::Fixed(qty),
+            ExitQuantityRequest::Fixed(qty),
+            bar_index,
+        );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_bracket_qty_percent(
+        &mut self,
+        id: String,
+        from_entry: String,
+        downside_price: f64,
+        upside_price: f64,
+        qty_percent: f64,
+        bar_index: usize,
+    ) {
+        self.place_exit_bracket_quantity(
+            id,
+            from_entry,
+            downside_price,
+            upside_price,
+            ExitQuantityRequest::Percent(qty_percent),
             bar_index,
         );
     }
@@ -360,7 +470,7 @@ impl BrokerState {
         from_entry: String,
         downside_price: f64,
         upside_price: f64,
-        quantity: PendingExitQuantity,
+        quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
         self.place_exit(
@@ -392,7 +502,7 @@ impl BrokerState {
                 offset_ticks,
                 mintick,
             },
-            PendingExitQuantity::Full,
+            ExitQuantityRequest::Full,
             bar_index,
         );
     }
@@ -409,7 +519,25 @@ impl BrokerState {
             id,
             from_entry,
             spec,
-            PendingExitQuantity::Fixed(qty),
+            ExitQuantityRequest::Fixed(qty),
+            bar_index,
+        );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_trail_price_qty_percent(
+        &mut self,
+        id: String,
+        from_entry: String,
+        spec: TrailPriceExitSpec,
+        qty_percent: f64,
+        bar_index: usize,
+    ) {
+        self.place_exit_trail_price_quantity(
+            id,
+            from_entry,
+            spec,
+            ExitQuantityRequest::Percent(qty_percent),
             bar_index,
         );
     }
@@ -419,7 +547,7 @@ impl BrokerState {
         id: String,
         from_entry: String,
         spec: TrailPriceExitSpec,
-        quantity: PendingExitQuantity,
+        quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
         let Some(offset_price_distance) =
@@ -454,7 +582,7 @@ impl BrokerState {
                 offset_ticks,
                 mintick,
             },
-            PendingExitQuantity::Full,
+            ExitQuantityRequest::Full,
             bar_index,
         );
     }
@@ -471,7 +599,25 @@ impl BrokerState {
             id,
             from_entry,
             spec,
-            PendingExitQuantity::Fixed(qty),
+            ExitQuantityRequest::Fixed(qty),
+            bar_index,
+        );
+    }
+
+    #[allow(dead_code)]
+    pub(crate) fn place_exit_trail_points_qty_percent(
+        &mut self,
+        id: String,
+        from_entry: String,
+        spec: TrailPointsExitSpec,
+        qty_percent: f64,
+        bar_index: usize,
+    ) {
+        self.place_exit_trail_points_quantity(
+            id,
+            from_entry,
+            spec,
+            ExitQuantityRequest::Percent(qty_percent),
             bar_index,
         );
     }
@@ -481,7 +627,7 @@ impl BrokerState {
         id: String,
         from_entry: String,
         spec: TrailPointsExitSpec,
-        quantity: PendingExitQuantity,
+        quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
         let Some(activation_price_offset) =
@@ -513,7 +659,7 @@ impl BrokerState {
         from_entry: String,
         activation: PendingTrailingActivation,
         offset_price_distance: f64,
-        quantity: PendingExitQuantity,
+        quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
         self.place_exit(
@@ -564,7 +710,7 @@ impl BrokerState {
         id: String,
         from_entry: String,
         trigger: PendingExitTrigger,
-        quantity: PendingExitQuantity,
+        quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
         if !trigger.prices_are_finite() {
@@ -574,7 +720,7 @@ impl BrokerState {
             });
             return;
         }
-        if !quantity.is_valid() {
+        if quantity.has_invalid_fixed_quantity() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_QTY".to_owned(),
                 message: "`strategy.exit` quantity must be finite and positive".to_owned(),
@@ -588,6 +734,10 @@ impl BrokerState {
             });
             return;
         }
+
+        let Some(quantity) = self.resolve_exit_quantity_request(quantity) else {
+            return;
+        };
 
         if self.pending_exit.as_ref().is_some_and(|pending_exit| {
             pending_exit.id == id
@@ -605,5 +755,28 @@ impl BrokerState {
             quantity,
             last_update_bar_index: bar_index,
         });
+    }
+
+    fn resolve_exit_quantity_request(
+        &mut self,
+        quantity: ExitQuantityRequest,
+    ) -> Option<PendingExitQuantity> {
+        match quantity {
+            ExitQuantityRequest::Full => Some(PendingExitQuantity::Full),
+            ExitQuantityRequest::Fixed(qty) => Some(PendingExitQuantity::Fixed(qty)),
+            ExitQuantityRequest::Percent(qty_percent) => {
+                if !qty_percent.is_finite() || qty_percent <= 0.0 {
+                    self.diagnostics.push(RuntimeDiagnostic {
+                        code: "E_STRATEGY_EXIT_QTY_PERCENT".to_owned(),
+                        message: "`strategy.exit` qty_percent must be finite and positive"
+                            .to_owned(),
+                    });
+                    return None;
+                }
+                Some(PendingExitQuantity::Fixed(
+                    self.position_size * qty_percent / 100.0,
+                ))
+            }
+        }
     }
 }

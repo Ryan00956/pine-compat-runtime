@@ -271,6 +271,96 @@ fn fixed_quantity_is_stored_on_supported_pending_exit_families() {
 }
 
 #[test]
+fn percent_quantity_resolves_on_supported_pending_exit_families() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty_percent("XS".to_owned(), "L".to_owned(), 95.0, 50.0, 0);
+    assert_eq!(
+        broker.pending_exit.as_ref().unwrap().quantity,
+        PendingExitQuantity::Fixed(1.0)
+    );
+
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit_qty_percent("XL".to_owned(), "L".to_owned(), 110.0, 100.0, 0);
+    assert_eq!(
+        broker.pending_exit.as_ref().unwrap().quantity,
+        PendingExitQuantity::Fixed(2.0)
+    );
+
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_profit_ticks_qty_percent("XP".to_owned(), "L".to_owned(), 10.0, 0.5, 50.0, 0);
+    assert_eq!(
+        broker.pending_exit.as_ref().unwrap().quantity,
+        PendingExitQuantity::Fixed(1.0)
+    );
+
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_loss_ticks_qty_percent("XL".to_owned(), "L".to_owned(), 5.0, 0.5, 50.0, 0);
+    assert_eq!(
+        broker.pending_exit.as_ref().unwrap().quantity,
+        PendingExitQuantity::Fixed(1.0)
+    );
+
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket_qty_percent("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 50.0, 0);
+    assert_eq!(
+        broker.pending_exit.as_ref().unwrap().quantity,
+        PendingExitQuantity::Fixed(1.0)
+    );
+
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price_qty_percent(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPriceExitSpec {
+            activation_price: 105.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        50.0,
+        0,
+    );
+    assert_eq!(
+        broker.pending_exit.as_ref().unwrap().quantity,
+        PendingExitQuantity::Fixed(1.0)
+    );
+
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_points_qty_percent(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPointsExitSpec {
+            activation_ticks: 10.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        50.0,
+        0,
+    );
+    assert_eq!(
+        broker.pending_exit.as_ref().unwrap().quantity,
+        PendingExitQuantity::Fixed(1.0)
+    );
+}
+
+#[test]
+fn percent_quantity_larger_than_position_closes_full_position() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit_qty_percent("XL".to_owned(), "L".to_owned(), 110.0, 150.0, 0);
+
+    assert_eq!(
+        broker.pending_exit.as_ref().unwrap().quantity,
+        PendingExitQuantity::Fixed(3.0)
+    );
+
+    broker.evaluate_pending_exits(1, 20, 111.0, 100.0);
+
+    assert_eq!(broker.orders[1].qty, 2.0);
+    assert_eq!(broker.trades[0].qty, 2.0);
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.entry_id, None);
+}
+
+#[test]
 fn unchanged_repeated_quantity_keeps_original_eligibility_bar() {
     let mut broker = broker_with_long_entry();
 
@@ -319,6 +409,49 @@ fn invalid_fixed_quantity_records_diagnostic_without_changing_pending_exit() {
             .iter()
             .all(|diagnostic| diagnostic.code == "E_STRATEGY_EXIT_QTY")
     );
+}
+
+#[test]
+fn invalid_percent_quantity_records_diagnostic_without_changing_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty_percent("XL".to_owned(), "L".to_owned(), 95.0, 50.0, 0);
+    let original_pending_exit = broker.pending_exit.clone();
+
+    broker.place_exit_stop_qty_percent("BAD".to_owned(), "L".to_owned(), 94.0, 0.0, 1);
+    broker.place_exit_limit_qty_percent("BAD2".to_owned(), "L".to_owned(), 110.0, f64::NAN, 2);
+
+    assert_eq!(broker.pending_exit, original_pending_exit);
+    assert_eq!(broker.diagnostics.len(), 2);
+    assert!(
+        broker
+            .diagnostics
+            .iter()
+            .all(|diagnostic| diagnostic.code == "E_STRATEGY_EXIT_QTY_PERCENT")
+    );
+}
+
+#[test]
+fn percent_quantity_while_flat_records_entry_diagnostic_before_percent_resolution() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_exit_stop_qty_percent("XL".to_owned(), "L".to_owned(), 95.0, f64::NAN, 0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+}
+
+#[test]
+fn percent_quantity_mismatched_entry_records_entry_diagnostic_before_percent_resolution() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("KEEP".to_owned(), "L".to_owned(), 95.0, 0);
+    let original_pending_exit = broker.pending_exit.clone();
+
+    broker.place_exit_stop_qty_percent("BAD".to_owned(), "OTHER".to_owned(), 94.0, f64::NAN, 1);
+
+    assert_eq!(broker.pending_exit, original_pending_exit);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
 }
 
 #[test]

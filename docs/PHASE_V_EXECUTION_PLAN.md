@@ -543,6 +543,25 @@ Exit criteria:
   forms, so no public compatibility claim is widened.
 - No public output fields change.
 
+Slice 2 execution record, 2026-06-01:
+
+- Added internal broker quantity requests with `Full`, `Fixed`, and `Percent`
+  variants. Persisted pending exits still store only `Full` or resolved
+  `Fixed` quantities, so strategy output schema remains unchanged.
+- Routed existing full-position and fixed-`qty` placement through the request
+  layer. Fixed invalid quantity diagnostics remain `E_STRATEGY_EXIT_QTY`.
+- Added percent placement helpers for the currently supported stop, limit,
+  profit, loss, bracket, and trailing exit families. These helpers are internal
+  broker/runtime API only; semantic analysis still rejects user scripts that
+  pass `qty_percent`.
+- Resolved valid percent values after matching-entry validation as
+  `position_size * qty_percent / 100.0`. Percent values greater than 100 are
+  stored as larger fixed requests and rely on the existing fill-time clamp to
+  close no more than the open position.
+- Added `E_STRATEGY_EXIT_QTY_PERCENT` for invalid percent values. Flat and
+  mismatched-entry percent placements continue to emit `E_STRATEGY_EXIT_ENTRY`
+  before percent validation and leave pending state unchanged.
+
 ## Slice 3: Atomic Semantic And Runtime Support For `qty_percent`
 
 Goal: open the selected `strategy.exit(..., qty_percent=...)` surface in one

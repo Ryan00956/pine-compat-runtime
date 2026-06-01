@@ -129,5 +129,7 @@ improved over time, but codes should remain stable once published.
   positive minimum tick.
 - `E_STRATEGY_EXIT_PRICE`: `strategy.exit` price argument is not finite.
 - `E_STRATEGY_EXIT_QTY`: `strategy.exit` quantity is not finite and positive.
+- `E_STRATEGY_EXIT_QTY_PERCENT`: `strategy.exit` percent quantity is not finite
+  and positive.
 - `E_STRATEGY_EXIT_TICKS`: `strategy.exit` tick distance is not finite and
   positive.
