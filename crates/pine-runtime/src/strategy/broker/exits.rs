@@ -87,6 +87,20 @@ impl PendingExitTrigger {
             _ => self == other,
         }
     }
+
+    pub(super) fn single_trigger_side(&self) -> Option<PendingExitSide> {
+        match self {
+            Self::Stop(_) => Some(PendingExitSide::Stop),
+            Self::Limit(_) => Some(PendingExitSide::Limit),
+            Self::Bracket { .. } | Self::Trailing(_) => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum PendingExitSide {
+    Stop,
+    Limit,
 }
 
 impl PendingExitQuantity {
@@ -111,6 +125,7 @@ pub(super) struct PendingExit {
     pub(super) trigger: PendingExitTrigger,
     pub(super) quantity: PendingExitQuantity,
     pub(super) reserved_quantity: f64,
+    pub(super) multiple_reservation: bool,
     pub(super) last_update_bar_index: usize,
 }
 
@@ -150,6 +165,26 @@ impl PendingExitBook {
             .find(|pending_exit| pending_exit.id == id && pending_exit.from_entry == from_entry)
     }
 
+    pub(super) fn other_exits_share_side(
+        &self,
+        from_entry: &str,
+        released_identity: Option<(&str, &str)>,
+        side: PendingExitSide,
+    ) -> bool {
+        self.exits
+            .iter()
+            .filter(|pending_exit| pending_exit.from_entry == from_entry)
+            .filter(|pending_exit| {
+                released_identity.is_none_or(|(id, from_entry)| {
+                    pending_exit.id != id || pending_exit.from_entry != from_entry
+                })
+            })
+            .all(|pending_exit| {
+                pending_exit.multiple_reservation
+                    && pending_exit.trigger.single_trigger_side() == Some(side)
+            })
+    }
+
     #[allow(dead_code)]
     pub(super) fn total_reserved_for_entry(
         &self,
@@ -185,6 +220,24 @@ impl PendingExitBook {
     pub(super) fn replace_all(&mut self, pending_exit: PendingExit) {
         self.exits.clear();
         self.exits.push(pending_exit);
+    }
+
+    pub(super) fn replace_or_append(&mut self, pending_exit: PendingExit) {
+        if let Some(existing) = self.exits.iter_mut().find(|existing| {
+            existing.id == pending_exit.id && existing.from_entry == pending_exit.from_entry
+        }) {
+            *existing = pending_exit;
+            return;
+        }
+        self.exits.push(pending_exit);
+    }
+
+    pub(super) fn remove_identities(&mut self, identities: &[(String, String)]) {
+        self.exits.retain(|pending_exit| {
+            !identities.iter().any(|(id, from_entry)| {
+                pending_exit.id == *id && pending_exit.from_entry == *from_entry
+            })
+        });
     }
 
     pub(super) fn clear_all(&mut self) {
@@ -811,30 +864,70 @@ impl BrokerState {
             return;
         }
 
+        let multiple_fixed_single_trigger = matches!(quantity, ExitQuantityRequest::Fixed(_))
+            && trigger.single_trigger_side().is_some();
+        let released_identity =
+            multiple_fixed_single_trigger.then_some((id.as_str(), from_entry.as_str()));
+        let available_quantity = if multiple_fixed_single_trigger
+            && self.pending_exits.other_exits_share_side(
+                &from_entry,
+                released_identity,
+                trigger
+                    .single_trigger_side()
+                    .expect("checked single trigger"),
+            ) {
+            self.pending_exits.available_unreserved_quantity(
+                self.position_size,
+                &from_entry,
+                released_identity,
+            )
+        } else {
+            self.position_size
+        };
+
         let Some((quantity, reserved_quantity)) =
-            self.resolve_exit_quantity_request_for_available(quantity, self.position_size)
+            self.resolve_exit_quantity_request_for_available(quantity, available_quantity)
         else {
             return;
         };
 
-        if self.pending_exit().is_some_and(|pending_exit| {
-            pending_exit.id == id
-                && pending_exit.from_entry == from_entry
-                && pending_exit.trigger.placement_equivalent(&trigger)
-                && pending_exit.quantity == quantity
-                && pending_exit.reserved_quantity == reserved_quantity
-        }) {
+        if self
+            .pending_exits
+            .find_by_identity(&id, &from_entry)
+            .is_some_and(|pending_exit| {
+                pending_exit.id == id
+                    && pending_exit.from_entry == from_entry
+                    && pending_exit.trigger.placement_equivalent(&trigger)
+                    && pending_exit.quantity == quantity
+                    && pending_exit.reserved_quantity == reserved_quantity
+            })
+        {
             return;
         }
 
-        self.pending_exits.replace_all(PendingExit {
+        let pending_exit = PendingExit {
             id,
             from_entry,
             trigger,
             quantity,
             reserved_quantity,
+            multiple_reservation: multiple_fixed_single_trigger,
             last_update_bar_index: bar_index,
-        });
+        };
+        if multiple_fixed_single_trigger
+            && self.pending_exits.other_exits_share_side(
+                &pending_exit.from_entry,
+                Some((pending_exit.id.as_str(), pending_exit.from_entry.as_str())),
+                pending_exit
+                    .trigger
+                    .single_trigger_side()
+                    .expect("checked single trigger"),
+            )
+        {
+            self.pending_exits.replace_or_append(pending_exit);
+        } else {
+            self.pending_exits.replace_all(pending_exit);
+        }
     }
 
     pub(super) fn resolve_exit_quantity_request_for_available(

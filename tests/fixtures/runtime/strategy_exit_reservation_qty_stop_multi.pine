@@ -1,0 +1,8 @@
+//@version=5
+strategy("Exit reservation qty stop multi")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XS1", "L", stop=2.5, qty=0.75)
+    strategy.exit("XS2", "L", stop=2.25, qty=0.5)
+plot(strategy.position_size)
+plot(strategy.netprofit)

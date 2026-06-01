@@ -728,6 +728,49 @@ Exit criteria:
 - Conformance text claims only the fixed-`qty` multiple single-trigger subset.
 - Public output shape is unchanged.
 
+### Slice 3 Implementation Record
+
+Status: completed on 2026-06-01.
+
+Implemented changes:
+
+- Opened multiple pending exits only for explicit fixed-`qty` same-side
+  single-trigger exits (`stop`, `limit`, and their `loss`/`profit` converted
+  forms).
+- Kept full-position exits, `qty_percent`, bracket exits, trailing exits, and
+  mixed-side fixed-`qty` exits on the previous one-effective-pending
+  replacement path.
+- Added internal tracking to distinguish explicit fixed-`qty` reservation
+  records from `qty_percent` records after both resolve to absolute quantities.
+- Added placement-order evaluation for multiple fixed-`qty` stop/limit exits:
+  creation/replacement bars are skipped, touched candidates fill in placement
+  order, filled identities are removed, and untouched exits remain pending while
+  the position remains open.
+- Added broker tests for multi-stop and multi-limit fills, replacement
+  reservation release, over-reservation clamping, zero-unreserved rejection,
+  full-close cancellation, and the `qty_percent` one-pending boundary.
+- Added runtime fixtures, golden snapshots, incremental coverage, and
+  conformance text for the exact fixed-`qty` same-side single-trigger
+  reservation subset.
+
+No public runtime JSON, Python dictionary, WASM JSON, or strategy output schema
+changes were made.
+
+Slice 3 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-sema strategy
+cargo test -p pine-runtime --test incremental
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli matrix_output_matches_golden_snapshot
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+```
+
+All commands passed on the Slice 3 workspace.
+
 ## Slice 4: Percent Reservation For Multiple Single-Trigger Exits
 
 Goal: extend the Slice 3 multiple single-trigger subset to `qty_percent`.

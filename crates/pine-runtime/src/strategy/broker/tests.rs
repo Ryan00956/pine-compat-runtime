@@ -183,6 +183,7 @@ fn place_exit_while_long_records_pending_stop() {
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -208,6 +209,7 @@ fn place_exit_replaces_existing_pending_stop() {
             trigger: PendingExitTrigger::Stop(90.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 1,
         })
     );
@@ -292,6 +294,126 @@ fn reservation_resolver_clamps_over_100_percent_to_available_quantity() {
 
     assert_eq!(resolved, Some((PendingExitQuantity::Fixed(3.0), 2.0)));
     assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn multiple_fixed_stop_exits_fill_in_placement_order() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("XS1".to_owned(), "L".to_owned(), 95.0, 0.75, 0);
+    broker.place_exit_stop_qty("XS2".to_owned(), "L".to_owned(), 94.0, 0.5, 0);
+
+    assert_eq!(pending_exit_count(&broker), 2);
+    assert_eq!(pending_exit_ids(&broker), vec!["XS1", "XS2"]);
+
+    broker.evaluate_pending_exits(1, 20, 100.0, 93.0);
+
+    assert_eq!(broker.orders[1].id, "XS1");
+    assert_eq!(broker.orders[1].qty, 0.75);
+    assert_eq!(broker.orders[1].price, 95.0);
+    assert_eq!(broker.orders[2].id, "XS2");
+    assert_eq!(broker.orders[2].qty, 0.5);
+    assert_eq!(broker.orders[2].price, 94.0);
+    assert_eq!(broker.trades.len(), 2);
+    assert_eq!(broker.position_size, 0.75);
+    assert_eq!(pending_exit_count(&broker), 0);
+}
+
+#[test]
+fn multiple_fixed_limit_exits_fill_in_placement_order() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit_qty("XL1".to_owned(), "L".to_owned(), 105.0, 0.75, 0);
+    broker.place_exit_limit_qty("XL2".to_owned(), "L".to_owned(), 106.0, 0.5, 0);
+
+    assert_eq!(pending_exit_count(&broker), 2);
+    assert_eq!(pending_exit_ids(&broker), vec!["XL1", "XL2"]);
+
+    broker.evaluate_pending_exits(1, 20, 107.0, 100.0);
+
+    assert_eq!(broker.orders[1].id, "XL1");
+    assert_eq!(broker.orders[1].qty, 0.75);
+    assert_eq!(broker.orders[1].price, 105.0);
+    assert_eq!(broker.orders[2].id, "XL2");
+    assert_eq!(broker.orders[2].qty, 0.5);
+    assert_eq!(broker.orders[2].price, 106.0);
+    assert_eq!(broker.trades.len(), 2);
+    assert_eq!(broker.position_size, 0.75);
+    assert_eq!(pending_exit_count(&broker), 0);
+}
+
+#[test]
+fn replacing_one_fixed_exit_releases_only_that_reservation() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("XS1".to_owned(), "L".to_owned(), 95.0, 0.5, 0);
+    broker.place_exit_stop_qty("XS2".to_owned(), "L".to_owned(), 94.0, 0.75, 0);
+
+    broker.place_exit_stop_qty("XS1".to_owned(), "L".to_owned(), 93.0, 1.25, 1);
+
+    assert_eq!(pending_exit_ids(&broker), vec!["XS1", "XS2"]);
+    let replaced = broker.pending_exit_by_identity("XS1", "L").unwrap();
+    assert_eq!(replaced.trigger, PendingExitTrigger::Stop(93.0));
+    assert_eq!(replaced.quantity, PendingExitQuantity::Fixed(1.25));
+    assert_eq!(replaced.reserved_quantity, 1.25);
+    let preserved = broker.pending_exit_by_identity("XS2", "L").unwrap();
+    assert_eq!(preserved.reserved_quantity, 0.75);
+    assert_eq!(
+        broker.pending_exits.total_reserved_for_entry("L", None),
+        2.0
+    );
+}
+
+#[test]
+fn new_fixed_exit_clamps_to_remaining_unreserved_quantity() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit_qty("XL1".to_owned(), "L".to_owned(), 105.0, 1.5, 0);
+    broker.place_exit_limit_qty("XL2".to_owned(), "L".to_owned(), 106.0, 1.0, 0);
+
+    assert_eq!(pending_exit_count(&broker), 2);
+    let clamped = broker.pending_exit_by_identity("XL2", "L").unwrap();
+    assert_eq!(clamped.quantity, PendingExitQuantity::Fixed(1.0));
+    assert_eq!(clamped.reserved_quantity, 0.5);
+    assert_eq!(
+        broker.pending_exits.total_reserved_for_entry("L", None),
+        2.0
+    );
+}
+
+#[test]
+fn fixed_exit_with_no_unreserved_quantity_is_rejected() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("XS1".to_owned(), "L".to_owned(), 95.0, 1.0, 0);
+    broker.place_exit_stop_qty("XS2".to_owned(), "L".to_owned(), 94.0, 1.0, 0);
+
+    broker.place_exit_stop_qty("XS3".to_owned(), "L".to_owned(), 93.0, 0.5, 0);
+
+    assert_eq!(pending_exit_ids(&broker), vec!["XS1", "XS2"]);
+    assert!(broker.pending_exit_by_identity("XS3", "L").is_none());
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_QTY");
+}
+
+#[test]
+fn fixed_exit_after_percent_exit_keeps_one_pending_behavior() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty_percent("XP".to_owned(), "L".to_owned(), 95.0, 50.0, 0);
+
+    broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 94.0, 0.5, 0);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert_eq!(pending_exit_ids(&broker), vec!["XS"]);
+    assert!(broker.pending_exit_by_identity("XP", "L").is_none());
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn full_close_cancels_remaining_multiple_pending_exits() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("XS1".to_owned(), "L".to_owned(), 95.0, 0.75, 0);
+    broker.place_exit_stop_qty("XS2".to_owned(), "L".to_owned(), 94.0, 0.75, 0);
+
+    broker.close_long("L".to_owned(), 1, 20, 110.0);
+
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(pending_exit_count(&broker), 0);
 }
 
 #[test]
@@ -481,6 +603,7 @@ fn changed_repeated_quantity_replaces_pending_exit() {
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Fixed(0.5),
             reserved_quantity: 0.5,
+            multiple_reservation: true,
             last_update_bar_index: 1,
         })
     );
@@ -586,6 +709,7 @@ fn repeated_entry_noop_leaves_pending_exit_untouched() {
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -774,6 +898,7 @@ fn profit_ticks_create_limit_from_average_entry_price() {
             trigger: PendingExitTrigger::Limit(105.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -793,6 +918,7 @@ fn loss_ticks_create_stop_from_average_entry_price() {
             trigger: PendingExitTrigger::Stop(97.5),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -816,6 +942,7 @@ fn place_exit_bracket_records_pending_bracket() {
             },
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -845,6 +972,7 @@ fn bracket_tick_helpers_resolve_prices_from_average_entry_price() {
             },
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -865,6 +993,7 @@ fn place_exit_trail_price_records_pending_trailing_exit() {
             trigger: trailing_price_trigger(105.0, 2.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -885,6 +1014,7 @@ fn place_exit_trail_points_records_entry_relative_activation() {
             trigger: trailing_points_trigger(10.0, 105.0, 2.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -917,6 +1047,7 @@ fn invalid_trailing_activation_price_records_diagnostic_without_changing_pending
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -939,6 +1070,7 @@ fn invalid_trailing_offset_ticks_record_diagnostic_without_changing_pending_exit
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -981,6 +1113,7 @@ fn unchanged_repeated_trailing_preserves_active_state() {
             }),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -1000,6 +1133,7 @@ fn changed_repeated_trailing_replaces_spec_and_delays_eligibility() {
             trigger: trailing_price_trigger(106.0, 2.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 1,
         })
     );
@@ -1031,6 +1165,7 @@ fn invalid_bracket_downside_price_records_diagnostic_without_changing_pending_ex
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -1053,6 +1188,7 @@ fn invalid_bracket_upside_price_records_diagnostic_without_changing_pending_exit
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -1076,6 +1212,7 @@ fn invalid_bracket_ticks_record_diagnostic_without_changing_pending_exit() {
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -1099,6 +1236,7 @@ fn invalid_bracket_mintick_records_diagnostic_without_changing_pending_exit() {
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -1132,6 +1270,7 @@ fn bracket_with_mismatched_entry_records_diagnostic_without_changing_pending_exi
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -1165,6 +1304,7 @@ fn changed_repeated_bracket_replaces_price_and_delays_eligibility() {
             },
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 1,
         })
     );
@@ -1188,6 +1328,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
             },
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 1,
         })
     );
@@ -1202,6 +1343,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
             trigger: PendingExitTrigger::Limit(111.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 2,
         })
     );
@@ -1299,6 +1441,7 @@ fn pending_trailing_is_not_eligible_on_creation_bar() {
             trigger: trailing_price_trigger(105.0, 2.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -1384,6 +1527,7 @@ fn invalid_profit_ticks_record_diagnostic_without_changing_pending_exit() {
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -1406,6 +1550,7 @@ fn invalid_exit_mintick_records_diagnostic_without_changing_pending_exit() {
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 0,
         })
     );
@@ -1470,6 +1615,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 1,
         })
     );
@@ -1484,6 +1630,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
+            multiple_reservation: false,
             last_update_bar_index: 2,
         })
     );

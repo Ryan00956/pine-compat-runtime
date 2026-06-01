@@ -800,6 +800,22 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_qty_state.pine",
             ),
             (
+                "runtime_strategy_exit_reservation_qty_stop_multi.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_stop_multi.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_limit_multi.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_limit_multi.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_replacement.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_replacement.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_clamp.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_clamp.pine",
+            ),
+            (
                 "runtime_strategy_exit_qty_percent_stop_partial.json",
                 "tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine",
             ),

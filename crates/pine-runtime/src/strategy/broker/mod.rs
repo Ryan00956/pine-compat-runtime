@@ -137,6 +137,11 @@ impl BrokerState {
         high: f64,
         low: f64,
     ) {
+        if self.pending_exit_count() > 1 {
+            self.evaluate_multiple_pending_exits(bar_index, time, high, low);
+            return;
+        }
+
         let Some(mut pending_exit) = self.pending_exit().cloned() else {
             return;
         };
@@ -187,7 +192,63 @@ impl BrokerState {
             _ => None,
         };
         if let Some(exit_price) = triggered_price {
+            let from_entry = pending_exit.from_entry.clone();
             self.fill_pending_exit(pending_exit, bar_index, time, exit_price);
+            if self.position_size <= 0.0 {
+                self.pending_exits.clear_all();
+            } else {
+                self.pending_exits.clear_for_entry(&from_entry);
+            }
+        }
+    }
+
+    fn evaluate_multiple_pending_exits(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        high: f64,
+        low: f64,
+    ) {
+        let pending_exits: Vec<PendingExit> = self.pending_exits.iter().cloned().collect();
+        let Some(first_pending_exit) = pending_exits.first() else {
+            return;
+        };
+        if self.position_size <= 0.0
+            || self.entry_id.as_deref() != Some(first_pending_exit.from_entry.as_str())
+        {
+            self.pending_exits
+                .clear_for_entry(&first_pending_exit.from_entry);
+            return;
+        }
+
+        let mut filled_identities = Vec::new();
+        for pending_exit in pending_exits {
+            if pending_exit.last_update_bar_index >= bar_index {
+                continue;
+            }
+            if self.position_size <= 0.0 {
+                break;
+            }
+            if self.entry_id.as_deref() != Some(pending_exit.from_entry.as_str()) {
+                self.pending_exits.clear_for_entry(&pending_exit.from_entry);
+                continue;
+            }
+
+            let triggered_price = match pending_exit.trigger {
+                PendingExitTrigger::Stop(price) if low <= price => Some(price),
+                PendingExitTrigger::Limit(price) if high >= price => Some(price),
+                _ => None,
+            };
+            if let Some(exit_price) = triggered_price {
+                filled_identities.push((pending_exit.id.clone(), pending_exit.from_entry.clone()));
+                self.fill_pending_exit(pending_exit, bar_index, time, exit_price);
+            }
+        }
+
+        if self.position_size <= 0.0 {
+            self.pending_exits.clear_all();
+        } else {
+            self.pending_exits.remove_identities(&filled_identities);
         }
     }
 

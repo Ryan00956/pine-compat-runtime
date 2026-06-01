@@ -84,7 +84,6 @@ impl BrokerState {
         });
 
         self.cash += qty * exit_price;
-        self.pending_exits.clear_all();
         if qty >= self.position_size {
             self.position_size = 0.0;
             self.avg_price = 0.0;
