@@ -1,0 +1,5 @@
+//@version=5
+indicator("Parse error recovery")
+x =
+y = close
+plot(y)

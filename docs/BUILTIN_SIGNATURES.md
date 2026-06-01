@@ -267,6 +267,9 @@ strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple
 Only metadata arguments needed by the output and history-retention model should
 be accepted in Phase 1. `max_bars_back` must be non-negative when provided.
 Unsupported named arguments should produce compatibility diagnostics.
+`strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
+`default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
+use the configured or default fixed quantity.
 `strategy.exit` accepts `qty` only on supported single-trigger, one-downside/
 one-upside bracket, and trailing trigger shapes. `qty_percent` and richer
 strategy order options remain unsupported.

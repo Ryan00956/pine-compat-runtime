@@ -1,4 +1,7 @@
-use pine_ir::CallSiteId;
+use pine_ir::{
+    CallSiteId, HirExpr, HirExprKind, HirLiteral, HirStmt, HirStmtKind, PineType, Qualifier,
+    ValueKind,
+};
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
@@ -26,6 +29,61 @@ plot(close)
         .expect_err("unsupported runtime call should fail");
 
     assert_eq!(error.message, "unsupported runtime call `runtime.unknown`");
+}
+
+#[test]
+fn rejects_hir_expression_past_runtime_eval_depth() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("runtime depth")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let mut program = analysis.hir.expect("HIR");
+    program.statements = vec![HirStmt {
+        kind: HirStmtKind::Expr(nested_unary_expr(MAX_RUNTIME_EVAL_DEPTH + 1)),
+    }];
+
+    let error =
+        run_historical(&program, &[bar(1.0)]).expect_err("deep runtime expression should fail");
+
+    assert_eq!(
+        error.message,
+        "runtime expression evaluation exceeded maximum depth"
+    );
+}
+
+fn nested_unary_expr(depth: u32) -> HirExpr {
+    let mut expr = int_expr(1);
+    for _ in 0..depth {
+        expr = HirExpr {
+            kind: HirExprKind::Unary {
+                op: pine_ir::HirUnaryOp::Plus,
+                expr: Box::new(expr),
+            },
+            pine_type: int_type(),
+            series_id: None,
+        };
+    }
+    expr
+}
+
+fn int_expr(value: i64) -> HirExpr {
+    HirExpr {
+        kind: HirExprKind::Literal(HirLiteral::Int(value)),
+        pine_type: int_type(),
+        series_id: None,
+    }
+}
+
+fn int_type() -> PineType {
+    PineType::new(Qualifier::Const, ValueKind::Int)
 }
 
 #[test]

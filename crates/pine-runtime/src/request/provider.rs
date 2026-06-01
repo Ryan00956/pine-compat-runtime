@@ -37,7 +37,6 @@ pub(crate) struct RequestCacheKey {
     call_site_id: CallSiteId,
     symbol: String,
     timeframe: String,
-    expression: String,
 }
 
 impl RequestCacheKey {
@@ -46,13 +45,11 @@ impl RequestCacheKey {
         call_site_id: CallSiteId,
         symbol: impl Into<String>,
         timeframe: impl Into<String>,
-        expression: impl Into<String>,
     ) -> Self {
         Self {
             call_site_id,
             symbol: symbol.into(),
             timeframe: timeframe.into(),
-            expression: expression.into(),
         }
     }
 }

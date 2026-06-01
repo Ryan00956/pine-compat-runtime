@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use pine_syntax::{
     CallArg, ExportDecl, ExportItem, Expr, ExprKind, FunctionBody, Program, Stmt, StmtKind,
@@ -7,21 +7,28 @@ use pine_syntax::{
 
 use crate::analyzer::calls::expr_name;
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub(super) struct RewriteContext {
     pub(super) constants: HashMap<String, Expr>,
     pub(super) function_targets: HashMap<String, String>,
+    shadowed_names: HashSet<String>,
 }
 
 pub(super) fn rewrite_program(program: &Program, context: &RewriteContext) -> Program {
     Program {
         version: program.version,
-        statements: program
-            .statements
-            .iter()
-            .map(|statement| rewrite_stmt(statement, context))
-            .collect(),
+        statements: rewrite_statements(&program.statements, context),
     }
+}
+
+fn rewrite_statements(statements: &[Stmt], context: &RewriteContext) -> Vec<Stmt> {
+    let mut scoped_context = context.clone();
+    let mut rewritten = Vec::with_capacity(statements.len());
+    for statement in statements {
+        rewritten.push(rewrite_stmt(statement, &scoped_context));
+        record_statement_bindings(statement, &mut scoped_context);
+    }
+    rewritten
 }
 
 fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
@@ -33,14 +40,8 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
             else_branch,
         } => StmtKind::If {
             condition: rewrite_expr(condition, context),
-            then_branch: then_branch
-                .iter()
-                .map(|statement| rewrite_stmt(statement, context))
-                .collect(),
-            else_branch: else_branch
-                .iter()
-                .map(|statement| rewrite_stmt(statement, context))
-                .collect(),
+            then_branch: rewrite_statements(then_branch, context),
+            else_branch: rewrite_statements(else_branch, context),
         },
         StmtKind::For {
             counter,
@@ -53,17 +54,14 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
             from: rewrite_expr(from, context),
             to: rewrite_expr(to, context),
             step: step.as_ref().map(|step| rewrite_expr(step, context)),
-            body: body
-                .iter()
-                .map(|statement| rewrite_stmt(statement, context))
-                .collect(),
+            body: {
+                let body_context = context.shadowing(counter);
+                rewrite_statements(body, &body_context)
+            },
         },
         StmtKind::While { condition, body } => StmtKind::While {
             condition: rewrite_expr(condition, context),
-            body: body
-                .iter()
-                .map(|statement| rewrite_stmt(statement, context))
-                .collect(),
+            body: rewrite_statements(body, context),
         },
         StmtKind::Decl { mode, name, value } => StmtKind::Decl {
             mode: *mode,
@@ -88,7 +86,7 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
                 } => ExportItem::Function {
                     name: name.clone(),
                     params: params.clone(),
-                    body: rewrite_function_body(body, context),
+                    body: rewrite_function_body(body, params, context),
                     span: *span,
                 },
                 ExportItem::Const { name, value, span } => ExportItem::Const {
@@ -103,7 +101,7 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
         StmtKind::Function { name, params, body } => StmtKind::Function {
             name: name.clone(),
             params: params.clone(),
-            body: rewrite_function_body(body, context),
+            body: rewrite_function_body(body, params, context),
         },
         StmtKind::Import(_)
         | StmtKind::Library(_)
@@ -119,21 +117,23 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
     }
 }
 
-pub(super) fn rewrite_function_body(body: &FunctionBody, context: &RewriteContext) -> FunctionBody {
+pub(super) fn rewrite_function_body(
+    body: &FunctionBody,
+    params: &[String],
+    context: &RewriteContext,
+) -> FunctionBody {
+    let context = context.shadowing_all(params);
     match body {
-        FunctionBody::Expr(expr) => FunctionBody::Expr(rewrite_expr(expr, context)),
-        FunctionBody::Block(statements) => FunctionBody::Block(
-            statements
-                .iter()
-                .map(|statement| rewrite_stmt(statement, context))
-                .collect(),
-        ),
+        FunctionBody::Expr(expr) => FunctionBody::Expr(rewrite_expr(expr, &context)),
+        FunctionBody::Block(statements) => {
+            FunctionBody::Block(rewrite_statements(statements, &context))
+        }
     }
 }
 
 pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
     if let Some(name) = expr_name(expr)
-        && let Some(value) = context.constants.get(&name)
+        && let Some(value) = context.constant(&name)
     {
         return value.clone();
     }
@@ -141,7 +141,7 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
     let kind = match &expr.kind {
         ExprKind::Call { callee, args } => {
             let callee = if let Some(name) = expr_name(callee)
-                && let Some(target) = context.function_targets.get(&name)
+                && let Some(target) = context.function_target(&name)
             {
                 Expr {
                     kind: ExprKind::Identifier(target.clone()),
@@ -193,10 +193,10 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
             step: step
                 .as_ref()
                 .map(|step| Box::new(rewrite_expr(step, context))),
-            body: body
-                .iter()
-                .map(|statement| rewrite_stmt(statement, context))
-                .collect(),
+            body: {
+                let body_context = context.shadowing(counter);
+                rewrite_statements(body, &body_context)
+            },
         },
         ExprKind::Switch { selector, arms } => ExprKind::Switch {
             selector: selector
@@ -230,5 +230,54 @@ pub(super) fn rewrite_expr(expr: &Expr, context: &RewriteContext) -> Expr {
     Expr {
         kind,
         span: expr.span,
+    }
+}
+
+impl RewriteContext {
+    fn shadowing(&self, name: &str) -> Self {
+        let mut context = self.clone();
+        context.shadowed_names.insert(name.to_owned());
+        context
+    }
+
+    fn shadowing_all<'a>(&self, names: impl IntoIterator<Item = &'a String>) -> Self {
+        let mut context = self.clone();
+        context
+            .shadowed_names
+            .extend(names.into_iter().map(|name| name.to_owned()));
+        context
+    }
+
+    fn constant(&self, name: &str) -> Option<&Expr> {
+        if self.is_shadowed(name) {
+            return None;
+        }
+        self.constants.get(name)
+    }
+
+    fn function_target(&self, name: &str) -> Option<&String> {
+        if self.is_shadowed(name) {
+            return None;
+        }
+        self.function_targets.get(name)
+    }
+
+    fn is_shadowed(&self, name: &str) -> bool {
+        self.shadowed_names.contains(name)
+            || name
+                .split_once('.')
+                .is_some_and(|(prefix, _)| self.shadowed_names.contains(prefix))
+    }
+}
+
+fn record_statement_bindings(statement: &Stmt, context: &mut RewriteContext) {
+    match &statement.kind {
+        StmtKind::Decl { name, .. } | StmtKind::Function { name, .. } => {
+            context.shadowed_names.insert(name.clone());
+        }
+        StmtKind::TupleDecl { names, .. } => {
+            context.shadowed_names.extend(names.iter().cloned());
+        }
+        _ => {}
     }
 }

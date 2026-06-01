@@ -281,7 +281,7 @@ impl Parser {
 
         match name.as_str() {
             "library" if self.nth_at(1, TokenKind::LParen) => Some(PhaseJStatement::Library),
-            "export" => Some(PhaseJStatement::Export),
+            "export" if self.nth_identifier(1) => Some(PhaseJStatement::Export),
             "type" if self.nth_identifier(1) => Some(PhaseJStatement::UserType),
             "method" if self.nth_identifier(1) => Some(PhaseJStatement::Method),
             _ => None,
@@ -432,6 +432,18 @@ mod tests {
         };
         assert_eq!(name, "answer");
         assert!(matches!(value.kind, ExprKind::Literal(Literal::Int(42))));
+    }
+
+    #[test]
+    fn parses_export_as_plain_identifier_when_not_followed_by_item_name() {
+        let parsed = parse("export = 5\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl { name, value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected ordinary declaration");
+        };
+        assert_eq!(name, "export");
+        assert!(matches!(value.kind, ExprKind::Literal(Literal::Int(5))));
     }
 
     #[test]

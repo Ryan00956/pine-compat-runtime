@@ -1,0 +1,9 @@
+//@version=5
+indicator("Computed array operands")
+n = 1
+values = array.new_float(n + 1)
+array.set(values, n - 1, close)
+array.set(values, n, close + 10)
+plot(array.get(values, n - 1))
+plot(array.get(values, n))
+plot(array.size(values))

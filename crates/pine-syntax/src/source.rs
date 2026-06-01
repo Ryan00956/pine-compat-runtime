@@ -72,10 +72,14 @@ impl SourceFile {
             Err(index) => index.saturating_sub(1),
         };
         let line_start = self.line_starts[line_index];
+        let column = self.text.get(line_start..offset).map_or_else(
+            || offset.saturating_sub(line_start),
+            |prefix| prefix.chars().count(),
+        ) + 1;
 
         LineCol {
             line: line_index + 1,
-            column: offset.saturating_sub(line_start) + 1,
+            column,
         }
     }
 }
@@ -91,5 +95,17 @@ mod tests {
         assert_eq!(source.line_col(0), LineCol { line: 1, column: 1 });
         assert_eq!(source.line_col(4), LineCol { line: 2, column: 1 });
         assert_eq!(source.line_col(6), LineCol { line: 2, column: 3 });
+    }
+
+    #[test]
+    fn maps_utf8_offsets_to_character_columns() {
+        let source = SourceFile::new("test.pine", "éx\nαβ\n");
+
+        assert_eq!(source.line_col(0), LineCol { line: 1, column: 1 });
+        assert_eq!(source.line_col("é".len()), LineCol { line: 1, column: 2 });
+        assert_eq!(
+            source.line_col("éx\nα".len()),
+            LineCol { line: 2, column: 2 }
+        );
     }
 }

@@ -11,6 +11,29 @@ use crate::compatibility::CompatibilityReport;
 use crate::prelude::UserTypeInfo;
 use crate::resolver::{BindingKey, ScopeResolver, SymbolInfo};
 
+pub(crate) const MAX_SEMA_EXPR_DEPTH: u32 = 128;
+pub(crate) const MAX_FUNCTION_CALL_DEPTH: usize = 64;
+pub(crate) const MAX_LOWERING_INLINE_DEPTH: u32 = 64;
+pub(crate) const MAX_LOWERING_HIR_NODES: u32 = 65_536;
+pub(crate) const MAX_LOWERING_TEMP_SYMBOLS: u32 = 4_096;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct LoweringLimits {
+    pub(crate) max_inline_depth: u32,
+    pub(crate) max_hir_nodes: u32,
+    pub(crate) max_temp_symbols: u32,
+}
+
+impl Default for LoweringLimits {
+    fn default() -> Self {
+        Self {
+            max_inline_depth: MAX_LOWERING_INLINE_DEPTH,
+            max_hir_nodes: MAX_LOWERING_HIR_NODES,
+            max_temp_symbols: MAX_LOWERING_TEMP_SYMBOLS,
+        }
+    }
+}
+
 pub(crate) struct Analyzer {
     pub(crate) diagnostics: Vec<Diagnostic>,
     pub(crate) compatibility: CompatibilityReport,
@@ -33,6 +56,12 @@ pub(crate) struct Analyzer {
     pub(crate) block_depth: u32,
     pub(crate) function_depth: u32,
     pub(crate) loop_depth: u32,
+    pub(crate) expr_depth: u32,
+    pub(crate) lowering_limits: LoweringLimits,
+    pub(crate) lowering_inline_depth: u32,
+    pub(crate) lowered_hir_nodes: u32,
+    pub(crate) lowered_temp_symbols: u32,
+    pub(crate) lowering_budget_reported: bool,
 }
 #[derive(Debug, Clone)]
 pub(crate) struct FunctionInfo {

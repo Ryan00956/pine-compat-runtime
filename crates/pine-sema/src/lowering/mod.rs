@@ -81,6 +81,9 @@ impl Analyzer {
             }
             statements.push(self.lower_stmt(statement)?);
         }
+        if self.has_errors() {
+            return None;
+        }
 
         let symbols = self.lower_symbols();
         let history = infer_history_requirements(&statements, &symbols);
@@ -157,6 +160,10 @@ impl Analyzer {
         param_exprs: &HashMap<String, HirExpr>,
         param_types: &HashMap<String, PineType>,
     ) -> Option<HirStmt> {
+        if !self.record_lowering_node(statement.span) {
+            return None;
+        }
+
         let kind = match &statement.kind {
             StmtKind::Expr(expr) => {
                 HirStmtKind::Expr(self.lower_expr_with_params(expr, param_exprs, param_types)?)
@@ -250,6 +257,10 @@ impl Analyzer {
         param_exprs: &HashMap<String, HirExpr>,
         param_types: &HashMap<String, PineType>,
     ) -> Option<HirExpr> {
+        if !self.record_lowering_node(expr.span) {
+            return None;
+        }
+
         if let ExprKind::Identifier(name) = &expr.kind
             && let Some(param_expr) = param_exprs.get(name)
             && self
@@ -434,7 +445,7 @@ impl Analyzer {
                     );
                 }
                 if self.functions.contains_key(&name) {
-                    return self.lower_udf_call(&name, args, param_exprs, param_types);
+                    return self.lower_udf_call(&name, expr.span, args, param_exprs, param_types);
                 }
                 if pine_builtins::get_phase_1_builtin(&name).is_none()
                     && let Some((receiver_name, method_name)) = method_call_parts(callee)
@@ -518,6 +529,7 @@ impl Analyzer {
     pub(crate) fn lower_udf_call(
         &mut self,
         name: &str,
+        span: Span,
         args: &[CallArg],
         outer_param_exprs: &HashMap<String, HirExpr>,
         outer_param_types: &HashMap<String, PineType>,
@@ -537,6 +549,9 @@ impl Analyzer {
         let mut arg_statements = Vec::new();
         for (param, resolved_arg) in function.params.iter().zip(resolved_args) {
             let (arg_expr, arg_type) = resolved_arg?;
+            if !self.record_lowering_temp_symbol(span) {
+                return None;
+            }
             let symbol = self.fresh_temp_symbol(&format!("{name}.{param}"), arg_type);
             arg_statements.push(HirStmt {
                 kind: HirStmtKind::Decl {
@@ -554,7 +569,12 @@ impl Analyzer {
             );
             param_types.insert(param.clone(), arg_type);
         }
-        let body = self.lower_function_body(&function.body, &param_exprs, &param_types)?;
+        if !self.enter_lowering_inline(span) {
+            return None;
+        }
+        let body = self.lower_function_body(&function.body, &param_exprs, &param_types);
+        self.exit_lowering_inline();
+        let body = body?;
         Some(prepend_block_statements(arg_statements, body))
     }
 
@@ -593,6 +613,9 @@ impl Analyzer {
                 pine_type: receiver_symbol.pine_type,
                 series_id: receiver_symbol.series_id,
             });
+        if !self.record_lowering_temp_symbol(receiver_span) {
+            return None;
+        }
         let receiver_temp = self.fresh_temp_symbol(
             &format!("{method_name}.{receiver_name}"),
             receiver_expr.pine_type,
@@ -622,6 +645,9 @@ impl Analyzer {
         }
         for (param, resolved_arg) in method.params.iter().zip(resolved_args) {
             let (arg_expr, arg_type) = resolved_arg?;
+            if !self.record_lowering_temp_symbol(receiver_span) {
+                return None;
+            }
             let symbol = self.fresh_temp_symbol(&format!("{method_name}.{}", param.name), arg_type);
             arg_statements.push(HirStmt {
                 kind: HirStmtKind::Decl {
@@ -639,7 +665,12 @@ impl Analyzer {
             );
             param_types.insert(param.name.clone(), arg_type);
         }
-        let body = self.lower_function_body(&method.body, &param_exprs, &param_types)?;
+        if !self.enter_lowering_inline(receiver_span) {
+            return None;
+        }
+        let body = self.lower_function_body(&method.body, &param_exprs, &param_types);
+        self.exit_lowering_inline();
+        let body = body?;
         Some(prepend_block_statements(arg_statements, body))
     }
 
@@ -686,5 +717,52 @@ impl Analyzer {
                 })
             }
         }
+    }
+
+    fn enter_lowering_inline(&mut self, span: Span) -> bool {
+        if self.lowering_inline_depth >= self.lowering_limits.max_inline_depth {
+            self.report_lowering_budget_exceeded("lowering inline call chain is too deep", span);
+            return false;
+        }
+
+        self.lowering_inline_depth += 1;
+        true
+    }
+
+    fn exit_lowering_inline(&mut self) {
+        self.lowering_inline_depth = self.lowering_inline_depth.saturating_sub(1);
+    }
+
+    fn record_lowering_node(&mut self, span: Span) -> bool {
+        if self.lowered_hir_nodes >= self.lowering_limits.max_hir_nodes {
+            self.report_lowering_budget_exceeded("lowered HIR is too large", span);
+            return false;
+        }
+
+        self.lowered_hir_nodes += 1;
+        true
+    }
+
+    fn record_lowering_temp_symbol(&mut self, span: Span) -> bool {
+        if self.lowered_temp_symbols >= self.lowering_limits.max_temp_symbols {
+            self.report_lowering_budget_exceeded(
+                "lowering generated too many temporary symbols",
+                span,
+            );
+            return false;
+        }
+
+        self.lowered_temp_symbols += 1;
+        true
+    }
+
+    fn report_lowering_budget_exceeded(&mut self, message: &str, span: Span) {
+        if self.lowering_budget_reported {
+            return;
+        }
+
+        self.lowering_budget_reported = true;
+        self.diagnostics
+            .push(Diagnostic::error("E_LOWERING_BUDGET", message, span));
     }
 }

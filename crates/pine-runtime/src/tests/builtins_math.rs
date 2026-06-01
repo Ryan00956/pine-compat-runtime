@@ -230,3 +230,27 @@ plot(invalid)
     assert_eq!(result.plots[1].values[3], PineValue::Na);
     assert_eq!(result.plots[2].values, vec![PineValue::Na; 4]);
 }
+
+#[test]
+fn runs_math_sum_with_computed_integer_length() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("math sum computed length")
+n = 2
+value = math.sum(close, n + 0)
+plot(value)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(4.0), bar(8.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[3.0, 6.0, 12.0]);
+}

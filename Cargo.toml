@@ -12,7 +12,8 @@ members = [
 resolver = "2"
 
 [workspace.package]
+description = "Clean-room Pine-compatible indicator runtime subset; not affiliated with TradingView."
 edition = "2024"
 license = "MIT"
-repository = ""
+repository = "https://github.com/Ryan00956/pine-compat-runtime"
 rust-version = "1.95"

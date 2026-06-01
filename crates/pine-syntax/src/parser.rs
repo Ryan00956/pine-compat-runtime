@@ -6,6 +6,8 @@ use crate::{
 #[path = "parser_phase_j.rs"]
 mod phase_j;
 
+const MAX_EXPR_DEPTH: u32 = 256;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct Parse {
     pub program: Program,
@@ -21,6 +23,7 @@ struct Parser {
     tokens: Vec<Token>,
     pos: usize,
     diagnostics: Vec<Diagnostic>,
+    expr_depth: u32,
 }
 
 struct ForParts {
@@ -39,6 +42,7 @@ impl Parser {
             tokens: lexed.tokens,
             pos: 0,
             diagnostics: lexed.diagnostics,
+            expr_depth: 0,
         }
     }
 
@@ -479,6 +483,18 @@ impl Parser {
     }
 
     fn parse_expr(&mut self, min_bp: u8) -> Option<Expr> {
+        if self.expr_depth >= MAX_EXPR_DEPTH {
+            self.error_here("E_PARSE_EXPR_DEPTH", "expression nesting is too deep");
+            return None;
+        }
+
+        self.expr_depth += 1;
+        let result = self.parse_expr_inner(min_bp);
+        self.expr_depth -= 1;
+        result
+    }
+
+    fn parse_expr_inner(&mut self, min_bp: u8) -> Option<Expr> {
         let mut left = self.parse_prefix()?;
 
         loop {
@@ -1128,6 +1144,22 @@ mod tests {
                 .diagnostics
                 .iter()
                 .any(|diagnostic| diagnostic.code == "E_PARSE_SWITCH_BLOCK"),
+            "{:?}",
+            parsed.diagnostics
+        );
+    }
+
+    #[test]
+    fn rejects_expression_nesting_past_depth_limit() {
+        let depth = MAX_EXPR_DEPTH as usize + 1;
+        let source = format!("x = {}close{}\n", "(".repeat(depth), ")".repeat(depth));
+        let parsed = parse(&source);
+
+        assert!(
+            parsed
+                .diagnostics
+                .iter()
+                .any(|diagnostic| diagnostic.code == "E_PARSE_EXPR_DEPTH"),
             "{:?}",
             parsed.diagnostics
         );

@@ -2,6 +2,16 @@ use crate::prelude::*;
 
 impl Analyzer {
     pub(crate) fn analyze_expr(&mut self, expr: &Expr) -> Option<PineType> {
+        if !self.enter_expr_analysis(expr.span) {
+            return None;
+        }
+
+        let result = self.analyze_expr_inner(expr);
+        self.exit_expr_analysis();
+        result
+    }
+
+    fn analyze_expr_inner(&mut self, expr: &Expr) -> Option<PineType> {
         match &expr.kind {
             ExprKind::Literal(literal) => {
                 if matches!(literal, Literal::ColorHex(_)) {
@@ -88,7 +98,7 @@ impl Analyzer {
                 ) {
                     self.unsupported(
                         "user-defined type history",
-                        "history references on user-defined type values are not supported in Phase J Slice 6",
+                        "history references on user-defined type values are not supported in the current UDT subset",
                         expr.span,
                     );
                     return None;
@@ -96,6 +106,24 @@ impl Analyzer {
                 value_type.map(|value_type| PineType::new(Qualifier::Series, value_type.kind))
             }
         }
+    }
+
+    fn enter_expr_analysis(&mut self, span: Span) -> bool {
+        if self.expr_depth >= MAX_SEMA_EXPR_DEPTH {
+            self.diagnostics.push(Diagnostic::error(
+                "E_SEMA_EXPR_DEPTH",
+                "expression is too deeply nested for semantic analysis",
+                span,
+            ));
+            return false;
+        }
+
+        self.expr_depth += 1;
+        true
+    }
+
+    fn exit_expr_analysis(&mut self) {
+        self.expr_depth = self.expr_depth.saturating_sub(1);
     }
 
     pub(crate) fn analyze_switch_expr(

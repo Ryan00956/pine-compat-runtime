@@ -8,16 +8,21 @@ improved over time, but codes should remain stable once published.
 - `E_LEX_CHAR`: unexpected character.
 - `E_LEX_COLOR`: invalid color literal.
 - `E_LEX_FLOAT`: invalid float literal.
+- `E_LEX_INDENT`: indentation is not a supported multiple of spaces.
 - `E_LEX_INT`: invalid integer literal.
 - `E_LEX_STRING`: unterminated or invalid string literal.
 - `E_LEX_VERSION`: invalid version directive.
 
 ## Parsing
 
+- `E_PARSE_BLOCK`: invalid or unterminated statement block.
 - `E_PARSE_DECL`: invalid declaration.
 - `E_PARSE_EXPECTED`: expected token was missing.
 - `E_PARSE_EXPR`: expected expression.
+- `E_PARSE_EXPR_DEPTH`: expression nesting exceeds the parser limit.
 - `E_PARSE_EXPORT`: invalid export declaration.
+- `E_PARSE_FOR`: invalid for-loop declaration.
+- `E_PARSE_FUNCTION`: invalid function declaration.
 - `E_PARSE_IMPORT`: invalid import declaration.
 - `E_PARSE_LIBRARY`: invalid library declaration.
 - `E_PARSE_NAME`: invalid qualified name.
@@ -47,6 +52,8 @@ improved over time, but codes should remain stable once published.
 - `E_FUNCTION_ARITY`: wrong number of user-defined function arguments.
 - `E_FUNCTION_DUPLICATE`: user-defined function name was declared more than
   once.
+- `E_FUNCTION_CALL_DEPTH`: user-defined function or method call nesting exceeds
+  the semantic analysis limit.
 - `E_FUNCTION_NAME`: user-defined function name conflicts with an existing
   symbol or built-in.
 - `E_FUNCTION_PARAM`: user-defined function parameter list is invalid.
@@ -67,7 +74,11 @@ improved over time, but codes should remain stable once published.
 - `E_METHOD_DUPLICATE`: duplicate method declaration for the same receiver
   type and method name.
 - `E_METHOD_PARAM`: user-defined method parameter list is invalid.
+- `E_METHOD_RECEIVER_TYPE`: user-defined method receiver type is missing,
+  malformed, or does not match the call receiver.
 - `E_RECURSIVE_METHOD`: recursive user-defined method call is not supported.
+- `E_LOWERING_BUDGET`: lowering exceeded the supported inline depth, HIR node,
+  or generated temporary-symbol budget.
 - `E_IMPORT_CYCLE`: import dependency graph contains a cycle.
 - `E_IMPORT_ALIAS_REQUIRED`: an import used by the executable subset omitted
   the required alias.
@@ -84,9 +95,39 @@ improved over time, but codes should remain stable once published.
 - `E_IMPORT_UNKNOWN_EXPORT`: root code accessed an export that the library does
   not declare.
 - `E_RECURSIVE_FUNCTION`: recursive user-defined function call is not supported.
+- `E_LOOP_CONTROL`: loop control statement is used outside a supported loop
+  context.
+- `E_LOOP_RANGE_TYPE`: for-loop range bounds are not integer-compatible.
+- `E_LOOP_RETURN`: loop expression result type is not compatible with the
+  surrounding expression.
+- `E_LOOP_STEP`: for-loop step is invalid.
 - `E_OPERATOR_TYPE`: operator does not accept the operand types.
+- `E_SCRIPT_DECL_DUPLICATE`: more than one top-level script declaration was
+  found.
+- `E_SCRIPT_DECL_LOCATION`: `indicator`, `strategy`, or `library` declaration is
+  not in a supported top-level location.
+- `E_SEMA_EXPR_DEPTH`: expression nesting exceeds the semantic analysis limit.
 - `E_TUPLE_ARITY`: tuple assignment target count does not match value count.
 - `E_TUPLE_TYPE`: tuple assignment value is not a tuple.
+- `E_UNKNOWN_COLOR`: color literal or color constant cannot be resolved.
+- `E_UNKNOWN_FUNCTION`: function call target cannot be resolved.
+- `E_UNKNOWN_METHOD`: method call target cannot be resolved for the receiver.
 - `E_UNKNOWN_SYMBOL`: symbol cannot be resolved.
 - `E_UNSUPPORTED_FEATURE`: recognized feature is outside the current supported
   subset.
+
+## Runtime
+
+- `E_RUNTIME`: runtime execution emitted a host-visible diagnostic.
+- `E_STRATEGY_MODE`: strategy-only feature is used outside `strategy()` mode or
+  an unsupported strategy mode was requested.
+- `E_STRATEGY_PRICE`: strategy order fill price is not finite.
+- `E_STRATEGY_QTY`: strategy order quantity is not finite and positive.
+- `E_STRATEGY_EXIT_ENTRY`: `strategy.exit` could not find or use the referenced
+  entry.
+- `E_STRATEGY_EXIT_MINTICK`: `strategy.exit` tick conversion requires a finite
+  positive minimum tick.
+- `E_STRATEGY_EXIT_PRICE`: `strategy.exit` price argument is not finite.
+- `E_STRATEGY_EXIT_QTY`: `strategy.exit` quantity is not finite and positive.
+- `E_STRATEGY_EXIT_TICKS`: `strategy.exit` tick distance is not finite and
+  positive.

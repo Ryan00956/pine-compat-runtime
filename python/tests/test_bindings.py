@@ -1,4 +1,5 @@
 import pine_compat
+import math
 from pathlib import Path
 
 
@@ -108,6 +109,36 @@ def test_compile_script_returns_program_with_run_method():
     assert result["alerts"] == []
     assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
     assert result["diagnostics"] == []
+
+
+def test_run_script_rejects_non_finite_bar_values():
+    bars = [
+        {"time": 0, "open": 1.0, "high": 1.0, "low": 1.0, "close": math.nan, "volume": 1.0}
+    ]
+
+    try:
+        pine_compat.run_script('indicator("demo")\nplot(close)\n', bars)
+    except ValueError as error:
+        assert "bar `close` value must be finite" in str(error)
+    else:
+        raise AssertionError("non-finite bar value should fail")
+
+
+def test_run_script_converts_non_finite_plot_values_to_none():
+    result = pine_compat.run_script('indicator("demo")\nplot(1.0 / 0.0)\n', BARS)
+
+    assert result["plots"][0]["values"] == [None, None, None]
+
+
+def test_compile_script_rejects_deep_input_without_aborting_process():
+    expression = "(" * 300 + "close" + ")" * 300
+
+    try:
+        pine_compat.compile_script(f'indicator("deep")\nplot({expression})\n')
+    except ValueError as error:
+        assert "E_PARSE_EXPR_DEPTH" in str(error)
+    else:
+        raise AssertionError("deep input should fail with diagnostics")
 
 
 def test_run_script_returns_empty_strategy_contract_for_strategy_mode():

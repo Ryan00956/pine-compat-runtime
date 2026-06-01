@@ -231,7 +231,12 @@ impl Analyzer {
                             statement.span,
                         ));
                     }
-                    self.update_symbol_type(name, value_type);
+                    if can_assign(target_type, value_type) {
+                        self.update_symbol_type(
+                            name,
+                            reassigned_symbol_type(target_type, value_type),
+                        );
+                    }
                 }
                 if let Some(symbol) = self.scope.resolve(name) {
                     self.bind_symbol(name, statement.span, symbol);
@@ -328,6 +333,13 @@ fn is_supported_varip_value(kind: ValueKind) -> bool {
             | ValueKind::Color
             | ValueKind::Na
     ) || is_supported_varip_array(kind)
+}
+
+fn reassigned_symbol_type(target_type: PineType, value_type: PineType) -> PineType {
+    PineType::new(
+        strongest_qualifier(target_type.qualifier, value_type.qualifier),
+        common_kind(target_type.kind, value_type.kind).unwrap_or(target_type.kind),
+    )
 }
 
 fn is_supported_varip_array(kind: ValueKind) -> bool {

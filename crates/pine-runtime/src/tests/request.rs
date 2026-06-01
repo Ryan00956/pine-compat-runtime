@@ -485,6 +485,33 @@ fn request_security_caches_requested_context_values_by_callsite() {
 }
 
 #[test]
+fn request_security_cache_isolates_same_context_different_callsite_expressions() {
+    let program = compile_program(
+        "indicator(\"request cache isolation\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, open))\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 25.0, 5.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 11.0, 26.0, 6.0, 21.0, 1.0),
+        ],
+    );
+    let mut runtime = HistoricalRuntime::with_request_environment(&program, environment);
+
+    runtime
+        .append_bar(timed_bar(0, 5.0))
+        .expect("first bar should run");
+    runtime
+        .append_bar(timed_bar(60_000, 7.0))
+        .expect("second bar should run");
+    let result = runtime.result();
+
+    assert_eq!(runtime.request_cache.len(), 2);
+    assert_values_close(&result.plots[0].values, &[10.0, 11.0]);
+    assert_values_close(&result.plots[1].values, &[20.0, 21.0]);
+}
+
+#[test]
 fn request_security_reports_missing_external_dataset() {
     let program = compile_program(
         "indicator(\"request missing\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close))\n",

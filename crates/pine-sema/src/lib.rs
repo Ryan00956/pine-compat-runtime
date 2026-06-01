@@ -32,7 +32,8 @@ mod prelude {
         is_ta_vwap_bands_call, method_call_parts, receiver_call_arg,
     };
     pub(crate) use crate::analyzer::context::{
-        Analyzer, FunctionInfo, MethodInfo, MethodParamInfo, MethodResolution, UdfArgError,
+        Analyzer, FunctionInfo, MAX_FUNCTION_CALL_DEPTH, MAX_SEMA_EXPR_DEPTH, MethodInfo,
+        MethodParamInfo, MethodResolution, UdfArgError,
     };
     pub(crate) use crate::analyzer::functions::resolve_udf_arg_indices;
     pub(crate) use crate::analyzer::strategy::is_strategy_state_variable;

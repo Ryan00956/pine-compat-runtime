@@ -552,6 +552,32 @@ plot(close + sum)
 }
 
 #[test]
+fn runs_for_loop_with_computed_integer_bound() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("computed for bound")
+n = 3
+sum = 0
+for i = 0 to n - 1
+    sum := sum + 1
+plot(sum)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[3.0, 3.0, 3.0]);
+}
+
+#[test]
 fn runs_descending_for_loop_reassignment() {
     let source = SourceFile::new(
         "test.pine",

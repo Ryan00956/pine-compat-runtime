@@ -94,6 +94,30 @@ plot(na(missing) ? 1 : 0)
 }
 
 #[test]
+fn runs_array_get_with_computed_integer_index() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("computed array index")
+values = array.from(10, 20, 30)
+k = 2
+plot(array.get(values, k - 1))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[20.0, 20.0, 20.0]);
+}
+
+#[test]
 fn runs_int_array_method_calls() {
     let source = SourceFile::new(
         "test.pine",
@@ -121,6 +145,35 @@ plot(na(missing) ? 1 : 0)
     assert_eq!(result.plots.len(), 2);
     assert_values_close(&result.plots[0].values, &[15.0, 15.0, 15.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+}
+
+#[test]
+fn runs_array_mutation_and_size_with_computed_integer_operands() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("computed array operands")
+n = 1
+values = array.new_float(n + 1)
+array.set(values, n - 1, close)
+array.set(values, n, close + 10)
+plot(array.get(values, n - 1))
+plot(array.get(values, n))
+plot(array.size(values))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[11.0, 12.0, 13.0]);
+    assert_values_close(&result.plots[2].values, &[2.0, 2.0, 2.0]);
 }
 
 #[test]

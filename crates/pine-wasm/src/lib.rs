@@ -208,28 +208,60 @@ fn parse_bars_csv(text: &str) -> Result<Vec<Bar>, String> {
         }
 
         bars.push(Bar {
-            time: parse_column(columns[0], line_index, "time")?,
-            open: parse_column(columns[1], line_index, "open")?,
-            high: parse_column(columns[2], line_index, "high")?,
-            low: parse_column(columns[3], line_index, "low")?,
-            close: parse_column(columns[4], line_index, "close")?,
-            volume: parse_column(columns[5], line_index, "volume")?,
+            time: parse_time_column(columns[0], line_index)?,
+            open: parse_f64_column(columns[1], line_index, "open")?,
+            high: parse_f64_column(columns[2], line_index, "high")?,
+            low: parse_f64_column(columns[3], line_index, "low")?,
+            close: parse_f64_column(columns[4], line_index, "close")?,
+            volume: parse_f64_column(columns[5], line_index, "volume")?,
         });
     }
+    validate_bar_times(&bars)?;
     Ok(bars)
 }
 
-fn parse_column<T: std::str::FromStr>(
-    value: &str,
-    line_index: usize,
-    name: &str,
-) -> Result<T, String> {
-    value.parse::<T>().map_err(|_| {
+fn parse_time_column(value: &str, line_index: usize) -> Result<i64, String> {
+    value.parse::<i64>().map_err(|_| {
+        format!(
+            "invalid `time` value `{value}` at bars CSV line {}",
+            line_index + 1
+        )
+    })
+}
+
+fn parse_f64_column(value: &str, line_index: usize, name: &str) -> Result<f64, String> {
+    let parsed = value.parse::<f64>().map_err(|_| {
         format!(
             "invalid `{name}` value `{value}` at bars CSV line {}",
             line_index + 1
         )
-    })
+    })?;
+    if !parsed.is_finite() {
+        return Err(format!(
+            "invalid `{name}` value `{value}` at bars CSV line {}: value must be finite",
+            line_index + 1
+        ));
+    }
+    Ok(parsed)
+}
+
+fn validate_bar_times(bars: &[Bar]) -> Result<(), String> {
+    let mut previous_time = None;
+    for bar in bars {
+        if let Some(previous_time) = previous_time {
+            if bar.time == previous_time {
+                return Err(format!("duplicate bar time `{}` in bars CSV", bar.time));
+            }
+            if bar.time < previous_time {
+                return Err(format!(
+                    "bars CSV is not sorted: `{}` follows `{previous_time}`",
+                    bar.time
+                ));
+            }
+        }
+        previous_time = Some(bar.time);
+    }
+    Ok(())
 }
 
 #[cfg(test)]

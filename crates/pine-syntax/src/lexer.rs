@@ -200,6 +200,17 @@ impl<'a> Lexer<'a> {
             self.pos += 1;
             self.consume_while(|byte| byte.is_ascii_digit());
         }
+        if self.starts_valid_exponent() {
+            is_float = true;
+            self.pos += 1;
+            if self
+                .peek_byte()
+                .is_some_and(|byte| matches!(byte, b'+' | b'-'))
+            {
+                self.pos += 1;
+            }
+            self.consume_while(|byte| byte.is_ascii_digit());
+        }
 
         let raw = &self.text[start..self.pos];
         let kind = if is_float {
@@ -233,6 +244,26 @@ impl<'a> Lexer<'a> {
             span: Span::new(start, self.pos),
         });
         self.line_start = false;
+    }
+
+    fn starts_valid_exponent(&self) -> bool {
+        if !self
+            .peek_byte()
+            .is_some_and(|byte| matches!(byte, b'e' | b'E'))
+        {
+            return false;
+        }
+
+        let bytes = self.text.as_bytes();
+        let mut index = self.pos + 1;
+        if bytes
+            .get(index)
+            .is_some_and(|byte| matches!(*byte, b'+' | b'-'))
+        {
+            index += 1;
+        }
+
+        bytes.get(index).is_some_and(u8::is_ascii_digit)
     }
 
     fn identifier_or_keyword(&mut self) {
@@ -554,6 +585,28 @@ mod tests {
                 TokenKind::LBracket,
                 TokenKind::Int(1),
                 TokenKind::RBracket,
+                TokenKind::Newline,
+                TokenKind::Eof,
+            ]
+        );
+    }
+
+    #[test]
+    fn lexes_scientific_float_literals() {
+        assert_eq!(
+            kinds("a = 3e8\nb = 6.02E-23\nc = 1E+6\n"),
+            vec![
+                TokenKind::Identifier("a".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Float(3e8),
+                TokenKind::Newline,
+                TokenKind::Identifier("b".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Float(6.02E-23),
+                TokenKind::Newline,
+                TokenKind::Identifier("c".to_owned()),
+                TokenKind::Eq,
+                TokenKind::Float(1E+6),
                 TokenKind::Newline,
                 TokenKind::Eof,
             ]

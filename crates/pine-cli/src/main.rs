@@ -49,7 +49,11 @@ mod tests {
     };
     use pine_sema::analyze_source;
     use pine_syntax::SourceFile;
-    use std::{env, fs, path::PathBuf};
+    use std::{
+        collections::BTreeSet,
+        env, fs,
+        path::{Path, PathBuf},
+    };
 
     #[test]
     fn matrix_includes_supported_builtins_and_unsupported_features() {
@@ -125,6 +129,29 @@ mod tests {
     fn conformance_metadata_references_existing_fixtures() {
         validate_fixture_paths(&conformance_entries(), &workspace_dir())
             .expect("fixture paths should exist");
+    }
+
+    #[test]
+    fn diagnostic_reference_documents_emitted_codes() {
+        let workspace = workspace_dir();
+        let mut emitted = BTreeSet::new();
+        for path in rust_source_files(&workspace.join("crates")) {
+            let text = fs::read_to_string(&path)
+                .unwrap_or_else(|err| panic!("failed to read {}: {err}", path.display()));
+            emitted.extend(diagnostic_codes_in_text(&text));
+        }
+        emitted.remove("E_TEST");
+
+        let docs_path = workspace.join("docs/DIAGNOSTIC_CODES.md");
+        let docs = fs::read_to_string(&docs_path)
+            .unwrap_or_else(|err| panic!("failed to read {}: {err}", docs_path.display()));
+        let documented = diagnostic_codes_in_text(&docs);
+        let missing: Vec<_> = emitted.difference(&documented).cloned().collect();
+
+        assert!(
+            missing.is_empty(),
+            "docs/DIAGNOSTIC_CODES.md is missing emitted diagnostic codes: {missing:?}"
+        );
     }
 
     #[test]
@@ -938,5 +965,48 @@ mod tests {
 
     fn workspace_dir() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
+    }
+
+    fn rust_source_files(root: &Path) -> Vec<PathBuf> {
+        let mut files = Vec::new();
+        collect_rust_source_files(root, &mut files);
+        files
+    }
+
+    fn collect_rust_source_files(path: &Path, files: &mut Vec<PathBuf>) {
+        if path.is_file() {
+            if path.extension().and_then(|extension| extension.to_str()) == Some("rs") {
+                files.push(path.to_owned());
+            }
+            return;
+        }
+
+        let Ok(entries) = fs::read_dir(path) else {
+            return;
+        };
+        for entry in entries {
+            let entry = entry.expect("source directory entry should be readable");
+            collect_rust_source_files(&entry.path(), files);
+        }
+    }
+
+    fn diagnostic_codes_in_text(text: &str) -> BTreeSet<String> {
+        let mut codes = BTreeSet::new();
+        for (index, _) in text.match_indices("E_") {
+            if index > 0 {
+                let previous = text[..index].chars().next_back().expect("previous char");
+                if previous.is_ascii_alphanumeric() || previous == '_' {
+                    continue;
+                }
+            }
+            let code: String = text[index..]
+                .chars()
+                .take_while(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit() || *ch == '_')
+                .collect();
+            if code.len() > 2 {
+                codes.insert(code);
+            }
+        }
+        codes
     }
 }

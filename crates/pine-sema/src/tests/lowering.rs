@@ -1,4 +1,5 @@
 use super::*;
+use crate::analyzer::context::MAX_LOWERING_TEMP_SYMBOLS;
 
 #[test]
 fn infers_history_requirements() {
@@ -160,4 +161,24 @@ fn lowers_tuple_assignment() {
             .iter()
             .any(|symbol| symbol.name == "a" && symbol.series_id.is_some())
     );
+}
+
+#[test]
+fn rejects_lowering_temp_symbol_budget_exhaustion() {
+    let mut source = String::from("id(x) => x\n");
+    for index in 0..=MAX_LOWERING_TEMP_SYMBOLS {
+        source.push_str(&format!("x{index} = id(1)\n"));
+    }
+
+    let analysis = analyze(&source);
+
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_LOWERING_BUDGET"
+                && diagnostic.message.contains("temporary symbols")
+        }),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
 }

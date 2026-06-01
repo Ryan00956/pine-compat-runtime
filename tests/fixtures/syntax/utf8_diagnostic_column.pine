@@ -1,0 +1,4 @@
+//@version=5
+indicator("UTF-8 diagnostic column")
+x = "中" @
+plot(close)

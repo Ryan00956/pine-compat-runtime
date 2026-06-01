@@ -14,7 +14,7 @@ impl Analyzer {
             _ => {
                 self.unsupported(
                     name,
-                    "multi-symbol and multi-timeframe data requests are not supported in Phase 1",
+                    "this request function is outside the supported request.security subset",
                     span,
                 );
                 None

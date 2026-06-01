@@ -75,12 +75,7 @@ impl<'a> HistoricalRuntime<'a> {
                 message: "request.security has no current chart bar".to_owned(),
             })?;
 
-        let cache_key = RequestCacheKey::new(
-            call_site_id,
-            key.symbol(),
-            key.timeframe().value(),
-            format!("{:?}", expression.kind),
-        );
+        let cache_key = RequestCacheKey::new(call_site_id, key.symbol(), key.timeframe().value());
         if !self.request_cache.contains_key(&cache_key) {
             let requested_bars = self
                 .request_environment

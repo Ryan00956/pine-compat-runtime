@@ -363,7 +363,7 @@ impl Analyzer {
             other if self.user_types.contains_key(other) => {
                 self.unsupported(
                     "user-defined type fields",
-                    "user-defined type fields cannot contain nested or recursive UDT values in Phase J Slice 6",
+                    "user-defined type fields cannot contain nested or recursive UDT values in the current UDT subset",
                     span,
                 );
                 return None;

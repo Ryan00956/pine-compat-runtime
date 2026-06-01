@@ -1,4 +1,5 @@
 use super::*;
+use pine_ir::{PineType, Qualifier, ValueKind};
 
 #[test]
 fn rejects_reassignment_to_unknown_symbol() {
@@ -20,6 +21,27 @@ fn accepts_reassignment_to_declared_symbol() {
         analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
+    );
+}
+
+#[test]
+fn reassignment_does_not_narrow_existing_series_symbol() {
+    let analysis = analyze("x = close\nx := 1\nplot(x)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let symbol = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "x")
+        .expect("x symbol");
+    assert_eq!(
+        symbol.pine_type,
+        PineType::new(Qualifier::Series, ValueKind::Float)
     );
 }
 
@@ -323,6 +345,26 @@ fn rejects_recursive_function() {
             .diagnostics
             .iter()
             .any(|diagnostic| diagnostic.code == "E_RECURSIVE_FUNCTION")
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_deep_acyclic_function_call_chain() {
+    let mut source = String::new();
+    for index in 0..70 {
+        source.push_str(&format!("f{index}(x) => f{}(x)\n", index + 1));
+    }
+    source.push_str("f70(x) => x\nplot(f0(close))\n");
+    let analysis = analyze(&source);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_FUNCTION_CALL_DEPTH"),
+        "{:?}",
+        analysis.diagnostics
     );
     assert!(analysis.hir.is_none());
 }

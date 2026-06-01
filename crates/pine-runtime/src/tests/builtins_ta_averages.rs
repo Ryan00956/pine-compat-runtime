@@ -35,6 +35,30 @@ plot(ma)
 }
 
 #[test]
+fn runs_sma_with_computed_integer_length() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("SMA computed length")
+n = 2
+ma = ta.sma(close, n * 1)
+plot(ma)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(4.0), bar(8.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[1.5, 3.0, 6.0]);
+}
+
+#[test]
 fn runs_ema_plot_over_historical_bars() {
     let source = SourceFile::new(
         "test.pine",

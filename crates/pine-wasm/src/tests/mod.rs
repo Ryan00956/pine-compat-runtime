@@ -40,6 +40,65 @@ fn runs_script_from_csv_to_json() {
 }
 
 #[test]
+fn run_script_csv_serializes_non_finite_values_as_json_null() {
+    let output = run_script_csv(
+        "indicator(\"nonfinite\")\nplot(1.0 / 0.0)\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
+    )
+    .expect("script should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["plots"][0]["values"][0], serde_json::Value::Null);
+    assert!(!output.contains("NaN"));
+    assert!(!output.contains("Infinity"));
+}
+
+#[test]
+fn run_script_csv_rejects_non_finite_ohlcv_values() {
+    for (column, row) in [
+        ("open", "0,NaN,1,1,1,1"),
+        ("high", "0,1,inf,1,1,1"),
+        ("low", "0,1,1,-inf,1,1"),
+        ("close", "0,1,1,1,infinity,1"),
+        ("volume", "0,1,1,1,1,NaN"),
+    ] {
+        let message = run_script_csv_internal(
+            "indicator(\"nonfinite\")\nplot(close)\n",
+            &format!("time,open,high,low,close,volume\n{row}\n"),
+        )
+        .expect_err("non-finite CSV value should fail");
+
+        assert!(
+            message.contains(&format!("invalid `{column}` value")),
+            "{message}"
+        );
+        assert!(message.contains("value must be finite"), "{message}");
+    }
+}
+
+#[test]
+fn run_script_csv_rejects_duplicate_bar_times() {
+    let message = run_script_csv_internal(
+        "indicator(\"duplicate\")\nplot(close)\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n0,2,2,2,2,1\n",
+    )
+    .expect_err("duplicate main bar time should fail");
+
+    assert_eq!(message, "duplicate bar time `0` in bars CSV");
+}
+
+#[test]
+fn run_script_csv_rejects_unsorted_bar_times() {
+    let message = run_script_csv_internal(
+        "indicator(\"unsorted\")\nplot(close)\n",
+        "time,open,high,low,close,volume\n1,2,2,2,2,1\n0,1,1,1,1,1\n",
+    )
+    .expect_err("unsorted main bar times should fail");
+
+    assert_eq!(message, "bars CSV is not sorted: `0` follows `1`");
+}
+
+#[test]
 fn runs_strategy_script_from_csv_to_empty_strategy_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nplot(close)\n",

@@ -1,5 +1,6 @@
 mod alerts;
 mod arrays;
+mod builtin_registry;
 mod builtins_colors;
 mod builtins_core;
 mod builtins_inputs;

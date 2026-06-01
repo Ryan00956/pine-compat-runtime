@@ -233,6 +233,14 @@ impl Analyzer {
             ));
             return None;
         }
+        if self.function_stack.len() >= MAX_FUNCTION_CALL_DEPTH {
+            self.diagnostics.push(Diagnostic::error(
+                "E_FUNCTION_CALL_DEPTH",
+                "user-defined function call chain is too deep",
+                span,
+            ));
+            return None;
+        }
         for arg in args {
             if contains_output_or_declaration_call(&arg.value) {
                 self.unsupported(

@@ -164,31 +164,13 @@ impl Analyzer {
             }
         }
 
-        match (
+        if let (_, _, Some(_), Some(qty)) = (
             fixed_default_qty_type,
             default_qty_type_arg,
             default_qty_value_arg,
             default_qty_value,
         ) {
-            (true, _, Some(_), Some(qty)) => {
-                self.strategy_settings.default_qty =
-                    Some(pine_ir::StrategyDefaultQuantity::Fixed(qty));
-            }
-            (true, Some(arg), None, _) => {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    "`strategy` argument `default_qty_value` is required when default_qty_type=strategy.fixed",
-                    arg.span,
-                ));
-            }
-            (false, None, Some(arg), Some(_)) => {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    "`strategy` argument `default_qty_value` requires default_qty_type=strategy.fixed",
-                    arg.span,
-                ));
-            }
-            _ => {}
+            self.strategy_settings.default_qty = Some(pine_ir::StrategyDefaultQuantity::Fixed(qty));
         }
     }
 
@@ -240,7 +222,6 @@ impl Analyzer {
     }
 
     pub(crate) fn validate_strategy_entry_args(&mut self, args: &[CallArg]) {
-        let mut has_qty = false;
         for (index, arg) in args.iter().enumerate() {
             let Some(name) = arg
                 .name
@@ -263,7 +244,6 @@ impl Analyzer {
                     }
                 }
                 "qty" => {
-                    has_qty = true;
                     if let Some(qty) = const_numeric_value(&arg.value)
                         && qty <= 0.0
                     {
@@ -276,14 +256,6 @@ impl Analyzer {
                 }
                 _ => {}
             }
-        }
-
-        if !has_qty && self.strategy_settings.default_qty.is_none() {
-            self.diagnostics.push(Diagnostic::error(
-                "E_CALL_ARITY",
-                "`strategy.entry` requires `qty` unless strategy default_qty_type=strategy.fixed and default_qty_value are configured",
-                args.first().map_or(Span::default(), |arg| arg.span),
-            ));
         }
     }
 

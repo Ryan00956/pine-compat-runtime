@@ -5,10 +5,16 @@ use pine_runtime::{
     run_historical_with_request_environment,
 };
 use pine_sema::{Analysis, AnalysisInput, analyze_input};
-use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
+use pine_syntax::{Diagnostic, SourceFile, Span};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PyModule, PySequence};
+
+mod diagnostics;
+#[cfg(test)]
+mod tests;
+
+use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
 
 #[pyclass(name = "Program", skip_from_py_object)]
 #[derive(Clone)]
@@ -38,7 +44,7 @@ fn compile_script(source: &str, library_sources: Option<&Bound<'_, PyAny>>) -> P
     let input = analysis_input_from_python(source, library_sources)?;
     let source_file = input.root().clone();
     let analysis = analyze_input(&input);
-    if !analysis.diagnostics.is_empty() {
+    if diagnostics_have_errors(&analysis.diagnostics) {
         return Err(PyValueError::new_err(format_diagnostics(
             &source_file,
             &analysis.diagnostics,
@@ -161,12 +167,12 @@ fn parse_request_key(key: &str) -> PyResult<RequestKey> {
 fn parse_bar(item: &Bound<'_, PyAny>) -> PyResult<Bar> {
     if let Ok(dict) = item.cast::<PyDict>() {
         return Ok(Bar {
-            time: dict_number(dict, "time")?,
-            open: dict_number(dict, "open")?,
-            high: dict_number(dict, "high")?,
-            low: dict_number(dict, "low")?,
-            close: dict_number(dict, "close")?,
-            volume: dict_number(dict, "volume")?,
+            time: dict_i64(dict, "time")?,
+            open: dict_finite_f64(dict, "open")?,
+            high: dict_finite_f64(dict, "high")?,
+            low: dict_finite_f64(dict, "low")?,
+            close: dict_finite_f64(dict, "close")?,
+            volume: dict_finite_f64(dict, "volume")?,
         });
     }
 
@@ -178,11 +184,11 @@ fn parse_bar(item: &Bound<'_, PyAny>) -> PyResult<Bar> {
         }
         return Ok(Bar {
             time: sequence.get_item(0)?.extract()?,
-            open: sequence.get_item(1)?.extract()?,
-            high: sequence.get_item(2)?.extract()?,
-            low: sequence.get_item(3)?.extract()?,
-            close: sequence.get_item(4)?.extract()?,
-            volume: sequence.get_item(5)?.extract()?,
+            open: finite_bar_value(sequence.get_item(1)?.extract()?, "open")?,
+            high: finite_bar_value(sequence.get_item(2)?.extract()?, "high")?,
+            low: finite_bar_value(sequence.get_item(3)?.extract()?, "low")?,
+            close: finite_bar_value(sequence.get_item(4)?.extract()?, "close")?,
+            volume: finite_bar_value(sequence.get_item(5)?.extract()?, "volume")?,
         });
     }
 
@@ -191,13 +197,28 @@ fn parse_bar(item: &Bound<'_, PyAny>) -> PyResult<Bar> {
     ))
 }
 
-fn dict_number<T>(dict: &Bound<'_, PyDict>, name: &str) -> PyResult<T>
-where
-    T: for<'py> FromPyObject<'py, 'py, Error = PyErr>,
-{
+fn dict_i64(dict: &Bound<'_, PyDict>, name: &str) -> PyResult<i64> {
     dict.get_item(name)?
         .ok_or_else(|| PyValueError::new_err(format!("bar is missing `{name}`")))?
         .extract()
+}
+
+fn dict_finite_f64(dict: &Bound<'_, PyDict>, name: &str) -> PyResult<f64> {
+    let value = dict
+        .get_item(name)?
+        .ok_or_else(|| PyValueError::new_err(format!("bar is missing `{name}`")))?
+        .extract()?;
+    finite_bar_value(value, name)
+}
+
+fn finite_bar_value(value: f64, name: &str) -> PyResult<f64> {
+    if value.is_finite() {
+        return Ok(value);
+    }
+
+    Err(PyValueError::new_err(format!(
+        "bar `{name}` value must be finite"
+    )))
 }
 
 fn analysis_to_py(py: Python<'_>, source: &SourceFile, analysis: &Analysis) -> PyResult<Py<PyAny>> {
@@ -338,10 +359,10 @@ fn strategy_trades_to_py(
         item.set_item("exitBarIndex", trade.exit_bar_index)?;
         item.set_item("entryTime", trade.entry_time)?;
         item.set_item("exitTime", trade.exit_time)?;
-        item.set_item("entryPrice", trade.entry_price)?;
-        item.set_item("exitPrice", trade.exit_price)?;
-        item.set_item("qty", trade.qty)?;
-        item.set_item("profit", trade.profit)?;
+        set_finite_f64(py, &item, "entryPrice", trade.entry_price)?;
+        set_finite_f64(py, &item, "exitPrice", trade.exit_price)?;
+        set_finite_f64(py, &item, "qty", trade.qty)?;
+        set_finite_f64(py, &item, "profit", trade.profit)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
@@ -358,8 +379,8 @@ fn strategy_orders_to_py(
         item.set_item("barIndex", order.bar_index)?;
         item.set_item("time", order.time)?;
         item.set_item("direction", &order.direction)?;
-        item.set_item("qty", order.qty)?;
-        item.set_item("price", order.price)?;
+        set_finite_f64(py, &item, "qty", order.qty)?;
+        set_finite_f64(py, &item, "price", order.price)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
@@ -373,8 +394,8 @@ fn strategy_position_to_py(
     for snapshot in position {
         let item = PyDict::new(py);
         item.set_item("barIndex", snapshot.bar_index)?;
-        item.set_item("size", snapshot.size)?;
-        item.set_item("avgPrice", snapshot.avg_price)?;
+        set_finite_f64(py, &item, "size", snapshot.size)?;
+        set_option_finite_f64(py, &item, "avgPrice", snapshot.avg_price)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
@@ -388,10 +409,10 @@ fn strategy_equity_to_py(
     for snapshot in equity {
         let item = PyDict::new(py);
         item.set_item("barIndex", snapshot.bar_index)?;
-        item.set_item("cash", snapshot.cash)?;
-        item.set_item("marketValue", snapshot.market_value)?;
-        item.set_item("equity", snapshot.equity)?;
-        item.set_item("netProfit", snapshot.net_profit)?;
+        set_finite_f64(py, &item, "cash", snapshot.cash)?;
+        set_finite_f64(py, &item, "marketValue", snapshot.market_value)?;
+        set_finite_f64(py, &item, "equity", snapshot.equity)?;
+        set_finite_f64(py, &item, "netProfit", snapshot.net_profit)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
@@ -720,7 +741,8 @@ fn value_to_py(py: Python<'_>, value: &PineValue) -> PyResult<Py<PyAny>> {
 fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -> PyResult<()> {
     match value {
         PineValue::Int(value) => output.append(*value),
-        PineValue::Float(value) => output.append(*value),
+        PineValue::Float(value) if value.is_finite() => output.append(*value),
+        PineValue::Float(_) => output.append(py.None()),
         PineValue::Bool(value) => output.append(*value),
         PineValue::String(value) => output.append(value),
         PineValue::Color(value)
@@ -737,28 +759,27 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
     }
 }
 
-fn severity_name(severity: Severity) -> &'static str {
-    match severity {
-        Severity::Error => "error",
-        Severity::Warning => "warning",
-        Severity::Info => "info",
+fn set_finite_f64(
+    py: Python<'_>,
+    output: &Bound<'_, PyDict>,
+    name: &str,
+    value: f64,
+) -> PyResult<()> {
+    if value.is_finite() {
+        output.set_item(name, value)
+    } else {
+        output.set_item(name, py.None())
     }
 }
 
-fn format_diagnostics(source: &SourceFile, diagnostics: &[Diagnostic]) -> String {
-    diagnostics
-        .iter()
-        .map(|diagnostic| {
-            let line_col = source.line_col(diagnostic.span.start);
-            format!(
-                "{}:{:?}:{}:{}: {}",
-                diagnostic.code,
-                diagnostic.severity,
-                line_col.line,
-                line_col.column,
-                diagnostic.message
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("\n")
+fn set_option_finite_f64(
+    py: Python<'_>,
+    output: &Bound<'_, PyDict>,
+    name: &str,
+    value: Option<f64>,
+) -> PyResult<()> {
+    match value {
+        Some(value) if value.is_finite() => output.set_item(name, value),
+        Some(_) | None => output.set_item(name, py.None()),
+    }
 }

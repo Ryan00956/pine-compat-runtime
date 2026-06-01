@@ -69,6 +69,7 @@ use builtins::colors::apply_transparency;
 use builtins::ta::{PivotPointPeriod, pivot_na_levels, pivot_point_levels};
 
 const MAX_WHILE_ITERATIONS: usize = 100_000;
+const MAX_RUNTIME_EVAL_DEPTH: u32 = 512;
 const MAX_ARRAY_ELEMENTS: usize = 100_000;
 const MAX_STRING_CHARS: usize = 40_960;
 const MAX_SERIES_HISTORY_VALUES: usize = 1_000_000;

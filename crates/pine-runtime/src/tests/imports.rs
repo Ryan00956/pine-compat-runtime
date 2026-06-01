@@ -41,6 +41,33 @@ export scale(value) => value * offset
 }
 
 #[test]
+fn imported_function_locals_shadow_exported_constants() {
+    let analysis = analyze_import(
+        r#"indicator("import shadow")
+import user/lib/1 as lib
+plot(lib.scale(close))
+"#,
+        r#"library("lib")
+export offset = 2
+export scale(value) =>
+    offset = 5
+    value + offset
+"#,
+    );
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_values_close(&result.plots[0].values, &[6.0, 7.0, 8.0]);
+}
+
+#[test]
 fn imported_function_callsite_state_is_independent() {
     let analysis = analyze_import(
         r#"indicator("imported state")

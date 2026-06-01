@@ -61,12 +61,21 @@ HELPER_FILENAMES = {
 }
 
 
+def is_test_support_file(path: Path) -> bool:
+    posix = path.as_posix()
+    return (
+        "/src/tests/" in posix
+        or path.name == "tests.rs"
+        or path.name.endswith("_tests.rs")
+    )
+
+
 def rust_source_files() -> list[Path]:
     crates_dir = ROOT / "crates"
     return sorted(
         path
         for path in crates_dir.glob("*/src/**/*.rs")
-        if "/src/tests/" not in path.as_posix()
+        if not is_test_support_file(path)
     )
 
 

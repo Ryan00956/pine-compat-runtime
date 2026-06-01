@@ -235,6 +235,40 @@ if bar_index == 1
 }
 
 #[test]
+fn strategy_entry_uses_builtin_default_qty_when_qty_is_absent() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("entry")
+if bar_index == 0
+    strategy.entry("D", strategy.long)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .hir
+            .as_ref()
+            .unwrap()
+            .strategy_settings
+            .default_entry_qty(),
+        Some(1.0)
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(2.0)]).expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "D");
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.orders[0].price, 2.0);
+}
+
+#[test]
 fn strategy_entry_explicit_qty_overrides_fixed_default_qty() {
     let source = SourceFile::new(
         "strategy.pine",

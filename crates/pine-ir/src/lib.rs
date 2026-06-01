@@ -42,7 +42,7 @@ impl Default for StrategySettings {
     fn default() -> Self {
         Self {
             initial_capital: DEFAULT_STRATEGY_INITIAL_CAPITAL,
-            default_qty: None,
+            default_qty: Some(StrategyDefaultQuantity::Fixed(1.0)),
         }
     }
 }

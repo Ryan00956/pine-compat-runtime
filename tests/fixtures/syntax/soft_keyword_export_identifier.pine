@@ -1,0 +1,4 @@
+//@version=5
+indicator("Soft keyword export")
+export = 5
+plot(export)

@@ -61,6 +61,7 @@ pub(crate) fn validate_modules(input: &AnalysisInput) -> ModuleValidation {
     let mut diagnostics = Vec::new();
     let mut modules = Vec::with_capacity(graph.libraries().len() + 1);
     let root_parse = parse_source(graph.root().source());
+    diagnostics.extend(root_parse.diagnostics.clone());
     let root_program = root_parse.program;
     modules.push(ModuleInfo {
         id: graph.root().id(),
@@ -417,7 +418,7 @@ fn build_import_plan(
 
         for (name, function) in &module.functions {
             let key = module_function_key(&alias, module, name);
-            let body = rewrite_function_body(&function.body, &module_context);
+            let body = rewrite_function_body(&function.body, &function.params, &module_context);
             if name_is_exported_function(module, name) || module.private_symbols.contains(name) {
                 plan.imported_functions.insert(
                     key,

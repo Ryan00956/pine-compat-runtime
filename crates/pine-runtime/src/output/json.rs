@@ -44,7 +44,8 @@ pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
         output.push_str(",\"strategy\":");
         output.push_str(&strategy_json(strategy));
     }
-    output.push_str(",\"diagnostics\":[]");
+    output.push_str(",\"diagnostics\":");
+    output.push_str(&runtime_diagnostics_json(&result.diagnostics));
     output.push('}');
     output
 }
@@ -632,8 +633,8 @@ fn strategy_orders_json(orders: &[crate::StrategyOrderEvent]) -> String {
             order.bar_index,
             order.time,
             json_escape(&order.direction),
-            order.qty,
-            order.price
+            f64_json(order.qty),
+            f64_json(order.price)
         ));
     }
     output.push(']');
@@ -653,10 +654,10 @@ fn strategy_trades_json(trades: &[crate::StrategyTrade]) -> String {
             trade.exit_bar_index,
             trade.entry_time,
             trade.exit_time,
-            trade.entry_price,
-            trade.exit_price,
-            trade.qty,
-            trade.profit
+            f64_json(trade.entry_price),
+            f64_json(trade.exit_price),
+            f64_json(trade.qty),
+            f64_json(trade.profit)
         ));
     }
     output.push(']');
@@ -672,7 +673,7 @@ fn strategy_position_json(position: &[crate::StrategyPositionSnapshot]) -> Strin
         output.push_str(&format!(
             "{{\"barIndex\":{},\"size\":{},\"avgPrice\":{}}}",
             snapshot.bar_index,
-            snapshot.size,
+            f64_json(snapshot.size),
             option_f64_json(snapshot.avg_price)
         ));
     }
@@ -689,10 +690,10 @@ fn strategy_equity_json(equity: &[crate::StrategyEquitySnapshot]) -> String {
         output.push_str(&format!(
             "{{\"barIndex\":{},\"cash\":{},\"marketValue\":{},\"equity\":{},\"netProfit\":{}}}",
             snapshot.bar_index,
-            snapshot.cash,
-            snapshot.market_value,
-            snapshot.equity,
-            snapshot.net_profit
+            f64_json(snapshot.cash),
+            f64_json(snapshot.market_value),
+            f64_json(snapshot.equity),
+            f64_json(snapshot.net_profit)
         ));
     }
     output.push(']');
@@ -700,7 +701,15 @@ fn strategy_equity_json(equity: &[crate::StrategyEquitySnapshot]) -> String {
 }
 
 fn option_f64_json(value: Option<f64>) -> String {
-    value.map_or_else(|| "null".to_owned(), |value| value.to_string())
+    value.map_or_else(|| "null".to_owned(), f64_json)
+}
+
+fn f64_json(value: f64) -> String {
+    if value.is_finite() {
+        value.to_string()
+    } else {
+        "null".to_owned()
+    }
 }
 
 fn runtime_diagnostics_json(diagnostics: &[crate::RuntimeDiagnostic]) -> String {
@@ -722,7 +731,7 @@ fn runtime_diagnostics_json(diagnostics: &[crate::RuntimeDiagnostic]) -> String 
 fn value_json(value: &PineValue) -> String {
     match value {
         PineValue::Int(value) => value.to_string(),
-        PineValue::Float(value) => value.to_string(),
+        PineValue::Float(value) => f64_json(*value),
         PineValue::Bool(value) => value.to_string(),
         PineValue::String(value) => format!("\"{}\"", json_escape(value)),
         PineValue::Color(value) => value.to_string(),
@@ -765,4 +774,120 @@ fn json_escape(value: &str) -> String {
         }
     }
     escaped
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent, StrategyPositionSnapshot,
+        StrategyTrade,
+    };
+
+    fn empty_result() -> RuntimeResult {
+        RuntimeResult {
+            plots: Vec::new(),
+            plot_chars: Vec::new(),
+            plot_shapes: Vec::new(),
+            plot_arrows: Vec::new(),
+            plot_bars: Vec::new(),
+            plot_candles: Vec::new(),
+            bg_colors: Vec::new(),
+            bar_colors: Vec::new(),
+            hlines: Vec::new(),
+            fills: Vec::new(),
+            labels: Vec::new(),
+            lines: Vec::new(),
+            boxes: Vec::new(),
+            tables: Vec::new(),
+            alerts: Vec::new(),
+            strategy: None,
+            diagnostics: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn runtime_json_serializes_non_finite_plot_floats_as_null() {
+        let mut result = empty_result();
+        result.plots.push(PlotSeries {
+            id: 1,
+            values: vec![
+                PineValue::Float(f64::NAN),
+                PineValue::Float(f64::INFINITY),
+                PineValue::Float(1.5),
+            ],
+        });
+
+        let output = public_runtime_result_json(&result);
+
+        assert!(output.contains(r#""values":[null,null,1.5]"#));
+        assert!(!output.contains("NaN"));
+        assert!(!output.contains("inf"));
+    }
+
+    #[test]
+    fn runtime_json_serializes_top_level_diagnostics() {
+        let mut result = empty_result();
+        result.diagnostics.push(RuntimeDiagnostic {
+            code: "E_RUNTIME".to_owned(),
+            message: "runtime \"warning\"\nline".to_owned(),
+        });
+
+        let output = public_runtime_result_json(&result);
+
+        assert!(
+            output.contains(
+                r#""diagnostics":[{"code":"E_RUNTIME","message":"runtime \"warning\"\nline"}]"#
+            ),
+            "{output}"
+        );
+    }
+
+    #[test]
+    fn runtime_json_serializes_non_finite_strategy_floats_as_null() {
+        let mut result = empty_result();
+        result.strategy = Some(StrategyResult {
+            orders: vec![StrategyOrderEvent {
+                id: "O".to_owned(),
+                bar_index: 0,
+                time: 10,
+                direction: "long".to_owned(),
+                qty: f64::INFINITY,
+                price: f64::NAN,
+            }],
+            trades: vec![StrategyTrade {
+                id: "T".to_owned(),
+                entry_bar_index: 0,
+                exit_bar_index: 1,
+                entry_time: 10,
+                exit_time: 20,
+                entry_price: f64::NAN,
+                exit_price: f64::NEG_INFINITY,
+                qty: 1.0,
+                profit: f64::INFINITY,
+            }],
+            position: vec![StrategyPositionSnapshot {
+                bar_index: 0,
+                size: f64::INFINITY,
+                avg_price: Some(f64::NAN),
+            }],
+            equity: vec![StrategyEquitySnapshot {
+                bar_index: 0,
+                cash: f64::NAN,
+                market_value: f64::INFINITY,
+                equity: f64::NEG_INFINITY,
+                net_profit: 2.0,
+            }],
+            diagnostics: Vec::new(),
+        });
+
+        let output = public_runtime_result_json(&result);
+
+        assert!(output.contains(r#""qty":null,"price":null"#));
+        assert!(output.contains(r#""entryPrice":null,"exitPrice":null,"qty":1,"profit":null"#));
+        assert!(output.contains(r#""size":null,"avgPrice":null"#));
+        assert!(output.contains(r#""cash":null,"marketValue":null,"equity":null,"netProfit":2"#));
+        assert!(!output.contains("NaN"));
+        assert!(!output.contains("inf"));
+    }
 }

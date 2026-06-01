@@ -1,4 +1,5 @@
 use pine_sema::analyze_input;
+use pine_syntax::Severity;
 
 use crate::library_sources::{
     LibrarySourceSpec, analysis_input_from_paths, parse_library_source_spec,
@@ -16,6 +17,10 @@ pub(crate) fn run(args: Vec<String>) -> Result<(), String> {
         analysis.compatibility.supported.len(),
         analysis.compatibility.unsupported.len()
     );
+    let has_errors = analysis
+        .diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.severity == Severity::Error);
     for diagnostic in analysis.diagnostics {
         let line_col = source.line_col(diagnostic.span.start);
         println!(
@@ -26,6 +31,9 @@ pub(crate) fn run(args: Vec<String>) -> Result<(), String> {
             line_col.column,
             diagnostic.message
         );
+    }
+    if has_errors {
+        return Err("analysis failed".to_owned());
     }
     Ok(())
 }
@@ -61,4 +69,25 @@ fn parse_options(args: &[String]) -> Result<AnalyzeOptions, String> {
         index += 1;
     }
     Ok(options)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::run;
+    use std::{env, fs};
+
+    #[test]
+    fn analyze_returns_error_when_error_diagnostics_exist() {
+        let path = env::temp_dir().join(format!(
+            "pine_analyze_error_{}_{}.pine",
+            std::process::id(),
+            line!()
+        ));
+        fs::write(&path, "indicator(\"bad\")\nplot(unknown)\n").expect("write script");
+
+        let result = run(vec![path.to_string_lossy().into_owned()]);
+
+        fs::remove_file(&path).expect("remove script");
+        assert_eq!(result, Err("analysis failed".to_owned()));
+    }
 }

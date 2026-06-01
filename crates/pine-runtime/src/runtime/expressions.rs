@@ -5,6 +5,25 @@ use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_expr(&mut self, expr: &HirExpr) -> Result<PineValue, RuntimeError> {
+        if self.eval_expr_depth >= MAX_RUNTIME_EVAL_DEPTH {
+            return Err(RuntimeError {
+                message: "runtime expression evaluation exceeded maximum depth".to_owned(),
+            });
+        }
+
+        self.eval_expr_depth += 1;
+        let result = self.eval_expr_inner(expr);
+        self.eval_expr_depth -= 1;
+
+        let value = result?;
+        if let Some(series_id) = expr.series_id {
+            self.current_series.insert(series_id, value.clone());
+        }
+
+        Ok(value)
+    }
+
+    fn eval_expr_inner(&mut self, expr: &HirExpr) -> Result<PineValue, RuntimeError> {
         let value = match &expr.kind {
             HirExprKind::Literal(literal) => eval_literal(literal),
             HirExprKind::Symbol(symbol) => self
@@ -91,10 +110,6 @@ impl<'a> HistoricalRuntime<'a> {
             HirExprKind::History { expr, offset } => self.eval_history(expr, offset)?,
         };
 
-        if let Some(series_id) = expr.series_id {
-            self.current_series.insert(series_id, value.clone());
-        }
-
         Ok(value)
     }
 
@@ -167,11 +182,11 @@ pub(crate) fn eval_binary(op: HirBinaryOp, left: PineValue, right: PineValue) ->
     }
 
     match op {
-        HirBinaryOp::Add => numeric_binary(left, right, |left, right| left + right),
-        HirBinaryOp::Sub => numeric_binary(left, right, |left, right| left - right),
-        HirBinaryOp::Mul => numeric_binary(left, right, |left, right| left * right),
-        HirBinaryOp::Div => numeric_binary(left, right, |left, right| left / right),
-        HirBinaryOp::Mod => numeric_binary(left, right, |left, right| left % right),
+        HirBinaryOp::Add => numeric_add(left, right),
+        HirBinaryOp::Sub => numeric_sub(left, right),
+        HirBinaryOp::Mul => numeric_mul(left, right),
+        HirBinaryOp::Div => numeric_float_binary(left, right, |left, right| left / right),
+        HirBinaryOp::Mod => numeric_mod(left, right),
         HirBinaryOp::Eq => PineValue::Bool(values_equal(&left, &right)),
         HirBinaryOp::NotEq => PineValue::Bool(!values_equal(&left, &right)),
         HirBinaryOp::Gt => compare_binary(left, right, |left, right| left > right),
@@ -189,7 +204,48 @@ pub(crate) fn eval_binary(op: HirBinaryOp, left: PineValue, right: PineValue) ->
     }
 }
 
-fn numeric_binary(
+fn numeric_add(left: PineValue, right: PineValue) -> PineValue {
+    match (left, right) {
+        (PineValue::Int(left), PineValue::Int(right)) => left.checked_add(right).map_or_else(
+            || finite_float_or_na(left as f64 + right as f64),
+            PineValue::Int,
+        ),
+        (left, right) => numeric_float_binary(left, right, |left, right| left + right),
+    }
+}
+
+fn numeric_sub(left: PineValue, right: PineValue) -> PineValue {
+    match (left, right) {
+        (PineValue::Int(left), PineValue::Int(right)) => left.checked_sub(right).map_or_else(
+            || finite_float_or_na(left as f64 - right as f64),
+            PineValue::Int,
+        ),
+        (left, right) => numeric_float_binary(left, right, |left, right| left - right),
+    }
+}
+
+fn numeric_mul(left: PineValue, right: PineValue) -> PineValue {
+    match (left, right) {
+        (PineValue::Int(left), PineValue::Int(right)) => left.checked_mul(right).map_or_else(
+            || finite_float_or_na(left as f64 * right as f64),
+            PineValue::Int,
+        ),
+        (left, right) => numeric_float_binary(left, right, |left, right| left * right),
+    }
+}
+
+fn numeric_mod(left: PineValue, right: PineValue) -> PineValue {
+    match (left, right) {
+        (PineValue::Int(_), PineValue::Int(0)) => PineValue::Na,
+        (PineValue::Int(left), PineValue::Int(right)) => left.checked_rem(right).map_or_else(
+            || finite_float_or_na(left as f64 % right as f64),
+            PineValue::Int,
+        ),
+        (left, right) => numeric_float_binary(left, right, |left, right| left % right),
+    }
+}
+
+fn numeric_float_binary(
     left: PineValue,
     right: PineValue,
     op: impl FnOnce(f64, f64) -> f64,

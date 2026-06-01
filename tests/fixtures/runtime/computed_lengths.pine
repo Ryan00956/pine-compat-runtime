@@ -1,0 +1,5 @@
+//@version=5
+indicator("Computed lengths")
+n = 2
+plot(ta.sma(close, n * 1))
+plot(math.sum(close, n + 0))

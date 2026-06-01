@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use pine_ir::HirProgram;
-use pine_syntax::{Diagnostic, SourceFile, parse_source};
+use pine_syntax::{Diagnostic, SourceFile};
 
 use crate::analyzer::context::Analyzer;
 use crate::compatibility::CompatibilityReport;
@@ -25,15 +25,13 @@ pub fn analyze_source(source: &SourceFile) -> Analysis {
 
 pub fn analyze_input(input: &AnalysisInput) -> Analysis {
     let module_validation = validate_modules(input);
-    let parsed = parse_source(input.root());
     let mut analyzer = Analyzer {
-        diagnostics: {
-            let mut diagnostics = module_validation.diagnostics;
-            diagnostics.extend(parsed.diagnostics);
-            diagnostics
-        },
+        diagnostics: module_validation.diagnostics,
         compatibility: CompatibilityReport {
-            language_version: parsed.program.version.map(|version| version.version),
+            language_version: module_validation
+                .root_program
+                .version
+                .map(|version| version.version),
             ..CompatibilityReport::default()
         },
         scope: ScopeResolver::new(initial_symbols(), initial_symbol_order()),
@@ -55,6 +53,12 @@ pub fn analyze_input(input: &AnalysisInput) -> Analysis {
         block_depth: 0,
         function_depth: 0,
         loop_depth: 0,
+        expr_depth: 0,
+        lowering_limits: Default::default(),
+        lowering_inline_depth: 0,
+        lowered_hir_nodes: 0,
+        lowered_temp_symbols: 0,
+        lowering_budget_reported: false,
     };
     analyzer.analyze_program(&module_validation.root_program);
     analyzer.finish(&module_validation.root_program)

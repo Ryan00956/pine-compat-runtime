@@ -1,0 +1,4 @@
+//@version=5
+indicator("Malformed number recovery")
+huge = 999999999999999999999999999999999999999
+plot(close)

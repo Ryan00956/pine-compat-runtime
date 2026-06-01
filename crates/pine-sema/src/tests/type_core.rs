@@ -44,6 +44,22 @@ fn accepts_type_casts() {
 }
 
 #[test]
+fn rejects_deep_semantic_expression_nesting() {
+    let expression = format!("{}close", "+".repeat(130));
+    let analysis = analyze(&format!("plot({expression})\n"));
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_SEMA_EXPR_DEPTH"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_unknown_history_offset() {
     let analysis = analyze("x = close[len]\n");
 

@@ -76,9 +76,9 @@ pine-compat-runtime/
     pine-python/       PyO3 and maturin Python bindings
     pine-wasm/         browser and host WASM bindings
   tests/
-    fixtures/
-    snapshots/
-    conformance/
+    fixtures/         runtime, sema, syntax, request, profile, realtime, etc.
+      conformance.tsv executable subset inventory
+    snapshots/        generated matrix snapshots
   docs/
 ```
 
