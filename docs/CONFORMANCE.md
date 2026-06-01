@@ -192,8 +192,7 @@ structural broker split is summarized in `docs/PHASE_P_AUDIT.md`. Phase Q's
 bracket design gate is recorded in `docs/PHASE_Q_AUDIT.md`. Phase R's
 fixture-backed bracket implementation is summarized in `docs/PHASE_R_AUDIT.md`.
 Phase U's fixed quantity subset is summarized in `docs/PHASE_U_AUDIT.md`. Phase
-V's percent quantity subset is tracked in `docs/PHASE_V_EXECUTION_PLAN.md` until
-the closeout audit lands.
+V's percent quantity subset is summarized in `docs/PHASE_V_AUDIT.md`.
 
 ## Source Graph Host Contract
 

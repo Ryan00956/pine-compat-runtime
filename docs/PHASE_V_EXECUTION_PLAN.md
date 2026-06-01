@@ -1,6 +1,7 @@
 # Phase V Strategy Exit Percent Quantity Execution Plan
 
-Status: in progress; Slice 0 decision gate complete.
+Status: closed for the current fixture-backed `qty_percent` partial-exit
+subset. See `docs/PHASE_V_AUDIT.md`.
 
 Phase V should widen only the current `strategy.exit` quantity surface by
 adding a deterministic `qty_percent` subset on top of the Phase U fixed-`qty`
@@ -864,8 +865,8 @@ Slice 6 execution record, 2026-06-01:
   wording matches the conformance and matrix boundary. `docs/BUILTIN_SIGNATURES.md`
   already exposed `qty_percent` on `strategy.exit`, so no signature edit was
   needed in this slice.
-- Kept Phase V marked in progress in the long-term plan; final closed status
-  stays deferred to the Slice 7 audit and release gate.
+- Left Phase V unclosed at Slice 6 so the final closed status could wait for
+  the Slice 7 audit and release gate.
 
 ## Slice 7: Audit And Release Verification
 
@@ -932,6 +933,20 @@ Exit criteria:
 - `scripts/verify.sh` passes.
 - The roadmap and conformance docs no longer describe Phase V as future work.
 - Remaining broker tails are explicitly deferred.
+
+Slice 7 execution record, 2026-06-01:
+
+- Added `docs/PHASE_V_AUDIT.md` with the completed slice summary, supported
+  `qty_percent` boundary, unsupported broker tails, fixture evidence, host
+  evidence, documentation evidence, and verification record.
+- Updated `docs/LONG_TERM_EXECUTION_PLAN.md` to mark Phase V closed after audit
+  and release-gate verification, and updated semantic/conformance references to
+  point at the final audit.
+- Updated `docs/SEMANTIC_MODEL.md` to remove stale `qty_percent` unsupported
+  wording and describe the current percent quantity semantics.
+- Added a conservative Phase V closeout entry to `docs/RELEASE_NOTES.md`.
+- Ran focused verification, snapshot refresh checks, Python wheel rebuild and
+  reinstall, Python tests, and `scripts/verify.sh`; all passed.
 
 ## Suggested Commit Slices
 

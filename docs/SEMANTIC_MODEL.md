@@ -58,28 +58,34 @@ price, `trail_points` converts once from `strategy.position_avg_price`, and
 default `syminfo.mintick`; trailing exits activate on a later eligible bar,
 never fill on the activation bar, ratchet upward only, and later fill when
 `low <= active trailing stop`. Phase U accepts optional fixed `qty` on each of
-those supported single-trigger, bracket, and trailing forms. `qty` evaluates
-once at placement time after `id` and `from_entry`, must be finite and
-positive, and stores an absolute requested close quantity on the pending exit.
-Omitted `qty` preserves full-position behavior. Filled exits close
-`min(qty, current position size)`, leave any remaining long position open at
-the same average price, record one order event and one closed trade for the
-filled quantity, and clear the pending exit. These calls are rejected in
-indicator scripts and user-defined functions. Short entries, `strategy.exit`
-same-side pairs, 3+ trigger or invalid trailing combinations, `qty_percent`,
-multiple pending exits, reservation behavior, missing-entry pre-placement,
-`strategy.order`, broker settings beyond `initial_capital` and fixed default
-quantity, realtime strategy handoff, and strategy metrics beyond the Phase L
-position/profit/equity variables remain unsupported except for the Phase O
-`strategy.closedtrades` and `strategy.opentrades` count variables. Those two
-variables are read-only
+those supported single-trigger, bracket, and trailing forms. Phase V accepts
+optional `qty_percent` on the same supported trigger forms. `qty` and
+`qty_percent` are mutually exclusive. Both quantity forms evaluate once at
+placement time after `id` and `from_entry`, must be finite and positive, and
+store an absolute requested close quantity on the pending exit. `qty_percent`
+resolves against the current open position size as
+`position_size * qty_percent / 100.0`; values above 100 are allowed because the
+fill closes no more than the current position. Omitted `qty` and omitted
+`qty_percent` preserve full-position behavior. Filled exits close
+`min(requested_quantity, current position size)`, leave any remaining long
+position open at the same average price, record one order event and one closed
+trade for the filled quantity, and clear the pending exit. These calls are
+rejected in indicator scripts and user-defined functions. Short entries,
+`strategy.exit` same-side pairs, 3+ trigger or invalid trailing combinations,
+`qty + qty_percent`, multiple pending exits, reservation behavior, missing-entry
+pre-placement, `strategy.order`, broker settings beyond `initial_capital` and
+fixed default quantity, realtime strategy handoff, and strategy metrics beyond
+the Phase L position/profit/equity variables remain unsupported except for the
+Phase O `strategy.closedtrades` and `strategy.opentrades` count variables. Those
+two variables are read-only
 strategy-mode `series int` values for the current long-only broker:
 `strategy.closedtrades` counts closed trades recorded by broker state, and
 `strategy.opentrades` is `1` while the supported long position is open and `0`
-when flat. They do not expose trade details or namespace functions. Phase M
-and Phase N keep pending-order records, partial fill fields, and exit reason
-fields outside the public output model, and Phases R, S, and U keep that public
-contract unchanged for brackets, trailing exits, and fixed `qty` exits.
+when flat. They do not expose trade details or namespace functions. Phase M and
+Phase N keep pending-order records, partial fill fields, and exit reason fields
+outside the public output model, and Phases R, S, U, and V keep that public
+contract unchanged for brackets, trailing exits, fixed `qty` exits, and percent
+`qty_percent` exits.
 Diagnostics should describe the current strategy subset, not old phase names.
 
 `indicator(...)` and `strategy(...)` declarations are mutually exclusive and

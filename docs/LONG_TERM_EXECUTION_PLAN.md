@@ -871,8 +871,9 @@ Out of scope until separately designed:
 Goal: add the first deterministic percent-quantity `strategy.exit` subset
 without changing the public strategy output schema.
 
-Status: in progress for the current fixture-backed `qty_percent` partial-exit
-subset. Execution playbook: `docs/PHASE_V_EXECUTION_PLAN.md`.
+Status: closed for the current fixture-backed `qty_percent` partial-exit subset.
+See `docs/PHASE_V_AUDIT.md`. Execution playbook:
+`docs/PHASE_V_EXECUTION_PLAN.md`.
 
 Planned scope:
 

@@ -151,8 +151,8 @@ namespace functions. The prior Phase L boundary is summarized in
 `docs/PHASE_L_AUDIT.md`; the closed Phase M and Phase N exit subsets are
 summarized in `docs/PHASE_M_AUDIT.md` and `docs/PHASE_N_AUDIT.md`; the Phase R
 bracket subset is summarized in `docs/PHASE_R_AUDIT.md`; the Phase U fixed
-quantity subset is summarized in `docs/PHASE_U_AUDIT.md`; and the in-progress
-Phase V percent quantity work is tracked in `docs/PHASE_V_EXECUTION_PLAN.md`.
+quantity subset is summarized in `docs/PHASE_U_AUDIT.md`; and the Phase V
+percent quantity subset is summarized in `docs/PHASE_V_AUDIT.md`.
 
 ## Alert Events
 

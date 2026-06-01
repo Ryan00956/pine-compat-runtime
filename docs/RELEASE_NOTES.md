@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Phase V for the current fixture-backed `strategy.exit(...,
+  qty_percent=...)` subset. The audit records supported single-trigger,
+  one-downside/one-upside bracket, and trailing percent exits; placement-time
+  percent-to-absolute resolution; fill-time clamping; unchanged public runtime
+  schema; host coverage; and the full release verification gate.
 - Added Phase V `strategy.exit(..., qty_percent=...)` support on the existing
   supported single-trigger, one-downside/one-upside bracket, and trailing exit
   subsets. `qty_percent` is evaluated at placement time, must be finite and
