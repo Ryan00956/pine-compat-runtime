@@ -850,6 +850,23 @@ Exit criteria:
 - No unsupported broker behavior is accidentally claimed.
 - Matrix output is deterministic and snapshot-backed.
 
+Slice 6 execution record, 2026-06-01:
+
+- Confirmed `tests/fixtures/conformance.tsv` and `tests/snapshots/matrix.json`
+  already name the same fixture-backed `qty_percent` subset and the remaining
+  unsupported broker behaviors.
+- Updated `docs/CONFORMANCE.md` to describe placement-time percent evaluation,
+  percent-to-absolute quantity resolution, full-position clamping, unchanged
+  public output shape, and the remaining unsupported `qty + qty_percent`,
+  reservation, multiple-pending, and missing-entry boundaries.
+- Updated `docs/EXECUTION_SEMANTICS.md`, `docs/RELEASE_NOTES.md`,
+  `docs/LONG_TERM_EXECUTION_PLAN.md`, and `README.md` so user-facing strategy
+  wording matches the conformance and matrix boundary. `docs/BUILTIN_SIGNATURES.md`
+  already exposed `qty_percent` on `strategy.exit`, so no signature edit was
+  needed in this slice.
+- Kept Phase V marked in progress in the long-term plan; final closed status
+  stays deferred to the Slice 7 audit and release gate.
+
 ## Slice 7: Audit And Release Verification
 
 Goal: close Phase V with an explicit audit and the full release gate.

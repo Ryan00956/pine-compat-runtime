@@ -113,12 +113,15 @@ imports for exported const expressions and pure exported functions,
 incremental append execution, realtime forming-bar rollback, partial
 strategy-mode long entries, closes, stop/limit/profit/loss exits, the first
 one-downside/one-upside `strategy.exit` bracket subset, the first trailing-stop
-`strategy.exit` subset, Python bindings, and a thin WASM binding.
+`strategy.exit` subset, optional fixed-quantity and percent-quantity partial
+exits on those supported exit shapes, Python bindings, and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as strategy order
 families beyond the current `strategy.entry`/`strategy.close`/`strategy.exit`
 subset, same-side, 3+ trigger, or invalid trailing strategy exits, request
-variants outside the narrow `request.security` subset, alert frequency modes
+variants outside the narrow `request.security` subset, `qty + qty_percent`,
+quantity reservation, multiple pending exits, missing-entry pre-placement,
+alert frequency modes
 and placeholder
 interpolation, remote library lookup, re-exports, imported UDTs, imported
 methods, side-effecting exported library functions, advanced drawing families

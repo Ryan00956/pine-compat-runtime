@@ -864,15 +864,47 @@ Out of scope until separately designed:
 - Multiple entries, pyramiding, short exposure, and reversals.
 - Public pending-order records, partial-fill fields, exit-reason fields, or a
   runtime schema bump.
-- `qty_percent`, which Phase U explicitly defers.
+- `qty_percent`, which Phase U explicitly defers to Phase V.
+
+## Phase V: Strategy Exit Percent Quantity
+
+Goal: add the first deterministic percent-quantity `strategy.exit` subset
+without changing the public strategy output schema.
+
+Status: in progress for the current fixture-backed `qty_percent` partial-exit
+subset. Execution playbook: `docs/PHASE_V_EXECUTION_PLAN.md`.
+
+Planned scope:
+
+- Strategy-mode-only `strategy.exit(..., qty_percent=...)` for the current
+  one-net-long, no-pyramiding, one-pending-exit broker.
+- Support `qty_percent` on the currently supported single-trigger, bracket, and
+  trailing exit forms.
+- Evaluate `qty_percent` at placement time, require finite positive values,
+  resolve it to an absolute requested close quantity against the current open
+  position size, and clamp filled quantity to the current position size.
+- Partial fills record one strategy exit order event and one closed trade for
+  the absolute filled quantity, leave any remaining long position open at the
+  same average price, and keep the existing strategy result shape and runtime
+  `schemaVersion: 3`.
+
+Out of scope until separately designed:
+
+- Calls that combine `qty` and `qty_percent`.
+- Quantity reservation across multiple exits.
+- Multiple independent pending exits.
+- Missing-entry pre-placement.
+- Multiple entries, pyramiding, short exposure, and reversals.
+- Public pending-order records, percent fields, remaining-quantity fields,
+  exit-reason fields, or a runtime schema bump.
 
 ## Backlog Priority
 
 Recommended order from the current state:
 
 1. Keep strategy maintenance narrow and fixture-backed. The next strategy work
-   should target one deferred broker tail at a time, such as `qty_percent`,
-   quantity reservation, missing-entry pre-placement, multiple pending exits, or
+   should target one deferred broker tail at a time, such as quantity
+   reservation, missing-entry pre-placement, multiple pending exits, or
    short/pyramiding behavior, with semantic, runtime, incremental, host,
    conformance, and closeout evidence before any compatibility claim widens.
 2. Phase J maintenance only when a small, fixture-backed change widens the

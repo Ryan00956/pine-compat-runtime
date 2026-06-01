@@ -47,9 +47,11 @@ positive const numeric fixed default entry quantity. The fixed default subset is
 the only supported declaration quantity mode; percent-of-equity, cash sizing,
 contracts, margin, and currency conversion remain unsupported.
 
-The current order subset is `strategy.entry(id, strategy.long, qty=...)`,
-`strategy.entry(id, strategy.long)` when a fixed default quantity is configured,
-and `strategy.close(id)`.
+The current immediate market-order subset is
+`strategy.entry(id, strategy.long, qty=...)`, `strategy.entry(id,
+strategy.long)` when a fixed default quantity is configured, and
+`strategy.close(id)`. Supported `strategy.exit` calls use the pending-exit model
+described below.
 When execution reaches the call in a strategy-mode script, the runtime fills a
 long market entry at the current bar close and records an order event plus a
 position snapshot. Only one net long position is supported; repeated entry
@@ -73,7 +75,8 @@ output field includes current open profit while a long position is open. The
 expression variable `strategy.netprofit` is narrower: it is cumulative realized
 closed-trade profit only and excludes current open profit. The current subset
 has no commission, slippage, margin, percent sizing, currency conversion,
-partial exits, or pyramiding.
+quantity reservation, multiple pending exits, missing-entry pre-placement, or
+pyramiding.
 
 Strategy-mode scripts can read `strategy.position_size` and
 `strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`, and
@@ -102,43 +105,54 @@ read-only.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants
-beyond the supported single-trigger, one-downside/one-upside bracket, and
-trailing-stop subset, `strategy.order`, rich order families, strategy reporting
-helpers beyond the supported position/profit/equity/count variables,
-requested-context strategy state, strategy state mutation, and realtime
-strategy handoff remain unsupported until later strategy-maintenance slices
-define and fixture those semantics. Phase M adds narrow stop-only
-`strategy.exit(id, from_entry, stop=price)` and limit-only
+beyond the supported single-trigger, one-downside/one-upside bracket,
+trailing-stop, fixed-quantity, and percent-quantity subset, `strategy.order`,
+rich order families, strategy reporting helpers beyond the supported
+position/profit/equity/count variables, requested-context strategy state,
+strategy state mutation, and realtime strategy handoff remain unsupported until
+later strategy-maintenance slices define and fixture those semantics. Phase M
+adds narrow stop-only `strategy.exit(id, from_entry, stop=price)` and limit-only
 `strategy.exit(id, from_entry, limit=price)` subsets for the current
 one-net-long broker. Phase N adds profit-only
 `strategy.exit(id, from_entry, profit=ticks)` and loss-only
 `strategy.exit(id, from_entry, loss=ticks)` helpers. Phase R adds the first
 bracket subset: exactly one downside leg plus one upside leg, covering
-`stop + limit`, `stop + profit`, `loss + limit`, and `loss + profit`.
-Phase S adds the first trailing subset: exactly `trail_price + trail_offset`
-and `trail_points + trail_offset`. Profit/loss and trailing tick arguments
-convert positive tick distances from
+`stop + limit`, `stop + profit`, `loss + limit`, and `loss + profit`. Phase S
+adds the first trailing subset: exactly `trail_price + trail_offset` and
+`trail_points + trail_offset`. Phase U adds optional fixed `qty`; Phase V adds
+optional `qty_percent` on those same supported trigger shapes. `qty` and
+`qty_percent` are mutually exclusive. Both quantity forms evaluate once at
+placement time, must be finite and positive, and store an absolute requested
+close quantity on the single pending exit. `qty_percent` resolves against the
+current open position size as `position_size * qty_percent / 100.0`, and values
+above 100 are allowed because fills clamp to the current position size. Omitted
+`qty` and omitted `qty_percent` keep the previous full-position behavior.
+
+Profit/loss and trailing tick arguments convert positive tick distances from
 `strategy.position_avg_price` using the fixed default `syminfo.mintick`, then
 reuse the same pending-exit lifecycle: accepted calls create or replace one
-pending full-position exit for the matching current entry, the exit is not
-eligible on the bar where it is created or replaced, and a later historical bar
-with `low <= stop/loss price` or `high >= limit/profit price` fills at the
-selected exit price. If both bracket legs are touched on the same eligible bar,
-the downside stop/loss leg fills first. A trailing exit activates on a later
+pending exit for the matching current entry, the exit is not eligible on the bar
+where it is created or replaced, and a later historical bar with
+`low <= stop/loss price` or `high >= limit/profit price` fills at the selected
+exit price. If both bracket legs are touched on the same eligible bar, the
+downside stop/loss leg fills first. A trailing exit activates on a later
 eligible bar when `high >= activation_price`, sets its active stop to
 `high - offset_distance`, and does not fill on the activation bar. On later
 bars, an active trailing exit fills first when `low <= active_stop`; otherwise
 the active stop ratchets upward and never decreases. A filled exit appends
-exactly one `strategy.exit` order event, records a closed trade under the source
-entry id, clears the position, and updates the normal position/equity
-snapshots. Phase M, Phase N, Phase R, and Phase S do not add public
-pending-order records, partial fill fields, bracket-leg metadata,
-trailing-state fields, or exit reason fields. Phase O does not add public
-open-trade records, trade namespace functions, or top-level runtime schema
-fields. The prior Phase L boundary is summarized in
+exactly one `strategy.exit` order event with the absolute filled quantity,
+records a closed trade under the source entry id for that quantity, reduces or
+clears the current long position, and updates the normal position/equity
+snapshots. Phase M, Phase N, Phase R, Phase S, Phase U, and Phase V do not add
+public pending-order records, remaining-quantity fields, percent fields,
+bracket-leg metadata, trailing-state fields, exit reason fields, or top-level
+runtime schema fields. Phase O does not add public open-trade records or trade
+namespace functions. The prior Phase L boundary is summarized in
 `docs/PHASE_L_AUDIT.md`; the closed Phase M and Phase N exit subsets are
 summarized in `docs/PHASE_M_AUDIT.md` and `docs/PHASE_N_AUDIT.md`; the Phase R
-bracket subset is summarized in `docs/PHASE_R_AUDIT.md`.
+bracket subset is summarized in `docs/PHASE_R_AUDIT.md`; the Phase U fixed
+quantity subset is summarized in `docs/PHASE_U_AUDIT.md`; and the in-progress
+Phase V percent quantity work is tracked in `docs/PHASE_V_EXECUTION_PLAN.md`.
 
 ## Alert Events
 
