@@ -4,7 +4,7 @@ mod fills;
 
 use pine_ir::DEFAULT_STRATEGY_INITIAL_CAPITAL;
 
-use exits::{PendingExit, PendingExitTrigger, PendingTrailingState};
+use exits::{PendingExit, PendingExitBook, PendingExitTrigger, PendingTrailingState};
 pub(crate) use exits::{TrailPointsExitSpec, TrailPriceExitSpec};
 
 use crate::{
@@ -26,7 +26,7 @@ pub struct BrokerState {
     position: Vec<StrategyPositionSnapshot>,
     equity: Vec<StrategyEquitySnapshot>,
     diagnostics: Vec<RuntimeDiagnostic>,
-    pending_exit: Option<PendingExit>,
+    pending_exits: PendingExitBook,
 }
 
 impl Default for BrokerState {
@@ -51,7 +51,7 @@ impl BrokerState {
             position: Vec::new(),
             equity: Vec::new(),
             diagnostics: Vec::new(),
-            pending_exit: None,
+            pending_exits: PendingExitBook::new(),
         }
     }
 
@@ -103,13 +103,31 @@ impl BrokerState {
     }
 
     pub(crate) fn cancel_exit_for_entry(&mut self, entry_id: &str) {
-        if self
-            .pending_exit
-            .as_ref()
-            .is_some_and(|pending_exit| pending_exit.from_entry == entry_id)
-        {
-            self.pending_exit = None;
-        }
+        self.pending_exits.clear_for_entry(entry_id);
+    }
+
+    fn pending_exit(&self) -> Option<&PendingExit> {
+        self.pending_exits.current()
+    }
+
+    #[allow(dead_code)]
+    fn pending_exit_mut(&mut self) -> Option<&mut PendingExit> {
+        self.pending_exits.current_mut()
+    }
+
+    #[allow(dead_code)]
+    fn pending_exit_count(&self) -> usize {
+        self.pending_exits.count()
+    }
+
+    #[allow(dead_code)]
+    fn pending_exit_by_identity(&self, id: &str, from_entry: &str) -> Option<&PendingExit> {
+        self.pending_exits.find_by_identity(id, from_entry)
+    }
+
+    #[allow(dead_code)]
+    fn pending_exits_in_placement_order(&self) -> impl Iterator<Item = &PendingExit> {
+        self.pending_exits.iter()
     }
 
     pub(crate) fn evaluate_pending_exits(
@@ -119,7 +137,7 @@ impl BrokerState {
         high: f64,
         low: f64,
     ) {
-        let Some(mut pending_exit) = self.pending_exit.clone() else {
+        let Some(mut pending_exit) = self.pending_exit().cloned() else {
             return;
         };
         if pending_exit.last_update_bar_index >= bar_index {
@@ -128,7 +146,7 @@ impl BrokerState {
         if self.position_size <= 0.0
             || self.entry_id.as_deref() != Some(pending_exit.from_entry.as_str())
         {
-            self.pending_exit = None;
+            self.pending_exits.clear_for_entry(&pending_exit.from_entry);
             return;
         }
         let triggered_price = match &mut pending_exit.trigger {
@@ -149,7 +167,7 @@ impl BrokerState {
                         trailing.state = PendingTrailingState::Active {
                             stop_price: high - trailing.spec.offset_price_distance,
                         };
-                        self.pending_exit = Some(pending_exit);
+                        self.pending_exits.replace_all(pending_exit);
                     }
                     return;
                 }
@@ -160,7 +178,7 @@ impl BrokerState {
                         let next_stop = high - trailing.spec.offset_price_distance;
                         if next_stop > *stop_price {
                             *stop_price = next_stop;
-                            self.pending_exit = Some(pending_exit);
+                            self.pending_exits.replace_all(pending_exit);
                         }
                         return;
                     }

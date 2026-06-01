@@ -540,6 +540,43 @@ Exit criteria:
 - No conformance row changes.
 - No public output shape changes.
 
+### Slice 1 Implementation Record
+
+Status: completed on 2026-06-01.
+
+Implemented changes:
+
+- Replaced the broker's single internal `pending_exit: Option<PendingExit>`
+  storage with `PendingExitBook`, a small broker-owned collection wrapper around
+  `Vec<PendingExit>`.
+- Added internal helper methods for:
+  - current effective pending exit access;
+  - same-identity lookup by `id + from_entry`;
+  - placement-order iteration;
+  - clearing exits for a matching entry;
+  - pending-exit count checks.
+- Preserved Slice 1 runtime behavior: every accepted new placement still
+  replaces the previous effective pending exit, unchanged repeated placement
+  preserves the original eligibility bar, `strategy.close(id)` cancels matching
+  pending state, invalid placements preserve existing pending state, and fills
+  clear the effective pending exit.
+- Updated broker unit tests to assert one-pending behavior through the new
+  collection helpers, including identity lookup and placement-order iteration.
+
+No public runtime JSON, Python dictionary, WASM JSON, conformance metadata,
+snapshot, semantic-analysis, or compatibility-claim changes were made.
+
+Slice 1 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-runtime --test incremental
+cargo test -p pine-cli strategy
+```
+
+All commands passed on the Slice 1 workspace.
+
 ## Slice 2: Reservation Accounting Internals
 
 Goal: add reservation calculation helpers behind the still-single-effective

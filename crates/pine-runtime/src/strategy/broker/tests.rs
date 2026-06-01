@@ -5,7 +5,14 @@ use super::exits::{
 use super::*;
 
 fn pending_exit_count(broker: &BrokerState) -> usize {
-    usize::from(broker.pending_exit.is_some())
+    broker.pending_exit_count()
+}
+
+fn pending_exit_ids(broker: &BrokerState) -> Vec<&str> {
+    broker
+        .pending_exits_in_placement_order()
+        .map(|pending_exit| pending_exit.id.as_str())
+        .collect()
 }
 
 fn broker_with_long_entry() -> BrokerState {
@@ -42,7 +49,7 @@ fn trailing_points_trigger(
 }
 
 fn assert_active_trailing_stop(broker: &BrokerState, expected_stop_price: f64) {
-    let pending_exit = broker.pending_exit.as_ref().expect("pending exit");
+    let pending_exit = broker.pending_exit().expect("pending exit");
     let PendingExitTrigger::Trailing(trailing) = &pending_exit.trigger else {
         panic!("expected trailing pending exit");
     };
@@ -165,8 +172,11 @@ fn place_exit_while_long_records_pending_stop() {
     broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
 
     assert_eq!(pending_exit_count(&broker), 1);
+    assert!(broker.pending_exit_by_identity("XL", "L").is_some());
+    assert!(broker.pending_exit_by_identity("XL", "OTHER").is_none());
+    assert_eq!(pending_exit_ids(&broker), vec!["XL"]);
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
@@ -186,8 +196,11 @@ fn place_exit_replaces_existing_pending_stop() {
     broker.place_exit_stop("XL2".to_owned(), "L".to_owned(), 90.0, 1);
 
     assert_eq!(pending_exit_count(&broker), 1);
+    assert!(broker.pending_exit_by_identity("XL", "L").is_none());
+    assert!(broker.pending_exit_by_identity("XL2", "L").is_some());
+    assert_eq!(pending_exit_ids(&broker), vec!["XL2"]);
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XL2".to_owned(),
             from_entry: "L".to_owned(),
@@ -203,35 +216,35 @@ fn fixed_quantity_is_stored_on_supported_pending_exit_families() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 95.0, 1.0, 0);
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
     let mut broker = broker_with_long_entry();
     broker.place_exit_limit_qty("XL".to_owned(), "L".to_owned(), 110.0, 1.0, 0);
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
     let mut broker = broker_with_long_entry();
     broker.place_exit_profit_ticks_qty("XP".to_owned(), "L".to_owned(), 10.0, 0.5, 1.0, 0);
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
     let mut broker = broker_with_long_entry();
     broker.place_exit_loss_ticks_qty("XL".to_owned(), "L".to_owned(), 5.0, 0.5, 1.0, 0);
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
     let mut broker = broker_with_long_entry();
     broker.place_exit_bracket_qty("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 1.0, 0);
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
@@ -248,7 +261,7 @@ fn fixed_quantity_is_stored_on_supported_pending_exit_families() {
         0,
     );
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
@@ -265,7 +278,7 @@ fn fixed_quantity_is_stored_on_supported_pending_exit_families() {
         0,
     );
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 }
@@ -275,35 +288,35 @@ fn percent_quantity_resolves_on_supported_pending_exit_families() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop_qty_percent("XS".to_owned(), "L".to_owned(), 95.0, 50.0, 0);
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
     let mut broker = broker_with_long_entry();
     broker.place_exit_limit_qty_percent("XL".to_owned(), "L".to_owned(), 110.0, 100.0, 0);
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(2.0)
     );
 
     let mut broker = broker_with_long_entry();
     broker.place_exit_profit_ticks_qty_percent("XP".to_owned(), "L".to_owned(), 10.0, 0.5, 50.0, 0);
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
     let mut broker = broker_with_long_entry();
     broker.place_exit_loss_ticks_qty_percent("XL".to_owned(), "L".to_owned(), 5.0, 0.5, 50.0, 0);
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
     let mut broker = broker_with_long_entry();
     broker.place_exit_bracket_qty_percent("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 50.0, 0);
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
@@ -320,7 +333,7 @@ fn percent_quantity_resolves_on_supported_pending_exit_families() {
         0,
     );
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 
@@ -337,7 +350,7 @@ fn percent_quantity_resolves_on_supported_pending_exit_families() {
         0,
     );
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(1.0)
     );
 }
@@ -348,7 +361,7 @@ fn percent_quantity_larger_than_position_closes_full_position() {
     broker.place_exit_limit_qty_percent("XL".to_owned(), "L".to_owned(), 110.0, 150.0, 0);
 
     assert_eq!(
-        broker.pending_exit.as_ref().unwrap().quantity,
+        broker.pending_exit().unwrap().quantity,
         PendingExitQuantity::Fixed(3.0)
     );
 
@@ -367,10 +380,7 @@ fn unchanged_repeated_quantity_keeps_original_eligibility_bar() {
     broker.place_exit_stop_qty("XL".to_owned(), "L".to_owned(), 95.0, 1.0, 0);
     broker.place_exit_stop_qty("XL".to_owned(), "L".to_owned(), 95.0, 1.0, 1);
 
-    assert_eq!(
-        broker.pending_exit.as_ref().unwrap().last_update_bar_index,
-        0
-    );
+    assert_eq!(broker.pending_exit().unwrap().last_update_bar_index, 0);
 }
 
 #[test]
@@ -381,7 +391,7 @@ fn changed_repeated_quantity_replaces_pending_exit() {
     broker.place_exit_stop_qty("XL".to_owned(), "L".to_owned(), 95.0, 0.5, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
@@ -396,12 +406,12 @@ fn changed_repeated_quantity_replaces_pending_exit() {
 fn invalid_fixed_quantity_records_diagnostic_without_changing_pending_exit() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop_qty("XL".to_owned(), "L".to_owned(), 95.0, 1.0, 0);
-    let original_pending_exit = broker.pending_exit.clone();
+    let original_pending_exit = broker.pending_exit().cloned();
 
     broker.place_exit_stop_qty("BAD".to_owned(), "L".to_owned(), 94.0, 0.0, 1);
     broker.place_exit_limit_qty("BAD2".to_owned(), "L".to_owned(), 110.0, f64::NAN, 2);
 
-    assert_eq!(broker.pending_exit, original_pending_exit);
+    assert_eq!(broker.pending_exit().cloned(), original_pending_exit);
     assert_eq!(broker.diagnostics.len(), 2);
     assert!(
         broker
@@ -415,12 +425,12 @@ fn invalid_fixed_quantity_records_diagnostic_without_changing_pending_exit() {
 fn invalid_percent_quantity_records_diagnostic_without_changing_pending_exit() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop_qty_percent("XL".to_owned(), "L".to_owned(), 95.0, 50.0, 0);
-    let original_pending_exit = broker.pending_exit.clone();
+    let original_pending_exit = broker.pending_exit().cloned();
 
     broker.place_exit_stop_qty_percent("BAD".to_owned(), "L".to_owned(), 94.0, 0.0, 1);
     broker.place_exit_limit_qty_percent("BAD2".to_owned(), "L".to_owned(), 110.0, f64::NAN, 2);
 
-    assert_eq!(broker.pending_exit, original_pending_exit);
+    assert_eq!(broker.pending_exit().cloned(), original_pending_exit);
     assert_eq!(broker.diagnostics.len(), 2);
     assert!(
         broker
@@ -445,11 +455,11 @@ fn percent_quantity_while_flat_records_entry_diagnostic_before_percent_resolutio
 fn percent_quantity_mismatched_entry_records_entry_diagnostic_before_percent_resolution() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop("KEEP".to_owned(), "L".to_owned(), 95.0, 0);
-    let original_pending_exit = broker.pending_exit.clone();
+    let original_pending_exit = broker.pending_exit().cloned();
 
     broker.place_exit_stop_qty_percent("BAD".to_owned(), "OTHER".to_owned(), 94.0, f64::NAN, 1);
 
-    assert_eq!(broker.pending_exit, original_pending_exit);
+    assert_eq!(broker.pending_exit().cloned(), original_pending_exit);
     assert_eq!(broker.diagnostics.len(), 1);
     assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
 }
@@ -485,7 +495,7 @@ fn repeated_entry_noop_leaves_pending_exit_untouched() {
 
     assert_eq!(pending_exit_count(&broker), 1);
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
@@ -672,7 +682,7 @@ fn profit_ticks_create_limit_from_average_entry_price() {
     broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 0.5, 0);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
@@ -690,7 +700,7 @@ fn loss_ticks_create_stop_from_average_entry_price() {
     broker.place_exit_loss_ticks("XL".to_owned(), "L".to_owned(), 5.0, 0.5, 0);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
@@ -709,7 +719,7 @@ fn place_exit_bracket_records_pending_bracket() {
 
     assert_eq!(pending_exit_count(&broker), 1);
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
@@ -737,7 +747,7 @@ fn bracket_tick_helpers_resolve_prices_from_average_entry_price() {
     broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), downside, upside, 0);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
@@ -759,7 +769,7 @@ fn place_exit_trail_price_records_pending_trailing_exit() {
     broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
@@ -778,7 +788,7 @@ fn place_exit_trail_points_records_entry_relative_activation() {
     broker.place_exit_trail_points("XT".to_owned(), "L".to_owned(), 10.0, 4.0, 0.5, 0);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
@@ -809,7 +819,7 @@ fn invalid_trailing_activation_price_records_diagnostic_without_changing_pending
     broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), f64::NAN, 4.0, 0.5, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
@@ -830,7 +840,7 @@ fn invalid_trailing_offset_ticks_record_diagnostic_without_changing_pending_exit
     broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 0.0, 0.5, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
@@ -849,17 +859,14 @@ fn unchanged_repeated_trailing_keeps_original_eligibility_bar() {
     broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
     broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 1);
 
-    assert_eq!(
-        broker.pending_exit.as_ref().unwrap().last_update_bar_index,
-        0
-    );
+    assert_eq!(broker.pending_exit().unwrap().last_update_bar_index, 0);
 }
 
 #[test]
 fn unchanged_repeated_trailing_preserves_active_state() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
-    let pending = broker.pending_exit.as_mut().expect("trailing pending exit");
+    let pending = broker.pending_exit_mut().expect("trailing pending exit");
     let PendingExitTrigger::Trailing(trailing) = &mut pending.trigger else {
         panic!("expected trailing pending exit");
     };
@@ -868,7 +875,7 @@ fn unchanged_repeated_trailing_preserves_active_state() {
     broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
@@ -892,7 +899,7 @@ fn changed_repeated_trailing_replaces_spec_and_delays_eligibility() {
     broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 106.0, 4.0, 0.5, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
@@ -922,7 +929,7 @@ fn invalid_bracket_downside_price_records_diagnostic_without_changing_pending_ex
     broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), f64::NAN, 110.0, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
@@ -943,7 +950,7 @@ fn invalid_bracket_upside_price_records_diagnostic_without_changing_pending_exit
     broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, f64::INFINITY, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
@@ -965,7 +972,7 @@ fn invalid_bracket_ticks_record_diagnostic_without_changing_pending_exit() {
 
     assert_eq!(price, None);
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
@@ -987,7 +994,7 @@ fn invalid_bracket_mintick_records_diagnostic_without_changing_pending_exit() {
 
     assert_eq!(price, None);
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
@@ -1019,7 +1026,7 @@ fn bracket_with_mismatched_entry_records_diagnostic_without_changing_pending_exi
     broker.place_exit_bracket("XB".to_owned(), "OTHER".to_owned(), 95.0, 110.0, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
@@ -1038,10 +1045,7 @@ fn unchanged_repeated_bracket_keeps_original_eligibility_bar() {
     broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
     broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 1);
 
-    assert_eq!(
-        broker.pending_exit.as_ref().unwrap().last_update_bar_index,
-        0
-    );
+    assert_eq!(broker.pending_exit().unwrap().last_update_bar_index, 0);
 }
 
 #[test]
@@ -1051,7 +1055,7 @@ fn changed_repeated_bracket_replaces_price_and_delays_eligibility() {
     broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 94.0, 110.0, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
@@ -1073,7 +1077,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
     broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
@@ -1089,7 +1093,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
     broker.place_exit_limit("XL".to_owned(), "L".to_owned(), 111.0, 2);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
@@ -1185,7 +1189,7 @@ fn pending_trailing_is_not_eligible_on_creation_bar() {
     broker.evaluate_pending_exits(0, 10, 110.0, 100.0);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
@@ -1269,7 +1273,7 @@ fn invalid_profit_ticks_record_diagnostic_without_changing_pending_exit() {
     broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 0.0, 0.01, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
@@ -1290,7 +1294,7 @@ fn invalid_exit_mintick_records_diagnostic_without_changing_pending_exit() {
     broker.place_exit_loss_ticks("XS".to_owned(), "L".to_owned(), 5.0, f64::NAN, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
@@ -1353,7 +1357,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
     broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 1.0, 1);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
@@ -1366,7 +1370,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
     broker.place_exit_loss_ticks("XL".to_owned(), "L".to_owned(), 5.0, 1.0, 2);
 
     assert_eq!(
-        broker.pending_exit,
+        broker.pending_exit().cloned(),
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),

@@ -113,6 +113,57 @@ pub(super) struct PendingExit {
     pub(super) last_update_bar_index: usize,
 }
 
+#[derive(Debug, Clone, Default, PartialEq)]
+pub(super) struct PendingExitBook {
+    exits: Vec<PendingExit>,
+}
+
+impl PendingExitBook {
+    pub(super) fn new() -> Self {
+        Self::default()
+    }
+
+    pub(super) fn current(&self) -> Option<&PendingExit> {
+        self.exits.first()
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn current_mut(&mut self) -> Option<&mut PendingExit> {
+        self.exits.first_mut()
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn iter(&self) -> impl Iterator<Item = &PendingExit> {
+        self.exits.iter()
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn count(&self) -> usize {
+        self.exits.len()
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn find_by_identity(&self, id: &str, from_entry: &str) -> Option<&PendingExit> {
+        self.exits
+            .iter()
+            .find(|pending_exit| pending_exit.id == id && pending_exit.from_entry == from_entry)
+    }
+
+    pub(super) fn replace_all(&mut self, pending_exit: PendingExit) {
+        self.exits.clear();
+        self.exits.push(pending_exit);
+    }
+
+    pub(super) fn clear_all(&mut self) {
+        self.exits.clear();
+    }
+
+    pub(super) fn clear_for_entry(&mut self, entry_id: &str) {
+        self.exits
+            .retain(|pending_exit| pending_exit.from_entry != entry_id);
+    }
+}
+
 impl BrokerState {
     pub(crate) fn place_exit_stop(
         &mut self,
@@ -731,7 +782,7 @@ impl BrokerState {
             return;
         };
 
-        if self.pending_exit.as_ref().is_some_and(|pending_exit| {
+        if self.pending_exit().is_some_and(|pending_exit| {
             pending_exit.id == id
                 && pending_exit.from_entry == from_entry
                 && pending_exit.trigger.placement_equivalent(&trigger)
@@ -740,7 +791,7 @@ impl BrokerState {
             return;
         }
 
-        self.pending_exit = Some(PendingExit {
+        self.pending_exits.replace_all(PendingExit {
             id,
             from_entry,
             trigger,
