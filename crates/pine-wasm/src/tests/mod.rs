@@ -348,6 +348,38 @@ fn runs_strategy_exit_qty_partial_fixture_from_csv_to_trade_json() {
     assert!(!output.contains("remainingQty"));
 }
 
+#[test]
+fn runs_strategy_exit_qty_percent_partial_fixture_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit percent quantity fixture should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":1},{\"id\":\"XP\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":2.5}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":1,\"exitTime\":2,\"entryPrice\":1,\"exitPrice\":2.5,\"qty\":1,\"profit\":1.5}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":1},{\"barIndex\":1,\"size\":1,\"avgPrice\":1}]"
+    ));
+    assert!(output.contains("\"values\":[2,2,1,1]"));
+    assert!(output.contains("\"values\":[0,0,1.5,1.5]"));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("remainingQty"));
+    assert!(!output.contains("qtyPercent"));
+    assert!(!output.contains("qty_percent"));
+}
+
 const REQUEST_HOST_SOURCE: &str =
     include_str!("../../../../tests/fixtures/request/request_security_host.pine");
 const REQUEST_HOST_CHART_CSV: &str =

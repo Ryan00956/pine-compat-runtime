@@ -675,6 +675,68 @@ def test_run_script_returns_strategy_exit_qty_partial_fixture_contract():
     assert "remainingQty" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_exit_qty_percent_partial_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
+    assert result["schemaVersion"] == 3
+    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 0,
+            "time": 1,
+            "direction": "strategy.long",
+            "qty": 2.0,
+            "price": 1.0,
+        },
+        {
+            "id": "XP",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.exit",
+            "qty": 1.0,
+            "price": 2.5,
+        },
+    ]
+    assert [order["direction"] for order in result["strategy"]["orders"]].count(
+        "strategy.exit"
+    ) == 1
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 0,
+            "exitBarIndex": 1,
+            "entryTime": 1,
+            "exitTime": 2,
+            "entryPrice": 1.0,
+            "exitPrice": 2.5,
+            "qty": 1.0,
+            "profit": 1.5,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 0, "size": 2.0, "avgPrice": 1.0},
+        {"barIndex": 1, "size": 1.0, "avgPrice": 1.0},
+    ]
+    assert [plot["values"] for plot in result["plots"]] == [
+        [2.0, 2.0, 1.0, 1.0],
+        [0.0, 0.0, 1.5, 1.5],
+    ]
+    assert result["diagnostics"] == []
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+    assert "remainingQty" not in result["strategy"]
+    assert "qtyPercent" not in result["strategy"]
+    assert "qty_percent" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_runtime_diagnostics():
     result = pine_compat.run_script(
         'strategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',

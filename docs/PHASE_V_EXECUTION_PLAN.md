@@ -781,6 +781,23 @@ Exit criteria:
 - Host output shapes remain unchanged.
 - No host contains independent percent-fill math.
 
+Slice 5 execution record, 2026-06-01:
+
+- Reused the existing CLI host assertion for
+  `strategy_exit_qty_percent_stop_partial.pine`, which checks one entry order,
+  one percent-resolved exit order, one closed trade, remaining open position,
+  and unchanged public strategy output shape.
+- Added Python binding coverage for the same representative fixture and default
+  runtime bars. The test asserts the shared runtime result keys, strategy keys,
+  absolute order/trade quantity, remaining position, plot values, and empty
+  diagnostics.
+- Added WASM host coverage for the same representative fixture and default
+  runtime bars. The test checks the same absolute quantity and remaining
+  position through the serialized JSON host surface.
+- Confirmed no new host helper or binding math was needed; CLI, Python, and
+  WASM continue to delegate percent resolution to shared runtime code and do
+  not expose internal pending, remaining, or percent fields.
+
 ## Slice 6: Conformance, Matrix, Docs, And Release Notes
 
 Goal: widen the compatibility claim only after the implementation and host
