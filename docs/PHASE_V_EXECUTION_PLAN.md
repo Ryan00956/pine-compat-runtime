@@ -470,6 +470,26 @@ Exit criteria:
 - Unsupported trigger-family diagnostics remain stable and documented.
 - No runtime behavior or compatibility claim is widened.
 
+Slice 1 decision record, 2026-06-01:
+
+- Added `qty_percent` to the builtin `strategy.exit` signature metadata and to
+  `docs/BUILTIN_SIGNATURES.md` as a known optional numeric argument.
+- Kept `qty_percent` classified as an unsupported strategy-exit option in
+  semantic analysis. User-visible `qty_percent` calls still stop before HIR
+  lowering and do not reach runtime placement.
+- Added a dedicated negative semantic fixture for
+  `qty_percent` combined with same-side `stop + loss` triggers. The expected
+  diagnostics keep both boundaries visible: `qty_percent` remains unsupported,
+  and same-side trigger families remain unsupported.
+- Kept `qty + qty_percent` diagnostic-only unsupported. Phase V still does not
+  claim TradingView's `qty` precedence behavior.
+- Added the new negative fixture to `tests/fixtures/conformance.tsv` and
+  refreshed the matrix snapshot. This expands unsupported evidence only; it
+  does not widen the supported compatibility claim.
+- Runtime `strategy.exit` dispatch still extracts `qty` only. `qty_percent`
+  routing is intentionally deferred until the atomic semantic/runtime support
+  slice.
+
 ## Slice 2: Runtime Percent Quantity Resolution Internals
 
 Goal: add the internal ability to resolve percent quantity requests without

@@ -119,6 +119,7 @@ mod tests {
     #[test]
     fn registers_strategy_exit_signature() {
         let signature = get_phase_1_builtin("strategy.exit").expect("strategy.exit signature");
+        assert_eq!(signature.params.len(), 11);
         assert_eq!(signature.params[0].name, "id");
         assert_eq!(signature.params[1].name, "from_entry");
         assert_eq!(signature.params[2].name, "stop");
@@ -167,6 +168,12 @@ mod tests {
         assert!(signature.params[9].optional);
         assert_eq!(
             signature.params[9].accepts,
+            crate::Accepts::SeriesOrSimpleNumeric
+        );
+        assert_eq!(signature.params[10].name, "qty_percent");
+        assert!(signature.params[10].optional);
+        assert_eq!(
+            signature.params[10].accepts,
             crate::Accepts::SeriesOrSimpleNumeric
         );
         assert!(!signature.variadic);

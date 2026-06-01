@@ -77,6 +77,11 @@ const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SeriesOrSimpleNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "qty_percent",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
 ];
 
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[

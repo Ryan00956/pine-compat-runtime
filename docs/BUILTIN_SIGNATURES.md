@@ -260,7 +260,7 @@ strategy(title: const string, shorttitle?: const string, overlay?: const bool, m
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric)
   -> void
 strategy.close(id: simple string) -> void
-strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric)
+strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric)
   -> void
 ```
 
@@ -271,8 +271,9 @@ Unsupported named arguments should produce compatibility diagnostics.
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
 use the configured or default fixed quantity.
 `strategy.exit` accepts `qty` only on supported single-trigger, one-downside/
-one-upside bracket, and trailing trigger shapes. `qty_percent` and richer
-strategy order options remain unsupported.
+one-upside bracket, and trailing trigger shapes. `qty_percent` is a known
+argument but remains diagnostic-only unsupported until the Phase V runtime
+subset opens. Richer strategy order options remain unsupported.
 
 ## Inputs
 
