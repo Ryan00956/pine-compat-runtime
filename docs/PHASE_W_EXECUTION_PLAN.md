@@ -621,6 +621,41 @@ Exit criteria:
 - Invalid placement never corrupts existing pending state.
 - No compatibility claim is widened.
 
+### Slice 2 Implementation Record
+
+Status: completed on 2026-06-01.
+
+Implemented changes:
+
+- Added internal `reserved_quantity` storage to `PendingExit` while keeping
+  `PendingExitQuantity` as the placement intent (`Full` or absolute `Fixed`).
+- Added internal pending-book helpers for total reserved quantity and available
+  unreserved quantity, with support for excluding a same-identity replacement
+  reservation.
+- Added a placement-time reservation resolver that resolves `Full`, fixed
+  quantity, and percent quantity requests to an absolute reserved quantity.
+- Kept Slice 2 user-visible behavior closed: accepted placements still replace
+  the single effective pending exit, so existing one-pending fixtures and
+  snapshots remain unchanged.
+- Updated fill logic to use `reserved_quantity` as the fill ceiling, while
+  still clamping to current remaining `position_size`.
+- Added broker unit tests for full reservations, fixed and percent clamping,
+  over-100 percent clamping, zero-available rejection, identity-release
+  availability, and invalid-placement preservation of existing pending state.
+
+No public runtime JSON, Python dictionary, WASM JSON, conformance metadata,
+snapshot, semantic-analysis, or compatibility-claim changes were made.
+
+Slice 2 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-sema strategy
+```
+
+All commands passed on the Slice 2 workspace.
+
 ## Slice 3: Multiple Single-Trigger Fixed-Quantity Exits
 
 Goal: open the first positive multiple-pending subset for explicit fixed

@@ -16,7 +16,7 @@ pub(super) enum PendingExitQuantity {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum ExitQuantityRequest {
+pub(super) enum ExitQuantityRequest {
     Full,
     Fixed(f64),
     Percent(f64),
@@ -110,6 +110,7 @@ pub(super) struct PendingExit {
     pub(super) from_entry: String,
     pub(super) trigger: PendingExitTrigger,
     pub(super) quantity: PendingExitQuantity,
+    pub(super) reserved_quantity: f64,
     pub(super) last_update_bar_index: usize,
 }
 
@@ -147,6 +148,38 @@ impl PendingExitBook {
         self.exits
             .iter()
             .find(|pending_exit| pending_exit.id == id && pending_exit.from_entry == from_entry)
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn total_reserved_for_entry(
+        &self,
+        entry_id: &str,
+        released_identity: Option<(&str, &str)>,
+    ) -> f64 {
+        self.exits
+            .iter()
+            .filter(|pending_exit| pending_exit.from_entry == entry_id)
+            .filter(|pending_exit| {
+                released_identity.is_none_or(|(id, from_entry)| {
+                    pending_exit.id != id || pending_exit.from_entry != from_entry
+                })
+            })
+            .map(|pending_exit| pending_exit.reserved_quantity)
+            .filter(|reserved_quantity| reserved_quantity.is_finite() && *reserved_quantity > 0.0)
+            .sum()
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn available_unreserved_quantity(
+        &self,
+        position_size: f64,
+        entry_id: &str,
+        released_identity: Option<(&str, &str)>,
+    ) -> f64 {
+        if !position_size.is_finite() || position_size <= 0.0 {
+            return 0.0;
+        }
+        (position_size - self.total_reserved_for_entry(entry_id, released_identity)).max(0.0)
     }
 
     pub(super) fn replace_all(&mut self, pending_exit: PendingExit) {
@@ -778,7 +811,9 @@ impl BrokerState {
             return;
         }
 
-        let Some(quantity) = self.resolve_exit_quantity_request(quantity) else {
+        let Some((quantity, reserved_quantity)) =
+            self.resolve_exit_quantity_request_for_available(quantity, self.position_size)
+        else {
             return;
         };
 
@@ -787,6 +822,7 @@ impl BrokerState {
                 && pending_exit.from_entry == from_entry
                 && pending_exit.trigger.placement_equivalent(&trigger)
                 && pending_exit.quantity == quantity
+                && pending_exit.reserved_quantity == reserved_quantity
         }) {
             return;
         }
@@ -796,17 +832,36 @@ impl BrokerState {
             from_entry,
             trigger,
             quantity,
+            reserved_quantity,
             last_update_bar_index: bar_index,
         });
     }
 
-    fn resolve_exit_quantity_request(
+    pub(super) fn resolve_exit_quantity_request_for_available(
         &mut self,
         quantity: ExitQuantityRequest,
-    ) -> Option<PendingExitQuantity> {
+        available_quantity: f64,
+    ) -> Option<(PendingExitQuantity, f64)> {
+        if !available_quantity.is_finite() || available_quantity <= 0.0 {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_EXIT_QTY".to_owned(),
+                message: "`strategy.exit` reserved quantity must be positive".to_owned(),
+            });
+            return None;
+        }
+
         match quantity {
-            ExitQuantityRequest::Full => Some(PendingExitQuantity::Full),
-            ExitQuantityRequest::Fixed(qty) => Some(PendingExitQuantity::Fixed(qty)),
+            ExitQuantityRequest::Full => Some((PendingExitQuantity::Full, available_quantity)),
+            ExitQuantityRequest::Fixed(qty) => {
+                if !PendingExitQuantity::Fixed(qty).is_valid() {
+                    self.diagnostics.push(RuntimeDiagnostic {
+                        code: "E_STRATEGY_EXIT_QTY".to_owned(),
+                        message: "`strategy.exit` quantity must be finite and positive".to_owned(),
+                    });
+                    return None;
+                }
+                Some((PendingExitQuantity::Fixed(qty), qty.min(available_quantity)))
+            }
             ExitQuantityRequest::Percent(qty_percent) => {
                 if !qty_percent.is_finite() || qty_percent <= 0.0 {
                     self.diagnostics.push(RuntimeDiagnostic {
@@ -816,8 +871,10 @@ impl BrokerState {
                     });
                     return None;
                 }
-                Some(PendingExitQuantity::Fixed(
-                    self.position_size * qty_percent / 100.0,
+                let requested_quantity = self.position_size * qty_percent / 100.0;
+                Some((
+                    PendingExitQuantity::Fixed(requested_quantity),
+                    requested_quantity.min(available_quantity),
                 ))
             }
         }

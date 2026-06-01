@@ -1,7 +1,4 @@
-use super::{
-    BrokerState,
-    exits::{PendingExit, PendingExitQuantity},
-};
+use super::{BrokerState, exits::PendingExit};
 use crate::{RuntimeDiagnostic, StrategyOrderEvent, StrategyPositionSnapshot, StrategyTrade};
 
 impl BrokerState {
@@ -54,10 +51,7 @@ impl BrokerState {
         time: i64,
         exit_price: f64,
     ) {
-        let qty = match pending_exit.quantity {
-            PendingExitQuantity::Full => self.position_size,
-            PendingExitQuantity::Fixed(requested_qty) => requested_qty.min(self.position_size),
-        };
+        let qty = pending_exit.reserved_quantity.min(self.position_size);
         if !qty.is_finite() || qty <= 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_QTY".to_owned(),

@@ -1,6 +1,6 @@
 use super::exits::{
-    PendingExitQuantity, PendingTrailingActivation, PendingTrailingExit, PendingTrailingSpec,
-    PendingTrailingState, TrailPointsExitSpec, TrailPriceExitSpec,
+    ExitQuantityRequest, PendingExitQuantity, PendingTrailingActivation, PendingTrailingExit,
+    PendingTrailingSpec, PendingTrailingState, TrailPointsExitSpec, TrailPriceExitSpec,
 };
 use super::*;
 
@@ -182,6 +182,7 @@ fn place_exit_while_long_records_pending_stop() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -206,9 +207,91 @@ fn place_exit_replaces_existing_pending_stop() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(90.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 1,
         })
     );
+}
+
+#[test]
+fn reservation_helpers_track_reserved_and_available_quantity() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("XL".to_owned(), "L".to_owned(), 95.0, 1.25, 0);
+
+    assert_eq!(
+        broker.pending_exits.total_reserved_for_entry("L", None),
+        1.25
+    );
+    assert_eq!(
+        broker
+            .pending_exits
+            .available_unreserved_quantity(broker.position_size, "L", None),
+        0.75
+    );
+    assert_eq!(
+        broker.pending_exits.available_unreserved_quantity(
+            broker.position_size,
+            "L",
+            Some(("XL", "L"))
+        ),
+        2.0
+    );
+}
+
+#[test]
+fn reservation_resolver_rejects_zero_available_quantity() {
+    let mut broker = broker_with_long_entry();
+
+    let resolved =
+        broker.resolve_exit_quantity_request_for_available(ExitQuantityRequest::Full, 0.0);
+
+    assert_eq!(resolved, None);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_QTY");
+}
+
+#[test]
+fn reservation_resolver_reserves_full_available_quantity() {
+    let mut broker = broker_with_long_entry();
+
+    let resolved =
+        broker.resolve_exit_quantity_request_for_available(ExitQuantityRequest::Full, 2.0);
+
+    assert_eq!(resolved, Some((PendingExitQuantity::Full, 2.0)));
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn reservation_resolver_clamps_fixed_quantity_to_available_quantity() {
+    let mut broker = broker_with_long_entry();
+
+    let resolved =
+        broker.resolve_exit_quantity_request_for_available(ExitQuantityRequest::Fixed(2.0), 0.75);
+
+    assert_eq!(resolved, Some((PendingExitQuantity::Fixed(2.0), 0.75)));
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn reservation_resolver_clamps_percent_quantity_to_available_quantity() {
+    let mut broker = broker_with_long_entry();
+
+    let resolved = broker
+        .resolve_exit_quantity_request_for_available(ExitQuantityRequest::Percent(50.0), 0.75);
+
+    assert_eq!(resolved, Some((PendingExitQuantity::Fixed(1.0), 0.75)));
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn reservation_resolver_clamps_over_100_percent_to_available_quantity() {
+    let mut broker = broker_with_long_entry();
+
+    let resolved = broker
+        .resolve_exit_quantity_request_for_available(ExitQuantityRequest::Percent(150.0), 2.0);
+
+    assert_eq!(resolved, Some((PendingExitQuantity::Fixed(3.0), 2.0)));
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
@@ -397,6 +480,7 @@ fn changed_repeated_quantity_replaces_pending_exit() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Fixed(0.5),
+            reserved_quantity: 0.5,
             last_update_bar_index: 1,
         })
     );
@@ -501,6 +585,7 @@ fn repeated_entry_noop_leaves_pending_exit_untouched() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -688,6 +773,7 @@ fn profit_ticks_create_limit_from_average_entry_price() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Limit(105.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -706,6 +792,7 @@ fn loss_ticks_create_stop_from_average_entry_price() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(97.5),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -728,6 +815,7 @@ fn place_exit_bracket_records_pending_bracket() {
                 upside: 110.0,
             },
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -756,6 +844,7 @@ fn bracket_tick_helpers_resolve_prices_from_average_entry_price() {
                 upside: 105.0,
             },
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -775,6 +864,7 @@ fn place_exit_trail_price_records_pending_trailing_exit() {
             from_entry: "L".to_owned(),
             trigger: trailing_price_trigger(105.0, 2.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -794,6 +884,7 @@ fn place_exit_trail_points_records_entry_relative_activation() {
             from_entry: "L".to_owned(),
             trigger: trailing_points_trigger(10.0, 105.0, 2.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -825,6 +916,7 @@ fn invalid_trailing_activation_price_records_diagnostic_without_changing_pending
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -846,6 +938,7 @@ fn invalid_trailing_offset_ticks_record_diagnostic_without_changing_pending_exit
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -887,6 +980,7 @@ fn unchanged_repeated_trailing_preserves_active_state() {
                 state: PendingTrailingState::Active { stop_price: 103.0 },
             }),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -905,6 +999,7 @@ fn changed_repeated_trailing_replaces_spec_and_delays_eligibility() {
             from_entry: "L".to_owned(),
             trigger: trailing_price_trigger(106.0, 2.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 1,
         })
     );
@@ -935,6 +1030,7 @@ fn invalid_bracket_downside_price_records_diagnostic_without_changing_pending_ex
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -956,6 +1052,7 @@ fn invalid_bracket_upside_price_records_diagnostic_without_changing_pending_exit
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -978,6 +1075,7 @@ fn invalid_bracket_ticks_record_diagnostic_without_changing_pending_exit() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -1000,6 +1098,7 @@ fn invalid_bracket_mintick_records_diagnostic_without_changing_pending_exit() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -1032,6 +1131,7 @@ fn bracket_with_mismatched_entry_records_diagnostic_without_changing_pending_exi
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -1064,6 +1164,7 @@ fn changed_repeated_bracket_replaces_price_and_delays_eligibility() {
                 upside: 110.0,
             },
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 1,
         })
     );
@@ -1086,6 +1187,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
                 upside: 110.0,
             },
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 1,
         })
     );
@@ -1099,6 +1201,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Limit(111.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 2,
         })
     );
@@ -1195,6 +1298,7 @@ fn pending_trailing_is_not_eligible_on_creation_bar() {
             from_entry: "L".to_owned(),
             trigger: trailing_price_trigger(105.0, 2.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -1279,6 +1383,7 @@ fn invalid_profit_ticks_record_diagnostic_without_changing_pending_exit() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -1300,6 +1405,7 @@ fn invalid_exit_mintick_records_diagnostic_without_changing_pending_exit() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 0,
         })
     );
@@ -1363,6 +1469,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 1,
         })
     );
@@ -1376,6 +1483,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
             last_update_bar_index: 2,
         })
     );
