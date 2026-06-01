@@ -1,0 +1,14 @@
+//@version=5
+strategy("Exit qty percent state", initial_capital=1000)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XP", "L", stop=2.5, qty_percent=37.5)
+if bar_index == 3
+    strategy.close("L")
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+plot(strategy.openprofit)
+plot(strategy.netprofit)
+plot(strategy.equity)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)

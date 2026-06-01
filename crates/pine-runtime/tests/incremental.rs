@@ -72,6 +72,7 @@ fn runtime_fixtures_match_incremental_append_execution() {
             }
             Some("strategy_exit_bracket_both_hit.pine") => &strategy_exit_bracket_both_hit_bars,
             Some("strategy_exit_qty_trailing_partial.pine") => &trailing_bars,
+            Some("strategy_exit_qty_percent_trailing_partial.pine") => &trailing_bars,
             _ => &default_bars,
         };
 

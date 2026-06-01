@@ -724,6 +724,22 @@ Exit criteria:
   percent fixture.
 - Public output shape remains unchanged.
 
+Slice 4 execution record, 2026-06-01:
+
+- Added public runtime fixtures and golden snapshots for stop, limit, bracket,
+  and trailing partial percent exits; `qty_percent=100`; `qty_percent>100`
+  full-clamp behavior; repeated unchanged percent placement; changed percent
+  replacement; and state-variable behavior after a partial percent fill.
+- Reused the existing default runtime bars except for trailing percent coverage,
+  which uses the existing trailing bars fixture.
+- Added the new fixtures to the CLI runtime snapshot harness and to incremental
+  append parity coverage.
+- Confirmed public strategy JSON still exposes only the existing strategy
+  result shape and records absolute order/trade quantities rather than percent
+  values.
+- Updated conformance metadata and matrix snapshots to include the public
+  percent runtime fixtures and the refined quantity support claim.
+
 ## Slice 5: Host Parity For CLI, Python, And WASM
 
 Goal: prove the percent quantity subset round-trips through every public host
