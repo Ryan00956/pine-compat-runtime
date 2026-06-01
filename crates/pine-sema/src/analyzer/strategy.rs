@@ -22,6 +22,7 @@ enum StrategyExitArgFamily {
     TrailingActivation,
     TrailingOffset,
     Quantity,
+    PercentQuantity,
     UnsupportedOption,
 }
 
@@ -35,9 +36,8 @@ fn strategy_exit_arg_family(name: &str) -> Option<StrategyExitArgFamily> {
         "trail_price" | "trail_points" => Some(StrategyExitArgFamily::TrailingActivation),
         "trail_offset" => Some(StrategyExitArgFamily::TrailingOffset),
         "qty" => Some(StrategyExitArgFamily::Quantity),
-        "qty_percent" | "oca_name" | "comment" | "alert_message" => {
-            Some(StrategyExitArgFamily::UnsupportedOption)
-        }
+        "qty_percent" => Some(StrategyExitArgFamily::PercentQuantity),
+        "oca_name" | "comment" | "alert_message" => Some(StrategyExitArgFamily::UnsupportedOption),
         _ => None,
     }
 }
@@ -267,6 +267,8 @@ impl Analyzer {
         let mut has_trail_price = false;
         let mut has_trail_points = false;
         let mut has_trail_offset = false;
+        let mut has_qty = false;
+        let mut has_qty_percent = false;
         let mut has_unsupported_arg = false;
         for (index, arg) in args.iter().enumerate() {
             let Some(name) = arg
@@ -300,7 +302,8 @@ impl Analyzer {
                     }
                 }
                 StrategyExitArgFamily::TrailingOffset => has_trail_offset = true,
-                StrategyExitArgFamily::Quantity => {}
+                StrategyExitArgFamily::Quantity => has_qty = true,
+                StrategyExitArgFamily::PercentQuantity => has_qty_percent = true,
                 StrategyExitArgFamily::UnsupportedOption => {
                     has_unsupported_arg = true;
                     self.diagnostics.push(Diagnostic::error(
@@ -312,6 +315,15 @@ impl Analyzer {
                     ))
                 }
             }
+        }
+        if has_qty && has_qty_percent {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_NAME",
+                "`strategy.exit` cannot combine `qty` and `qty_percent` in the current strategy subset",
+                args.iter()
+                    .find(|arg| arg.name.as_deref() == Some("qty_percent"))
+                    .map_or(Span::default(), |arg| arg.span),
+            ));
         }
         let trigger_count = usize::from(has_stop)
             + usize::from(has_limit)

@@ -15,7 +15,6 @@ pub(super) enum PendingExitQuantity {
     Fixed(f64),
 }
 
-#[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
 enum ExitQuantityRequest {
     Full,
@@ -148,7 +147,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_stop_qty_percent(
         &mut self,
         id: String,
@@ -216,7 +214,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_limit_qty_percent(
         &mut self,
         id: String,
@@ -288,7 +285,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_profit_ticks_qty_percent(
         &mut self,
         id: String,
@@ -366,7 +362,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_loss_ticks_qty_percent(
         &mut self,
         id: String,
@@ -444,7 +439,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_bracket_qty_percent(
         &mut self,
         id: String,
@@ -524,7 +518,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_trail_price_qty_percent(
         &mut self,
         id: String,
@@ -604,7 +597,6 @@ impl BrokerState {
         );
     }
 
-    #[allow(dead_code)]
     pub(crate) fn place_exit_trail_points_qty_percent(
         &mut self,
         id: String,

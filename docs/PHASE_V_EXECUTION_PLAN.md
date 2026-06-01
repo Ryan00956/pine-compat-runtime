@@ -642,6 +642,25 @@ Exit criteria:
 - Invalid `qty_percent` does not replace an existing pending exit.
 - `qty + qty_percent` remains diagnostic-only unsupported.
 
+Slice 3 execution record, 2026-06-01:
+
+- Reclassified `qty_percent` as a percent quantity argument in semantic
+  analysis instead of an unsupported option.
+- Opened `qty_percent` on the same trigger shapes that already supported fixed
+  `qty`: single-trigger stop, limit, profit, and loss; one-downside/one-upside
+  brackets; and valid trailing stop forms.
+- Kept `qty + qty_percent` diagnostic-only unsupported and kept same-side,
+  3+ trigger, invalid trailing, and triggerless forms rejected.
+- Extracted and evaluated `qty_percent` once in `eval_strategy_exit`, after
+  `id` and `from_entry`, and routed stop, limit, profit, loss, bracket, and
+  trailing placements to the broker percent helpers added in Slice 2.
+- Converted the now-supported negative semantic fixtures for stop/loss
+  `qty_percent` into supported fixtures, added bracket and trailing supported
+  semantic fixtures, and updated the builtin signature notes.
+- Added runtime unit coverage proving accepted percent exits dispatch partial
+  quantities for single-trigger, bracket, and trailing paths, and proving
+  invalid percent values preserve an existing pending exit.
+
 ## Slice 4: Runtime Fixtures, Snapshots, And Incremental Parity
 
 Goal: cover the supported percent quantity behavior through public runtime

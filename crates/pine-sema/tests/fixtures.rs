@@ -197,14 +197,6 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
             "E_CALL_ARG_NAME",
         ),
         (
-            "tests/fixtures/sema/unsupported_strategy_exit_loss_qty_percent.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
-            "tests/fixtures/sema/unsupported_strategy_exit_qty_percent.pine",
-            "E_CALL_ARG_NAME",
-        ),
-        (
             "tests/fixtures/sema/unsupported_strategy_exit_qty_and_qty_percent.pine",
             "E_CALL_ARG_NAME",
         ),
@@ -280,19 +272,12 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
 #[test]
 fn reports_strategy_exit_quantity_guardrail_messages() {
     assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_strategy_exit_qty_percent.pine",
-        &["`strategy.exit` argument `qty_percent` is not supported"],
-    );
-    assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_exit_qty_and_qty_percent.pine",
-        &["`strategy.exit` argument `qty_percent` is not supported"],
+        &["`strategy.exit` cannot combine `qty` and `qty_percent`"],
     );
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_exit_qty_percent_same_side.pine",
-        &[
-            "`strategy.exit` argument `qty_percent` is not supported",
-            "`strategy.exit` combined trigger families are not supported",
-        ],
+        &["`strategy.exit` combined trigger families are not supported"],
     );
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_exit_qty_same_side.pine",
@@ -320,6 +305,10 @@ fn accepts_supported_strategy_exit_fixtures() {
         "tests/fixtures/sema/supported_strategy_exit_qty_stop.pine",
         "tests/fixtures/sema/supported_strategy_exit_qty_bracket.pine",
         "tests/fixtures/sema/supported_strategy_exit_qty_trailing.pine",
+        "tests/fixtures/sema/supported_strategy_exit_qty_percent_stop.pine",
+        "tests/fixtures/sema/supported_strategy_exit_qty_percent_loss.pine",
+        "tests/fixtures/sema/supported_strategy_exit_qty_percent_bracket.pine",
+        "tests/fixtures/sema/supported_strategy_exit_qty_percent_trailing.pine",
     ] {
         let path = workspace_fixture(fixture);
         let text = fs::read_to_string(&path).expect("fixture should be readable");
