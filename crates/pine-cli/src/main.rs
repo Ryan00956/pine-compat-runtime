@@ -820,6 +820,22 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine",
             ),
             (
+                "runtime_strategy_exit_reservation_qty_percent_stop_multi.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_stop_multi.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_mixed_stop_multi.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_mixed_stop_multi.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_percent_replacement.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_replacement.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_percent_clamp.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_clamp.pine",
+            ),
+            (
                 "runtime_strategy_exit_qty_percent_limit_partial.json",
                 "tests/fixtures/runtime/strategy_exit_qty_percent_limit_partial.pine",
             ),

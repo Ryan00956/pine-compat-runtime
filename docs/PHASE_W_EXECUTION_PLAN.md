@@ -824,6 +824,45 @@ Exit criteria:
 - Existing Phase V single-exit percent fixtures remain green.
 - Public output shape is unchanged.
 
+### Slice 4 Implementation Record
+
+Status: completed on 2026-06-01.
+
+Implemented changes:
+
+- Extended the Slice 3 multiple single-trigger reservation path from explicit
+  fixed `qty` to explicit fixed `qty` or `qty_percent`.
+- Kept percent sizing semantics placement-time and position-based:
+  `qty_percent` resolves against the current open position size first, then
+  clamps its reserved quantity to remaining unreserved quantity.
+- Kept `qty + qty_percent` unsupported through the existing semantic guardrail;
+  no semantic fixture changes were needed.
+- Kept bracket, trailing, full-position exits, and mixed-side percent/fixed
+  exits on the existing one-effective-pending replacement path.
+- Added broker tests for two percent exits, mixed fixed/percent reservations,
+  percent replacement reservation release, over-100 percent clamping, and
+  zero-unreserved rejection.
+- Added runtime fixtures, golden snapshots, incremental coverage, and
+  conformance text for the exact percent reservation subset.
+
+No public runtime JSON, Python dictionary, WASM JSON, or strategy output schema
+changes were made.
+
+Slice 4 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-sema strategy
+cargo test -p pine-runtime --test incremental
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli matrix_output_matches_golden_snapshot
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+```
+
+All commands passed on the Slice 4 workspace.
+
 ## Slice 5: Cross-Side Fill Precedence And State Timing
 
 Goal: cover deterministic mixed downside/upside behavior for multiple

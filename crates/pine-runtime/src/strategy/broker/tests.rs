@@ -392,16 +392,108 @@ fn fixed_exit_with_no_unreserved_quantity_is_rejected() {
 }
 
 #[test]
-fn fixed_exit_after_percent_exit_keeps_one_pending_behavior() {
+fn fixed_exit_after_percent_exit_shares_reservation_pool() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop_qty_percent("XP".to_owned(), "L".to_owned(), 95.0, 50.0, 0);
 
     broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 94.0, 0.5, 0);
 
-    assert_eq!(pending_exit_count(&broker), 1);
-    assert_eq!(pending_exit_ids(&broker), vec!["XS"]);
-    assert!(broker.pending_exit_by_identity("XP", "L").is_none());
+    assert_eq!(pending_exit_count(&broker), 2);
+    assert_eq!(pending_exit_ids(&broker), vec!["XP", "XS"]);
+    assert_eq!(
+        broker.pending_exit_by_identity("XP", "L").unwrap().quantity,
+        PendingExitQuantity::Fixed(1.0)
+    );
+    assert_eq!(
+        broker
+            .pending_exit_by_identity("XP", "L")
+            .unwrap()
+            .reserved_quantity,
+        1.0
+    );
+    assert_eq!(
+        broker
+            .pending_exit_by_identity("XS", "L")
+            .unwrap()
+            .reserved_quantity,
+        0.5
+    );
     assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn two_percent_stop_exits_reserve_expected_absolute_quantities() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty_percent("XP1".to_owned(), "L".to_owned(), 95.0, 25.0, 0);
+    broker.place_exit_stop_qty_percent("XP2".to_owned(), "L".to_owned(), 94.0, 50.0, 0);
+
+    assert_eq!(pending_exit_count(&broker), 2);
+    assert_eq!(pending_exit_ids(&broker), vec!["XP1", "XP2"]);
+    let first = broker.pending_exit_by_identity("XP1", "L").unwrap();
+    assert_eq!(first.quantity, PendingExitQuantity::Fixed(0.5));
+    assert_eq!(first.reserved_quantity, 0.5);
+    let second = broker.pending_exit_by_identity("XP2", "L").unwrap();
+    assert_eq!(second.quantity, PendingExitQuantity::Fixed(1.0));
+    assert_eq!(second.reserved_quantity, 1.0);
+
+    broker.evaluate_pending_exits(1, 20, 100.0, 93.0);
+
+    assert_eq!(broker.orders[1].id, "XP1");
+    assert_eq!(broker.orders[1].qty, 0.5);
+    assert_eq!(broker.orders[2].id, "XP2");
+    assert_eq!(broker.orders[2].qty, 1.0);
+    assert_eq!(broker.position_size, 0.5);
+}
+
+#[test]
+fn percent_replacement_releases_old_reservation_first() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty_percent("XP1".to_owned(), "L".to_owned(), 95.0, 25.0, 0);
+    broker.place_exit_stop_qty_percent("XP2".to_owned(), "L".to_owned(), 94.0, 25.0, 0);
+
+    broker.place_exit_stop_qty_percent("XP1".to_owned(), "L".to_owned(), 93.0, 75.0, 1);
+
+    assert_eq!(pending_exit_ids(&broker), vec!["XP1", "XP2"]);
+    let replaced = broker.pending_exit_by_identity("XP1", "L").unwrap();
+    assert_eq!(replaced.trigger, PendingExitTrigger::Stop(93.0));
+    assert_eq!(replaced.quantity, PendingExitQuantity::Fixed(1.5));
+    assert_eq!(replaced.reserved_quantity, 1.5);
+    let preserved = broker.pending_exit_by_identity("XP2", "L").unwrap();
+    assert_eq!(preserved.reserved_quantity, 0.5);
+    assert_eq!(
+        broker.pending_exits.total_reserved_for_entry("L", None),
+        2.0
+    );
+}
+
+#[test]
+fn over_100_percent_exit_reserves_remaining_unreserved_quantity() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 95.0, 0.75, 0);
+    broker.place_exit_stop_qty_percent("XP".to_owned(), "L".to_owned(), 94.0, 150.0, 0);
+
+    let percent = broker.pending_exit_by_identity("XP", "L").unwrap();
+    assert_eq!(percent.quantity, PendingExitQuantity::Fixed(3.0));
+    assert_eq!(percent.reserved_quantity, 1.25);
+    assert_eq!(
+        broker.pending_exits.total_reserved_for_entry("L", None),
+        2.0
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn percent_exit_with_no_unreserved_quantity_is_rejected() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty_percent("XP1".to_owned(), "L".to_owned(), 95.0, 50.0, 0);
+    broker.place_exit_stop_qty_percent("XP2".to_owned(), "L".to_owned(), 94.0, 50.0, 0);
+
+    broker.place_exit_stop_qty_percent("XP3".to_owned(), "L".to_owned(), 93.0, 25.0, 0);
+
+    assert_eq!(pending_exit_ids(&broker), vec!["XP1", "XP2"]);
+    assert!(broker.pending_exit_by_identity("XP3", "L").is_none());
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_QTY");
 }
 
 #[test]

@@ -864,11 +864,13 @@ impl BrokerState {
             return;
         }
 
-        let multiple_fixed_single_trigger = matches!(quantity, ExitQuantityRequest::Fixed(_))
-            && trigger.single_trigger_side().is_some();
+        let multiple_single_trigger_reservation = matches!(
+            quantity,
+            ExitQuantityRequest::Fixed(_) | ExitQuantityRequest::Percent(_)
+        ) && trigger.single_trigger_side().is_some();
         let released_identity =
-            multiple_fixed_single_trigger.then_some((id.as_str(), from_entry.as_str()));
-        let available_quantity = if multiple_fixed_single_trigger
+            multiple_single_trigger_reservation.then_some((id.as_str(), from_entry.as_str()));
+        let available_quantity = if multiple_single_trigger_reservation
             && self.pending_exits.other_exits_share_side(
                 &from_entry,
                 released_identity,
@@ -911,10 +913,10 @@ impl BrokerState {
             trigger,
             quantity,
             reserved_quantity,
-            multiple_reservation: multiple_fixed_single_trigger,
+            multiple_reservation: multiple_single_trigger_reservation,
             last_update_bar_index: bar_index,
         };
-        if multiple_fixed_single_trigger
+        if multiple_single_trigger_reservation
             && self.pending_exits.other_exits_share_side(
                 &pending_exit.from_entry,
                 Some((pending_exit.id.as_str(), pending_exit.from_entry.as_str())),
