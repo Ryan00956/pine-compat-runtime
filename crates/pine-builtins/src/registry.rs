@@ -106,6 +106,8 @@ mod tests {
         assert_eq!(signature.params[1].name, "direction");
         assert_eq!(signature.params[2].name, "qty");
         assert!(signature.params[2].optional);
+        assert_eq!(signature.params[3].name, "limit");
+        assert!(signature.params[3].optional);
         assert!(!signature.variadic);
     }
 

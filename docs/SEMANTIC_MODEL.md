@@ -38,6 +38,11 @@ numeric `N`.
 and explicit `qty` overrides the declaration default. The supported market-long
 entry creates an internal pending entry, emits no public order while pending, and
 fills at the next historical bar open before script statements on that fill bar.
+`strategy.entry(..., limit=price)` creates an internal pending long limit entry,
+emits no public order while pending, never fills on its creation bar, and fills
+at the limit price before script statements on a later historical bar when
+`low <= limit`. Same-calculation absolute `strategy.exit` attachment may target
+the active pending market or limit entry id.
 `strategy.close(id)` closes the full matching long position at the current bar
 close.
 `strategy.close_all()` closes the current supported long position at the current
@@ -54,8 +59,8 @@ downside leg plus one upside leg in a single bracket:
 single-trigger, bracket, and trailing exits with explicit fixed `qty` or
 `qty_percent` can keep multiple pending exits for different `id + from_entry`
 identities on the current matching long entry. Same-calculation absolute `stop`,
-`limit`, and `trail_price` attachment may target the active pending market entry
-id; `profit`, `loss`, and `trail_points` attachment to a pending entry remains
+`limit`, and `trail_price` attachment may target the active pending entry id;
+`profit`, `loss`, and `trail_points` attachment to a pending entry remains
 unsupported until deferred price resolution is designed. Their reserved
 quantities are resolved at placement time, the sum of reservations is clamped to
 the current open position or matching pending entry quantity, and new

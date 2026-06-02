@@ -5,7 +5,7 @@ mod fills;
 
 use pine_ir::DEFAULT_STRATEGY_INITIAL_CAPITAL;
 
-use entries::PendingEntryBook;
+use entries::{PendingEntryBook, PendingEntryKind};
 use exits::{
     PendingExit, PendingExitBook, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
 };
@@ -127,6 +127,26 @@ impl BrokerState {
     }
 
     #[allow(dead_code)]
+    pub(crate) fn place_pending_limit_long_entry(
+        &mut self,
+        id: String,
+        qty: f64,
+        limit: f64,
+        created_bar_index: usize,
+    ) {
+        if self.position_size > 0.0 {
+            return;
+        }
+        self.pending_entries.place_limit_long(
+            id,
+            qty,
+            limit,
+            created_bar_index,
+            &mut self.diagnostics,
+        );
+    }
+
+    #[allow(dead_code)]
     fn pending_entry_count(&self) -> usize {
         self.pending_entries.count()
     }
@@ -153,6 +173,36 @@ impl BrokerState {
             bar_index,
             time,
             fill_price,
+            pending_entry.quantity,
+        );
+        self.pending_entries.clear_all();
+    }
+
+    pub(crate) fn fill_pending_limit_long_entries(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        low: f64,
+    ) {
+        if self.position_size > 0.0 {
+            self.pending_entries.clear_all();
+            return;
+        }
+        let Some(pending_entry) = self
+            .pending_entries
+            .take_first_eligible_limit_long(bar_index, low)
+        else {
+            return;
+        };
+
+        let PendingEntryKind::Limit { price } = pending_entry.kind else {
+            return;
+        };
+        self.entry_long(
+            pending_entry.id,
+            bar_index,
+            time,
+            price,
             pending_entry.quantity,
         );
         self.pending_entries.clear_all();

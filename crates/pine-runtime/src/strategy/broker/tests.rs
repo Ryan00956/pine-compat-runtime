@@ -409,6 +409,55 @@ fn pending_market_entry_fill_clears_book_when_position_is_already_open() {
 }
 
 #[test]
+fn pending_limit_entry_rejects_invalid_price() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_limit_long_entry("L".to_owned(), 1.0, f64::NAN, 0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_PRICE");
+}
+
+#[test]
+fn pending_limit_entry_does_not_fill_on_creation_bar() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_limit_long_entry("L".to_owned(), 2.0, 100.0, 0);
+    broker.fill_pending_limit_long_entries(0, 10, 99.0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.position_size, 0.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_limit_entry_fills_on_later_low_crossing_bar() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_limit_long_entry("L".to_owned(), 2.0, 100.0, 0);
+    broker.fill_pending_limit_long_entries(1, 20, 101.0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert!(broker.orders.is_empty());
+
+    broker.fill_pending_limit_long_entries(2, 30, 99.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.orders[0].id, "L");
+    assert_eq!(broker.orders[0].bar_index, 2);
+    assert_eq!(broker.orders[0].time, 30);
+    assert_eq!(broker.orders[0].qty, 2.0);
+    assert_eq!(broker.orders[0].price, 100.0);
+    assert_eq!(broker.position_size, 2.0);
+    assert_eq!(broker.position[0].avg_price, Some(100.0));
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn pending_market_entry_allows_attached_stop_exit_without_public_fill() {
     let mut broker = BrokerState::new(100_000.0);
 

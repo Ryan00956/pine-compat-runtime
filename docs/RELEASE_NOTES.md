@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 5 Slice 0 long `strategy.entry(..., limit=...)`
+  support. Supported long limit entries use the existing internal pending-entry
+  model, never fill on their creation bar, and fill at the limit price on a
+  later historical bar when `low <= limit`, with no public pending-order output.
+  Entry stop, stop-limit, shorts, pyramiding, and generic order APIs remain
+  unsupported.
 - Added Strategy Internal Stage 4 `strategy.exit` quantity precedence. For
   supported single-trigger, bracket, and trailing exit shapes, calls that supply
   both `qty` and `qty_percent` now follow Pine-compatible precedence where fixed

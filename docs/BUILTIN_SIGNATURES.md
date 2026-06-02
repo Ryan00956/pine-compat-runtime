@@ -257,7 +257,7 @@ indicator(title: const string, shorttitle?: const string, overlay?: const bool, 
   -> void
 strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric)
   -> void
-strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric)
+strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric)
   -> void
 strategy.close(id: simple string) -> void
 strategy.close_all() -> void
@@ -271,7 +271,9 @@ Unsupported named arguments should produce compatibility diagnostics.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
 use the configured or default fixed quantity. Supported market-long entries fill
-at the next historical bar open and do not expose public pending-order records.
+at the next historical bar open. Supported long limit entries wait until a later
+historical bar where `low <= limit` and fill at the limit price. Neither form
+exposes public pending-order records while pending.
 `strategy.close_all()` closes the current supported long position at the current
 bar close and is a no-op while flat.
 `strategy.exit` accepts `qty`, `qty_percent`, or both on supported
@@ -280,10 +282,10 @@ When both are present, fixed `qty` determines the reserved or filled quantity
 and `qty_percent` is ignored. Explicit fixed `qty` or `qty_percent` exits on
 those supported shapes can keep multiple reserved pending exits for different
 `id + from_entry` identities on the current matching long entry or the active
-pending market entry for same-calculation absolute `stop`, `limit`, and
-`trail_price` attachment. Same-calculation `profit`, `loss`, and `trail_points`
-attachment to a pending entry remains unsupported. Richer strategy order
-options remain unsupported.
+pending entry for same-calculation absolute `stop`, `limit`, and `trail_price`
+attachment. Same-calculation `profit`, `loss`, and `trail_points` attachment to
+a pending entry remains unsupported. Richer strategy order options remain
+unsupported.
 
 ## Inputs
 

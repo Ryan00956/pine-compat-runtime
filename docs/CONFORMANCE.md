@@ -93,9 +93,11 @@ position marked to the current close and is `0` when flat. `strategy.netprofit`
 is cumulative realized closed-trade profit only, excluding any current open
 profit. `strategy.equity` is `initial_capital + strategy.netprofit +
 strategy.openprofit` in the current subset. Supported market `strategy.entry`
-calls create an internal pending entry and fill on the next historical bar open;
-these variables reflect that filled entry before script statements on the fill
-bar, not on the creation bar. Supported `strategy.close` and
+calls create an internal pending entry and fill on the next historical bar open.
+Supported long limit entries fill at the limit price before script statements
+on a later historical bar when `low <= limit`. These variables reflect filled
+entries before script statements on the fill bar, not on the creation bar.
+Supported `strategy.close` and
 `strategy.close_all` calls still update immediately for later statements on the
 same bar. They behave like read-only series floats in supported expression
 contexts, including branches, switches, loops, pure UDF arguments, and constant
@@ -391,11 +393,12 @@ Examples:
   When supported `strategy.exit` shapes supply both `qty` and `qty_percent`,
   fixed `qty` determines the reserved or filled quantity and `qty_percent` is
   ignored.
-- minimal `strategy.entry` long market entries in strategy-mode scripts, filled
-  at the next historical bar open with no public pending-order output;
-  unsupported short/stop/limit/indicator-mode variants are fixture-backed;
-  entries may omit `qty` only when the strategy declaration configures the fixed
-  default quantity subset
+- minimal `strategy.entry` long market and long limit entries in strategy-mode
+  scripts; market entries fill at the next historical bar open, limit entries
+  fill at the limit price on a later historical bar when `low <= limit`, and no
+  public pending-order output is exposed; unsupported short/stop/indicator-mode
+  variants are fixture-backed; entries may omit `qty` only when the strategy
+  declaration configures the fixed default quantity subset
 - minimal `strategy.close` full-position closes for matching long entry ids,
   with missing or repeated closes treated as no-op
 - minimal `strategy.close_all` full-position closes for the current supported
@@ -471,7 +474,7 @@ request.security     partial      same-context identity and same-or-higher-timef
 alertcondition       partial      bool-compatible condition plus const-string title/message runtime events
 alert                partial      const-string message runtime events when execution reaches the call
 strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital and fixed default_qty subset only
-strategy.entry       partial      long market entry filled at next historical bar open; explicit positive qty or fixed default qty; one net long position; no pyramiding; no public pending-order output
+strategy.entry       partial      long market entry filled at next historical bar open plus long limit entry filled at limit price on a later historical bar when low <= limit; explicit positive qty or fixed default qty; one net long position; no pyramiding; no public pending-order output
 strategy.close       partial      full long-position close at current bar close; closed trade output
 strategy.close_all   partial      full close of the current supported long position at current bar close; flat or already-closed calls are no-op; closed trade output uses the current entry id
 strategy equity      partial      per-bar cash, marketValue, equity, and netProfit snapshots
@@ -485,7 +488,7 @@ strategy.wintrades partial        closed winning-trade count read-only series in
 strategy.losstrades partial       closed losing-trade count read-only series int in strategy-mode scripts only; counts closed trades with negative realized profit
 strategy.eventrades partial       closed even-trade count read-only series int in strategy-mode scripts only; counts closed trades with zero realized profit
 strategy.opentrades partial       open-trade count read-only series int in strategy-mode scripts only; 1 for the current supported long position and 0 when flat
-strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent long exits; same-calculation absolute stop/limit/trail_price attachment to a pending market entry is supported for the active entry id; same-calculation entry-relative profit/loss/trail_points attachment remains unsupported until deferred price resolution; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; qty is placement-time finite positive absolute quantity; qty_percent is placement-time finite positive percent resolved to an absolute quantity against current position size or matching pending entry quantity; when qty and qty_percent are both supplied, qty determines the reserved or filled quantity; omitted qty and qty_percent keep full-position one-effective-pending replacement behavior; explicit fixed-qty or qty-percent single-trigger, bracket, and trailing calls can keep multiple reserved pending exits; fills clamp to current position size, leave remaining long position open when partial, and expose only absolute filled qty; later-bar low <= stop/loss/active trailing stop or high >= limit/profit/activation price drives fills/activation; same-side touched exits fill in placement order; mixed downside/upside same-bar touches fill downside candidates only; bracket both-leg touches contribute the downside candidate; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
+strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent long exits; same-calculation absolute stop/limit/trail_price attachment to a pending entry is supported for the active entry id; same-calculation entry-relative profit/loss/trail_points attachment remains unsupported until deferred price resolution; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; qty is placement-time finite positive absolute quantity; qty_percent is placement-time finite positive percent resolved to an absolute quantity against current position size or matching pending entry quantity; when qty and qty_percent are both supplied, qty determines the reserved or filled quantity; omitted qty and qty_percent keep full-position one-effective-pending replacement behavior; explicit fixed-qty or qty-percent single-trigger, bracket, and trailing calls can keep multiple reserved pending exits; fills clamp to current position size, leave remaining long position open when partial, and expose only absolute filled qty; later-bar low <= stop/loss/active trailing stop or high >= limit/profit/activation price drives fills/activation; same-side touched exits fill in placement order; mixed downside/upside same-bar touches fill downside candidates only; bracket both-leg touches contribute the downside candidate; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
 strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close/strategy.close_all and the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger/bracket/trailing multiple-exit reservation subset; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/multiple-pending outside that subset/omitted-quantity multiple reservations/reservation outside that subset/missing-entry forms; rich order types, percent/cash/contracts sizing, mutable strategy state, trade namespace functions, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented

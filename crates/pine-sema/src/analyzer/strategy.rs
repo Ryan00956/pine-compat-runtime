@@ -232,7 +232,7 @@ impl Analyzer {
             let Some(name) = arg
                 .name
                 .as_deref()
-                .or_else(|| ["id", "direction", "qty"].get(index).copied())
+                .or_else(|| ["id", "direction", "qty", "limit"].get(index).copied())
             else {
                 continue;
             };
@@ -256,6 +256,17 @@ impl Analyzer {
                         self.diagnostics.push(Diagnostic::error(
                             "E_CALL_ARG_VALUE",
                             "`strategy.entry` argument `qty` must be positive",
+                            arg.span,
+                        ));
+                    }
+                }
+                "limit" => {
+                    if let Some(limit) = const_numeric_value(&arg.value)
+                        && (!limit.is_finite() || limit <= 0.0)
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.entry` argument `limit` must be positive",
                             arg.span,
                         ));
                     }

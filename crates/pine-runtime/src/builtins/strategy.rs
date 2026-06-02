@@ -56,6 +56,12 @@ impl<'a> HistoricalRuntime<'a> {
                 .default_entry_qty()
                 .unwrap_or(f64::NAN)
         };
+        if let Some(limit_expr) = call_arg_expr(args, 3, "limit") {
+            let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
+            self.strategy_broker
+                .place_pending_limit_long_entry(id, qty, limit, self.bars);
+            return Ok(PineValue::Void);
+        }
 
         self.strategy_broker
             .place_pending_market_long_entry(id, qty, self.bars);
