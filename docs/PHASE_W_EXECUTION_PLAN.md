@@ -998,6 +998,67 @@ Exit criteria:
 - No ambiguous bracket/trailing behavior is silently claimed.
 - Existing bracket/trailing single-exit fixtures remain green.
 
+### Slice 6 Decision Record
+
+Status: completed on 2026-06-02.
+
+Decision: defer bracket and trailing multiple-exit reservation out of Phase W.
+
+Evidence reviewed:
+
+- Slice 3 opened explicit fixed-`qty` same-side single-trigger reservations.
+- Slice 4 extended the same single-trigger reservation pool to `qty_percent`.
+- Slice 5 opened mixed-side single-trigger reservations with the confirmed
+  downside-wins same-bar policy.
+- Existing bracket support is one pending exit with exactly one downside and one
+  upside leg, including stop/loss-first behavior when both bracket legs are
+  touched on the same eligible bar.
+- Existing trailing support carries activation state and ratchets active stops
+  upward across bars, with no fill on the activation bar.
+
+Deferral rationale:
+
+- Bracket reservations combine a reserved quantity with two trigger sides and
+  existing both-hit leg precedence. Extending multiple pending brackets would
+  require additional fixture-backed rules for bracket-vs-single-trigger,
+  bracket-vs-bracket, and mixed bracket/single-trigger same-bar precedence.
+- Trailing reservations combine a reserved quantity with per-exit activation
+  state, active stop state, and ratchet timing. Extending multiple pending
+  trailing exits would require additional fixture-backed rules for activation
+  ordering, active-stop updates, trailing-vs-fixed single-trigger precedence,
+  and replacement of active trailing state.
+- Neither family needs public pending-order, reservation, remaining-quantity,
+  bracket-leg, trailing-state, or exit-reason fields for the current public
+  schema, but the behavior surface is large enough to deserve a separate
+  explicit phase rather than being silently claimed inside Phase W.
+
+Phase W boundary after Slice 6:
+
+- Multiple pending reservations are supported only for explicit fixed `qty` or
+  `qty_percent` single-trigger `stop`, `limit`, `profit`, and `loss` exits on
+  the current matching long entry.
+- Full-position exits, bracket exits, and trailing exits remain on the existing
+  one-effective-pending replacement path.
+- Bracket and trailing multiple-pending reservation remains unsupported and
+  outside the Phase W compatibility claim.
+- Public runtime JSON, Python dictionaries, WASM JSON, and
+  `schemaVersion: 3` remain unchanged.
+
+No runtime behavior, conformance metadata, public output schema, host binding,
+or snapshot changes were made in Slice 6.
+
+Slice 6 verification:
+
+```text
+cargo test -p pine-runtime strategy
+cargo test -p pine-runtime --test incremental
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+git diff --check
+```
+
+All commands passed on the Slice 6 workspace.
+
 ## Slice 7: Host Surface Parity
 
 Goal: prove the supported reservation subset round-trips identically through
