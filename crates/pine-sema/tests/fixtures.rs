@@ -440,6 +440,30 @@ fn accepts_supported_strategy_close_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_close_all_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_close_all.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.close_all")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_supported_strategy_position_state_fixture() {
     assert_strategy_state_supported_fixture(
         "tests/fixtures/sema/supported_strategy_position_state.pine",
@@ -496,6 +520,14 @@ fn reports_strategy_close_indicator_fixture() {
 }
 
 #[test]
+fn reports_strategy_close_all_indicator_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_close_all_indicator.pine",
+        "E_STRATEGY_MODE",
+    );
+}
+
+#[test]
 fn reports_strategy_state_indicator_fixture() {
     assert_strategy_state_mode_fixture(
         "tests/fixtures/sema/unsupported_strategy_state_indicator.pine",
@@ -522,7 +554,6 @@ fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine",
         &[
-            "strategy.close_all",
             "strategy.cancel",
             "strategy.cancel_all",
             "strategy.risk.max_drawdown",

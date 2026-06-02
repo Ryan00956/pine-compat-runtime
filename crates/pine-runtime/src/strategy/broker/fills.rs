@@ -2,6 +2,13 @@ use super::{BrokerState, exits::PendingExit};
 use crate::{RuntimeDiagnostic, StrategyOrderEvent, StrategyPositionSnapshot, StrategyTrade};
 
 impl BrokerState {
+    pub(crate) fn close_all_long(&mut self, bar_index: usize, time: i64, price: f64) {
+        let Some(id) = self.entry_id.clone() else {
+            return;
+        };
+        self.close_long(id, bar_index, time, price);
+    }
+
     pub(crate) fn close_long(&mut self, id: String, bar_index: usize, time: i64, price: f64) {
         if self.position_size <= 0.0 || self.entry_id.as_deref() != Some(id.as_str()) {
             return;

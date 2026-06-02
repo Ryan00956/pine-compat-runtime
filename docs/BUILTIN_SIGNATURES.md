@@ -260,6 +260,7 @@ strategy(title: const string, shorttitle?: const string, overlay?: const bool, m
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric)
   -> void
 strategy.close(id: simple string) -> void
+strategy.close_all() -> void
 strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric)
   -> void
 ```
@@ -271,6 +272,8 @@ Unsupported named arguments should produce compatibility diagnostics.
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
 use the configured or default fixed quantity. Supported market-long entries fill
 at the next historical bar open and do not expose public pending-order records.
+`strategy.close_all()` closes the current supported long position at the current
+bar close and is a no-op while flat.
 `strategy.exit` accepts `qty` or `qty_percent` on supported single-trigger,
 one-downside/one-upside bracket, and trailing trigger shapes. Explicit fixed
 `qty` or `qty_percent` exits on those supported shapes can keep multiple

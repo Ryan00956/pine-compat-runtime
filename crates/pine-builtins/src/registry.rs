@@ -117,6 +117,14 @@ mod tests {
     }
 
     #[test]
+    fn registers_strategy_close_all_signature() {
+        let signature =
+            get_phase_1_builtin("strategy.close_all").expect("strategy.close_all signature");
+        assert!(signature.params.is_empty());
+        assert!(!signature.variadic);
+    }
+
+    #[test]
     fn registers_strategy_exit_signature() {
         let signature = get_phase_1_builtin("strategy.exit").expect("strategy.exit signature");
         assert_eq!(signature.params.len(), 11);

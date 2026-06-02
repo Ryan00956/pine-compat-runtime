@@ -180,7 +180,10 @@ impl Analyzer {
         span: Span,
         args: &[CallArg],
     ) {
-        if !matches!(name, "strategy.entry" | "strategy.close" | "strategy.exit") {
+        if !matches!(
+            name,
+            "strategy.entry" | "strategy.close" | "strategy.close_all" | "strategy.exit"
+        ) {
             return;
         }
 

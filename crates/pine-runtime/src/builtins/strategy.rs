@@ -21,6 +21,7 @@ impl<'a> HistoricalRuntime<'a> {
         Some(match callee {
             "strategy.entry" => self.eval_strategy_entry(args),
             "strategy.close" => self.eval_strategy_close(args),
+            "strategy.close_all" => self.eval_strategy_close_all(),
             "strategy.exit" => self.eval_strategy_exit(args),
             _ => return None,
         })
@@ -77,6 +78,18 @@ impl<'a> HistoricalRuntime<'a> {
 
         self.strategy_broker
             .close_long(id, self.bars, bar.time, bar.close);
+        Ok(PineValue::Void)
+    }
+
+    fn eval_strategy_close_all(&mut self) -> Result<PineValue, RuntimeError> {
+        let Some(bar) = self.current_bar else {
+            return Err(RuntimeError {
+                message: "`strategy.close_all` requires an active bar".to_owned(),
+            });
+        };
+
+        self.strategy_broker
+            .close_all_long(self.bars, bar.time, bar.close);
         Ok(PineValue::Void)
     }
 

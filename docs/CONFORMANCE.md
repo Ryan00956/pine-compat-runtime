@@ -95,12 +95,12 @@ profit. `strategy.equity` is `initial_capital + strategy.netprofit +
 strategy.openprofit` in the current subset. Supported market `strategy.entry`
 calls create an internal pending entry and fill on the next historical bar open;
 these variables reflect that filled entry before script statements on the fill
-bar, not on the creation bar. Supported `strategy.close` calls still update
-immediately for later statements on the same bar. They behave like read-only
-series floats in supported expression contexts, including branches, switches,
-loops, pure UDF arguments, and constant history references. They do not change
-the public runtime JSON shape because scripts observe them through ordinary
-outputs such as `plot`.
+bar, not on the creation bar. Supported `strategy.close` and
+`strategy.close_all` calls still update immediately for later statements on the
+same bar. They behave like read-only series floats in supported expression
+contexts, including branches, switches, loops, pure UDF arguments, and constant
+history references. They do not change the public runtime JSON shape because
+scripts observe them through ordinary outputs such as `plot`.
 
 Phase O adds the first narrow strategy reporting count variables for
 historical strategy-mode scripts. `strategy.closedtrades` is a read-only
@@ -109,12 +109,12 @@ series int count of closed trades recorded by the current broker state.
 current long-only no-pyramiding broker, so it is `1` while the supported long
 position is open and `0` when flat. Supported market `strategy.entry` calls fill
 on the next historical bar open and update both counts before script statements
-on that fill bar. Supported `strategy.close` calls update both counts
-immediately for later statements on the same bar. Pending `strategy.exit` fills
-are still evaluated after script statements on the bar, so script reads see the
-count changes on the next bar. Trade namespace functions, public open-trade
-records, rich reporting metrics, and public output schema changes remain out of
-scope.
+on that fill bar. Supported `strategy.close` and `strategy.close_all` calls
+update both counts immediately for later statements on the same bar. Pending
+`strategy.exit` fills are still evaluated after script statements on the bar, so
+script reads see the count changes on the next bar. Trade namespace functions,
+public open-trade records, rich reporting metrics, and public output schema
+changes remain out of scope.
 
 Phase M adds the first executable `strategy.exit` subset:
 `strategy.exit(id, from_entry, stop=price)` and
@@ -391,6 +391,8 @@ Examples:
   default quantity subset
 - minimal `strategy.close` full-position closes for matching long entry ids,
   with missing or repeated closes treated as no-op
+- minimal `strategy.close_all` full-position closes for the current supported
+  long position, with flat or already-closed calls treated as no-op
 - minimal strategy equity snapshots with bar-close mark-to-market accounting,
   with broader broker settings and rich strategy reporting variables
   unsupported
@@ -464,16 +466,17 @@ alert                partial      const-string message runtime events when execu
 strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital and fixed default_qty subset only
 strategy.entry       partial      long market entry filled at next historical bar open; explicit positive qty or fixed default qty; one net long position; no pyramiding; no public pending-order output
 strategy.close       partial      full long-position close at current bar close; closed trade output
+strategy.close_all   partial      full close of the current supported long position at current bar close; flat or already-closed calls are no-op; closed trade output uses the current entry id
 strategy equity      partial      per-bar cash, marketValue, equity, and netProfit snapshots
 strategy.position_size partial    current long-only position size read-only series in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.position_avg_price partial current long-only average entry price read-only series, na when flat, in strategy-mode scripts only
 strategy.openprofit partial       current long-only unrealized profit read-only series, 0 when flat, in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.netprofit  partial       cumulative realized closed-trade profit read-only series, excluding current open profit, in strategy-mode scripts only
 strategy.equity     partial       initial_capital plus realized net profit plus current open profit read-only series in strategy-mode scripts only
-strategy.closedtrades partial     closed-trade count read-only series int in strategy-mode scripts only; immediate after strategy.close and next-bar visible after pending strategy.exit fills
+strategy.closedtrades partial     closed-trade count read-only series int in strategy-mode scripts only; immediate after strategy.close or strategy.close_all and next-bar visible after pending strategy.exit fills
 strategy.opentrades partial       open-trade count read-only series int in strategy-mode scripts only; 1 for the current supported long position and 0 when flat
 strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent long exits; same-calculation absolute stop/limit/trail_price attachment to a pending market entry is supported for the active entry id; same-calculation entry-relative profit/loss/trail_points attachment remains unsupported until deferred price resolution; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; qty is placement-time finite positive absolute quantity; qty_percent is placement-time finite positive percent resolved to an absolute quantity against current position size or matching pending entry quantity; omitted qty and qty_percent keep full-position one-effective-pending replacement behavior; explicit fixed-qty or qty-percent single-trigger, bracket, and trailing calls can keep multiple reserved pending exits; fills clamp to current position size, leave remaining long position open when partial, and expose only absolute filled qty; later-bar low <= stop/loss/active trailing stop or high >= limit/profit/activation price drives fills/activation; same-side touched exits fill in placement order; mixed downside/upside same-bar touches fill downside candidates only; bracket both-leg touches contribute the downside candidate; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger/bracket/trailing multiple-exit reservation subset; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/qty + qty_percent/multiple-pending outside that subset/omitted-quantity multiple reservations/reservation outside that subset/missing-entry forms; rich order types, percent/cash/contracts sizing, mutable strategy state, trade namespace functions, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count variables are not implemented
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close/strategy.close_all and the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger/bracket/trailing multiple-exit reservation subset; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/qty + qty_percent/multiple-pending outside that subset/omitted-quantity multiple reservations/reservation outside that subset/missing-entry forms; rich order types, percent/cash/contracts sizing, mutable strategy state, trade namespace functions, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

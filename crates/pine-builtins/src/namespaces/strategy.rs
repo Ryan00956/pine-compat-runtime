@@ -26,6 +26,8 @@ const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const STRATEGY_CLOSE_ALL_PARAMS: &[BuiltinParam] = &[];
+
 const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -96,6 +98,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "strategy.close",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_CLOSE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.close_all",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CLOSE_ALL_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

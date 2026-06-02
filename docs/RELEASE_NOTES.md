@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 3 Slice 0 `strategy.close_all()` support for
+  the current one-net-long broker. Strategy-mode scripts can close the current
+  supported long position at the current bar close without naming the entry id;
+  flat or already-closed calls are no-op, pending exits for the closed entry are
+  cancelled, and the existing public strategy output shape is unchanged.
 - Added Strategy Internal Stage 2 pending-entry timing. Supported market-long
   `strategy.entry` calls now create an internal pending entry and fill at the
   next historical bar open, with no public pending-order output. Same-calculation

@@ -1,0 +1,3 @@
+//@version=5
+indicator("Strategy close_all in indicator")
+strategy.close_all()

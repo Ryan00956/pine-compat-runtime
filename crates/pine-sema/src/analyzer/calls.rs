@@ -181,6 +181,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "table.cell"
             | "strategy.entry"
             | "strategy.close"
+            | "strategy.close_all"
             | "strategy.exit"
     ) || name == "input"
         || name.starts_with("input.")

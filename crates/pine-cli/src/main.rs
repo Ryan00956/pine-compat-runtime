@@ -69,6 +69,7 @@ mod tests {
                 || signature.name == "strategy"
                 || signature.name == "strategy.entry"
                 || signature.name == "strategy.close"
+                || signature.name == "strategy.close_all"
                 || signature.name == "strategy.exit"
                 || signature.name == "alert"
                 || signature.name == "alertcondition"
@@ -654,6 +655,10 @@ mod tests {
             (
                 "runtime_strategy_close.json",
                 "tests/fixtures/runtime/strategy_close.pine",
+            ),
+            (
+                "runtime_strategy_close_all.json",
+                "tests/fixtures/runtime/strategy_close_all.pine",
             ),
             (
                 "runtime_strategy_exit_stop.json",

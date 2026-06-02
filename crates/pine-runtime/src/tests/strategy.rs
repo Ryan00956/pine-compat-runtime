@@ -373,6 +373,94 @@ if bar_index == 2
 }
 
 #[test]
+fn strategy_close_all_records_closed_trade_and_flat_position() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("close_all")
+if bar_index == 0
+    strategy.close_all()
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 2
+    strategy.close_all()
+if bar_index == 3
+    strategy.close_all()
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_values_close(&result.plots[0].values, &[0.0, 2.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 0.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[2].values, &[0.0, 1.0, 0.0, 0.0]);
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "L");
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].id, "L");
+    assert_eq!(strategy.trades[0].entry_bar_index, 1);
+    assert_eq!(strategy.trades[0].exit_bar_index, 2);
+    assert_eq!(strategy.trades[0].entry_price, 2.0);
+    assert_eq!(strategy.trades[0].exit_price, 3.0);
+    assert_eq!(strategy.trades[0].qty, 2.0);
+    assert_eq!(strategy.trades[0].profit, 2.0);
+    assert_eq!(strategy.position.len(), 2);
+    assert_eq!(strategy.position[0].size, 2.0);
+    assert_eq!(strategy.position[1].size, 0.0);
+    assert_eq!(strategy.equity[2].cash, 100_002.0);
+    assert_eq!(strategy.equity[2].market_value, 0.0);
+    assert_eq!(strategy.equity[2].equity, 100_002.0);
+    assert_eq!(strategy.equity[2].net_profit, 2.0);
+}
+
+#[test]
+fn strategy_close_all_cancels_pending_exit_before_evaluation() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("close_all")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XL", "L", limit=4)
+if bar_index == 2
+    strategy.close_all()
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].exit_bar_index, 2);
+    assert_eq!(strategy.trades[0].exit_price, 3.0);
+    assert_eq!(strategy.trades[0].profit, 2.0);
+    assert_eq!(strategy.position.last().unwrap().size, 0.0);
+}
+
+#[test]
 fn strategy_exit_stop_stages_pending_exit_without_public_fill() {
     let source = SourceFile::new(
         "strategy.pine",

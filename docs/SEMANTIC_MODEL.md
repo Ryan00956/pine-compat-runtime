@@ -40,6 +40,10 @@ entry creates an internal pending entry, emits no public order while pending, an
 fills at the next historical bar open before script statements on that fill bar.
 `strategy.close(id)` closes the full matching long position at the current bar
 close.
+`strategy.close_all()` closes the current supported long position at the current
+bar close without requiring an entry id; while flat or already closed it is a
+no-op. It cancels pending exits for the closed entry and keeps the existing
+public strategy output shape.
 `strategy.exit(id, from_entry, stop=price)`,
 `strategy.exit(id, from_entry, limit=price)`,
 `strategy.exit(id, from_entry, profit=ticks)`, and
@@ -97,7 +101,7 @@ rejected in indicator scripts and user-defined functions. Short entries,
 `qty_percent` single-trigger/bracket/trailing exits, omitted-quantity multiple
 reservations, reservation behavior outside that subset,
 unmatched missing-entry pre-placement, entry-relative exit attachment to pending
-entries, `strategy.order`, broker settings beyond
+entries, `strategy.order`, `strategy.cancel`, `strategy.cancel_all`, broker settings beyond
 `initial_capital` and fixed default quantity, realtime strategy handoff, and
 strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and

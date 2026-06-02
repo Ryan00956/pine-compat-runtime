@@ -216,6 +216,27 @@ fn runs_strategy_close_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_close_all_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        "strategy(\"demo\")\nif bar_index == 0\n    strategy.close_all()\n    strategy.entry(\"L\", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close_all()\nif bar_index == 3\n    strategy.close_all()\nplot(strategy.position_size)\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n3,4,4,4,4,1\n",
+    )
+    .expect("strategy close_all script should run");
+
+    assert!(output.contains("\"values\":[0,2,0,0]"));
+    assert!(output.contains("\"values\":[0,0,1,1]"));
+    assert!(output.contains("\"values\":[0,1,0,0]"));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":1,\"exitTime\":2,\"entryPrice\":2,\"exitPrice\":3,\"qty\":2,\"profit\":2}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"
+    ));
+    assert!(!output.contains("closeAll"));
+    assert!(!output.contains("pending"));
+}
+
+#[test]
 fn runs_strategy_exit_stop_from_csv_to_trade_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nif bar_index == 0\n    strategy.entry(\"L\", strategy.long, qty=2)\n    strategy.exit(\"XL\", \"L\", stop=9)\n",

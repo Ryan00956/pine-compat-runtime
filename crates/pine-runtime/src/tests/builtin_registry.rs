@@ -179,6 +179,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "str.upper",
     "strategy",
     "strategy.close",
+    "strategy.close_all",
     "strategy.entry",
     "strategy.exit",
     "string",

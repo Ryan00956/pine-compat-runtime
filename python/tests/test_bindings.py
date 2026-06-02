@@ -312,6 +312,46 @@ def test_run_script_returns_strategy_close_trade_contract():
     }
 
 
+def test_run_script_returns_strategy_close_all_trade_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_close_all.pine").read_text()
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0.0, 2.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 1.0],
+        [0.0, 1.0, 0.0, 0.0],
+    ]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 2.0,
+            "price": 2.0,
+        }
+    ]
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 1,
+            "exitBarIndex": 2,
+            "entryTime": 2,
+            "exitTime": 3,
+            "entryPrice": 2.0,
+            "exitPrice": 3.0,
+            "qty": 2.0,
+            "profit": 2.0,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 0.0, "avgPrice": None},
+    ]
+    assert "closeAll" not in result["strategy"]
+    assert "pending" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_exit_stop_trade_contract():
     bars = [
         {"time": 10, "open": 10.0, "high": 10.0, "low": 10.0, "close": 10.0, "volume": 1.0},
