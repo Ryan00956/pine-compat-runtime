@@ -1034,6 +1034,44 @@ Exit criteria:
 - Matrix and conformance match the exact implemented subset.
 - Public runtime schema remains `schemaVersion: 3`.
 
+### Slice 5 Implementation Record
+
+Representative host fixture:
+
+- Added `strategy_exit_reservation_bracket_host_parity.pine`, covering one
+  fixed-`qty` bracket reservation and one `qty_percent` bracket reservation.
+  The fixed reservation fills partially on bar 1, and the percent reservation
+  fills later on bar 2 as an absolute quantity.
+
+Implementation:
+
+- Added the host-parity fixture to CLI runtime golden snapshots.
+- Added CLI, Python, and WASM host-shape assertions for:
+  - two public `strategy.exit` order events;
+  - absolute filled quantities `0.5` and `1`;
+  - filled prices `2` and `3`;
+  - unchanged public strategy result keys and `schemaVersion: 3`;
+  - no public pending, reserved quantity, remaining quantity, qty-percent, or
+    bracket-leg fields.
+- Updated `tests/fixtures/conformance.tsv` and `tests/snapshots/matrix.json`
+  to claim only the implemented explicit fixed-`qty` or `qty_percent`
+  single-trigger/bracket reservation subset.
+- Kept `strategy.exit` `partial` and broad `strategy.*` `unsupported`.
+
+Verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-cli strategy
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+cargo test -p pine-cli matrix_output_matches_golden_snapshot
+cargo test -p pine-wasm strategy
+maturin build --manifest-path crates/pine-python/Cargo.toml --out dist
+python3 -m pip install --force-reinstall dist/pine_compat_runtime-0.1.0-cp310-abi3-manylinux_2_35_x86_64.whl
+python3 -m pytest python/tests
+```
+
 ## Slice 6: Documentation Closeout And Audit
 
 Goal: close Phase X with an audit that ties implementation, fixtures, docs, and

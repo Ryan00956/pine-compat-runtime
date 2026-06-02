@@ -1,0 +1,8 @@
+//@version=5
+strategy("Exit reservation bracket host parity")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XB1", "L", stop=0.25, limit=2, qty=0.5)
+    strategy.exit("XB2", "L", stop=0.25, limit=3, qty_percent=50)
+plot(strategy.position_size)
+plot(strategy.netprofit)
