@@ -97,15 +97,14 @@ impl PendingExitTrigger {
     }
 
     pub(super) fn reservation_family(&self) -> PendingExitReservationFamily {
+        if self.single_trigger_side().is_some() {
+            return PendingExitReservationFamily::SingleTrigger;
+        }
         match self {
-            Self::Stop(_) | Self::Limit(_) => PendingExitReservationFamily::SingleTrigger,
             Self::Bracket { .. } => PendingExitReservationFamily::Bracket,
             Self::Trailing(_) => PendingExitReservationFamily::OneEffectivePendingOnly,
+            Self::Stop(_) | Self::Limit(_) => unreachable!("single triggers returned above"),
         }
-    }
-
-    pub(super) fn is_single_trigger_reservation_family(&self) -> bool {
-        self.reservation_family() == PendingExitReservationFamily::SingleTrigger
     }
 
     pub(super) fn touched_candidate(&self, high: f64, low: f64) -> Option<PendingExitTouch> {
@@ -134,18 +133,6 @@ impl PendingExitTrigger {
                 }
             }
             Self::Trailing(_) | Self::Stop(_) | Self::Limit(_) => None,
-        }
-    }
-
-    pub(super) fn single_trigger_touched_candidate(
-        &self,
-        high: f64,
-        low: f64,
-    ) -> Option<PendingExitTouch> {
-        if self.single_trigger_side().is_some() {
-            self.touched_candidate(high, low)
-        } else {
-            None
         }
     }
 }
@@ -231,10 +218,11 @@ impl PendingExitBook {
             .find(|pending_exit| pending_exit.id == id && pending_exit.from_entry == from_entry)
     }
 
-    pub(super) fn other_exits_are_single_trigger_reservations(
+    pub(super) fn other_exits_are_reservations_in_family(
         &self,
         from_entry: &str,
         released_identity: Option<(&str, &str)>,
+        family: PendingExitReservationFamily,
     ) -> bool {
         self.exits
             .iter()
@@ -246,7 +234,7 @@ impl PendingExitBook {
             })
             .all(|pending_exit| {
                 pending_exit.multiple_reservation
-                    && pending_exit.trigger.is_single_trigger_reservation_family()
+                    && pending_exit.trigger.reservation_family() == family
             })
     }
 
@@ -929,18 +917,27 @@ impl BrokerState {
             return;
         }
 
-        let multiple_single_trigger_reservation = matches!(
-            quantity,
-            ExitQuantityRequest::Fixed(_) | ExitQuantityRequest::Percent(_)
-        ) && trigger
-            .is_single_trigger_reservation_family();
+        let multiple_reservation_family = match (quantity, trigger.reservation_family()) {
+            (
+                ExitQuantityRequest::Fixed(_) | ExitQuantityRequest::Percent(_),
+                PendingExitReservationFamily::SingleTrigger,
+            ) => Some(PendingExitReservationFamily::SingleTrigger),
+            (ExitQuantityRequest::Fixed(_), PendingExitReservationFamily::Bracket) => {
+                Some(PendingExitReservationFamily::Bracket)
+            }
+            _ => None,
+        };
         let released_identity =
-            multiple_single_trigger_reservation.then_some((id.as_str(), from_entry.as_str()));
-        let available_quantity = if multiple_single_trigger_reservation
-            && self
-                .pending_exits
-                .other_exits_are_single_trigger_reservations(&from_entry, released_identity)
-        {
+            multiple_reservation_family.map(|_| (id.as_str(), from_entry.as_str()));
+        let other_exits_are_same_reservation_family =
+            multiple_reservation_family.is_some_and(|family| {
+                self.pending_exits.other_exits_are_reservations_in_family(
+                    &from_entry,
+                    released_identity,
+                    family,
+                )
+            });
+        let available_quantity = if other_exits_are_same_reservation_family {
             self.pending_exits.available_unreserved_quantity(
                 self.position_size,
                 &from_entry,
@@ -976,17 +973,10 @@ impl BrokerState {
             trigger,
             quantity,
             reserved_quantity,
-            multiple_reservation: multiple_single_trigger_reservation,
+            multiple_reservation: multiple_reservation_family.is_some(),
             last_update_bar_index: bar_index,
         };
-        if multiple_single_trigger_reservation
-            && self
-                .pending_exits
-                .other_exits_are_single_trigger_reservations(
-                    &pending_exit.from_entry,
-                    Some((pending_exit.id.as_str(), pending_exit.from_entry.as_str())),
-                )
-        {
+        if multiple_reservation_family.is_some() && other_exits_are_same_reservation_family {
             self.pending_exits.replace_or_append(pending_exit);
         } else {
             self.pending_exits.replace_all(pending_exit);

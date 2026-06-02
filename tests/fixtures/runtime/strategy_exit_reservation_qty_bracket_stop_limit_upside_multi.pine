@@ -1,0 +1,8 @@
+//@version=5
+strategy("Exit reservation qty bracket upside multi")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XB1", "L", stop=0.5, limit=2, qty=0.5)
+    strategy.exit("XB2", "L", stop=0.25, limit=2, qty=0.75)
+plot(strategy.position_size)
+plot(strategy.netprofit)

@@ -233,10 +233,7 @@ impl BrokerState {
                 continue;
             }
 
-            if let Some(touch) = pending_exit
-                .trigger
-                .single_trigger_touched_candidate(high, low)
-            {
+            if let Some(touch) = pending_exit.trigger.touched_candidate(high, low) {
                 touched_candidates.push((pending_exit, touch.exit_price, touch.side));
             }
         }

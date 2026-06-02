@@ -816,6 +816,22 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_reservation_qty_clamp.pine",
             ),
             (
+                "runtime_strategy_exit_reservation_qty_bracket_stop_limit_downside_multi.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_stop_limit_downside_multi.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_bracket_stop_limit_upside_multi.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_stop_limit_upside_multi.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_bracket_replacement.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_replacement.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_bracket_clamp.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_clamp.pine",
+            ),
+            (
                 "runtime_strategy_exit_qty_percent_stop_partial.json",
                 "tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine",
             ),

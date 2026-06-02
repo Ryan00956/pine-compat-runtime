@@ -704,6 +704,66 @@ Exit criteria:
   subset if conformance is updated in this slice.
 - Public output shape is unchanged.
 
+### Slice 2 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Implemented changes:
+
+- Opened multiple pending reservations for explicit fixed-`qty` bracket exits
+  using the existing `PendingExitBook` reservation ledger.
+- Kept bracket reservation support limited to the existing bracket trigger
+  shapes: `stop + limit`, `stop + profit`, `loss + limit`, and `loss + profit`.
+- Kept `qty_percent` bracket calls, omitted-quantity bracket calls, trailing
+  exits, and incompatible mixed single-trigger/bracket pools on the
+  one-effective-pending replacement path.
+- Generalized pending-exit placement to choose a supported reservation family
+  before resolving available quantity. Same-family reservations append or
+  replace by `id + from_entry`; incompatible families replace the current
+  pending pool.
+- Generalized the multiple-pending evaluator to use trigger touch helpers, so
+  fixed-`qty` bracket reservations fill using the confirmed downside-wins and
+  placement-order policy.
+- Added broker tests for fixed-quantity bracket append, downside fills, upside
+  fills, same-identity replacement, clamp to remaining unreserved quantity,
+  zero-unreserved rejection, full-fill cleanup, invalid replacement preservation,
+  incompatible single-trigger replacement, and percent bracket deferral.
+
+Runtime fixtures and snapshots added:
+
+```text
+tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_stop_limit_downside_multi.pine
+tests/snapshots/runtime_strategy_exit_reservation_qty_bracket_stop_limit_downside_multi.json
+tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_stop_limit_upside_multi.pine
+tests/snapshots/runtime_strategy_exit_reservation_qty_bracket_stop_limit_upside_multi.json
+tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_replacement.pine
+tests/snapshots/runtime_strategy_exit_reservation_qty_bracket_replacement.json
+tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_clamp.pine
+tests/snapshots/runtime_strategy_exit_reservation_qty_bracket_clamp.json
+```
+
+The runtime fixtures are included in the CLI golden snapshot harness and the
+generic incremental append fixture harness. `tests/fixtures/conformance.tsv` and
+`tests/snapshots/matrix.json` were intentionally left unchanged in Slice 2; the
+public compatibility wording is deferred to the host/conformance slice after
+fixed and percent bracket reservation evidence are both available.
+
+No public runtime JSON, Python dictionary, WASM JSON, or `schemaVersion: 3`
+shape changed in Slice 2.
+
+Slice 2 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-runtime --test incremental
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+```
+
+All commands passed on the Slice 2 workspace.
+
 ## Slice 3: Percent Bracket Reservations
 
 Goal: extend the Slice 2 bracket-reservation subset to explicit
