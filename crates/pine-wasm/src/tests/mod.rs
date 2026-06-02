@@ -380,6 +380,39 @@ fn runs_strategy_exit_qty_percent_partial_fixture_from_csv_to_trade_json() {
     assert!(!output.contains("qty_percent"));
 }
 
+#[test]
+fn runs_strategy_exit_reservation_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_mixed_side_precedence.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit reservation fixture should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 2);
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":1},{\"id\":\"XS\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":0.5,\"price\":2.5},{\"id\":\"XL\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.exit\",\"qty\":1.5,\"price\":1.5}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":1,\"exitTime\":2,\"entryPrice\":1,\"exitPrice\":2.5,\"qty\":0.5,\"profit\":0.75},{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":2,\"entryTime\":1,\"exitTime\":3,\"entryPrice\":1,\"exitPrice\":1.5,\"qty\":1.5,\"profit\":0.75}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":1},{\"barIndex\":1,\"size\":1.5,\"avgPrice\":1},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"
+    ));
+    assert!(output.contains("\"strategy\":{\"orders\":"));
+    assert!(output.contains("\"equity\":["));
+    assert!(output.contains("\"diagnostics\":[]}"));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("remainingQty"));
+    assert!(!output.contains("qtyPercent"));
+    assert!(!output.contains("qty_percent"));
+}
+
 const REQUEST_HOST_SOURCE: &str =
     include_str!("../../../../tests/fixtures/request/request_security_host.pine");
 const REQUEST_HOST_CHART_CSV: &str =

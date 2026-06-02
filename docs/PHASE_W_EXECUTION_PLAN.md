@@ -1103,6 +1103,39 @@ Exit criteria:
 - No public strategy result keys are added, removed, or renamed.
 - No host contains broker reservation logic.
 
+### Slice 7 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Representative host-parity fixture:
+
+- `tests/fixtures/runtime/strategy_exit_reservation_mixed_side_precedence.pine`
+
+Slice 7 added host-surface assertions for the same mixed-side reservation
+fixture across:
+
+- CLI: `strategy_exit_reservation_fixture_has_host_stable_shape`
+- Python: `test_run_script_returns_strategy_exit_reservation_fixture_contract`
+- WASM:
+  `runs_strategy_exit_reservation_fixture_from_csv_to_public_strategy_json`
+
+The host tests assert the shared public runtime contract:
+
+- runtime output remains `schemaVersion: 3`;
+- strategy result keys remain `orders`, `trades`, `position`, `equity`, and
+  `diagnostics`;
+- the fixture exposes the same absolute order and trade quantities:
+  `0.5` for `XS` and `1.5` for `XL`;
+- position snapshots show the remaining long position after the first fill and
+  flat state after the second fill;
+- diagnostics remain empty at both the runtime and strategy levels;
+- internal reservation fields such as `pending`, `remainingQty`,
+  `qtyPercent`, and `qty_percent` are not exposed publicly.
+
+No host binding implements reservation math, fill precedence, or quantity
+resolution. CLI, Python, and WASM continue to call the shared runtime path and
+only serialize/project the resulting public strategy output.
+
 ## Slice 8: Conformance, Matrix, Docs, And Release Notes
 
 Goal: synchronize the compatibility claim after behavior and host evidence

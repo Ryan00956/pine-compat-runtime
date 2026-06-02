@@ -737,6 +737,91 @@ def test_run_script_returns_strategy_exit_qty_percent_partial_fixture_contract()
     assert "qty_percent" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_exit_reservation_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_exit_reservation_mixed_side_precedence.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
+    assert result["schemaVersion"] == 3
+    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 0,
+            "time": 1,
+            "direction": "strategy.long",
+            "qty": 2.0,
+            "price": 1.0,
+        },
+        {
+            "id": "XS",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.exit",
+            "qty": 0.5,
+            "price": 2.5,
+        },
+        {
+            "id": "XL",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.exit",
+            "qty": 1.5,
+            "price": 1.5,
+        },
+    ]
+    assert [order["direction"] for order in result["strategy"]["orders"]].count(
+        "strategy.exit"
+    ) == 2
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 0,
+            "exitBarIndex": 1,
+            "entryTime": 1,
+            "exitTime": 2,
+            "entryPrice": 1.0,
+            "exitPrice": 2.5,
+            "qty": 0.5,
+            "profit": 0.75,
+        },
+        {
+            "id": "L",
+            "entryBarIndex": 0,
+            "exitBarIndex": 2,
+            "entryTime": 1,
+            "exitTime": 3,
+            "entryPrice": 1.0,
+            "exitPrice": 1.5,
+            "qty": 1.5,
+            "profit": 0.75,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 0, "size": 2.0, "avgPrice": 1.0},
+        {"barIndex": 1, "size": 1.5, "avgPrice": 1.0},
+        {"barIndex": 2, "size": 0.0, "avgPrice": None},
+    ]
+    assert [plot["values"] for plot in result["plots"]] == [
+        [2.0, 2.0, 1.5, 0.0],
+        [0.0, 0.0, 0.75, 1.5],
+        [0.0, 0.0, 1.0, 2.0],
+        [1.0, 1.0, 1.0, 0.0],
+    ]
+    assert result["diagnostics"] == []
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+    assert "remainingQty" not in result["strategy"]
+    assert "qtyPercent" not in result["strategy"]
+    assert "qty_percent" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_runtime_diagnostics():
     result = pine_compat.run_script(
         'strategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=close-close)\n',
