@@ -246,6 +246,8 @@ impl<'a> HistoricalRuntime<'a> {
                 .fill_pending_market_long_entries(bar_index, bar.time, bar.open);
             self.strategy_broker
                 .fill_pending_limit_long_entries(bar_index, bar.time, bar.low);
+            self.strategy_broker
+                .fill_pending_stop_long_entries(bar_index, bar.time, bar.high);
         }
         self.set_builtin_symbols(&bar, bar_index)?;
 

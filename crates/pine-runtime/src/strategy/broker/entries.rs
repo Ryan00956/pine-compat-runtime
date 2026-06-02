@@ -9,6 +9,7 @@ pub(super) enum PendingEntryDirection {
 pub(super) enum PendingEntryKind {
     Market,
     Limit { price: f64 },
+    Stop { price: f64 },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -85,6 +86,20 @@ impl PendingEntryBook {
     }
 
     #[allow(dead_code)]
+    pub(super) fn take_first_eligible_stop_long(
+        &mut self,
+        bar_index: usize,
+        high: f64,
+    ) -> Option<PendingEntry> {
+        let position = self.entries.iter().position(|pending_entry| {
+            pending_entry.direction == PendingEntryDirection::Long
+                && matches!(pending_entry.kind, PendingEntryKind::Stop { price } if high >= price)
+                && pending_entry.created_bar_index < bar_index
+        })?;
+        Some(self.entries.remove(position))
+    }
+
+    #[allow(dead_code)]
     pub(super) fn clear_all(&mut self) {
         self.entries.clear();
     }
@@ -124,6 +139,30 @@ impl PendingEntryBook {
         self.place_long(
             id,
             PendingEntryKind::Limit { price },
+            quantity,
+            created_bar_index,
+            diagnostics,
+        );
+    }
+
+    pub(super) fn place_stop_long(
+        &mut self,
+        id: String,
+        quantity: f64,
+        price: f64,
+        created_bar_index: usize,
+        diagnostics: &mut Vec<RuntimeDiagnostic>,
+    ) {
+        if !price.is_finite() || price <= 0.0 {
+            diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.entry` stop price must be positive".to_owned(),
+            });
+            return;
+        }
+        self.place_long(
+            id,
+            PendingEntryKind::Stop { price },
             quantity,
             created_bar_index,
             diagnostics,

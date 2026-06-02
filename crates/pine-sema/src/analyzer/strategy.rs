@@ -228,12 +228,14 @@ impl Analyzer {
     }
 
     pub(crate) fn validate_strategy_entry_args(&mut self, args: &[CallArg]) {
+        let mut has_limit = false;
+        let mut has_stop = false;
         for (index, arg) in args.iter().enumerate() {
-            let Some(name) = arg
-                .name
-                .as_deref()
-                .or_else(|| ["id", "direction", "qty", "limit"].get(index).copied())
-            else {
+            let Some(name) = arg.name.as_deref().or_else(|| {
+                ["id", "direction", "qty", "limit", "stop"]
+                    .get(index)
+                    .copied()
+            }) else {
                 continue;
             };
             match name {
@@ -261,6 +263,7 @@ impl Analyzer {
                     }
                 }
                 "limit" => {
+                    has_limit = true;
                     if let Some(limit) = const_numeric_value(&arg.value)
                         && (!limit.is_finite() || limit <= 0.0)
                     {
@@ -271,8 +274,33 @@ impl Analyzer {
                         ));
                     }
                 }
+                "stop" => {
+                    has_stop = true;
+                    if let Some(stop) = const_numeric_value(&arg.value)
+                        && (!stop.is_finite() || stop <= 0.0)
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.entry` argument `stop` must be positive",
+                            arg.span,
+                        ));
+                    }
+                }
                 _ => {}
             }
+        }
+        if has_limit
+            && has_stop
+            && let Some(arg) = args
+                .iter()
+                .find(|arg| arg.name.as_deref() == Some("stop"))
+                .or_else(|| args.get(4).filter(|arg| arg.name.is_none()))
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_VALUE",
+                "`strategy.entry` stop-limit orders are not supported in the current strategy subset",
+                arg.span,
+            ));
         }
     }
 

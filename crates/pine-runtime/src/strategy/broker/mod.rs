@@ -147,6 +147,26 @@ impl BrokerState {
     }
 
     #[allow(dead_code)]
+    pub(crate) fn place_pending_stop_long_entry(
+        &mut self,
+        id: String,
+        qty: f64,
+        stop: f64,
+        created_bar_index: usize,
+    ) {
+        if self.position_size > 0.0 {
+            return;
+        }
+        self.pending_entries.place_stop_long(
+            id,
+            qty,
+            stop,
+            created_bar_index,
+            &mut self.diagnostics,
+        );
+    }
+
+    #[allow(dead_code)]
     fn pending_entry_count(&self) -> usize {
         self.pending_entries.count()
     }
@@ -196,6 +216,36 @@ impl BrokerState {
         };
 
         let PendingEntryKind::Limit { price } = pending_entry.kind else {
+            return;
+        };
+        self.entry_long(
+            pending_entry.id,
+            bar_index,
+            time,
+            price,
+            pending_entry.quantity,
+        );
+        self.pending_entries.clear_all();
+    }
+
+    pub(crate) fn fill_pending_stop_long_entries(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        high: f64,
+    ) {
+        if self.position_size > 0.0 {
+            self.pending_entries.clear_all();
+            return;
+        }
+        let Some(pending_entry) = self
+            .pending_entries
+            .take_first_eligible_stop_long(bar_index, high)
+        else {
+            return;
+        };
+
+        let PendingEntryKind::Stop { price } = pending_entry.kind else {
             return;
         };
         self.entry_long(

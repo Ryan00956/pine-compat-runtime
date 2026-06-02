@@ -49,16 +49,18 @@ contracts, margin, and currency conversion remain unsupported.
 
 The current entry subset is `strategy.entry(id, strategy.long, qty=...)`,
 `strategy.entry(id, strategy.long)` when a fixed default quantity is configured,
-and `strategy.entry(..., limit=price)` for long limit entries. Market entries
-fill at the next historical bar open. Limit entries never fill on their
-creation bar; they fill at the limit price before script statements on a later
-historical bar when `low <= limit`. Pending entries emit no public order while
-pending. Only one net long position is supported; repeated entry calls while a
-position is open are ignored under the current no-pyramiding rule. Explicit
-`qty` overrides the declaration default. The resolved quantity and limit price
-must be positive, and non-positive runtime values are reported in the strategy
-diagnostics array. Supported `strategy.exit` calls use the pending-exit model
-described below.
+`strategy.entry(..., limit=price)` for long limit entries, and
+`strategy.entry(..., stop=price)` for long stop entries. Market entries fill at
+the next historical bar open. Limit and stop entries never fill on their
+creation bar; limit entries fill at the limit price before script statements on
+a later historical bar when `low <= limit`, and stop entries fill at the stop
+price before script statements on a later historical bar when `high >= stop`.
+Pending entries emit no public order while pending. Only one net long position
+is supported; repeated entry calls while a position is open are ignored under
+the current no-pyramiding rule. Explicit `qty` overrides the declaration
+default. The resolved quantity, limit price, and stop price must be positive,
+and non-positive runtime values are reported in the strategy diagnostics array.
+Supported `strategy.exit` calls use the pending-exit model described below.
 
 `strategy.close(id)` closes the full matching long position at the current bar
 close. It records a closed trade with entry/exit bar indexes, entry/exit times,

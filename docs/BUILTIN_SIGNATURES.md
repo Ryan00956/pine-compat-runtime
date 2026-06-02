@@ -257,7 +257,7 @@ indicator(title: const string, shorttitle?: const string, overlay?: const bool, 
   -> void
 strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric)
   -> void
-strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric)
+strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric)
   -> void
 strategy.close(id: simple string) -> void
 strategy.close_all() -> void
@@ -272,8 +272,10 @@ Unsupported named arguments should produce compatibility diagnostics.
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
 use the configured or default fixed quantity. Supported market-long entries fill
 at the next historical bar open. Supported long limit entries wait until a later
-historical bar where `low <= limit` and fill at the limit price. Neither form
-exposes public pending-order records while pending.
+historical bar where `low <= limit` and fill at the limit price. Supported long
+stop entries wait until a later historical bar where `high >= stop` and fill at
+the stop price. These entry forms do not expose public pending-order records
+while pending.
 `strategy.close_all()` closes the current supported long position at the current
 bar close and is a no-op while flat.
 `strategy.exit` accepts `qty`, `qty_percent`, or both on supported

@@ -48,7 +48,23 @@ impl<'a> HistoricalRuntime<'a> {
         if direction != PineValue::String("strategy.long".to_owned()) {
             return Ok(PineValue::Void);
         }
-        let qty = if let Some(qty_expr) = call_arg_expr(args, 2, "qty") {
+        let qty_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("qty"))
+            .or_else(|| args.get(2).filter(|arg| arg.name.is_none()))
+            .map(|arg| &arg.value);
+        let limit_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("limit"))
+            .or_else(|| args.get(3).filter(|arg| arg.name.is_none()))
+            .map(|arg| &arg.value);
+        let stop_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("stop"))
+            .or_else(|| args.get(4).filter(|arg| arg.name.is_none()))
+            .map(|arg| &arg.value);
+
+        let qty = if let Some(qty_expr) = qty_expr {
             self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN)
         } else {
             self.program
@@ -56,10 +72,16 @@ impl<'a> HistoricalRuntime<'a> {
                 .default_entry_qty()
                 .unwrap_or(f64::NAN)
         };
-        if let Some(limit_expr) = call_arg_expr(args, 3, "limit") {
+        if let Some(limit_expr) = limit_expr {
             let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker
                 .place_pending_limit_long_entry(id, qty, limit, self.bars);
+            return Ok(PineValue::Void);
+        }
+        if let Some(stop_expr) = stop_expr {
+            let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
+            self.strategy_broker
+                .place_pending_stop_long_entry(id, qty, stop, self.bars);
             return Ok(PineValue::Void);
         }
 

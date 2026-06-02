@@ -108,6 +108,8 @@ mod tests {
         assert!(signature.params[2].optional);
         assert_eq!(signature.params[3].name, "limit");
         assert!(signature.params[3].optional);
+        assert_eq!(signature.params[4].name, "stop");
+        assert!(signature.params[4].optional);
         assert!(!signature.variadic);
     }
 

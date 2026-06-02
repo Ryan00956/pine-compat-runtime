@@ -23,6 +23,11 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SeriesOrSimpleNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "stop",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
 ];
 
 const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
