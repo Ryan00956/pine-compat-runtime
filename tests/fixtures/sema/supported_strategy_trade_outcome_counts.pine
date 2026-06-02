@@ -1,0 +1,13 @@
+//@version=5
+strategy("Supported strategy trade outcome counts")
+
+scale(value) => value * 2
+
+plot(strategy.wintrades)
+plot(strategy.losstrades)
+plot(strategy.eventrades)
+
+if strategy.wintrades > strategy.losstrades
+    plot(scale(strategy.wintrades))
+else
+    plot(strategy.eventrades[1])

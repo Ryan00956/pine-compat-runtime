@@ -145,6 +145,15 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "strategy.closedtrades" {
             return PineValue::Int(self.strategy_broker.closed_trade_count());
         }
+        if name == "strategy.wintrades" {
+            return PineValue::Int(self.strategy_broker.winning_trade_count());
+        }
+        if name == "strategy.losstrades" {
+            return PineValue::Int(self.strategy_broker.losing_trade_count());
+        }
+        if name == "strategy.eventrades" {
+            return PineValue::Int(self.strategy_broker.even_trade_count());
+        }
         if name == "strategy.opentrades" {
             return PineValue::Int(self.strategy_broker.open_trade_count());
         }

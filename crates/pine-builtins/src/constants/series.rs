@@ -28,6 +28,18 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Int),
     ),
     (
+        "strategy.wintrades",
+        PineType::new(Qualifier::Series, ValueKind::Int),
+    ),
+    (
+        "strategy.losstrades",
+        PineType::new(Qualifier::Series, ValueKind::Int),
+    ),
+    (
+        "strategy.eventrades",
+        PineType::new(Qualifier::Series, ValueKind::Int),
+    ),
+    (
         "strategy.opentrades",
         PineType::new(Qualifier::Series, ValueKind::Int),
     ),
@@ -102,13 +114,17 @@ mod tests {
 
     #[test]
     fn registers_strategy_trade_count_series_values() {
-        assert_eq!(
-            builtin_series_value_type("strategy.closedtrades"),
-            Some(PineType::new(Qualifier::Series, ValueKind::Int))
-        );
-        assert_eq!(
-            builtin_series_value_type("strategy.opentrades"),
-            Some(PineType::new(Qualifier::Series, ValueKind::Int))
-        );
+        for name in [
+            "strategy.closedtrades",
+            "strategy.wintrades",
+            "strategy.losstrades",
+            "strategy.eventrades",
+            "strategy.opentrades",
+        ] {
+            assert_eq!(
+                builtin_series_value_type(name),
+                Some(PineType::new(Qualifier::Series, ValueKind::Int))
+            );
+        }
     }
 }

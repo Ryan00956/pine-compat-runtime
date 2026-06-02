@@ -49,6 +49,39 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub fn winning_trade_count(&self) -> i64 {
+        i64::try_from(
+            self.trades
+                .iter()
+                .filter(|trade| trade.profit > 0.0)
+                .count(),
+        )
+        .unwrap_or(i64::MAX)
+    }
+
+    #[must_use]
+    pub fn losing_trade_count(&self) -> i64 {
+        i64::try_from(
+            self.trades
+                .iter()
+                .filter(|trade| trade.profit < 0.0)
+                .count(),
+        )
+        .unwrap_or(i64::MAX)
+    }
+
+    #[must_use]
+    pub fn even_trade_count(&self) -> i64 {
+        i64::try_from(
+            self.trades
+                .iter()
+                .filter(|trade| normalize_zero(trade.profit) == 0.0)
+                .count(),
+        )
+        .unwrap_or(i64::MAX)
+    }
+
+    #[must_use]
     pub fn open_trade_count(&self) -> i64 {
         if self.position_size > 0.0 && self.entry_id.is_some() {
             1

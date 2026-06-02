@@ -96,7 +96,7 @@ Acceptance:
 
 ## Stage 3: Small Independent Strategy Utilities
 
-Status: in progress on 2026-06-02. See
+Status: closed on 2026-06-02. See
 `docs/STRATEGY_INTERNAL_STAGE3_UTILITIES_AUDIT.md`.
 
 Goal: add narrow, high-value helpers that do not require the full broker model.

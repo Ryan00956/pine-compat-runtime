@@ -9,6 +9,9 @@ const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.netprofit",
     "strategy.equity",
     "strategy.closedtrades",
+    "strategy.wintrades",
+    "strategy.losstrades",
+    "strategy.eventrades",
     "strategy.opentrades",
 ];
 

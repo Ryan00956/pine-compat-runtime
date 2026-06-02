@@ -1905,6 +1905,115 @@ plot(strategy.opentrades)
 }
 
 #[test]
+fn strategy_trade_outcome_count_variables_follow_closed_trade_profits() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("trade outcome counts")
+if bar_index == 0
+    strategy.entry("W", strategy.long, qty=1)
+if bar_index == 2
+    strategy.close("W")
+if bar_index == 3
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index == 5
+    strategy.close("L")
+if bar_index == 6
+    strategy.entry("E", strategy.long, qty=1)
+if bar_index == 8
+    strategy.close("E")
+plot(strategy.wintrades)
+plot(strategy.losstrades)
+plot(strategy.eventrades)
+plot(strategy.closedtrades)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar(1.0),
+            bar(2.0),
+            bar(3.0),
+            bar(4.0),
+            bar(4.0),
+            bar(2.0),
+            bar(3.0),
+            bar(5.0),
+            bar(5.0),
+        ],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(1),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(1),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(1),
+        ]
+    );
+    assert_eq!(
+        result.plots[3].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(2),
+            PineValue::Int(2),
+            PineValue::Int(2),
+            PineValue::Int(3),
+        ]
+    );
+    let strategy = result.strategy.as_ref().expect("strategy result");
+    assert_eq!(strategy.trades.len(), 3);
+    assert_eq!(strategy.trades[0].profit, 1.0);
+    assert_eq!(strategy.trades[1].profit, -2.0);
+    assert_eq!(strategy.trades[2].profit, 0.0);
+}
+
+#[test]
 fn strategy_trade_count_variables_observe_pending_exit_on_next_bar() {
     let source = SourceFile::new(
         "strategy.pine",

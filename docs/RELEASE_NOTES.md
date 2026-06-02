@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 3 Slice 1 trade outcome count variables.
+  `strategy.wintrades`, `strategy.losstrades`, and `strategy.eventrades` are
+  read-only strategy-mode series int counts derived from the current closed
+  trade list by positive, negative, and zero realized profit. Rich trade
+  namespace functions and broader reporting metrics remain unsupported, and the
+  public strategy output shape is unchanged.
 - Added Strategy Internal Stage 3 Slice 0 `strategy.close_all()` support for
   the current one-net-long broker. Strategy-mode scripts can close the current
   supported long position at the current bar close without naming the entry id;

@@ -512,6 +512,18 @@ fn accepts_supported_strategy_trade_count_interactions_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_trade_outcome_counts_fixture() {
+    assert_strategy_state_supported_fixture(
+        "tests/fixtures/sema/supported_strategy_trade_outcome_counts.pine",
+        &[
+            "strategy.wintrades",
+            "strategy.losstrades",
+            "strategy.eventrades",
+        ],
+    );
+}
+
+#[test]
 fn reports_strategy_close_indicator_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_close_indicator.pine",
@@ -961,6 +973,9 @@ fn assert_strategy_state_mode_fixture(path: &str) {
         "strategy.netprofit",
         "strategy.equity",
         "strategy.closedtrades",
+        "strategy.wintrades",
+        "strategy.losstrades",
+        "strategy.eventrades",
         "strategy.opentrades",
     ];
 
@@ -1011,11 +1026,7 @@ fn assert_strategy_state_unsupported_fixture(path: &str) {
     let text = fs::read_to_string(&path).expect("fixture should be readable");
     let source = SourceFile::new(path.display().to_string(), text);
     let analysis = analyze_source(&source);
-    let variables = [
-        "strategy.max_drawdown",
-        "strategy.wintrades",
-        "strategy.losstrades",
-    ];
+    let variables = ["strategy.max_drawdown"];
 
     for variable in variables {
         assert!(

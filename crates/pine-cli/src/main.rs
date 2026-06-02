@@ -1037,6 +1037,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_trade_counts.pine",
             ),
             (
+                "runtime_strategy_trade_outcome_counts.json",
+                "tests/fixtures/runtime/strategy_trade_outcome_counts.pine",
+            ),
+            (
                 "runtime_strategy_exit_trade_counts.json",
                 "tests/fixtures/runtime/strategy_exit_trade_counts.pine",
             ),
@@ -1293,6 +1297,9 @@ mod tests {
             "tests/fixtures/runtime/strategy_exit_loss.pine" => {
                 include_str!("../../../tests/fixtures/runtime/strategy_exit_loss_bars.csv")
             }
+            "tests/fixtures/runtime/strategy_trade_outcome_counts.pine" => include_str!(
+                "../../../tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv"
+            ),
             "tests/fixtures/runtime/strategy_exit_profit_loss_interactions.pine" => include_str!(
                 "../../../tests/fixtures/runtime/strategy_exit_profit_loss_interactions_bars.csv"
             ),

@@ -91,8 +91,10 @@ price while long. `strategy.openprofit` is `(close - avg_price) * size` while
 long and `0` when flat. `strategy.netprofit` sums realized closed-trade profit.
 `strategy.equity` equals `initial_capital + strategy.netprofit +
 strategy.openprofit`. `strategy.closedtrades` is the number of closed trades
-recorded by the broker, and `strategy.opentrades` is `1` while the supported
-long position is open and `0` when flat. Supported `strategy.entry` and
+recorded by the broker. `strategy.wintrades`, `strategy.losstrades`, and
+`strategy.eventrades` count closed trades whose realized profit is positive,
+negative, or zero. `strategy.opentrades` is `1` while the supported long
+position is open and `0` when flat. Supported `strategy.entry` and
 `strategy.close` calls mutate broker state immediately, so later statements on
 the same bar see the updated strategy state values. Pending `strategy.exit`
 fills are evaluated after script statements on a historical bar, so script
