@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 1 closed-trade `size` and `profit`
+  field functions. They use the same zero-based `trade_num` contract as the
+  existing closed-trade field subset, return `na` for invalid or out-of-range
+  indexes, and keep the public runtime output shape unchanged. Open-trade
+  namespaces, commission, runup/drawdown, ids, times, and richer reporting
+  metrics remain unsupported.
 - Added Strategy Internal Stage 7 Slice 0 closed-trade field functions:
   `strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
   `strategy.closedtrades.entry_bar_index`, and

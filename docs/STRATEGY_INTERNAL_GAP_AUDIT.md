@@ -348,16 +348,16 @@ read-only script variables.
 Current state: `strategy.closedtrades` and `strategy.opentrades` are count
 variables. Stage 7 Slice 0 also supports script-visible
 `strategy.closedtrades.entry_price()`, `.exit_price()`, `.entry_bar_index()`,
-and `.exit_bar_index()` over the current closed-trade list without public
-runtime schema expansion. Other namespace functions are unsupported.
+`.exit_bar_index()`, `.size()`, and `.profit()` over the current closed-trade
+list without public runtime schema expansion. Other namespace functions are
+unsupported.
 
 Missing internal behavior:
 
 - `strategy.opentrades.entry_id()`, `.entry_price()`, `.entry_bar_index()`,
   `.entry_time()`, `.size()`, `.profit()`, `.commission()`, runup, and drawdown;
 - `strategy.closedtrades.entry_*()` and `.exit_*()` fields beyond the supported
-  price/bar-index subset, plus `.size()`, `.profit()`, `.commission()`, runup,
-  and drawdown;
+  price/bar-index subset, plus `.commission()`, runup, and drawdown;
 - indexed trade access;
 - open-trade and closed-trade records with enough retained metadata.
 
@@ -367,6 +367,10 @@ First slice closed: closed-trade `entry_price`, `exit_price`,
 `entry_bar_index`, and `exit_bar_index` for the current closed-trade list are
 script-variable only. Public JSON, Python, and WASM runtime schema remains
 unchanged.
+
+Second slice closed: closed-trade `size` and `profit` follow the same
+script-variable-only, zero-based `trade_num` contract without changing public
+runtime schema.
 
 ### 13. Risk Management
 

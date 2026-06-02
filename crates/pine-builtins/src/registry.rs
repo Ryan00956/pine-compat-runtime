@@ -213,6 +213,8 @@ mod tests {
             "strategy.closedtrades.exit_price",
             "strategy.closedtrades.entry_bar_index",
             "strategy.closedtrades.exit_bar_index",
+            "strategy.closedtrades.size",
+            "strategy.closedtrades.profit",
         ] {
             let signature = get_phase_1_builtin(name).expect("closed trade field signature");
             assert_eq!(signature.params.len(), 1, "{name}");

@@ -1,6 +1,6 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
-Status: in progress. Slice 0 closed on 2026-06-02.
+Status: in progress. Slices 0 and 1 closed on 2026-06-02.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -39,9 +39,29 @@ Still unsupported:
 
 - all `strategy.opentrades.*` namespace functions;
 - closed-trade field functions beyond `entry_price`, `exit_price`,
-  `entry_bar_index`, and `exit_bar_index`;
-- runup, drawdown, commission, size, ids, times, and richer reporting metrics;
+  `entry_bar_index`, `exit_bar_index`, `size`, and `profit`;
+- runup, drawdown, commission, ids, times, and richer reporting metrics;
 - public trade namespace schema expansion.
+
+## Slice 1: Closed Trade Size And Profit Functions
+
+Closed on 2026-06-02.
+
+Supported script-visible functions:
+
+- `strategy.closedtrades.size(trade_num)`;
+- `strategy.closedtrades.profit(trade_num)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- `trade_num` follows the same zero-based integer index contract as Slice 0;
+- missing, negative, out-of-range, or non-integer indexes return `na`;
+- `size` returns the closed trade's absolute filled quantity in the current
+  long-only subset;
+- `profit` returns the closed trade's realized profit;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
+  output shape with no new top-level fields.
 
 ## Remaining Stage 7 Work
 

@@ -215,7 +215,7 @@ Acceptance:
 
 ## Stage 7: Trade Records, Costs, And Account Model
 
-Status: in progress. Slice 0 closed on 2026-06-02; see
+Status: in progress. Slices 0 and 1 closed on 2026-06-02; see
 `docs/STRATEGY_INTERNAL_STAGE7_TRADE_RECORDS_AUDIT.md`.
 
 Goal: enrich strategy reporting and accounting without jumping directly to a
@@ -242,8 +242,8 @@ Acceptance:
 
 - Script-variable support and public-output decisions are documented before
   implementation.
-- Slice 0 keeps the closed-trade field functions script-visible only and does
-  not expand public CLI/Python/WASM runtime schema.
+- Closed-trade field slices keep their functions script-visible only and do not
+  expand public CLI/Python/WASM runtime schema.
 - Profit, equity, and trade-count behavior remain internally consistent when
   costs or account sizing are introduced.
 - Existing strategy fixtures either remain unchanged or are intentionally

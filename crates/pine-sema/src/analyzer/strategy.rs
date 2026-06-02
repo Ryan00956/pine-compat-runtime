@@ -20,6 +20,8 @@ const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.closedtrades.exit_price",
     "strategy.closedtrades.entry_bar_index",
     "strategy.closedtrades.exit_bar_index",
+    "strategy.closedtrades.size",
+    "strategy.closedtrades.profit",
 ];
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

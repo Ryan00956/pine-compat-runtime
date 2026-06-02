@@ -262,9 +262,11 @@ fn runs_strategy_closedtrades_fields_from_csv_to_json() {
     )
     .expect("strategy closed trade fields script should run");
 
-    assert!(output.contains("\"values\":[null,2,2,2]"));
-    assert!(output.contains("\"values\":[null,1,1,1]"));
+    assert!(output.contains("\"values\":[null,null,2,2]"));
+    assert!(output.contains("\"values\":[null,null,3,3]"));
     assert!(output.contains("\"values\":[null,null,null,null]"));
+    assert!(output.contains("\"profit\":2"));
+    assert!(output.contains("\"qty\":2"));
     assert!(output.contains("\"trades\":["));
     assert!(!output.contains("closedTrades"));
     assert!(!output.contains("openTrades"));

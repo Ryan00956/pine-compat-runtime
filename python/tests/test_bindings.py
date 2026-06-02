@@ -364,15 +364,19 @@ def test_run_script_returns_strategy_closedtrades_field_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, 2.0, 2.0, 2.0],
-        [None, 2.0, 2.0, 2.0],
-        [None, 1, 1, 1],
-        [None, 1, 1, 1],
+        [None, None, 2.0, 2.0],
+        [None, None, 3.0, 3.0],
+        [None, None, 1, 1],
+        [None, None, 2, 2],
+        [None, None, 2.0, 2.0],
+        [None, None, 2.0, 2.0],
         [None, None, None, None],
     ]
     assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
     assert result["strategy"]["trades"][0]["entryPrice"] == 2.0
-    assert result["strategy"]["trades"][0]["exitPrice"] == 2.0
+    assert result["strategy"]["trades"][0]["exitPrice"] == 3.0
+    assert result["strategy"]["trades"][0]["qty"] == 2.0
+    assert result["strategy"]["trades"][0]["profit"] == 2.0
     assert "closedTrades" not in result["strategy"]
     assert "openTrades" not in result["strategy"]
 
