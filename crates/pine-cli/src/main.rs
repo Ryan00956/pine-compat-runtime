@@ -79,6 +79,7 @@ mod tests {
                 || signature.name == "strategy.closedtrades.exit_bar_index"
                 || signature.name == "strategy.closedtrades.entry_time"
                 || signature.name == "strategy.closedtrades.exit_time"
+                || signature.name == "strategy.closedtrades.commission"
                 || signature.name == "strategy.closedtrades.size"
                 || signature.name == "strategy.closedtrades.profit"
                 || signature.name == "alert"

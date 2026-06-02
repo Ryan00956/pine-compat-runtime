@@ -127,11 +127,13 @@ The first supported closed-trade namespace functions are
 `strategy.closedtrades.size(trade_num)` and
 `strategy.closedtrades.profit(trade_num)`. Stage 7 Slice 2 adds
 `strategy.closedtrades.entry_time(trade_num)` and
-`strategy.closedtrades.exit_time(trade_num)`. They read the current
-closed-trade list with a zero-based integer `trade_num`; missing, negative,
-out-of-range, or non-integer indexes return `na`. These functions are
-script-observable only through ordinary series outputs and do not add public
-runtime JSON, Python, or WASM fields.
+`strategy.closedtrades.exit_time(trade_num)`. Stage 7 Slice 3 adds
+`strategy.closedtrades.commission(trade_num)`, which returns `0.0` for closed
+trades because the current account model has no commission calculation. They
+read the current closed-trade list with a zero-based integer `trade_num`;
+missing, negative, out-of-range, or non-integer indexes return `na`. These
+functions are script-observable only through ordinary series outputs and do not
+add public runtime JSON, Python, or WASM fields.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants
@@ -199,8 +201,8 @@ top-level runtime schema fields.
 Phase O does not add public
 open-trade records. Stage 7 adds only script-visible closed-trade
 `entry_price`, `exit_price`, `entry_bar_index`, `exit_bar_index`, `entry_time`,
-`exit_time`, `size`, and `profit` namespace functions; it does not add public
-trade-namespace fields. The prior Phase L boundary is
+`exit_time`, `commission`, `size`, and `profit` namespace functions; it does
+not add public trade-namespace fields. The prior Phase L boundary is
 summarized in
 `docs/PHASE_L_AUDIT.md`; the closed Phase M and Phase N exit subsets are
 summarized in `docs/PHASE_M_AUDIT.md` and `docs/PHASE_N_AUDIT.md`; the Phase R

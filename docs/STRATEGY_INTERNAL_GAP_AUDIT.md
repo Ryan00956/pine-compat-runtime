@@ -348,16 +348,16 @@ read-only script variables.
 Current state: `strategy.closedtrades` and `strategy.opentrades` are count
 variables. Stage 7 Slice 0 also supports script-visible
 `strategy.closedtrades.entry_price()`, `.exit_price()`, `.entry_bar_index()`,
-`.exit_bar_index()`, `.entry_time()`, `.exit_time()`, `.size()`, and
-`.profit()` over the current closed-trade list without public runtime schema
-expansion. Other namespace functions are unsupported.
+`.exit_bar_index()`, `.entry_time()`, `.exit_time()`, `.commission()`,
+`.size()`, and `.profit()` over the current closed-trade list without public
+runtime schema expansion. Other namespace functions are unsupported.
 
 Missing internal behavior:
 
 - `strategy.opentrades.entry_id()`, `.entry_price()`, `.entry_bar_index()`,
   `.entry_time()`, `.size()`, `.profit()`, `.commission()`, runup, and drawdown;
 - `strategy.closedtrades.entry_*()` and `.exit_*()` fields beyond the supported
-  price/bar-index/time subset, plus `.commission()`, runup, and drawdown;
+  price/bar-index/time subset, plus runup and drawdown;
 - indexed trade access;
 - open-trade and closed-trade records with enough retained metadata.
 
@@ -374,6 +374,9 @@ runtime schema.
 
 Third slice closed: closed-trade `entry_time` and `exit_time` expose the
 already-retained timestamps under the same script-variable-only contract.
+
+Fourth slice closed: closed-trade `commission` returns `0.0` under the current
+no-commission account model and keeps the same script-variable-only contract.
 
 ### 13. Risk Management
 

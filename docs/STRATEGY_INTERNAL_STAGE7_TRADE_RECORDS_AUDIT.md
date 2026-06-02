@@ -1,6 +1,6 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
-Status: in progress. Slices 0, 1, and 2 closed on 2026-06-02.
+Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -39,9 +39,9 @@ Still unsupported:
 
 - all `strategy.opentrades.*` namespace functions;
 - closed-trade field functions beyond `entry_price`, `exit_price`,
-  `entry_bar_index`, `exit_bar_index`, `entry_time`, `exit_time`, `size`, and
-  `profit`;
-- runup, drawdown, commission, ids, and richer reporting metrics;
+  `entry_bar_index`, `exit_bar_index`, `entry_time`, `exit_time`,
+  `commission`, `size`, and `profit`;
+- runup, drawdown, ids, and richer reporting metrics;
 - public trade namespace schema expansion.
 
 ## Slice 1: Closed Trade Size And Profit Functions
@@ -84,9 +84,28 @@ Contract:
 - public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
   output shape with no new top-level fields.
 
+## Slice 3: Closed Trade Commission Function
+
+Closed on 2026-06-02.
+
+Supported script-visible function:
+
+- `strategy.closedtrades.commission(trade_num)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- `trade_num` follows the same zero-based integer index contract as Slices 0,
+  1, and 2;
+- missing, negative, out-of-range, or non-integer indexes return `na`;
+- `commission` returns `0.0` for closed trades because the current account model
+  has no commission calculation;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
+  output shape with no new top-level fields.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting
-addition, such as commission/slippage modeling or another closed-trade field,
-only after documenting whether the behavior is script-only or public-output
-visible.
+addition, such as real commission/slippage modeling, runup/drawdown, ids, or
+another closed-trade field, only after documenting whether the behavior is
+script-only or public-output visible.

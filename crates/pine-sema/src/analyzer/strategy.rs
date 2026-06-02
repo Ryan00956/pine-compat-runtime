@@ -22,6 +22,7 @@ const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.closedtrades.exit_bar_index",
     "strategy.closedtrades.entry_time",
     "strategy.closedtrades.exit_time",
+    "strategy.closedtrades.commission",
     "strategy.closedtrades.size",
     "strategy.closedtrades.profit",
 ];

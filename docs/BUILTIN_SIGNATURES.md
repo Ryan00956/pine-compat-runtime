@@ -271,6 +271,7 @@ strategy.closedtrades.entry_bar_index(trade_num: series/simple numeric) -> serie
 strategy.closedtrades.exit_bar_index(trade_num: series/simple numeric) -> series int
 strategy.closedtrades.entry_time(trade_num: series/simple numeric) -> series int
 strategy.closedtrades.exit_time(trade_num: series/simple numeric) -> series int
+strategy.closedtrades.commission(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.size(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.profit(trade_num: series/simple numeric) -> series float
 ```
@@ -311,11 +312,13 @@ unsupported.
 `strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
 `strategy.closedtrades.entry_bar_index`, and
 `strategy.closedtrades.exit_bar_index`, `strategy.closedtrades.entry_time`,
-`strategy.closedtrades.exit_time`, `strategy.closedtrades.size`, and
-`strategy.closedtrades.profit` are read-only strategy-mode field functions over
-the current closed-trade list. `trade_num` is a zero-based integer index;
-missing, negative, out-of-range, or non-integer indexes return `na`. They do
-not add public runtime schema fields. Other closed-trade fields and all
+`strategy.closedtrades.exit_time`, `strategy.closedtrades.commission`,
+`strategy.closedtrades.size`, and `strategy.closedtrades.profit` are read-only
+strategy-mode field functions over the current closed-trade list. `trade_num`
+is a zero-based integer index; missing, negative, out-of-range, or non-integer
+indexes return `na`. `commission` returns `0.0` in the current no-commission
+account model. They do not add public runtime schema fields. Other closed-trade
+fields and all
 open-trade namespace functions remain unsupported.
 
 ## Inputs

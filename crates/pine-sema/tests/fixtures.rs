@@ -508,6 +508,7 @@ fn accepts_supported_strategy_closedtrades_fields_fixture() {
             "strategy.closedtrades.exit_bar_index",
             "strategy.closedtrades.entry_time",
             "strategy.closedtrades.exit_time",
+            "strategy.closedtrades.commission",
             "strategy.closedtrades.size",
             "strategy.closedtrades.profit",
         ],
@@ -578,7 +579,7 @@ fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
         "tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine",
         &[
             "strategy.risk.max_drawdown",
-            "strategy.closedtrades.commission",
+            "strategy.closedtrades.max_runup",
             "strategy.opentrades.entry_price",
         ],
     );

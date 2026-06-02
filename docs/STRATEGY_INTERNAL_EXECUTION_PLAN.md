@@ -215,7 +215,7 @@ Acceptance:
 
 ## Stage 7: Trade Records, Costs, And Account Model
 
-Status: in progress. Slices 0, 1, and 2 closed on 2026-06-02; see
+Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; see
 `docs/STRATEGY_INTERNAL_STAGE7_TRADE_RECORDS_AUDIT.md`.
 
 Goal: enrich strategy reporting and accounting without jumping directly to a

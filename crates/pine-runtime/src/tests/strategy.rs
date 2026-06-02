@@ -2598,6 +2598,7 @@ plot(strategy.closedtrades.entry_bar_index(0))
 plot(strategy.closedtrades.exit_bar_index(0))
 plot(strategy.closedtrades.entry_time(0))
 plot(strategy.closedtrades.exit_time(0))
+plot(strategy.closedtrades.commission(0))
 plot(strategy.closedtrades.size(0))
 plot(strategy.closedtrades.profit(0))
 plot(strategy.closedtrades.entry_price(1))
@@ -2669,13 +2670,17 @@ plot(strategy.closedtrades.entry_price(0.5))
     );
     assert_eq!(
         result.plots[6].values,
-        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(2.0),]
+        vec![PineValue::Na, PineValue::Float(0.0), PineValue::Float(0.0),]
     );
     assert_eq!(
         result.plots[7].values,
         vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(2.0),]
     );
-    for values in result.plots[8..].iter().map(|plot| &plot.values) {
+    assert_eq!(
+        result.plots[8].values,
+        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(2.0),]
+    );
+    for values in result.plots[9..].iter().map(|plot| &plot.values) {
         assert_eq!(values, &vec![PineValue::Na, PineValue::Na, PineValue::Na]);
     }
 }

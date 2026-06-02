@@ -31,6 +31,7 @@ impl<'a> HistoricalRuntime<'a> {
             | "strategy.closedtrades.exit_bar_index"
             | "strategy.closedtrades.entry_time"
             | "strategy.closedtrades.exit_time"
+            | "strategy.closedtrades.commission"
             | "strategy.closedtrades.size"
             | "strategy.closedtrades.profit" => self.eval_strategy_closed_trade_field(callee, args),
             _ => return None,
@@ -63,6 +64,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
             "strategy.closedtrades.entry_time" => PineValue::Int(trade.entry_time),
             "strategy.closedtrades.exit_time" => PineValue::Int(trade.exit_time),
+            "strategy.closedtrades.commission" => PineValue::Float(0.0),
             "strategy.closedtrades.size" => PineValue::Float(trade.qty),
             "strategy.closedtrades.profit" => PineValue::Float(trade.profit),
             _ => PineValue::Na,
