@@ -935,14 +935,57 @@ Out of scope until separately designed:
 - Public pending-order records, reservation fields, remaining-quantity fields,
   exit-reason fields, or a runtime schema bump.
 
+## Phase X: Strategy Exit Bracket Reservations
+
+Goal: extend the deterministic multiple-exit reservation subset to supported
+one-downside/one-upside bracket exits without changing the public strategy
+output schema.
+
+Status: closed for the current fixture-backed explicit fixed `qty` or
+`qty_percent` bracket reservation subset. See `docs/PHASE_X_AUDIT.md`.
+Execution playbook: `docs/PHASE_X_EXECUTION_PLAN.md`.
+
+Supported scope:
+
+- Strategy-mode-only multiple pending `strategy.exit` reservations for the
+  current one-net-long, no-pyramiding broker.
+- Support different `id + from_entry` identities for supported bracket forms
+  only when each bracket has explicit fixed `qty` or `qty_percent`.
+- Supported bracket forms remain `stop + limit`, `stop + profit`,
+  `loss + limit`, and `loss + profit`.
+- Single-trigger reservations and bracket reservations can share the same
+  reservation pool for the current matching long entry.
+- Resolve reservations at placement time, clamp new reservations to remaining
+  unreserved position quantity, and reject zero-reservation placements without
+  changing existing pending exits.
+- Replace same-identity pending exits after releasing the old reservation.
+- Fill same-side touched candidates in placement order, process downside
+  candidates only when downside and upside candidates are both touched on the
+  same eligible bar, and treat a both-leg bracket touch as that bracket's
+  downside candidate.
+- Keep the existing strategy result shape and runtime `schemaVersion: 3`.
+
+Out of scope until separately designed:
+
+- Calls that combine `qty` and `qty_percent`.
+- Multiple pending exits for omitted-quantity full-position exits.
+- Omitted-quantity bracket reservations.
+- Multiple pending trailing reservations.
+- Reservation behavior outside explicit fixed `qty` or `qty_percent`
+  single-trigger and bracket exits.
+- Missing-entry pre-placement.
+- Multiple entries, pyramiding, short exposure, and reversals.
+- Public pending-order records, reservation fields, remaining-quantity fields,
+  bracket-leg fields, exit-reason fields, or a runtime schema bump.
+
 ## Backlog Priority
 
 Recommended order from the current state:
 
 1. Keep strategy maintenance narrow and fixture-backed. The next strategy work
    should target one deferred broker tail at a time, such as missing-entry
-   pre-placement, omitted-quantity multiple exits, bracket/trailing
-   reservations, or short/pyramiding behavior, with semantic, runtime,
+   pre-placement, omitted-quantity multiple exits, trailing reservations, or
+   short/pyramiding behavior, with semantic, runtime,
    incremental, host, conformance, and closeout evidence before any
    compatibility claim widens.
 2. Phase J maintenance only when a small, fixture-backed change widens the

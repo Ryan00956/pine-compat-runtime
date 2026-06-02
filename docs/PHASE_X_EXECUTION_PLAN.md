@@ -1120,6 +1120,35 @@ Exit criteria:
   matrix snapshot agree.
 - No unsupported broker tail is accidentally claimed.
 
+### Slice 6 Implementation Record
+
+Implementation:
+
+- Added `docs/PHASE_X_AUDIT.md` with supported surface, unsupported
+  boundaries, public output shape, fixture evidence, host evidence,
+  documentation evidence, focused verification, and pending release-gate
+  status.
+- Updated `README.md`, `docs/CONFORMANCE.md`,
+  `docs/EXECUTION_SEMANTICS.md`, `docs/SEMANTIC_MODEL.md`,
+  `docs/LONG_TERM_EXECUTION_PLAN.md`, and `docs/RELEASE_NOTES.md` to align on
+  the explicit fixed-`qty` or `qty_percent` single-trigger/bracket reservation
+  subset.
+- Marked Phase X closed in the long-term roadmap while leaving missing-entry
+  pre-placement, omitted-quantity multiple exits, trailing reservations,
+  short/pyramiding behavior, richer broker APIs, and public pending/reservation
+  fields deferred.
+- Kept `strategy.exit` `partial`, broad `strategy.*` `unsupported`, and runtime
+  output at `schemaVersion: 3`.
+
+Verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-cli matrix
+cargo test -p pine-cli matrix_output_matches_golden_snapshot
+git diff --check
+```
+
 ## Slice 7: Release Verification
 
 Goal: run the canonical release gate and leave the workspace ready for a narrow

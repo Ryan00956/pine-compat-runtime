@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Added Phase X `strategy.exit` bracket reservations for explicit fixed `qty`
+  or `qty_percent` one-downside/one-upside brackets on the current matching
+  long entry. Different `id + from_entry` identities can keep multiple internal
+  pending bracket reservations, and bracket reservations can share the
+  reservation pool with Phase W single-trigger reservations. Same identities
+  replace the previous reservation after releasing it; new reservations resolve
+  at placement time, clamp to remaining unreserved position quantity, and are
+  rejected with strategy diagnostics when no quantity remains. Same-side
+  touched candidates fill in placement order, mixed downside/upside same-bar
+  touches process downside candidates only, and a both-leg bracket touch
+  contributes the bracket's downside candidate. Public runtime output remains
+  `schemaVersion: 3` and continues to expose only `orders`, `trades`,
+  `position`, `equity`, and `diagnostics` under `strategy`. Omitted-quantity
+  bracket reservations, trailing reservations, full-position multiple-pending
+  exits, `qty + qty_percent`, missing-entry pre-placement, public pending-order
+  records, pyramiding, shorts, and richer broker behavior remain unsupported.
 - Added Phase W `strategy.exit` quantity reservations for explicit fixed
   `qty` or `qty_percent` single-trigger exits on the current matching long
   entry. Different `id + from_entry` identities can keep multiple internal
