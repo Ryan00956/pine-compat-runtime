@@ -1842,15 +1842,111 @@ fn invalid_fixed_qty_bracket_replacement_preserves_existing_pending_bracket() {
 }
 
 #[test]
-fn fixed_qty_bracket_replaces_incompatible_single_trigger_reservation_pool() {
+fn fixed_qty_bracket_shares_reservation_pool_with_single_trigger() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 95.0, 1.0, 0);
 
     broker.place_exit_bracket_qty("XB".to_owned(), "L".to_owned(), 94.0, 110.0, 1.0, 1);
 
-    assert_eq!(pending_exit_count(&broker), 1);
-    assert!(broker.pending_exit_by_identity("XS", "L").is_none());
+    assert_eq!(pending_exit_count(&broker), 2);
+    assert_eq!(pending_exit_ids(&broker), vec!["XS", "XB"]);
+    assert!(broker.pending_exit_by_identity("XS", "L").is_some());
     assert!(broker.pending_exit_by_identity("XB", "L").is_some());
+    assert_eq!(
+        broker.pending_exits.total_reserved_for_entry("L", None),
+        2.0
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn mixed_stop_and_bracket_downside_fill_in_placement_order() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 95.0, 0.5, 0);
+    broker.place_exit_bracket_qty("XB".to_owned(), "L".to_owned(), 96.0, 111.0, 0.75, 0);
+
+    broker.evaluate_pending_exits(1, 20, 110.0, 94.0);
+
+    assert_eq!(broker.orders[1].id, "XS");
+    assert_eq!(broker.orders[1].qty, 0.5);
+    assert_eq!(broker.orders[1].price, 95.0);
+    assert_eq!(broker.orders[2].id, "XB");
+    assert_eq!(broker.orders[2].qty, 0.75);
+    assert_eq!(broker.orders[2].price, 96.0);
+    assert_eq!(broker.position_size, 0.75);
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn mixed_limit_and_bracket_upside_fill_in_placement_order() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit_qty("XL".to_owned(), "L".to_owned(), 110.0, 0.5, 0);
+    broker.place_exit_bracket_qty("XB".to_owned(), "L".to_owned(), 95.0, 111.0, 0.75, 0);
+
+    broker.evaluate_pending_exits(1, 20, 112.0, 97.0);
+
+    assert_eq!(broker.orders[1].id, "XL");
+    assert_eq!(broker.orders[1].qty, 0.5);
+    assert_eq!(broker.orders[1].price, 110.0);
+    assert_eq!(broker.orders[2].id, "XB");
+    assert_eq!(broker.orders[2].qty, 0.75);
+    assert_eq!(broker.orders[2].price, 111.0);
+    assert_eq!(broker.position_size, 0.75);
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn mixed_downside_candidate_wins_over_bracket_upside_candidate() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket_qty("XB".to_owned(), "L".to_owned(), 90.0, 111.0, 0.75, 0);
+    broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 94.0, 0.5, 0);
+
+    broker.evaluate_pending_exits(1, 20, 112.0, 93.0);
+
+    assert_eq!(broker.orders[1].id, "XS");
+    assert_eq!(broker.orders[1].qty, 0.5);
+    assert_eq!(broker.orders[1].price, 94.0);
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.position_size, 1.5);
+    assert_eq!(pending_exit_ids(&broker), vec!["XB"]);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn same_identity_single_trigger_and_bracket_replacement_releases_reservation() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("X".to_owned(), "L".to_owned(), 95.0, 1.5, 0);
+
+    broker.place_exit_bracket_qty("X".to_owned(), "L".to_owned(), 94.0, 110.0, 2.0, 1);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    let pending = broker
+        .pending_exit_by_identity("X", "L")
+        .expect("replacement should exist");
+    assert_eq!(
+        pending.trigger,
+        PendingExitTrigger::Bracket {
+            downside: 94.0,
+            upside: 110.0,
+        }
+    );
+    assert_eq!(pending.reserved_quantity, 2.0);
+    assert_eq!(pending.last_update_bar_index, 1);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn close_long_cancels_mixed_single_trigger_and_bracket_reservations() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 95.0, 0.5, 0);
+    broker.place_exit_bracket_qty("XB".to_owned(), "L".to_owned(), 94.0, 110.0, 0.75, 0);
+
+    broker.close_long("L".to_owned(), 1, 20, 105.0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.trades.len(), 1);
     assert!(broker.diagnostics.is_empty());
 }
 

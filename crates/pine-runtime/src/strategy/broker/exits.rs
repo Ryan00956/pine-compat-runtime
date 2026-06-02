@@ -218,11 +218,10 @@ impl PendingExitBook {
             .find(|pending_exit| pending_exit.id == id && pending_exit.from_entry == from_entry)
     }
 
-    pub(super) fn other_exits_are_reservations_in_family(
+    pub(super) fn other_exits_are_supported_reservations(
         &self,
         from_entry: &str,
         released_identity: Option<(&str, &str)>,
-        family: PendingExitReservationFamily,
     ) -> bool {
         self.exits
             .iter()
@@ -234,7 +233,11 @@ impl PendingExitBook {
             })
             .all(|pending_exit| {
                 pending_exit.multiple_reservation
-                    && pending_exit.trigger.reservation_family() == family
+                    && matches!(
+                        pending_exit.trigger.reservation_family(),
+                        PendingExitReservationFamily::SingleTrigger
+                            | PendingExitReservationFamily::Bracket
+                    )
             })
     }
 
@@ -930,15 +933,11 @@ impl BrokerState {
         };
         let released_identity =
             multiple_reservation_family.map(|_| (id.as_str(), from_entry.as_str()));
-        let other_exits_are_same_reservation_family =
-            multiple_reservation_family.is_some_and(|family| {
-                self.pending_exits.other_exits_are_reservations_in_family(
-                    &from_entry,
-                    released_identity,
-                    family,
-                )
-            });
-        let available_quantity = if other_exits_are_same_reservation_family {
+        let other_exits_are_supported_reservations = multiple_reservation_family.is_some()
+            && self
+                .pending_exits
+                .other_exits_are_supported_reservations(&from_entry, released_identity);
+        let available_quantity = if other_exits_are_supported_reservations {
             self.pending_exits.available_unreserved_quantity(
                 self.position_size,
                 &from_entry,
@@ -977,7 +976,7 @@ impl BrokerState {
             multiple_reservation: multiple_reservation_family.is_some(),
             last_update_bar_index: bar_index,
         };
-        if multiple_reservation_family.is_some() && other_exits_are_same_reservation_family {
+        if multiple_reservation_family.is_some() && other_exits_are_supported_reservations {
             self.pending_exits.replace_or_append(pending_exit);
         } else {
             self.pending_exits.replace_all(pending_exit);

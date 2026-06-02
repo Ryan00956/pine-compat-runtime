@@ -1,0 +1,8 @@
+//@version=5
+strategy("Exit reservation bracket single downside precedence")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XB", "L", stop=0.25, limit=2, qty=0.75)
+    strategy.exit("XS", "L", stop=2.5, qty=0.5)
+plot(strategy.position_size)
+plot(strategy.netprofit)

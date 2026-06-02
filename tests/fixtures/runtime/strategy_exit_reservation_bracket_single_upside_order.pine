@@ -1,0 +1,8 @@
+//@version=5
+strategy("Exit reservation bracket single upside order")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XL", "L", limit=2, qty=0.5)
+    strategy.exit("XB", "L", stop=0.25, limit=2, qty=0.75)
+plot(strategy.position_size)
+plot(strategy.netprofit)

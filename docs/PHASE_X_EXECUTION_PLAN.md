@@ -940,6 +940,38 @@ Exit criteria:
 - Public strategy output and expression-time reads remain consistent with
   existing Phase M/N/R/S/U/V/W timing rules.
 
+### Slice 4 Implementation Record
+
+Decision: support mixed single-trigger and bracket reservation collections for
+the same matching long entry when every existing pending exit in that entry
+uses the Phase W/X explicit `qty` or `qty_percent` reservation path. This keeps
+both families on the same touched-candidate evaluation model and still excludes
+trailing and full-position exits from the multi-reservation path.
+
+Implementation:
+
+- Replaced the same-family placement gate with a supported-reservation gate:
+  existing pending exits may share the reservation pool when they are marked
+  `multiple_reservation` and classify as either `SingleTrigger` or `Bracket`.
+- Kept trailing and full-position exits on the single-effective-pending
+  replacement path.
+- Added broker tests for downside and upside placement order, mixed-side
+  downside precedence, same-identity single-trigger/bracket replacement, and
+  `strategy.close` cancellation of mixed reservations.
+- Added runtime fixtures and snapshots for mixed downside precedence, upside
+  placement order, replacement, and strategy state timing.
+
+Verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-runtime --test incremental
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+```
+
 ## Slice 5: Host Parity, Conformance, And Public Shape Guardrails
 
 Goal: prove the bracket-reservation subset through all host surfaces and align
