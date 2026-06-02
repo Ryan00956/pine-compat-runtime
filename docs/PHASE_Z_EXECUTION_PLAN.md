@@ -818,14 +818,37 @@ Exit criteria:
 
 ### Slice 5 Implementation Record
 
-Status: pending.
+Status: completed on 2026-06-02.
 
 Record:
 
-- Docs updated.
-- Audit evidence recorded.
-- Commands run and results.
-- Remaining unsupported broker tails.
+- Added `docs/PHASE_Z_AUDIT.md` with supported/unsupported boundaries,
+  broker-test evidence, runtime fixture/snapshot evidence, host parity evidence,
+  conformance/matrix evidence, and focused verification results.
+- Synchronized omitted-quantity boundary wording in:
+  - `README.md`;
+  - `docs/CONFORMANCE.md`;
+  - `docs/EXECUTION_SEMANTICS.md`;
+  - `docs/SEMANTIC_MODEL.md`;
+  - `docs/LONG_TERM_EXECUTION_PLAN.md`;
+  - `docs/RELEASE_NOTES.md`.
+- Updated `docs/LONG_TERM_EXECUTION_PLAN.md` with a closed Phase Z section and
+  removed omitted-quantity multiple exits from the next-backlog examples.
+- Remaining unsupported broker tails:
+  - omitted-quantity multiple pending reservations;
+  - missing-entry pre-placement;
+  - short exposure, reversals, pyramiding, and multiple simultaneous entries;
+  - public pending/reservation/remaining-quantity/trigger-side/activation/
+    exit-reason fields;
+  - richer order APIs and broker behavior, including `strategy.order`,
+    `strategy.cancel`, OCA APIs, commission, slippage, margin, realtime
+    strategy handoff, and intrabar path reconstruction.
+- Commands run:
+  - `rg -n "omitted-quantity bracket or trailing reservations|omitted-quantity brackets/trailing|omitted-quantity multiple exits|full-position multiple-pending exits|Multiple pending exits for omitted-quantity" README.md docs/CONFORMANCE.md docs/EXECUTION_SEMANTICS.md docs/SEMANTIC_MODEL.md docs/LONG_TERM_EXECUTION_PLAN.md docs/RELEASE_NOTES.md docs/PHASE_Z_AUDIT.md`
+  - `cargo fmt --check`
+  - `cargo test -p pine-cli matrix`
+  - `cargo test -p pine-cli matrix_output_matches_golden_snapshot`
+  - `git diff --check`
 
 ## Slice 6: Release Verification
 

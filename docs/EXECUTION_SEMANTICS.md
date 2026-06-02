@@ -144,9 +144,13 @@ stop/loss/trailing candidates and upside limit/profit candidates are both
 touched on the same eligible bar, only downside candidates fill on that bar in
 placement order; opposite-side candidates remain pending if a long position
 remains. If both legs of one bracket are touched on the same eligible bar, that
-bracket contributes its downside stop/loss candidate. Full-position exits and
-omitted-quantity brackets/trailing exits still use one-effective-pending
-replacement behavior. A trailing exit activates on a later eligible bar when
+bracket contributes its downside stop/loss candidate. Omitted-quantity
+full-position exits still use one-effective-pending replacement behavior across
+supported single-trigger, bracket, and trailing forms, even when the
+replacement uses a different `id + from_entry` identity. A later omitted
+full-position exit clears earlier explicit fixed-`qty` or `qty_percent`
+reservations for the current matching long entry. A trailing exit activates on
+a later eligible bar when
 `high >= activation_price`, sets its active stop to `high - offset_distance`,
 and does not fill on the activation bar. On later bars, an active trailing exit
 fills first when `low <= active_stop`; otherwise the active stop ratchets upward
@@ -157,7 +161,7 @@ filled exit appends exactly one `strategy.exit` order event with the absolute
 filled quantity, records a closed trade under the source entry id for that
 quantity, reduces or clears the current long position, and updates the normal
 position/equity snapshots. Phase M, Phase N, Phase R, Phase S, Phase U, Phase V,
-Phase W, Phase X, and Phase Y do not add public pending-order records,
+Phase W, Phase X, Phase Y, and Phase Z do not add public pending-order records,
 reservation fields, remaining-quantity fields, percent fields, bracket-leg
 metadata, trailing-state fields, activation fields, exit reason fields, or
 top-level runtime schema fields.
@@ -170,7 +174,8 @@ bracket subset is summarized in `docs/PHASE_R_AUDIT.md`; the Phase U fixed
 quantity subset is summarized in `docs/PHASE_U_AUDIT.md`; and the Phase V
 percent quantity subset is summarized in `docs/PHASE_V_AUDIT.md`; the Phase X
 bracket reservation subset is summarized in `docs/PHASE_X_AUDIT.md`; the Phase Y
-trailing reservation subset is summarized in `docs/PHASE_Y_AUDIT.md`.
+trailing reservation subset is summarized in `docs/PHASE_Y_AUDIT.md`; the Phase
+Z omitted-quantity boundary is summarized in `docs/PHASE_Z_AUDIT.md`.
 
 ## Alert Events
 

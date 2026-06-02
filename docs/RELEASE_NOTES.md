@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Closed Phase Z for the omitted-quantity `strategy.exit` boundary. Omitted
+  `qty` and omitted `qty_percent` exits keep full-position
+  one-effective-pending behavior across supported single-trigger, bracket, and
+  trailing forms, and a later omitted full-position exit clears earlier explicit
+  reservations for the current matching long entry. Runtime fixtures and
+  CLI/Python/WASM host tests cover the boundary. Omitted-quantity multiple
+  reservations, missing-entry pre-placement, public pending/reservation fields,
+  pyramiding, shorts, and richer broker behavior remain unsupported.
 - Added Phase Y `strategy.exit` trailing reservations for explicit fixed `qty`
   or `qty_percent` trailing exits on the current matching long entry. Supported
   trailing reservation forms remain `trail_price + trail_offset` and
@@ -13,9 +21,9 @@
   candidates before same-bar ratchets, and otherwise ratchet upward only. Public
   runtime output remains `schemaVersion: 3` and continues to expose only
   `orders`, `trades`, `position`, `equity`, and `diagnostics` under `strategy`.
-  Omitted-quantity trailing reservations, full-position multiple-pending exits,
-  `qty + qty_percent`, missing-entry pre-placement, public pending/trailing-state
-  records, pyramiding, shorts, and richer broker behavior remain unsupported.
+  Omitted-quantity multiple reservations, `qty + qty_percent`, missing-entry
+  pre-placement, public pending/trailing-state records, pyramiding, shorts, and
+  richer broker behavior remain unsupported.
 - Added Phase X `strategy.exit` bracket reservations for explicit fixed `qty`
   or `qty_percent` one-downside/one-upside brackets on the current matching
   long entry. Different `id + from_entry` identities can keep multiple internal
@@ -29,8 +37,8 @@
   contributes the bracket's downside candidate. Public runtime output remains
   `schemaVersion: 3` and continues to expose only `orders`, `trades`,
   `position`, `equity`, and `diagnostics` under `strategy`. Omitted-quantity
-  bracket reservations, full-position multiple-pending exits, `qty + qty_percent`,
-  missing-entry pre-placement, public pending-order
+  multiple reservations, `qty + qty_percent`, missing-entry pre-placement,
+  public pending-order
   records, pyramiding, shorts, and richer broker behavior remain unsupported.
 - Added Phase W `strategy.exit` quantity reservations for explicit fixed
   `qty` or `qty_percent` single-trigger exits on the current matching long
@@ -42,7 +50,7 @@
   mixed downside/upside same-bar touches process downside candidates only.
   Public runtime output remains `schemaVersion: 3` and continues to expose only
   `orders`, `trades`, `position`, `equity`, and `diagnostics` under
-  `strategy`. Full-position multiple-pending exits, `qty + qty_percent`,
+  `strategy`. Omitted-quantity multiple reservations, `qty + qty_percent`,
   missing-entry pre-placement, public pending-order records, pyramiding, shorts,
   and richer broker behavior remain unsupported.
 - Closed Phase V for the current fixture-backed `strategy.exit(...,

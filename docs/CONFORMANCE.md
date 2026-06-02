@@ -197,10 +197,15 @@ legs of one bracket are touched, that bracket contributes its downside
 candidate. Inactive trailing reservations activate on a later eligible bar and
 never fill on the activation bar; active trailing reservations fill as downside
 candidates before same-bar ratchets and otherwise ratchet upward only. `qty` and
-`qty_percent` in the same call remain unsupported, as do multiple pending exits
-outside this explicit fixed-`qty` or `qty_percent` single-trigger/bracket/trailing
-reservation subset, omitted-quantity bracket or trailing reservations,
-reservation behavior outside that subset, and missing-entry pre-placement.
+Phase Z closes the omitted-quantity boundary: omitted `qty` and omitted
+`qty_percent` keep full-position one-effective-pending behavior across
+supported single-trigger, bracket, and trailing forms, and a later omitted
+full-position exit clears earlier explicit reservations for the current
+matching long entry. `qty` and `qty_percent` in the same call remain
+unsupported, as do multiple pending exits outside this explicit fixed-`qty` or
+`qty_percent` single-trigger/bracket/trailing reservation subset, including
+omitted-quantity multiple reservations, reservation behavior outside that
+subset, and missing-entry pre-placement.
 
 The closed Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`. The
 closed Phase M boundary is summarized in `docs/PHASE_M_AUDIT.md`. The closed
@@ -212,7 +217,8 @@ fixture-backed bracket implementation is summarized in `docs/PHASE_R_AUDIT.md`.
 Phase U's fixed quantity subset is summarized in `docs/PHASE_U_AUDIT.md`. Phase
 V's percent quantity subset is summarized in `docs/PHASE_V_AUDIT.md`. Phase X's
 bracket reservation subset is summarized in `docs/PHASE_X_AUDIT.md`. Phase Y's
-trailing reservation subset is summarized in `docs/PHASE_Y_AUDIT.md`.
+trailing reservation subset is summarized in `docs/PHASE_Y_AUDIT.md`. Phase Z's
+omitted-quantity boundary is summarized in `docs/PHASE_Z_AUDIT.md`.
 
 ## Source Graph Host Contract
 
@@ -459,8 +465,8 @@ strategy.netprofit  partial       cumulative realized closed-trade profit read-o
 strategy.equity     partial       initial_capital plus realized net profit plus current open profit read-only series in strategy-mode scripts only
 strategy.closedtrades partial     closed-trade count read-only series int in strategy-mode scripts only; immediate after strategy.close and next-bar visible after pending strategy.exit fills
 strategy.opentrades partial       open-trade count read-only series int in strategy-mode scripts only; 1 for the current supported long position and 0 when flat
-strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent long exits; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; qty is placement-time finite positive absolute quantity; qty_percent is placement-time finite positive percent resolved to an absolute quantity against current position size; explicit fixed-qty or qty-percent single-trigger, bracket, and trailing calls can keep multiple reserved pending exits; fills clamp to current position size, leave remaining long position open when partial, and expose only absolute filled qty; later-bar low <= stop/loss/active trailing stop or high >= limit/profit/activation price drives fills/activation; same-side touched exits fill in placement order; mixed downside/upside same-bar touches fill downside candidates only; bracket both-leg touches contribute the downside candidate; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger/bracket/trailing multiple-exit reservation subset; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/qty + qty_percent/multiple-pending outside that subset/omitted-quantity bracket or trailing reservations/reservation outside that subset/missing-entry forms; rich order types, percent/cash/contracts sizing, mutable strategy state, trade namespace functions, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count variables are not implemented
+strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent long exits; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; qty is placement-time finite positive absolute quantity; qty_percent is placement-time finite positive percent resolved to an absolute quantity against current position size; omitted qty and qty_percent keep full-position one-effective-pending replacement behavior; explicit fixed-qty or qty-percent single-trigger, bracket, and trailing calls can keep multiple reserved pending exits; fills clamp to current position size, leave remaining long position open when partial, and expose only absolute filled qty; later-bar low <= stop/loss/active trailing stop or high >= limit/profit/activation price drives fills/activation; same-side touched exits fill in placement order; mixed downside/upside same-bar touches fill downside candidates only; bracket both-leg touches contribute the downside candidate; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger/bracket/trailing multiple-exit reservation subset; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/qty + qty_percent/multiple-pending outside that subset/omitted-quantity multiple reservations/reservation outside that subset/missing-entry forms; rich order types, percent/cash/contracts sizing, mutable strategy state, trade namespace functions, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

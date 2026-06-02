@@ -123,9 +123,10 @@ families beyond the current `strategy.entry`/`strategy.close`/`strategy.exit`
 subset, same-side, 3+ trigger, or invalid trailing strategy exits, request
 variants outside the narrow `request.security` subset, `qty + qty_percent`,
 multiple pending exits outside explicit fixed-quantity or percent-quantity
-single-trigger, bracket, and trailing `strategy.exit` reservations, reservation
-behavior outside that subset, missing-entry pre-placement, alert frequency modes and
-placeholder interpolation, remote library lookup, re-exports, imported UDTs,
+single-trigger, bracket, and trailing `strategy.exit` reservations, including
+omitted-quantity multiple reservations, reservation behavior outside that
+subset, missing-entry pre-placement, alert frequency modes and placeholder
+interpolation, remote library lookup, re-exports, imported UDTs,
 imported methods, side-effecting exported library functions, advanced drawing
 families and methods, unsupported collection families and element types, recursive
 functions, function side effects, and unsupported `varip` value families such

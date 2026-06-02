@@ -926,7 +926,7 @@ Planned scope:
 Out of scope until separately designed:
 
 - Calls that combine `qty` and `qty_percent`.
-- Multiple pending exits for omitted-quantity full-position exits.
+- Omitted-quantity multiple reservations, closed as unsupported by Phase Z.
 - Multiple pending bracket or trailing reservations.
 - Reservation behavior outside explicit fixed `qty` or `qty_percent`
   single-trigger exits.
@@ -968,8 +968,7 @@ Supported scope:
 Out of scope until separately designed:
 
 - Calls that combine `qty` and `qty_percent`.
-- Multiple pending exits for omitted-quantity full-position exits.
-- Omitted-quantity bracket reservations.
+- Omitted-quantity multiple reservations, closed as unsupported by Phase Z.
 - Multiple pending trailing reservations.
 - Reservation behavior outside explicit fixed `qty` or `qty_percent`
   single-trigger and bracket exits.
@@ -1014,8 +1013,7 @@ Supported scope:
 Out of scope until separately designed:
 
 - Calls that combine `qty` and `qty_percent`.
-- Multiple pending exits for omitted-quantity full-position exits.
-- Omitted-quantity bracket or trailing reservations.
+- Omitted-quantity multiple reservations, closed as unsupported by Phase Z.
 - Reservation behavior outside explicit fixed `qty` or `qty_percent`
   single-trigger, bracket, and trailing exits.
 - Missing-entry pre-placement.
@@ -1024,15 +1022,54 @@ Out of scope until separately designed:
   bracket-leg fields, trailing-state fields, activation fields, exit-reason
   fields, or a runtime schema bump.
 
+## Phase Z: Strategy Exit Omitted-Quantity Boundary
+
+Goal: close the omitted-quantity multiple-exit boundary without widening the
+reservation subset or changing the public strategy output schema.
+
+Status: closed for the current fixture-backed omitted-quantity replacement
+boundary. Omitted-quantity multiple reservations are fixture-backed as
+unsupported. See `docs/PHASE_Z_AUDIT.md`.
+Execution playbook: `docs/PHASE_Z_EXECUTION_PLAN.md`.
+
+Supported boundary:
+
+- Omitted `qty` and omitted `qty_percent` calls keep full-position
+  one-effective-pending behavior.
+- Different `id + from_entry` identities replace the previous omitted
+  full-position pending exit for supported single-trigger, bracket, and trailing
+  forms.
+- A later omitted full-position exit clears earlier explicit fixed-`qty` or
+  `qty_percent` reservations for the current matching long entry.
+- The existing strategy result shape and runtime `schemaVersion: 3` remain
+  unchanged.
+
+Closed unsupported boundary:
+
+- Omitted-quantity multiple pending reservations.
+- Reservation behavior outside explicit fixed `qty` or `qty_percent`
+  single-trigger, bracket, and trailing exits.
+
+Still deferred:
+
+- Missing-entry pre-placement.
+- Multiple entries, pyramiding, short exposure, and reversals.
+- Public pending-order records, reservation fields, remaining-quantity fields,
+  trigger-side fields, activation fields, exit-reason fields, or a runtime
+  schema bump.
+- Richer order APIs and broker behavior, including `strategy.order`,
+  `strategy.cancel`, OCA APIs, commission, slippage, margin, and realtime
+  strategy handoff.
+
 ## Backlog Priority
 
 Recommended order from the current state:
 
 1. Keep strategy maintenance narrow and fixture-backed. The next strategy work
    should target one deferred broker tail at a time, such as missing-entry
-   pre-placement, omitted-quantity multiple exits, or short/pyramiding behavior,
-   with semantic, runtime, incremental, host, conformance, and closeout evidence before any
-   compatibility claim widens.
+   pre-placement, public pending-order records, richer order APIs, or
+   short/pyramiding behavior, with semantic, runtime, incremental, host,
+   conformance, and closeout evidence before any compatibility claim widens.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an

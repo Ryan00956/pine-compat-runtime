@@ -75,15 +75,19 @@ store an absolute requested close quantity on the pending exit. `qty_percent`
 resolves against the current open position size as
 `position_size * qty_percent / 100.0`; values above 100 are allowed because the
 fill closes no more than the current position. Omitted `qty` and omitted
-`qty_percent` preserve full-position behavior. Filled exits close
+`qty_percent` preserve full-position one-effective-pending behavior across
+supported single-trigger, bracket, and trailing forms. Different identities
+replace rather than append omitted full-position pending exits, and a later
+omitted full-position exit clears earlier explicit reservations for the current
+matching long entry. Filled exits close
 `min(requested_quantity, current position size)`, leave any remaining long
 position open at the same average price, record one order event and one closed
 trade for the filled quantity, and clear the pending exit. These calls are
 rejected in indicator scripts and user-defined functions. Short entries,
 `strategy.exit` same-side pairs, 3+ trigger or invalid trailing combinations,
 `qty + qty_percent`, multiple pending exits outside explicit fixed `qty` or
-`qty_percent` single-trigger/bracket/trailing exits, omitted-quantity bracket
-or trailing reservations, reservation behavior outside that subset,
+`qty_percent` single-trigger/bracket/trailing exits, omitted-quantity multiple
+reservations, reservation behavior outside that subset,
 missing-entry pre-placement, `strategy.order`, broker settings beyond
 `initial_capital` and fixed default quantity, realtime strategy handoff, and
 strategy metrics beyond the Phase L position/profit/equity variables remain
@@ -97,7 +101,8 @@ Phase N keep pending-order records, partial fill fields, and exit reason fields
 outside the public output model, and Phases R, S, U, V, W, X, and Y keep that
 public contract unchanged for brackets, trailing exits, fixed `qty` exits,
 percent `qty_percent` exits, and explicit fixed-quantity or percent-quantity
-single-trigger/bracket/trailing reservations.
+single-trigger/bracket/trailing reservations. Phase Z keeps the same public
+contract unchanged for omitted-quantity replacement boundaries.
 Diagnostics should describe the current strategy subset, not old phase names.
 
 `indicator(...)` and `strategy(...)` declarations are mutually exclusive and
