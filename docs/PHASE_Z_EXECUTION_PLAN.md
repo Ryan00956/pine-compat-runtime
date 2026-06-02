@@ -1,7 +1,7 @@
 # Phase Z Strategy Exit Omitted-Quantity Boundary Execution Plan
 
-Status: planned. This document is the step-by-step execution playbook for the
-narrow strategy phase after `docs/PHASE_Y_AUDIT.md`.
+Status: closed on 2026-06-02. This document is the step-by-step execution
+playbook for the narrow strategy phase after `docs/PHASE_Y_AUDIT.md`.
 
 Phase Z should close the omitted-quantity multiple-exit ambiguity left after the
 Phase W/X/Y reservation work. It should be treated first as a design gate and
@@ -891,13 +891,20 @@ Exit criteria:
 
 ### Slice 6 Implementation Record
 
-Status: pending.
+Status: completed on 2026-06-02.
 
 Record:
 
-- Final verification commands and results.
-- Final file list.
-- Commit hash if committed.
+- Final verification commands and results:
+  - `git diff --check` passed before the release gate;
+  - `scripts/verify.sh` passed, covering formatting, clippy with
+    `-D warnings`, workspace tests, structural guardrails, wasm32 checking for
+    `pine-wasm`, Python wheel build/install, and Python binding tests;
+  - `git status --short` was clean after the release gate.
+- Final file list for this Slice 6 commit:
+  - `docs/PHASE_Z_AUDIT.md`
+  - `docs/PHASE_Z_EXECUTION_PLAN.md`
+- Commit hash if committed: recorded by the Slice 6 commit.
 
 ## Closeout Claim
 

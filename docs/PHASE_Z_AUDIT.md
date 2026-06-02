@@ -1,7 +1,6 @@
 # Phase Z Strategy Exit Omitted-Quantity Boundary Audit
 
-Status: closeout recorded on 2026-06-02. Canonical release verification remains
-pending in Slice 6.
+Status: closed on 2026-06-02.
 
 Phase Z closes the omitted-quantity `strategy.exit` boundary for the current
 long-only, one-net-position, no-pyramiding broker. It does not add a new
@@ -149,4 +148,14 @@ cargo run -q -p pine-cli -- matrix
 git diff --check
 ```
 
-Canonical release verification will be recorded after Slice 6.
+Canonical release verification passed:
+
+```text
+git diff --check
+scripts/verify.sh
+git status --short
+```
+
+`scripts/verify.sh` covered formatting, clippy with `-D warnings`, workspace
+tests, structural guardrails, wasm32 checking for `pine-wasm`, Python wheel
+build/install, and Python binding tests.
