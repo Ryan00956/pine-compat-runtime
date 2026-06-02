@@ -453,6 +453,50 @@ fn runs_strategy_exit_bracket_reservation_fixture_from_csv_to_public_strategy_js
     assert!(!output.contains("bracket"));
 }
 
+#[test]
+fn runs_strategy_exit_trailing_reservation_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_host_parity.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_host_parity_bars.csv"
+        ),
+    )
+    .expect("strategy exit trailing reservation fixture should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 2);
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":1},{\"id\":\"XT1\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":0.75,\"price\":3.5},{\"id\":\"XT2\",\"barIndex\":4,\"time\":5,\"direction\":\"strategy.exit\",\"qty\":1.25,\"price\":3.3}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":3,\"entryTime\":1,\"exitTime\":4,\"entryPrice\":1,\"exitPrice\":3.5,\"qty\":0.75,\"profit\":1.875},{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":4,\"entryTime\":1,\"exitTime\":5,\"entryPrice\":1,\"exitPrice\":3.3,\"qty\":1.25,\"profit\":2.875}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":1},{\"barIndex\":3,\"size\":1.25,\"avgPrice\":1},{\"barIndex\":4,\"size\":0,\"avgPrice\":null}]"
+    ));
+    assert!(output.contains("\"values\":[2,2,2,2,1.25]"));
+    assert!(output.contains("\"values\":[0,0,0,0,1.875]"));
+    assert!(output.contains("\"strategy\":{\"orders\":"));
+    assert!(output.contains("\"equity\":["));
+    assert!(output.contains("\"diagnostics\":[]}"));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("reservedQuantity"));
+    assert!(!output.contains("reserved_quantity"));
+    assert!(!output.contains("remainingQty"));
+    assert!(!output.contains("remaining_quantity"));
+    assert!(!output.contains("qtyPercent"));
+    assert!(!output.contains("qty_percent"));
+    assert!(!output.contains("trailing"));
+    assert!(!output.contains("stop_price"));
+    assert!(!output.contains("activation"));
+    assert!(!output.contains("exitReason"));
+}
+
 const REQUEST_HOST_SOURCE: &str =
     include_str!("../../../../tests/fixtures/request/request_security_host.pine");
 const REQUEST_HOST_CHART_CSV: &str =

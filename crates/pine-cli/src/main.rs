@@ -904,6 +904,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_clamp.pine",
             ),
             (
+                "runtime_strategy_exit_reservation_trailing_host_parity.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_trailing_host_parity.pine",
+            ),
+            (
                 "runtime_strategy_exit_reservation_trailing_single_downside_order.json",
                 "tests/fixtures/runtime/strategy_exit_reservation_trailing_single_downside_order.pine",
             ),
@@ -1168,6 +1172,42 @@ mod tests {
     }
 
     #[test]
+    fn strategy_exit_trailing_reservation_fixture_has_host_stable_shape() {
+        let output = runtime_fixture_json(
+            "tests/fixtures/runtime/strategy_exit_reservation_trailing_host_parity.pine",
+        );
+
+        assert!(output.starts_with(&format!(
+            r#"{{"schemaVersion":{},"#,
+            PUBLIC_RUNTIME_SCHEMA_VERSION
+        )));
+        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 2);
+        assert!(output.contains(
+            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":1},{"id":"XT1","barIndex":3,"time":4,"direction":"strategy.exit","qty":0.75,"price":3.5},{"id":"XT2","barIndex":4,"time":5,"direction":"strategy.exit","qty":1.25,"price":3.3}]"#
+        ));
+        assert!(output.contains(
+            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":3,"entryTime":1,"exitTime":4,"entryPrice":1,"exitPrice":3.5,"qty":0.75,"profit":1.875},{"id":"L","entryBarIndex":0,"exitBarIndex":4,"entryTime":1,"exitTime":5,"entryPrice":1,"exitPrice":3.3,"qty":1.25,"profit":2.875}]"#
+        ));
+        assert!(output.contains(
+            r#""position":[{"barIndex":0,"size":2,"avgPrice":1},{"barIndex":3,"size":1.25,"avgPrice":1},{"barIndex":4,"size":0,"avgPrice":null}]"#
+        ));
+        assert!(output.contains(r#""strategy":{"orders":"#));
+        assert!(output.contains(r#""equity":["#));
+        assert!(output.contains(r#""diagnostics":[]}"#));
+        assert!(!output.contains("pending"));
+        assert!(!output.contains("reservedQuantity"));
+        assert!(!output.contains("reserved_quantity"));
+        assert!(!output.contains("remainingQty"));
+        assert!(!output.contains("remaining_quantity"));
+        assert!(!output.contains("qtyPercent"));
+        assert!(!output.contains("qty_percent"));
+        assert!(!output.contains("trailing"));
+        assert!(!output.contains("stop_price"));
+        assert!(!output.contains("activation"));
+        assert!(!output.contains("exitReason"));
+    }
+
+    #[test]
     fn matrix_output_matches_golden_snapshot() {
         assert_snapshot("matrix.json", &matrix_json(&conformance_entries()));
     }
@@ -1239,6 +1279,11 @@ mod tests {
             | "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_clamp.pine" => {
                 include_str!(
                     "../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_bars.csv"
+                )
+            }
+            "tests/fixtures/runtime/strategy_exit_reservation_trailing_host_parity.pine" => {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_host_parity_bars.csv"
                 )
             }
             "tests/fixtures/runtime/strategy_exit_reservation_trailing_single_downside_order.pine"

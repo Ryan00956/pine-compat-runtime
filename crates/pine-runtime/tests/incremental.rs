@@ -44,6 +44,9 @@ fn runtime_fixtures_match_incremental_append_execution() {
     let reservation_trailing_mixed_bars = load_bars(&workspace_fixture(
         "tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_bars.csv",
     ));
+    let reservation_trailing_host_parity_bars = load_bars(&workspace_fixture(
+        "tests/fixtures/runtime/strategy_exit_reservation_trailing_host_parity_bars.csv",
+    ));
     let mut checked = 0;
 
     for entry in fs::read_dir(&fixtures_dir).expect("runtime fixture dir should be readable") {
@@ -101,6 +104,9 @@ fn runtime_fixtures_match_incremental_append_execution() {
             }
             Some("strategy_exit_reservation_qty_percent_trailing_clamp.pine") => {
                 &reservation_trailing_bars
+            }
+            Some("strategy_exit_reservation_trailing_host_parity.pine") => {
+                &reservation_trailing_host_parity_bars
             }
             Some("strategy_exit_reservation_trailing_single_downside_order.pine") => {
                 &reservation_trailing_mixed_bars

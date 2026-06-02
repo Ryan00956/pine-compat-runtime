@@ -1049,6 +1049,52 @@ Exit criteria:
 - Matrix and conformance match the exact implemented subset.
 - Public runtime schema remains `schemaVersion: 3`.
 
+### Slice 5 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Implemented changes:
+
+- Added `strategy_exit_reservation_trailing_host_parity.pine` with a fixed
+  trailing reservation and a `qty_percent` trailing reservation sharing the
+  same reservation pool. The dedicated host-parity bars activate both exits,
+  fill one reservation partially on a later bar, then fill the remaining
+  percent reservation on the final bar.
+- Added CLI host-shape assertions for the representative Phase Y fixture,
+  including order count, absolute filled quantities, fill prices, public
+  position/trade shape, `schemaVersion: 3`, and absence of reservation,
+  trailing-state, activation, pending-order, `qty_percent`, and exit-reason
+  fields.
+- Added matching WASM and Python binding tests using the same fixture and bars.
+- Added the host-parity fixture to golden runtime snapshots and incremental
+  append parity coverage.
+- Updated `tests/fixtures/conformance.tsv` and `tests/snapshots/matrix.json`
+  to claim only the implemented explicit fixed-`qty` or `qty_percent`
+  single-trigger, bracket, and trailing reservation subset.
+- Kept `strategy.exit` `partial` and broad `strategy.*` `unsupported`.
+
+Host bindings still call the shared runtime path; no reservation math, trailing
+activation, ratchet, or fill precedence was added to CLI, Python, or WASM
+binding code.
+
+Slice 5 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-cli strategy
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli matrix_output_matches_golden_snapshot
+cargo test -p pine-cli matrix
+cargo test -p pine-wasm strategy
+maturin build --manifest-path crates/pine-python/Cargo.toml --out dist
+python3 -m pip install --force-reinstall dist/pine_compat_runtime-0.1.0-cp310-abi3-manylinux_2_35_x86_64.whl
+python3 -m pytest python/tests
+cargo test -p pine-runtime --test incremental
+```
+
+All commands passed on the Slice 5 workspace.
+
 ## Slice 6: Documentation Closeout And Audit
 
 Goal: close Phase Y with an audit that ties implementation, fixtures, docs, and
