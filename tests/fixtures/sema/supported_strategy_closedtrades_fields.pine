@@ -1,0 +1,8 @@
+//@version=5
+strategy("Supported closed trade fields")
+strategy.entry("L", strategy.long, qty=1)
+strategy.close("L")
+plot(strategy.closedtrades.entry_price(0))
+plot(strategy.closedtrades.exit_price(0))
+plot(strategy.closedtrades.entry_bar_index(0))
+plot(strategy.closedtrades.exit_bar_index(0))

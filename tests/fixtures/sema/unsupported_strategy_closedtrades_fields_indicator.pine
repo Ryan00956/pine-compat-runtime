@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported closed trade fields in indicator")
+plot(strategy.closedtrades.entry_price(0))

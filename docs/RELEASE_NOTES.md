@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 0 closed-trade field functions:
+  `strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
+  `strategy.closedtrades.entry_bar_index`, and
+  `strategy.closedtrades.exit_bar_index`. These read the existing closed-trade
+  list in strategy-mode scripts with zero-based integer `trade_num` indexes,
+  return `na` for invalid or out-of-range indexes, and keep the public runtime
+  output shape unchanged. Open-trade namespaces, additional closed-trade fields,
+  and richer reporting metrics remain unsupported.
 - Added Strategy Internal Stage 6 Slice 1 `strategy.cancel_all()` support for
   the current supported pending-entry and pending-exit subset. The call clears
   all supported internal pending orders, is a no-op when none exist, and keeps

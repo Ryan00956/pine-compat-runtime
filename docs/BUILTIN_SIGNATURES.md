@@ -265,6 +265,10 @@ strategy.cancel(id: simple string) -> void
 strategy.cancel_all() -> void
 strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric)
   -> void
+strategy.closedtrades.entry_price(trade_num: series/simple numeric) -> series float
+strategy.closedtrades.exit_price(trade_num: series/simple numeric) -> series float
+strategy.closedtrades.entry_bar_index(trade_num: series/simple numeric) -> series int
+strategy.closedtrades.exit_bar_index(trade_num: series/simple numeric) -> series int
 ```
 
 Only metadata arguments needed by the output and history-retention model should
@@ -300,6 +304,13 @@ pending entry for same-calculation absolute `stop`, `limit`, and `trail_price`
 attachment. Same-calculation `profit`, `loss`, and `trail_points` attachment to
 a pending entry remains unsupported. Richer strategy order options remain
 unsupported.
+`strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
+`strategy.closedtrades.entry_bar_index`, and
+`strategy.closedtrades.exit_bar_index` are read-only strategy-mode field
+functions over the current closed-trade list. `trade_num` is a zero-based
+integer index; missing, negative, out-of-range, or non-integer indexes return
+`na`. They do not add public runtime schema fields. Other closed-trade fields
+and all open-trade namespace functions remain unsupported.
 
 ## Inputs
 

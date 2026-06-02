@@ -73,6 +73,10 @@ mod tests {
                 || signature.name == "strategy.cancel"
                 || signature.name == "strategy.cancel_all"
                 || signature.name == "strategy.exit"
+                || signature.name == "strategy.closedtrades.entry_price"
+                || signature.name == "strategy.closedtrades.exit_price"
+                || signature.name == "strategy.closedtrades.entry_bar_index"
+                || signature.name == "strategy.closedtrades.exit_bar_index"
                 || signature.name == "alert"
                 || signature.name == "alertcondition"
             {
@@ -1069,6 +1073,10 @@ mod tests {
             (
                 "runtime_strategy_trade_counts.json",
                 "tests/fixtures/runtime/strategy_trade_counts.pine",
+            ),
+            (
+                "runtime_strategy_closedtrades_fields.json",
+                "tests/fixtures/runtime/strategy_closedtrades_fields.pine",
             ),
             (
                 "runtime_strategy_trade_outcome_counts.json",

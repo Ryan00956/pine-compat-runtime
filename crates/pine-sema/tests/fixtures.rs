@@ -498,6 +498,19 @@ fn accepts_supported_strategy_trade_counts_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_closedtrades_fields_fixture() {
+    assert_strategy_state_supported_fixture(
+        "tests/fixtures/sema/supported_strategy_closedtrades_fields.pine",
+        &[
+            "strategy.closedtrades.entry_price",
+            "strategy.closedtrades.exit_price",
+            "strategy.closedtrades.entry_bar_index",
+            "strategy.closedtrades.exit_bar_index",
+        ],
+    );
+}
+
+#[test]
 fn accepts_supported_strategy_trade_count_interactions_fixture() {
     assert_strategy_state_supported_fixture(
         "tests/fixtures/sema/supported_strategy_trade_count_interactions.pine",
@@ -561,9 +574,16 @@ fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
         "tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine",
         &[
             "strategy.risk.max_drawdown",
-            "strategy.closedtrades.entry_price",
             "strategy.opentrades.entry_price",
         ],
+    );
+}
+
+#[test]
+fn reports_strategy_closedtrades_fields_indicator_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_closedtrades_fields_indicator.pine",
+        "E_STRATEGY_MODE",
     );
 }
 

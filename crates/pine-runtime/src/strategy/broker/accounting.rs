@@ -1,5 +1,5 @@
 use super::BrokerState;
-use crate::{PineValue, StrategyEquitySnapshot};
+use crate::{PineValue, StrategyEquitySnapshot, StrategyTrade};
 
 fn normalize_zero(value: f64) -> f64 {
     if value == 0.0 { 0.0 } else { value }
@@ -46,6 +46,12 @@ impl BrokerState {
     #[must_use]
     pub fn closed_trade_count(&self) -> i64 {
         i64::try_from(self.trades.len()).unwrap_or(i64::MAX)
+    }
+
+    #[must_use]
+    pub(crate) fn closed_trade(&self, trade_num: i64) -> Option<&StrategyTrade> {
+        let index = usize::try_from(trade_num).ok()?;
+        self.trades.get(index)
     }
 
     #[must_use]

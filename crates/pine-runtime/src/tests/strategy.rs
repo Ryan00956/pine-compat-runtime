@@ -2584,6 +2584,62 @@ plot(strategy.opentrades)
 }
 
 #[test]
+fn strategy_closed_trade_field_functions_read_recorded_trades() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("closed trade fields")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
+    strategy.close("L")
+plot(strategy.closedtrades.entry_price(0))
+plot(strategy.closedtrades.exit_price(0))
+plot(strategy.closedtrades.entry_bar_index(0))
+plot(strategy.closedtrades.exit_bar_index(0))
+plot(strategy.closedtrades.entry_price(1))
+plot(strategy.closedtrades.entry_price(-1))
+plot(strategy.closedtrades.entry_price(0.5))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(1.0, 1.0, 1.0, 1.0),
+            bar_ohlc(2.0, 3.0, 2.0, 3.0),
+            bar_ohlc(4.0, 4.0, 4.0, 4.0),
+        ],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(2.0),]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Na, PineValue::Float(3.0), PineValue::Float(3.0),]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![PineValue::Na, PineValue::Int(1), PineValue::Int(1)]
+    );
+    assert_eq!(
+        result.plots[3].values,
+        vec![PineValue::Na, PineValue::Int(1), PineValue::Int(1)]
+    );
+    for values in result.plots[4..].iter().map(|plot| &plot.values) {
+        assert_eq!(values, &vec![PineValue::Na, PineValue::Na, PineValue::Na]);
+    }
+}
+
+#[test]
 fn strategy_trade_outcome_count_variables_follow_closed_trade_profits() {
     let source = SourceFile::new(
         "strategy.pine",

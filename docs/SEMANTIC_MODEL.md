@@ -126,14 +126,20 @@ entries, `strategy.order`, broker settings beyond
 `initial_capital` and fixed default quantity, realtime strategy handoff, and
 strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and
-`strategy.opentrades` count variables plus the Stage 3 outcome count variables.
-Those variables are read-only strategy-mode `series int` values for the current
-long-only broker: `strategy.closedtrades` counts closed trades recorded by
-broker state; `strategy.wintrades`, `strategy.losstrades`, and
-`strategy.eventrades` count closed trades with positive, negative, and zero
-realized profit; and `strategy.opentrades` is `1` while the supported long
-position is open and `0` when flat. They do not expose trade details or
-namespace functions. Phase M and
+`strategy.opentrades` count variables, the Stage 3 outcome count variables, and
+the Stage 7 Slice 0 closed-trade field functions. The count variables are
+read-only strategy-mode `series int` values for the current long-only broker:
+`strategy.closedtrades` counts closed trades recorded by broker state;
+`strategy.wintrades`, `strategy.losstrades`, and `strategy.eventrades` count
+closed trades with positive, negative, and zero realized profit; and
+`strategy.opentrades` is `1` while the supported long position is open and `0`
+when flat. The supported closed-trade namespace functions are
+`strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
+`strategy.closedtrades.entry_bar_index`, and
+`strategy.closedtrades.exit_bar_index`; they accept a zero-based integer
+`trade_num` and return `na` for missing, negative, out-of-range, or non-integer
+indexes. Other trade details and open-trade namespace functions remain
+unsupported. Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
 outside the public output model, and Phases R, S, U, V, W, X, and Y keep that
 public contract unchanged for brackets, trailing exits, fixed `qty` exits,

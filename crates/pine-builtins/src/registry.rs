@@ -28,7 +28,7 @@ const BUILTIN_COUNT: usize = core::SCRIPT_SIGNATURES.len()
     + arrays::SIGNATURES.len()
     + ta::SIGNATURES.len();
 
-const PHASE_1_BUILTINS_ARRAY: [BuiltinSignature; BUILTIN_COUNT] = build_phase_1_builtins();
+static PHASE_1_BUILTINS_ARRAY: [BuiltinSignature; BUILTIN_COUNT] = build_phase_1_builtins();
 
 pub const PHASE_1_BUILTINS: &[BuiltinSignature] = &PHASE_1_BUILTINS_ARRAY;
 
@@ -204,5 +204,26 @@ mod tests {
             crate::Accepts::SeriesOrSimpleNumeric
         );
         assert!(!signature.variadic);
+    }
+
+    #[test]
+    fn registers_strategy_closed_trade_field_signatures() {
+        for name in [
+            "strategy.closedtrades.entry_price",
+            "strategy.closedtrades.exit_price",
+            "strategy.closedtrades.entry_bar_index",
+            "strategy.closedtrades.exit_bar_index",
+        ] {
+            let signature = get_phase_1_builtin(name).expect("closed trade field signature");
+            assert_eq!(signature.params.len(), 1, "{name}");
+            assert_eq!(signature.params[0].name, "trade_num", "{name}");
+            assert_eq!(
+                signature.params[0].accepts,
+                crate::Accepts::SeriesOrSimpleNumeric,
+                "{name}"
+            );
+            assert!(!signature.params[0].optional, "{name}");
+            assert!(!signature.variadic, "{name}");
+        }
     }
 }

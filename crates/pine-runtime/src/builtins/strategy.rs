@@ -25,7 +25,41 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.cancel" => self.eval_strategy_cancel(args),
             "strategy.cancel_all" => self.eval_strategy_cancel_all(),
             "strategy.exit" => self.eval_strategy_exit(args),
+            "strategy.closedtrades.entry_price"
+            | "strategy.closedtrades.exit_price"
+            | "strategy.closedtrades.entry_bar_index"
+            | "strategy.closedtrades.exit_bar_index" => {
+                self.eval_strategy_closed_trade_field(callee, args)
+            }
             _ => return None,
+        })
+    }
+
+    fn eval_strategy_closed_trade_field(
+        &mut self,
+        callee: &str,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(trade_num_expr) = call_arg_expr(args, 0, "trade_num") else {
+            return Ok(PineValue::Na);
+        };
+        let Some(trade_num) = self.eval_expr(trade_num_expr)?.as_i64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(trade) = self.strategy_broker.closed_trade(trade_num) else {
+            return Ok(PineValue::Na);
+        };
+
+        Ok(match callee {
+            "strategy.closedtrades.entry_price" => PineValue::Float(trade.entry_price),
+            "strategy.closedtrades.exit_price" => PineValue::Float(trade.exit_price),
+            "strategy.closedtrades.entry_bar_index" => {
+                PineValue::Int(i64::try_from(trade.entry_bar_index).unwrap_or(i64::MAX))
+            }
+            "strategy.closedtrades.exit_bar_index" => {
+                PineValue::Int(i64::try_from(trade.exit_bar_index).unwrap_or(i64::MAX))
+            }
+            _ => PineValue::Na,
         })
     }
 

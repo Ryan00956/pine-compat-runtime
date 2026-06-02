@@ -1,6 +1,6 @@
 use crate::signature::{Accepts, BuiltinParam, BuiltinPhase, BuiltinSignature, ReturnSpec};
 
-use super::types::VOID;
+use super::types::{SERIES_FLOAT, SERIES_INT, VOID};
 
 const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
@@ -102,6 +102,12 @@ const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const STRATEGY_CLOSED_TRADE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "trade_num",
+    accepts: Accepts::SeriesOrSimpleNumeric,
+    optional: false,
+}];
+
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "strategy.entry",
@@ -143,6 +149,34 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_EXIT_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.closedtrades.entry_price",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CLOSED_TRADE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.closedtrades.exit_price",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CLOSED_TRADE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.closedtrades.entry_bar_index",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CLOSED_TRADE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.closedtrades.exit_bar_index",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CLOSED_TRADE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
         variadic: false,
     },
 ];

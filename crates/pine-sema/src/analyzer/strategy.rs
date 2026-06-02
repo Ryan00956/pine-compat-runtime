@@ -15,6 +15,13 @@ const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.opentrades",
 ];
 
+const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[
+    "strategy.closedtrades.entry_price",
+    "strategy.closedtrades.exit_price",
+    "strategy.closedtrades.entry_bar_index",
+    "strategy.closedtrades.exit_bar_index",
+];
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum StrategyExitArgFamily {
     Identity,
@@ -51,6 +58,10 @@ pub(crate) fn is_strategy_state_variable(name: &str) -> bool {
 
 pub(crate) fn is_supported_strategy_state_variable(name: &str) -> bool {
     STRATEGY_STATE_VARIABLES.contains(&name)
+}
+
+pub(crate) fn is_supported_strategy_closed_trade_field_function(name: &str) -> bool {
+    STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS.contains(&name)
 }
 
 impl Analyzer {
@@ -207,6 +218,20 @@ impl Analyzer {
             self.validate_strategy_entry_args(args);
         } else if name == "strategy.exit" {
             self.validate_strategy_exit_args(args);
+        }
+    }
+
+    pub(crate) fn validate_strategy_closed_trade_field_call(&mut self, name: &str, span: Span) {
+        if !is_supported_strategy_closed_trade_field_function(name) {
+            return;
+        }
+
+        if !matches!(self.script_declaration, Some((ScriptMode::Strategy, _))) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_STRATEGY_MODE",
+                format!("`{name}` is only supported in scripts declared with strategy(...)"),
+                span,
+            ));
         }
     }
 
