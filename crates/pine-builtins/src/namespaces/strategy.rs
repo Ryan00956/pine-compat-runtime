@@ -132,6 +132,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "strategy.cancel_all",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CLOSE_ALL_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "strategy.exit",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_EXIT_PARAMS,

@@ -117,6 +117,11 @@ impl BrokerState {
         self.pending_exits.cancel_id(id);
     }
 
+    pub(crate) fn cancel_all_pending_orders(&mut self) {
+        self.pending_entries.clear_all();
+        self.pending_exits.clear_all();
+    }
+
     #[allow(dead_code)]
     pub(crate) fn place_pending_market_long_entry(
         &mut self,

@@ -200,8 +200,9 @@ This is internally small and should preserve the current public output shape.
 
 ### 5. Generic Orders And Cancellation
 
-Current state: `strategy.order`, `strategy.cancel`, and
-`strategy.cancel_all` are unsupported.
+Current state: `strategy.order` remains unsupported. Stage 6 added the
+fixture-backed supported `strategy.cancel(id)` and `strategy.cancel_all()`
+subsets for current internal pending entries and exits.
 
 Missing internal behavior:
 

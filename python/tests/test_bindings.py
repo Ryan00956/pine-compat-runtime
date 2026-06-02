@@ -493,6 +493,24 @@ def test_run_script_returns_strategy_cancel_entry_contract():
     assert "cancel" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_cancel_all_entry_exit_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_cancel_all_entry_exit.pine"
+    ).read_text()
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0.0, 0.0, 0.0, 0.0],
+        [0, 0, 0, 0],
+    ]
+    assert result["strategy"]["orders"] == []
+    assert result["strategy"]["trades"] == []
+    assert result["strategy"]["position"] == []
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+    assert "cancel" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_exit_stop_trade_contract():
     bars = [
         {"time": 10, "open": 10.0, "high": 10.0, "low": 10.0, "close": 10.0, "volume": 1.0},

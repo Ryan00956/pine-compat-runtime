@@ -189,6 +189,7 @@ impl Analyzer {
                 | "strategy.close"
                 | "strategy.close_all"
                 | "strategy.cancel"
+                | "strategy.cancel_all"
                 | "strategy.exit"
         ) {
             return;

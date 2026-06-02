@@ -560,7 +560,6 @@ fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine",
         &[
-            "strategy.cancel_all",
             "strategy.risk.max_drawdown",
             "strategy.closedtrades.entry_price",
             "strategy.opentrades.entry_price",
@@ -588,6 +587,30 @@ fn accepts_supported_strategy_cancel_fixture() {
             .supported
             .iter()
             .any(|supported| supported.feature == "strategy.cancel")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_strategy_cancel_all_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_cancel_all.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "strategy.cancel_all")
     );
     assert!(analysis.hir.is_some());
 }
@@ -823,7 +846,7 @@ fn reports_unsupported_strategy_order_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_order_function_side_effect.pine",
         "function_side_effect",
-        "strategy.entry",
+        "strategy order calls",
     );
 }
 

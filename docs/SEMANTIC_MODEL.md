@@ -61,6 +61,9 @@ public strategy output shape.
 pending exit ids in the supported order subset. Filled ids, unknown ids, and
 already-cancelled ids are no-op, and cancellation does not expose public
 pending-order records.
+`strategy.cancel_all()` cancels all currently supported internal pending entries
+and pending exits. Calling it without pending orders is a no-op and does not
+expose public pending-order or cancellation records.
 `strategy.exit(id, from_entry, stop=price)`,
 `strategy.exit(id, from_entry, limit=price)`,
 `strategy.exit(id, from_entry, profit=ticks)`, and
@@ -119,7 +122,7 @@ multiple pending exits outside explicit fixed `qty` or `qty_percent`
 single-trigger/bracket/trailing exits, omitted-quantity multiple
 reservations, reservation behavior outside that subset,
 unmatched missing-entry pre-placement, entry-relative exit attachment to pending
-entries, `strategy.order`, `strategy.cancel_all`, broker settings beyond
+entries, `strategy.order`, broker settings beyond
 `initial_capital` and fixed default quantity, realtime strategy handoff, and
 strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and

@@ -136,6 +136,14 @@ mod tests {
     }
 
     #[test]
+    fn registers_strategy_cancel_all_signature() {
+        let signature =
+            get_phase_1_builtin("strategy.cancel_all").expect("strategy.cancel_all signature");
+        assert!(signature.params.is_empty());
+        assert!(!signature.variadic);
+    }
+
+    #[test]
     fn registers_strategy_exit_signature() {
         let signature = get_phase_1_builtin("strategy.exit").expect("strategy.exit signature");
         assert_eq!(signature.params.len(), 11);

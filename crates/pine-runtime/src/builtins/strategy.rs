@@ -23,6 +23,7 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.close" => self.eval_strategy_close(args),
             "strategy.close_all" => self.eval_strategy_close_all(),
             "strategy.cancel" => self.eval_strategy_cancel(args),
+            "strategy.cancel_all" => self.eval_strategy_cancel_all(),
             "strategy.exit" => self.eval_strategy_exit(args),
             _ => return None,
         })
@@ -144,6 +145,17 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         self.strategy_broker.cancel_pending_order(&id);
+        Ok(PineValue::Void)
+    }
+
+    fn eval_strategy_cancel_all(&mut self) -> Result<PineValue, RuntimeError> {
+        let Some(_bar) = self.current_bar else {
+            return Err(RuntimeError {
+                message: "`strategy.cancel_all` requires an active bar".to_owned(),
+            });
+        };
+
+        self.strategy_broker.cancel_all_pending_orders();
         Ok(PineValue::Void)
     }
 

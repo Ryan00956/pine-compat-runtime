@@ -149,6 +149,37 @@ fn cancel_pending_order_unknown_id_is_noop() {
 }
 
 #[test]
+fn cancel_all_pending_orders_clears_pending_entries_and_exits() {
+    let mut entry_broker = BrokerState::new(100_000.0);
+    entry_broker.place_pending_limit_long_entry("L1".to_owned(), 1.0, 95.0, 0);
+    entry_broker.place_pending_stop_long_entry("L2".to_owned(), 1.0, 105.0, 0);
+
+    assert_eq!(pending_entry_count(&entry_broker), 2);
+    entry_broker.cancel_all_pending_orders();
+    assert_eq!(pending_entry_count(&entry_broker), 0);
+
+    entry_broker.fill_pending_limit_long_entries(1, 20, 95.0);
+    entry_broker.fill_pending_stop_long_entries(1, 20, 105.0);
+
+    assert!(entry_broker.orders.is_empty());
+    assert_eq!(entry_broker.position_size(), 0.0);
+
+    let mut exit_broker = broker_with_long_entry();
+    exit_broker.place_exit_limit_qty("XL".to_owned(), "L".to_owned(), 110.0, 0.5, 0);
+    exit_broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 90.0, 0.5, 0);
+
+    assert_eq!(pending_exit_count(&exit_broker), 2);
+    exit_broker.cancel_all_pending_orders();
+    assert_eq!(pending_exit_count(&exit_broker), 0);
+
+    exit_broker.evaluate_pending_exits(1, 20, 110.0, 90.0);
+
+    assert_eq!(exit_broker.orders.len(), 1);
+    assert!(exit_broker.trades.is_empty());
+    assert_eq!(exit_broker.position_size(), 2.0);
+}
+
+#[test]
 fn exit_trigger_helpers_classify_single_trigger_reservation_family() {
     assert_eq!(
         PendingExitTrigger::Stop(95.0).reservation_family(),

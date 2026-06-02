@@ -350,6 +350,27 @@ fn runs_strategy_cancel_entry_fixture_from_csv_to_public_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_cancel_all_entry_exit_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_cancel_all_entry_exit.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy cancel all entry exit script should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert!(output.contains("\"values\":[0,0,0,0]"));
+    assert!(output.contains("\"orders\":[]"));
+    assert!(output.contains("\"trades\":[]"));
+    assert!(output.contains("\"position\":[]"));
+    assert!(output.contains("\"diagnostics\":[]"));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("cancel"));
+}
+
+#[test]
 fn runs_strategy_exit_limit_from_csv_to_trade_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nif bar_index == 0\n    strategy.entry(\"L\", strategy.long, qty=2)\n    strategy.exit(\"XL\", \"L\", limit=12)\n",

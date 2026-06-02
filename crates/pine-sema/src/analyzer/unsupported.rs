@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 pub(crate) const VARIP_DRAWING_UNSUPPORTED_REASON: &str = "varip drawing object ids are not supported; retaining only an id would be unsafe while drawing object stores roll back between forming updates";
 pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently supports scalar int, float, bool, string, color, na, and scalar typed-array declarations only; drawing ids, tuples, UDTs, and other value families are not implemented";
-pub(crate) const STRATEGY_UNSUPPORTED_REASON: &str = "strategy order functions beyond the supported strategy.entry/strategy.close/strategy.close_all/strategy.exit subset, broker emulation settings, and rich backtesting features are not implemented";
+pub(crate) const STRATEGY_UNSUPPORTED_REASON: &str = "strategy order functions beyond the supported strategy.entry/strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all/strategy.exit subset, broker emulation settings, and rich backtesting features are not implemented";
 pub(crate) const STRATEGY_STATE_UNSUPPORTED_REASON: &str = "strategy state variables beyond the supported position, profit, equity, and trade-count subset are not implemented";
 
 pub(crate) fn unsupported_strategy_reason(name: &str) -> Option<&'static str> {

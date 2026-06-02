@@ -470,6 +470,94 @@ plot(strategy.position_size)
 }
 
 #[test]
+fn strategy_cancel_all_cancels_pending_entry_and_attached_exit_before_fill() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("cancel all entry exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2, limit=2)
+    strategy.exit("XL", "L", stop=1.5)
+    strategy.cancel_all()
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar_ohlc(5.0, 5.0, 5.0, 5.0), bar_ohlc(2.0, 2.0, 1.0, 2.0)],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert!(strategy.orders.is_empty());
+    assert!(strategy.position.is_empty());
+    assert!(strategy.trades.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Float(0.0), PineValue::Float(0.0)]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Int(0), PineValue::Int(0)]
+    );
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
+fn strategy_cancel_all_cancels_pending_exit_before_fill() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("cancel all exit")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
+    strategy.exit("XL", "L", limit=4)
+    strategy.cancel_all()
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(1.0, 1.0, 1.0, 1.0),
+            bar_ohlc(2.0, 2.0, 2.0, 2.0),
+            bar_ohlc(4.0, 4.0, 4.0, 4.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "L");
+    assert_eq!(strategy.position.len(), 1);
+    assert_eq!(strategy.position[0].size, 2.0);
+    assert!(strategy.trades.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+        ]
+    );
+    assert!(strategy.diagnostics.is_empty());
+}
+
+#[test]
 fn strategy_entry_stop_limit_activates_then_fills_on_later_low_crossing_bar() {
     let source = SourceFile::new(
         "strategy.pine",
