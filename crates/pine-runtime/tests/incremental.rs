@@ -87,6 +87,18 @@ fn runtime_fixtures_match_incremental_append_execution() {
             }
             Some("strategy_exit_reservation_qty_trailing_clamp.pine") => &reservation_trailing_bars,
             Some("strategy_exit_reservation_trailing_state.pine") => &reservation_trailing_bars,
+            Some("strategy_exit_reservation_qty_percent_trailing_multi.pine") => {
+                &reservation_trailing_bars
+            }
+            Some("strategy_exit_reservation_qty_mixed_trailing_multi.pine") => {
+                &reservation_trailing_bars
+            }
+            Some("strategy_exit_reservation_qty_percent_trailing_replacement.pine") => {
+                &reservation_trailing_bars
+            }
+            Some("strategy_exit_reservation_qty_percent_trailing_clamp.pine") => {
+                &reservation_trailing_bars
+            }
             _ => &default_bars,
         };
 

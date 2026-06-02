@@ -888,6 +888,22 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_reservation_trailing_state.pine",
             ),
             (
+                "runtime_strategy_exit_reservation_qty_percent_trailing_multi.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_multi.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_mixed_trailing_multi.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_mixed_trailing_multi.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_percent_trailing_replacement.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_replacement.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_percent_trailing_clamp.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_clamp.pine",
+            ),
+            (
                 "runtime_strategy_exit_qty_percent_stop_partial.json",
                 "tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine",
             ),
@@ -1192,7 +1208,11 @@ mod tests {
             | "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_points_multi.pine"
             | "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_replacement.pine"
             | "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_clamp.pine"
-            | "tests/fixtures/runtime/strategy_exit_reservation_trailing_state.pine" => {
+            | "tests/fixtures/runtime/strategy_exit_reservation_trailing_state.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_multi.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_qty_mixed_trailing_multi.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_replacement.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_clamp.pine" => {
                 include_str!(
                     "../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_bars.csv"
                 )

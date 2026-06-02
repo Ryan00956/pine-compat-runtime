@@ -833,6 +833,44 @@ Exit criteria:
 - Existing Phase V single-exit percent fixtures remain green.
 - Public output shape is unchanged.
 
+### Slice 3 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Implemented changes:
+
+- Opened the multiple-reservation placement path for explicit
+  `qty_percent` trailing exits.
+- Reused the existing percent resolver so percent quantities resolve against
+  current `position_size`, then clamp to currently unreserved quantity.
+- Kept `qty + qty_percent` unsupported through the existing analyzer/runtime
+  guardrail and kept omitted-quantity trailing exits on the one-effective
+  replacement path.
+- Added broker tests for two percent trailing reservations, fixed plus percent
+  shared reservation pools, percent replacement, `qty_percent > 100` clamping,
+  zero-unreserved rejection, and invalid percent replacement preservation.
+- Added runtime fixtures and snapshots for percent trailing reservations,
+  mixed fixed/percent trailing reservations, percent replacement, and percent
+  clamping.
+- Added the new fixtures to the CLI golden snapshot harness and incremental
+  append parity harness.
+
+Conformance wording and matrix claims remain conservative until the
+host-parity/conformance slice.
+
+Slice 3 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-runtime --test incremental
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+```
+
+All commands passed on the Slice 3 workspace.
+
 ## Slice 4: Mixed Single-Trigger, Bracket, And Trailing Reservation Interactions
 
 Goal: cover deterministic interaction between Phase W single-trigger
