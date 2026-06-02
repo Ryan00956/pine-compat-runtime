@@ -72,6 +72,13 @@ impl<'a> HistoricalRuntime<'a> {
                 .default_entry_qty()
                 .unwrap_or(f64::NAN)
         };
+        if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {
+            let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
+            let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
+            self.strategy_broker
+                .place_pending_stop_limit_long_entry(id, qty, stop, limit, self.bars);
+            return Ok(PineValue::Void);
+        }
         if let Some(limit_expr) = limit_expr {
             let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker

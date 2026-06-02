@@ -97,8 +97,12 @@ calls create an internal pending entry and fill on the next historical bar open.
 Supported long limit entries fill at the limit price before script statements
 on a later historical bar when `low <= limit`. Supported long stop entries fill
 at the stop price before script statements on a later historical bar when
-`high >= stop`. These variables reflect filled entries before script statements
-on the fill bar, not on the creation bar. Supported `strategy.close` and
+`high >= stop`. Supported long stop-limit entries activate before script
+statements on a later historical bar when `high >= stop`, do not fill on that
+activation bar, and fill at the limit price before script statements on a later
+historical bar when `low <= limit`. These variables reflect filled entries
+before script statements on the fill bar, not on the creation or activation bar.
+Supported `strategy.close` and
 `strategy.close_all` calls still update immediately for later statements on the
 same bar. They behave like read-only series floats in supported expression
 contexts, including branches, switches, loops, pure UDF arguments, and constant
@@ -394,14 +398,16 @@ Examples:
   When supported `strategy.exit` shapes supply both `qty` and `qty_percent`,
   fixed `qty` determines the reserved or filled quantity and `qty_percent` is
   ignored.
-- minimal `strategy.entry` long market, long limit, and long stop entries in
-  strategy-mode scripts; market entries fill at the next historical bar open,
-  limit entries fill at the limit price on a later historical bar when
-  `low <= limit`, stop entries fill at the stop price on a later historical bar
-  when `high >= stop`, and no public pending-order output is exposed;
-  unsupported short/stop-limit/indicator-mode variants are fixture-backed;
-  entries may omit `qty` only when the strategy declaration configures the fixed
-  default quantity subset
+- minimal `strategy.entry` long market, long limit, long stop, and long
+  stop-limit entries in strategy-mode scripts; market entries fill at the next
+  historical bar open, limit entries fill at the limit price on a later
+  historical bar when `low <= limit`, stop entries fill at the stop price on a
+  later historical bar when `high >= stop`, stop-limit entries activate on a
+  later historical bar when `high >= stop` and fill at the limit price on a
+  subsequent historical bar when `low <= limit`, and no public pending-order
+  output is exposed; unsupported short/indicator-mode variants are
+  fixture-backed; entries may omit `qty` only when the strategy declaration
+  configures the fixed default quantity subset
 - minimal `strategy.close` full-position closes for matching long entry ids,
   with missing or repeated closes treated as no-op
 - minimal `strategy.close_all` full-position closes for the current supported
@@ -477,7 +483,7 @@ request.security     partial      same-context identity and same-or-higher-timef
 alertcondition       partial      bool-compatible condition plus const-string title/message runtime events
 alert                partial      const-string message runtime events when execution reaches the call
 strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital and fixed default_qty subset only
-strategy.entry       partial      long market entry filled at next historical bar open plus long limit entry filled at limit price on a later historical bar when low <= limit and long stop entry filled at stop price on a later historical bar when high >= stop; explicit positive qty or fixed default qty; one net long position; no pyramiding; no public pending-order output
+strategy.entry       partial      long market entry filled at next historical bar open plus long limit entry filled at limit price on a later historical bar when low <= limit, long stop entry filled at stop price on a later historical bar when high >= stop, and long stop-limit entry activated on a later historical bar when high >= stop then filled at limit price on a subsequent historical bar when low <= limit; explicit positive qty or fixed default qty; one net long position; no pyramiding; no public pending-order output
 strategy.close       partial      full long-position close at current bar close; closed trade output
 strategy.close_all   partial      full close of the current supported long position at current bar close; flat or already-closed calls are no-op; closed trade output uses the current entry id
 strategy equity      partial      per-bar cash, marketValue, equity, and netProfit snapshots

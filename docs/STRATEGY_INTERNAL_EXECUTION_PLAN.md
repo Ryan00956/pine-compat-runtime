@@ -154,7 +154,7 @@ Acceptance:
 
 ## Stage 5: Entry Limit, Stop, And Stop-Limit Orders
 
-Status: in progress on 2026-06-02. See
+Status: closed on 2026-06-02. See
 `docs/STRATEGY_INTERNAL_STAGE5_ENTRY_ORDERS_AUDIT.md`.
 
 Goal: extend `strategy.entry` beyond market-long entries after pending-entry

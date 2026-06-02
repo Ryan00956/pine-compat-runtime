@@ -44,8 +44,13 @@ at the limit price before script statements on a later historical bar when
 `low <= limit`. `strategy.entry(..., stop=price)` creates an internal pending
 long stop entry, emits no public order while pending, never fills on its
 creation bar, and fills at the stop price before script statements on a later
-historical bar when `high >= stop`. Same-calculation absolute `strategy.exit`
-attachment may target the active pending market, limit, or stop entry id.
+historical bar when `high >= stop`. `strategy.entry(..., stop=price,
+limit=price)` creates an internal pending long stop-limit entry, activates an
+internal limit order before script statements on a later historical bar when
+`high >= stop`, does not fill on that activation bar, and fills at the limit
+price before script statements on a later historical bar when `low <= limit`.
+Same-calculation absolute `strategy.exit` attachment may target the active
+pending market, limit, stop, or stop-limit entry id.
 `strategy.close(id)` closes the full matching long position at the current bar
 close.
 `strategy.close_all()` closes the current supported long position at the current

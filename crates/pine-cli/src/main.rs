@@ -653,6 +653,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_entry_stop.pine",
             ),
             (
+                "runtime_strategy_entry_stop_limit.json",
+                "tests/fixtures/runtime/strategy_entry_stop_limit.pine",
+            ),
+            (
                 "runtime_strategy_default_quantity.json",
                 "tests/fixtures/runtime/strategy_default_quantity.pine",
             ),

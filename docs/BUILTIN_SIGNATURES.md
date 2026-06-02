@@ -274,8 +274,11 @@ use the configured or default fixed quantity. Supported market-long entries fill
 at the next historical bar open. Supported long limit entries wait until a later
 historical bar where `low <= limit` and fill at the limit price. Supported long
 stop entries wait until a later historical bar where `high >= stop` and fill at
-the stop price. These entry forms do not expose public pending-order records
-while pending.
+the stop price. Supported long stop-limit entries wait until a later historical
+bar where `high >= stop`, activate an internal limit order without filling on
+that activation bar, then fill at the limit price on a later historical bar
+where `low <= limit`. These entry forms do not expose public pending-order
+records while pending.
 `strategy.close_all()` closes the current supported long position at the current
 bar close and is a no-op while flat.
 `strategy.exit` accepts `qty`, `qty_percent`, or both on supported

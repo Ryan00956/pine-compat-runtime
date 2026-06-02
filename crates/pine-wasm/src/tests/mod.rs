@@ -163,6 +163,25 @@ fn runs_strategy_entry_stop_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_entry_stop_limit_from_csv_to_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry_stop_limit.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy stop-limit entry script should run");
+
+    assert!(output.contains("\"values\":[0,0,0,2]"));
+    assert!(output.contains("\"values\":[null,null,null,4]"));
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.long\",\"qty\":2,\"price\":4}]"
+    ));
+    assert!(output.contains("\"position\":[{\"barIndex\":3,\"size\":2,\"avgPrice\":4}]"));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("stop"));
+    assert!(!output.contains("limit"));
+}
+
+#[test]
 fn runs_strategy_default_quantity_from_csv_to_strategy_json() {
     let output = run_script_csv(
         "strategy(\"demo\", default_qty_type=strategy.fixed, default_qty_value=3)\nif bar_index == 1\n    strategy.entry(\"D\", strategy.long)\nplot(strategy.position_size)\n",

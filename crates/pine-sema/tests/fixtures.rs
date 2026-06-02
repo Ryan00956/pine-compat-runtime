@@ -360,6 +360,7 @@ fn accepts_supported_strategy_entry_fixture() {
         "tests/fixtures/sema/supported_strategy_entry.pine",
         "tests/fixtures/sema/supported_strategy_entry_limit.pine",
         "tests/fixtures/sema/supported_strategy_entry_stop.pine",
+        "tests/fixtures/sema/supported_strategy_entry_stop_limit.pine",
     ] {
         let path = workspace_fixture(fixture);
         let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -396,14 +397,6 @@ fn reports_strategy_entry_indicator_fixture() {
 fn reports_strategy_entry_short_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_entry_short.pine",
-        "E_CALL_ARG_VALUE",
-    );
-}
-
-#[test]
-fn reports_strategy_entry_stop_limit_fixture() {
-    assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_strategy_entry_stop_limit.pine",
         "E_CALL_ARG_VALUE",
     );
 }

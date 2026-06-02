@@ -244,6 +244,32 @@ def test_run_script_returns_strategy_entry_stop_contract():
     assert "stop" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_entry_stop_limit_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry_stop_limit.pine").read_text()
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0.0, 0.0, 0.0, 2.0],
+        [None, None, None, 4.0],
+    ]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 3,
+            "time": 4,
+            "direction": "strategy.long",
+            "qty": 2.0,
+            "price": 4.0,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 3, "size": 2.0, "avgPrice": 4.0}
+    ]
+    assert "pending" not in result["strategy"]
+    assert "stop" not in result["strategy"]
+    assert "limit" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_default_quantity_contract():
     result = pine_compat.run_script(
         'strategy("demo", default_qty_type=strategy.fixed, default_qty_value=3)\nif bar_index == 1\n    strategy.entry("D", strategy.long)\nplot(strategy.position_size)\n',

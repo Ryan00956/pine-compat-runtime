@@ -8,8 +8,17 @@ pub(super) enum PendingEntryDirection {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(super) enum PendingEntryKind {
     Market,
-    Limit { price: f64 },
-    Stop { price: f64 },
+    Limit {
+        price: f64,
+    },
+    Stop {
+        price: f64,
+    },
+    StopLimit {
+        stop_price: f64,
+        limit_price: f64,
+        activated_bar_index: Option<usize>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -99,6 +108,46 @@ impl PendingEntryBook {
         Some(self.entries.remove(position))
     }
 
+    pub(super) fn activate_stop_limit_long_entries(&mut self, bar_index: usize, high: f64) {
+        for pending_entry in &mut self.entries {
+            if pending_entry.direction != PendingEntryDirection::Long
+                || pending_entry.created_bar_index >= bar_index
+            {
+                continue;
+            }
+            let PendingEntryKind::StopLimit {
+                stop_price,
+                activated_bar_index,
+                ..
+            } = &mut pending_entry.kind
+            else {
+                continue;
+            };
+            if activated_bar_index.is_none() && high >= *stop_price {
+                *activated_bar_index = Some(bar_index);
+            }
+        }
+    }
+
+    pub(super) fn take_first_eligible_stop_limit_long(
+        &mut self,
+        bar_index: usize,
+        low: f64,
+    ) -> Option<PendingEntry> {
+        let position = self.entries.iter().position(|pending_entry| {
+            pending_entry.direction == PendingEntryDirection::Long
+                && matches!(
+                    pending_entry.kind,
+                    PendingEntryKind::StopLimit {
+                        limit_price,
+                        activated_bar_index: Some(activated_bar_index),
+                        ..
+                    } if activated_bar_index < bar_index && low <= limit_price
+                )
+        })?;
+        Some(self.entries.remove(position))
+    }
+
     #[allow(dead_code)]
     pub(super) fn clear_all(&mut self) {
         self.entries.clear();
@@ -163,6 +212,39 @@ impl PendingEntryBook {
         self.place_long(
             id,
             PendingEntryKind::Stop { price },
+            quantity,
+            created_bar_index,
+            diagnostics,
+        );
+    }
+
+    pub(super) fn place_stop_limit_long(
+        &mut self,
+        id: String,
+        quantity: f64,
+        stop_price: f64,
+        limit_price: f64,
+        created_bar_index: usize,
+        diagnostics: &mut Vec<RuntimeDiagnostic>,
+    ) {
+        if !stop_price.is_finite()
+            || stop_price <= 0.0
+            || !limit_price.is_finite()
+            || limit_price <= 0.0
+        {
+            diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.entry` stop-limit prices must be positive".to_owned(),
+            });
+            return;
+        }
+        self.place_long(
+            id,
+            PendingEntryKind::StopLimit {
+                stop_price,
+                limit_price,
+                activated_bar_index: None,
+            },
             quantity,
             created_bar_index,
             diagnostics,

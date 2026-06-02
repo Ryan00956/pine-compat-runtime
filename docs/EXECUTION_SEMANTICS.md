@@ -50,11 +50,15 @@ contracts, margin, and currency conversion remain unsupported.
 The current entry subset is `strategy.entry(id, strategy.long, qty=...)`,
 `strategy.entry(id, strategy.long)` when a fixed default quantity is configured,
 `strategy.entry(..., limit=price)` for long limit entries, and
-`strategy.entry(..., stop=price)` for long stop entries. Market entries fill at
-the next historical bar open. Limit and stop entries never fill on their
-creation bar; limit entries fill at the limit price before script statements on
-a later historical bar when `low <= limit`, and stop entries fill at the stop
-price before script statements on a later historical bar when `high >= stop`.
+`strategy.entry(..., stop=price)` for long stop entries. Supplying both `stop`
+and `limit` creates a long stop-limit entry. Market entries fill at the next
+historical bar open. Limit and stop entries never fill on their creation bar;
+limit entries fill at the limit price before script statements on a later
+historical bar when `low <= limit`, and stop entries fill at the stop price
+before script statements on a later historical bar when `high >= stop`.
+Stop-limit entries activate before script statements on a later historical bar
+when `high >= stop`, do not fill on that activation bar, and fill at the limit
+price before script statements on a later historical bar when `low <= limit`.
 Pending entries emit no public order while pending. Only one net long position
 is supported; repeated entry calls while a position is open are ignored under
 the current no-pyramiding rule. Explicit `qty` overrides the declaration

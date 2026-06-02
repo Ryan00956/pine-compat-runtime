@@ -1,3 +1,0 @@
-//@version=5
-strategy("Unsupported stop strategy entry")
-strategy.entry("L", strategy.long, qty=1, limit=1, stop=2)

@@ -507,6 +507,63 @@ fn pending_stop_entry_fills_on_later_high_crossing_bar() {
 }
 
 #[test]
+fn pending_stop_limit_entry_rejects_invalid_price() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_stop_limit_long_entry("L".to_owned(), 1.0, f64::NAN, 100.0, 0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_PRICE");
+}
+
+#[test]
+fn pending_stop_limit_entry_activates_without_filling_on_activation_bar() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_stop_limit_long_entry("L".to_owned(), 2.0, 105.0, 100.0, 0);
+    broker.fill_pending_stop_limit_long_entries(1, 20, 106.0, 99.0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(
+        broker.pending_entries.current().map(|entry| entry.kind),
+        Some(PendingEntryKind::StopLimit {
+            stop_price: 105.0,
+            limit_price: 100.0,
+            activated_bar_index: Some(1),
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_stop_limit_entry_fills_after_activation_on_later_low_crossing_bar() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_stop_limit_long_entry("L".to_owned(), 2.0, 105.0, 100.0, 0);
+    broker.fill_pending_stop_limit_long_entries(1, 20, 106.0, 99.0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert!(broker.orders.is_empty());
+
+    broker.fill_pending_stop_limit_long_entries(2, 30, 104.0, 99.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.orders[0].id, "L");
+    assert_eq!(broker.orders[0].bar_index, 2);
+    assert_eq!(broker.orders[0].time, 30);
+    assert_eq!(broker.orders[0].qty, 2.0);
+    assert_eq!(broker.orders[0].price, 100.0);
+    assert_eq!(broker.position_size, 2.0);
+    assert_eq!(broker.position[0].avg_price, Some(100.0));
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn pending_market_entry_allows_attached_stop_exit_without_public_fill() {
     let mut broker = BrokerState::new(100_000.0);
 

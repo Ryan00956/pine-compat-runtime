@@ -1,0 +1,3 @@
+//@version=5
+strategy("Supported strategy entry stop limit")
+strategy.entry("L", strategy.long, qty=1, stop=high, limit=low)
