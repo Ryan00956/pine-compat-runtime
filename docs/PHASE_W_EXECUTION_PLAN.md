@@ -140,9 +140,8 @@ The first runtime claim should be deliberately small:
 
 - Multiple pending single-trigger exits for the same current long entry.
 - Explicit `qty` and `qty_percent` reservations.
-- Omitted quantity participates in the same reservation model and resolves to
-  all currently unreserved quantity. This preserves the current full-position
-  behavior for one pending exit and makes the multi-exit rule explicit.
+- Omitted quantity remains on the existing one-effective-pending full-position
+  path and is outside the multiple-reservation claim.
 - Bracket and trailing exits should stay one-pending-compatible until the
   single-trigger reservation subset is fixture-backed. Runtime placement must
   not silently append bracket or trailing exits with new identities before the
@@ -193,8 +192,8 @@ revised rule.
 - A call with an existing identity replaces that pending exit. The old
   reservation is released before resolving the replacement quantity. If the
   replacement is invalid, the old pending exit remains unchanged.
-- Omitted `qty` and omitted `qty_percent` resolve to all currently unreserved
-  quantity.
+- Omitted `qty` and omitted `qty_percent` keep the previous full-position
+  behavior through the one-effective-pending replacement path.
 - Fixed `qty` resolves to `min(qty, unreserved_position_quantity)`.
 - `qty_percent` resolves to `position_size * qty_percent / 100.0`, then clamps
   to the current unreserved position quantity.
@@ -369,7 +368,7 @@ Steps:
 4. Confirm the exact first positive subset:
    - multiple pending single-trigger exits;
    - explicit `qty` and `qty_percent`;
-   - omitted quantity resolves to all unreserved quantity;
+   - omitted quantity stays on the one-effective-pending full-position path;
    - bracket/trailing multi-reservation deferred until later slices.
 5. Confirm reservation math:
    - release old reservation before replacement;
@@ -444,7 +443,8 @@ Confirmed Phase W first subset:
 - Multiple pending exits open first only for single-trigger `stop`, `limit`,
   `profit`, and `loss` forms on the current matching long entry.
 - Explicit fixed `qty` and `qty_percent` participate in the reservation model.
-- Omitted quantity resolves to all currently unreserved quantity.
+- Omitted quantity stays on the one-effective-pending full-position path and is
+  outside the Phase W multiple-reservation claim.
 - Bracket and trailing multiple-pending reservation remains deferred until a
   later explicit slice; until then, new-identity bracket/trailing calls must
   stay one-pending-compatible.
@@ -1319,11 +1319,14 @@ All commands passed on the Slice 9 workspace.
 At Phase W close, the expected claim should be no broader than:
 
 - `strategy.exit` remains `partial`.
-- Multiple pending exits are supported only for the fixture-backed subset.
+- Multiple pending exits are supported only for the fixture-backed explicit
+  fixed-`qty` or `qty_percent` single-trigger subset.
 - Reservation applies only to the current one-net-long position.
 - Reserved quantities are absolute placement-time quantities.
 - Fills emit existing order and trade records with absolute filled quantities.
 - Public runtime schema remains `schemaVersion: 3`.
+- Omitted-quantity full-position exits, bracket exits, and trailing exits remain
+  on the one-effective-pending replacement path.
 - Missing-entry pre-placement, multiple entries, pyramiding, short exposure,
   reversals, public pending-order records, rich order APIs, OCA behavior,
   commission, slippage, margin, strategy alerts, realtime broker rollback, and

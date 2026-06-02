@@ -1,7 +1,8 @@
 # Phase X Strategy Exit Bracket Reservation Execution Plan
 
-Status: planned. This document is the step-by-step execution playbook for the
-narrow strategy phase after `docs/PHASE_W_AUDIT.md`.
+Status: closed on 2026-06-02. Closeout is recorded in
+`docs/PHASE_X_AUDIT.md`. This document is the step-by-step execution playbook
+used for the narrow strategy phase after `docs/PHASE_W_AUDIT.md`.
 
 Phase X should extend the Phase W reservation model from explicit fixed `qty`
 or `qty_percent` single-trigger exits to explicit fixed `qty` or `qty_percent`
