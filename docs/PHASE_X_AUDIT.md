@@ -1,7 +1,6 @@
 # Phase X Strategy Exit Bracket Reservation Audit
 
-Status: closeout in progress on 2026-06-02; pending Slice 7 release
-verification.
+Status: closed on 2026-06-02.
 
 Phase X extends the Phase W multiple-reservation model from explicit
 single-trigger exits to the supported one-downside/one-upside bracket exits.
@@ -155,8 +154,12 @@ python3 -m pytest python/tests
 git diff --check
 ```
 
-Canonical release verification remains pending for Slice 7:
+Canonical release verification passed:
 
 ```text
 scripts/verify.sh
 ```
+
+`scripts/verify.sh` covered formatting, clippy with `-D warnings`, workspace
+tests, structural guardrails, wasm32 checking for `pine-wasm`, Python wheel
+build/install, and Python binding tests.
