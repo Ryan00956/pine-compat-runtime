@@ -1,0 +1,4 @@
+//@version=5
+strategy("Supported strategy cancel")
+strategy.entry("L", strategy.long, qty=1, limit=low)
+strategy.cancel("L")

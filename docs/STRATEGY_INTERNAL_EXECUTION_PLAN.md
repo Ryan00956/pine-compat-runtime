@@ -185,6 +185,9 @@ Acceptance:
 
 ## Stage 6: General Pending-Order Book And Cancellation
 
+Status: in progress on 2026-06-02. See
+`docs/STRATEGY_INTERNAL_STAGE6_CANCELLATION_AUDIT.md`.
+
 Goal: add cancellation semantics after pending orders are no longer
 exit-specific.
 

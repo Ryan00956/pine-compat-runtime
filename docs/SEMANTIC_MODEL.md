@@ -57,6 +57,10 @@ close.
 bar close without requiring an entry id; while flat or already closed it is a
 no-op. It cancels pending exits for the closed entry and keeps the existing
 public strategy output shape.
+`strategy.cancel(id)` cancels matching internal pending entry ids and matching
+pending exit ids in the supported order subset. Filled ids, unknown ids, and
+already-cancelled ids are no-op, and cancellation does not expose public
+pending-order records.
 `strategy.exit(id, from_entry, stop=price)`,
 `strategy.exit(id, from_entry, limit=price)`,
 `strategy.exit(id, from_entry, profit=ticks)`, and
@@ -115,7 +119,7 @@ multiple pending exits outside explicit fixed `qty` or `qty_percent`
 single-trigger/bracket/trailing exits, omitted-quantity multiple
 reservations, reservation behavior outside that subset,
 unmatched missing-entry pre-placement, entry-relative exit attachment to pending
-entries, `strategy.order`, `strategy.cancel`, `strategy.cancel_all`, broker settings beyond
+entries, `strategy.order`, `strategy.cancel_all`, broker settings beyond
 `initial_capital` and fixed default quantity, realtime strategy handoff, and
 strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 6 Slice 0 `strategy.cancel(id)` support for
+  the current supported pending-entry and pending-exit subset. Matching pending
+  ids are cancelled internally, filled or unknown ids are no-op, and the public
+  strategy output shape remains unchanged. `strategy.cancel_all()`, generic
+  order APIs, OCA groups, pyramiding, shorts, and reversals remain unsupported.
 - Added Strategy Internal Stage 5 Slice 2 long `strategy.entry(..., stop=...,
   limit=...)` stop-limit support. Supported long stop-limit entries use the
   existing internal pending-entry model, activate on a later historical bar when

@@ -185,7 +185,11 @@ impl Analyzer {
     ) {
         if !matches!(
             name,
-            "strategy.entry" | "strategy.close" | "strategy.close_all" | "strategy.exit"
+            "strategy.entry"
+                | "strategy.close"
+                | "strategy.close_all"
+                | "strategy.cancel"
+                | "strategy.exit"
         ) {
             return;
         }

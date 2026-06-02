@@ -182,6 +182,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "strategy.entry"
             | "strategy.close"
             | "strategy.close_all"
+            | "strategy.cancel"
             | "strategy.exit"
     ) || name == "input"
         || name.starts_with("input.")
@@ -260,7 +261,7 @@ impl Analyzer {
             if self.function_depth > 0 && is_output_or_declaration_builtin(&name) {
                 self.unsupported(
                     "function_side_effect",
-                    "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy.entry/strategy.close/strategy.exit order calls are not supported inside user-defined functions",
+                    "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy.entry/strategy.close/strategy.cancel/strategy.exit order calls are not supported inside user-defined functions",
                     callee.span,
                 );
             }

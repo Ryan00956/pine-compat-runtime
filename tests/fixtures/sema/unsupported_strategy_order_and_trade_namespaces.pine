@@ -1,6 +1,5 @@
 //@version=5
 strategy("Unsupported strategy order and trade namespaces")
-strategy.cancel("XL")
 strategy.cancel_all()
 strategy.risk.max_drawdown(10)
 plot(strategy.closedtrades.entry_price(0))

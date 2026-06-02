@@ -261,6 +261,7 @@ strategy.entry(id: simple string, direction: string-compatible, qty?: series/sim
   -> void
 strategy.close(id: simple string) -> void
 strategy.close_all() -> void
+strategy.cancel(id: simple string) -> void
 strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric)
   -> void
 ```
@@ -281,6 +282,10 @@ where `low <= limit`. These entry forms do not expose public pending-order
 records while pending.
 `strategy.close_all()` closes the current supported long position at the current
 bar close and is a no-op while flat.
+`strategy.cancel(id)` cancels matching internal pending entry ids and matching
+internal pending exit ids in the current supported order subset. Unknown,
+already-filled, and already-cancelled ids are no-op. Cancellation emits no
+public order record and does not add pending-order fields to the public output.
 `strategy.exit` accepts `qty`, `qty_percent`, or both on supported
 single-trigger, one-downside/one-upside bracket, and trailing trigger shapes.
 When both are present, fixed `qty` determines the reserved or filled quantity

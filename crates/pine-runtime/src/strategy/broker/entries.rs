@@ -67,6 +67,10 @@ impl PendingEntryBook {
             .map(|pending_entry| pending_entry.quantity)
     }
 
+    pub(super) fn cancel_id(&mut self, id: &str) {
+        self.entries.retain(|pending_entry| pending_entry.id != id);
+    }
+
     #[allow(dead_code)]
     pub(super) fn take_first_eligible_market_long(
         &mut self,

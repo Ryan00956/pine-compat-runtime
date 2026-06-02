@@ -65,6 +65,10 @@ the current no-pyramiding rule. Explicit `qty` overrides the declaration
 default. The resolved quantity, limit price, and stop price must be positive,
 and non-positive runtime values are reported in the strategy diagnostics array.
 Supported `strategy.exit` calls use the pending-exit model described below.
+`strategy.cancel(id)` cancels matching internal pending entry ids and matching
+pending exit ids in the supported order subset. Unknown, already-filled, and
+already-cancelled ids are no-op. Cancellation records no public order, trade, or
+pending-order output.
 
 `strategy.close(id)` closes the full matching long position at the current bar
 close. It records a closed trade with entry/exit bar indexes, entry/exit times,
@@ -116,8 +120,9 @@ read-only.
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants
 beyond the supported single-trigger, one-downside/one-upside bracket,
-trailing-stop, fixed-quantity, percent-quantity, and explicit single-trigger or
-bracket/trailing reservation subset, `strategy.order`, rich order families, strategy
+trailing-stop, fixed-quantity, percent-quantity, explicit single-trigger or
+bracket/trailing reservation subset, and `strategy.cancel(id)`,
+`strategy.order`, rich order families, strategy
 reporting helpers beyond the supported position/profit/equity/count variables,
 requested-context strategy state, strategy state mutation, and realtime
 strategy handoff remain unsupported until later strategy-maintenance slices

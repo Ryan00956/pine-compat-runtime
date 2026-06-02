@@ -350,6 +350,10 @@ impl PendingExitBook {
         });
     }
 
+    pub(super) fn cancel_id(&mut self, id: &str) {
+        self.exits.retain(|pending_exit| pending_exit.id != id);
+    }
+
     pub(super) fn clear_all(&mut self) {
         self.exits.clear();
     }
