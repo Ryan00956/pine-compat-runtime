@@ -915,6 +915,45 @@ Exit criteria:
 - Public strategy output and expression-time reads remain consistent with
   existing Phase M/N/R/S/U/V timing rules.
 
+### Slice 5 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Implemented changes:
+
+- Opened mixed-side multiple pending reservations for explicit fixed `qty` or
+  `qty_percent` single-trigger exits while keeping full-position, bracket, and
+  trailing exits on the existing one-effective-pending replacement path.
+- Implemented the Slice 0 mixed-side policy: touched candidates are collected
+  for an eligible bar, downside stop/loss candidates win when both downside and
+  upside candidates are touched, and only the winning side fills on that bar.
+- Preserved placement-order fills within the winning side, removed only filled
+  identities when a position remains, and kept opposite-side pending exits for
+  later bars after partial downside fills.
+- Added broker tests for mixed-side same-bar precedence, multiple downside
+  placement-order fills, opposite-side pending preservation, and
+  partial-to-full position/count/equity updates.
+- Added runtime fixtures, golden snapshots, incremental coverage, conformance
+  text, and docs for the mixed-side OHLC policy and state timing.
+
+No public runtime JSON, Python dictionary, WASM JSON, or strategy output schema
+changes were made.
+
+Slice 5 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-sema strategy
+cargo test -p pine-runtime --test incremental
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli matrix_output_matches_golden_snapshot
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+```
+
+All commands passed on the Slice 5 workspace.
+
 ## Slice 6: Bracket And Trailing Reservation Decision
 
 Goal: decide whether Phase W should include bracket/trailing multiple-exit

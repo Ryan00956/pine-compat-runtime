@@ -165,11 +165,10 @@ impl PendingExitBook {
             .find(|pending_exit| pending_exit.id == id && pending_exit.from_entry == from_entry)
     }
 
-    pub(super) fn other_exits_share_side(
+    pub(super) fn other_exits_are_single_trigger_reservations(
         &self,
         from_entry: &str,
         released_identity: Option<(&str, &str)>,
-        side: PendingExitSide,
     ) -> bool {
         self.exits
             .iter()
@@ -181,7 +180,7 @@ impl PendingExitBook {
             })
             .all(|pending_exit| {
                 pending_exit.multiple_reservation
-                    && pending_exit.trigger.single_trigger_side() == Some(side)
+                    && pending_exit.trigger.single_trigger_side().is_some()
             })
     }
 
@@ -871,13 +870,10 @@ impl BrokerState {
         let released_identity =
             multiple_single_trigger_reservation.then_some((id.as_str(), from_entry.as_str()));
         let available_quantity = if multiple_single_trigger_reservation
-            && self.pending_exits.other_exits_share_side(
-                &from_entry,
-                released_identity,
-                trigger
-                    .single_trigger_side()
-                    .expect("checked single trigger"),
-            ) {
+            && self
+                .pending_exits
+                .other_exits_are_single_trigger_reservations(&from_entry, released_identity)
+        {
             self.pending_exits.available_unreserved_quantity(
                 self.position_size,
                 &from_entry,
@@ -917,14 +913,12 @@ impl BrokerState {
             last_update_bar_index: bar_index,
         };
         if multiple_single_trigger_reservation
-            && self.pending_exits.other_exits_share_side(
-                &pending_exit.from_entry,
-                Some((pending_exit.id.as_str(), pending_exit.from_entry.as_str())),
-                pending_exit
-                    .trigger
-                    .single_trigger_side()
-                    .expect("checked single trigger"),
-            )
+            && self
+                .pending_exits
+                .other_exits_are_single_trigger_reservations(
+                    &pending_exit.from_entry,
+                    Some((pending_exit.id.as_str(), pending_exit.from_entry.as_str())),
+                )
         {
             self.pending_exits.replace_or_append(pending_exit);
         } else {

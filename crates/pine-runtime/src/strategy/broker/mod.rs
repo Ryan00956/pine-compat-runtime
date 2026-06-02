@@ -4,7 +4,9 @@ mod fills;
 
 use pine_ir::DEFAULT_STRATEGY_INITIAL_CAPITAL;
 
-use exits::{PendingExit, PendingExitBook, PendingExitTrigger, PendingTrailingState};
+use exits::{
+    PendingExit, PendingExitBook, PendingExitSide, PendingExitTrigger, PendingTrailingState,
+};
 pub(crate) use exits::{TrailPointsExitSpec, TrailPriceExitSpec};
 
 use crate::{
@@ -221,9 +223,47 @@ impl BrokerState {
             return;
         }
 
-        let mut filled_identities = Vec::new();
+        let mut touched_candidates = Vec::new();
         for pending_exit in pending_exits {
             if pending_exit.last_update_bar_index >= bar_index {
+                continue;
+            }
+            if self.entry_id.as_deref() != Some(pending_exit.from_entry.as_str()) {
+                self.pending_exits.clear_for_entry(&pending_exit.from_entry);
+                continue;
+            }
+
+            let triggered = match &pending_exit.trigger {
+                PendingExitTrigger::Stop(price) if low <= *price => {
+                    Some((*price, PendingExitSide::Stop))
+                }
+                PendingExitTrigger::Limit(price) if high >= *price => {
+                    Some((*price, PendingExitSide::Limit))
+                }
+                _ => None,
+            };
+            if let Some((exit_price, side)) = triggered {
+                touched_candidates.push((pending_exit, exit_price, side));
+            }
+        }
+
+        let winning_side = if touched_candidates
+            .iter()
+            .any(|(_, _, side)| *side == PendingExitSide::Stop)
+        {
+            PendingExitSide::Stop
+        } else if touched_candidates
+            .iter()
+            .any(|(_, _, side)| *side == PendingExitSide::Limit)
+        {
+            PendingExitSide::Limit
+        } else {
+            return;
+        };
+
+        let mut filled_identities = Vec::new();
+        for (pending_exit, exit_price, side) in touched_candidates {
+            if side != winning_side {
                 continue;
             }
             if self.position_size <= 0.0 {
@@ -233,16 +273,8 @@ impl BrokerState {
                 self.pending_exits.clear_for_entry(&pending_exit.from_entry);
                 continue;
             }
-
-            let triggered_price = match pending_exit.trigger {
-                PendingExitTrigger::Stop(price) if low <= price => Some(price),
-                PendingExitTrigger::Limit(price) if high >= price => Some(price),
-                _ => None,
-            };
-            if let Some(exit_price) = triggered_price {
-                filled_identities.push((pending_exit.id.clone(), pending_exit.from_entry.clone()));
-                self.fill_pending_exit(pending_exit, bar_index, time, exit_price);
-            }
+            filled_identities.push((pending_exit.id.clone(), pending_exit.from_entry.clone()));
+            self.fill_pending_exit(pending_exit, bar_index, time, exit_price);
         }
 
         if self.position_size <= 0.0 {

@@ -43,14 +43,23 @@ closes the full matching long position at the current bar close.
 `strategy.exit(id, from_entry, loss=ticks)` support the current long-only
 full-position single-trigger exit subset. Phase R also supports exactly one
 downside leg plus one upside leg in a single bracket:
-`stop + limit`, `stop + profit`, `loss + limit`, and `loss + profit`. Each
-accepted exit creates or replaces one pending exit for the matching entry,
-ignores same-bar triggers on newly created or replaced exits, and fills on a
-later historical bar when `low <= stop/loss price` or
-`high >= limit/profit price`. If both bracket legs are touched on the same
-eligible historical bar, the downside stop/loss leg fills first. Profit and
-loss use positive tick distances converted from `strategy.position_avg_price`
-with the fixed default `syminfo.mintick`. Phase S also supports exactly two
+`stop + limit`, `stop + profit`, `loss + limit`, and `loss + profit`. Supported
+single-trigger exits with explicit fixed `qty` or `qty_percent` can keep
+multiple pending exits for different `id + from_entry` identities on the
+current matching long entry. Their reserved quantities are resolved at
+placement time, the sum of reservations is clamped to the current open
+position, and new zero-reservation placements are rejected without changing
+existing pending exits. Same-identity calls replace the existing pending exit.
+New or replaced exits ignore same-bar triggers and can fill on a later
+historical bar when `low <= stop/loss price` or `high >= limit/profit price`.
+Same-side touched exits fill in placement order. If downside stop/loss and
+upside limit/profit candidates are both touched on the same eligible historical
+bar, only downside candidates fill on that bar in placement order; opposite-side
+candidates remain pending if a long position remains. If both bracket legs are
+touched on the same eligible historical bar, the downside stop/loss leg fills
+first. Profit and loss use positive tick distances converted from
+`strategy.position_avg_price` with the fixed default `syminfo.mintick`. Phase S
+also supports exactly two
 trailing forms for the current long-only broker: `trail_price + trail_offset`
 and `trail_points + trail_offset`. `trail_price` is an explicit activation
 price, `trail_points` converts once from `strategy.position_avg_price`, and
@@ -72,12 +81,13 @@ position open at the same average price, record one order event and one closed
 trade for the filled quantity, and clear the pending exit. These calls are
 rejected in indicator scripts and user-defined functions. Short entries,
 `strategy.exit` same-side pairs, 3+ trigger or invalid trailing combinations,
-`qty + qty_percent`, multiple pending exits, reservation behavior, missing-entry
-pre-placement, `strategy.order`, broker settings beyond `initial_capital` and
-fixed default quantity, realtime strategy handoff, and strategy metrics beyond
-the Phase L position/profit/equity variables remain unsupported except for the
-Phase O `strategy.closedtrades` and `strategy.opentrades` count variables. Those
-two variables are read-only
+`qty + qty_percent`, multiple pending exits outside explicit fixed `qty` or
+`qty_percent` single-trigger exits, reservation behavior outside that subset,
+missing-entry pre-placement, `strategy.order`, broker settings beyond
+`initial_capital` and fixed default quantity, realtime strategy handoff, and
+strategy metrics beyond the Phase L position/profit/equity variables remain
+unsupported except for the Phase O `strategy.closedtrades` and
+`strategy.opentrades` count variables. Those two variables are read-only
 strategy-mode `series int` values for the current long-only broker:
 `strategy.closedtrades` counts closed trades recorded by broker state, and
 `strategy.opentrades` is `1` while the supported long position is open and `0`

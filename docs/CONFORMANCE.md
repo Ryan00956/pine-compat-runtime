@@ -180,9 +180,18 @@ requested close quantity. Fills use `min(resolved_qty, current position size)`,
 so `qty_percent > 100` is allowed but closes no more than the current position.
 Partial fills emit the same existing order/trade fields with absolute `qty`,
 leave any remaining long position open at the same average price, and do not add
-public pending, remaining, percent, or schema fields. `qty` and `qty_percent` in
-the same call remain unsupported, as do multiple pending exits, quantity
-reservation, and missing-entry pre-placement.
+public pending, remaining, percent, or schema fields. Phase W adds the first
+multiple-pending reservation subset for explicit fixed `qty` or `qty_percent`
+single-trigger exits on the current matching long entry. Reservations are
+resolved at placement time, clamped to currently unreserved position quantity,
+and same-identity calls replace the previous reservation. Same-side touched
+exits fill in placement order. If downside stop/loss and upside limit/profit
+candidates are both touched on one eligible bar, downside candidates fill on
+that bar in placement order and opposite-side candidates remain pending if a
+long position remains. `qty` and `qty_percent` in the same call remain
+unsupported, as do multiple pending exits outside this single-trigger
+reservation subset, reservation behavior outside that subset, and missing-entry
+pre-placement.
 
 The closed Phase L boundary is summarized in `docs/PHASE_L_AUDIT.md`. The
 closed Phase M boundary is summarized in `docs/PHASE_M_AUDIT.md`. The closed
@@ -439,8 +448,8 @@ strategy.netprofit  partial       cumulative realized closed-trade profit read-o
 strategy.equity     partial       initial_capital plus realized net profit plus current open profit read-only series in strategy-mode scripts only
 strategy.closedtrades partial     closed-trade count read-only series int in strategy-mode scripts only; immediate after strategy.close and next-bar visible after pending strategy.exit fills
 strategy.opentrades partial       open-trade count read-only series int in strategy-mode scripts only; 1 for the current supported long position and 0 when flat
-strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent long exits; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; qty is placement-time finite positive absolute quantity; qty_percent is placement-time finite positive percent resolved to an absolute quantity against current position size; fills clamp to current position size, leave remaining long position open when partial, and expose only absolute filled qty; later-bar low <= stop/loss/active trailing stop or high >= limit/profit/activation price drives fills/activation; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the supported single-trigger, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent strategy.exit subset; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/qty + qty_percent/multiple-pending/reservation/missing-entry forms; rich order types, percent/cash/contracts sizing, mutable strategy state, trade namespace functions, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count variables are not implemented
+strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent long exits; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; qty is placement-time finite positive absolute quantity; qty_percent is placement-time finite positive percent resolved to an absolute quantity against current position size; explicit fixed-qty or qty-percent single-trigger calls can keep multiple reserved pending exits; fills clamp to current position size, leave remaining long position open when partial, and expose only absolute filled qty; later-bar low <= stop/loss/active trailing stop or high >= limit/profit/activation price drives fills/activation; same-side touched exits fill in placement order; mixed downside/upside same-bar touches fill downside candidates only; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close and the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger multiple-exit reservation subset; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/qty + qty_percent/multiple-pending outside that subset/reservation outside that subset/missing-entry forms; rich order types, percent/cash/contracts sizing, mutable strategy state, trade namespace functions, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

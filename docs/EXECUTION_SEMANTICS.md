@@ -75,8 +75,9 @@ output field includes current open profit while a long position is open. The
 expression variable `strategy.netprofit` is narrower: it is cumulative realized
 closed-trade profit only and excludes current open profit. The current subset
 has no commission, slippage, margin, percent sizing, currency conversion,
-quantity reservation, multiple pending exits, missing-entry pre-placement, or
-pyramiding.
+missing-entry pre-placement, or pyramiding. The only multiple-pending
+reservation subset is explicit fixed `qty` or `qty_percent` single-trigger
+`strategy.exit` calls for the current matching long entry.
 
 Strategy-mode scripts can read `strategy.position_size` and
 `strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`, and
@@ -130,12 +131,18 @@ above 100 are allowed because fills clamp to the current position size. Omitted
 
 Profit/loss and trailing tick arguments convert positive tick distances from
 `strategy.position_avg_price` using the fixed default `syminfo.mintick`, then
-reuse the same pending-exit lifecycle: accepted calls create or replace one
-pending exit for the matching current entry, the exit is not eligible on the bar
-where it is created or replaced, and a later historical bar with
+reuse the same pending-exit lifecycle: accepted calls are not eligible on the
+bar where they are created or replaced, and a later historical bar with
 `low <= stop/loss price` or `high >= limit/profit price` fills at the selected
-exit price. If both bracket legs are touched on the same eligible bar, the
-downside stop/loss leg fills first. A trailing exit activates on a later
+exit price. Single-trigger exits with explicit fixed `qty` or `qty_percent`
+can keep multiple pending reservations for different identities. Same-side
+touched candidates fill in placement order. When downside stop/loss and upside
+limit/profit candidates are both touched on the same eligible bar, only downside
+candidates fill on that bar in placement order; opposite-side candidates remain
+pending if a long position remains. Full-position, bracket, and trailing exits
+still use one-effective-pending replacement behavior. If both bracket legs are
+touched on the same eligible bar, the downside stop/loss leg fills first. A
+trailing exit activates on a later
 eligible bar when `high >= activation_price`, sets its active stop to
 `high - offset_distance`, and does not fill on the activation bar. On later
 bars, an active trailing exit fills first when `low <= active_stop`; otherwise

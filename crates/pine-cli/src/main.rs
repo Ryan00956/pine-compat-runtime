@@ -836,6 +836,18 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_clamp.pine",
             ),
             (
+                "runtime_strategy_exit_reservation_mixed_side_precedence.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_mixed_side_precedence.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_state.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_state.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_interactions.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_interactions.pine",
+            ),
+            (
                 "runtime_strategy_exit_qty_percent_limit_partial.json",
                 "tests/fixtures/runtime/strategy_exit_qty_percent_limit_partial.pine",
             ),
