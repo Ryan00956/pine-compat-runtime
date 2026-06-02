@@ -1,7 +1,7 @@
 # Phase W Strategy Exit Reservation Execution Plan
 
-Status: proposed. This document is the step-by-step execution playbook for the
-next narrow strategy phase after `docs/PHASE_V_AUDIT.md`.
+Status: closed on 2026-06-02. This document is the step-by-step execution
+playbook for the narrow strategy phase after `docs/PHASE_V_AUDIT.md`.
 
 Phase W should turn the current single pending `strategy.exit` model into the
 first deterministic reservation-backed multiple-exit subset for the existing
@@ -1276,6 +1276,43 @@ Exit criteria:
 - Focused verification passes.
 - `scripts/verify.sh` passes.
 - The workspace is ready for a narrow Phase W commit.
+
+### Slice 9 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Slice 9 created `docs/PHASE_W_AUDIT.md`, tied the supported surface,
+unsupported boundaries, public output contract, fixture evidence, host
+evidence, docs evidence, and verification evidence together, and closed this
+execution plan after the release gate passed.
+
+Focused verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-builtins strategy
+cargo test -p pine-sema strategy
+cargo test -p pine-runtime strategy
+cargo test -p pine-runtime --test incremental
+cargo test -p pine-runtime --test profile_fixtures
+cargo test -p pine-cli strategy
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+cargo test -p pine-cli matrix_output_matches_golden_snapshot
+cargo test -p pine-wasm strategy
+maturin build --manifest-path crates/pine-python/Cargo.toml --out dist
+python3 -m pip install --force-reinstall dist/pine_compat_runtime-0.1.0-cp310-abi3-manylinux_2_35_x86_64.whl
+python3 -m pytest python/tests
+git diff --check
+```
+
+Release verification:
+
+```text
+scripts/verify.sh
+```
+
+All commands passed on the Slice 9 workspace.
 
 ## Expected Final Compatibility Boundary
 

@@ -904,9 +904,9 @@ Out of scope until separately designed:
 Goal: add the first deterministic multiple-exit reservation subset without
 changing the public strategy output schema.
 
-Status: implemented for the current fixture-backed explicit fixed `qty` or
-`qty_percent` single-trigger reservation subset. Final Phase W audit and
-release-gate closeout are tracked in `docs/PHASE_W_EXECUTION_PLAN.md`.
+Status: closed for the current fixture-backed explicit fixed `qty` or
+`qty_percent` single-trigger reservation subset. See `docs/PHASE_W_AUDIT.md`.
+Execution playbook: `docs/PHASE_W_EXECUTION_PLAN.md`.
 
 Planned scope:
 
