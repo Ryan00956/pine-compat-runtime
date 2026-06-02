@@ -271,9 +271,11 @@ Unsupported named arguments should produce compatibility diagnostics.
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
 use the configured or default fixed quantity.
 `strategy.exit` accepts `qty` or `qty_percent` on supported single-trigger,
-one-downside/one-upside bracket, and trailing trigger shapes. `qty` and
-`qty_percent` remain mutually exclusive. Richer strategy order options remain
-unsupported.
+one-downside/one-upside bracket, and trailing trigger shapes. Explicit fixed
+`qty` or `qty_percent` single-trigger exits can keep multiple reserved pending
+exits for different `id + from_entry` identities on the current matching long
+entry. `qty` and `qty_percent` remain mutually exclusive. Richer strategy order
+options remain unsupported.
 
 ## Inputs
 

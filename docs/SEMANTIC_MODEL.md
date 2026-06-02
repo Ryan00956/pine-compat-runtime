@@ -93,9 +93,10 @@ strategy-mode `series int` values for the current long-only broker:
 `strategy.opentrades` is `1` while the supported long position is open and `0`
 when flat. They do not expose trade details or namespace functions. Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
-outside the public output model, and Phases R, S, U, and V keep that public
-contract unchanged for brackets, trailing exits, fixed `qty` exits, and percent
-`qty_percent` exits.
+outside the public output model, and Phases R, S, U, V, and W keep that public
+contract unchanged for brackets, trailing exits, fixed `qty` exits, percent
+`qty_percent` exits, and explicit fixed-quantity or percent-quantity
+single-trigger reservations.
 Diagnostics should describe the current strategy subset, not old phase names.
 
 `indicator(...)` and `strategy(...)` declarations are mutually exclusive and

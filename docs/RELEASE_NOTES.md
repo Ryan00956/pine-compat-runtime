@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Added Phase W `strategy.exit` quantity reservations for explicit fixed
+  `qty` or `qty_percent` single-trigger exits on the current matching long
+  entry. Different `id + from_entry` identities can keep multiple internal
+  pending reservations; same identities replace the previous reservation after
+  releasing it. New reservations resolve at placement time, clamp to remaining
+  unreserved position quantity, and are rejected with strategy diagnostics when
+  no quantity remains. Same-side touched exits fill in placement order, while
+  mixed downside/upside same-bar touches process downside candidates only.
+  Public runtime output remains `schemaVersion: 3` and continues to expose only
+  `orders`, `trades`, `position`, `equity`, and `diagnostics` under
+  `strategy`. Bracket and trailing multiple-pending reservations,
+  full-position multiple-pending exits, `qty + qty_percent`, missing-entry
+  pre-placement, public pending-order records, pyramiding, shorts, and richer
+  broker behavior remain unsupported.
 - Closed Phase V for the current fixture-backed `strategy.exit(...,
   qty_percent=...)` subset. The audit records supported single-trigger,
   one-downside/one-upside bracket, and trailing percent exits; placement-time

@@ -1191,6 +1191,39 @@ Exit criteria:
 - No docs claim public pending-order records or full broker-emulator parity.
 - Unsupported boundaries are explicit.
 
+### Slice 8 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Slice 8 synchronized the public compatibility claim after runtime,
+incremental, and host evidence existed:
+
+- `tests/fixtures/conformance.tsv` keeps `strategy.exit` `partial`, records the
+  explicit fixed-`qty` or `qty_percent` single-trigger reservation subset, and
+  keeps broad `strategy.*` unsupported outside the claimed subset.
+- `tests/snapshots/matrix.json` was refreshed from the conformance matrix.
+- `README.md`, `docs/BUILTIN_SIGNATURES.md`, `docs/EXECUTION_SEMANTICS.md`,
+  `docs/SEMANTIC_MODEL.md`, and `docs/LONG_TERM_EXECUTION_PLAN.md` now state
+  the Phase W reservation boundary without claiming public pending-order
+  records, reservation fields, full broker-emulator parity, missing-entry
+  pre-placement, short exposure, pyramiding, omitted-quantity multiple exits, or
+  bracket/trailing multiple reservations.
+- `docs/RELEASE_NOTES.md` includes an Unreleased Phase W entry covering
+  placement-time reservation, same-identity replacement, mixed-side same-bar
+  precedence, unchanged `schemaVersion: 3`, unchanged public strategy keys, and
+  still-unsupported broker tails.
+
+Slice 8 verification:
+
+```text
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli matrix_output_matches_golden_snapshot
+cargo test -p pine-cli matrix
+cargo test -p pine-cli matrix_output_matches_golden_snapshot
+git diff --check
+```
+
+All commands passed on the Slice 8 workspace.
+
 ## Slice 9: Audit And Release Verification
 
 Goal: close Phase W with an audit that ties implementation, fixtures, docs, and

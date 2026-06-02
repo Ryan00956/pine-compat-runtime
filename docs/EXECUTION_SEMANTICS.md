@@ -150,11 +150,12 @@ the active stop ratchets upward and never decreases. A filled exit appends
 exactly one `strategy.exit` order event with the absolute filled quantity,
 records a closed trade under the source entry id for that quantity, reduces or
 clears the current long position, and updates the normal position/equity
-snapshots. Phase M, Phase N, Phase R, Phase S, Phase U, and Phase V do not add
-public pending-order records, remaining-quantity fields, percent fields,
-bracket-leg metadata, trailing-state fields, exit reason fields, or top-level
-runtime schema fields. Phase O does not add public open-trade records or trade
-namespace functions. The prior Phase L boundary is summarized in
+snapshots. Phase M, Phase N, Phase R, Phase S, Phase U, Phase V, and Phase W do
+not add public pending-order records, reservation fields, remaining-quantity
+fields, percent fields, bracket-leg metadata, trailing-state fields, exit
+reason fields, or top-level runtime schema fields. Phase O does not add public
+open-trade records or trade namespace functions. The prior Phase L boundary is
+summarized in
 `docs/PHASE_L_AUDIT.md`; the closed Phase M and Phase N exit subsets are
 summarized in `docs/PHASE_M_AUDIT.md` and `docs/PHASE_N_AUDIT.md`; the Phase R
 bracket subset is summarized in `docs/PHASE_R_AUDIT.md`; the Phase U fixed
