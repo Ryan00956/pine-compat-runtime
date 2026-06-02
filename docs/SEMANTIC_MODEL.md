@@ -79,12 +79,13 @@ default `syminfo.mintick`; trailing exits activate on a later eligible bar,
 never fill on the activation bar, ratchet upward only, and later fill when
 `low <= active trailing stop`. Phase U accepts optional fixed `qty` on each of
 those supported single-trigger, bracket, and trailing forms. Phase V accepts
-optional `qty_percent` on the same supported trigger forms. `qty` and
-`qty_percent` are mutually exclusive. Both quantity forms evaluate once at
-placement time after `id` and `from_entry`, must be finite and positive, and
-store an absolute requested close quantity on the pending exit. `qty_percent`
-resolves against the current open position size, or the matching pending entry
-quantity for same-calculation absolute attachment, as
+optional `qty_percent` on the same supported trigger forms. Stage 4 accepts
+`qty` and `qty_percent` together on those same supported trigger forms, with
+fixed `qty` determining the reserved or filled quantity. Quantity forms evaluate
+once at placement time after `id` and `from_entry`, must be finite and positive,
+and store an absolute requested close quantity on the pending exit. When only
+`qty_percent` is used, it resolves against the current open position size, or
+the matching pending entry quantity for same-calculation absolute attachment, as
 `target_quantity * qty_percent / 100.0`; values above 100 are allowed because
 the fill closes no more than the current position. Omitted `qty` and omitted
 `qty_percent` preserve full-position one-effective-pending behavior across
@@ -97,8 +98,8 @@ position open at the same average price, record one order event and one closed
 trade for the filled quantity, and clear the pending exit. These calls are
 rejected in indicator scripts and user-defined functions. Short entries,
 `strategy.exit` same-side pairs, 3+ trigger or invalid trailing combinations,
-`qty + qty_percent`, multiple pending exits outside explicit fixed `qty` or
-`qty_percent` single-trigger/bracket/trailing exits, omitted-quantity multiple
+multiple pending exits outside explicit fixed `qty` or `qty_percent`
+single-trigger/bracket/trailing exits, omitted-quantity multiple
 reservations, reservation behavior outside that subset,
 unmatched missing-entry pre-placement, entry-relative exit attachment to pending
 entries, `strategy.order`, `strategy.cancel`, `strategy.cancel_all`, broker settings beyond

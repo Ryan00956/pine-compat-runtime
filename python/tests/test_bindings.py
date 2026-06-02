@@ -729,6 +729,57 @@ def test_run_script_returns_strategy_exit_qty_partial_fixture_contract():
     assert "remainingQty" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_exit_qty_precedence_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_qty_precedence_stop.pine").read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
+    assert result["schemaVersion"] == 3
+    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 2.0,
+            "price": 2.0,
+        },
+        {
+            "id": "XQ",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.exit",
+            "qty": 0.75,
+            "price": 3.0,
+        },
+    ]
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 1,
+            "exitBarIndex": 2,
+            "entryTime": 2,
+            "exitTime": 3,
+            "entryPrice": 2.0,
+            "exitPrice": 3.0,
+            "qty": 0.75,
+            "profit": 0.75,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 1.25, "avgPrice": 2.0},
+    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert "qtyPercent" not in result["strategy"]
+    assert "qty_percent" not in result["strategy"]
+    assert "pending" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_exit_qty_percent_partial_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine"

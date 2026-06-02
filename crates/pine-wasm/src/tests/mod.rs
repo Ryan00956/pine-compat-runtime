@@ -390,6 +390,33 @@ fn runs_strategy_exit_qty_partial_fixture_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_qty_precedence_fixture_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_qty_precedence_stop.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit qty precedence fixture should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XQ\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.exit\",\"qty\":0.75,\"price\":3}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":2,\"exitTime\":3,\"entryPrice\":2,\"exitPrice\":3,\"qty\":0.75,\"profit\":0.75}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":2,\"size\":1.25,\"avgPrice\":2}]"
+    ));
+    assert!(!output.contains("qtyPercent"));
+    assert!(!output.contains("qty_percent"));
+    assert!(!output.contains("pending"));
+}
+
+#[test]
 fn runs_strategy_exit_qty_percent_partial_fixture_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!(

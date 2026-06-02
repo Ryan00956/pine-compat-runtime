@@ -274,15 +274,16 @@ use the configured or default fixed quantity. Supported market-long entries fill
 at the next historical bar open and do not expose public pending-order records.
 `strategy.close_all()` closes the current supported long position at the current
 bar close and is a no-op while flat.
-`strategy.exit` accepts `qty` or `qty_percent` on supported single-trigger,
-one-downside/one-upside bracket, and trailing trigger shapes. Explicit fixed
-`qty` or `qty_percent` exits on those supported shapes can keep multiple
-reserved pending exits for different `id + from_entry` identities on the
-current matching long entry or the active pending market entry for
-same-calculation absolute `stop`, `limit`, and `trail_price` attachment.
-Same-calculation `profit`, `loss`, and `trail_points` attachment to a pending
-entry remains unsupported. `qty` and `qty_percent` remain mutually exclusive.
-Richer strategy order options remain unsupported.
+`strategy.exit` accepts `qty`, `qty_percent`, or both on supported
+single-trigger, one-downside/one-upside bracket, and trailing trigger shapes.
+When both are present, fixed `qty` determines the reserved or filled quantity
+and `qty_percent` is ignored. Explicit fixed `qty` or `qty_percent` exits on
+those supported shapes can keep multiple reserved pending exits for different
+`id + from_entry` identities on the current matching long entry or the active
+pending market entry for same-calculation absolute `stop`, `limit`, and
+`trail_price` attachment. Same-calculation `profit`, `loss`, and `trail_points`
+attachment to a pending entry remains unsupported. Richer strategy order
+options remain unsupported.
 
 ## Inputs
 

@@ -1,0 +1,4 @@
+//@version=5
+strategy("Supported strategy exit qty and qty percent bracket")
+strategy.entry("L", strategy.long, qty=2)
+strategy.exit("XB", "L", stop=low, limit=high, qty=1, qty_percent=50)

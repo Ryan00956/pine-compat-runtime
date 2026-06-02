@@ -125,6 +125,9 @@ Acceptance:
 
 ## Stage 4: Pine-Compatible `qty + qty_percent`
 
+Status: closed on 2026-06-02. See
+`docs/STRATEGY_INTERNAL_STAGE4_QTY_PRECEDENCE_AUDIT.md`.
+
 Goal: align `strategy.exit` quantity precedence with Pine where `qty` wins over
 `qty_percent`.
 

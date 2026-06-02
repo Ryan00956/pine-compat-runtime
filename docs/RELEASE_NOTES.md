@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 4 `strategy.exit` quantity precedence. For
+  supported single-trigger, bracket, and trailing exit shapes, calls that supply
+  both `qty` and `qty_percent` now follow Pine-compatible precedence where fixed
+  `qty` determines the reserved or filled quantity and `qty_percent` is ignored.
+  Unsupported trigger combinations remain rejected, and the public strategy
+  output shape is unchanged.
 - Added Strategy Internal Stage 3 Slice 1 trade outcome count variables.
   `strategy.wintrades`, `strategy.losstrades`, and `strategy.eventrades` are
   read-only strategy-mode series int counts derived from the current closed
@@ -48,9 +54,9 @@
   candidates before same-bar ratchets, and otherwise ratchet upward only. Public
   runtime output remains `schemaVersion: 3` and continues to expose only
   `orders`, `trades`, `position`, `equity`, and `diagnostics` under `strategy`.
-  Omitted-quantity multiple reservations, `qty + qty_percent`, missing-entry
-  pre-placement, public pending/trailing-state records, pyramiding, shorts, and
-  richer broker behavior remain unsupported.
+  Omitted-quantity multiple reservations, missing-entry pre-placement, public
+  pending/trailing-state records, pyramiding, shorts, and richer broker behavior
+  remain unsupported.
 - Added Phase X `strategy.exit` bracket reservations for explicit fixed `qty`
   or `qty_percent` one-downside/one-upside brackets on the current matching
   long entry. Different `id + from_entry` identities can keep multiple internal
@@ -64,8 +70,7 @@
   contributes the bracket's downside candidate. Public runtime output remains
   `schemaVersion: 3` and continues to expose only `orders`, `trades`,
   `position`, `equity`, and `diagnostics` under `strategy`. Omitted-quantity
-  multiple reservations, `qty + qty_percent`, missing-entry pre-placement,
-  public pending-order
+  multiple reservations, missing-entry pre-placement, public pending-order
   records, pyramiding, shorts, and richer broker behavior remain unsupported.
 - Added Phase W `strategy.exit` quantity reservations for explicit fixed
   `qty` or `qty_percent` single-trigger exits on the current matching long
@@ -77,9 +82,9 @@
   mixed downside/upside same-bar touches process downside candidates only.
   Public runtime output remains `schemaVersion: 3` and continues to expose only
   `orders`, `trades`, `position`, `equity`, and `diagnostics` under
-  `strategy`. Omitted-quantity multiple reservations, `qty + qty_percent`,
-  missing-entry pre-placement, public pending-order records, pyramiding, shorts,
-  and richer broker behavior remain unsupported.
+  `strategy`. Omitted-quantity multiple reservations, missing-entry
+  pre-placement, public pending-order records, pyramiding, shorts, and richer
+  broker behavior remain unsupported.
 - Closed Phase V for the current fixture-backed `strategy.exit(...,
   qty_percent=...)` subset. The audit records supported single-trigger,
   one-downside/one-upside bracket, and trailing percent exits; placement-time
@@ -91,9 +96,9 @@
   positive, resolves to an absolute requested close quantity against the current
   position size, and fills no more than the current position. Public strategy
   outputs continue to expose absolute order/trade `qty` values with no schema
-  bump. `qty + qty_percent`, quantity reservation, multiple pending exits,
-  missing-entry pre-placement, pyramiding, shorts, and richer broker behavior
-  remain unsupported.
+  bump. Quantity reservation, multiple pending exits, missing-entry
+  pre-placement, pyramiding, shorts, and richer broker behavior remain
+  unsupported.
 - Added Phase U fixed `strategy.exit(..., qty=...)` support for the existing
   single-trigger, one-downside/one-upside bracket, and trailing exit subsets.
   Fixed `qty` is evaluated at placement time, must be finite and positive,

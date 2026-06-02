@@ -125,13 +125,15 @@ bracket subset: exactly one downside leg plus one upside leg, covering
 `stop + limit`, `stop + profit`, `loss + limit`, and `loss + profit`. Phase S
 adds the first trailing subset: exactly `trail_price + trail_offset` and
 `trail_points + trail_offset`. Phase U adds optional fixed `qty`; Phase V adds
-optional `qty_percent` on those same supported trigger shapes. `qty` and
-`qty_percent` are mutually exclusive. Both quantity forms evaluate once at
-placement time, must be finite and positive, and store an absolute requested
-close quantity on the single pending exit. `qty_percent` resolves against the
-current open position size as `position_size * qty_percent / 100.0`, and values
-above 100 are allowed because fills clamp to the current position size. Omitted
-`qty` and omitted `qty_percent` keep the previous full-position behavior.
+optional `qty_percent` on those same supported trigger shapes. Stage 4 accepts
+`qty` and `qty_percent` together on those same supported trigger shapes, with
+fixed `qty` determining the reserved or filled quantity. Quantity forms evaluate
+once at placement time, must be finite and positive, and store an absolute
+requested close quantity on the single pending exit. When only `qty_percent` is
+used, it resolves against the current open position size as
+`position_size * qty_percent / 100.0`, and values above 100 are allowed because
+fills clamp to the current position size. Omitted `qty` and omitted
+`qty_percent` keep the previous full-position behavior.
 
 Profit/loss and trailing tick arguments convert positive tick distances from
 `strategy.position_avg_price` using the fixed default `syminfo.mintick`, then

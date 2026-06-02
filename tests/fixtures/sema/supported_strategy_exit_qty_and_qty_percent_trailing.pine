@@ -1,0 +1,4 @@
+//@version=5
+strategy("Supported strategy exit qty and qty percent trailing")
+strategy.entry("L", strategy.long, qty=2)
+strategy.exit("XT", "L", trail_points=10, trail_offset=2, qty=1, qty_percent=50)

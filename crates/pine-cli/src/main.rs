@@ -813,6 +813,18 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_qty_state.pine",
             ),
             (
+                "runtime_strategy_exit_qty_precedence_stop.json",
+                "tests/fixtures/runtime/strategy_exit_qty_precedence_stop.pine",
+            ),
+            (
+                "runtime_strategy_exit_qty_precedence_bracket.json",
+                "tests/fixtures/runtime/strategy_exit_qty_precedence_bracket.pine",
+            ),
+            (
+                "runtime_strategy_exit_qty_precedence_trailing.json",
+                "tests/fixtures/runtime/strategy_exit_qty_precedence_trailing.pine",
+            ),
+            (
                 "runtime_strategy_exit_reservation_qty_stop_multi.json",
                 "tests/fixtures/runtime/strategy_exit_reservation_qty_stop_multi.pine",
             ),
@@ -1335,6 +1347,11 @@ mod tests {
             | "tests/fixtures/runtime/strategy_exit_qty_trailing_partial.pine"
             | "tests/fixtures/runtime/strategy_exit_qty_percent_trailing_partial.pine" => {
                 include_str!("../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv")
+            }
+            "tests/fixtures/runtime/strategy_exit_qty_precedence_trailing.pine" => {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_exit_qty_precedence_trailing_bars.csv"
+                )
             }
             "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_price_multi.pine"
             | "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_points_multi.pine"

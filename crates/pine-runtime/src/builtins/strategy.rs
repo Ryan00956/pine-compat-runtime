@@ -167,7 +167,7 @@ impl<'a> HistoricalRuntime<'a> {
             None
         };
         let quantity = match (qty, qty_percent) {
-            (Some(_), Some(_)) => return Ok(PineValue::Void),
+            (Some(qty), Some(_)) => StrategyExitQuantityArg::Fixed(qty),
             (Some(qty), None) => StrategyExitQuantityArg::Fixed(qty),
             (None, Some(qty_percent)) => StrategyExitQuantityArg::Percent(qty_percent),
             (None, None) => StrategyExitQuantityArg::Full,
