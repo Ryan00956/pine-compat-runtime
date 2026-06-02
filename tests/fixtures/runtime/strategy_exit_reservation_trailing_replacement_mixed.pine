@@ -1,0 +1,12 @@
+//@version=5
+strategy("Exit reservation trailing replacement mixed")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("X", "L", trail_price=2, trail_offset=50, qty=1.5)
+    strategy.exit("Y", "L", stop=2.7, qty=0.5)
+if bar_index == 2
+    strategy.exit("X", "L", stop=2.7, qty=1.5)
+plot(strategy.position_size)
+plot(strategy.netprofit)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)

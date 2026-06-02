@@ -1,0 +1,10 @@
+//@version=5
+strategy("Exit reservation trailing bracket downside order")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XB", "L", stop=2.7, limit=4.5, qty=0.75)
+    strategy.exit("XT", "L", trail_price=2, trail_offset=50, qty=0.5)
+plot(strategy.position_size)
+plot(strategy.netprofit)
+plot(strategy.closedtrades)
+plot(strategy.opentrades)

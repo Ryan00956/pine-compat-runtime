@@ -2650,6 +2650,203 @@ fn close_long_cancels_mixed_single_trigger_and_bracket_reservations() {
 }
 
 #[test]
+fn mixed_trailing_and_stop_downside_fill_in_placement_order() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price_qty(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPriceExitSpec {
+            activation_price: 105.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        0.5,
+        0,
+    );
+    broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 103.0, 0.75, 0);
+
+    broker.evaluate_pending_exits(1, 20, 110.0, 106.0);
+    assert_active_trailing_stop_by_id(&broker, "XT", 108.0);
+
+    broker.evaluate_pending_exits(2, 30, 109.0, 102.0);
+
+    assert_eq!(broker.orders[1].id, "XT");
+    assert_eq!(broker.orders[1].qty, 0.5);
+    assert_eq!(broker.orders[1].price, 108.0);
+    assert_eq!(broker.orders[2].id, "XS");
+    assert_eq!(broker.orders[2].qty, 0.75);
+    assert_eq!(broker.orders[2].price, 103.0);
+    assert_eq!(broker.position_size, 0.75);
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn mixed_trailing_and_bracket_downside_fill_in_placement_order() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket_qty("XB".to_owned(), "L".to_owned(), 107.0, 115.0, 0.75, 0);
+    broker.place_exit_trail_price_qty(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPriceExitSpec {
+            activation_price: 105.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        0.5,
+        0,
+    );
+
+    broker.evaluate_pending_exits(1, 20, 110.0, 109.0);
+    assert_active_trailing_stop_by_id(&broker, "XT", 108.0);
+
+    broker.evaluate_pending_exits(2, 30, 114.0, 106.0);
+
+    assert_eq!(broker.orders[1].id, "XB");
+    assert_eq!(broker.orders[1].qty, 0.75);
+    assert_eq!(broker.orders[1].price, 107.0);
+    assert_eq!(broker.orders[2].id, "XT");
+    assert_eq!(broker.orders[2].qty, 0.5);
+    assert_eq!(broker.orders[2].price, 108.0);
+    assert_eq!(broker.position_size, 0.75);
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn mixed_trailing_downside_wins_over_upside_candidates_and_preserves_them() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit_qty("XL".to_owned(), "L".to_owned(), 111.0, 0.5, 0);
+    broker.place_exit_bracket_qty("XB".to_owned(), "L".to_owned(), 95.0, 112.0, 0.5, 0);
+    broker.place_exit_trail_price_qty(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPriceExitSpec {
+            activation_price: 105.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        0.5,
+        0,
+    );
+
+    broker.evaluate_pending_exits(1, 20, 110.0, 106.0);
+    assert_active_trailing_stop_by_id(&broker, "XT", 108.0);
+
+    broker.evaluate_pending_exits(2, 30, 113.0, 107.0);
+
+    assert_eq!(broker.orders[1].id, "XT");
+    assert_eq!(broker.orders[1].qty, 0.5);
+    assert_eq!(broker.orders[1].price, 108.0);
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.position_size, 1.5);
+    assert_eq!(pending_exit_ids(&broker), vec!["XL", "XB"]);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn mixed_inactive_trailing_activation_and_upside_fill_same_bar_preserves_trailing() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price_qty(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPriceExitSpec {
+            activation_price: 105.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        0.5,
+        0,
+    );
+    broker.place_exit_limit_qty("XL".to_owned(), "L".to_owned(), 109.0, 0.75, 0);
+
+    broker.evaluate_pending_exits(1, 20, 110.0, 103.0);
+
+    assert_eq!(broker.orders[1].id, "XL");
+    assert_eq!(broker.orders[1].qty, 0.75);
+    assert_eq!(broker.orders[1].price, 109.0);
+    assert_eq!(broker.position_size, 1.25);
+    assert_eq!(pending_exit_ids(&broker), vec!["XT"]);
+    assert_active_trailing_stop_by_id(&broker, "XT", 108.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn same_identity_replacement_between_trailing_and_other_families_releases_reservation() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_trail_price_qty(
+        "X".to_owned(),
+        "L".to_owned(),
+        TrailPriceExitSpec {
+            activation_price: 105.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        1.5,
+        0,
+    );
+    broker.place_exit_stop_qty("Y".to_owned(), "L".to_owned(), 94.0, 0.5, 0);
+
+    broker.place_exit_stop_qty("X".to_owned(), "L".to_owned(), 95.0, 1.5, 1);
+
+    let replaced = broker
+        .pending_exit_by_identity("X", "L")
+        .expect("single-trigger replacement should exist");
+    assert_eq!(replaced.trigger, PendingExitTrigger::Stop(95.0));
+    assert_eq!(replaced.reserved_quantity, 1.5);
+    assert_eq!(replaced.last_update_bar_index, 1);
+    assert!(broker.diagnostics.is_empty());
+
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket_qty("X".to_owned(), "L".to_owned(), 95.0, 110.0, 1.5, 0);
+    broker.place_exit_stop_qty("Y".to_owned(), "L".to_owned(), 94.0, 0.5, 0);
+
+    broker.place_exit_trail_price_qty(
+        "X".to_owned(),
+        "L".to_owned(),
+        TrailPriceExitSpec {
+            activation_price: 105.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        1.5,
+        1,
+    );
+
+    let replaced = broker
+        .pending_exit_by_identity("X", "L")
+        .expect("trailing replacement should exist");
+    assert_eq!(replaced.trigger, trailing_price_trigger(105.0, 2.0));
+    assert_eq!(replaced.reserved_quantity, 1.5);
+    assert_eq!(replaced.last_update_bar_index, 1);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn close_long_cancels_mixed_single_bracket_and_trailing_reservations() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 95.0, 0.5, 0);
+    broker.place_exit_bracket_qty("XB".to_owned(), "L".to_owned(), 94.0, 110.0, 0.5, 0);
+    broker.place_exit_trail_price_qty(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPriceExitSpec {
+            activation_price: 105.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        0.5,
+        0,
+    );
+
+    broker.close_long("L".to_owned(), 1, 20, 105.0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.trades.len(), 1);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn two_percent_brackets_reserve_expected_absolute_quantities() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_bracket_qty_percent("XB1".to_owned(), "L".to_owned(), 95.0, 110.0, 25.0, 0);

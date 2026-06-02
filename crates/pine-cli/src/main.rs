@@ -904,6 +904,30 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_clamp.pine",
             ),
             (
+                "runtime_strategy_exit_reservation_trailing_single_downside_order.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_trailing_single_downside_order.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_trailing_bracket_downside_order.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_trailing_bracket_downside_order.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_trailing_mixed_side_precedence.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_side_precedence.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_trailing_activation_mixed_fill.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_trailing_activation_mixed_fill.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_trailing_replacement_mixed.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_trailing_replacement_mixed.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_trailing_mixed_state.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_state.pine",
+            ),
+            (
                 "runtime_strategy_exit_qty_percent_stop_partial.json",
                 "tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine",
             ),
@@ -1215,6 +1239,16 @@ mod tests {
             | "tests/fixtures/runtime/strategy_exit_reservation_qty_percent_trailing_clamp.pine" => {
                 include_str!(
                     "../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_bars.csv"
+                )
+            }
+            "tests/fixtures/runtime/strategy_exit_reservation_trailing_single_downside_order.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_trailing_bracket_downside_order.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_side_precedence.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_trailing_activation_mixed_fill.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_trailing_replacement_mixed.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_state.pine" => {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_bars.csv"
                 )
             }
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),

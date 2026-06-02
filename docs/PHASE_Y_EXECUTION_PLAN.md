@@ -944,6 +944,46 @@ Exit criteria:
 - Public strategy output and expression-time reads remain consistent with
   existing Phase M/N/R/S/U/V/W/X timing rules.
 
+### Slice 4 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Implemented changes:
+
+- Confirmed the support path for mixed explicit fixed/percent single-trigger,
+  bracket, and trailing reservation collections; no runtime widening was needed
+  beyond the Slice 2/3 placement and evaluator paths.
+- Added broker tests for trailing plus single-trigger downside placement order,
+  trailing plus bracket downside placement order, trailing downside precedence
+  over touched upside candidates, inactive trailing activation with a same-bar
+  upside fill, cross-family same-identity replacement, and `strategy.close`
+  cleanup across single-trigger, bracket, and trailing reservations.
+- Added `strategy_exit_reservation_trailing_mixed_bars.csv` so runtime fixtures
+  can activate, ratchet, and then trigger mixed candidates deterministically
+  without ordinary stops/brackets filling before the intended bar.
+- Added runtime fixtures and snapshots for trailing plus single-trigger downside
+  order, trailing plus bracket downside order, trailing downside precedence over
+  preserved upside candidates, activation with a mixed upside fill, mixed-family
+  replacement, and mixed state-variable timing.
+- Added the new fixtures to the CLI golden snapshot harness and incremental
+  append parity harness.
+
+Conformance wording and matrix claims remain conservative until the
+host-parity/conformance slice.
+
+Slice 4 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-runtime --test incremental
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+```
+
+All commands passed on the Slice 4 workspace.
+
 ## Slice 5: Host Parity, Conformance, And Public Shape Guardrails
 
 Goal: prove the trailing-reservation subset through all host surfaces and align
