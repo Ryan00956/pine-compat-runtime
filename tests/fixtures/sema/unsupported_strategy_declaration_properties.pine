@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy declaration properties", pyramiding=2, calc_on_order_fills=true, calc_on_every_tick=true, process_orders_on_close=true, backtest_fill_limits_assumption=1, default_qty_type="strategy.cash", currency="USD", slippage=1, commission_value=0.1, margin_long=100, close_entries_rule="FIFO", risk_free_rate=0.02, use_bar_magnifier=true, fill_orders_on_standard_ohlc=true)
+plot(close)

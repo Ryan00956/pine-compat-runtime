@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 1 boundary lock documentation. The Stage 1
+  audit records the current fixture-backed strategy support and unsupported
+  boundary, aligns current reservation wording for single-trigger, bracket, and
+  trailing `strategy.exit` reservations, and adds negative semantic fixtures
+  for unsupported strategy declaration properties plus unsupported
+  order/trade/risk namespaces. Runtime behavior and public strategy output are
+  unchanged; conformance and matrix snapshots are synchronized to the added
+  semantic guard coverage.
 - Closed Phase Z for the omitted-quantity `strategy.exit` boundary. Omitted
   `qty` and omitted `qty_percent` exits keep full-position
   one-effective-pending behavior across supported single-trigger, bracket, and

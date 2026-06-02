@@ -196,8 +196,8 @@ opposite-side candidates remain pending if a long position remains. When both
 legs of one bracket are touched, that bracket contributes its downside
 candidate. Inactive trailing reservations activate on a later eligible bar and
 never fill on the activation bar; active trailing reservations fill as downside
-candidates before same-bar ratchets and otherwise ratchet upward only. `qty` and
-Phase Z closes the omitted-quantity boundary: omitted `qty` and omitted
+candidates before same-bar ratchets and otherwise ratchet upward only. Phase Z
+closes the omitted-quantity boundary: omitted `qty` and omitted
 `qty_percent` keep full-position one-effective-pending behavior across
 supported single-trigger, bracket, and trailing forms, and a later omitted
 full-position exit clears earlier explicit reservations for the current

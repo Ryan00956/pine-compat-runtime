@@ -170,6 +170,14 @@ fn reports_unsupported_strategy_default_quantity_fixture() {
 }
 
 #[test]
+fn reports_unsupported_strategy_declaration_properties_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_declaration_properties.pine",
+        "E_CALL_ARG_NAME",
+    );
+}
+
+#[test]
 fn reports_unsupported_strategy_order_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_orders.pine",
@@ -506,6 +514,21 @@ fn reports_unknown_strategy_variable_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_unknown_variable.pine",
         &["strategy.future_metric"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
+    assert_strategy_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine",
+        &[
+            "strategy.close_all",
+            "strategy.cancel",
+            "strategy.cancel_all",
+            "strategy.risk.max_drawdown",
+            "strategy.closedtrades.entry_price",
+            "strategy.opentrades.entry_price",
+        ],
     );
 }
 
