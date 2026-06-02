@@ -823,6 +823,78 @@ def test_run_script_returns_strategy_exit_reservation_fixture_contract():
     assert "qty_percent" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_exit_omitted_replaces_reservations_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_exit_omitted_replaces_reservations.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
+    assert result["schemaVersion"] == 3
+    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 0,
+            "time": 1,
+            "direction": "strategy.long",
+            "qty": 2.0,
+            "price": 1.0,
+        },
+        {
+            "id": "XFULL",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.exit",
+            "qty": 2.0,
+            "price": 2.5,
+        },
+    ]
+    assert [order["direction"] for order in result["strategy"]["orders"]].count(
+        "strategy.exit"
+    ) == 1
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 0,
+            "exitBarIndex": 2,
+            "entryTime": 1,
+            "exitTime": 3,
+            "entryPrice": 1.0,
+            "exitPrice": 2.5,
+            "qty": 2.0,
+            "profit": 3.0,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 0, "size": 2.0, "avgPrice": 1.0},
+        {"barIndex": 2, "size": 0.0, "avgPrice": None},
+    ]
+    assert [plot["values"] for plot in result["plots"]] == [
+        [2.0, 2.0, 2.0, 0.0],
+        [0.0, 0.0, 0.0, 3.0],
+    ]
+    assert result["diagnostics"] == []
+    assert result["strategy"]["diagnostics"] == []
+    strategy_json = json.dumps(result["strategy"])
+    assert "pending" not in strategy_json
+    assert "reservation" not in strategy_json
+    assert "reservedQuantity" not in strategy_json
+    assert "reserved_quantity" not in strategy_json
+    assert "remainingQuantity" not in strategy_json
+    assert "remaining_quantity" not in strategy_json
+    assert "remainingQty" not in strategy_json
+    assert "qtyPercent" not in strategy_json
+    assert "qty_percent" not in strategy_json
+    assert "triggerSide" not in strategy_json
+    assert "activation" not in strategy_json
+    assert "exitReason" not in strategy_json
+
+
 def test_run_script_returns_strategy_exit_bracket_reservation_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_exit_reservation_bracket_host_parity.pine"

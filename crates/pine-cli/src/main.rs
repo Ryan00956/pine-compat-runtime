@@ -1154,6 +1154,45 @@ mod tests {
     }
 
     #[test]
+    fn strategy_exit_omitted_replaces_reservations_fixture_has_host_stable_shape() {
+        let output = runtime_fixture_json(
+            "tests/fixtures/runtime/strategy_exit_omitted_replaces_reservations.pine",
+        );
+
+        assert!(output.starts_with(&format!(
+            r#"{{"schemaVersion":{},"#,
+            PUBLIC_RUNTIME_SCHEMA_VERSION
+        )));
+        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
+        assert!(output.contains(
+            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":1},{"id":"XFULL","barIndex":2,"time":3,"direction":"strategy.exit","qty":2,"price":2.5}]"#
+        ));
+        assert!(output.contains(
+            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":2,"entryTime":1,"exitTime":3,"entryPrice":1,"exitPrice":2.5,"qty":2,"profit":3}]"#
+        ));
+        assert!(output.contains(
+            r#""position":[{"barIndex":0,"size":2,"avgPrice":1},{"barIndex":2,"size":0,"avgPrice":null}]"#
+        ));
+        assert!(output.contains(r#""strategy":{"orders":"#));
+        assert!(output.contains(r#""trades":["#));
+        assert!(output.contains(r#""position":["#));
+        assert!(output.contains(r#""equity":["#));
+        assert!(output.contains(r#""diagnostics":[]}"#));
+        assert!(!output.contains("pending"));
+        assert!(!output.contains("reservation"));
+        assert!(!output.contains("reservedQuantity"));
+        assert!(!output.contains("reserved_quantity"));
+        assert!(!output.contains("remainingQuantity"));
+        assert!(!output.contains("remaining_quantity"));
+        assert!(!output.contains("remainingQty"));
+        assert!(!output.contains("qtyPercent"));
+        assert!(!output.contains("qty_percent"));
+        assert!(!output.contains("triggerSide"));
+        assert!(!output.contains("activation"));
+        assert!(!output.contains("exitReason"));
+    }
+
+    #[test]
     fn strategy_exit_bracket_reservation_fixture_has_host_stable_shape() {
         let output = runtime_fixture_json(
             "tests/fixtures/runtime/strategy_exit_reservation_bracket_host_parity.pine",

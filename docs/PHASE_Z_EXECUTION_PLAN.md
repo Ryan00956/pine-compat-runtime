@@ -669,13 +669,32 @@ Exit criteria:
 
 ### Slice 3 Implementation Record
 
-Status: pending.
+Status: completed on 2026-06-02.
 
 Record:
 
-- Host tests added.
-- Commands run and results.
-- Any host-specific issue found.
+- Added host-shape coverage for
+  `tests/fixtures/runtime/strategy_exit_omitted_replaces_reservations.pine` in:
+  - `crates/pine-cli/src/main.rs`;
+  - `python/tests/test_bindings.py`;
+  - `crates/pine-wasm/src/tests/mod.rs`.
+- Each host test calls the existing shared runtime path and asserts:
+  - public runtime `schemaVersion` remains `3`;
+  - public `strategy` keys remain `orders`, `trades`, `position`, `equity`,
+    and `diagnostics`;
+  - the final public exit path is one `XFULL` order/trade with absolute
+    quantity `2`;
+  - internal pending, reservation, remaining-quantity, qty-percent, trigger,
+    activation, and exit-reason fields do not appear.
+- Commands run:
+  - `cargo fmt --check`
+  - `cargo test -p pine-cli strategy`
+  - `cargo test -p pine-wasm strategy`
+  - `maturin build --manifest-path crates/pine-python/Cargo.toml --out dist`
+  - `python3 -m pip install --force-reinstall dist/pine_compat_runtime-0.1.0-cp310-abi3-manylinux_2_35_x86_64.whl`
+  - `python3 -m pytest python/tests`
+- No host-specific behavior issue was found, and no binding/runtime
+  implementation changes were required.
 
 ## Slice 4: Conformance And Matrix Boundary Sync
 
