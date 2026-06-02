@@ -1,0 +1,10 @@
+//@version=5
+strategy("Exit reservation qty percent bracket replacement")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XB1", "L", stop=0.5, limit=4, qty_percent=25)
+    strategy.exit("XB2", "L", stop=0.25, limit=3, qty_percent=25)
+if bar_index == 1
+    strategy.exit("XB1", "L", stop=0.5, limit=4, qty_percent=75)
+plot(strategy.position_size)
+plot(strategy.netprofit)

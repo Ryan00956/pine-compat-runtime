@@ -824,6 +824,58 @@ Exit criteria:
 - Existing Phase V single-exit percent fixtures remain green.
 - Public output shape is unchanged.
 
+### Slice 3 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Implemented changes:
+
+- Extended the Slice 2 bracket reservation family from explicit fixed `qty` to
+  explicit fixed `qty` or `qty_percent`.
+- Reused the existing percent quantity resolver: `qty_percent` resolves against
+  the current open `position_size` at placement time, then clamps to currently
+  unreserved position quantity.
+- Kept `qty + qty_percent` rejected by the existing semantic guardrail.
+- Kept omitted-quantity bracket exits and trailing exits outside the
+  multiple-reservation claim.
+- Added broker tests for two percent brackets, mixed fixed and percent brackets,
+  percent replacement, over-100 percent clamping, zero-unreserved rejection, and
+  invalid percent replacement preserving the previous pending bracket.
+
+Runtime fixtures and snapshots added:
+
+```text
+tests/fixtures/runtime/strategy_exit_reservation_qty_percent_bracket_multi.pine
+tests/snapshots/runtime_strategy_exit_reservation_qty_percent_bracket_multi.json
+tests/fixtures/runtime/strategy_exit_reservation_qty_mixed_bracket_multi.pine
+tests/snapshots/runtime_strategy_exit_reservation_qty_mixed_bracket_multi.json
+tests/fixtures/runtime/strategy_exit_reservation_qty_percent_bracket_replacement.pine
+tests/snapshots/runtime_strategy_exit_reservation_qty_percent_bracket_replacement.json
+tests/fixtures/runtime/strategy_exit_reservation_qty_percent_bracket_clamp.pine
+tests/snapshots/runtime_strategy_exit_reservation_qty_percent_bracket_clamp.json
+```
+
+The runtime fixtures are included in the CLI golden snapshot harness and the
+generic incremental append fixture harness. `tests/fixtures/conformance.tsv` and
+`tests/snapshots/matrix.json` were intentionally left unchanged in Slice 3; final
+compatibility wording is deferred to the host/conformance slice.
+
+No public runtime JSON, Python dictionary, WASM JSON, or `schemaVersion: 3`
+shape changed in Slice 3.
+
+Slice 3 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-runtime --test incremental
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+```
+
+All commands passed on the Slice 3 workspace.
+
 ## Slice 4: Mixed Single-Trigger And Bracket Reservation Interactions
 
 Goal: cover deterministic interaction between Phase W single-trigger

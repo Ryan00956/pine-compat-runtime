@@ -922,9 +922,10 @@ impl BrokerState {
                 ExitQuantityRequest::Fixed(_) | ExitQuantityRequest::Percent(_),
                 PendingExitReservationFamily::SingleTrigger,
             ) => Some(PendingExitReservationFamily::SingleTrigger),
-            (ExitQuantityRequest::Fixed(_), PendingExitReservationFamily::Bracket) => {
-                Some(PendingExitReservationFamily::Bracket)
-            }
+            (
+                ExitQuantityRequest::Fixed(_) | ExitQuantityRequest::Percent(_),
+                PendingExitReservationFamily::Bracket,
+            ) => Some(PendingExitReservationFamily::Bracket),
             _ => None,
         };
         let released_identity =

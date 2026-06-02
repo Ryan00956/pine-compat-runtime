@@ -1855,21 +1855,147 @@ fn fixed_qty_bracket_replaces_incompatible_single_trigger_reservation_pool() {
 }
 
 #[test]
-fn percent_bracket_stays_on_one_effective_pending_path() {
+fn two_percent_brackets_reserve_expected_absolute_quantities() {
     let mut broker = broker_with_long_entry();
-    broker.place_exit_bracket_qty("XB1".to_owned(), "L".to_owned(), 95.0, 110.0, 0.5, 0);
+    broker.place_exit_bracket_qty_percent("XB1".to_owned(), "L".to_owned(), 95.0, 110.0, 25.0, 0);
+    broker.place_exit_bracket_qty_percent("XB2".to_owned(), "L".to_owned(), 96.0, 111.0, 50.0, 0);
 
-    broker.place_exit_bracket_qty_percent("XB2".to_owned(), "L".to_owned(), 96.0, 111.0, 25.0, 1);
+    assert_eq!(pending_exit_count(&broker), 2);
+    assert_eq!(pending_exit_ids(&broker), vec!["XB1", "XB2"]);
+    let first = broker.pending_exit_by_identity("XB1", "L").unwrap();
+    assert_eq!(first.quantity, PendingExitQuantity::Fixed(0.5));
+    assert_eq!(first.reserved_quantity, 0.5);
+    let second = broker.pending_exit_by_identity("XB2", "L").unwrap();
+    assert_eq!(second.quantity, PendingExitQuantity::Fixed(1.0));
+    assert_eq!(second.reserved_quantity, 1.0);
+
+    broker.evaluate_pending_exits(1, 20, 112.0, 97.0);
+
+    assert_eq!(broker.orders[1].id, "XB1");
+    assert_eq!(broker.orders[1].qty, 0.5);
+    assert_eq!(broker.orders[1].price, 110.0);
+    assert_eq!(broker.orders[2].id, "XB2");
+    assert_eq!(broker.orders[2].qty, 1.0);
+    assert_eq!(broker.orders[2].price, 111.0);
+    assert_eq!(broker.position_size, 0.5);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn percent_and_fixed_brackets_share_reservation_pool() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket_qty("XB1".to_owned(), "L".to_owned(), 95.0, 110.0, 0.75, 0);
+    broker.place_exit_bracket_qty_percent("XB2".to_owned(), "L".to_owned(), 96.0, 111.0, 75.0, 0);
+
+    assert_eq!(pending_exit_count(&broker), 2);
+    assert_eq!(
+        broker
+            .pending_exit_by_identity("XB2", "L")
+            .expect("percent bracket should exist")
+            .quantity,
+        PendingExitQuantity::Fixed(1.5)
+    );
+    assert_eq!(
+        broker
+            .pending_exit_by_identity("XB2", "L")
+            .expect("percent bracket should exist")
+            .reserved_quantity,
+        1.25
+    );
+    assert_eq!(
+        broker.pending_exits.total_reserved_for_entry("L", None),
+        2.0
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn percent_bracket_replacement_releases_old_reservation_first() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket_qty_percent("XB1".to_owned(), "L".to_owned(), 95.0, 110.0, 25.0, 0);
+    broker.place_exit_bracket_qty_percent("XB2".to_owned(), "L".to_owned(), 96.0, 111.0, 25.0, 0);
+
+    broker.place_exit_bracket_qty_percent("XB1".to_owned(), "L".to_owned(), 94.0, 109.0, 75.0, 1);
+
+    assert_eq!(pending_exit_ids(&broker), vec!["XB1", "XB2"]);
+    let replaced = broker.pending_exit_by_identity("XB1", "L").unwrap();
+    assert_eq!(
+        replaced.trigger,
+        PendingExitTrigger::Bracket {
+            downside: 94.0,
+            upside: 109.0,
+        }
+    );
+    assert_eq!(replaced.quantity, PendingExitQuantity::Fixed(1.5));
+    assert_eq!(replaced.reserved_quantity, 1.5);
+    assert_eq!(replaced.last_update_bar_index, 1);
+    let preserved = broker.pending_exit_by_identity("XB2", "L").unwrap();
+    assert_eq!(preserved.reserved_quantity, 0.5);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn over_100_percent_bracket_reserves_remaining_unreserved_quantity() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket_qty("XB1".to_owned(), "L".to_owned(), 95.0, 110.0, 0.75, 0);
+    broker.place_exit_bracket_qty_percent("XB2".to_owned(), "L".to_owned(), 96.0, 111.0, 150.0, 0);
+
+    let percent = broker.pending_exit_by_identity("XB2", "L").unwrap();
+    assert_eq!(percent.quantity, PendingExitQuantity::Fixed(3.0));
+    assert_eq!(percent.reserved_quantity, 1.25);
+    assert_eq!(
+        broker.pending_exits.total_reserved_for_entry("L", None),
+        2.0
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn percent_bracket_with_no_unreserved_quantity_is_rejected() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket_qty_percent("XB1".to_owned(), "L".to_owned(), 95.0, 110.0, 50.0, 0);
+    broker.place_exit_bracket_qty_percent("XB2".to_owned(), "L".to_owned(), 96.0, 111.0, 50.0, 0);
+
+    broker.place_exit_bracket_qty_percent("XB3".to_owned(), "L".to_owned(), 97.0, 112.0, 25.0, 0);
+
+    assert_eq!(pending_exit_ids(&broker), vec!["XB1", "XB2"]);
+    assert!(broker.pending_exit_by_identity("XB3", "L").is_none());
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_QTY");
+}
+
+#[test]
+fn invalid_percent_bracket_replacement_preserves_existing_pending_bracket() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_bracket_qty_percent("XB1".to_owned(), "L".to_owned(), 95.0, 110.0, 25.0, 0);
+
+    broker.place_exit_bracket_qty_percent(
+        "XB1".to_owned(),
+        "L".to_owned(),
+        94.0,
+        109.0,
+        f64::NAN,
+        1,
+    );
 
     assert_eq!(pending_exit_count(&broker), 1);
-    assert!(broker.pending_exit_by_identity("XB1", "L").is_none());
-    let pending = broker
-        .pending_exit_by_identity("XB2", "L")
-        .expect("percent bracket should replace the existing pool");
-    assert_eq!(pending.quantity, PendingExitQuantity::Fixed(0.5));
-    assert_eq!(pending.reserved_quantity, 0.5);
-    assert!(!pending.multiple_reservation);
-    assert!(broker.diagnostics.is_empty());
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XB1".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Bracket {
+                downside: 95.0,
+                upside: 110.0,
+            },
+            quantity: PendingExitQuantity::Fixed(0.5),
+            reserved_quantity: 0.5,
+            multiple_reservation: true,
+            last_update_bar_index: 0,
+        })
+    );
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_QTY_PERCENT");
 }
 
 #[test]
