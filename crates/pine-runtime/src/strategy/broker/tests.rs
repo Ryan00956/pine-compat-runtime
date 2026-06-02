@@ -1,7 +1,7 @@
 use super::exits::{
     ExitQuantityRequest, PendingExitQuantity, PendingExitReservationFamily, PendingExitTouch,
     PendingTrailingActivation, PendingTrailingExit, PendingTrailingSpec, PendingTrailingState,
-    TrailPointsExitSpec, TrailPriceExitSpec,
+    PendingTrailingUpdate, TrailPointsExitSpec, TrailPriceExitSpec,
 };
 use super::*;
 
@@ -47,6 +47,16 @@ fn trailing_points_trigger(
         },
         state: PendingTrailingState::Inactive,
     })
+}
+
+fn trailing_price_exit(activation_price: f64, offset_price_distance: f64) -> PendingTrailingExit {
+    PendingTrailingExit {
+        spec: PendingTrailingSpec {
+            activation: PendingTrailingActivation::Price(activation_price),
+            offset_price_distance,
+        },
+        state: PendingTrailingState::Inactive,
+    }
 }
 
 fn assert_active_trailing_stop(broker: &BrokerState, expected_stop_price: f64) {
@@ -98,6 +108,7 @@ fn exit_trigger_helpers_classify_bracket_and_trailing_reservation_families() {
         trailing_price_trigger(105.0, 2.0).reservation_family(),
         PendingExitReservationFamily::OneEffectivePendingOnly
     );
+    assert!(trailing_price_trigger(105.0, 2.0).is_trailing_reservation_candidate());
     assert_eq!(
         trailing_price_trigger(105.0, 2.0).single_trigger_side(),
         None
@@ -163,6 +174,61 @@ fn exit_trigger_helpers_exclude_trailing_from_fixed_touch_selection() {
     let trailing = trailing_price_trigger(105.0, 2.0);
 
     assert_eq!(trailing.touched_candidate(106.0, 94.0), None);
+}
+
+#[test]
+fn trailing_update_helper_activates_without_fill_candidate() {
+    let trailing = trailing_price_exit(105.0, 2.0);
+
+    assert_eq!(
+        trailing.evaluate_update(110.0, 100.0),
+        PendingTrailingUpdate::Persist(PendingTrailingExit {
+            spec: PendingTrailingSpec {
+                activation: PendingTrailingActivation::Price(105.0),
+                offset_price_distance: 2.0,
+            },
+            state: PendingTrailingState::Active { stop_price: 108.0 },
+        })
+    );
+    assert_eq!(
+        trailing.evaluate_update(104.0, 100.0),
+        PendingTrailingUpdate::NoChange
+    );
+}
+
+#[test]
+fn trailing_update_helper_selects_active_stop_candidate() {
+    let mut trailing = trailing_price_exit(105.0, 2.0);
+    trailing.state = PendingTrailingState::Active { stop_price: 108.0 };
+
+    assert_eq!(
+        trailing.evaluate_update(115.0, 107.0),
+        PendingTrailingUpdate::Candidate(PendingExitTouch {
+            exit_price: 108.0,
+            side: PendingExitSide::Stop,
+        })
+    );
+}
+
+#[test]
+fn trailing_update_helper_ratchets_upward_only() {
+    let mut trailing = trailing_price_exit(105.0, 2.0);
+    trailing.state = PendingTrailingState::Active { stop_price: 108.0 };
+
+    assert_eq!(
+        trailing.evaluate_update(113.0, 109.0),
+        PendingTrailingUpdate::Persist(PendingTrailingExit {
+            spec: PendingTrailingSpec {
+                activation: PendingTrailingActivation::Price(105.0),
+                offset_price_distance: 2.0,
+            },
+            state: PendingTrailingState::Active { stop_price: 111.0 },
+        })
+    );
+    assert_eq!(
+        trailing.evaluate_update(109.0, 108.5),
+        PendingTrailingUpdate::NoChange
+    );
 }
 
 #[test]

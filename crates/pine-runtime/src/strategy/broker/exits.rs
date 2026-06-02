@@ -61,10 +61,55 @@ pub(super) enum PendingTrailingState {
     Active { stop_price: f64 },
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub(super) enum PendingTrailingUpdate {
+    NoChange,
+    Persist(PendingTrailingExit),
+    Candidate(PendingExitTouch),
+}
+
 impl PendingTrailingActivation {
     pub(super) fn price(&self) -> f64 {
         match self {
             Self::Price(price) | Self::Points { price, .. } => *price,
+        }
+    }
+}
+
+impl PendingTrailingExit {
+    pub(super) fn evaluate_update(&self, high: f64, low: f64) -> PendingTrailingUpdate {
+        match self.state {
+            PendingTrailingState::Inactive => {
+                if high >= self.spec.activation.price() {
+                    return PendingTrailingUpdate::Persist(Self {
+                        spec: self.spec.clone(),
+                        state: PendingTrailingState::Active {
+                            stop_price: high - self.spec.offset_price_distance,
+                        },
+                    });
+                }
+                PendingTrailingUpdate::NoChange
+            }
+            PendingTrailingState::Active { stop_price } => {
+                if low <= stop_price {
+                    return PendingTrailingUpdate::Candidate(PendingExitTouch {
+                        exit_price: stop_price,
+                        side: PendingExitSide::Stop,
+                    });
+                }
+
+                let next_stop = high - self.spec.offset_price_distance;
+                if next_stop > stop_price {
+                    PendingTrailingUpdate::Persist(Self {
+                        spec: self.spec.clone(),
+                        state: PendingTrailingState::Active {
+                            stop_price: next_stop,
+                        },
+                    })
+                } else {
+                    PendingTrailingUpdate::NoChange
+                }
+            }
         }
     }
 }
@@ -100,11 +145,19 @@ impl PendingExitTrigger {
         if self.single_trigger_side().is_some() {
             return PendingExitReservationFamily::SingleTrigger;
         }
+        if self.is_trailing_reservation_candidate() {
+            return PendingExitReservationFamily::OneEffectivePendingOnly;
+        }
         match self {
             Self::Bracket { .. } => PendingExitReservationFamily::Bracket,
-            Self::Trailing(_) => PendingExitReservationFamily::OneEffectivePendingOnly,
-            Self::Stop(_) | Self::Limit(_) => unreachable!("single triggers returned above"),
+            Self::Stop(_) | Self::Limit(_) | Self::Trailing(_) => {
+                unreachable!("single and trailing triggers returned above")
+            }
         }
+    }
+
+    pub(super) fn is_trailing_reservation_candidate(&self) -> bool {
+        matches!(self, Self::Trailing(_))
     }
 
     pub(super) fn touched_candidate(&self, high: f64, low: f64) -> Option<PendingExitTouch> {

@@ -5,7 +5,7 @@ mod fills;
 use pine_ir::DEFAULT_STRATEGY_INITIAL_CAPITAL;
 
 use exits::{
-    PendingExit, PendingExitBook, PendingExitSide, PendingExitTrigger, PendingTrailingState,
+    PendingExit, PendingExitBook, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
 };
 pub(crate) use exits::{TrailPointsExitSpec, TrailPriceExitSpec};
 
@@ -168,28 +168,14 @@ impl BrokerState {
                     None
                 }
             }
-            PendingExitTrigger::Trailing(trailing) => match &mut trailing.state {
-                PendingTrailingState::Inactive => {
-                    if high >= trailing.spec.activation.price() {
-                        trailing.state = PendingTrailingState::Active {
-                            stop_price: high - trailing.spec.offset_price_distance,
-                        };
-                        self.pending_exits.replace_all(pending_exit);
-                    }
+            PendingExitTrigger::Trailing(trailing) => match trailing.evaluate_update(high, low) {
+                PendingTrailingUpdate::NoChange => return,
+                PendingTrailingUpdate::Persist(updated_trailing) => {
+                    pending_exit.trigger = PendingExitTrigger::Trailing(updated_trailing);
+                    self.pending_exits.replace_all(pending_exit);
                     return;
                 }
-                PendingTrailingState::Active { stop_price } => {
-                    if low <= *stop_price {
-                        Some(*stop_price)
-                    } else {
-                        let next_stop = high - trailing.spec.offset_price_distance;
-                        if next_stop > *stop_price {
-                            *stop_price = next_stop;
-                            self.pending_exits.replace_all(pending_exit);
-                        }
-                        return;
-                    }
-                }
+                PendingTrailingUpdate::Candidate(touch) => Some(touch.exit_price),
             },
             _ => None,
         };

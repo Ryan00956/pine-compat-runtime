@@ -615,6 +615,38 @@ Exit criteria:
 - No conformance row changes.
 - No public output shape changes.
 
+### Slice 1 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Implemented changes:
+
+- Added internal `PendingTrailingUpdate` classification for trailing no-change,
+  persisted-state, and active-stop candidate outcomes.
+- Added `PendingTrailingExit::evaluate_update` to centralize inactive
+  activation, active-stop fill candidate detection, and upward-only ratchet
+  calculation.
+- Kept `PendingExitTrigger::reservation_family` returning
+  `OneEffectivePendingOnly` for trailing exits, so trailing reservations remain
+  not user-visible in Slice 1.
+- Rewired the single-pending trailing evaluation path to use the new helper
+  without changing activation-bar, fill-before-ratchet, or ratchet semantics.
+- Added broker unit tests for trailing helper activation/no-candidate behavior,
+  active-stop candidate selection, upward ratcheting, and no downward ratchet.
+
+No runtime fixture, conformance metadata, matrix snapshot, public output shape,
+Python binding, or WASM binding changed in Slice 1.
+
+Slice 1 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-cli strategy
+```
+
+All commands passed on the Slice 1 workspace.
+
 ## Slice 2: Fixed-Quantity Trailing Reservations
 
 Goal: open the first positive multiple-pending trailing subset for explicit
