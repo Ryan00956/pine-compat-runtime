@@ -1,6 +1,7 @@
 use super::exits::{
-    ExitQuantityRequest, PendingExitQuantity, PendingTrailingActivation, PendingTrailingExit,
-    PendingTrailingSpec, PendingTrailingState, TrailPointsExitSpec, TrailPriceExitSpec,
+    ExitQuantityRequest, PendingExitQuantity, PendingExitReservationFamily, PendingExitTouch,
+    PendingTrailingActivation, PendingTrailingExit, PendingTrailingSpec, PendingTrailingState,
+    TrailPointsExitSpec, TrailPriceExitSpec,
 };
 use super::*;
 
@@ -59,6 +60,111 @@ fn assert_active_trailing_stop(broker: &BrokerState, expected_stop_price: f64) {
             stop_price: expected_stop_price,
         }
     );
+}
+
+#[test]
+fn exit_trigger_helpers_classify_single_trigger_reservation_family() {
+    assert_eq!(
+        PendingExitTrigger::Stop(95.0).reservation_family(),
+        PendingExitReservationFamily::SingleTrigger
+    );
+    assert_eq!(
+        PendingExitTrigger::Stop(95.0).single_trigger_side(),
+        Some(PendingExitSide::Stop)
+    );
+    assert_eq!(
+        PendingExitTrigger::Limit(105.0).reservation_family(),
+        PendingExitReservationFamily::SingleTrigger
+    );
+    assert_eq!(
+        PendingExitTrigger::Limit(105.0).single_trigger_side(),
+        Some(PendingExitSide::Limit)
+    );
+}
+
+#[test]
+fn exit_trigger_helpers_classify_bracket_and_trailing_reservation_families() {
+    let bracket = PendingExitTrigger::Bracket {
+        downside: 95.0,
+        upside: 105.0,
+    };
+
+    assert_eq!(
+        bracket.reservation_family(),
+        PendingExitReservationFamily::Bracket
+    );
+    assert_eq!(bracket.single_trigger_side(), None);
+    assert_eq!(
+        trailing_price_trigger(105.0, 2.0).reservation_family(),
+        PendingExitReservationFamily::OneEffectivePendingOnly
+    );
+    assert_eq!(
+        trailing_price_trigger(105.0, 2.0).single_trigger_side(),
+        None
+    );
+}
+
+#[test]
+fn exit_trigger_helpers_select_single_trigger_touched_candidates() {
+    let stop = PendingExitTrigger::Stop(95.0);
+    let limit = PendingExitTrigger::Limit(105.0);
+
+    assert_eq!(
+        stop.single_trigger_touched_candidate(104.0, 94.0),
+        Some(PendingExitTouch {
+            exit_price: 95.0,
+            side: PendingExitSide::Stop,
+        })
+    );
+    assert_eq!(stop.single_trigger_touched_candidate(104.0, 96.0), None);
+    assert_eq!(
+        limit.single_trigger_touched_candidate(106.0, 96.0),
+        Some(PendingExitTouch {
+            exit_price: 105.0,
+            side: PendingExitSide::Limit,
+        })
+    );
+    assert_eq!(limit.single_trigger_touched_candidate(104.0, 96.0), None);
+}
+
+#[test]
+fn exit_trigger_helpers_select_bracket_touched_candidates() {
+    let bracket = PendingExitTrigger::Bracket {
+        downside: 95.0,
+        upside: 105.0,
+    };
+
+    assert_eq!(
+        bracket.touched_candidate(104.0, 94.0),
+        Some(PendingExitTouch {
+            exit_price: 95.0,
+            side: PendingExitSide::Stop,
+        })
+    );
+    assert_eq!(
+        bracket.touched_candidate(106.0, 96.0),
+        Some(PendingExitTouch {
+            exit_price: 105.0,
+            side: PendingExitSide::Limit,
+        })
+    );
+    assert_eq!(
+        bracket.touched_candidate(106.0, 94.0),
+        Some(PendingExitTouch {
+            exit_price: 95.0,
+            side: PendingExitSide::Stop,
+        })
+    );
+    assert_eq!(bracket.touched_candidate(104.0, 96.0), None);
+    assert_eq!(bracket.single_trigger_touched_candidate(106.0, 94.0), None);
+}
+
+#[test]
+fn exit_trigger_helpers_exclude_trailing_from_fixed_touch_selection() {
+    let trailing = trailing_price_trigger(105.0, 2.0);
+
+    assert_eq!(trailing.touched_candidate(106.0, 94.0), None);
+    assert_eq!(trailing.single_trigger_touched_candidate(106.0, 94.0), None);
 }
 
 #[test]

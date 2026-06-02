@@ -95,12 +95,78 @@ impl PendingExitTrigger {
             Self::Bracket { .. } | Self::Trailing(_) => None,
         }
     }
+
+    pub(super) fn reservation_family(&self) -> PendingExitReservationFamily {
+        match self {
+            Self::Stop(_) | Self::Limit(_) => PendingExitReservationFamily::SingleTrigger,
+            Self::Bracket { .. } => PendingExitReservationFamily::Bracket,
+            Self::Trailing(_) => PendingExitReservationFamily::OneEffectivePendingOnly,
+        }
+    }
+
+    pub(super) fn is_single_trigger_reservation_family(&self) -> bool {
+        self.reservation_family() == PendingExitReservationFamily::SingleTrigger
+    }
+
+    pub(super) fn touched_candidate(&self, high: f64, low: f64) -> Option<PendingExitTouch> {
+        match self {
+            Self::Stop(price) if low <= *price => Some(PendingExitTouch {
+                exit_price: *price,
+                side: PendingExitSide::Stop,
+            }),
+            Self::Limit(price) if high >= *price => Some(PendingExitTouch {
+                exit_price: *price,
+                side: PendingExitSide::Limit,
+            }),
+            Self::Bracket { downside, upside } => {
+                if low <= *downside {
+                    Some(PendingExitTouch {
+                        exit_price: *downside,
+                        side: PendingExitSide::Stop,
+                    })
+                } else if high >= *upside {
+                    Some(PendingExitTouch {
+                        exit_price: *upside,
+                        side: PendingExitSide::Limit,
+                    })
+                } else {
+                    None
+                }
+            }
+            Self::Trailing(_) | Self::Stop(_) | Self::Limit(_) => None,
+        }
+    }
+
+    pub(super) fn single_trigger_touched_candidate(
+        &self,
+        high: f64,
+        low: f64,
+    ) -> Option<PendingExitTouch> {
+        if self.single_trigger_side().is_some() {
+            self.touched_candidate(high, low)
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum PendingExitReservationFamily {
+    SingleTrigger,
+    Bracket,
+    OneEffectivePendingOnly,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum PendingExitSide {
     Stop,
     Limit,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(super) struct PendingExitTouch {
+    pub(super) exit_price: f64,
+    pub(super) side: PendingExitSide,
 }
 
 impl PendingExitQuantity {
@@ -180,7 +246,7 @@ impl PendingExitBook {
             })
             .all(|pending_exit| {
                 pending_exit.multiple_reservation
-                    && pending_exit.trigger.single_trigger_side().is_some()
+                    && pending_exit.trigger.is_single_trigger_reservation_family()
             })
     }
 
@@ -866,7 +932,8 @@ impl BrokerState {
         let multiple_single_trigger_reservation = matches!(
             quantity,
             ExitQuantityRequest::Fixed(_) | ExitQuantityRequest::Percent(_)
-        ) && trigger.single_trigger_side().is_some();
+        ) && trigger
+            .is_single_trigger_reservation_family();
         let released_identity =
             multiple_single_trigger_reservation.then_some((id.as_str(), from_entry.as_str()));
         let available_quantity = if multiple_single_trigger_reservation

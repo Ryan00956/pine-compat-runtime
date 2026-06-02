@@ -233,17 +233,11 @@ impl BrokerState {
                 continue;
             }
 
-            let triggered = match &pending_exit.trigger {
-                PendingExitTrigger::Stop(price) if low <= *price => {
-                    Some((*price, PendingExitSide::Stop))
-                }
-                PendingExitTrigger::Limit(price) if high >= *price => {
-                    Some((*price, PendingExitSide::Limit))
-                }
-                _ => None,
-            };
-            if let Some((exit_price, side)) = triggered {
-                touched_candidates.push((pending_exit, exit_price, side));
+            if let Some(touch) = pending_exit
+                .trigger
+                .single_trigger_touched_candidate(high, low)
+            {
+                touched_candidates.push((pending_exit, touch.exit_price, touch.side));
             }
         }
 

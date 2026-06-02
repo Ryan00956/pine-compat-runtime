@@ -592,6 +592,36 @@ Exit criteria:
 - No conformance row changes.
 - No public output shape changes.
 
+### Slice 1 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Implemented changes:
+
+- Added internal `PendingExitReservationFamily` classification for
+  single-trigger, bracket, and one-effective-pending-only trigger families.
+- Added `PendingExitTouch` and trigger touch-selection helpers that return the
+  selected fill side and price for stop, limit, and bracket triggers.
+- Kept the multiple-pending evaluator wired only to the single-trigger touch
+  helper, so bracket exits remain on the existing one-effective-pending path in
+  Slice 1.
+- Added broker unit tests for single-trigger classification, bracket
+  classification, trailing exclusion, single-trigger touch selection, and
+  bracket downside-only, upside-only, both-hit, and no-hit candidate selection.
+
+No runtime fixture, conformance metadata, matrix snapshot, public output shape,
+Python binding, or WASM binding changed in Slice 1.
+
+Slice 1 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-cli strategy
+```
+
+All commands passed on the Slice 1 workspace.
+
 ## Slice 2: Fixed-Quantity Bracket Reservations
 
 Goal: open the first positive multiple-pending bracket subset for explicit
