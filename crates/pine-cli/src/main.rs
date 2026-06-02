@@ -712,6 +712,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_bracket_replacement.pine",
             ),
             (
+                "runtime_strategy_exit_omitted_bracket_replacement.json",
+                "tests/fixtures/runtime/strategy_exit_omitted_bracket_replacement.pine",
+            ),
+            (
                 "runtime_strategy_exit_bracket_invalid_leg.json",
                 "tests/fixtures/runtime/strategy_exit_bracket_invalid_leg.pine",
             ),
@@ -750,6 +754,10 @@ mod tests {
             (
                 "runtime_strategy_exit_trailing_replacement.json",
                 "tests/fixtures/runtime/strategy_exit_trailing_replacement.pine",
+            ),
+            (
+                "runtime_strategy_exit_omitted_trailing_replacement.json",
+                "tests/fixtures/runtime/strategy_exit_omitted_trailing_replacement.pine",
             ),
             (
                 "runtime_strategy_exit_trailing_invalid.json",
@@ -962,6 +970,14 @@ mod tests {
             (
                 "runtime_strategy_exit_reservation_interactions.json",
                 "tests/fixtures/runtime/strategy_exit_reservation_interactions.pine",
+            ),
+            (
+                "runtime_strategy_exit_omitted_single_replacement.json",
+                "tests/fixtures/runtime/strategy_exit_omitted_single_replacement.pine",
+            ),
+            (
+                "runtime_strategy_exit_omitted_replaces_reservations.json",
+                "tests/fixtures/runtime/strategy_exit_omitted_replaces_reservations.pine",
             ),
             (
                 "runtime_strategy_exit_qty_percent_limit_partial.json",
@@ -1260,6 +1276,7 @@ mod tests {
             | "tests/fixtures/runtime/strategy_exit_trailing_ratchet.pine"
             | "tests/fixtures/runtime/strategy_exit_trailing_repeated.pine"
             | "tests/fixtures/runtime/strategy_exit_trailing_replacement.pine"
+            | "tests/fixtures/runtime/strategy_exit_omitted_trailing_replacement.pine"
             | "tests/fixtures/runtime/strategy_exit_trailing_invalid.pine"
             | "tests/fixtures/runtime/strategy_exit_trailing_close_cancel.pine"
             | "tests/fixtures/runtime/strategy_exit_trailing_interactions.pine"

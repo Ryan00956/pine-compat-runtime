@@ -1,0 +1,10 @@
+//@version=5
+strategy("Exit omitted replaces reservations")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XS", "L", stop=2.5, qty=0.5)
+    strategy.exit("XB", "L", stop=0.25, limit=3, qty=0.5)
+    strategy.exit("XT", "L", trail_price=2, trail_offset=50, qty_percent=25)
+    strategy.exit("XFULL", "L", limit=2.5)
+plot(strategy.position_size)
+plot(strategy.netprofit)

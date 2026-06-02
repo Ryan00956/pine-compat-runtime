@@ -599,14 +599,31 @@ Exit criteria:
 
 ### Slice 2 Implementation Record
 
-Status: pending.
+Status: completed on 2026-06-02.
 
 Record:
 
-- Fixtures and snapshots added.
-- Incremental coverage added.
-- Commands run and results.
-- Any implementation fixes required by fixture failures.
+- Added runtime fixtures and golden snapshots for omitted-quantity replacement
+  across single-trigger, bracket, trailing, and mixed omitted/explicit
+  reservation cases:
+  - `tests/fixtures/runtime/strategy_exit_omitted_single_replacement.pine`
+  - `tests/fixtures/runtime/strategy_exit_omitted_bracket_replacement.pine`
+  - `tests/fixtures/runtime/strategy_exit_omitted_trailing_replacement.pine`
+  - `tests/fixtures/runtime/strategy_exit_omitted_replaces_reservations.pine`
+- Added all four fixtures to the CLI golden snapshot harness. The trailing
+  omitted fixture uses the existing trailing bars fixture in both CLI snapshot
+  execution and runtime incremental append parity.
+- Snapshot inspection confirmed one effective public exit path in each fixture:
+  `XL`, `XB2`, `XT2`, and `XFULL` respectively. The first/replaced exit ids and
+  internal pending/reservation fields do not appear in the public snapshots.
+- Commands run:
+  - `UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots`
+  - `cargo fmt --check`
+  - `cargo test -p pine-runtime --test incremental`
+  - `cargo test -p pine-cli runtime_outputs_match_golden_snapshots`
+  - `cargo test -p pine-cli strategy`
+  - `git diff --check`
+- No runtime implementation changes were required.
 
 ## Slice 3: Host Parity Boundary Coverage
 
