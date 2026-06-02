@@ -27,7 +27,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn eval_strategy_entry(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
-        let Some(bar) = self.current_bar else {
+        let Some(_bar) = self.current_bar else {
             return Err(RuntimeError {
                 message: "`strategy.entry` requires an active bar".to_owned(),
             });
@@ -57,7 +57,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         self.strategy_broker
-            .entry_long(id, self.bars, bar.time, bar.close, qty);
+            .place_pending_market_long_entry(id, qty, self.bars);
         Ok(PineValue::Void)
     }
 
@@ -159,6 +159,13 @@ impl<'a> HistoricalRuntime<'a> {
             (None, Some(qty_percent)) => StrategyExitQuantityArg::Percent(qty_percent),
             (None, None) => StrategyExitQuantityArg::Full,
         };
+        if (profit_expr.is_some() || loss_expr.is_some() || trail_points_expr.is_some())
+            && self
+                .strategy_broker
+                .reject_entry_relative_exit_for_pending_entry(&from_entry)
+        {
+            return Ok(PineValue::Void);
+        }
         let has_downside = stop_expr.is_some() || loss_expr.is_some();
         let has_upside = limit_expr.is_some() || profit_expr.is_some();
         let has_fixed_exit = has_downside || has_upside;

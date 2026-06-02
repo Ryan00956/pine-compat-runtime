@@ -241,6 +241,10 @@ impl<'a> HistoricalRuntime<'a> {
         self.series_store.set_current_bar(bar_index);
         self.current_symbols.clear();
         self.current_series.clear();
+        if self.program.script_mode == ScriptMode::Strategy {
+            self.strategy_broker
+                .fill_pending_market_long_entries(bar_index, bar.time, bar.open);
+        }
         self.set_builtin_symbols(&bar, bar_index)?;
 
         for statement in &self.program.statements {

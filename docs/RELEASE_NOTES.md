@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 2 pending-entry timing. Supported market-long
+  `strategy.entry` calls now create an internal pending entry and fill at the
+  next historical bar open, with no public pending-order output. Same-calculation
+  absolute `strategy.exit` attachment for the active pending entry id is
+  supported, including fixed `qty` or `qty_percent` reservation against the
+  pending entry quantity; same-calculation entry-relative `profit`, `loss`, and
+  `trail_points` attachment remains unsupported until deferred price resolution
+  is designed. Public strategy output shape remains unchanged.
 - Closed Strategy Internal Stage 1 boundary lock documentation. The Stage 1
   audit records the current fixture-backed strategy support and unsupported
   boundary, aligns current reservation wording for single-trigger, bracket, and

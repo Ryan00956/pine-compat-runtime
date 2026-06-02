@@ -165,31 +165,31 @@ def test_run_script_returns_strategy_entry_contract():
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 1,
-            "time": 1,
+            "barIndex": 2,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 2.0,
+            "price": 3.0,
         }
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0}
+        {"barIndex": 2, "size": 2.0, "avgPrice": 3.0}
     ]
     assert result["strategy"]["equity"] == [
         FLAT_EQUITY[0],
         {
             "barIndex": 1,
-            "cash": 99996.0,
-            "marketValue": 4.0,
+            "cash": 100000.0,
+            "marketValue": 0.0,
             "equity": 100000.0,
             "netProfit": 0.0,
         },
         {
             "barIndex": 2,
-            "cash": 99996.0,
+            "cash": 99994.0,
             "marketValue": 6.0,
-            "equity": 100002.0,
-            "netProfit": 2.0,
+            "equity": 100000.0,
+            "netProfit": 0.0,
         },
     ]
 
@@ -203,17 +203,17 @@ def test_run_script_returns_strategy_default_quantity_contract():
     assert result["strategy"]["orders"] == [
         {
             "id": "D",
-            "barIndex": 1,
-            "time": 1,
+            "barIndex": 2,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 3.0,
-            "price": 2.0,
+            "price": 3.0,
         }
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 1, "size": 3.0, "avgPrice": 2.0}
+        {"barIndex": 2, "size": 3.0, "avgPrice": 3.0}
     ]
-    assert result["plots"][0]["values"] == [0.0, 3.0, 3.0]
+    assert result["plots"][0]["values"] == [0.0, 0.0, 3.0]
 
 
 def test_run_script_returns_strategy_position_state_plots():
@@ -224,11 +224,11 @@ def test_run_script_returns_strategy_position_state_plots():
 
     assert result["plots"] == [
         {"id": 1, "values": [0.0, 0.0, 2.0]},
-        {"id": 2, "values": [None, None, 2.0]},
-        {"id": 4, "values": [0.0, 2.0, 2.0]},
-        {"id": 5, "values": [None, 2.0, 2.0]},
-        {"id": 7, "values": [0.0, 2.0, 0.0]},
-        {"id": 8, "values": [None, 2.0, None]},
+        {"id": 2, "values": [None, None, 3.0]},
+        {"id": 4, "values": [0.0, 0.0, 2.0]},
+        {"id": 5, "values": [None, None, 3.0]},
+        {"id": 7, "values": [0.0, 0.0, 0.0]},
+        {"id": 8, "values": [None, None, None]},
     ]
 
 
@@ -239,12 +239,12 @@ def test_run_script_returns_strategy_profit_state_plots():
     )
 
     assert result["plots"] == [
-        {"id": 1, "values": [0.0, 0.0, 2.0]},
+        {"id": 1, "values": [0.0, 0.0, 0.0]},
         {"id": 2, "values": [0.0, 0.0, 0.0]},
-        {"id": 3, "values": [1000.0, 1000.0, 1002.0]},
-        {"id": 5, "values": [0.0, 0.0, 2.0]},
+        {"id": 3, "values": [1000.0, 1000.0, 1000.0]},
+        {"id": 5, "values": [0.0, 0.0, 0.0]},
         {"id": 6, "values": [0.0, 0.0, 0.0]},
-        {"id": 7, "values": [1000.0, 1000.0, 1002.0]},
+        {"id": 7, "values": [1000.0, 1000.0, 1000.0]},
     ]
 
 
@@ -255,9 +255,9 @@ def test_run_script_returns_strategy_variable_interaction_plots():
     )
 
     assert [plot["values"] for plot in result["plots"]] == [
-        [None, 0.0, 2.0],
         [None, 0.0, 0.0],
-        [0.0, 20.0, 20.0],
+        [None, 0.0, 0.0],
+        [0.0, 0.0, 20.0],
     ]
 
 
@@ -271,9 +271,9 @@ def test_run_script_returns_strategy_trade_count_plots():
         [0, 0, 0],
         [0, 0, 1],
         [0, 0, 0],
-        [0, 1, 1],
         [0, 0, 1],
-        [0, 1, 0],
+        [0, 0, 1],
+        [0, 0, 0],
     ]
     assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
     assert result["strategy"]["orders"][0]["id"] == "L"
@@ -289,26 +289,26 @@ def test_run_script_returns_strategy_close_trade_contract():
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 1,
+            "entryBarIndex": 2,
             "exitBarIndex": 2,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 2,
-            "entryPrice": 2.0,
+            "entryPrice": 3.0,
             "exitPrice": 3.0,
             "qty": 2.0,
-            "profit": 2.0,
+            "profit": 0.0,
         }
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 2.0, "avgPrice": 3.0},
         {"barIndex": 2, "size": 0.0, "avgPrice": None},
     ]
     assert result["strategy"]["equity"][-1] == {
         "barIndex": 2,
-        "cash": 100002.0,
+        "cash": 100000.0,
         "marketValue": 0.0,
-        "equity": 100002.0,
-        "netProfit": 2.0,
+        "equity": 100000.0,
+        "netProfit": 0.0,
     }
 
 
@@ -325,11 +325,11 @@ def test_run_script_returns_strategy_exit_stop_trade_contract():
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 10,
+            "barIndex": 1,
+            "time": 20,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 10.0,
+            "price": 11.0,
         },
         {
             "id": "XL",
@@ -343,26 +343,26 @@ def test_run_script_returns_strategy_exit_stop_trade_contract():
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 1,
-            "entryTime": 10,
+            "entryTime": 20,
             "exitTime": 20,
-            "entryPrice": 10.0,
+            "entryPrice": 11.0,
             "exitPrice": 9.0,
             "qty": 2.0,
-            "profit": -2.0,
+            "profit": -4.0,
         }
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 0, "size": 2.0, "avgPrice": 10.0},
+        {"barIndex": 1, "size": 2.0, "avgPrice": 11.0},
         {"barIndex": 1, "size": 0.0, "avgPrice": None},
     ]
     assert result["strategy"]["equity"][-1] == {
         "barIndex": 1,
-        "cash": 99998.0,
+        "cash": 99996.0,
         "marketValue": 0.0,
-        "equity": 99998.0,
-        "netProfit": -2.0,
+        "equity": 99996.0,
+        "netProfit": -4.0,
     }
 
 
@@ -379,11 +379,11 @@ def test_run_script_returns_strategy_exit_limit_trade_contract():
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 10,
+            "barIndex": 1,
+            "time": 20,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 10.0,
+            "price": 11.0,
         },
         {
             "id": "XL",
@@ -397,102 +397,96 @@ def test_run_script_returns_strategy_exit_limit_trade_contract():
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 1,
-            "entryTime": 10,
+            "entryTime": 20,
             "exitTime": 20,
-            "entryPrice": 10.0,
+            "entryPrice": 11.0,
             "exitPrice": 12.0,
             "qty": 2.0,
-            "profit": 4.0,
+            "profit": 2.0,
         }
     ]
     assert result["strategy"]["equity"][-1] == {
         "barIndex": 1,
-        "cash": 100004.0,
+        "cash": 100002.0,
         "marketValue": 0.0,
-        "equity": 100004.0,
-        "netProfit": 4.0,
+        "equity": 100002.0,
+        "netProfit": 2.0,
     }
 
 
 def test_run_script_returns_strategy_exit_profit_trade_contract():
-    bars = [
-        {"time": 10, "open": 10.0, "high": 10.0, "low": 10.0, "close": 10.0, "volume": 1.0},
-        {"time": 20, "open": 11.0, "high": 12.0, "low": 10.0, "close": 11.0, "volume": 1.0},
-    ]
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_profit.pine").read_text()
     result = pine_compat.run_script(
-        'strategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=2)\n    strategy.exit("XP", "L", profit=200)\n',
-        bars,
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
     )
 
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 10,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 10.0,
+            "price": 2.0,
         },
         {
             "id": "XP",
-            "barIndex": 1,
-            "time": 20,
+            "barIndex": 3,
+            "time": 4,
             "direction": "strategy.exit",
             "qty": 2.0,
-            "price": 12.0,
+            "price": 3.5,
         },
     ]
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
-            "exitBarIndex": 1,
-            "entryTime": 10,
-            "exitTime": 20,
-            "entryPrice": 10.0,
-            "exitPrice": 12.0,
+            "entryBarIndex": 1,
+            "exitBarIndex": 3,
+            "entryTime": 2,
+            "exitTime": 4,
+            "entryPrice": 2.0,
+            "exitPrice": 3.5,
             "qty": 2.0,
-            "profit": 4.0,
+            "profit": 3.0,
         }
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 0, "size": 2.0, "avgPrice": 10.0},
-        {"barIndex": 1, "size": 0.0, "avgPrice": None},
+        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
+        {"barIndex": 3, "size": 0.0, "avgPrice": None},
     ]
     assert result["strategy"]["equity"][-1] == {
-        "barIndex": 1,
-        "cash": 100004.0,
+        "barIndex": 3,
+        "cash": 100003.0,
         "marketValue": 0.0,
-        "equity": 100004.0,
-        "netProfit": 4.0,
+        "equity": 100003.0,
+        "netProfit": 3.0,
     }
 
 
 def test_run_script_returns_strategy_exit_loss_trade_contract():
-    bars = [
-        {"time": 10, "open": 10.0, "high": 10.0, "low": 10.0, "close": 10.0, "volume": 1.0},
-        {"time": 20, "open": 10.0, "high": 10.0, "low": 9.0, "close": 10.0, "volume": 1.0},
-    ]
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_loss.pine").read_text()
     result = pine_compat.run_script(
-        'strategy("demo")\nif bar_index == 0\n    strategy.entry("L", strategy.long, qty=2)\n    strategy.exit("XL", "L", loss=100)\n',
-        bars,
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_exit_loss_bars.csv"),
     )
 
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 10,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
             "price": 10.0,
         },
         {
             "id": "XL",
-            "barIndex": 1,
-            "time": 20,
+            "barIndex": 2,
+            "time": 3,
             "direction": "strategy.exit",
             "qty": 2.0,
             "price": 9.0,
@@ -501,10 +495,10 @@ def test_run_script_returns_strategy_exit_loss_trade_contract():
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
-            "exitBarIndex": 1,
-            "entryTime": 10,
-            "exitTime": 20,
+            "entryBarIndex": 1,
+            "exitBarIndex": 2,
+            "entryTime": 2,
+            "exitTime": 3,
             "entryPrice": 10.0,
             "exitPrice": 9.0,
             "qty": 2.0,
@@ -512,11 +506,11 @@ def test_run_script_returns_strategy_exit_loss_trade_contract():
         }
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 0, "size": 2.0, "avgPrice": 10.0},
-        {"barIndex": 1, "size": 0.0, "avgPrice": None},
+        {"barIndex": 1, "size": 2.0, "avgPrice": 10.0},
+        {"barIndex": 2, "size": 0.0, "avgPrice": None},
     ]
     assert result["strategy"]["equity"][-1] == {
-        "barIndex": 1,
+        "barIndex": 3,
         "cash": 99998.0,
         "marketValue": 0.0,
         "equity": 99998.0,
@@ -531,12 +525,12 @@ def test_run_script_returns_strategy_exit_bracket_fixture_contract():
         fixture_bars("tests/fixtures/runtime/strategy_exit_bracket_both_hit_bars.csv"),
     )
 
-    assert result["plots"][0]["values"] == [2.0, 2.0, 0.0, 0.0]
+    assert result["plots"][0]["values"] == [0.0, 2.0, 0.0, 0.0]
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 1,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
             "price": 100.0,
@@ -556,9 +550,9 @@ def test_run_script_returns_strategy_exit_bracket_fixture_contract():
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 1,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 2,
             "entryPrice": 100.0,
             "exitPrice": 95.0,
@@ -567,7 +561,7 @@ def test_run_script_returns_strategy_exit_bracket_fixture_contract():
         }
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 0, "size": 2.0, "avgPrice": 100.0},
+        {"barIndex": 1, "size": 2.0, "avgPrice": 100.0},
         {"barIndex": 1, "size": 0.0, "avgPrice": None},
     ]
     assert result["strategy"]["equity"][-1] == {
@@ -592,11 +586,11 @@ def test_run_script_returns_strategy_exit_trailing_fixture_contract():
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 1,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 1.0,
+            "price": 2.0,
         },
         {
             "id": "XT",
@@ -613,14 +607,14 @@ def test_run_script_returns_strategy_exit_trailing_fixture_contract():
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 3,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 4,
-            "entryPrice": 1.0,
+            "entryPrice": 2.0,
             "exitPrice": 3.5,
             "qty": 2.0,
-            "profit": 5.0,
+            "profit": 3.0,
         }
     ]
     assert result["strategy"]["diagnostics"] == []
@@ -639,11 +633,11 @@ def test_run_script_returns_strategy_exit_qty_partial_fixture_contract():
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 1,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 1.0,
+            "price": 2.0,
         },
         {
             "id": "XQ",
@@ -657,19 +651,19 @@ def test_run_script_returns_strategy_exit_qty_partial_fixture_contract():
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 1,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 2,
-            "entryPrice": 1.0,
+            "entryPrice": 2.0,
             "exitPrice": 2.5,
             "qty": 0.75,
-            "profit": 1.125,
+            "profit": 0.375,
         }
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 0, "size": 2.0, "avgPrice": 1.0},
-        {"barIndex": 1, "size": 1.25, "avgPrice": 1.0},
+        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
+        {"barIndex": 1, "size": 1.25, "avgPrice": 2.0},
     ]
     assert result["strategy"]["diagnostics"] == []
     assert "pending" not in result["strategy"]
@@ -691,11 +685,11 @@ def test_run_script_returns_strategy_exit_qty_percent_partial_fixture_contract()
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 1,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 1.0,
+            "price": 2.0,
         },
         {
             "id": "XP",
@@ -712,23 +706,23 @@ def test_run_script_returns_strategy_exit_qty_percent_partial_fixture_contract()
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 1,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 2,
-            "entryPrice": 1.0,
+            "entryPrice": 2.0,
             "exitPrice": 2.5,
             "qty": 1.0,
-            "profit": 1.5,
+            "profit": 0.5,
         }
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 0, "size": 2.0, "avgPrice": 1.0},
-        {"barIndex": 1, "size": 1.0, "avgPrice": 1.0},
+        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
+        {"barIndex": 1, "size": 1.0, "avgPrice": 2.0},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [2.0, 2.0, 1.0, 1.0],
-        [0.0, 0.0, 1.5, 1.5],
+        [0.0, 2.0, 1.0, 1.0],
+        [0.0, 0.0, 0.5, 0.5],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -754,11 +748,11 @@ def test_run_script_returns_strategy_exit_reservation_fixture_contract():
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 1,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 1.0,
+            "price": 2.0,
         },
         {
             "id": "XS",
@@ -783,37 +777,37 @@ def test_run_script_returns_strategy_exit_reservation_fixture_contract():
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 1,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 2,
-            "entryPrice": 1.0,
+            "entryPrice": 2.0,
             "exitPrice": 2.5,
             "qty": 0.5,
-            "profit": 0.75,
+            "profit": 0.25,
         },
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 2,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 3,
-            "entryPrice": 1.0,
+            "entryPrice": 2.0,
             "exitPrice": 1.5,
             "qty": 1.5,
-            "profit": 0.75,
+            "profit": -0.75,
         },
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 0, "size": 2.0, "avgPrice": 1.0},
-        {"barIndex": 1, "size": 1.5, "avgPrice": 1.0},
+        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
+        {"barIndex": 1, "size": 1.5, "avgPrice": 2.0},
         {"barIndex": 2, "size": 0.0, "avgPrice": None},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [2.0, 2.0, 1.5, 0.0],
-        [0.0, 0.0, 0.75, 1.5],
+        [0.0, 2.0, 1.5, 0.0],
+        [0.0, 0.0, 0.25, -0.5],
         [0.0, 0.0, 1.0, 2.0],
-        [1.0, 1.0, 1.0, 0.0],
+        [0.0, 1.0, 1.0, 0.0],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -839,11 +833,11 @@ def test_run_script_returns_strategy_exit_omitted_replaces_reservations_contract
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 1,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 1.0,
+            "price": 2.0,
         },
         {
             "id": "XFULL",
@@ -860,23 +854,23 @@ def test_run_script_returns_strategy_exit_omitted_replaces_reservations_contract
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 2,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 3,
-            "entryPrice": 1.0,
+            "entryPrice": 2.0,
             "exitPrice": 2.5,
             "qty": 2.0,
-            "profit": 3.0,
+            "profit": 1.0,
         },
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 0, "size": 2.0, "avgPrice": 1.0},
+        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
         {"barIndex": 2, "size": 0.0, "avgPrice": None},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [2.0, 2.0, 2.0, 0.0],
-        [0.0, 0.0, 0.0, 3.0],
+        [0.0, 2.0, 2.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -910,11 +904,11 @@ def test_run_script_returns_strategy_exit_bracket_reservation_fixture_contract()
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 1,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 1.0,
+            "price": 2.0,
         },
         {
             "id": "XB1",
@@ -939,35 +933,35 @@ def test_run_script_returns_strategy_exit_bracket_reservation_fixture_contract()
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 1,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 2,
-            "entryPrice": 1.0,
+            "entryPrice": 2.0,
             "exitPrice": 2.0,
             "qty": 0.5,
-            "profit": 0.5,
+            "profit": 0.0,
         },
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 2,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 3,
-            "entryPrice": 1.0,
+            "entryPrice": 2.0,
             "exitPrice": 3.0,
             "qty": 1.0,
-            "profit": 2.0,
+            "profit": 1.0,
         },
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 0, "size": 2.0, "avgPrice": 1.0},
-        {"barIndex": 1, "size": 1.5, "avgPrice": 1.0},
-        {"barIndex": 2, "size": 0.5, "avgPrice": 1.0},
+        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
+        {"barIndex": 1, "size": 1.5, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 0.5, "avgPrice": 2.0},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [2.0, 2.0, 1.5, 0.5],
-        [0.0, 0.0, 0.5, 2.5],
+        [0.0, 2.0, 1.5, 0.5],
+        [0.0, 0.0, 0.0, 1.0],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
@@ -999,11 +993,11 @@ def test_run_script_returns_strategy_exit_trailing_reservation_fixture_contract(
     assert result["strategy"]["orders"] == [
         {
             "id": "L",
-            "barIndex": 0,
-            "time": 1,
+            "barIndex": 1,
+            "time": 2,
             "direction": "strategy.long",
             "qty": 2.0,
-            "price": 1.0,
+            "price": 3.0,
         },
         {
             "id": "XT1",
@@ -1028,35 +1022,35 @@ def test_run_script_returns_strategy_exit_trailing_reservation_fixture_contract(
     assert result["strategy"]["trades"] == [
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 3,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 4,
-            "entryPrice": 1.0,
+            "entryPrice": 3.0,
             "exitPrice": 3.5,
             "qty": 0.75,
-            "profit": 1.875,
+            "profit": 0.375,
         },
         {
             "id": "L",
-            "entryBarIndex": 0,
+            "entryBarIndex": 1,
             "exitBarIndex": 4,
-            "entryTime": 1,
+            "entryTime": 2,
             "exitTime": 5,
-            "entryPrice": 1.0,
+            "entryPrice": 3.0,
             "exitPrice": 3.3,
             "qty": 1.25,
-            "profit": 2.875,
+            "profit": 0.3749999999999998,
         },
     ]
     assert result["strategy"]["position"] == [
-        {"barIndex": 0, "size": 2.0, "avgPrice": 1.0},
-        {"barIndex": 3, "size": 1.25, "avgPrice": 1.0},
+        {"barIndex": 1, "size": 2.0, "avgPrice": 3.0},
+        {"barIndex": 3, "size": 1.25, "avgPrice": 3.0},
         {"barIndex": 4, "size": 0.0, "avgPrice": None},
     ]
     assert [plot["values"] for plot in result["plots"]] == [
-        [2.0, 2.0, 2.0, 2.0, 1.25],
-        [0.0, 0.0, 0.0, 0.0, 1.875],
+        [0.0, 2.0, 2.0, 2.0, 1.25],
+        [0.0, 0.0, 0.0, 0.0, 0.375],
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []

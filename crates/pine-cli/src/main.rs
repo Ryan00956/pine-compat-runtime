@@ -1048,10 +1048,10 @@ mod tests {
         assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
         assert_eq!(output.matches(r#""trades":[{"#).count(), 1);
         assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":100},{"id":"XB","barIndex":1,"time":2,"direction":"strategy.exit","qty":2,"price":95}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":100},{"id":"XB","barIndex":1,"time":2,"direction":"strategy.exit","qty":2,"price":95}]"#
         ));
         assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":1,"entryTime":1,"exitTime":2,"entryPrice":100,"exitPrice":95,"qty":2,"profit":-10}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":100,"exitPrice":95,"qty":2,"profit":-10}]"#
         ));
     }
 
@@ -1067,10 +1067,10 @@ mod tests {
         assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
         assert_eq!(output.matches(r#""trades":[{"#).count(), 1);
         assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":1},{"id":"XT","barIndex":3,"time":4,"direction":"strategy.exit","qty":2,"price":3.5}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XT","barIndex":3,"time":4,"direction":"strategy.exit","qty":2,"price":3.5}]"#
         ));
         assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":3,"entryTime":1,"exitTime":4,"entryPrice":1,"exitPrice":3.5,"qty":2,"profit":5}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":3,"entryTime":2,"exitTime":4,"entryPrice":2,"exitPrice":3.5,"qty":2,"profit":3}]"#
         ));
     }
 
@@ -1085,13 +1085,13 @@ mod tests {
         )));
         assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
         assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":1},{"id":"XQ","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.75,"price":2.5}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XQ","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.75,"price":2.5}]"#
         ));
         assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":1,"entryTime":1,"exitTime":2,"entryPrice":1,"exitPrice":2.5,"qty":0.75,"profit":1.125}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2.5,"qty":0.75,"profit":0.375}]"#
         ));
         assert!(output.contains(
-            r#""position":[{"barIndex":0,"size":2,"avgPrice":1},{"barIndex":1,"size":1.25,"avgPrice":1}]"#
+            r#""position":[{"barIndex":1,"size":2,"avgPrice":2},{"barIndex":1,"size":1.25,"avgPrice":2}]"#
         ));
         assert!(!output.contains("pending"));
         assert!(!output.contains("remainingQty"));
@@ -1109,13 +1109,13 @@ mod tests {
         )));
         assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
         assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":1},{"id":"XP","barIndex":1,"time":2,"direction":"strategy.exit","qty":1,"price":2.5}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XP","barIndex":1,"time":2,"direction":"strategy.exit","qty":1,"price":2.5}]"#
         ));
         assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":1,"entryTime":1,"exitTime":2,"entryPrice":1,"exitPrice":2.5,"qty":1,"profit":1.5}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2.5,"qty":1,"profit":0.5}]"#
         ));
         assert!(output.contains(
-            r#""position":[{"barIndex":0,"size":2,"avgPrice":1},{"barIndex":1,"size":1,"avgPrice":1}]"#
+            r#""position":[{"barIndex":1,"size":2,"avgPrice":2},{"barIndex":1,"size":1,"avgPrice":2}]"#
         ));
         assert!(output.contains(r#""strategy":{"orders":"#));
         assert!(!output.contains("pending"));
@@ -1136,13 +1136,13 @@ mod tests {
         )));
         assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 2);
         assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":1},{"id":"XS","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.5,"price":2.5},{"id":"XL","barIndex":2,"time":3,"direction":"strategy.exit","qty":1.5,"price":1.5}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XS","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.5,"price":2.5},{"id":"XL","barIndex":2,"time":3,"direction":"strategy.exit","qty":1.5,"price":1.5}]"#
         ));
         assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":1,"entryTime":1,"exitTime":2,"entryPrice":1,"exitPrice":2.5,"qty":0.5,"profit":0.75},{"id":"L","entryBarIndex":0,"exitBarIndex":2,"entryTime":1,"exitTime":3,"entryPrice":1,"exitPrice":1.5,"qty":1.5,"profit":0.75}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2.5,"qty":0.5,"profit":0.25},{"id":"L","entryBarIndex":1,"exitBarIndex":2,"entryTime":2,"exitTime":3,"entryPrice":2,"exitPrice":1.5,"qty":1.5,"profit":-0.75}]"#
         ));
         assert!(output.contains(
-            r#""position":[{"barIndex":0,"size":2,"avgPrice":1},{"barIndex":1,"size":1.5,"avgPrice":1},{"barIndex":2,"size":0,"avgPrice":null}]"#
+            r#""position":[{"barIndex":1,"size":2,"avgPrice":2},{"barIndex":1,"size":1.5,"avgPrice":2},{"barIndex":2,"size":0,"avgPrice":null}]"#
         ));
         assert!(output.contains(r#""strategy":{"orders":"#));
         assert!(output.contains(r#""equity":["#));
@@ -1165,13 +1165,13 @@ mod tests {
         )));
         assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
         assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":1},{"id":"XFULL","barIndex":2,"time":3,"direction":"strategy.exit","qty":2,"price":2.5}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XFULL","barIndex":2,"time":3,"direction":"strategy.exit","qty":2,"price":2.5}]"#
         ));
         assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":2,"entryTime":1,"exitTime":3,"entryPrice":1,"exitPrice":2.5,"qty":2,"profit":3}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":2,"entryTime":2,"exitTime":3,"entryPrice":2,"exitPrice":2.5,"qty":2,"profit":1}]"#
         ));
         assert!(output.contains(
-            r#""position":[{"barIndex":0,"size":2,"avgPrice":1},{"barIndex":2,"size":0,"avgPrice":null}]"#
+            r#""position":[{"barIndex":1,"size":2,"avgPrice":2},{"barIndex":2,"size":0,"avgPrice":null}]"#
         ));
         assert!(output.contains(r#""strategy":{"orders":"#));
         assert!(output.contains(r#""trades":["#));
@@ -1204,13 +1204,13 @@ mod tests {
         )));
         assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 2);
         assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":1},{"id":"XB1","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.5,"price":2},{"id":"XB2","barIndex":2,"time":3,"direction":"strategy.exit","qty":1,"price":3}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XB1","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.5,"price":2},{"id":"XB2","barIndex":2,"time":3,"direction":"strategy.exit","qty":1,"price":3}]"#
         ));
         assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":1,"entryTime":1,"exitTime":2,"entryPrice":1,"exitPrice":2,"qty":0.5,"profit":0.5},{"id":"L","entryBarIndex":0,"exitBarIndex":2,"entryTime":1,"exitTime":3,"entryPrice":1,"exitPrice":3,"qty":1,"profit":2}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":1,"entryTime":2,"exitTime":2,"entryPrice":2,"exitPrice":2,"qty":0.5,"profit":0},{"id":"L","entryBarIndex":1,"exitBarIndex":2,"entryTime":2,"exitTime":3,"entryPrice":2,"exitPrice":3,"qty":1,"profit":1}]"#
         ));
         assert!(output.contains(
-            r#""position":[{"barIndex":0,"size":2,"avgPrice":1},{"barIndex":1,"size":1.5,"avgPrice":1},{"barIndex":2,"size":0.5,"avgPrice":1}]"#
+            r#""position":[{"barIndex":1,"size":2,"avgPrice":2},{"barIndex":1,"size":1.5,"avgPrice":2},{"barIndex":2,"size":0.5,"avgPrice":2}]"#
         ));
         assert!(output.contains(r#""strategy":{"orders":"#));
         assert!(output.contains(r#""equity":["#));
@@ -1238,13 +1238,13 @@ mod tests {
         )));
         assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 2);
         assert!(output.contains(
-            r#""orders":[{"id":"L","barIndex":0,"time":1,"direction":"strategy.long","qty":2,"price":1},{"id":"XT1","barIndex":3,"time":4,"direction":"strategy.exit","qty":0.75,"price":3.5},{"id":"XT2","barIndex":4,"time":5,"direction":"strategy.exit","qty":1.25,"price":3.3}]"#
+            r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":3},{"id":"XT1","barIndex":3,"time":4,"direction":"strategy.exit","qty":0.75,"price":3.5},{"id":"XT2","barIndex":4,"time":5,"direction":"strategy.exit","qty":1.25,"price":3.3}]"#
         ));
         assert!(output.contains(
-            r#""trades":[{"id":"L","entryBarIndex":0,"exitBarIndex":3,"entryTime":1,"exitTime":4,"entryPrice":1,"exitPrice":3.5,"qty":0.75,"profit":1.875},{"id":"L","entryBarIndex":0,"exitBarIndex":4,"entryTime":1,"exitTime":5,"entryPrice":1,"exitPrice":3.3,"qty":1.25,"profit":2.875}]"#
+            r#""trades":[{"id":"L","entryBarIndex":1,"exitBarIndex":3,"entryTime":2,"exitTime":4,"entryPrice":3,"exitPrice":3.5,"qty":0.75,"profit":0.375},{"id":"L","entryBarIndex":1,"exitBarIndex":4,"entryTime":2,"exitTime":5,"entryPrice":3,"exitPrice":3.3,"qty":1.25,"profit":0.3749999999999998}]"#
         ));
         assert!(output.contains(
-            r#""position":[{"barIndex":0,"size":2,"avgPrice":1},{"barIndex":3,"size":1.25,"avgPrice":1},{"barIndex":4,"size":0,"avgPrice":null}]"#
+            r#""position":[{"barIndex":1,"size":2,"avgPrice":3},{"barIndex":3,"size":1.25,"avgPrice":3},{"barIndex":4,"size":0,"avgPrice":null}]"#
         ));
         assert!(output.contains(r#""strategy":{"orders":"#));
         assert!(output.contains(r#""equity":["#));

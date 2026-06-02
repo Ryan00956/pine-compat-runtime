@@ -115,7 +115,7 @@ fn strategy_exit_args_mut(program: &mut HirProgram) -> &mut Vec<HirCallArg> {
 }
 
 #[test]
-fn strategy_entry_opens_long_position_at_current_close() {
+fn strategy_entry_opens_long_position_at_next_bar_open() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"strategy("entry")
@@ -148,24 +148,32 @@ plot(close)
             close: 2.0,
             volume: 1.0,
         },
+        Bar {
+            time: 30,
+            open: 3.0,
+            high: 3.0,
+            low: 3.0,
+            close: 3.0,
+            volume: 1.0,
+        },
     ];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
     let strategy = result.strategy.expect("strategy output");
 
     assert_eq!(strategy.orders.len(), 1);
     assert_eq!(strategy.orders[0].id, "L");
-    assert_eq!(strategy.orders[0].bar_index, 1);
-    assert_eq!(strategy.orders[0].time, 20);
+    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].time, 30);
     assert_eq!(strategy.orders[0].direction, "strategy.long");
     assert_eq!(strategy.orders[0].qty, 2.0);
-    assert_eq!(strategy.orders[0].price, 2.0);
+    assert_eq!(strategy.orders[0].price, 3.0);
     assert_eq!(strategy.position.len(), 1);
-    assert_eq!(strategy.position[0].bar_index, 1);
+    assert_eq!(strategy.position[0].bar_index, 2);
     assert_eq!(strategy.position[0].size, 2.0);
-    assert_eq!(strategy.position[0].avg_price, Some(2.0));
-    assert_eq!(strategy.equity[1].cash, 99_996.0);
-    assert_eq!(strategy.equity[1].market_value, 4.0);
-    assert_eq!(strategy.equity[1].equity, 100_000.0);
+    assert_eq!(strategy.position[0].avg_price, Some(3.0));
+    assert_eq!(strategy.equity[2].cash, 99_994.0);
+    assert_eq!(strategy.equity[2].market_value, 6.0);
+    assert_eq!(strategy.equity[2].equity, 100_000.0);
 }
 
 #[test]
@@ -227,11 +235,13 @@ if bar_index == 1
     assert_eq!(strategy.orders.len(), 1);
     assert_eq!(strategy.orders[0].id, "D");
     assert_eq!(strategy.orders[0].qty, 3.0);
-    assert_eq!(strategy.orders[0].price, 2.0);
+    assert_eq!(strategy.orders[0].price, 4.0);
     assert_eq!(strategy.position[0].size, 3.0);
-    assert_eq!(strategy.equity[0].cash, 99_994.0);
-    assert_eq!(strategy.equity[0].market_value, 6.0);
-    assert_eq!(strategy.equity[1].equity, 100_006.0);
+    assert_eq!(strategy.equity[0].cash, 100_000.0);
+    assert_eq!(strategy.equity[0].market_value, 0.0);
+    assert_eq!(strategy.equity[1].cash, 99_988.0);
+    assert_eq!(strategy.equity[1].market_value, 12.0);
+    assert_eq!(strategy.equity[1].equity, 100_000.0);
 }
 
 #[test]
@@ -259,13 +269,14 @@ if bar_index == 0
         Some(1.0)
     );
 
-    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(2.0)]).expect("runtime result");
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(2.0), bar(3.0)]).expect("runtime result");
     let strategy = result.strategy.expect("strategy output");
 
     assert_eq!(strategy.orders.len(), 1);
     assert_eq!(strategy.orders[0].id, "D");
     assert_eq!(strategy.orders[0].qty, 1.0);
-    assert_eq!(strategy.orders[0].price, 2.0);
+    assert_eq!(strategy.orders[0].price, 3.0);
 }
 
 #[test]
@@ -284,14 +295,15 @@ if bar_index == 0
         analysis.diagnostics
     );
 
-    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(2.0)]).expect("runtime result");
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(2.0), bar(3.0)]).expect("runtime result");
     let strategy = result.strategy.expect("strategy output");
 
     assert_eq!(strategy.orders.len(), 1);
     assert_eq!(strategy.orders[0].id, "E");
     assert_eq!(strategy.orders[0].qty, 5.0);
     assert_eq!(strategy.position[0].size, 5.0);
-    assert_eq!(strategy.equity[0].cash, 99_990.0);
+    assert_eq!(strategy.equity[1].cash, 99_985.0);
 }
 
 #[test]
@@ -343,21 +355,21 @@ if bar_index == 2
 
     assert_eq!(strategy.trades.len(), 1);
     assert_eq!(strategy.trades[0].id, "L");
-    assert_eq!(strategy.trades[0].entry_bar_index, 1);
+    assert_eq!(strategy.trades[0].entry_bar_index, 2);
     assert_eq!(strategy.trades[0].exit_bar_index, 2);
-    assert_eq!(strategy.trades[0].entry_time, 20);
+    assert_eq!(strategy.trades[0].entry_time, 30);
     assert_eq!(strategy.trades[0].exit_time, 30);
-    assert_eq!(strategy.trades[0].entry_price, 2.0);
+    assert_eq!(strategy.trades[0].entry_price, 3.0);
     assert_eq!(strategy.trades[0].exit_price, 3.0);
     assert_eq!(strategy.trades[0].qty, 2.0);
-    assert_eq!(strategy.trades[0].profit, 2.0);
+    assert_eq!(strategy.trades[0].profit, 0.0);
     assert_eq!(strategy.position.len(), 2);
     assert_eq!(strategy.position[1].size, 0.0);
     assert_eq!(strategy.position[1].avg_price, None);
-    assert_eq!(strategy.equity[2].cash, 100_002.0);
+    assert_eq!(strategy.equity[2].cash, 100_000.0);
     assert_eq!(strategy.equity[2].market_value, 0.0);
-    assert_eq!(strategy.equity[2].equity, 100_002.0);
-    assert_eq!(strategy.equity[2].net_profit, 2.0);
+    assert_eq!(strategy.equity[2].equity, 100_000.0);
+    assert_eq!(strategy.equity[2].net_profit, 0.0);
 }
 
 #[test]
@@ -379,9 +391,9 @@ strategy.exit("XL", "L", stop=low)
     let result = run_historical(&analysis.hir.expect("HIR"), &[bar(2.0)]).expect("runtime result");
     let strategy = result.strategy.expect("strategy output");
 
-    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders.len(), 0);
     assert!(strategy.trades.is_empty());
-    assert_eq!(strategy.position.len(), 1);
+    assert_eq!(strategy.position.len(), 0);
     assert_eq!(strategy.equity.len(), 1);
     assert!(strategy.diagnostics.is_empty());
 }
@@ -519,17 +531,17 @@ if bar_index == 0
     assert_eq!(strategy.orders[1].price, 9.0);
     assert_eq!(strategy.trades.len(), 1);
     assert_eq!(strategy.trades[0].id, "L");
-    assert_eq!(strategy.trades[0].entry_bar_index, 0);
+    assert_eq!(strategy.trades[0].entry_bar_index, 1);
     assert_eq!(strategy.trades[0].exit_bar_index, 1);
-    assert_eq!(strategy.trades[0].entry_price, 10.0);
+    assert_eq!(strategy.trades[0].entry_price, 11.0);
     assert_eq!(strategy.trades[0].exit_price, 9.0);
     assert_eq!(strategy.trades[0].qty, 2.0);
-    assert_eq!(strategy.trades[0].profit, -2.0);
+    assert_eq!(strategy.trades[0].profit, -4.0);
     assert_eq!(strategy.position.len(), 2);
     assert_eq!(strategy.position[1].size, 0.0);
-    assert_eq!(strategy.equity[1].cash, 99_998.0);
+    assert_eq!(strategy.equity[1].cash, 99_996.0);
     assert_eq!(strategy.equity[1].market_value, 0.0);
-    assert_eq!(strategy.equity[1].net_profit, -2.0);
+    assert_eq!(strategy.equity[1].net_profit, -4.0);
     assert!(strategy.diagnostics.is_empty());
 }
 
@@ -571,6 +583,7 @@ fn strategy_exit_qty_single_trigger_forms_dispatch_partial_quantity() {
                 r#"strategy("exit")
 if bar_index == 0
     strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
     {exit_call}
 "#
             ),
@@ -585,6 +598,7 @@ if bar_index == 0
         let result = run_historical(
             &analysis.hir.expect("HIR"),
             &[
+                bar_ohlc(100.0, 100.0, 100.0, 100.0),
                 bar_ohlc(100.0, 100.0, 100.0, 100.0),
                 bar_ohlc(100.0, high, low, 100.0),
             ],
@@ -643,6 +657,7 @@ fn strategy_exit_qty_percent_single_trigger_forms_dispatch_partial_quantity() {
                 r#"strategy("exit")
 if bar_index == 0
     strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
     {exit_call}
 "#
             ),
@@ -657,6 +672,7 @@ if bar_index == 0
         let result = run_historical(
             &analysis.hir.expect("HIR"),
             &[
+                bar_ohlc(100.0, 100.0, 100.0, 100.0),
                 bar_ohlc(100.0, 100.0, 100.0, 100.0),
                 bar_ohlc(100.0, high, low, 100.0),
             ],
@@ -717,7 +733,7 @@ if bar_index == 0
     assert!(strategy.trades.is_empty());
     assert_eq!(strategy.position.len(), 1);
     assert_eq!(strategy.equity[1].market_value, 11.0);
-    assert_eq!(strategy.equity[1].net_profit, 1.0);
+    assert_eq!(strategy.equity[1].net_profit, 0.0);
 }
 
 #[test]
@@ -817,7 +833,7 @@ if bar_index == 1
     assert_eq!(strategy.orders.len(), 1);
     assert_eq!(strategy.trades.len(), 1);
     assert_eq!(strategy.trades[0].exit_price, 11.0);
-    assert_eq!(strategy.trades[0].profit, 1.0);
+    assert_eq!(strategy.trades[0].profit, 0.0);
 }
 
 #[test]
@@ -866,9 +882,9 @@ if bar_index == 0
     assert_eq!(strategy.trades.len(), 1);
     assert_eq!(strategy.trades[0].id, "L");
     assert_eq!(strategy.trades[0].exit_price, 12.0);
-    assert_eq!(strategy.trades[0].profit, 4.0);
+    assert_eq!(strategy.trades[0].profit, 2.0);
     assert_eq!(strategy.position[1].size, 0.0);
-    assert_eq!(strategy.equity[1].cash, 100_004.0);
+    assert_eq!(strategy.equity[1].cash, 100_002.0);
 }
 
 #[test]
@@ -946,6 +962,7 @@ fn strategy_exit_profit_ticks_fill_through_converted_limit() {
         r#"strategy("exit")
 if bar_index == 0
     strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
     strategy.exit("XP", "L", profit=200)
 "#,
     );
@@ -959,8 +976,9 @@ if bar_index == 0
     let result = run_historical(
         &analysis.hir.expect("HIR"),
         &[
-            bar_ohlc(10.0, 12.0, 10.0, 10.0),
-            bar_ohlc(11.0, 12.0, 10.0, 11.0),
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 12.0, 10.0, 11.0),
         ],
     )
     .expect("runtime result");
@@ -968,7 +986,7 @@ if bar_index == 0
 
     assert_eq!(strategy.orders.len(), 2);
     assert_eq!(strategy.orders[1].id, "XP");
-    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].bar_index, 2);
     assert_eq!(strategy.orders[1].direction, "strategy.exit");
     assert_eq!(strategy.orders[1].price, 12.0);
     assert_eq!(strategy.trades.len(), 1);
@@ -985,6 +1003,7 @@ fn strategy_exit_loss_ticks_fill_through_converted_stop() {
         r#"strategy("exit")
 if bar_index == 0
     strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
     strategy.exit("XL", "L", loss=100)
 "#,
     );
@@ -999,6 +1018,7 @@ if bar_index == 0
         &analysis.hir.expect("HIR"),
         &[
             bar_ohlc(10.0, 10.0, 9.0, 10.0),
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
             bar_ohlc(10.0, 10.0, 9.0, 10.0),
         ],
     )
@@ -1007,7 +1027,7 @@ if bar_index == 0
 
     assert_eq!(strategy.orders.len(), 2);
     assert_eq!(strategy.orders[1].id, "XL");
-    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].bar_index, 2);
     assert_eq!(strategy.orders[1].direction, "strategy.exit");
     assert_eq!(strategy.orders[1].price, 9.0);
     assert_eq!(strategy.trades.len(), 1);
@@ -1055,6 +1075,7 @@ fn strategy_exit_bracket_forms_dispatch_to_bracket_pending_exit() {
                 r#"strategy("exit")
 if bar_index == 0
     strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
     {exit_call}
 "#
             ),
@@ -1070,6 +1091,7 @@ if bar_index == 0
             &analysis.hir.expect("HIR"),
             &[
                 bar_ohlc(100.0, 100.0, 100.0, 100.0),
+                bar_ohlc(100.0, 100.0, 100.0, 100.0),
                 bar_ohlc(100.0, high, low, 100.0),
             ],
         )
@@ -1078,7 +1100,7 @@ if bar_index == 0
 
         assert_eq!(strategy.orders.len(), 2, "{name}");
         assert_eq!(strategy.orders[1].id, "XB", "{name}");
-        assert_eq!(strategy.orders[1].bar_index, 1, "{name}");
+        assert_eq!(strategy.orders[1].bar_index, 2, "{name}");
         assert_eq!(strategy.orders[1].direction, "strategy.exit", "{name}");
         assert_eq!(strategy.orders[1].price, expected_price, "{name}");
         assert_eq!(strategy.trades.len(), 1, "{name}");
@@ -1126,6 +1148,7 @@ fn strategy_exit_qty_bracket_forms_dispatch_partial_quantity() {
                 r#"strategy("exit")
 if bar_index == 0
     strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
     {exit_call}
 "#
             ),
@@ -1140,6 +1163,7 @@ if bar_index == 0
         let result = run_historical(
             &analysis.hir.expect("HIR"),
             &[
+                bar_ohlc(100.0, 100.0, 100.0, 100.0),
                 bar_ohlc(100.0, 100.0, 100.0, 100.0),
                 bar_ohlc(100.0, high, low, 100.0),
             ],
@@ -1197,6 +1221,7 @@ fn strategy_exit_qty_percent_bracket_forms_dispatch_partial_quantity() {
                 r#"strategy("exit")
 if bar_index == 0
     strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
     {exit_call}
 "#
             ),
@@ -1211,6 +1236,7 @@ if bar_index == 0
         let result = run_historical(
             &analysis.hir.expect("HIR"),
             &[
+                bar_ohlc(100.0, 100.0, 100.0, 100.0),
                 bar_ohlc(100.0, 100.0, 100.0, 100.0),
                 bar_ohlc(100.0, high, low, 100.0),
             ],
@@ -1236,6 +1262,7 @@ fn strategy_exit_qty_trailing_dispatches_partial_quantity() {
         r#"strategy("exit")
 if bar_index == 0
     strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
     strategy.exit("TQ", "L", trail_points=100, trail_offset=50, qty=0.5)
 "#,
     );
@@ -1252,6 +1279,7 @@ if bar_index == 0
             bar_ohlc(100.0, 100.0, 100.0, 100.0),
             bar_ohlc(100.0, 102.0, 101.75, 102.0),
             bar_ohlc(102.0, 102.0, 101.0, 101.25),
+            bar_ohlc(101.25, 101.25, 101.0, 101.0),
         ],
     )
     .expect("runtime result");
@@ -1259,7 +1287,7 @@ if bar_index == 0
 
     assert_eq!(strategy.orders.len(), 2);
     assert_eq!(strategy.orders[1].id, "TQ");
-    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].bar_index, 3);
     assert_eq!(strategy.orders[1].qty, 0.5);
     assert_eq!(strategy.orders[1].price, 101.5);
     assert_eq!(strategy.trades.len(), 1);
@@ -1276,6 +1304,7 @@ fn strategy_exit_qty_percent_trailing_dispatches_partial_quantity() {
         r#"strategy("exit")
 if bar_index == 0
     strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
     strategy.exit("TP", "L", trail_points=100, trail_offset=50, qty_percent=25)
 "#,
     );
@@ -1292,6 +1321,7 @@ if bar_index == 0
             bar_ohlc(100.0, 100.0, 100.0, 100.0),
             bar_ohlc(100.0, 102.0, 101.75, 102.0),
             bar_ohlc(102.0, 102.0, 101.0, 101.25),
+            bar_ohlc(101.25, 101.25, 101.0, 101.0),
         ],
     )
     .expect("runtime result");
@@ -1299,7 +1329,7 @@ if bar_index == 0
 
     assert_eq!(strategy.orders.len(), 2);
     assert_eq!(strategy.orders[1].id, "TP");
-    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].bar_index, 3);
     assert_eq!(strategy.orders[1].qty, 0.5);
     assert_eq!(strategy.orders[1].price, 101.5);
     assert_eq!(strategy.trades.len(), 1);
@@ -1315,6 +1345,7 @@ fn strategy_exit_bracket_invalid_downside_price_preempts_upside_tick_diagnostic(
         r#"strategy("exit")
 if bar_index == 0
     strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
     strategy.exit("XB", "L", stop=close / (close - close), profit=0)
 "#,
     );
@@ -1325,8 +1356,8 @@ if bar_index == 0
         analysis.diagnostics
     );
 
-    let result =
-        run_historical(&analysis.hir.expect("HIR"), &[bar(100.0)]).expect("runtime result");
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(100.0), bar(100.0)])
+        .expect("runtime result");
     let strategy = result.strategy.expect("strategy output");
 
     assert!(strategy.trades.is_empty());
@@ -1579,17 +1610,17 @@ if bar_index == 0
     let strategy = result.strategy.expect("strategy output");
 
     assert_eq!(strategy.equity.len(), 3);
-    assert_eq!(strategy.equity[0].cash, 900.0);
-    assert_eq!(strategy.equity[0].market_value, 100.0);
+    assert_eq!(strategy.equity[0].cash, 1000.0);
+    assert_eq!(strategy.equity[0].market_value, 0.0);
     assert_eq!(strategy.equity[0].equity, 1000.0);
-    assert_eq!(strategy.equity[1].cash, 900.0);
+    assert_eq!(strategy.equity[1].cash, 910.0);
     assert_eq!(strategy.equity[1].market_value, 90.0);
-    assert_eq!(strategy.equity[1].equity, 990.0);
-    assert_eq!(strategy.equity[1].net_profit, -10.0);
-    assert_eq!(strategy.equity[2].cash, 900.0);
+    assert_eq!(strategy.equity[1].equity, 1000.0);
+    assert_eq!(strategy.equity[1].net_profit, 0.0);
+    assert_eq!(strategy.equity[2].cash, 910.0);
     assert_eq!(strategy.equity[2].market_value, 120.0);
-    assert_eq!(strategy.equity[2].equity, 1020.0);
-    assert_eq!(strategy.equity[2].net_profit, 20.0);
+    assert_eq!(strategy.equity[2].equity, 1030.0);
+    assert_eq!(strategy.equity[2].net_profit, 30.0);
 }
 
 #[test]
@@ -1614,9 +1645,8 @@ strategy.close("L")
     let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
     let strategy = result.strategy.expect("strategy output");
 
-    assert_eq!(strategy.trades.len(), 1);
-    assert_eq!(strategy.trades[0].id, "L");
-    assert_eq!(strategy.position.len(), 2);
+    assert!(strategy.trades.is_empty());
+    assert!(strategy.position.is_empty());
 }
 
 #[test]
@@ -1663,7 +1693,7 @@ plot(strategy.position_avg_price)
         vec![
             PineValue::Na,
             PineValue::Na,
-            PineValue::Float(2.0),
+            PineValue::Float(3.0),
             PineValue::Na,
         ]
     );
@@ -1671,7 +1701,7 @@ plot(strategy.position_avg_price)
         result.plots[2].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(2.0),
+            PineValue::Float(0.0),
             PineValue::Float(2.0),
             PineValue::Float(0.0),
         ]
@@ -1680,8 +1710,8 @@ plot(strategy.position_avg_price)
         result.plots[3].values,
         vec![
             PineValue::Na,
-            PineValue::Float(2.0),
-            PineValue::Float(2.0),
+            PineValue::Na,
+            PineValue::Float(3.0),
             PineValue::Na,
         ]
     );
@@ -1689,19 +1719,14 @@ plot(strategy.position_avg_price)
         result.plots[4].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(2.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
         ]
     );
     assert_eq!(
         result.plots[5].values,
-        vec![
-            PineValue::Na,
-            PineValue::Float(2.0),
-            PineValue::Na,
-            PineValue::Na,
-        ]
+        vec![PineValue::Na, PineValue::Na, PineValue::Na, PineValue::Na,]
     );
 }
 
@@ -1766,7 +1791,7 @@ plot(strategy.opentrades)
         result.plots[3].values,
         vec![
             PineValue::Int(0),
-            PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(0),
         ]
@@ -1784,7 +1809,7 @@ plot(strategy.opentrades)
         result.plots[5].values,
         vec![
             PineValue::Int(0),
-            PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(0),
         ]
@@ -1835,7 +1860,7 @@ plot(strategy.opentrades[1])
     assert_eq!(
         result.plots[1].values,
         vec![
-            PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(0),
@@ -1854,7 +1879,7 @@ plot(strategy.opentrades[1])
         result.plots[3].values,
         vec![
             PineValue::Na,
-            PineValue::Int(1),
+            PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(1),
         ]
@@ -1885,10 +1910,10 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
-            PineValue::Float(2.0),
-            PineValue::Float(-2.0),
             PineValue::Float(0.0),
-            PineValue::Float(2.0),
+            PineValue::Float(-4.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
         ]
     );
     assert_eq!(
@@ -1898,8 +1923,8 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
             PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
-            PineValue::Float(-2.0),
-            PineValue::Float(-2.0),
+            PineValue::Float(-4.0),
+            PineValue::Float(-4.0),
         ]
     );
     assert_eq!(
@@ -1907,10 +1932,10 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
         vec![
             PineValue::Float(1000.0),
             PineValue::Float(1000.0),
-            PineValue::Float(1002.0),
-            PineValue::Float(998.0),
-            PineValue::Float(998.0),
             PineValue::Float(1000.0),
+            PineValue::Float(996.0),
+            PineValue::Float(996.0),
+            PineValue::Float(996.0),
         ]
     );
     assert_eq!(
@@ -1918,7 +1943,7 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
-            PineValue::Float(2.0),
+            PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
@@ -1930,9 +1955,9 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
             PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
-            PineValue::Float(-2.0),
-            PineValue::Float(-2.0),
-            PineValue::Float(0.0),
+            PineValue::Float(-4.0),
+            PineValue::Float(-4.0),
+            PineValue::Float(-4.0),
         ]
     );
     assert_eq!(
@@ -1940,10 +1965,10 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
         vec![
             PineValue::Float(1000.0),
             PineValue::Float(1000.0),
-            PineValue::Float(1002.0),
-            PineValue::Float(998.0),
-            PineValue::Float(998.0),
             PineValue::Float(1000.0),
+            PineValue::Float(996.0),
+            PineValue::Float(996.0),
+            PineValue::Float(996.0),
         ]
     );
 }
@@ -1971,7 +1996,7 @@ fn strategy_variables_work_in_supported_expression_contexts() {
         result.plots[0].values,
         vec![
             PineValue::Float(-1.0),
-            PineValue::Float(2.0),
+            PineValue::Float(-1.0),
             PineValue::Float(2.0),
             PineValue::Float(-1.0),
         ]
@@ -1980,8 +2005,8 @@ fn strategy_variables_work_in_supported_expression_contexts() {
         result.plots[1].values,
         vec![
             PineValue::Float(-1.0),
+            PineValue::Float(-1.0),
             PineValue::Float(2.0),
-            PineValue::Float(4.0),
             PineValue::Float(-1.0),
         ]
     );
@@ -1989,7 +2014,7 @@ fn strategy_variables_work_in_supported_expression_contexts() {
         result.plots[2].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(4.0),
+            PineValue::Float(0.0),
             PineValue::Float(4.0),
             PineValue::Float(0.0),
         ]
@@ -1998,7 +2023,7 @@ fn strategy_variables_work_in_supported_expression_contexts() {
         result.plots[3].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(2.0),
+            PineValue::Float(0.0),
             PineValue::Float(2.0),
             PineValue::Float(0.0),
         ]
@@ -2007,7 +2032,7 @@ fn strategy_variables_work_in_supported_expression_contexts() {
         result.plots[4].values,
         vec![
             PineValue::Float(0.0),
-            PineValue::Float(20.0),
+            PineValue::Float(0.0),
             PineValue::Float(20.0),
             PineValue::Float(0.0),
         ]
@@ -2017,7 +2042,7 @@ fn strategy_variables_work_in_supported_expression_contexts() {
         vec![
             PineValue::Na,
             PineValue::Float(0.0),
-            PineValue::Float(2.0),
+            PineValue::Float(0.0),
             PineValue::Float(2.0),
         ]
     );
@@ -2027,7 +2052,7 @@ fn strategy_variables_work_in_supported_expression_contexts() {
             PineValue::Na,
             PineValue::Float(0.0),
             PineValue::Float(0.0),
-            PineValue::Float(2.0),
+            PineValue::Float(0.0),
         ]
     );
 }

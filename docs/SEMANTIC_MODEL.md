@@ -35,8 +35,11 @@ quantity declaration subset:
 numeric `N`.
 `strategy.entry(id, strategy.long, qty=...)` is a strategy-mode side effect;
 `qty` may be omitted only when the fixed default quantity subset is configured,
-and explicit `qty` overrides the declaration default. `strategy.close(id)`
-closes the full matching long position at the current bar close.
+and explicit `qty` overrides the declaration default. The supported market-long
+entry creates an internal pending entry, emits no public order while pending, and
+fills at the next historical bar open before script statements on that fill bar.
+`strategy.close(id)` closes the full matching long position at the current bar
+close.
 `strategy.exit(id, from_entry, stop=price)`,
 `strategy.exit(id, from_entry, limit=price)`,
 `strategy.exit(id, from_entry, profit=ticks)`, and
@@ -46,10 +49,14 @@ downside leg plus one upside leg in a single bracket:
 `stop + limit`, `stop + profit`, `loss + limit`, and `loss + profit`. Supported
 single-trigger, bracket, and trailing exits with explicit fixed `qty` or
 `qty_percent` can keep multiple pending exits for different `id + from_entry`
-identities on the current matching long entry. Their reserved quantities are resolved at
-placement time, the sum of reservations is clamped to the current open
-position, and new zero-reservation placements are rejected without changing
-existing pending exits. Same-identity calls replace the existing pending exit.
+identities on the current matching long entry. Same-calculation absolute `stop`,
+`limit`, and `trail_price` attachment may target the active pending market entry
+id; `profit`, `loss`, and `trail_points` attachment to a pending entry remains
+unsupported until deferred price resolution is designed. Their reserved
+quantities are resolved at placement time, the sum of reservations is clamped to
+the current open position or matching pending entry quantity, and new
+zero-reservation placements are rejected without changing existing pending
+exits. Same-identity calls replace the existing pending exit.
 New or replaced exits ignore same-bar triggers and can fill on a later
 historical bar when `low <= stop/loss price` or `high >= limit/profit price`.
 Same-side touched exits fill in placement order. If downside stop/loss and
@@ -72,9 +79,10 @@ optional `qty_percent` on the same supported trigger forms. `qty` and
 `qty_percent` are mutually exclusive. Both quantity forms evaluate once at
 placement time after `id` and `from_entry`, must be finite and positive, and
 store an absolute requested close quantity on the pending exit. `qty_percent`
-resolves against the current open position size as
-`position_size * qty_percent / 100.0`; values above 100 are allowed because the
-fill closes no more than the current position. Omitted `qty` and omitted
+resolves against the current open position size, or the matching pending entry
+quantity for same-calculation absolute attachment, as
+`target_quantity * qty_percent / 100.0`; values above 100 are allowed because
+the fill closes no more than the current position. Omitted `qty` and omitted
 `qty_percent` preserve full-position one-effective-pending behavior across
 supported single-trigger, bracket, and trailing forms. Different identities
 replace rather than append omitted full-position pending exits, and a later
@@ -88,7 +96,8 @@ rejected in indicator scripts and user-defined functions. Short entries,
 `qty + qty_percent`, multiple pending exits outside explicit fixed `qty` or
 `qty_percent` single-trigger/bracket/trailing exits, omitted-quantity multiple
 reservations, reservation behavior outside that subset,
-missing-entry pre-placement, `strategy.order`, broker settings beyond
+unmatched missing-entry pre-placement, entry-relative exit attachment to pending
+entries, `strategy.order`, broker settings beyond
 `initial_capital` and fixed default quantity, realtime strategy handoff, and
 strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and

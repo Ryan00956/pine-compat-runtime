@@ -1,9 +1,14 @@
+use super::entries::{PendingEntry, PendingEntryDirection, PendingEntryKind};
 use super::exits::{
     ExitQuantityRequest, PendingExitQuantity, PendingExitReservationFamily, PendingExitTouch,
     PendingTrailingActivation, PendingTrailingExit, PendingTrailingSpec, PendingTrailingState,
     PendingTrailingUpdate, TrailPointsExitSpec, TrailPriceExitSpec,
 };
 use super::*;
+
+fn pending_entry_count(broker: &BrokerState) -> usize {
+    broker.pending_entry_count()
+}
 
 fn pending_exit_count(broker: &BrokerState) -> usize {
     broker.pending_exit_count()
@@ -20,6 +25,14 @@ fn broker_with_long_entry() -> BrokerState {
     let mut broker = BrokerState::new(100_000.0);
     broker.entry_long("L".to_owned(), 0, 10, 100.0, 2.0);
     broker
+}
+
+fn pending_entry_ids(broker: &BrokerState) -> Vec<&str> {
+    broker
+        .pending_entries
+        .iter()
+        .map(|pending_entry| pending_entry.id.as_str())
+        .collect()
 }
 
 fn trailing_price_trigger(activation_price: f64, offset_price_distance: f64) -> PendingExitTrigger {
@@ -255,6 +268,260 @@ fn trade_counts_start_flat() {
 }
 
 #[test]
+fn pending_market_entry_records_internal_order_without_public_fill() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert_eq!(pending_entry_ids(&broker), vec!["L"]);
+    assert_eq!(
+        broker.pending_entries.current().cloned(),
+        Some(PendingEntry {
+            id: "L".to_owned(),
+            direction: PendingEntryDirection::Long,
+            kind: PendingEntryKind::Market,
+            quantity: 2.0,
+            created_bar_index: 0,
+        })
+    );
+    assert!(broker.orders.is_empty());
+    assert!(broker.trades.is_empty());
+    assert!(broker.position.is_empty());
+    assert_eq!(broker.position_size, 0.0);
+    assert!(broker.result().orders.is_empty());
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_entry_replaces_same_id_without_public_fill() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 1.0, 0);
+    broker.place_pending_market_long_entry("L".to_owned(), 3.0, 1);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert_eq!(
+        broker.pending_entries.current().cloned(),
+        Some(PendingEntry {
+            id: "L".to_owned(),
+            direction: PendingEntryDirection::Long,
+            kind: PendingEntryKind::Market,
+            quantity: 3.0,
+            created_bar_index: 1,
+        })
+    );
+    assert!(broker.orders.is_empty());
+    assert!(broker.position.is_empty());
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_entry_rejects_invalid_quantity() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), f64::NAN, 0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_QTY");
+}
+
+#[test]
+fn pending_market_entry_does_not_queue_while_position_is_open() {
+    let mut broker = broker_with_long_entry();
+
+    broker.place_pending_market_long_entry("L2".to_owned(), 1.0, 1);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.open_trade_count(), 1);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_entry_does_not_fill_on_creation_bar() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    broker.fill_pending_market_long_entries(0, 10, 100.0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.open_trade_count(), 0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_entry_fills_on_later_bar_price() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    broker.fill_pending_market_long_entries(1, 20, 101.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.orders[0].id, "L");
+    assert_eq!(broker.orders[0].bar_index, 1);
+    assert_eq!(broker.orders[0].time, 20);
+    assert_eq!(broker.orders[0].direction, "strategy.long");
+    assert_eq!(broker.orders[0].qty, 2.0);
+    assert_eq!(broker.orders[0].price, 101.0);
+    assert_eq!(broker.position_size, 2.0);
+    assert_eq!(broker.open_trade_count(), 1);
+    assert_eq!(broker.position.len(), 1);
+    assert_eq!(broker.position[0].avg_price, Some(101.0));
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_entry_fill_uses_first_eligible_entry_and_clears_rest() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L1".to_owned(), 1.0, 0);
+    broker.place_pending_market_long_entry("L2".to_owned(), 3.0, 0);
+    broker.fill_pending_market_long_entries(1, 20, 101.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.orders[0].id, "L1");
+    assert_eq!(broker.orders[0].qty, 1.0);
+    assert_eq!(broker.position_size, 1.0);
+    assert!(broker.pending_entries.find_by_id("L2").is_none());
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_entry_fill_clears_book_when_position_is_already_open() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker.place_pending_market_long_entry("L".to_owned(), 1.0, 0);
+    broker.entry_long("E".to_owned(), 0, 10, 100.0, 2.0);
+
+    broker.fill_pending_market_long_entries(1, 20, 101.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.orders[0].id, "E");
+    assert_eq!(broker.position_size, 2.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_entry_allows_attached_stop_exit_without_public_fill() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XL".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Stop(95.0),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
+            multiple_reservation: false,
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.orders.is_empty());
+    assert!(broker.position.is_empty());
+    assert_eq!(broker.position_size, 0.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_entry_attachment_uses_pending_quantity_for_reservations() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 95.0, 0.75, 0);
+    broker.place_exit_limit_qty_percent("XL".to_owned(), "L".to_owned(), 110.0, 75.0, 0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert_eq!(pending_exit_count(&broker), 2);
+    assert_eq!(pending_exit_ids(&broker), vec!["XS", "XL"]);
+    assert_eq!(
+        broker
+            .pending_exit_by_identity("XS", "L")
+            .unwrap()
+            .reserved_quantity,
+        0.75
+    );
+    assert_eq!(
+        broker
+            .pending_exit_by_identity("XL", "L")
+            .unwrap()
+            .reserved_quantity,
+        1.25
+    );
+    assert_eq!(
+        broker.pending_exit_by_identity("XL", "L").unwrap().quantity,
+        PendingExitQuantity::Fixed(1.5)
+    );
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.position_size, 0.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_entry_attachment_rejects_unknown_from_entry() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    broker.place_exit_stop("XL".to_owned(), "OTHER".to_owned(), 95.0, 0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+}
+
+#[test]
+fn pending_market_entry_rejects_entry_relative_profit_attachment() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 0.01, 0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+}
+
+#[test]
+fn pending_market_entry_rejects_entry_relative_loss_attachment() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    broker.place_exit_loss_ticks("XL".to_owned(), "L".to_owned(), 10.0, 0.01, 0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+}
+
+#[test]
+fn pending_market_entry_rejects_entry_relative_trail_points_attachment() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    broker.place_exit_trail_points("XT".to_owned(), "L".to_owned(), 10.0, 5.0, 0.01, 0);
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+}
+
+#[test]
 fn trade_counts_track_long_entry_and_no_pyramiding_noop() {
     let mut broker = BrokerState::new(100_000.0);
 
@@ -455,7 +722,7 @@ fn reservation_resolver_rejects_zero_available_quantity() {
     let mut broker = broker_with_long_entry();
 
     let resolved =
-        broker.resolve_exit_quantity_request_for_available(ExitQuantityRequest::Full, 0.0);
+        broker.resolve_exit_quantity_request_for_available(ExitQuantityRequest::Full, 2.0, 0.0);
 
     assert_eq!(resolved, None);
     assert_eq!(broker.diagnostics.len(), 1);
@@ -467,7 +734,7 @@ fn reservation_resolver_reserves_full_available_quantity() {
     let mut broker = broker_with_long_entry();
 
     let resolved =
-        broker.resolve_exit_quantity_request_for_available(ExitQuantityRequest::Full, 2.0);
+        broker.resolve_exit_quantity_request_for_available(ExitQuantityRequest::Full, 2.0, 2.0);
 
     assert_eq!(resolved, Some((PendingExitQuantity::Full, 2.0)));
     assert!(broker.diagnostics.is_empty());
@@ -477,8 +744,11 @@ fn reservation_resolver_reserves_full_available_quantity() {
 fn reservation_resolver_clamps_fixed_quantity_to_available_quantity() {
     let mut broker = broker_with_long_entry();
 
-    let resolved =
-        broker.resolve_exit_quantity_request_for_available(ExitQuantityRequest::Fixed(2.0), 0.75);
+    let resolved = broker.resolve_exit_quantity_request_for_available(
+        ExitQuantityRequest::Fixed(2.0),
+        2.0,
+        0.75,
+    );
 
     assert_eq!(resolved, Some((PendingExitQuantity::Fixed(2.0), 0.75)));
     assert!(broker.diagnostics.is_empty());
@@ -488,8 +758,11 @@ fn reservation_resolver_clamps_fixed_quantity_to_available_quantity() {
 fn reservation_resolver_clamps_percent_quantity_to_available_quantity() {
     let mut broker = broker_with_long_entry();
 
-    let resolved = broker
-        .resolve_exit_quantity_request_for_available(ExitQuantityRequest::Percent(50.0), 0.75);
+    let resolved = broker.resolve_exit_quantity_request_for_available(
+        ExitQuantityRequest::Percent(50.0),
+        2.0,
+        0.75,
+    );
 
     assert_eq!(resolved, Some((PendingExitQuantity::Fixed(1.0), 0.75)));
     assert!(broker.diagnostics.is_empty());
@@ -499,8 +772,11 @@ fn reservation_resolver_clamps_percent_quantity_to_available_quantity() {
 fn reservation_resolver_clamps_over_100_percent_to_available_quantity() {
     let mut broker = broker_with_long_entry();
 
-    let resolved = broker
-        .resolve_exit_quantity_request_for_available(ExitQuantityRequest::Percent(150.0), 2.0);
+    let resolved = broker.resolve_exit_quantity_request_for_available(
+        ExitQuantityRequest::Percent(150.0),
+        2.0,
+        2.0,
+    );
 
     assert_eq!(resolved, Some((PendingExitQuantity::Fixed(3.0), 2.0)));
     assert!(broker.diagnostics.is_empty());

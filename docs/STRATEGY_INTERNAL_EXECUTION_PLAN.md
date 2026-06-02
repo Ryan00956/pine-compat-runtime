@@ -64,6 +64,9 @@ Acceptance:
 
 ## Stage 2: Pending Entry And Order Timing Foundation
 
+Status: closed on 2026-06-02. See
+`docs/STRATEGY_INTERNAL_STAGE2_PENDING_ENTRY_AUDIT.md`.
+
 Goal: introduce the internal pending-entry model needed by Pine-compatible order
 timing.
 
@@ -71,8 +74,8 @@ Scope:
 
 - Add active entry orders that can exist before fill.
 - Preserve public output unless an entry actually fills.
-- Fixture the selected default historical fill policy, such as next-tick or
-  next-bar-close behavior.
+- Fixture the selected default historical fill policy; Stage 2 selected
+  next-historical-bar-open behavior for market entries.
 - Support same-calculation `strategy.entry` plus `strategy.exit` attachment when
   the exit refers to the active entry id.
 

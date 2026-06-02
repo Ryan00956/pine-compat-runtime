@@ -560,6 +560,9 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
+        if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
+            return;
+        }
         let Some(limit_price) = self.exit_profit_price_from_ticks(ticks, mintick) else {
             return;
         };
@@ -637,6 +640,9 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
+        if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
+            return;
+        }
         let Some(stop_price) = self.exit_loss_price_from_ticks(ticks, mintick) else {
             return;
         };
@@ -869,6 +875,9 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
+        if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
+            return;
+        }
         let Some(activation_price_offset) =
             self.exit_tick_price_offset(spec.activation_ticks, spec.mintick)
         else {
@@ -966,13 +975,21 @@ impl BrokerState {
             });
             return;
         }
-        if self.position_size <= 0.0 || self.entry_id.as_deref() != Some(from_entry.as_str()) {
+        let target_position_size = if self.position_size > 0.0
+            && self.entry_id.as_deref() == Some(from_entry.as_str())
+        {
+            self.position_size
+        } else if let Some(pending_entry_quantity) =
+            self.pending_entries.quantity_for_id(&from_entry)
+        {
+            pending_entry_quantity
+        } else {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_ENTRY".to_owned(),
                 message: "`strategy.exit` from_entry must match the current long entry".to_owned(),
             });
             return;
-        }
+        };
 
         let multiple_reservation_family = match (quantity, trigger.reservation_family()) {
             (
@@ -997,17 +1014,19 @@ impl BrokerState {
                 .other_exits_are_supported_reservations(&from_entry, released_identity);
         let available_quantity = if other_exits_are_supported_reservations {
             self.pending_exits.available_unreserved_quantity(
-                self.position_size,
+                target_position_size,
                 &from_entry,
                 released_identity,
             )
         } else {
-            self.position_size
+            target_position_size
         };
 
-        let Some((quantity, reserved_quantity)) =
-            self.resolve_exit_quantity_request_for_available(quantity, available_quantity)
-        else {
+        let Some((quantity, reserved_quantity)) = self.resolve_exit_quantity_request_for_available(
+            quantity,
+            target_position_size,
+            available_quantity,
+        ) else {
             return;
         };
 
@@ -1044,8 +1063,16 @@ impl BrokerState {
     pub(super) fn resolve_exit_quantity_request_for_available(
         &mut self,
         quantity: ExitQuantityRequest,
+        target_quantity: f64,
         available_quantity: f64,
     ) -> Option<(PendingExitQuantity, f64)> {
+        if !target_quantity.is_finite() || target_quantity <= 0.0 {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_EXIT_QTY".to_owned(),
+                message: "`strategy.exit` target quantity must be positive".to_owned(),
+            });
+            return None;
+        }
         if !available_quantity.is_finite() || available_quantity <= 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_QTY".to_owned(),
@@ -1075,7 +1102,7 @@ impl BrokerState {
                     });
                     return None;
                 }
-                let requested_quantity = self.position_size * qty_percent / 100.0;
+                let requested_quantity = target_quantity * qty_percent / 100.0;
                 Some((
                     PendingExitQuantity::Fixed(requested_quantity),
                     requested_quantity.min(available_quantity),

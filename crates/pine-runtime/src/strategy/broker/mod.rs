@@ -1,9 +1,11 @@
 mod accounting;
+mod entries;
 mod exits;
 mod fills;
 
 use pine_ir::DEFAULT_STRATEGY_INITIAL_CAPITAL;
 
+use entries::PendingEntryBook;
 use exits::{
     PendingExit, PendingExitBook, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
 };
@@ -28,6 +30,7 @@ pub struct BrokerState {
     position: Vec<StrategyPositionSnapshot>,
     equity: Vec<StrategyEquitySnapshot>,
     diagnostics: Vec<RuntimeDiagnostic>,
+    pending_entries: PendingEntryBook,
     pending_exits: PendingExitBook,
 }
 
@@ -53,6 +56,7 @@ impl BrokerState {
             position: Vec::new(),
             equity: Vec::new(),
             diagnostics: Vec::new(),
+            pending_entries: PendingEntryBook::new(),
             pending_exits: PendingExitBook::new(),
         }
     }
@@ -108,6 +112,71 @@ impl BrokerState {
         self.pending_exits.clear_for_entry(entry_id);
     }
 
+    #[allow(dead_code)]
+    pub(crate) fn place_pending_market_long_entry(
+        &mut self,
+        id: String,
+        qty: f64,
+        created_bar_index: usize,
+    ) {
+        if self.position_size > 0.0 {
+            return;
+        }
+        self.pending_entries
+            .place_market_long(id, qty, created_bar_index, &mut self.diagnostics);
+    }
+
+    #[allow(dead_code)]
+    fn pending_entry_count(&self) -> usize {
+        self.pending_entries.count()
+    }
+
+    pub(crate) fn fill_pending_market_long_entries(
+        &mut self,
+        bar_index: usize,
+        time: i64,
+        fill_price: f64,
+    ) {
+        if self.position_size > 0.0 {
+            self.pending_entries.clear_all();
+            return;
+        }
+        let Some(pending_entry) = self
+            .pending_entries
+            .take_first_eligible_market_long(bar_index)
+        else {
+            return;
+        };
+
+        self.entry_long(
+            pending_entry.id,
+            bar_index,
+            time,
+            fill_price,
+            pending_entry.quantity,
+        );
+        self.pending_entries.clear_all();
+    }
+
+    fn has_pending_entry(&self, id: &str) -> bool {
+        self.pending_entries.quantity_for_id(id).is_some()
+    }
+
+    pub(crate) fn reject_entry_relative_exit_for_pending_entry(
+        &mut self,
+        from_entry: &str,
+    ) -> bool {
+        if self.position_size > 0.0 || self.pending_entries.quantity_for_id(from_entry).is_none() {
+            return false;
+        }
+
+        self.diagnostics.push(RuntimeDiagnostic {
+            code: "E_STRATEGY_EXIT_ENTRY".to_owned(),
+            message: "`strategy.exit` from_entry must match the current long entry".to_owned(),
+        });
+        true
+    }
+
     fn pending_exit(&self) -> Option<&PendingExit> {
         self.pending_exits.current()
     }
@@ -153,6 +222,9 @@ impl BrokerState {
         if self.position_size <= 0.0
             || self.entry_id.as_deref() != Some(pending_exit.from_entry.as_str())
         {
+            if self.position_size <= 0.0 && self.has_pending_entry(&pending_exit.from_entry) {
+                return;
+            }
             self.pending_exits.clear_for_entry(&pending_exit.from_entry);
             return;
         }
@@ -204,6 +276,24 @@ impl BrokerState {
         if self.position_size <= 0.0
             || self.entry_id.as_deref() != Some(first_pending_exit.from_entry.as_str())
         {
+            if self.position_size <= 0.0 {
+                let attached_pending_entry_ids: Vec<String> = pending_exits
+                    .iter()
+                    .filter(|pending_exit| self.has_pending_entry(&pending_exit.from_entry))
+                    .map(|pending_exit| pending_exit.from_entry.clone())
+                    .collect();
+                if !attached_pending_entry_ids.is_empty() {
+                    for pending_exit in pending_exits {
+                        if !attached_pending_entry_ids
+                            .iter()
+                            .any(|entry_id| entry_id == &pending_exit.from_entry)
+                        {
+                            self.pending_exits.clear_for_entry(&pending_exit.from_entry);
+                        }
+                    }
+                    return;
+                }
+            }
             self.pending_exits
                 .clear_for_entry(&first_pending_exit.from_entry);
             return;

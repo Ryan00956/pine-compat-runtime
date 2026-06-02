@@ -269,12 +269,16 @@ be accepted in Phase 1. `max_bars_back` must be non-negative when provided.
 Unsupported named arguments should produce compatibility diagnostics.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
-use the configured or default fixed quantity.
+use the configured or default fixed quantity. Supported market-long entries fill
+at the next historical bar open and do not expose public pending-order records.
 `strategy.exit` accepts `qty` or `qty_percent` on supported single-trigger,
 one-downside/one-upside bracket, and trailing trigger shapes. Explicit fixed
 `qty` or `qty_percent` exits on those supported shapes can keep multiple
 reserved pending exits for different `id + from_entry` identities on the
-current matching long entry. `qty` and `qty_percent` remain mutually exclusive.
+current matching long entry or the active pending market entry for
+same-calculation absolute `stop`, `limit`, and `trail_price` attachment.
+Same-calculation `profit`, `loss`, and `trail_points` attachment to a pending
+entry remains unsupported. `qty` and `qty_percent` remain mutually exclusive.
 Richer strategy order options remain unsupported.
 
 ## Inputs

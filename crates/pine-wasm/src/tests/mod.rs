@@ -116,28 +116,28 @@ fn runs_strategy_script_from_csv_to_empty_strategy_json() {
 fn runs_strategy_entry_from_csv_to_strategy_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(close)\n",
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
     )
     .expect("strategy entry script should run");
 
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":2,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":3}]"
     ));
-    assert!(output.contains("\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2}]"));
+    assert!(output.contains("\"position\":[{\"barIndex\":2,\"size\":2,\"avgPrice\":3}]"));
 }
 
 #[test]
 fn runs_strategy_default_quantity_from_csv_to_strategy_json() {
     let output = run_script_csv(
         "strategy(\"demo\", default_qty_type=strategy.fixed, default_qty_value=3)\nif bar_index == 1\n    strategy.entry(\"D\", strategy.long)\nplot(strategy.position_size)\n",
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
     )
     .expect("strategy default quantity script should run");
 
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"D\",\"barIndex\":1,\"time\":1,\"direction\":\"strategy.long\",\"qty\":3,\"price\":2}]"
+        "\"orders\":[{\"id\":\"D\",\"barIndex\":2,\"time\":2,\"direction\":\"strategy.long\",\"qty\":3,\"price\":3}]"
     ));
-    assert!(output.contains("\"values\":[0,3]"));
+    assert!(output.contains("\"values\":[0,0,3]"));
 }
 
 #[test]
@@ -149,9 +149,9 @@ fn runs_strategy_position_state_from_csv_to_json() {
     .expect("strategy position state script should run");
 
     assert!(output.contains("\"values\":[0,0,2]"));
-    assert!(output.contains("\"values\":[null,null,2]"));
-    assert!(output.contains("\"values\":[0,2,0]"));
-    assert!(output.contains("\"values\":[null,2,null]"));
+    assert!(output.contains("\"values\":[null,null,3]"));
+    assert!(output.contains("\"values\":[0,0,0]"));
+    assert!(output.contains("\"values\":[null,null,null]"));
 }
 
 #[test]
@@ -162,9 +162,9 @@ fn runs_strategy_profit_state_from_csv_to_json() {
     )
     .expect("strategy profit state script should run");
 
-    assert!(output.contains("\"values\":[0,0,2]"));
     assert!(output.contains("\"values\":[0,0,0]"));
-    assert!(output.contains("\"values\":[1000,1000,1002]"));
+    assert!(output.contains("\"values\":[0,0,0]"));
+    assert!(output.contains("\"values\":[1000,1000,1000]"));
 }
 
 #[test]
@@ -175,9 +175,9 @@ fn runs_strategy_variable_interactions_from_csv_to_json() {
     )
     .expect("strategy variable interaction script should run");
 
-    assert!(output.contains("\"values\":[null,0,2]"));
     assert!(output.contains("\"values\":[null,0,0]"));
-    assert!(output.contains("\"values\":[0,20,20]"));
+    assert!(output.contains("\"values\":[null,0,0]"));
+    assert!(output.contains("\"values\":[0,0,20]"));
 }
 
 #[test]
@@ -189,7 +189,7 @@ fn runs_strategy_trade_counts_from_csv_to_json() {
     .expect("strategy trade count script should run");
 
     assert!(output.contains("\"values\":[0,0,1]"));
-    assert!(output.contains("\"values\":[0,1,0]"));
+    assert!(output.contains("\"values\":[0,0,0]"));
     assert!(output.contains("\"strategy\":{\"orders\":["));
     assert!(output.contains("\"trades\":["));
     assert!(output.contains("\"position\":["));
@@ -208,10 +208,10 @@ fn runs_strategy_close_from_csv_to_trade_json() {
     .expect("strategy close script should run");
 
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":1,\"exitTime\":2,\"entryPrice\":2,\"exitPrice\":3,\"qty\":2,\"profit\":2}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":2,\"exitBarIndex\":2,\"entryTime\":2,\"exitTime\":2,\"entryPrice\":3,\"exitPrice\":3,\"qty\":2,\"profit\":0}]"
     ));
     assert!(output.contains(
-        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"
+        "\"position\":[{\"barIndex\":2,\"size\":2,\"avgPrice\":3},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"
     ));
 }
 
@@ -224,10 +224,10 @@ fn runs_strategy_exit_stop_from_csv_to_trade_json() {
     .expect("strategy exit stop script should run");
 
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":10,\"direction\":\"strategy.long\",\"qty\":2,\"price\":10},{\"id\":\"XL\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":9}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.long\",\"qty\":2,\"price\":11},{\"id\":\"XL\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":9}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":10,\"exitTime\":20,\"entryPrice\":10,\"exitPrice\":9,\"qty\":2,\"profit\":-2}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":20,\"exitTime\":20,\"entryPrice\":11,\"exitPrice\":9,\"qty\":2,\"profit\":-4}]"
     ));
 }
 
@@ -240,45 +240,45 @@ fn runs_strategy_exit_limit_from_csv_to_trade_json() {
     .expect("strategy exit limit script should run");
 
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":10,\"direction\":\"strategy.long\",\"qty\":2,\"price\":10},{\"id\":\"XL\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":12}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.long\",\"qty\":2,\"price\":11},{\"id\":\"XL\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":12}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":10,\"exitTime\":20,\"entryPrice\":10,\"exitPrice\":12,\"qty\":2,\"profit\":4}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":20,\"exitTime\":20,\"entryPrice\":11,\"exitPrice\":12,\"qty\":2,\"profit\":2}]"
     ));
 }
 
 #[test]
 fn runs_strategy_exit_profit_from_csv_to_trade_json() {
     let output = run_script_csv(
-        "strategy(\"demo\")\nif bar_index == 0\n    strategy.entry(\"L\", strategy.long, qty=2)\n    strategy.exit(\"XP\", \"L\", profit=200)\n",
-        "time,open,high,low,close,volume\n10,10,10,10,10,1\n20,11,12,10,11,1\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_profit.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy exit profit script should run");
 
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":10,\"direction\":\"strategy.long\",\"qty\":2,\"price\":10},{\"id\":\"XP\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":12}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XP\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":3.5}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":10,\"exitTime\":20,\"entryPrice\":10,\"exitPrice\":12,\"qty\":2,\"profit\":4}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":2,\"exitPrice\":3.5,\"qty\":2,\"profit\":3}]"
     ));
-    assert!(output.contains("\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":10},{\"barIndex\":1,\"size\":0,\"avgPrice\":null}]"));
+    assert!(output.contains("\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":3,\"size\":0,\"avgPrice\":null}]"));
 }
 
 #[test]
 fn runs_strategy_exit_loss_from_csv_to_trade_json() {
     let output = run_script_csv(
-        "strategy(\"demo\")\nif bar_index == 0\n    strategy.entry(\"L\", strategy.long, qty=2)\n    strategy.exit(\"XL\", \"L\", loss=100)\n",
-        "time,open,high,low,close,volume\n10,10,10,10,10,1\n20,10,10,9,10,1\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_loss.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_loss_bars.csv"),
     )
     .expect("strategy exit loss script should run");
 
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":10,\"direction\":\"strategy.long\",\"qty\":2,\"price\":10},{\"id\":\"XL\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":9}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":10},{\"id\":\"XL\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":9}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":10,\"exitTime\":20,\"entryPrice\":10,\"exitPrice\":9,\"qty\":2,\"profit\":-2}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":2,\"exitTime\":3,\"entryPrice\":10,\"exitPrice\":9,\"qty\":2,\"profit\":-2}]"
     ));
-    assert!(output.contains("\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":10},{\"barIndex\":1,\"size\":0,\"avgPrice\":null}]"));
+    assert!(output.contains("\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":10},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"));
 }
 
 #[test]
@@ -291,13 +291,13 @@ fn runs_strategy_exit_bracket_fixture_from_csv_to_trade_json() {
 
     assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":100},{\"id\":\"XB\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":95}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":100},{\"id\":\"XB\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":95}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":1,\"exitTime\":2,\"entryPrice\":100,\"exitPrice\":95,\"qty\":2,\"profit\":-10}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":2,\"exitTime\":2,\"entryPrice\":100,\"exitPrice\":95,\"qty\":2,\"profit\":-10}]"
     ));
     assert!(output.contains(
-        "\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":100},{\"barIndex\":1,\"size\":0,\"avgPrice\":null}]"
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":100},{\"barIndex\":1,\"size\":0,\"avgPrice\":null}]"
     ));
 }
 
@@ -315,10 +315,10 @@ fn runs_strategy_exit_trailing_fixture_from_csv_to_trade_json() {
     )));
     assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":1},{\"id\":\"XT\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":3.5}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XT\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":3.5}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":3,\"entryTime\":1,\"exitTime\":4,\"entryPrice\":1,\"exitPrice\":3.5,\"qty\":2,\"profit\":5}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":2,\"exitPrice\":3.5,\"qty\":2,\"profit\":3}]"
     ));
 }
 
@@ -336,13 +336,13 @@ fn runs_strategy_exit_qty_partial_fixture_from_csv_to_trade_json() {
     )));
     assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":1},{\"id\":\"XQ\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":0.75,\"price\":2.5}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XQ\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":0.75,\"price\":2.5}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":1,\"exitTime\":2,\"entryPrice\":1,\"exitPrice\":2.5,\"qty\":0.75,\"profit\":1.125}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":2,\"exitTime\":2,\"entryPrice\":2,\"exitPrice\":2.5,\"qty\":0.75,\"profit\":0.375}]"
     ));
     assert!(output.contains(
-        "\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":1},{\"barIndex\":1,\"size\":1.25,\"avgPrice\":1}]"
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":1,\"size\":1.25,\"avgPrice\":2}]"
     ));
     assert!(!output.contains("pending"));
     assert!(!output.contains("remainingQty"));
@@ -364,16 +364,16 @@ fn runs_strategy_exit_qty_percent_partial_fixture_from_csv_to_trade_json() {
     )));
     assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":1},{\"id\":\"XP\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":2.5}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XP\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":2.5}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":1,\"exitTime\":2,\"entryPrice\":1,\"exitPrice\":2.5,\"qty\":1,\"profit\":1.5}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":2,\"exitTime\":2,\"entryPrice\":2,\"exitPrice\":2.5,\"qty\":1,\"profit\":0.5}]"
     ));
     assert!(output.contains(
-        "\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":1},{\"barIndex\":1,\"size\":1,\"avgPrice\":1}]"
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":1,\"size\":1,\"avgPrice\":2}]"
     ));
-    assert!(output.contains("\"values\":[2,2,1,1]"));
-    assert!(output.contains("\"values\":[0,0,1.5,1.5]"));
+    assert!(output.contains("\"values\":[0,2,1,1]"));
+    assert!(output.contains("\"values\":[0,0,0.5,0.5]"));
     assert!(!output.contains("pending"));
     assert!(!output.contains("remainingQty"));
     assert!(!output.contains("qtyPercent"));
@@ -396,13 +396,13 @@ fn runs_strategy_exit_reservation_fixture_from_csv_to_public_strategy_json() {
     )));
     assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 2);
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":1},{\"id\":\"XS\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":0.5,\"price\":2.5},{\"id\":\"XL\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.exit\",\"qty\":1.5,\"price\":1.5}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XS\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":0.5,\"price\":2.5},{\"id\":\"XL\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.exit\",\"qty\":1.5,\"price\":1.5}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":1,\"exitTime\":2,\"entryPrice\":1,\"exitPrice\":2.5,\"qty\":0.5,\"profit\":0.75},{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":2,\"entryTime\":1,\"exitTime\":3,\"entryPrice\":1,\"exitPrice\":1.5,\"qty\":1.5,\"profit\":0.75}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":2,\"exitTime\":2,\"entryPrice\":2,\"exitPrice\":2.5,\"qty\":0.5,\"profit\":0.25},{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":2,\"exitTime\":3,\"entryPrice\":2,\"exitPrice\":1.5,\"qty\":1.5,\"profit\":-0.75}]"
     ));
     assert!(output.contains(
-        "\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":1},{\"barIndex\":1,\"size\":1.5,\"avgPrice\":1},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":1,\"size\":1.5,\"avgPrice\":2},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"
     ));
     assert!(output.contains("\"strategy\":{\"orders\":"));
     assert!(output.contains("\"equity\":["));
@@ -429,16 +429,16 @@ fn runs_strategy_exit_omitted_replaces_reservations_from_csv_to_public_strategy_
     )));
     assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":1},{\"id\":\"XFULL\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":2.5}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XFULL\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":2.5}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":2,\"entryTime\":1,\"exitTime\":3,\"entryPrice\":1,\"exitPrice\":2.5,\"qty\":2,\"profit\":3}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":2,\"exitTime\":3,\"entryPrice\":2,\"exitPrice\":2.5,\"qty\":2,\"profit\":1}]"
     ));
     assert!(output.contains(
-        "\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":1},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"
     ));
-    assert!(output.contains("\"values\":[2,2,2,0]"));
-    assert!(output.contains("\"values\":[0,0,0,3]"));
+    assert!(output.contains("\"values\":[0,2,2,0]"));
+    assert!(output.contains("\"values\":[0,0,0,1]"));
     assert!(output.contains("\"strategy\":{\"orders\":"));
     assert!(output.contains("\"trades\":["));
     assert!(output.contains("\"position\":["));
@@ -474,16 +474,16 @@ fn runs_strategy_exit_bracket_reservation_fixture_from_csv_to_public_strategy_js
     )));
     assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 2);
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":1},{\"id\":\"XB1\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":0.5,\"price\":2},{\"id\":\"XB2\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":3}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XB1\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":0.5,\"price\":2},{\"id\":\"XB2\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":3}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":1,\"entryTime\":1,\"exitTime\":2,\"entryPrice\":1,\"exitPrice\":2,\"qty\":0.5,\"profit\":0.5},{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":2,\"entryTime\":1,\"exitTime\":3,\"entryPrice\":1,\"exitPrice\":3,\"qty\":1,\"profit\":2}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":2,\"exitTime\":2,\"entryPrice\":2,\"exitPrice\":2,\"qty\":0.5,\"profit\":0},{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":2,\"exitTime\":3,\"entryPrice\":2,\"exitPrice\":3,\"qty\":1,\"profit\":1}]"
     ));
     assert!(output.contains(
-        "\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":1},{\"barIndex\":1,\"size\":1.5,\"avgPrice\":1},{\"barIndex\":2,\"size\":0.5,\"avgPrice\":1}]"
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":1,\"size\":1.5,\"avgPrice\":2},{\"barIndex\":2,\"size\":0.5,\"avgPrice\":2}]"
     ));
-    assert!(output.contains("\"values\":[2,2,1.5,0.5]"));
-    assert!(output.contains("\"values\":[0,0,0.5,2.5]"));
+    assert!(output.contains("\"values\":[0,2,1.5,0.5]"));
+    assert!(output.contains("\"values\":[0,0,0,1]"));
     assert!(output.contains("\"strategy\":{\"orders\":"));
     assert!(output.contains("\"equity\":["));
     assert!(output.contains("\"diagnostics\":[]}"));
@@ -516,16 +516,16 @@ fn runs_strategy_exit_trailing_reservation_fixture_from_csv_to_public_strategy_j
     )));
     assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 2);
     assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":0,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":1},{\"id\":\"XT1\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":0.75,\"price\":3.5},{\"id\":\"XT2\",\"barIndex\":4,\"time\":5,\"direction\":\"strategy.exit\",\"qty\":1.25,\"price\":3.3}]"
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":3},{\"id\":\"XT1\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":0.75,\"price\":3.5},{\"id\":\"XT2\",\"barIndex\":4,\"time\":5,\"direction\":\"strategy.exit\",\"qty\":1.25,\"price\":3.3}]"
     ));
     assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":3,\"entryTime\":1,\"exitTime\":4,\"entryPrice\":1,\"exitPrice\":3.5,\"qty\":0.75,\"profit\":1.875},{\"id\":\"L\",\"entryBarIndex\":0,\"exitBarIndex\":4,\"entryTime\":1,\"exitTime\":5,\"entryPrice\":1,\"exitPrice\":3.3,\"qty\":1.25,\"profit\":2.875}]"
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":3,\"exitPrice\":3.5,\"qty\":0.75,\"profit\":0.375},{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":4,\"entryTime\":2,\"exitTime\":5,\"entryPrice\":3,\"exitPrice\":3.3,\"qty\":1.25,\"profit\":0.3749999999999998}]"
     ));
     assert!(output.contains(
-        "\"position\":[{\"barIndex\":0,\"size\":2,\"avgPrice\":1},{\"barIndex\":3,\"size\":1.25,\"avgPrice\":1},{\"barIndex\":4,\"size\":0,\"avgPrice\":null}]"
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":3},{\"barIndex\":3,\"size\":1.25,\"avgPrice\":3},{\"barIndex\":4,\"size\":0,\"avgPrice\":null}]"
     ));
-    assert!(output.contains("\"values\":[2,2,2,2,1.25]"));
-    assert!(output.contains("\"values\":[0,0,0,0,1.875]"));
+    assert!(output.contains("\"values\":[0,2,2,2,1.25]"));
+    assert!(output.contains("\"values\":[0,0,0,0,0.375]"));
     assert!(output.contains("\"strategy\":{\"orders\":"));
     assert!(output.contains("\"equity\":["));
     assert!(output.contains("\"diagnostics\":[]}"));
