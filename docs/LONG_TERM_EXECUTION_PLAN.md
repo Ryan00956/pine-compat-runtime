@@ -978,15 +978,60 @@ Out of scope until separately designed:
 - Public pending-order records, reservation fields, remaining-quantity fields,
   bracket-leg fields, exit-reason fields, or a runtime schema bump.
 
+## Phase Y: Strategy Exit Trailing Reservations
+
+Goal: extend the deterministic multiple-exit reservation subset to supported
+trailing exits without changing the public strategy output schema.
+
+Status: closed for the current fixture-backed explicit fixed `qty` or
+`qty_percent` trailing reservation subset. See `docs/PHASE_Y_AUDIT.md`.
+Execution playbook: `docs/PHASE_Y_EXECUTION_PLAN.md`.
+
+Supported scope:
+
+- Strategy-mode-only multiple pending `strategy.exit` reservations for the
+  current one-net-long, no-pyramiding broker.
+- Support different `id + from_entry` identities for supported trailing forms
+  only when each trailing exit has explicit fixed `qty` or `qty_percent`.
+- Supported trailing forms remain `trail_price + trail_offset` and
+  `trail_points + trail_offset`.
+- Single-trigger, bracket, and trailing reservations can share the same
+  reservation pool for the current matching long entry.
+- Resolve reservations at placement time, clamp new reservations to remaining
+  unreserved position quantity, and reject zero-reservation placements without
+  changing existing pending exits.
+- Replace same-identity pending exits after releasing the old reservation.
+- Inactive trailing reservations activate on a later eligible bar and do not
+  fill on the activation bar.
+- Active trailing reservations fill as downside candidates before same-bar
+  ratchets, and unfilled active trailing stops ratchet upward only.
+- Fill same-side touched candidates in placement order, process downside
+  candidates only when downside and upside candidates are both touched on the
+  same eligible bar, and preserve opposite-side candidates when a long position
+  remains.
+- Keep the existing strategy result shape and runtime `schemaVersion: 3`.
+
+Out of scope until separately designed:
+
+- Calls that combine `qty` and `qty_percent`.
+- Multiple pending exits for omitted-quantity full-position exits.
+- Omitted-quantity bracket or trailing reservations.
+- Reservation behavior outside explicit fixed `qty` or `qty_percent`
+  single-trigger, bracket, and trailing exits.
+- Missing-entry pre-placement.
+- Multiple entries, pyramiding, short exposure, and reversals.
+- Public pending-order records, reservation fields, remaining-quantity fields,
+  bracket-leg fields, trailing-state fields, activation fields, exit-reason
+  fields, or a runtime schema bump.
+
 ## Backlog Priority
 
 Recommended order from the current state:
 
 1. Keep strategy maintenance narrow and fixture-backed. The next strategy work
    should target one deferred broker tail at a time, such as missing-entry
-   pre-placement, omitted-quantity multiple exits, trailing reservations, or
-   short/pyramiding behavior, with semantic, runtime,
-   incremental, host, conformance, and closeout evidence before any
+   pre-placement, omitted-quantity multiple exits, or short/pyramiding behavior,
+   with semantic, runtime, incremental, host, conformance, and closeout evidence before any
    compatibility claim widens.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.

@@ -1144,6 +1144,40 @@ Exit criteria:
   matrix snapshot agree.
 - No unsupported broker tail is accidentally claimed.
 
+### Slice 6 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Implemented changes:
+
+- Created `docs/PHASE_Y_AUDIT.md` with supported surface, unsupported
+  boundaries, public output shape, runtime fixture/snapshot evidence, host
+  parity tests, conformance/matrix evidence, and verification commands.
+- Updated `docs/CONFORMANCE.md` to match the conformance TSV claim for explicit
+  fixed-`qty` or `qty_percent` single-trigger, bracket, and trailing
+  reservations.
+- Updated `docs/EXECUTION_SEMANTICS.md` with trailing-reservation placement,
+  activation, ratchet, same-bar precedence, and public-output rules.
+- Updated `docs/SEMANTIC_MODEL.md` with the exact analyzer/runtime boundary and
+  public schema guardrail.
+- Added Phase Y to `docs/LONG_TERM_EXECUTION_PLAN.md`, marked it closed, and
+  removed trailing reservations from the current next-tail examples.
+- Updated `docs/RELEASE_NOTES.md` and `README.md` support summaries while keeping
+  omitted-quantity multiple exits, missing-entry pre-placement, short exposure,
+  pyramiding, public pending/reservation/trailing-state fields, and richer
+  broker behavior unsupported.
+
+Slice 6 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-cli matrix
+cargo test -p pine-cli matrix_output_matches_golden_snapshot
+git diff --check
+```
+
+All commands passed on the Slice 6 workspace.
+
 ## Slice 7: Release Verification
 
 Goal: run the canonical release gate and leave the workspace ready for a narrow

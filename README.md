@@ -115,16 +115,16 @@ strategy-mode long entries, closes, stop/limit/profit/loss exits, the first
 one-downside/one-upside `strategy.exit` bracket subset, the first trailing-stop
 `strategy.exit` subset, optional fixed-quantity and percent-quantity partial
 exits on those supported exit shapes, explicit fixed-quantity or
-percent-quantity single-trigger and bracket multiple-exit reservations, Python
-bindings, and a thin WASM binding.
+percent-quantity single-trigger, bracket, and trailing multiple-exit
+reservations, Python bindings, and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as strategy order
 families beyond the current `strategy.entry`/`strategy.close`/`strategy.exit`
 subset, same-side, 3+ trigger, or invalid trailing strategy exits, request
 variants outside the narrow `request.security` subset, `qty + qty_percent`,
 multiple pending exits outside explicit fixed-quantity or percent-quantity
-single-trigger and bracket `strategy.exit` reservations, reservation behavior
-outside that subset, missing-entry pre-placement, alert frequency modes and
+single-trigger, bracket, and trailing `strategy.exit` reservations, reservation
+behavior outside that subset, missing-entry pre-placement, alert frequency modes and
 placeholder interpolation, remote library lookup, re-exports, imported UDTs,
 imported methods, side-effecting exported library functions, advanced drawing
 families and methods, unsupported collection families and element types, recursive

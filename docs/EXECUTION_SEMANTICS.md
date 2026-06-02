@@ -77,8 +77,8 @@ closed-trade profit only and excludes current open profit. The current subset
 has no commission, slippage, margin, percent sizing, currency conversion,
 missing-entry pre-placement, or pyramiding. The only multiple-pending
 reservation subset is explicit fixed `qty` or `qty_percent` single-trigger or
-one-downside/one-upside bracket `strategy.exit` calls for the current matching
-long entry.
+one-downside/one-upside bracket or trailing `strategy.exit` calls for the
+current matching long entry.
 
 Strategy-mode scripts can read `strategy.position_size` and
 `strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`, and
@@ -109,7 +109,7 @@ The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants
 beyond the supported single-trigger, one-downside/one-upside bracket,
 trailing-stop, fixed-quantity, percent-quantity, and explicit single-trigger or
-bracket reservation subset, `strategy.order`, rich order families, strategy
+bracket/trailing reservation subset, `strategy.order`, rich order families, strategy
 reporting helpers beyond the supported position/profit/equity/count variables,
 requested-context strategy state, strategy state mutation, and realtime
 strategy handoff remain unsupported until later strategy-maintenance slices
@@ -136,28 +136,31 @@ Profit/loss and trailing tick arguments convert positive tick distances from
 reuse the same pending-exit lifecycle: accepted calls are not eligible on the
 bar where they are created or replaced, and a later historical bar with
 `low <= stop/loss price` or `high >= limit/profit price` fills at the selected
-exit price. Single-trigger and bracket exits with explicit fixed `qty` or
-`qty_percent` can keep multiple pending reservations for different identities
-and share one reservation pool for the current matching long entry. Same-side
-touched candidates fill in placement order. When downside stop/loss and upside
-limit/profit candidates are both touched on the same eligible bar, only
-downside candidates fill on that bar in placement order; opposite-side
-candidates remain pending if a long position remains. If both legs of one
-bracket are touched on the same eligible bar, that bracket contributes its
-downside stop/loss candidate. Full-position exits, omitted-quantity brackets,
-and trailing exits still use one-effective-pending replacement behavior. A
-trailing exit activates on a later
-eligible bar when `high >= activation_price`, sets its active stop to
-`high - offset_distance`, and does not fill on the activation bar. On later
-bars, an active trailing exit fills first when `low <= active_stop`; otherwise
-the active stop ratchets upward and never decreases. A filled exit appends
-exactly one `strategy.exit` order event with the absolute filled quantity,
-records a closed trade under the source entry id for that quantity, reduces or
-clears the current long position, and updates the normal position/equity
-snapshots. Phase M, Phase N, Phase R, Phase S, Phase U, Phase V, Phase W, and
-Phase X do not add public pending-order records, reservation fields,
-remaining-quantity fields, percent fields, bracket-leg metadata,
-trailing-state fields, exit reason fields, or top-level runtime schema fields.
+exit price. Single-trigger, bracket, and trailing exits with explicit fixed
+`qty` or `qty_percent` can keep multiple pending reservations for different
+identities and share one reservation pool for the current matching long entry.
+Same-side touched candidates fill in placement order. When downside
+stop/loss/trailing candidates and upside limit/profit candidates are both
+touched on the same eligible bar, only downside candidates fill on that bar in
+placement order; opposite-side candidates remain pending if a long position
+remains. If both legs of one bracket are touched on the same eligible bar, that
+bracket contributes its downside stop/loss candidate. Full-position exits and
+omitted-quantity brackets/trailing exits still use one-effective-pending
+replacement behavior. A trailing exit activates on a later eligible bar when
+`high >= activation_price`, sets its active stop to `high - offset_distance`,
+and does not fill on the activation bar. On later bars, an active trailing exit
+fills first when `low <= active_stop`; otherwise the active stop ratchets upward
+and never decreases. When an inactive trailing reservation activates on the same
+bar where an upside reservation fills, the trailing reservation persists its
+active state and does not contribute a fill candidate until a later bar. A
+filled exit appends exactly one `strategy.exit` order event with the absolute
+filled quantity, records a closed trade under the source entry id for that
+quantity, reduces or clears the current long position, and updates the normal
+position/equity snapshots. Phase M, Phase N, Phase R, Phase S, Phase U, Phase V,
+Phase W, Phase X, and Phase Y do not add public pending-order records,
+reservation fields, remaining-quantity fields, percent fields, bracket-leg
+metadata, trailing-state fields, activation fields, exit reason fields, or
+top-level runtime schema fields.
 Phase O does not add public
 open-trade records or trade namespace functions. The prior Phase L boundary is
 summarized in
@@ -166,7 +169,8 @@ summarized in `docs/PHASE_M_AUDIT.md` and `docs/PHASE_N_AUDIT.md`; the Phase R
 bracket subset is summarized in `docs/PHASE_R_AUDIT.md`; the Phase U fixed
 quantity subset is summarized in `docs/PHASE_U_AUDIT.md`; and the Phase V
 percent quantity subset is summarized in `docs/PHASE_V_AUDIT.md`; the Phase X
-bracket reservation subset is summarized in `docs/PHASE_X_AUDIT.md`.
+bracket reservation subset is summarized in `docs/PHASE_X_AUDIT.md`; the Phase Y
+trailing reservation subset is summarized in `docs/PHASE_Y_AUDIT.md`.
 
 ## Alert Events
 
