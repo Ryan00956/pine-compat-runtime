@@ -512,14 +512,28 @@ Exit criteria:
 
 ### Slice 1 Implementation Record
 
-Status: pending.
+Status: completed on 2026-06-02.
 
 Record:
 
-- Tests added.
-- Whether implementation changes were required.
-- Any behavior bug fixed.
-- Commands run and results.
+- Tests added in `crates/pine-runtime/src/strategy/broker/tests.rs`:
+  - `omitted_quantity_single_trigger_with_new_identity_replaces_instead_of_appending`;
+  - `omitted_quantity_bracket_with_new_identity_replaces_instead_of_appending`;
+  - `omitted_quantity_trailing_with_new_identity_replaces_and_resets_eligibility`;
+  - `omitted_quantity_exit_replaces_explicit_reservation_pool`;
+  - `explicit_reservation_after_omitted_quantity_replaces_full_then_appends_supported_reservations`.
+- Implementation changes required:
+  - none; live broker placement already matched the Slice 0 boundary decision.
+- Behavior bugs fixed:
+  - none.
+- Commands run and results:
+  - `cargo fmt --check` passed;
+  - `cargo test -p pine-runtime strategy` passed: 185 strategy-filtered unit
+    tests passed, plus the strategy profile fixture test;
+  - `cargo test -p pine-cli strategy` passed: 8 CLI strategy tests passed.
+- Compatibility claim:
+  - unchanged; no runtime fixtures, snapshots, conformance metadata, matrix
+    metadata, or public docs were updated in Slice 1.
 
 ## Slice 2: Runtime Fixtures And Snapshots
 

@@ -401,6 +401,31 @@ fn place_exit_replaces_existing_pending_stop() {
 }
 
 #[test]
+fn omitted_quantity_single_trigger_with_new_identity_replaces_instead_of_appending() {
+    let mut broker = broker_with_long_entry();
+
+    broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+    broker.place_exit_limit("XL".to_owned(), "L".to_owned(), 110.0, 1);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert!(broker.pending_exit_by_identity("XS", "L").is_none());
+    assert_eq!(pending_exit_ids(&broker), vec!["XL"]);
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XL".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Limit(110.0),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
+            multiple_reservation: false,
+            last_update_bar_index: 1,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn reservation_helpers_track_reserved_and_available_quantity() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop_qty("XL".to_owned(), "L".to_owned(), 95.0, 1.25, 0);
@@ -764,6 +789,81 @@ fn full_close_cancels_remaining_multiple_pending_exits() {
 
     assert_eq!(broker.position_size, 0.0);
     assert_eq!(pending_exit_count(&broker), 0);
+}
+
+#[test]
+fn omitted_quantity_exit_replaces_explicit_reservation_pool() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 95.0, 0.5, 0);
+    broker.place_exit_bracket_qty("XB".to_owned(), "L".to_owned(), 94.0, 110.0, 0.75, 0);
+    broker.place_exit_trail_price_qty(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPriceExitSpec {
+            activation_price: 105.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        0.5,
+        0,
+    );
+
+    broker.place_exit_limit("XFULL".to_owned(), "L".to_owned(), 111.0, 1);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert!(broker.pending_exit_by_identity("XS", "L").is_none());
+    assert!(broker.pending_exit_by_identity("XB", "L").is_none());
+    assert!(broker.pending_exit_by_identity("XT", "L").is_none());
+    assert_eq!(pending_exit_ids(&broker), vec!["XFULL"]);
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XFULL".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Limit(111.0),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
+            multiple_reservation: false,
+            last_update_bar_index: 1,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn explicit_reservation_after_omitted_quantity_replaces_full_then_appends_supported_reservations() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("XFULL".to_owned(), "L".to_owned(), 95.0, 0);
+
+    broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 94.0, 0.5, 1);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert!(broker.pending_exit_by_identity("XFULL", "L").is_none());
+    let first_explicit = broker.pending_exit_by_identity("XS", "L").unwrap();
+    assert_eq!(first_explicit.quantity, PendingExitQuantity::Fixed(0.5));
+    assert_eq!(first_explicit.reserved_quantity, 0.5);
+    assert!(first_explicit.multiple_reservation);
+
+    broker.place_exit_bracket_qty("XB".to_owned(), "L".to_owned(), 93.0, 110.0, 0.75, 1);
+    broker.place_exit_trail_price_qty(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPriceExitSpec {
+            activation_price: 105.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        0.25,
+        1,
+    );
+
+    assert_eq!(pending_exit_count(&broker), 3);
+    assert_eq!(pending_exit_ids(&broker), vec!["XS", "XB", "XT"]);
+    assert_eq!(
+        broker.pending_exits.total_reserved_for_entry("L", None),
+        1.5
+    );
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
@@ -1487,6 +1587,40 @@ fn changed_repeated_trailing_replaces_spec_and_delays_eligibility() {
             last_update_bar_index: 1,
         })
     );
+}
+
+#[test]
+fn omitted_quantity_trailing_with_new_identity_replaces_and_resets_eligibility() {
+    let mut broker = broker_with_long_entry();
+
+    broker.place_exit_trail_price("XT1".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
+    broker.place_exit_trail_price("XT2".to_owned(), "L".to_owned(), 106.0, 6.0, 0.5, 1);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert!(broker.pending_exit_by_identity("XT1", "L").is_none());
+    assert_eq!(pending_exit_ids(&broker), vec!["XT2"]);
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XT2".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: trailing_price_trigger(106.0, 3.0),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
+            multiple_reservation: false,
+            last_update_bar_index: 1,
+        })
+    );
+
+    broker.evaluate_pending_exits(1, 20, 110.0, 100.0);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert_eq!(
+        broker.pending_exit().unwrap().trigger,
+        trailing_price_trigger(106.0, 3.0)
+    );
+    assert!(broker.trades.is_empty());
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
@@ -2276,6 +2410,34 @@ fn changed_repeated_bracket_replaces_price_and_delays_eligibility() {
             last_update_bar_index: 1,
         })
     );
+}
+
+#[test]
+fn omitted_quantity_bracket_with_new_identity_replaces_instead_of_appending() {
+    let mut broker = broker_with_long_entry();
+
+    broker.place_exit_bracket("XB1".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
+    broker.place_exit_bracket("XB2".to_owned(), "L".to_owned(), 94.0, 111.0, 1);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert!(broker.pending_exit_by_identity("XB1", "L").is_none());
+    assert_eq!(pending_exit_ids(&broker), vec!["XB2"]);
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XB2".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Bracket {
+                downside: 94.0,
+                upside: 111.0,
+            },
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
+            multiple_reservation: false,
+            last_update_bar_index: 1,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
