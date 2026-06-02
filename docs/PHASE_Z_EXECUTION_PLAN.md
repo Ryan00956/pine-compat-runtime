@@ -737,14 +737,33 @@ Exit criteria:
 
 ### Slice 4 Implementation Record
 
-Status: pending.
+Status: completed on 2026-06-02.
 
 Record:
 
-- Conformance TSV changes.
-- Matrix snapshot changes.
-- Commands run and results.
-- Exact final matrix wording for `strategy.exit` and `strategy.*`.
+- Updated `tests/fixtures/conformance.tsv`:
+  - kept `strategy.exit` as `partial`;
+  - kept broad `strategy.*` as `unsupported`;
+  - added the four Slice 2 omitted-quantity runtime fixtures to the
+    `strategy.exit` evidence list;
+  - clarified that omitted `qty` and `qty_percent` keep full-position
+    one-effective-pending behavior, including replacement across ids for
+    single-trigger, bracket, and trailing forms and clearing earlier explicit
+    reservations when a later omitted full-position exit is placed;
+  - clarified that omitted-quantity multiple reservations remain unsupported.
+- Regenerated `tests/snapshots/matrix.json`.
+- Commands run:
+  - `UPDATE_SNAPSHOTS=1 cargo test -p pine-cli matrix_output_matches_golden_snapshot`
+  - `cargo test -p pine-cli matrix`
+  - `cargo test -p pine-cli matrix_output_matches_golden_snapshot`
+  - `cargo run -q -p pine-cli -- matrix`
+- Final matrix wording:
+  - `strategy.exit`: `partial`; notes include omitted full-position
+    one-effective-pending replacement across ids and explicit-reservation
+    clearing, plus unsupported omitted-quantity multiple reservations.
+  - `strategy.*`: `unsupported`; notes include multiple pending exits outside
+    the explicit fixed-`qty` or `qty_percent` reservation subset, including
+    omitted-quantity multiple reservations.
 
 ## Slice 5: Documentation Closeout
 
