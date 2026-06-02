@@ -729,6 +729,50 @@ Exit criteria:
   subset if conformance is updated in this slice.
 - Public output shape is unchanged.
 
+### Slice 2 Implementation Record
+
+Status: completed on 2026-06-02.
+
+Implemented changes:
+
+- Added a distinct internal trailing reservation family and opened the
+  multiple-reservation placement path only for explicit fixed `qty` trailing
+  exits.
+- Kept omitted-quantity trailing exits and `qty_percent` trailing exits on the
+  existing one-effective-pending path.
+- Extended multiple-pending evaluation to activate inactive trailing exits,
+  persist active-state updates, collect active trailing downside candidates,
+  ratchet unfilled active trailing exits upward, fill winning-side candidates
+  in placement order, remove filled identities, and clear all pending exits
+  when the position becomes flat.
+- Added broker tests for fixed-`qty` trailing reservation placement,
+  independent activation, placement-order fills, same-identity replacement,
+  clamping, zero-unreserved rejection, invalid replacement preservation, full
+  close cleanup, and ratcheted state persistence.
+- Added runtime fixtures and snapshots for fixed-`qty` trailing price
+  reservations, trailing points reservations, replacement, clamping, and state
+  timing.
+- Added `strategy_exit_reservation_trailing_bars.csv` so the new fixtures cover
+  the bar after trailing reservation fills.
+- Added the new fixtures to the CLI golden snapshot harness and incremental
+  append parity harness.
+
+Conformance wording and matrix claims were intentionally not widened in Slice
+2; they remain conservative until the host-parity/conformance slice.
+
+Slice 2 verification:
+
+```text
+cargo fmt --check
+cargo test -p pine-runtime strategy
+cargo test -p pine-runtime --test incremental
+UPDATE_SNAPSHOTS=1 cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -p pine-cli matrix
+```
+
+All commands passed on the Slice 2 workspace.
+
 ## Slice 3: Percent Trailing Reservations
 
 Goal: extend the Slice 2 trailing-reservation subset to explicit

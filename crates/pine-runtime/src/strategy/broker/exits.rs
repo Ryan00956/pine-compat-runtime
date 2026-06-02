@@ -146,7 +146,7 @@ impl PendingExitTrigger {
             return PendingExitReservationFamily::SingleTrigger;
         }
         if self.is_trailing_reservation_candidate() {
-            return PendingExitReservationFamily::OneEffectivePendingOnly;
+            return PendingExitReservationFamily::Trailing;
         }
         match self {
             Self::Bracket { .. } => PendingExitReservationFamily::Bracket,
@@ -194,7 +194,7 @@ impl PendingExitTrigger {
 pub(super) enum PendingExitReservationFamily {
     SingleTrigger,
     Bracket,
-    OneEffectivePendingOnly,
+    Trailing,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -290,6 +290,7 @@ impl PendingExitBook {
                         pending_exit.trigger.reservation_family(),
                         PendingExitReservationFamily::SingleTrigger
                             | PendingExitReservationFamily::Bracket
+                            | PendingExitReservationFamily::Trailing
                     )
             })
     }
@@ -982,6 +983,9 @@ impl BrokerState {
                 ExitQuantityRequest::Fixed(_) | ExitQuantityRequest::Percent(_),
                 PendingExitReservationFamily::Bracket,
             ) => Some(PendingExitReservationFamily::Bracket),
+            (ExitQuantityRequest::Fixed(_), PendingExitReservationFamily::Trailing) => {
+                Some(PendingExitReservationFamily::Trailing)
+            }
             _ => None,
         };
         let released_identity =

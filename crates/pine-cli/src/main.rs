@@ -868,6 +868,26 @@ mod tests {
                 "tests/fixtures/runtime/strategy_exit_reservation_bracket_host_parity.pine",
             ),
             (
+                "runtime_strategy_exit_reservation_qty_trailing_price_multi.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_price_multi.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_trailing_points_multi.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_points_multi.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_trailing_replacement.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_replacement.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_qty_trailing_clamp.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_clamp.pine",
+            ),
+            (
+                "runtime_strategy_exit_reservation_trailing_state.json",
+                "tests/fixtures/runtime/strategy_exit_reservation_trailing_state.pine",
+            ),
+            (
                 "runtime_strategy_exit_qty_percent_stop_partial.json",
                 "tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine",
             ),
@@ -1167,6 +1187,15 @@ mod tests {
             | "tests/fixtures/runtime/strategy_exit_qty_trailing_partial.pine"
             | "tests/fixtures/runtime/strategy_exit_qty_percent_trailing_partial.pine" => {
                 include_str!("../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv")
+            }
+            "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_price_multi.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_points_multi.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_replacement.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_clamp.pine"
+            | "tests/fixtures/runtime/strategy_exit_reservation_trailing_state.pine" => {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_bars.csv"
+                )
             }
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }

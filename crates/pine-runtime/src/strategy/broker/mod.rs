@@ -210,6 +210,7 @@ impl BrokerState {
         }
 
         let mut touched_candidates = Vec::new();
+        let mut state_updates = Vec::new();
         for pending_exit in pending_exits {
             if pending_exit.last_update_bar_index >= bar_index {
                 continue;
@@ -219,8 +220,26 @@ impl BrokerState {
                 continue;
             }
 
-            if let Some(touch) = pending_exit.trigger.touched_candidate(high, low) {
-                touched_candidates.push((pending_exit, touch.exit_price, touch.side));
+            match pending_exit.trigger.clone() {
+                PendingExitTrigger::Trailing(trailing) => {
+                    match trailing.evaluate_update(high, low) {
+                        PendingTrailingUpdate::NoChange => {}
+                        PendingTrailingUpdate::Persist(updated_trailing) => {
+                            let mut updated_pending_exit = pending_exit;
+                            updated_pending_exit.trigger =
+                                PendingExitTrigger::Trailing(updated_trailing);
+                            state_updates.push(updated_pending_exit);
+                        }
+                        PendingTrailingUpdate::Candidate(touch) => {
+                            touched_candidates.push((pending_exit, touch.exit_price, touch.side));
+                        }
+                    }
+                }
+                _ => {
+                    if let Some(touch) = pending_exit.trigger.touched_candidate(high, low) {
+                        touched_candidates.push((pending_exit, touch.exit_price, touch.side));
+                    }
+                }
             }
         }
 
@@ -235,6 +254,9 @@ impl BrokerState {
         {
             PendingExitSide::Limit
         } else {
+            for updated_pending_exit in state_updates {
+                self.pending_exits.replace_or_append(updated_pending_exit);
+            }
             return;
         };
 
@@ -257,6 +279,9 @@ impl BrokerState {
         if self.position_size <= 0.0 {
             self.pending_exits.clear_all();
         } else {
+            for updated_pending_exit in state_updates {
+                self.pending_exits.replace_or_append(updated_pending_exit);
+            }
             self.pending_exits.remove_identities(&filled_identities);
         }
     }
