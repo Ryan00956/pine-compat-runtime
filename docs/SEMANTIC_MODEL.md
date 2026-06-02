@@ -136,10 +136,11 @@ closed trades with positive, negative, and zero realized profit; and
 when flat. The supported closed-trade namespace functions are
 `strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
 `strategy.closedtrades.entry_bar_index`,
-`strategy.closedtrades.exit_bar_index`, `strategy.closedtrades.size`, and
-`strategy.closedtrades.profit`; they accept a zero-based integer `trade_num`
-and return `na` for missing, negative, out-of-range, or non-integer indexes.
-Other trade details and open-trade namespace functions remain unsupported. Phase M and
+`strategy.closedtrades.exit_bar_index`, `strategy.closedtrades.entry_time`,
+`strategy.closedtrades.exit_time`, `strategy.closedtrades.size`, and
+`strategy.closedtrades.profit`; they accept a zero-based integer `trade_num` and
+return `na` for missing, negative, out-of-range, or non-integer indexes. Other
+trade details and open-trade namespace functions remain unsupported. Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
 outside the public output model, and Phases R, S, U, V, W, X, and Y keep that
 public contract unchanged for brackets, trailing exits, fixed `qty` exits,

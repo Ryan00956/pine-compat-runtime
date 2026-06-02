@@ -368,6 +368,8 @@ def test_run_script_returns_strategy_closedtrades_field_plots():
         [None, None, 3.0, 3.0],
         [None, None, 1, 1],
         [None, None, 2, 2],
+        [None, None, 2, 2],
+        [None, None, 3, 3],
         [None, None, 2.0, 2.0],
         [None, None, 2.0, 2.0],
         [None, None, None, None],
@@ -375,6 +377,8 @@ def test_run_script_returns_strategy_closedtrades_field_plots():
     assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
     assert result["strategy"]["trades"][0]["entryPrice"] == 2.0
     assert result["strategy"]["trades"][0]["exitPrice"] == 3.0
+    assert result["strategy"]["trades"][0]["entryTime"] == 2
+    assert result["strategy"]["trades"][0]["exitTime"] == 3
     assert result["strategy"]["trades"][0]["qty"] == 2.0
     assert result["strategy"]["trades"][0]["profit"] == 2.0
     assert "closedTrades" not in result["strategy"]

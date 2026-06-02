@@ -269,6 +269,8 @@ strategy.closedtrades.entry_price(trade_num: series/simple numeric) -> series fl
 strategy.closedtrades.exit_price(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.entry_bar_index(trade_num: series/simple numeric) -> series int
 strategy.closedtrades.exit_bar_index(trade_num: series/simple numeric) -> series int
+strategy.closedtrades.entry_time(trade_num: series/simple numeric) -> series int
+strategy.closedtrades.exit_time(trade_num: series/simple numeric) -> series int
 strategy.closedtrades.size(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.profit(trade_num: series/simple numeric) -> series float
 ```
@@ -308,7 +310,8 @@ a pending entry remains unsupported. Richer strategy order options remain
 unsupported.
 `strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
 `strategy.closedtrades.entry_bar_index`, and
-`strategy.closedtrades.exit_bar_index`, `strategy.closedtrades.size`, and
+`strategy.closedtrades.exit_bar_index`, `strategy.closedtrades.entry_time`,
+`strategy.closedtrades.exit_time`, `strategy.closedtrades.size`, and
 `strategy.closedtrades.profit` are read-only strategy-mode field functions over
 the current closed-trade list. `trade_num` is a zero-based integer index;
 missing, negative, out-of-range, or non-integer indexes return `na`. They do

@@ -180,6 +180,20 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "strategy.closedtrades.entry_time",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CLOSED_TRADE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.closedtrades.exit_time",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CLOSED_TRADE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "strategy.closedtrades.size",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_CLOSED_TRADE_PARAMS,

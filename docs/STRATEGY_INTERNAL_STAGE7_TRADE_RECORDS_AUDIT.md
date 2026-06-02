@@ -1,6 +1,6 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
-Status: in progress. Slices 0 and 1 closed on 2026-06-02.
+Status: in progress. Slices 0, 1, and 2 closed on 2026-06-02.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -39,8 +39,9 @@ Still unsupported:
 
 - all `strategy.opentrades.*` namespace functions;
 - closed-trade field functions beyond `entry_price`, `exit_price`,
-  `entry_bar_index`, `exit_bar_index`, `size`, and `profit`;
-- runup, drawdown, commission, ids, times, and richer reporting metrics;
+  `entry_bar_index`, `exit_bar_index`, `entry_time`, `exit_time`, `size`, and
+  `profit`;
+- runup, drawdown, commission, ids, and richer reporting metrics;
 - public trade namespace schema expansion.
 
 ## Slice 1: Closed Trade Size And Profit Functions
@@ -60,6 +61,26 @@ Contract:
 - `size` returns the closed trade's absolute filled quantity in the current
   long-only subset;
 - `profit` returns the closed trade's realized profit;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
+  output shape with no new top-level fields.
+
+## Slice 2: Closed Trade Time Functions
+
+Closed on 2026-06-02.
+
+Supported script-visible functions:
+
+- `strategy.closedtrades.entry_time(trade_num)`;
+- `strategy.closedtrades.exit_time(trade_num)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- `trade_num` follows the same zero-based integer index contract as Slices 0
+  and 1;
+- missing, negative, out-of-range, or non-integer indexes return `na`;
+- `entry_time` and `exit_time` return the timestamps already retained on the
+  closed trade record;
 - public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
   output shape with no new top-level fields.
 

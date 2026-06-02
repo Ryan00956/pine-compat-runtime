@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 2 closed-trade `entry_time` and
+  `exit_time` field functions. They expose the timestamps already retained on
+  closed trade records, use the same zero-based `trade_num` contract, and keep
+  the public runtime output shape unchanged.
 - Added Strategy Internal Stage 7 Slice 1 closed-trade `size` and `profit`
   field functions. They use the same zero-based `trade_num` contract as the
   existing closed-trade field subset, return `na` for invalid or out-of-range

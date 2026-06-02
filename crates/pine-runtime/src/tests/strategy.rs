@@ -2596,6 +2596,8 @@ plot(strategy.closedtrades.entry_price(0))
 plot(strategy.closedtrades.exit_price(0))
 plot(strategy.closedtrades.entry_bar_index(0))
 plot(strategy.closedtrades.exit_bar_index(0))
+plot(strategy.closedtrades.entry_time(0))
+plot(strategy.closedtrades.exit_time(0))
 plot(strategy.closedtrades.size(0))
 plot(strategy.closedtrades.profit(0))
 plot(strategy.closedtrades.entry_price(1))
@@ -2613,9 +2615,30 @@ plot(strategy.closedtrades.entry_price(0.5))
     let result = run_historical(
         &analysis.hir.expect("HIR"),
         &[
-            bar_ohlc(1.0, 1.0, 1.0, 1.0),
-            bar_ohlc(2.0, 3.0, 2.0, 3.0),
-            bar_ohlc(4.0, 4.0, 4.0, 4.0),
+            Bar {
+                time: 10,
+                open: 1.0,
+                high: 1.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 20,
+                open: 2.0,
+                high: 3.0,
+                low: 2.0,
+                close: 3.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 30,
+                open: 4.0,
+                high: 4.0,
+                low: 4.0,
+                close: 4.0,
+                volume: 1.0,
+            },
         ],
     )
     .expect("runtime result");
@@ -2638,13 +2661,21 @@ plot(strategy.closedtrades.entry_price(0.5))
     );
     assert_eq!(
         result.plots[4].values,
-        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(2.0),]
+        vec![PineValue::Na, PineValue::Int(20), PineValue::Int(20)]
     );
     assert_eq!(
         result.plots[5].values,
+        vec![PineValue::Na, PineValue::Int(20), PineValue::Int(20)]
+    );
+    assert_eq!(
+        result.plots[6].values,
         vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(2.0),]
     );
-    for values in result.plots[6..].iter().map(|plot| &plot.values) {
+    assert_eq!(
+        result.plots[7].values,
+        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(2.0),]
+    );
+    for values in result.plots[8..].iter().map(|plot| &plot.values) {
         assert_eq!(values, &vec![PineValue::Na, PineValue::Na, PineValue::Na]);
     }
 }
