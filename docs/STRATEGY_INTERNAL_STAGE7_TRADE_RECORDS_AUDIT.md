@@ -35,7 +35,8 @@ Evidence:
   `tests/fixtures/sema/supported_strategy_closedtrades_fields.pine`,
   `tests/fixtures/sema/unsupported_strategy_closedtrades_fields_indicator.pine`,
   and `tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine`;
-- host parity tests cover CLI snapshots plus Python and WASM plot values.
+- host parity tests cover Python and WASM plot values; CLI matrix and
+  conformance metadata cover fixture registration.
 
 Still unsupported:
 
@@ -950,6 +951,44 @@ Evidence:
   `tests/fixtures/sema/unsupported_strategy_default_quantity.pine` keeps
   `strategy.cash` guarded;
 - CLI golden snapshot covers the public runtime shape.
+
+## Slice 32: Profit Percent State Variables
+
+Closed on 2026-06-03.
+
+Supported variables:
+
+- `strategy.netprofit_percent`;
+- `strategy.grossprofit_percent`;
+- `strategy.grossloss_percent`.
+
+Contract:
+
+- strategy-mode scripts only;
+- read-only `series float`;
+- divide the corresponding realized amount by `initial_capital` and multiply by
+  100;
+- `strategy.netprofit_percent` uses cumulative realized closed-trade profit,
+  excluding current open profit;
+- `strategy.grossprofit_percent` uses positive realized closed-trade profit
+  only;
+- `strategy.grossloss_percent` uses realized closed-trade losses as a positive
+  value;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing
+  strategy output shape with no new top-level fields.
+
+Evidence:
+
+- runtime test:
+  `strategy_profit_percent_variables_use_initial_capital_denominator`;
+- runtime fixture:
+  `tests/fixtures/runtime/strategy_profit_percent_state.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_profit_state.pine`,
+  `tests/fixtures/sema/unsupported_strategy_state_indicator.pine`,
+  `tests/fixtures/sema/unsupported_request_strategy_state.pine`, and
+  `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
+- host parity tests cover CLI snapshots plus Python and WASM plot values.
 
 ## Remaining Stage 7 Work
 

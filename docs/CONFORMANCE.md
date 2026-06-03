@@ -113,7 +113,10 @@ profit. Stage 7 Slice 22 adds `strategy.grossprofit` as cumulative positive
 realized closed-trade profit only, excluding losing, flat, and current open
 trades. Stage 7 Slice 23 adds `strategy.grossloss` as cumulative realized
 closed-trade loss as a positive value, excluding winning, flat, and current
-open trades. Stage 7 Slice 24 adds `strategy.avg_trade` as average realized
+open trades. Stage 7 Slice 32 adds `strategy.netprofit_percent`,
+`strategy.grossprofit_percent`, and `strategy.grossloss_percent` by dividing the
+corresponding realized amount by `initial_capital` and multiplying by 100.
+Stage 7 Slice 24 adds `strategy.avg_trade` as average realized
 profit/loss per closed trade, returning `na` until at least one trade is
 closed. Stage 7 Slice 25 adds `strategy.avg_winning_trade` as average realized
 profit among winning closed trades only, returning `na` until at least one
@@ -612,8 +615,11 @@ strategy.position_size partial    current long-only position size read-only seri
 strategy.position_avg_price partial current long-only average entry price read-only series, na when flat, in strategy-mode scripts only
 strategy.openprofit partial       current long-only unrealized profit read-only series, 0 when flat, in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.netprofit  partial       cumulative realized closed-trade profit read-only series, excluding current open profit, in strategy-mode scripts only
+strategy.netprofit_percent partial cumulative realized closed-trade profit as a percentage of initial_capital, excluding current open profit, in strategy-mode scripts only
 strategy.grossprofit partial      cumulative positive realized closed-trade profit read-only series, excluding losing, flat, and current open trades, in strategy-mode scripts only
+strategy.grossprofit_percent partial cumulative positive realized closed-trade profit as a percentage of initial_capital, excluding losing, flat, and current open trades, in strategy-mode scripts only
 strategy.grossloss partial        cumulative realized closed-trade loss read-only series as a positive value, excluding winning, flat, and current open trades, in strategy-mode scripts only
+strategy.grossloss_percent partial cumulative realized closed-trade loss as a positive percentage of initial_capital, excluding winning, flat, and current open trades, in strategy-mode scripts only
 strategy.avg_trade partial        average realized profit/loss per closed trade read-only series, na before the first closed trade and excluding current open trades, in strategy-mode scripts only
 strategy.avg_winning_trade partial average realized profit among winning closed trades only, na before the first winning closed trade and excluding losing, flat, and current open trades, in strategy-mode scripts only
 strategy.avg_losing_trade partial average realized loss among losing closed trades only as a positive value, na before the first losing closed trade and excluding winning, flat, and current open trades, in strategy-mode scripts only

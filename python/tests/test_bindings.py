@@ -616,6 +616,24 @@ def test_run_script_returns_strategy_trade_outcome_count_plots():
     assert "evenTrades" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_profit_percent_plots():
+    source = (ROOT / "tests/fixtures/runtime/strategy_profit_percent_state.pine").read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv"),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0.0, 0.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0],
+        [0.0, 0.0, 0.1, 0.1, 0.1, -0.1, -0.1, -0.1, -0.1],
+        [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+        [0.0, 0.0, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 2.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 0.2, 0.2, 0.2],
+    ]
+    assert "profitPercent" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_close_trade_contract():
     result = pine_compat.run_script(
         'strategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close("L")\n',

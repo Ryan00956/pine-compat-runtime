@@ -335,14 +335,15 @@ implementation.
 
 ### 11. Strategy Information Variables
 
-Current state: position size, average price, open profit, net profit, gross
-profit, gross loss, average trade, average winning trade, average losing trade,
-max run-up amount and percent, max drawdown amount and percent, equity,
-closed/open trade counts, and win/loss/even trade counts are supported.
+Current state: position size, average price, open profit, net profit, net profit
+percent, gross profit, gross profit percent, gross loss, gross loss percent,
+average trade, average winning trade, average losing trade, max run-up amount
+and percent, max drawdown amount and percent, equity, closed/open trade counts,
+and win/loss/even trade counts are supported.
 
 Missing internal behavior:
 
-- other percent variants;
+- remaining percent variants outside the supported profit/run-up/drawdown subset;
 - max contracts/shares held;
 - capital held;
 - built-ins whose value depends on costs, margin, or individual trade records.
@@ -394,7 +395,9 @@ with the official intrabar long-trade drawdown formula under the same
 public-output contract. Stage 7 Slice 30 adds `strategy.max_runup_percent` and
 `strategy.max_drawdown_percent` under the same public-output contract. Stage 7
 Slice 31 adds `default_qty_type=strategy.percent_of_equity` for supported entry
-default sizing without expanding public output. Other
+default sizing without expanding public output. Stage 7 Slice 32 adds
+`strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
+`strategy.grossloss_percent` without expanding public output. Other
 namespace functions are unsupported.
 
 Missing internal behavior:

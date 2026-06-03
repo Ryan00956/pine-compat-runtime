@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 32
+  `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
+  `strategy.grossloss_percent`. Strategy-mode scripts can read realized
+  profit/loss percentages relative to `initial_capital`, while public JSON,
+  Python, and WASM strategy schemas remain unchanged.
 - Added Strategy Internal Stage 7 Slice 31
   `default_qty_type=strategy.percent_of_equity`.
   Supported long entries without explicit `qty` now resolve their default

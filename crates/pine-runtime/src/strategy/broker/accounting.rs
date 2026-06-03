@@ -54,6 +54,11 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn realized_profit_percent(&self) -> f64 {
+        self.initial_capital_percent(self.realized_profit())
+    }
+
+    #[must_use]
     pub(crate) fn gross_profit(&self) -> f64 {
         normalize_zero(
             self.trades
@@ -65,6 +70,11 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn gross_profit_percent(&self) -> f64 {
+        self.initial_capital_percent(self.gross_profit())
+    }
+
+    #[must_use]
     pub(crate) fn gross_loss(&self) -> f64 {
         normalize_zero(
             self.trades
@@ -73,6 +83,11 @@ impl BrokerState {
                 .map(|trade| -trade.profit)
                 .sum(),
         )
+    }
+
+    #[must_use]
+    pub(crate) fn gross_loss_percent(&self) -> f64 {
+        self.initial_capital_percent(self.gross_loss())
     }
 
     #[must_use]
@@ -143,6 +158,13 @@ impl BrokerState {
     #[must_use]
     pub(crate) fn equity_value(&self, close: f64) -> f64 {
         normalize_zero(self.cash + self.position_size * close)
+    }
+
+    fn initial_capital_percent(&self, value: f64) -> f64 {
+        if !value.is_finite() || !self.initial_capital.is_finite() || self.initial_capital <= 0.0 {
+            return 0.0;
+        }
+        normalize_zero(value / self.initial_capital * 100.0)
     }
 
     #[must_use]

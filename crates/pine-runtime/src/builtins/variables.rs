@@ -165,11 +165,20 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "strategy.netprofit" {
             return PineValue::Float(self.strategy_broker.realized_profit());
         }
+        if name == "strategy.netprofit_percent" {
+            return PineValue::Float(self.strategy_broker.realized_profit_percent());
+        }
         if name == "strategy.grossprofit" {
             return PineValue::Float(self.strategy_broker.gross_profit());
         }
+        if name == "strategy.grossprofit_percent" {
+            return PineValue::Float(self.strategy_broker.gross_profit_percent());
+        }
         if name == "strategy.grossloss" {
             return PineValue::Float(self.strategy_broker.gross_loss());
+        }
+        if name == "strategy.grossloss_percent" {
+            return PineValue::Float(self.strategy_broker.gross_loss_percent());
         }
         if name == "strategy.avg_trade" {
             return self

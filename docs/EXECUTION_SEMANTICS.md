@@ -218,7 +218,10 @@ adds `strategy.avg_trade` under the same public-output contract. Stage 7 Slice
 Stage 7 Slice 26 adds `strategy.avg_losing_trade` under the same public-output
 contract. Stage 7 Slice 27 adds `strategy.max_drawdown` under the same
 public-output contract. Stage 7 Slice 28 adds `strategy.max_runup` under the
-same public-output contract. They read the current
+same public-output contract. Stage 7 Slice 32 adds
+`strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
+`strategy.grossloss_percent` under the same public-output contract, using
+`amount / initial_capital * 100`. They read the current
 closed-trade list with a zero-based integer `trade_num`; missing,
 negative, out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public

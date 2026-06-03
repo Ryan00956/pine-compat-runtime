@@ -625,8 +625,11 @@ fn accepts_supported_strategy_profit_state_fixture() {
         &[
             "strategy.openprofit",
             "strategy.netprofit",
+            "strategy.netprofit_percent",
             "strategy.grossprofit",
+            "strategy.grossprofit_percent",
             "strategy.grossloss",
+            "strategy.grossloss_percent",
             "strategy.avg_trade",
             "strategy.avg_winning_trade",
             "strategy.avg_losing_trade",

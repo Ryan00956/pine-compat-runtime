@@ -265,8 +265,11 @@ strategy.cancel(id: simple string) -> void
 strategy.cancel_all() -> void
 strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric)
   -> void
+strategy.netprofit_percent -> series float
 strategy.grossprofit -> series float
+strategy.grossprofit_percent -> series float
 strategy.grossloss -> series float
+strategy.grossloss_percent -> series float
 strategy.avg_trade -> series float
 strategy.avg_winning_trade -> series float
 strategy.avg_losing_trade -> series float
@@ -320,6 +323,10 @@ fill prices downward after trigger selection.
 integer const ticks and requires supported limit-order fills to move that many
 fixed `syminfo.mintick` ticks past the limit price while preserving the limit
 fill price. Other commission modes and richer fill models remain unsupported.
+`strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
+`strategy.grossloss_percent` are read-only strategy-mode series floats that
+divide the corresponding realized amount by `initial_capital` and multiply by
+100.
 `strategy.grossprofit` is a read-only strategy-mode series float that sums
 positive realized closed-trade profit only. Losing, flat, and current open
 trades do not change it. `strategy.grossloss` is a read-only strategy-mode

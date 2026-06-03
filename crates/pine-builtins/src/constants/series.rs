@@ -20,11 +20,23 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.netprofit_percent",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "strategy.grossprofit",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.grossprofit_percent",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "strategy.grossloss",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
+        "strategy.grossloss_percent",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
@@ -169,8 +181,11 @@ mod tests {
         for name in [
             "strategy.openprofit",
             "strategy.netprofit",
+            "strategy.netprofit_percent",
             "strategy.grossprofit",
+            "strategy.grossprofit_percent",
             "strategy.grossloss",
+            "strategy.grossloss_percent",
             "strategy.avg_trade",
             "strategy.avg_winning_trade",
             "strategy.avg_losing_trade",
