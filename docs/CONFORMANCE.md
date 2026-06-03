@@ -69,13 +69,14 @@ until a JSON mode is added.
 Phase G marks `strategy` as partial. The executable subset accepts
 `strategy(title, shorttitle, overlay, max_bars_back, initial_capital,
 default_qty_type, default_qty_value, commission_type, commission_value,
-slippage, backtest_fill_limits_assumption)` where
+slippage, backtest_fill_limits_assumption, margin_long, margin_short)` where
 `initial_capital` must be a positive const numeric value when provided. Phase L
 accepts `default_qty_type=strategy.fixed` with positive const numeric
 `default_qty_value`; Stage 7 Slice 31 accepts
 `default_qty_type=strategy.percent_of_equity` with positive const numeric
 `default_qty_value`, resolving omitted entry `qty` at placement time from the
-current supported equity and current close. Stage 7 Slice 17 accepts
+current supported equity and current close. Margin parameters are currently
+declaration/IR-only and do not enable runtime margin behavior. Stage 7 Slice 17 accepts
 `commission_type=strategy.commission.cash_per_contract`, and Stage 7 Slice 18
 accepts `commission_type=strategy.commission.cash_per_order`, both with finite
 non-negative const numeric `commission_value`. Stage 7 Slice 21 accepts

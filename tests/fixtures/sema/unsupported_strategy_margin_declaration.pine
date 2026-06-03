@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported strategy margin declaration", margin_long=-1)
+plot(close)

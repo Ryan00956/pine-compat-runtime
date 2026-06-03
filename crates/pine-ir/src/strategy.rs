@@ -14,12 +14,44 @@ pub enum StrategyCommission {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+pub struct StrategyMarginSetting {
+    pub value_percent: f64,
+    pub explicit: bool,
+}
+
+impl StrategyMarginSetting {
+    #[must_use]
+    pub fn explicit(value_percent: f64) -> Self {
+        Self {
+            value_percent,
+            explicit: true,
+        }
+    }
+
+    #[must_use]
+    pub fn is_active(self) -> bool {
+        self.explicit && self.value_percent > 0.0
+    }
+}
+
+impl Default for StrategyMarginSetting {
+    fn default() -> Self {
+        Self {
+            value_percent: 0.0,
+            explicit: false,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct StrategySettings {
     pub initial_capital: f64,
     pub default_qty: Option<StrategyDefaultQuantity>,
     pub commission: Option<StrategyCommission>,
     pub slippage_ticks: f64,
     pub backtest_fill_limit_ticks: f64,
+    pub margin_long: StrategyMarginSetting,
+    pub margin_short: StrategyMarginSetting,
 }
 
 impl Default for StrategySettings {
@@ -30,6 +62,8 @@ impl Default for StrategySettings {
             commission: None,
             slippage_ticks: 0.0,
             backtest_fill_limit_ticks: 0.0,
+            margin_long: StrategyMarginSetting::default(),
+            margin_short: StrategyMarginSetting::default(),
         }
     }
 }

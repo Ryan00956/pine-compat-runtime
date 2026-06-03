@@ -1,0 +1,3 @@
+//@version=5
+strategy("Strategy margin declaration", margin_long=25, margin_short=50)
+plot(close)

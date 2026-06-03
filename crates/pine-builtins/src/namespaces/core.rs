@@ -83,6 +83,16 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "margin_long",
+        accepts: Accepts::ConstNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "margin_short",
+        accepts: Accepts::ConstNumeric,
+        optional: true,
+    },
 ];
 
 const INPUT_PARAMS: &[BuiltinParam] = &[

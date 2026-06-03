@@ -153,6 +153,8 @@ Acceptance:
 
 ### Slice M1: Declaration And IR Boundary
 
+Closed on 2026-06-03.
+
 Add `margin_long` and `margin_short` parsing to `strategy(...)` without enabling
 runtime margin behavior.
 

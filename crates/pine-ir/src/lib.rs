@@ -3,7 +3,8 @@
 mod strategy;
 
 pub use strategy::{
-    DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCommission, StrategyDefaultQuantity, StrategySettings,
+    DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCommission, StrategyDefaultQuantity,
+    StrategyMarginSetting, StrategySettings,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

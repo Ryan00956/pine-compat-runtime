@@ -66,6 +66,11 @@ using the fixed `syminfo.mintick` subset.
 integer const ticks and requires supported limit-order fills to move that many
 fixed `syminfo.mintick` ticks past the limit price while preserving the limit
 fill price. Other commission modes and richer fill models remain unsupported.
+`strategy(..., margin_long=N, margin_short=N)` accepts finite non-negative
+const numeric declaration values and stores their explicit presence in the
+internal strategy settings. Stage 7 Margin Slice M1 does not apply those values
+to order affordability, `strategy.opentrades.capital_held`, equity snapshots,
+or forced liquidation yet.
 
 The current entry subset is `strategy.entry(id, strategy.long, qty=...)`,
 `strategy.entry(id, strategy.long)` when a fixed default quantity is configured,

@@ -104,6 +104,10 @@ mod tests {
         assert_eq!(signature.params[9].accepts, crate::Accepts::ConstNumeric);
         assert_eq!(signature.params[10].name, "backtest_fill_limits_assumption");
         assert_eq!(signature.params[10].accepts, crate::Accepts::ConstNumeric);
+        assert_eq!(signature.params[11].name, "margin_long");
+        assert_eq!(signature.params[11].accepts, crate::Accepts::ConstNumeric);
+        assert_eq!(signature.params[12].name, "margin_short");
+        assert_eq!(signature.params[12].accepts, crate::Accepts::ConstNumeric);
         assert!(!signature.variadic);
     }
 

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Implemented Strategy Internal Margin Slice M1. `strategy(..., margin_long=N,
+  margin_short=N)` now accepts finite non-negative const numeric declaration
+  values and stores their explicit presence in IR, without enabling runtime
+  margin affordability, margin-backed `strategy.opentrades.capital_held`, or
+  forced liquidation.
 - Added `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` as the design
   gate for future margin/account-model work. The document keeps current
   runtime behavior unchanged while defining the official semantics, non-goals,

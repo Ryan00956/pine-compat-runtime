@@ -255,7 +255,7 @@ ohlc4 = (open + high + low + close) / 4
 ```text
 indicator(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric)
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric)
   -> void
@@ -330,6 +330,10 @@ fill prices downward after trigger selection.
 integer const ticks and requires supported limit-order fills to move that many
 fixed `syminfo.mintick` ticks past the limit price while preserving the limit
 fill price. Other commission modes and richer fill models remain unsupported.
+`strategy(..., margin_long=N, margin_short=N)` accepts finite non-negative
+const numeric declaration values and stores their explicit presence for future
+account-model slices; the current runtime still does not apply margin
+affordability, margin-backed `capital_held`, or forced liquidation.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by

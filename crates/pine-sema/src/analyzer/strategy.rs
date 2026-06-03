@@ -175,6 +175,8 @@ impl Analyzer {
                     "commission_value",
                     "slippage",
                     "backtest_fill_limits_assumption",
+                    "margin_long",
+                    "margin_short",
                 ]
                 .get(index)
                 .copied()
@@ -316,6 +318,25 @@ impl Analyzer {
                         continue;
                     }
                     self.strategy_settings.backtest_fill_limit_ticks = value;
+                }
+                "margin_long" | "margin_short" => {
+                    let Some(value) = const_numeric_value(&arg.value) else {
+                        continue;
+                    };
+                    if !value.is_finite() || value < 0.0 {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            format!("`strategy` argument `{name}` must be non-negative"),
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    let setting = pine_ir::StrategyMarginSetting::explicit(value);
+                    if name == "margin_long" {
+                        self.strategy_settings.margin_long = setting;
+                    } else {
+                        self.strategy_settings.margin_short = setting;
+                    }
                 }
                 _ => {}
             }
