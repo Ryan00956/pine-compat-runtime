@@ -177,6 +177,12 @@ impl<'a> HistoricalRuntime<'a> {
                 .average_trade()
                 .map_or(PineValue::Na, PineValue::Float);
         }
+        if name == "strategy.avg_winning_trade" {
+            return self
+                .strategy_broker
+                .average_winning_trade()
+                .map_or(PineValue::Na, PineValue::Float);
+        }
         if name == "strategy.equity" {
             return self.current_bar.map_or(PineValue::Na, |bar| {
                 PineValue::Float(self.strategy_broker.equity_value(bar.close))

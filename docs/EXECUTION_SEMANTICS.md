@@ -120,7 +120,8 @@ current matching long entry.
 
 Strategy-mode scripts can read `strategy.position_size` and
 `strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`,
-`strategy.grossprofit`, `strategy.grossloss`, `strategy.avg_trade`, and
+`strategy.grossprofit`, `strategy.grossloss`, `strategy.avg_trade`,
+`strategy.avg_winning_trade`, and
 `strategy.equity` as historical series floats. They can also read `strategy.closedtrades` and
 `strategy.opentrades` as historical series ints in the current count-only
 reporting subset. In the current long-only subset,
@@ -134,6 +135,8 @@ losing, flat, and current open trades do not change it.
 winning, flat, and current open trades do not change it.
 `strategy.avg_trade` returns `strategy.netprofit / strategy.closedtrades` once
 at least one trade is closed, and `na` before the first closed trade.
+`strategy.avg_winning_trade` returns the average realized profit among winning
+closed trades only, and `na` before the first winning closed trade.
 `strategy.equity` is cash plus current market value; without configured
 commission this equals `initial_capital + strategy.netprofit +
 strategy.openprofit`, and with supported commission it also includes entry
@@ -188,7 +191,8 @@ entry/exit fills under the same public contract. Stage 7 Slice 22 adds
 `strategy.grossprofit` as a script-visible read-only series float over the
 closed-trade list without changing public output shape. Stage 7 Slice 23 adds
 `strategy.grossloss` under the same public-output contract. Stage 7 Slice 24
-adds `strategy.avg_trade` under the same public-output contract. They read the current
+adds `strategy.avg_trade` under the same public-output contract. Stage 7 Slice
+25 adds `strategy.avg_winning_trade` under the same public-output contract. They read the current
 closed-trade list with a zero-based integer `trade_num`; missing,
 negative, out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public

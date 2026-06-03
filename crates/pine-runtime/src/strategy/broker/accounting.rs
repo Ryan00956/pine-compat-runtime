@@ -85,6 +85,23 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn average_winning_trade(&self) -> Option<f64> {
+        let mut count = 0usize;
+        let mut total = 0.0;
+        for trade in &self.trades {
+            if trade.profit > 0.0 {
+                count += 1;
+                total += trade.profit;
+            }
+        }
+        if count == 0 {
+            None
+        } else {
+            Some(normalize_zero(total / count as f64))
+        }
+    }
+
+    #[must_use]
     pub(crate) fn equity_value(&self, close: f64) -> f64 {
         normalize_zero(self.cash + self.position_size * close)
     }

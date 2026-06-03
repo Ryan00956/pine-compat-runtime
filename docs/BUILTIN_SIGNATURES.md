@@ -268,6 +268,7 @@ strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple
 strategy.grossprofit -> series float
 strategy.grossloss -> series float
 strategy.avg_trade -> series float
+strategy.avg_winning_trade -> series float
 strategy.closedtrades.entry_price(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.entry_id(trade_num: series/simple numeric) -> series string
 strategy.closedtrades.exit_price(trade_num: series/simple numeric) -> series float
@@ -318,6 +319,9 @@ series float that sums realized closed-trade losses as positive values.
 Winning, flat, and current open trades do not change it. `strategy.avg_trade`
 is a read-only strategy-mode series float that returns average realized
 profit/loss per closed trade, or `na` before the first closed trade.
+`strategy.avg_winning_trade` is a read-only strategy-mode series float that
+returns average realized profit among winning closed trades only, or `na`
+before the first winning closed trade.
 Supported market-long entries fill at the next
 historical bar open. Supported long limit entries wait until a later
 historical bar where `low <= limit`, or below the configured verified limit

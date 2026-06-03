@@ -596,6 +596,7 @@ fn accepts_supported_strategy_profit_state_fixture() {
             "strategy.grossprofit",
             "strategy.grossloss",
             "strategy.avg_trade",
+            "strategy.avg_winning_trade",
             "strategy.equity",
         ],
     );

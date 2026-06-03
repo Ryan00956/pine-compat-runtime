@@ -146,7 +146,10 @@ trades do not change it. `strategy.grossloss` is a read-only strategy-mode
 `series float` that sums realized closed-trade losses as positive values;
 winning, flat, and current open trades do not change it. `strategy.avg_trade`
 is a read-only strategy-mode `series float` that returns average realized
-profit/loss per closed trade and `na` before the first closed trade. The count variables are
+profit/loss per closed trade and `na` before the first closed trade.
+`strategy.avg_winning_trade` is a read-only strategy-mode `series float` that
+returns average realized profit among winning closed trades only and `na`
+before the first winning closed trade. The count variables are
 read-only strategy-mode `series int` values for the current long-only broker:
 `strategy.closedtrades` counts closed trades recorded by broker state;
 `strategy.wintrades`, `strategy.losstrades`, and `strategy.eventrades` count
