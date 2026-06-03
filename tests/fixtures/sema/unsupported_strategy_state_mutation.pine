@@ -5,6 +5,7 @@ strategy.grossprofit := 1
 strategy.grossloss := 1
 strategy.avg_trade := 1
 strategy.avg_winning_trade := 1
+strategy.avg_losing_trade := 1
 strategy.closedtrades := 1
 strategy.wintrades := 1
 strategy.losstrades := 1

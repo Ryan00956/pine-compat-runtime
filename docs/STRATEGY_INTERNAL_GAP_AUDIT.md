@@ -57,6 +57,7 @@ Implemented and fixture-backed:
   - `strategy.grossloss`
   - `strategy.avg_trade`
   - `strategy.avg_winning_trade`
+  - `strategy.avg_losing_trade`
   - `strategy.equity`
   - `strategy.closedtrades`
   - `strategy.opentrades`
@@ -335,13 +336,12 @@ implementation.
 ### 11. Strategy Information Variables
 
 Current state: position size, average price, open profit, net profit, gross
-profit, gross loss, average trade, average winning trade, equity, closed/open
-trade counts, and win/loss/even trade counts are supported.
+profit, gross loss, average trade, average winning trade, average losing trade,
+equity, closed/open trade counts, and win/loss/even trade counts are supported.
 
 Missing internal behavior:
 
-- average losing trade, runup, drawdown, and percent
-  variants;
+- runup, drawdown, and percent variants;
 - max contracts/shares held;
 - capital held;
 - built-ins whose value depends on costs, margin, or individual trade records.
@@ -349,7 +349,8 @@ Missing internal behavior:
 Gap size: medium.
 
 Best next slice: choose another read-only performance variable such as a narrow
-average-losing-trade variable, preserving the current public output shape.
+runup, drawdown, or percent-variant variable, preserving the current public
+output shape.
 
 ### 12. Individual Trade Namespaces
 
@@ -384,8 +385,9 @@ entry/exit fills under the same public contract. Stage 7 Slice 22 adds
 public schema expansion. Stage 7 Slice 23 adds `strategy.grossloss` under the
 same public-output contract. Stage 7 Slice 24 adds `strategy.avg_trade` under
 the same public-output contract. Stage 7 Slice 25 adds
-`strategy.avg_winning_trade` under the same public-output contract. Other
-namespace functions are unsupported.
+`strategy.avg_winning_trade` under the same public-output contract. Stage 7
+Slice 26 adds `strategy.avg_losing_trade` under the same public-output
+contract. Other namespace functions are unsupported.
 
 Missing internal behavior:
 

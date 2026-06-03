@@ -3568,6 +3568,7 @@ plot(strategy.grossprofit)
 plot(strategy.grossloss)
 plot(strategy.avg_trade)
 plot(strategy.avg_winning_trade)
+plot(strategy.avg_losing_trade)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -3703,6 +3704,20 @@ plot(strategy.avg_winning_trade)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(1.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[8].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
         ]
     );
     let strategy = result.strategy.as_ref().expect("strategy result");

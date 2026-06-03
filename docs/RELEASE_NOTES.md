@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 26 `strategy.avg_losing_trade`.
+  Strategy-mode scripts can read average realized loss among losing closed
+  trades only as a positive value, with `na` before the first losing closed
+  trade, while keeping public JSON, Python, and WASM strategy schemas
+  unchanged.
 - Added Strategy Internal Stage 7 Slice 25 `strategy.avg_winning_trade`.
   Strategy-mode scripts can read average realized profit among winning closed
   trades only, with `na` before the first winning closed trade, while keeping
