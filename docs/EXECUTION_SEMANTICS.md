@@ -121,7 +121,8 @@ current matching long entry.
 Strategy-mode scripts can read `strategy.position_size` and
 `strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`,
 `strategy.grossprofit`, `strategy.grossloss`, `strategy.avg_trade`,
-`strategy.avg_winning_trade`, `strategy.avg_losing_trade`, and
+`strategy.avg_winning_trade`, `strategy.avg_losing_trade`,
+`strategy.max_drawdown`, and
 `strategy.equity` as historical series floats. They can also read `strategy.closedtrades` and
 `strategy.opentrades` as historical series ints in the current count-only
 reporting subset. In the current long-only subset,
@@ -140,6 +141,11 @@ closed trades only, and `na` before the first winning closed trade.
 `strategy.avg_losing_trade` returns the average realized loss among losing
 closed trades only as a positive value, and `na` before the first losing closed
 trade.
+`strategy.max_drawdown` returns the maximum equity peak-to-trough drawdown
+amount over the current supported trading interval, using current close
+mark-to-market equity and including current open profit/loss. It returns `0`
+before any equity decline from a peak. `strategy.max_drawdown_percent` remains
+unsupported.
 `strategy.equity` is cash plus current market value; without configured
 commission this equals `initial_capital + strategy.netprofit +
 strategy.openprofit`, and with supported commission it also includes entry
@@ -196,7 +202,9 @@ closed-trade list without changing public output shape. Stage 7 Slice 23 adds
 `strategy.grossloss` under the same public-output contract. Stage 7 Slice 24
 adds `strategy.avg_trade` under the same public-output contract. Stage 7 Slice
 25 adds `strategy.avg_winning_trade` under the same public-output contract.
-Stage 7 Slice 26 adds `strategy.avg_losing_trade` under the same public-output contract. They read the current
+Stage 7 Slice 26 adds `strategy.avg_losing_trade` under the same public-output
+contract. Stage 7 Slice 27 adds `strategy.max_drawdown` under the same
+public-output contract. They read the current
 closed-trade list with a zero-based integer `trade_num`; missing,
 negative, out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public

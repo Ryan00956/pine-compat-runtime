@@ -3855,9 +3855,9 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
             PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Float(4.0),
+            PineValue::Float(4.0),
+            PineValue::Float(4.0),
         ]
     );
     assert_eq!(
@@ -3866,13 +3866,24 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
             PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[5].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
             PineValue::Float(-4.0),
             PineValue::Float(-4.0),
             PineValue::Float(-4.0),
         ]
     );
     assert_eq!(
-        result.plots[5].values,
+        result.plots[6].values,
         vec![
             PineValue::Float(1000.0),
             PineValue::Float(1000.0),
@@ -3880,6 +3891,51 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
             PineValue::Float(996.0),
             PineValue::Float(996.0),
             PineValue::Float(996.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[7].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(4.0),
+            PineValue::Float(4.0),
+            PineValue::Float(4.0),
+        ]
+    );
+}
+
+#[test]
+fn strategy_max_drawdown_follows_peak_to_current_equity() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("drawdown", initial_capital=1000)
+plot(strategy.max_drawdown)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=10)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(10.0), bar(12.0), bar(9.0), bar(11.0)],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(30.0),
+            PineValue::Float(30.0),
         ]
     );
 }

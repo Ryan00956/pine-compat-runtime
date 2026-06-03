@@ -189,6 +189,14 @@ impl<'a> HistoricalRuntime<'a> {
                 .average_losing_trade()
                 .map_or(PineValue::Na, PineValue::Float);
         }
+        if name == "strategy.max_drawdown" {
+            return self.current_bar.map_or(PineValue::Na, |bar| {
+                PineValue::Float(
+                    self.strategy_broker
+                        .max_drawdown(self.strategy_broker.equity_value(bar.close)),
+                )
+            });
+        }
         if name == "strategy.equity" {
             return self.current_bar.map_or(PineValue::Na, |bar| {
                 PineValue::Float(self.strategy_broker.equity_value(bar.close))

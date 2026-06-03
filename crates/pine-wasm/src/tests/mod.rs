@@ -212,7 +212,7 @@ fn runs_strategy_position_state_from_csv_to_json() {
 #[test]
 fn runs_strategy_profit_state_from_csv_to_json() {
     let output = run_script_csv(
-        "strategy(\"demo\", initial_capital=1000)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\n",
+        "strategy(\"demo\", initial_capital=1000)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nplot(strategy.max_drawdown)\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nplot(strategy.max_drawdown)\n",
         "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
     )
     .expect("strategy profit state script should run");

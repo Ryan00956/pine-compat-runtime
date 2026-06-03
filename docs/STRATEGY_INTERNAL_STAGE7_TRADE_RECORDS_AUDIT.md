@@ -2,7 +2,7 @@
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-25, and 26 closed on 2026-06-03.
+25, 26, and 27 closed on 2026-06-03.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -788,6 +788,41 @@ Evidence:
   `tests/fixtures/sema/unsupported_strategy_state_indicator.pine`,
   `tests/fixtures/sema/unsupported_request_strategy_state.pine`, and
   `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
+- host parity tests cover CLI snapshots plus Python and WASM plot values.
+
+## Slice 27: Maximum Drawdown State Variable
+
+Closed on 2026-06-03.
+
+Supported variable:
+
+- `strategy.max_drawdown`.
+
+Contract:
+
+- strategy-mode scripts only;
+- read-only `series float`;
+- returns the maximum equity peak-to-trough drawdown amount over the current
+  supported trading interval;
+- uses current close mark-to-market equity and includes current open
+  profit/loss;
+- returns `0` before any equity decline from a peak;
+- `strategy.max_drawdown_percent` remains unsupported;
+- margin, currency conversion, pyramiding, and short exposure remain outside
+  the current account model;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing
+  strategy output shape with no new top-level fields.
+
+Evidence:
+
+- runtime fixture: `tests/fixtures/runtime/strategy_profit_state.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_profit_state.pine`,
+  `tests/fixtures/sema/unsupported_strategy_state_indicator.pine`,
+  `tests/fixtures/sema/unsupported_request_strategy_state.pine`, and
+  `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
+- `tests/fixtures/sema/unsupported_strategy_state_variables.pine` keeps
+  `strategy.max_drawdown_percent` unsupported;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
 ## Remaining Stage 7 Work

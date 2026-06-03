@@ -152,7 +152,11 @@ returns average realized profit among winning closed trades only and `na`
 before the first winning closed trade. `strategy.avg_losing_trade` is a
 read-only strategy-mode `series float` that returns average realized loss among
 losing closed trades only as a positive value and `na` before the first losing
-closed trade. The count variables are
+closed trade. `strategy.max_drawdown` is a read-only strategy-mode
+`series float` that returns the maximum equity peak-to-trough drawdown amount
+over the current supported trading interval using current close mark-to-market
+equity, including current open profit/loss; the percent variant remains
+unsupported. The count variables are
 read-only strategy-mode `series int` values for the current long-only broker:
 `strategy.closedtrades` counts closed trades recorded by broker state;
 `strategy.wintrades`, `strategy.losstrades`, and `strategy.eventrades` count

@@ -119,6 +119,22 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn max_drawdown(&self, current_equity: f64) -> f64 {
+        let mut peak = self.initial_capital;
+        let mut max_drawdown = 0.0;
+        for equity in self
+            .equity
+            .iter()
+            .map(|snapshot| snapshot.equity)
+            .chain(std::iter::once(current_equity))
+        {
+            peak = peak.max(equity);
+            max_drawdown = f64::max(max_drawdown, peak - equity);
+        }
+        normalize_zero(max_drawdown)
+    }
+
+    #[must_use]
     pub(crate) fn equity_value(&self, close: f64) -> f64 {
         normalize_zero(self.cash + self.position_size * close)
     }
