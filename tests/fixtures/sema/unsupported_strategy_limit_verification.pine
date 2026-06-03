@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported limit verification", backtest_fill_limits_assumption=0.5)
+plot(close)

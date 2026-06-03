@@ -37,7 +37,8 @@ numeric `N`. Stage 7 Slices 17 and 18 add cash commission declaration subsets:
 `commission_type=strategy.commission.cash_per_order, commission_value=N` with
 finite non-negative const numeric `N`. Stage 7 Slice 19 adds `slippage=N` with
 finite non-negative integer const ticks using the fixed `syminfo.mintick`
-subset.
+subset. Stage 7 Slice 20 adds `backtest_fill_limits_assumption=N` with finite
+non-negative integer const ticks for supported limit-order verification.
 `strategy.entry(id, strategy.long, qty=...)` is a strategy-mode side effect;
 `qty` may be omitted only when the fixed default quantity subset is configured,
 and explicit `qty` overrides the declaration default. The supported market-long
@@ -46,7 +47,8 @@ fills at the next historical bar open before script statements on that fill bar.
 `strategy.entry(..., limit=price)` creates an internal pending long limit entry,
 emits no public order while pending, never fills on its creation bar, and fills
 at the limit price before script statements on a later historical bar when
-`low <= limit`. `strategy.entry(..., stop=price)` creates an internal pending
+`low <= limit`, or below the configured verified limit threshold.
+`strategy.entry(..., stop=price)` creates an internal pending
 long stop entry, emits no public order while pending, never fills on its
 creation bar, and fills at the stop price before script statements on a later
 historical bar when `high >= stop`. `strategy.entry(..., stop=price,
@@ -129,7 +131,7 @@ reservations, reservation behavior outside that subset,
 unmatched missing-entry pre-placement, entry-relative exit attachment to pending
 entries, `strategy.order`, broker settings beyond
 `initial_capital`, fixed default quantity, supported cash commission, and
-fixed-tick slippage,
+fixed-tick slippage and limit verification,
 realtime strategy handoff, and
 strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and

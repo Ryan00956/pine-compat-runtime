@@ -255,7 +255,7 @@ ohlc4 = (open + high + low + close) / 4
 ```text
 indicator(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric)
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric)
   -> void
@@ -302,16 +302,21 @@ const numeric `commission_value`; entry cash, exit cash, realized trade profit,
 configured. `strategy(..., slippage=N)` accepts finite non-negative integer
 const ticks and uses the fixed `syminfo.mintick` subset; configured slippage
 worsens supported long entry fill prices upward and supported long exit/close
-fill prices downward after trigger selection. Other commission modes and richer
-fill models remain unsupported. Supported market-long entries fill at the next
+fill prices downward after trigger selection.
+`strategy(..., backtest_fill_limits_assumption=N)` accepts finite non-negative
+integer const ticks and requires supported limit-order fills to move that many
+fixed `syminfo.mintick` ticks past the limit price while preserving the limit
+fill price. Other commission modes and richer fill models remain unsupported.
+Supported market-long entries fill at the next
 historical bar open. Supported long limit entries wait until a later
-historical bar where `low <= limit` and fill at the limit price. Supported long
-stop entries wait until a later historical bar where `high >= stop` and fill at
+historical bar where `low <= limit`, or below the configured verified limit
+threshold, and fill at the limit price. Supported long stop entries wait until
+a later historical bar where `high >= stop` and fill at
 the stop price. Supported long stop-limit entries wait until a later historical
 bar where `high >= stop`, activate an internal limit order without filling on
 that activation bar, then fill at the limit price on a later historical bar
-where `low <= limit`. These entry forms do not expose public pending-order
-records while pending.
+where `low <= limit`, or below the configured verified limit threshold. These
+entry forms do not expose public pending-order records while pending.
 `strategy.close_all()` closes the current supported long position at the current
 bar close and is a no-op while flat.
 `strategy.cancel(id)` cancels matching internal pending entry ids and matching

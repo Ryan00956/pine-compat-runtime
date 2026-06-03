@@ -1,0 +1,5 @@
+//@version=5
+strategy("Limit verification", backtest_fill_limits_assumption=100)
+strategy.entry("L", strategy.long, qty=2, limit=10)
+strategy.exit("XL", "L", limit=11)
+plot(close)

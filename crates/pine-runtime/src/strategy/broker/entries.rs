@@ -89,10 +89,11 @@ impl PendingEntryBook {
         &mut self,
         bar_index: usize,
         low: f64,
+        verification_offset: f64,
     ) -> Option<PendingEntry> {
         let position = self.entries.iter().position(|pending_entry| {
             pending_entry.direction == PendingEntryDirection::Long
-                && matches!(pending_entry.kind, PendingEntryKind::Limit { price } if low <= price)
+                && matches!(pending_entry.kind, PendingEntryKind::Limit { price } if low <= price - verification_offset)
                 && pending_entry.created_bar_index < bar_index
         })?;
         Some(self.entries.remove(position))
@@ -137,6 +138,7 @@ impl PendingEntryBook {
         &mut self,
         bar_index: usize,
         low: f64,
+        verification_offset: f64,
     ) -> Option<PendingEntry> {
         let position = self.entries.iter().position(|pending_entry| {
             pending_entry.direction == PendingEntryDirection::Long
@@ -146,7 +148,7 @@ impl PendingEntryBook {
                         limit_price,
                         activated_bar_index: Some(activated_bar_index),
                         ..
-                    } if activated_bar_index < bar_index && low <= limit_price
+                    } if activated_bar_index < bar_index && low <= limit_price - verification_offset
                 )
         })?;
         Some(self.entries.remove(position))

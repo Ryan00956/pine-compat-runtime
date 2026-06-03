@@ -2820,6 +2820,162 @@ plot(strategy.equity)
 }
 
 #[test]
+fn strategy_limit_verification_delays_limit_entry_until_price_moves_past_limit() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("limit verification", backtest_fill_limits_assumption=100)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2, limit=100)
+plot(strategy.position_size)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .hir
+            .as_ref()
+            .unwrap()
+            .strategy_settings
+            .backtest_fill_limit_ticks,
+        100.0
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            Bar {
+                time: 1,
+                open: 101.0,
+                high: 101.0,
+                low: 101.0,
+                close: 101.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 2,
+                open: 100.0,
+                high: 101.0,
+                low: 99.5,
+                close: 100.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 3,
+                open: 100.0,
+                high: 100.0,
+                low: 99.0,
+                close: 100.0,
+                volume: 1.0,
+            },
+        ],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+        ]
+    );
+    let strategy = result.strategy.expect("strategy output");
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].price, 100.0);
+    assert!(strategy.trades.is_empty());
+}
+
+#[test]
+fn strategy_limit_verification_delays_limit_exit_but_keeps_limit_fill_price() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("limit verification", backtest_fill_limits_assumption=100)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XL", "L", limit=12)
+plot(strategy.closedtrades.exit_price(0))
+plot(strategy.closedtrades.profit(0))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            Bar {
+                time: 1,
+                open: 10.0,
+                high: 10.0,
+                low: 10.0,
+                close: 10.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 2,
+                open: 11.0,
+                high: 12.0,
+                low: 10.0,
+                close: 11.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 3,
+                open: 12.0,
+                high: 13.0,
+                low: 11.0,
+                close: 12.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 4,
+                open: 12.0,
+                high: 12.0,
+                low: 12.0,
+                close: 12.0,
+                volume: 1.0,
+            },
+        ],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(12.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(2.0),
+        ]
+    );
+    let strategy = result.strategy.expect("strategy output");
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].price, 12.0);
+    assert_eq!(strategy.trades[0].exit_price, 12.0);
+    assert_eq!(strategy.trades[0].profit, 2.0);
+}
+
+#[test]
 fn strategy_close_without_matching_position_is_noop() {
     let source = SourceFile::new(
         "strategy.pine",

@@ -1,0 +1,6 @@
+//@version=5
+strategy("Limit verification entry", backtest_fill_limits_assumption=100)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2, limit=2)
+plot(strategy.position_size)
+plot(strategy.opentrades)

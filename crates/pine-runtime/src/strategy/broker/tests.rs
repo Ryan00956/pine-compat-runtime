@@ -228,21 +228,21 @@ fn exit_trigger_helpers_select_single_trigger_touched_candidates() {
     let limit = PendingExitTrigger::Limit(105.0);
 
     assert_eq!(
-        stop.touched_candidate(104.0, 94.0),
+        stop.touched_candidate(104.0, 94.0, 0.0),
         Some(PendingExitTouch {
             exit_price: 95.0,
             side: PendingExitSide::Stop,
         })
     );
-    assert_eq!(stop.touched_candidate(104.0, 96.0), None);
+    assert_eq!(stop.touched_candidate(104.0, 96.0, 0.0), None);
     assert_eq!(
-        limit.touched_candidate(106.0, 96.0),
+        limit.touched_candidate(106.0, 96.0, 0.0),
         Some(PendingExitTouch {
             exit_price: 105.0,
             side: PendingExitSide::Limit,
         })
     );
-    assert_eq!(limit.touched_candidate(104.0, 96.0), None);
+    assert_eq!(limit.touched_candidate(104.0, 96.0, 0.0), None);
 }
 
 #[test]
@@ -253,34 +253,34 @@ fn exit_trigger_helpers_select_bracket_touched_candidates() {
     };
 
     assert_eq!(
-        bracket.touched_candidate(104.0, 94.0),
+        bracket.touched_candidate(104.0, 94.0, 0.0),
         Some(PendingExitTouch {
             exit_price: 95.0,
             side: PendingExitSide::Stop,
         })
     );
     assert_eq!(
-        bracket.touched_candidate(106.0, 96.0),
+        bracket.touched_candidate(106.0, 96.0, 0.0),
         Some(PendingExitTouch {
             exit_price: 105.0,
             side: PendingExitSide::Limit,
         })
     );
     assert_eq!(
-        bracket.touched_candidate(106.0, 94.0),
+        bracket.touched_candidate(106.0, 94.0, 0.0),
         Some(PendingExitTouch {
             exit_price: 95.0,
             side: PendingExitSide::Stop,
         })
     );
-    assert_eq!(bracket.touched_candidate(104.0, 96.0), None);
+    assert_eq!(bracket.touched_candidate(104.0, 96.0, 0.0), None);
 }
 
 #[test]
 fn exit_trigger_helpers_exclude_trailing_from_fixed_touch_selection() {
     let trailing = trailing_price_trigger(105.0, 2.0);
 
-    assert_eq!(trailing.touched_candidate(106.0, 94.0), None);
+    assert_eq!(trailing.touched_candidate(106.0, 94.0, 0.0), None);
 }
 
 #[test]

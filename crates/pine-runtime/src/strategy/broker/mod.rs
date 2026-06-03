@@ -22,6 +22,7 @@ pub struct BrokerState {
     commission: Option<StrategyCommission>,
     open_entry_commission: f64,
     slippage_price_offset: f64,
+    limit_verification_price_offset: f64,
     cash: f64,
     position_size: f64,
     avg_price: f64,
@@ -77,11 +78,27 @@ impl BrokerState {
         commission: Option<StrategyCommission>,
         slippage_price_offset: f64,
     ) -> Self {
+        Self::new_with_commission_slippage_and_limit_verification(
+            initial_capital,
+            commission,
+            slippage_price_offset,
+            0.0,
+        )
+    }
+
+    #[must_use]
+    pub fn new_with_commission_slippage_and_limit_verification(
+        initial_capital: f64,
+        commission: Option<StrategyCommission>,
+        slippage_price_offset: f64,
+        limit_verification_price_offset: f64,
+    ) -> Self {
         Self {
             initial_capital,
             commission,
             open_entry_commission: 0.0,
             slippage_price_offset,
+            limit_verification_price_offset,
             cash: initial_capital,
             position_size: 0.0,
             avg_price: 0.0,
@@ -131,6 +148,10 @@ impl BrokerState {
 
     fn long_exit_fill_price(&self, price: f64) -> f64 {
         price - self.slippage_price_offset
+    }
+
+    fn long_limit_exit_is_verified(&self, limit_price: f64, high: f64) -> bool {
+        high >= limit_price + self.limit_verification_price_offset
     }
 
     pub(crate) fn entry_long(
@@ -324,10 +345,11 @@ impl BrokerState {
             self.pending_entries.clear_all();
             return;
         }
-        let Some(pending_entry) = self
-            .pending_entries
-            .take_first_eligible_limit_long(bar_index, low)
-        else {
+        let Some(pending_entry) = self.pending_entries.take_first_eligible_limit_long(
+            bar_index,
+            low,
+            self.limit_verification_price_offset,
+        ) else {
             return;
         };
 
@@ -387,10 +409,11 @@ impl BrokerState {
         }
         self.pending_entries
             .activate_stop_limit_long_entries(bar_index, high);
-        let Some(pending_entry) = self
-            .pending_entries
-            .take_first_eligible_stop_limit_long(bar_index, low)
-        else {
+        let Some(pending_entry) = self.pending_entries.take_first_eligible_stop_limit_long(
+            bar_index,
+            low,
+            self.limit_verification_price_offset,
+        ) else {
             return;
         };
 
@@ -479,11 +502,13 @@ impl BrokerState {
         }
         let triggered_price = match &mut pending_exit.trigger {
             PendingExitTrigger::Stop(price) if low <= *price => Some(*price),
-            PendingExitTrigger::Limit(price) if high >= *price => Some(*price),
+            PendingExitTrigger::Limit(price) if self.long_limit_exit_is_verified(*price, high) => {
+                Some(*price)
+            }
             PendingExitTrigger::Bracket { downside, upside } => {
                 if low <= *downside {
                     Some(*downside)
-                } else if high >= *upside {
+                } else if self.long_limit_exit_is_verified(*upside, high) {
                     Some(*upside)
                 } else {
                     None
@@ -575,7 +600,11 @@ impl BrokerState {
                     }
                 }
                 _ => {
-                    if let Some(touch) = pending_exit.trigger.touched_candidate(high, low) {
+                    if let Some(touch) = pending_exit.trigger.touched_candidate(
+                        high,
+                        low,
+                        self.limit_verification_price_offset,
+                    ) {
                         touched_candidates.push((pending_exit, touch.exit_price, touch.side));
                     }
                 }

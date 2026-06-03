@@ -102,6 +102,8 @@ mod tests {
         assert_eq!(signature.params[8].accepts, crate::Accepts::ConstNumeric);
         assert_eq!(signature.params[9].name, "slippage");
         assert_eq!(signature.params[9].accepts, crate::Accepts::ConstNumeric);
+        assert_eq!(signature.params[10].name, "backtest_fill_limits_assumption");
+        assert_eq!(signature.params[10].accepts, crate::Accepts::ConstNumeric);
         assert!(!signature.variadic);
     }
 

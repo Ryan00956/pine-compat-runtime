@@ -1,7 +1,7 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
-5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, and 19 closed on
+5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, and 20 closed on
 2026-06-03.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
@@ -567,6 +567,40 @@ Evidence:
   `tests/fixtures/sema/unsupported_strategy_slippage.pine`;
 - host parity tests cover CLI snapshots plus Python plot and trade/equity
   values.
+
+## Slice 20: Fixed Tick Limit Verification
+
+Closed on 2026-06-03.
+
+Supported declaration subset:
+
+- `strategy(..., backtest_fill_limits_assumption=N)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- `backtest_fill_limits_assumption` must be a finite non-negative integer const
+  tick count;
+- ticks convert through the current fixed `syminfo.mintick` subset;
+- supported long limit entries and stop-limit entry limit legs require
+  `low <= limit - ticks * syminfo.mintick`;
+- supported long limit/profit exit fills and bracket upside fills require
+  `high >= limit_or_profit_price + ticks * syminfo.mintick`;
+- verified limit orders still fill at the original limit/profit price, not the
+  verification threshold;
+- stop/loss/trailing triggers and slippage direction are unchanged;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
+  output shape with no new top-level fields or public trade metric fields.
+
+Evidence:
+
+- runtime fixtures:
+  `tests/fixtures/runtime/strategy_limit_verification_entry.pine` and
+  `tests/fixtures/runtime/strategy_limit_verification_exit.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_limit_verification.pine` and
+  `tests/fixtures/sema/unsupported_strategy_limit_verification.pine`;
+- host parity tests cover CLI snapshots plus Python trade/order values.
 
 ## Remaining Stage 7 Work
 

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 20 fixed-tick limit verification.
+  `strategy(..., backtest_fill_limits_assumption=N)` now accepts finite
+  non-negative integer const ticks, requires supported long limit entry and
+  supported long limit/profit exit fills to move that many fixed
+  `syminfo.mintick` ticks beyond the limit price, preserves the original limit
+  fill price, and keeps public JSON, Python, and WASM strategy schemas
+  unchanged.
 - Added Strategy Internal Stage 7 Slice 19 fixed-tick slippage. `strategy(...,
   slippage=N)` now accepts finite non-negative integer const ticks, converts
   them through the fixed `syminfo.mintick` subset, worsens supported long entry

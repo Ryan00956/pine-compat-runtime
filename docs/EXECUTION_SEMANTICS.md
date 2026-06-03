@@ -52,8 +52,11 @@ cash-per-contract commission. `strategy(...,
 commission_type=strategy.commission.cash_per_order, commission_value=N)`
 accepts a finite non-negative const numeric cash-per-order commission.
 `strategy(..., slippage=N)` accepts finite non-negative integer const ticks
-using the fixed `syminfo.mintick` subset. Other commission modes and richer
-fill models remain unsupported.
+using the fixed `syminfo.mintick` subset.
+`strategy(..., backtest_fill_limits_assumption=N)` accepts finite non-negative
+integer const ticks and requires supported limit-order fills to move that many
+fixed `syminfo.mintick` ticks past the limit price while preserving the limit
+fill price. Other commission modes and richer fill models remain unsupported.
 
 The current entry subset is `strategy.entry(id, strategy.long, qty=...)`,
 `strategy.entry(id, strategy.long)` when a fixed default quantity is configured,
@@ -62,11 +65,13 @@ The current entry subset is `strategy.entry(id, strategy.long, qty=...)`,
 and `limit` creates a long stop-limit entry. Market entries fill at the next
 historical bar open. Limit and stop entries never fill on their creation bar;
 limit entries fill at the limit price before script statements on a later
-historical bar when `low <= limit`, and stop entries fill at the stop price
-before script statements on a later historical bar when `high >= stop`.
+historical bar when `low <= limit`, or below the configured verified limit
+threshold, and stop entries fill at the stop price before script statements on
+a later historical bar when `high >= stop`.
 Stop-limit entries activate before script statements on a later historical bar
 when `high >= stop`, do not fill on that activation bar, and fill at the limit
-price before script statements on a later historical bar when `low <= limit`.
+price before script statements on a later historical bar when `low <= limit`,
+or below the configured verified limit threshold.
 Pending entries emit no public order while pending. Only one net long position
 is supported; repeated entry calls while a position is open are ignored under
 the current no-pyramiding rule. Explicit `qty` overrides the declaration
@@ -100,8 +105,9 @@ output field includes current open profit while a long position is open. The
 expression variable `strategy.netprofit` is narrower: it is cumulative realized
 closed-trade profit only and excludes current open profit. The current subset
 supports only `strategy.commission.cash_per_contract`,
-`strategy.commission.cash_per_order`, and fixed-tick slippage, and has no other
-commission modes, richer fill models, margin, percent sizing, currency conversion,
+`strategy.commission.cash_per_order`, fixed-tick slippage, and fixed-tick limit
+verification, and has no other commission modes, richer fill models, margin,
+percent sizing, currency conversion,
 missing-entry pre-placement, or pyramiding. The only multiple-pending
 reservation subset is explicit fixed `qty` or `qty_percent` single-trigger or
 one-downside/one-upside bracket or trailing `strategy.exit` calls for the
@@ -162,7 +168,10 @@ Slice 17 adds cash-per-contract commission accounting for supported entries and
 exits without adding public schema fields. Stage 7 Slice 18 adds cash-per-order
 commission accounting under the same public contract. Stage 7 Slice 19 adds
 fixed-tick slippage to supported long entry, close, and exit fill prices
-without changing trigger conditions or public schema. They read the current
+without changing trigger conditions or public schema. Stage 7 Slice 20 adds
+fixed-tick limit-order verification for supported long limit entry and
+supported long limit/profit exit fills while preserving the original limit fill
+price. They read the current
 closed-trade list with a zero-based integer `trade_num`; missing,
 negative, out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public
@@ -223,9 +232,12 @@ Profit/loss and trailing tick arguments convert positive tick distances from
 reuse the same pending-exit lifecycle: accepted calls are not eligible on the
 bar where they are created or replaced, and a later historical bar with
 `low <= stop/loss price` or `high >= limit/profit price` fills at the selected
-exit price. Configured slippage worsens the supported long exit fill price
-after trigger selection without changing trigger conditions. Single-trigger,
-bracket, and trailing exits with explicit fixed
+exit price. Configured limit-order verification requires supported long
+limit/profit exit fills to move the configured number of ticks beyond the
+limit/profit price while still filling at the original limit/profit price.
+Configured slippage worsens the supported long exit fill price after trigger
+selection without changing trigger conditions. Single-trigger, bracket, and
+trailing exits with explicit fixed
 `qty` or `qty_percent` can keep multiple pending reservations for different
 identities and share one reservation pool for the current matching long entry.
 Same-side touched candidates fill in placement order. When downside

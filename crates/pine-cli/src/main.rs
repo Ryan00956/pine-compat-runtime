@@ -646,6 +646,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_entry_limit.pine",
             ),
             (
+                "runtime_strategy_limit_verification_entry.json",
+                "tests/fixtures/runtime/strategy_limit_verification_entry.pine",
+            ),
+            (
                 "runtime_strategy_entry_stop.json",
                 "tests/fixtures/runtime/strategy_entry_stop.pine",
             ),
@@ -1064,6 +1068,10 @@ mod tests {
             (
                 "runtime_strategy_exit_slippage.json",
                 "tests/fixtures/runtime/strategy_exit_slippage.pine",
+            ),
+            (
+                "runtime_strategy_limit_verification_exit.json",
+                "tests/fixtures/runtime/strategy_limit_verification_exit.pine",
             ),
             (
                 "runtime_strategy_position_state.json",

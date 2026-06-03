@@ -160,23 +160,30 @@ impl PendingExitTrigger {
         matches!(self, Self::Trailing(_))
     }
 
-    pub(super) fn touched_candidate(&self, high: f64, low: f64) -> Option<PendingExitTouch> {
+    pub(super) fn touched_candidate(
+        &self,
+        high: f64,
+        low: f64,
+        limit_verification_offset: f64,
+    ) -> Option<PendingExitTouch> {
         match self {
             Self::Stop(price) if low <= *price => Some(PendingExitTouch {
                 exit_price: *price,
                 side: PendingExitSide::Stop,
             }),
-            Self::Limit(price) if high >= *price => Some(PendingExitTouch {
-                exit_price: *price,
-                side: PendingExitSide::Limit,
-            }),
+            Self::Limit(price) if high >= *price + limit_verification_offset => {
+                Some(PendingExitTouch {
+                    exit_price: *price,
+                    side: PendingExitSide::Limit,
+                })
+            }
             Self::Bracket { downside, upside } => {
                 if low <= *downside {
                     Some(PendingExitTouch {
                         exit_price: *downside,
                         side: PendingExitSide::Stop,
                     })
-                } else if high >= *upside {
+                } else if high >= *upside + limit_verification_offset {
                     Some(PendingExitTouch {
                         exit_price: *upside,
                         side: PendingExitSide::Limit,

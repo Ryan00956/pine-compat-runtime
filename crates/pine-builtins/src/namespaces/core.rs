@@ -78,6 +78,11 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "backtest_fill_limits_assumption",
+        accepts: Accepts::ConstNumeric,
+        optional: true,
+    },
 ];
 
 const INPUT_PARAMS: &[BuiltinParam] = &[

@@ -17,6 +17,7 @@ pub struct StrategySettings {
     pub default_qty: Option<StrategyDefaultQuantity>,
     pub commission: Option<StrategyCommission>,
     pub slippage_ticks: f64,
+    pub backtest_fill_limit_ticks: f64,
 }
 
 impl Default for StrategySettings {
@@ -26,6 +27,7 @@ impl Default for StrategySettings {
             default_qty: Some(StrategyDefaultQuantity::Fixed(1.0)),
             commission: None,
             slippage_ticks: 0.0,
+            backtest_fill_limit_ticks: 0.0,
         }
     }
 }

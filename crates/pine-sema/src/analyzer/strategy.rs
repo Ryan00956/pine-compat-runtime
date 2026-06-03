@@ -153,6 +153,7 @@ impl Analyzer {
                     "commission_type",
                     "commission_value",
                     "slippage",
+                    "backtest_fill_limits_assumption",
                 ]
                 .get(index)
                 .copied()
@@ -261,6 +262,20 @@ impl Analyzer {
                         continue;
                     }
                     self.strategy_settings.slippage_ticks = value;
+                }
+                "backtest_fill_limits_assumption" => {
+                    let Some(value) = const_numeric_value(&arg.value) else {
+                        continue;
+                    };
+                    if !value.is_finite() || value < 0.0 || value.fract() != 0.0 {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `backtest_fill_limits_assumption` must be a non-negative integer",
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    self.strategy_settings.backtest_fill_limit_ticks = value;
                 }
                 _ => {}
             }
