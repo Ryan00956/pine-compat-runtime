@@ -663,6 +663,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_default_quantity.pine",
             ),
             (
+                "runtime_strategy_percent_of_equity_default_quantity.json",
+                "tests/fixtures/runtime/strategy_percent_of_equity_default_quantity.pine",
+            ),
+            (
                 "runtime_strategy_default_quantity_override.json",
                 "tests/fixtures/runtime/strategy_default_quantity_override.pine",
             ),

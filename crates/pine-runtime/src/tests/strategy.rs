@@ -717,7 +717,7 @@ if bar_index == 1
             .as_ref()
             .unwrap()
             .strategy_settings
-            .default_entry_qty(),
+            .default_entry_qty(100_000.0, 2.0),
         Some(3.0)
     );
 
@@ -758,7 +758,7 @@ if bar_index == 0
             .as_ref()
             .unwrap()
             .strategy_settings
-            .default_entry_qty(),
+            .default_entry_qty(100_000.0, 2.0),
         Some(1.0)
     );
 
@@ -770,6 +770,45 @@ if bar_index == 0
     assert_eq!(strategy.orders[0].id, "D");
     assert_eq!(strategy.orders[0].qty, 1.0);
     assert_eq!(strategy.orders[0].price, 3.0);
+}
+
+#[test]
+fn strategy_entry_uses_percent_of_equity_default_qty_when_qty_is_absent() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("entry", initial_capital=1000, default_qty_type=strategy.percent_of_equity, default_qty_value=25)
+if bar_index == 0
+    strategy.entry("D", strategy.long)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis
+            .hir
+            .as_ref()
+            .unwrap()
+            .strategy_settings
+            .default_entry_qty(1000.0, 10.0),
+        Some(25.0)
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(10.0), bar(20.0)])
+        .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 1);
+    assert_eq!(strategy.orders[0].id, "D");
+    assert_eq!(strategy.orders[0].qty, 25.0);
+    assert_eq!(strategy.orders[0].price, 20.0);
+    assert_eq!(strategy.position[0].size, 25.0);
+    assert_eq!(strategy.equity[1].cash, 500.0);
+    assert_eq!(strategy.equity[1].market_value, 500.0);
+    assert_eq!(strategy.equity[1].equity, 1000.0);
 }
 
 #[test]

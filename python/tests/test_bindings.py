@@ -292,6 +292,28 @@ def test_run_script_returns_strategy_default_quantity_contract():
     assert result["plots"][0]["values"] == [0.0, 0.0, 3.0]
 
 
+def test_run_script_returns_strategy_percent_of_equity_default_quantity_contract():
+    result = pine_compat.run_script(
+        'strategy("demo", initial_capital=1000, default_qty_type=strategy.percent_of_equity, default_qty_value=25)\nif bar_index == 1\n    strategy.entry("D", strategy.long)\nplot(strategy.position_size)\n',
+        BARS,
+    )
+
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "D",
+            "barIndex": 2,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 125.0,
+            "price": 3.0,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 2, "size": 125.0, "avgPrice": 3.0}
+    ]
+    assert result["plots"][0]["values"] == [0.0, 0.0, 125.0]
+
+
 def test_run_script_returns_strategy_position_state_plots():
     result = pine_compat.run_script(
         'strategy("demo")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 2\n    strategy.close("L")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\n',

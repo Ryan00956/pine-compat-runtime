@@ -161,7 +161,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn eval_strategy_entry(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
-        let Some(_bar) = self.current_bar else {
+        let Some(bar) = self.current_bar else {
             return Err(RuntimeError {
                 message: "`strategy.entry` requires an active bar".to_owned(),
             });
@@ -200,9 +200,10 @@ impl<'a> HistoricalRuntime<'a> {
         let qty = if let Some(qty_expr) = qty_expr {
             self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN)
         } else {
+            let equity = self.strategy_broker.equity_value(bar.close);
             self.program
                 .strategy_settings
-                .default_entry_qty()
+                .default_entry_qty(equity, bar.close)
                 .unwrap_or(f64::NAN)
         };
         if let (Some(limit_expr), Some(stop_expr)) = (limit_expr, stop_expr) {

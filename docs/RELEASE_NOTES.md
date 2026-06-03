@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 31
+  `default_qty_type=strategy.percent_of_equity`.
+  Supported long entries without explicit `qty` now resolve their default
+  quantity from current supported equity and current close at placement time,
+  while cash sizing, margin constraints, and currency conversion remain
+  unsupported.
 - Added Strategy Internal Stage 7 Slice 30
   `strategy.max_runup_percent` and `strategy.max_drawdown_percent`.
   Strategy-mode scripts can read maximum intrabar equity run-up/drawdown

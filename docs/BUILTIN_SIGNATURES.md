@@ -303,7 +303,10 @@ be accepted in Phase 1. `max_bars_back` must be non-negative when provided.
 Unsupported named arguments should produce compatibility diagnostics.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
-use the configured or default fixed quantity. `strategy(...)` accepts
+use the configured or default fixed quantity.
+`default_qty_type=strategy.percent_of_equity` is also supported for positive
+const numeric `default_qty_value`; omitted supported entry `qty` resolves once
+at placement time from current supported equity and current close. `strategy(...)` accepts
 `commission_type=strategy.commission.cash_per_contract`,
 `strategy.commission.cash_per_order`, or `strategy.commission.percent` with a
 finite non-negative const numeric `commission_value`; entry cash, exit cash,

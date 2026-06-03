@@ -32,7 +32,11 @@ accepts `strategy(...)` with the common declaration metadata subset plus
 positive const numeric `initial_capital`. Phase L adds the fixed default
 quantity declaration subset:
 `default_qty_type=strategy.fixed, default_qty_value=N` with positive const
-numeric `N`. Stage 7 Slices 17, 18, and 21 add supported commission declaration subsets:
+numeric `N`. Stage 7 Slice 31 adds
+`default_qty_type=strategy.percent_of_equity, default_qty_value=N` with positive
+const numeric `N`; omitted supported entry quantities resolve at placement time
+from current supported equity and current close. Stage 7 Slices 17, 18, and 21
+add supported commission declaration subsets:
 `commission_type=strategy.commission.cash_per_contract, commission_value=N` and
 `commission_type=strategy.commission.cash_per_order, commission_value=N` with
 finite non-negative const numeric `N`, plus
@@ -42,7 +46,8 @@ finite non-negative integer const ticks using the fixed `syminfo.mintick`
 subset. Stage 7 Slice 20 adds `backtest_fill_limits_assumption=N` with finite
 non-negative integer const ticks for supported limit-order verification.
 `strategy.entry(id, strategy.long, qty=...)` is a strategy-mode side effect;
-`qty` may be omitted only when the fixed default quantity subset is configured,
+`qty` may be omitted when a supported fixed or percent-of-equity default
+quantity subset is configured,
 and explicit `qty` overrides the declaration default. The supported market-long
 entry creates an internal pending entry, emits no public order while pending, and
 fills at the next historical bar open before script statements on that fill bar.

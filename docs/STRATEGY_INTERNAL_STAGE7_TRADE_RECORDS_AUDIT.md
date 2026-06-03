@@ -915,8 +915,45 @@ Evidence:
   `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
+## Slice 31: Percent-Of-Equity Default Entry Quantity
+
+Closed on 2026-06-03.
+
+Supported declaration subset:
+
+- `strategy(..., default_qty_type=strategy.percent_of_equity,
+  default_qty_value=N)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- positive const numeric `default_qty_value`;
+- applies when a supported `strategy.entry` omits explicit `qty`;
+- resolves the absolute quantity once at placement time as
+  `strategy.equity * N / 100 / close`, using the current supported equity and
+  current close;
+- explicit `qty` still takes precedence over the configured default quantity;
+- no public CLI JSON, Python dictionary, or WASM JSON schema expansion;
+- cash sizing, contract/share rounding policy, margin constraints, forced
+  liquidation, account constraints that prevent fills, and currency conversion
+  remain unsupported.
+
+Evidence:
+
+- runtime test:
+  `strategy_entry_uses_percent_of_equity_default_qty_when_qty_is_absent`;
+- runtime fixture:
+  `tests/fixtures/runtime/strategy_percent_of_equity_default_quantity.pine`;
+- semantic fixture:
+  `tests/fixtures/sema/supported_strategy_percent_of_equity_default_quantity.pine`;
+- unsupported fixture:
+  `tests/fixtures/sema/unsupported_strategy_default_quantity.pine` keeps
+  `strategy.cash` guarded;
+- CLI golden snapshot covers the public runtime shape.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting
-addition, such as another reporting helper, only after
+addition, such as another reporting helper or a documented sizing/account-model
+subslice, only after
 documenting whether the behavior is script-only or public-output visible.

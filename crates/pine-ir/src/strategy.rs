@@ -3,6 +3,7 @@ pub const DEFAULT_STRATEGY_INITIAL_CAPITAL: f64 = 100_000.0;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum StrategyDefaultQuantity {
     Fixed(f64),
+    PercentOfEquity(f64),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -35,9 +36,16 @@ impl Default for StrategySettings {
 
 impl StrategySettings {
     #[must_use]
-    pub fn default_entry_qty(self) -> Option<f64> {
-        self.default_qty
-            .map(|StrategyDefaultQuantity::Fixed(qty)| qty)
+    pub fn default_entry_qty(self, equity: f64, price: f64) -> Option<f64> {
+        self.default_qty.and_then(|default_qty| match default_qty {
+            StrategyDefaultQuantity::Fixed(qty) => Some(qty),
+            StrategyDefaultQuantity::PercentOfEquity(percent) => {
+                if !equity.is_finite() || !price.is_finite() || equity <= 0.0 || price <= 0.0 {
+                    return None;
+                }
+                Some(equity * percent / 100.0 / price)
+            }
+        })
     }
 
     #[must_use]

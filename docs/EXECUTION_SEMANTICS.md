@@ -43,9 +43,14 @@ runtime results do not include this key.
 `strategy(..., initial_capital=N)` accepts a positive const numeric starting
 cash value; when omitted, the runtime uses 100000.
 `strategy(..., default_qty_type=strategy.fixed, default_qty_value=N)` accepts a
-positive const numeric fixed default entry quantity. The fixed default subset is
-the only supported declaration quantity mode; percent-of-equity, cash sizing,
-contracts, margin, and currency conversion remain unsupported.
+positive const numeric fixed default entry quantity.
+`strategy(..., default_qty_type=strategy.percent_of_equity, default_qty_value=N)`
+accepts a positive const numeric default entry percentage. When a supported
+`strategy.entry` omits `qty`, the percent-of-equity subset calculates the
+absolute quantity once at placement time as
+`strategy.equity * N / 100 / close`, using the current supported equity and
+current close. Cash sizing, contracts, margin constraints, forced liquidation,
+and currency conversion remain unsupported.
 `strategy(..., commission_type=strategy.commission.cash_per_contract,
 commission_value=N)` accepts a finite non-negative const numeric
 cash-per-contract commission. `strategy(...,

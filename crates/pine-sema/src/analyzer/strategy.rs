@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 const STRATEGY_FIXED_DEFAULT_QTY_TYPE: &str = "strategy.fixed";
+const STRATEGY_PERCENT_OF_EQUITY_DEFAULT_QTY_TYPE: &str = "strategy.percent_of_equity";
 const STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE: &str = "strategy.commission.cash_per_contract";
 const STRATEGY_CASH_PER_ORDER_COMMISSION_TYPE: &str = "strategy.commission.cash_per_order";
 const STRATEGY_PERCENT_COMMISSION_TYPE: &str = "strategy.commission.percent";
@@ -143,7 +144,7 @@ impl Analyzer {
     pub(crate) fn validate_strategy_declaration_args(&mut self, args: &[CallArg]) {
         let mut default_qty_type_arg = None;
         let mut default_qty_value_arg = None;
-        let mut fixed_default_qty_type = false;
+        let mut default_qty_constructor: Option<fn(f64) -> pine_ir::StrategyDefaultQuantity> = None;
         let mut default_qty_value = None;
         let mut commission_type_arg = None;
         let mut commission_constructor: Option<fn(f64) -> pine_ir::StrategyCommission> = None;
@@ -191,15 +192,28 @@ impl Analyzer {
                     let Some(default_qty_type) = const_string_value(&arg.value) else {
                         continue;
                     };
-                    if default_qty_type != STRATEGY_FIXED_DEFAULT_QTY_TYPE {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `default_qty_type` only supports strategy.fixed",
-                            arg.span,
-                        ));
-                        continue;
+                    match default_qty_type.as_str() {
+                        STRATEGY_FIXED_DEFAULT_QTY_TYPE => {
+                            default_qty_constructor = Some(
+                                pine_ir::StrategyDefaultQuantity::Fixed
+                                    as fn(f64) -> pine_ir::StrategyDefaultQuantity,
+                            );
+                        }
+                        STRATEGY_PERCENT_OF_EQUITY_DEFAULT_QTY_TYPE => {
+                            default_qty_constructor = Some(
+                                pine_ir::StrategyDefaultQuantity::PercentOfEquity
+                                    as fn(f64) -> pine_ir::StrategyDefaultQuantity,
+                            );
+                        }
+                        _ => {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_CALL_ARG_VALUE",
+                                "`strategy` argument `default_qty_type` only supports strategy.fixed or strategy.percent_of_equity",
+                                arg.span,
+                            ));
+                            continue;
+                        }
                     }
-                    fixed_default_qty_type = true;
                 }
                 "default_qty_value" => {
                     default_qty_value_arg = Some(arg);
@@ -297,12 +311,18 @@ impl Analyzer {
             }
         }
 
-        if let (_, _, Some(_), Some(qty)) = (
-            fixed_default_qty_type,
-            default_qty_type_arg,
-            default_qty_value_arg,
-            default_qty_value,
-        ) {
+        if default_qty_type_arg.is_some() {
+            if let (Some(default_qty_constructor), Some(qty)) = (
+                default_qty_constructor,
+                if default_qty_value_arg.is_some() {
+                    default_qty_value
+                } else {
+                    Some(1.0)
+                },
+            ) {
+                self.strategy_settings.default_qty = Some(default_qty_constructor(qty));
+            }
+        } else if let Some(qty) = default_qty_value {
             self.strategy_settings.default_qty = Some(pine_ir::StrategyDefaultQuantity::Fixed(qty));
         }
         if commission_value_arg.is_some() && commission_type_arg.is_none() {

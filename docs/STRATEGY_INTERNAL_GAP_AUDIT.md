@@ -123,7 +123,6 @@ Missing internal behavior:
 - `process_orders_on_close`
 - `backtest_fill_limits_assumption`
 - `default_qty_type=strategy.cash`
-- `default_qty_type=strategy.percent_of_equity`
 - `currency`
 - commission modes beyond `strategy.commission.cash_per_contract`,
   `strategy.commission.cash_per_order`, and `strategy.commission.percent`
@@ -298,14 +297,14 @@ settled. This is the largest broker-model gap.
 
 ### 9. Position Sizing And Account Model
 
-Current state: explicit positive quantities and fixed default quantities are
-supported. Cash, market value, equity, and net profit are calculated for the
-current long-only model without costs.
+Current state: explicit positive quantities, fixed default quantities, and a
+percent-of-equity default quantity subset are supported. Cash, market value,
+equity, and net profit are calculated for the current long-only model with the
+supported cost modes.
 
 Missing internal behavior:
 
 - cash-based default quantity;
-- percent-of-equity default quantity;
 - contract/share minimum and rounding behavior;
 - currency selection and conversion;
 - margin requirements and forced liquidation;
@@ -314,8 +313,8 @@ Missing internal behavior:
 
 Gap size: large.
 
-Best first slice: percent-of-equity default quantity for long market entries
-could be isolated, but it should wait until the account model policy is explicit.
+Best next slice: cash-based default quantity or rounding policy would require a
+more explicit account-model contract before implementation.
 
 ### 10. Costs And Price Adjustments
 
@@ -393,7 +392,9 @@ public-output contract. Stage 7 Slice 28 adds `strategy.max_runup` under the
 same public-output contract. Stage 7 Slice 29 aligns `strategy.max_drawdown`
 with the official intrabar long-trade drawdown formula under the same
 public-output contract. Stage 7 Slice 30 adds `strategy.max_runup_percent` and
-`strategy.max_drawdown_percent` under the same public-output contract. Other
+`strategy.max_drawdown_percent` under the same public-output contract. Stage 7
+Slice 31 adds `default_qty_type=strategy.percent_of_equity` for supported entry
+default sizing without expanding public output. Other
 namespace functions are unsupported.
 
 Missing internal behavior:

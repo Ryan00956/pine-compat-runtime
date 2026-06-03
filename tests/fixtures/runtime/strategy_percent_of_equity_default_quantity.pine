@@ -1,0 +1,5 @@
+//@version=5
+strategy("Strategy percent default quantity", initial_capital=1000, default_qty_type=strategy.percent_of_equity, default_qty_value=25)
+if bar_index == 1
+    strategy.entry("D", strategy.long)
+plot(strategy.position_size)
