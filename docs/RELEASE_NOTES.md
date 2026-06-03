@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` as the design
+  gate for future margin/account-model work. The document keeps current
+  runtime behavior unchanged while defining the official semantics, non-goals,
+  slice order, and stop conditions for any later `margin_long`,
+  `margin_short`, `strategy.opentrades.capital_held`, and forced-liquidation
+  implementation.
 - Added Strategy Internal Stage 7 Slice 35
   `strategy.opentrades.capital_held` as a read-only strategy-mode variable. In
   the current no-margin subset it returns `na`, matching Pine's behavior when a

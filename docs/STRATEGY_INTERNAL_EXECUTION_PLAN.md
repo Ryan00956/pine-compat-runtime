@@ -233,6 +233,9 @@ Scope:
   explicit.
 - Candidate cost/account slices include additional commission modes, richer fill
   models, cash sizing, and percent-of-equity sizing.
+- Margin/account-model work must pass through
+  `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` before runtime support
+  is widened.
 
 Out of scope:
 

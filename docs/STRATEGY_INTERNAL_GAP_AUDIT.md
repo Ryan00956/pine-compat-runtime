@@ -313,8 +313,9 @@ Missing internal behavior:
 
 Gap size: large.
 
-Best next slice: cash-based default quantity or rounding policy would require a
-more explicit account-model contract before implementation.
+Best next slice: use
+`docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` as the design gate before
+implementing margin, forced liquidation, or account-constraint behavior.
 
 ### 10. Costs And Price Adjustments
 
@@ -351,8 +352,10 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best next slice: choose another read-only performance variable such as a narrow
-percent-variant variable, preserving the current public output shape.
+Best next slice: the remaining script-visible reporting gap is now tied to the
+margin/account model. Follow
+`docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` before changing runtime
+behavior.
 
 ### 12. Individual Trade Namespaces
 

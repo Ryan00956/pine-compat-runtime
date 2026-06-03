@@ -1104,4 +1104,8 @@ Evidence:
 
 The next slice should choose one explicitly bounded accounting/reporting
 addition, such as a documented margin/account-model subslice, only after
-documenting whether the behavior is script-only or public-output visible.
+documenting whether the behavior is script-only or public-output visible. The
+margin/account-model direction is captured in
+`docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md`; runtime support should
+not widen before that design gate's slice order and stop conditions are
+followed.
