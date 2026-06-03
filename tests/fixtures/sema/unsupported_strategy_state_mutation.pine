@@ -3,6 +3,7 @@ strategy("Unsupported strategy state mutation")
 strategy.position_size := 1
 strategy.grossprofit := 1
 strategy.grossloss := 1
+strategy.avg_trade := 1
 strategy.closedtrades := 1
 strategy.wintrades := 1
 strategy.losstrades := 1

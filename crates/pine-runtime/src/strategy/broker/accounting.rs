@@ -74,6 +74,17 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn average_trade(&self) -> Option<f64> {
+        if self.trades.is_empty() {
+            None
+        } else {
+            Some(normalize_zero(
+                self.realized_profit() / self.trades.len() as f64,
+            ))
+        }
+    }
+
+    #[must_use]
     pub(crate) fn equity_value(&self, close: f64) -> f64 {
         normalize_zero(self.cash + self.position_size * close)
     }

@@ -12,6 +12,7 @@ const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.netprofit",
     "strategy.grossprofit",
     "strategy.grossloss",
+    "strategy.avg_trade",
     "strategy.equity",
     "strategy.closedtrades",
     "strategy.wintrades",

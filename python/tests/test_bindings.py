@@ -324,9 +324,9 @@ def test_run_script_returns_strategy_profit_state_plots():
     ]
 
 
-def test_run_script_returns_strategy_grossprofit_and_grossloss_plots():
+def test_run_script_returns_strategy_profit_summary_plots():
     result = pine_compat.run_script(
-        'strategy("demo")\nif bar_index == 0\n    strategy.entry("W", strategy.long, qty=1)\nif bar_index == 2\n    strategy.close("W")\nif bar_index == 3\n    strategy.entry("L", strategy.long, qty=1)\nif bar_index == 5\n    strategy.close("L")\nplot(strategy.netprofit)\nplot(strategy.grossprofit)\nplot(strategy.grossloss)\n',
+        'strategy("demo")\nif bar_index == 0\n    strategy.entry("W", strategy.long, qty=1)\nif bar_index == 2\n    strategy.close("W")\nif bar_index == 3\n    strategy.entry("L", strategy.long, qty=1)\nif bar_index == 5\n    strategy.close("L")\nplot(strategy.netprofit)\nplot(strategy.grossprofit)\nplot(strategy.grossloss)\nplot(strategy.avg_trade)\n',
         fixture_bars("tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv"),
     )
 
@@ -334,6 +334,7 @@ def test_run_script_returns_strategy_grossprofit_and_grossloss_plots():
         [0.0, 0.0, 1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0],
         [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
         [0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 2.0],
+        [None, None, 1.0, 1.0, 1.0, -0.5, -0.5, -0.5, -0.5],
     ]
 
 
@@ -573,6 +574,7 @@ def test_run_script_returns_strategy_trade_outcome_count_plots():
         [0, 0, 1, 1, 1, 2, 2, 2, 3],
         [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
         [0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 2.0],
+        [None, None, 1.0, 1.0, 1.0, -0.5, -0.5, -0.5, -1.0 / 3.0],
     ]
     assert [trade["profit"] for trade in result["strategy"]["trades"]] == [1.0, -2.0, 0.0]
     assert "winTrades" not in result["strategy"]
