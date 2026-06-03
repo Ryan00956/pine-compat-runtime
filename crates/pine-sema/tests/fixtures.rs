@@ -503,6 +503,7 @@ fn accepts_supported_strategy_closedtrades_fields_fixture() {
         "tests/fixtures/sema/supported_strategy_closedtrades_fields.pine",
         &[
             "strategy.closedtrades.entry_price",
+            "strategy.closedtrades.entry_id",
             "strategy.closedtrades.exit_price",
             "strategy.closedtrades.entry_bar_index",
             "strategy.closedtrades.exit_bar_index",

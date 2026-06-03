@@ -183,6 +183,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "strategy.cancel",
     "strategy.cancel_all",
     "strategy.closedtrades.entry_bar_index",
+    "strategy.closedtrades.entry_id",
     "strategy.closedtrades.entry_price",
     "strategy.closedtrades.exit_bar_index",
     "strategy.closedtrades.exit_price",

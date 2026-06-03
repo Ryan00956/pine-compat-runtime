@@ -1,6 +1,7 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
-Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02.
+Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slice 4
+closed on 2026-06-03.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -38,10 +39,10 @@ Evidence:
 Still unsupported:
 
 - all `strategy.opentrades.*` namespace functions;
-- closed-trade field functions beyond `entry_price`, `exit_price`,
+- closed-trade field functions beyond `entry_price`, `entry_id`, `exit_price`,
   `entry_bar_index`, `exit_bar_index`, `entry_time`, `exit_time`,
   `commission`, `size`, and `profit`;
-- runup, drawdown, ids, and richer reporting metrics;
+- runup, drawdown, exit ids, and richer reporting metrics;
 - public trade namespace schema expansion.
 
 ## Slice 1: Closed Trade Size And Profit Functions
@@ -103,9 +104,30 @@ Contract:
 - public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
   output shape with no new top-level fields.
 
+## Slice 4: Closed Trade Entry Id Function
+
+Closed on 2026-06-03.
+
+Supported script-visible function:
+
+- `strategy.closedtrades.entry_id(trade_num)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- `trade_num` follows the same zero-based integer index contract as Slices 0
+  through 3;
+- missing, negative, out-of-range, or non-integer indexes return `na`;
+- `entry_id` returns the entry id already retained on the closed trade record;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
+  output shape with no new top-level fields.
+
+`strategy.closedtrades.exit_id` remains unsupported because closed trade records
+do not yet retain exit id metadata.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting
-addition, such as real commission/slippage modeling, runup/drawdown, ids, or
-another closed-trade field, only after documenting whether the behavior is
+addition, such as real commission/slippage modeling, runup/drawdown, exit ids,
+or another closed-trade field, only after documenting whether the behavior is
 script-only or public-output visible.

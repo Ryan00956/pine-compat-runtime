@@ -1,6 +1,6 @@
 use crate::signature::{Accepts, BuiltinParam, BuiltinPhase, BuiltinSignature, ReturnSpec};
 
-use super::types::{SERIES_FLOAT, SERIES_INT, VOID};
+use super::types::{SERIES_FLOAT, SERIES_INT, SERIES_STRING, VOID};
 
 const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
@@ -156,6 +156,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_CLOSED_TRADE_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.closedtrades.entry_id",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CLOSED_TRADE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_STRING),
         variadic: false,
     },
     BuiltinSignature {

@@ -26,6 +26,7 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.cancel_all" => self.eval_strategy_cancel_all(),
             "strategy.exit" => self.eval_strategy_exit(args),
             "strategy.closedtrades.entry_price"
+            | "strategy.closedtrades.entry_id"
             | "strategy.closedtrades.exit_price"
             | "strategy.closedtrades.entry_bar_index"
             | "strategy.closedtrades.exit_bar_index"
@@ -55,6 +56,7 @@ impl<'a> HistoricalRuntime<'a> {
 
         Ok(match callee {
             "strategy.closedtrades.entry_price" => PineValue::Float(trade.entry_price),
+            "strategy.closedtrades.entry_id" => PineValue::String(trade.id.clone()),
             "strategy.closedtrades.exit_price" => PineValue::Float(trade.exit_price),
             "strategy.closedtrades.entry_bar_index" => {
                 PineValue::Int(i64::try_from(trade.entry_bar_index).unwrap_or(i64::MAX))

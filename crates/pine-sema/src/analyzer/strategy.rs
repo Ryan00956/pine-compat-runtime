@@ -17,6 +17,7 @@ const STRATEGY_STATE_VARIABLES: &[&str] = &[
 
 const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.closedtrades.entry_price",
+    "strategy.closedtrades.entry_id",
     "strategy.closedtrades.exit_price",
     "strategy.closedtrades.entry_bar_index",
     "strategy.closedtrades.exit_bar_index",
