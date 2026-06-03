@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Margin Slice M4 with
+  `docs/STRATEGY_INTERNAL_MARGIN_CALL_DESIGN.md`, mapping TradingView's
+  documented long margin-call algorithm onto the current long-only broker and
+  defining the no-schema-expansion output, timing, and whole-unit truncation
+  boundary for the later liquidation implementation.
 - Implemented Strategy Internal Margin Slice M3. With explicit active
   `margin_long`, supported long market, limit, stop, and stop-limit entry fills
   now check required margin at the actual fill price, reject overleveraged fills

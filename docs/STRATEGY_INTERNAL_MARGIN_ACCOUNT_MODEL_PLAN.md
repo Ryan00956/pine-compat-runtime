@@ -236,6 +236,9 @@ Stop condition:
 
 ### Slice M4: Long-Only Margin Call Design
 
+Closed on 2026-06-03. See
+`docs/STRATEGY_INTERNAL_MARGIN_CALL_DESIGN.md`.
+
 Before implementing liquidation, write a narrow liquidation design note with
 exact public output and rounding decisions.
 
