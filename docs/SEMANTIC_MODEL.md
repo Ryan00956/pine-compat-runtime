@@ -225,8 +225,9 @@ strategy-mode variable and returns `na` in the current no-margin subset. With
 explicit active `margin_long`, the current long-only subset returns `0.0` while
 flat and current open long market value times `margin_long / 100` while open.
 The same active `margin_long` setting also constrains supported long entry
-fills at their actual fill price. Forced liquidation and short margin behavior
-remain unsupported.
+fills at their actual fill price and supports the first long-only forced
+liquidation subset. After a margin call, `capital_held` reflects the remaining
+open long position. Short margin behavior remains unsupported.
 Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
 outside the public output model, and Phases R, S, U, V, W, X, and Y keep that

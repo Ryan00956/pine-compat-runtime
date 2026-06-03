@@ -562,6 +562,65 @@ fn margin_rejected_pending_entry_clears_attached_exits() {
 }
 
 #[test]
+fn margin_call_partially_liquidates_long_position() {
+    let mut broker = margin_broker(165.0, 25.0);
+    assert!(broker.entry_long("L".to_owned(), 1, 20, 4.0, 100.0));
+    broker.update_open_trade_extremes(4.0, 3.0);
+
+    broker.evaluate_margin_call_long(1, 20, 3.0);
+
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[1].id, "Margin Call");
+    assert_eq!(broker.orders[1].direction, "strategy.short");
+    assert_eq!(broker.orders[1].qty, 52.0);
+    assert_eq!(broker.orders[1].price, 3.0);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].id, "L");
+    assert_eq!(broker.trades[0].exit_id, "Margin Call");
+    assert_eq!(broker.trades[0].qty, 52.0);
+    assert_eq!(broker.trades[0].profit, -52.0);
+    assert_eq!(broker.position_size, 48.0);
+    assert_eq!(broker.avg_price, 4.0);
+    assert_eq!(broker.cash, -79.0);
+    assert_eq!(broker.equity_value(3.0), 65.0);
+    assert_eq!(broker.open_trade_capital_held(3.0), Some(36.0));
+    assert_eq!(broker.open_trade_count(), 1);
+    assert_eq!(broker.closed_trade_count(), 1);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn margin_call_clamps_to_full_long_position() {
+    let mut broker = margin_broker(100.0, 25.0);
+    assert!(broker.entry_long("L".to_owned(), 1, 20, 4.0, 100.0));
+
+    broker.evaluate_margin_call_long(2, 30, 1.0);
+
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[1].id, "Margin Call");
+    assert_eq!(broker.orders[1].qty, 100.0);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].qty, 100.0);
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.avg_price, 0.0);
+    assert_eq!(broker.open_trade_count(), 0);
+    assert_eq!(broker.closed_trade_count(), 1);
+}
+
+#[test]
+fn margin_call_is_noop_when_available_funds_cover_margin() {
+    let mut broker = margin_broker(200.0, 25.0);
+    assert!(broker.entry_long("L".to_owned(), 1, 20, 4.0, 100.0));
+
+    broker.evaluate_margin_call_long(1, 20, 3.0);
+
+    assert_eq!(broker.orders.len(), 1);
+    assert!(broker.trades.is_empty());
+    assert_eq!(broker.position_size, 100.0);
+    assert_eq!(broker.cash, -200.0);
+}
+
+#[test]
 fn pending_market_entry_fill_uses_first_eligible_entry_and_clears_rest() {
     let mut broker = BrokerState::new(100_000.0);
 

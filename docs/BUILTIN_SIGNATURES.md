@@ -334,8 +334,10 @@ fill price. Other commission modes and richer fill models remain unsupported.
 const numeric declaration values and stores their explicit presence for future
 account-model slices. The current runtime uses explicit active `margin_long`
 for long-only `strategy.opentrades.capital_held` and supported long-entry
-affordability checks at the actual fill price; it still does not apply forced
-liquidation, short margin behavior, or margin liquidation price.
+affordability checks at the actual fill price. It also supports the first
+long-only forced-liquidation subset using `bar.low` and whole-unit truncation.
+Short margin behavior, symbol precision rounding, and margin liquidation price
+remain unsupported.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by
@@ -423,8 +425,8 @@ for the current supported long position.
 `strategy.opentrades.capital_held` is a read-only strategy-mode variable. The
 current no-margin subset returns `na`; with explicit active `margin_long`, the
 current long-only subset returns current open long market value multiplied by
-`margin_long / 100`. Forced liquidation and short margin behavior remain
-unsupported.
+`margin_long / 100`, including after the current long-only forced-liquidation
+subset reduces the open position. Short margin behavior remains unsupported.
 `trade_num` is a zero-based integer index; missing, negative, out-of-range, or
 non-integer indexes return `na`. Closed- and open-trade `entry_id` return the
 retained entry id. Closed-trade `exit_id` returns the retained close or exit id.

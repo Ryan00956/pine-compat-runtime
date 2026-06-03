@@ -936,8 +936,8 @@ Contract:
 - explicit `qty` still takes precedence over the configured default quantity;
 - no public CLI JSON, Python dictionary, or WASM JSON schema expansion;
 - cash sizing, contract/share rounding policy, margin constraints beyond the
-  current explicit-`margin_long` long-entry affordability subset, forced
-  liquidation, and currency conversion remain unsupported.
+  current explicit-`margin_long` long-only account subset, symbol precision
+  rounding, and currency conversion remain unsupported.
 
 Evidence:
 
@@ -1089,8 +1089,10 @@ Contract:
   current open long market value times `margin_long / 100` while open;
 - Strategy Internal Margin Slice M3 adds supported long-entry affordability
   checks at the actual fill price for explicit active `margin_long`;
-- `margin_short`, forced liquidation, and margin liquidation price remain
-  unsupported;
+- Strategy Internal Margin Slice M5 adds the first long-only forced-liquidation
+  subset using `bar.low` and whole-unit truncation;
+- `margin_short`, symbol precision rounding, and margin liquidation price
+  remain unsupported;
 - public CLI JSON, Python dictionaries, and WASM JSON keep the existing
   strategy output shape with no new top-level fields.
 

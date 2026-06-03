@@ -1098,6 +1098,7 @@ mod tests {
                 "runtime_strategy_margin_capital_held_long.json", "tests/fixtures/runtime/strategy_margin_capital_held_long.pine",
             ),
             ("runtime_strategy_margin_entry_affordability.json", "tests/fixtures/runtime/strategy_margin_entry_affordability_long.pine"),
+            ("runtime_strategy_margin_call_long.json", "tests/fixtures/runtime/strategy_margin_call_long.pine"),
             (
                 "runtime_strategy_trade_outcome_counts.json",
                 "tests/fixtures/runtime/strategy_trade_outcome_counts.pine",
@@ -1434,6 +1435,9 @@ mod tests {
             "tests/fixtures/runtime/strategy_opentrades_fields.pine" => {
                 include_str!("../../../tests/fixtures/runtime/strategy_opentrades_fields_bars.csv")
             }
+            "tests/fixtures/runtime/strategy_margin_call_long.pine" => {
+                include_str!("../../../tests/fixtures/runtime/strategy_margin_call_long_bars.csv")
+            }
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }
     }
@@ -1450,17 +1454,14 @@ mod tests {
             .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
         assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");
     }
-
     fn workspace_dir() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
     }
-
     fn rust_source_files(root: &Path) -> Vec<PathBuf> {
         let mut files = Vec::new();
         collect_rust_source_files(root, &mut files);
         files
     }
-
     fn collect_rust_source_files(path: &Path, files: &mut Vec<PathBuf>) {
         if path.is_file() {
             if path.extension().and_then(|extension| extension.to_str()) == Some("rs") {
@@ -1468,7 +1469,6 @@ mod tests {
             }
             return;
         }
-
         let Ok(entries) = fs::read_dir(path) else {
             return;
         };

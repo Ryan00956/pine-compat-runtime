@@ -346,6 +346,30 @@ fn runs_strategy_margin_entry_affordability_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_margin_call_from_csv_to_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_margin_call_long.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_margin_call_long_bars.csv"),
+    )
+    .expect("strategy margin call script should run");
+
+    assert!(output.contains("\"values\":[0,48,48]"));
+    assert!(output.contains("\"values\":[0,36,36]"));
+    assert!(output.contains("\"values\":[0,1,1]"));
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":100,\"price\":4},{\"id\":\"Margin Call\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.short\",\"qty\":52,\"price\":3}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":2,\"exitTime\":2,\"entryPrice\":4,\"exitPrice\":3,\"qty\":52,\"profit\":-52}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":1,\"size\":100,\"avgPrice\":4},{\"barIndex\":1,\"size\":48,\"avgPrice\":4}]"
+    ));
+    assert!(!output.contains("closedTrades"));
+    assert!(!output.contains("openTrades"));
+}
+
+#[test]
 fn runs_strategy_trade_outcome_counts_from_csv_to_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nif bar_index == 0\n    strategy.entry(\"W\", strategy.long, qty=1)\nif bar_index == 2\n    strategy.close(\"W\")\nif bar_index == 3\n    strategy.entry(\"L\", strategy.long, qty=1)\nif bar_index == 5\n    strategy.close(\"L\")\nif bar_index == 6\n    strategy.entry(\"E\", strategy.long, qty=1)\nif bar_index == 8\n    strategy.close(\"E\")\nplot(strategy.wintrades)\nplot(strategy.losstrades)\nplot(strategy.eventrades)\nplot(strategy.closedtrades)\nplot(strategy.grossprofit)\nplot(strategy.grossloss)\nplot(strategy.avg_trade)\nplot(strategy.avg_trade_percent)\nplot(strategy.avg_winning_trade)\nplot(strategy.avg_winning_trade_percent)\nplot(strategy.avg_losing_trade)\nplot(strategy.avg_losing_trade_percent)\n",

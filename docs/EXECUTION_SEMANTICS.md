@@ -50,8 +50,7 @@ accepts a positive const numeric default entry percentage. When a supported
 absolute quantity once at placement time as
 `strategy.equity * N / 100 / close`, using the current supported equity and
 current close. Cash sizing, contracts, margin constraints beyond the current
-supported long-entry affordability subset, forced liquidation, and currency
-conversion remain unsupported.
+explicit-margin long-only subset, and currency conversion remain unsupported.
 `strategy(..., commission_type=strategy.commission.cash_per_contract,
 commission_value=N)` accepts a finite non-negative const numeric
 cash-per-contract commission. `strategy(...,
@@ -72,8 +71,10 @@ const numeric declaration values and stores their explicit presence in the
 internal strategy settings. Stage 7 Margin Slice M2 uses explicit active
 `margin_long` for long-only `strategy.opentrades.capital_held`; Stage 7 Margin
 Slice M3 also checks supported long entry affordability at the actual fill
-price. Forced liquidation, short margin behavior, margin liquidation price, and
-margin-specific equity-snapshot expansion remain unsupported.
+price. Stage 7 Margin Slice M5 implements the first long-only forced
+liquidation subset using `bar.low`, the documented available-funds algorithm,
+and whole-unit truncation. Short margin behavior, margin liquidation price, and
+margin-specific public schema expansion remain unsupported.
 
 The current entry subset is `strategy.entry(id, strategy.long, qty=...)`,
 `strategy.entry(id, strategy.long)` when a fixed default quantity is configured,
@@ -269,8 +270,9 @@ inside the open-trade namespace. In the current no-margin subset it returns
 current supported open long position's market value times `margin_long / 100`,
 or `0.0` while flat. Stage 7 Margin Slice M3 applies the same active
 `margin_long` account model to supported long entry affordability at the actual
-fill price, while forced liquidation and short margin behavior remain
-unsupported.
+fill price. Stage 7 Margin Slice M5 applies the long-only forced-liquidation
+subset, so `capital_held` reflects the remaining open long position after a
+margin call. Short margin behavior remains unsupported.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants

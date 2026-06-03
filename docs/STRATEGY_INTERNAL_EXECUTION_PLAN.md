@@ -242,7 +242,8 @@ Out of scope:
 - Full trade namespace coverage.
 - Remaining trade namespace fields beyond the current closed/open-trade field
   slices.
-- Margin and forced liquidation until account constraints are designed.
+- Margin behavior beyond the current explicit-`margin_long` long-only account
+  slices until broader account constraints are designed.
 - Public JSON expansion without an explicit host contract.
 
 Acceptance:

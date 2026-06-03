@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Implemented Strategy Internal Margin Slice M5. Explicit active `margin_long`
+  now supports the first long-only forced-liquidation subset: historical checks
+  use `bar.low`, apply TradingView's documented available-funds and
+  four-times-cover algorithm with temporary whole-unit truncation, emit existing
+  order/trade/position/equity output only, and update
+  `strategy.opentrades.capital_held` for the remaining long position.
 - Closed Strategy Internal Margin Slice M4 with
   `docs/STRATEGY_INTERNAL_MARGIN_CALL_DESIGN.md`, mapping TradingView's
   documented long margin-call algorithm onto the current long-only broker and
@@ -11,8 +17,7 @@
   `margin_long`, supported long market, limit, stop, and stop-limit entry fills
   now check required margin at the actual fill price, reject overleveraged fills
   with a strategy diagnostic, and keep public strategy output shape unchanged;
-  forced liquidation, short margin behavior, and margin liquidation price remain
-  unsupported.
+  short margin behavior and margin liquidation price remain unsupported.
 - Implemented Strategy Internal Margin Slice M2. With explicit active
   `margin_long`, `strategy.opentrades.capital_held` now returns current open
   long market value times `margin_long / 100`, returns `0.0` while flat, and

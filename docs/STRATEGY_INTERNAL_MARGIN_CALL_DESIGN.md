@@ -4,7 +4,7 @@ Closed on 2026-06-03.
 
 This note closes Strategy Internal Margin Slice M4 from
 `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md`. It is a design gate for
-the later M5 implementation; it does not enable forced liquidation by itself.
+the M5 implementation; it did not enable forced liquidation by itself.
 
 Official reference:
 
@@ -93,7 +93,10 @@ Use the existing strategy output schema only:
 
 The broker-owned liquidation event should use:
 
-- order/trade exit id: `Margin Call`;
+- public order id and internal closed-trade `exit_id`: `Margin Call`. The
+  current public trade JSON does not serialize `exit_id`, so this remains
+  script-visible through supported `strategy.closedtrades.exit_id()` rather
+  than a new public JSON field;
 - direction in the order event: `strategy.short`, because the event reduces a
   long position;
 - quantity: the positive absolute liquidated quantity;
@@ -146,7 +149,7 @@ without changing the public strategy output schema.
 
 ## M5 Fixture Shape
 
-The first implementation fixture should avoid pending exits and should cover:
+The first implementation fixture avoids pending exits and covers:
 
 - an explicit active `margin_long` strategy;
 - one accepted over-leveraged long entry that later breaches margin;

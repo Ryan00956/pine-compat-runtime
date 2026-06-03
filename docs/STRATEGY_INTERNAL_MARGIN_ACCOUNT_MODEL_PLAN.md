@@ -52,7 +52,9 @@ Current supported strategy model:
 - `strategy.opentrades.capital_held` returns `na` in the no-margin subset and
   current long margin requirement in the explicit active `margin_long` subset;
 - supported long entry fills check affordability at the actual fill price when
-  explicit active `margin_long` is configured.
+  explicit active `margin_long` is configured;
+- supported long-only forced liquidation uses `bar.low`, the documented
+  available-funds algorithm, and temporary whole-unit truncation.
 
 Current public output boundary:
 
@@ -252,6 +254,8 @@ Acceptance:
 
 ### Slice M5: Long-Only Forced Liquidation
 
+Closed on 2026-06-03.
+
 Implement margin-call liquidation only after M4 closes.
 
 Contract:
@@ -276,7 +280,7 @@ Minimum fixtures after runtime support begins:
 - `unsupported_strategy_margin_declaration.pine`
 - `strategy_margin_capital_held_long.pine`
 - `strategy_margin_entry_affordability_long.pine`
-- later: `strategy_margin_call_long.pine`
+- `strategy_margin_call_long.pine`
 
 Host parity:
 
