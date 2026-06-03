@@ -48,9 +48,11 @@ Current supported strategy model:
 - cash, market value, equity snapshots, and realized net profit;
 - fixed, percent-of-equity, supported commission modes, slippage, and limit
   verification;
-- no margin settings in `pine_ir::StrategySettings`;
-- `strategy.opentrades.capital_held` returns `na` in the current no-margin
-  subset.
+- explicit margin settings in `pine_ir::StrategySettings`;
+- `strategy.opentrades.capital_held` returns `na` in the no-margin subset and
+  current long margin requirement in the explicit active `margin_long` subset;
+- supported long entry fills check affordability at the actual fill price when
+  explicit active `margin_long` is configured.
 
 Current public output boundary:
 
@@ -206,6 +208,8 @@ Stop condition:
   basis than current market value for open long positions.
 
 ### Slice M3: Long Entry Affordability
+
+Closed on 2026-06-03.
 
 Apply active long margin constraints to supported long entry fills.
 

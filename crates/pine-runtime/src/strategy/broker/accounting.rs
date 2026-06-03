@@ -69,6 +69,15 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn can_afford_long_entry(&self, qty: f64, fill_price: f64) -> bool {
+        if !self.margin_long.is_active() {
+            return true;
+        }
+        let required_margin = qty * fill_price * self.margin_long.value_percent / 100.0;
+        required_margin.is_finite() && self.equity_value(fill_price) >= required_margin
+    }
+
+    #[must_use]
     pub(crate) fn realized_profit(&self) -> f64 {
         normalize_zero(self.trades.iter().map(|trade| trade.profit).sum())
     }

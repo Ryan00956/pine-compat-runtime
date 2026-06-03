@@ -2,16 +2,19 @@
 
 ## Unreleased
 
+- Implemented Strategy Internal Margin Slice M3. With explicit active
+  `margin_long`, supported long market, limit, stop, and stop-limit entry fills
+  now check required margin at the actual fill price, reject overleveraged fills
+  with a strategy diagnostic, and keep public strategy output shape unchanged;
+  forced liquidation, short margin behavior, and margin liquidation price remain
+  unsupported.
 - Implemented Strategy Internal Margin Slice M2. With explicit active
   `margin_long`, `strategy.opentrades.capital_held` now returns current open
   long market value times `margin_long / 100`, returns `0.0` while flat, and
-  preserves `na` in the no-margin subset; margin affordability and forced
-  liquidation remain unsupported.
+  preserves `na` in the no-margin subset.
 - Implemented Strategy Internal Margin Slice M1. `strategy(..., margin_long=N,
   margin_short=N)` now accepts finite non-negative const numeric declaration
-  values and stores their explicit presence in IR, without enabling runtime
-  margin affordability, margin-backed `strategy.opentrades.capital_held`, or
-  forced liquidation.
+  values and stores their explicit presence in IR.
 - Added `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` as the design
   gate for future margin/account-model work. The document keeps current
   runtime behavior unchanged while defining the official semantics, non-goals,
@@ -43,8 +46,8 @@
   `default_qty_type=strategy.percent_of_equity`.
   Supported long entries without explicit `qty` now resolve their default
   quantity from current supported equity and current close at placement time,
-  while cash sizing, margin constraints, and currency conversion remain
-  unsupported.
+  while cash sizing, margin behavior beyond the later explicit-margin subset,
+  and currency conversion remain unsupported.
 - Added Strategy Internal Stage 7 Slice 30
   `strategy.max_runup_percent` and `strategy.max_drawdown_percent`.
   Strategy-mode scripts can read maximum intrabar equity run-up/drawdown

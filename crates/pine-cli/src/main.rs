@@ -1097,6 +1097,7 @@ mod tests {
             (
                 "runtime_strategy_margin_capital_held_long.json", "tests/fixtures/runtime/strategy_margin_capital_held_long.pine",
             ),
+            ("runtime_strategy_margin_entry_affordability.json", "tests/fixtures/runtime/strategy_margin_entry_affordability_long.pine"),
             (
                 "runtime_strategy_trade_outcome_counts.json",
                 "tests/fixtures/runtime/strategy_trade_outcome_counts.pine",
@@ -1445,7 +1446,6 @@ mod tests {
             fs::write(&snapshot_path, format!("{actual}\n")).expect("write snapshot");
             return;
         }
-
         let expected = fs::read_to_string(&snapshot_path)
             .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
         assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");

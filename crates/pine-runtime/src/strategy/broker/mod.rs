@@ -205,23 +205,23 @@ impl BrokerState {
         time: i64,
         price: f64,
         qty: f64,
-    ) {
+    ) -> bool {
         if !qty.is_finite() || qty <= 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_QTY".to_owned(),
                 message: "`strategy.entry` quantity must be positive".to_owned(),
             });
-            return;
+            return false;
         }
         if !price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_PRICE".to_owned(),
                 message: "`strategy.entry` fill price must be finite".to_owned(),
             });
-            return;
+            return false;
         }
         if self.position_size > 0.0 {
-            return;
+            return false;
         }
 
         let fill_price = self.long_entry_fill_price(price);
@@ -230,7 +230,14 @@ impl BrokerState {
                 code: "E_STRATEGY_PRICE".to_owned(),
                 message: "`strategy.entry` slipped fill price must be finite".to_owned(),
             });
-            return;
+            return false;
+        }
+        if !self.can_afford_long_entry(qty, fill_price) {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_MARGIN".to_owned(),
+                message: "`strategy.entry` requires more margin than available equity".to_owned(),
+            });
+            return false;
         }
 
         let equity_on_entry = self.cash;
@@ -262,6 +269,7 @@ impl BrokerState {
             size: qty,
             avg_price: Some(fill_price),
         });
+        true
     }
 
     pub(crate) fn cancel_exit_for_entry(&mut self, entry_id: &str) {
@@ -376,13 +384,17 @@ impl BrokerState {
             return;
         };
 
-        self.entry_long(
-            pending_entry.id,
+        let entry_id = pending_entry.id;
+        let filled = self.entry_long(
+            entry_id.clone(),
             bar_index,
             time,
             fill_price,
             pending_entry.quantity,
         );
+        if !filled {
+            self.pending_exits.clear_for_entry(&entry_id);
+        }
         self.pending_entries.clear_all();
     }
 
@@ -407,13 +419,17 @@ impl BrokerState {
         let PendingEntryKind::Limit { price } = pending_entry.kind else {
             return;
         };
-        self.entry_long(
-            pending_entry.id,
+        let entry_id = pending_entry.id;
+        let filled = self.entry_long(
+            entry_id.clone(),
             bar_index,
             time,
             price,
             pending_entry.quantity,
         );
+        if !filled {
+            self.pending_exits.clear_for_entry(&entry_id);
+        }
         self.pending_entries.clear_all();
     }
 
@@ -437,13 +453,17 @@ impl BrokerState {
         let PendingEntryKind::Stop { price } = pending_entry.kind else {
             return;
         };
-        self.entry_long(
-            pending_entry.id,
+        let entry_id = pending_entry.id;
+        let filled = self.entry_long(
+            entry_id.clone(),
             bar_index,
             time,
             price,
             pending_entry.quantity,
         );
+        if !filled {
+            self.pending_exits.clear_for_entry(&entry_id);
+        }
         self.pending_entries.clear_all();
     }
 
@@ -471,13 +491,17 @@ impl BrokerState {
         let PendingEntryKind::StopLimit { limit_price, .. } = pending_entry.kind else {
             return;
         };
-        self.entry_long(
-            pending_entry.id,
+        let entry_id = pending_entry.id;
+        let filled = self.entry_long(
+            entry_id.clone(),
             bar_index,
             time,
             limit_price,
             pending_entry.quantity,
         );
+        if !filled {
+            self.pending_exits.clear_for_entry(&entry_id);
+        }
         self.pending_entries.clear_all();
     }
 

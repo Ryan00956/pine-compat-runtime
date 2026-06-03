@@ -307,16 +307,18 @@ Missing internal behavior:
 - cash-based default quantity;
 - contract/share minimum and rounding behavior;
 - currency selection and conversion;
-- margin requirements and forced liquidation;
+- margin requirements beyond supported explicit-`margin_long` long-entry
+  affordability and forced liquidation;
 - margin-backed capital-held behavior beyond the current long-only explicit
   `margin_long` subset;
-- account constraints that can prevent fills.
+- account constraints beyond supported long-entry affordability.
 
 Gap size: large.
 
 Best next slice: use
 `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` as the design gate before
-implementing margin, forced liquidation, or account-constraint behavior.
+implementing additional margin, forced liquidation, or account-constraint
+behavior.
 
 ### 10. Costs And Price Adjustments
 

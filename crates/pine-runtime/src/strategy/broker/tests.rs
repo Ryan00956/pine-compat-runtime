@@ -27,6 +27,17 @@ fn broker_with_long_entry() -> BrokerState {
     broker
 }
 
+fn margin_broker(initial_capital: f64, margin_long: f64) -> BrokerState {
+    BrokerState::new_with_account_settings(
+        initial_capital,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::explicit(margin_long),
+        StrategyMarginSetting::default(),
+    )
+}
+
 fn pending_entry_ids(broker: &BrokerState) -> Vec<&str> {
     broker
         .pending_entries
@@ -453,6 +464,101 @@ fn pending_market_entry_fills_on_later_bar_price() {
     assert_eq!(broker.position.len(), 1);
     assert_eq!(broker.position[0].avg_price, Some(101.0));
     assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn margin_long_allows_affordable_long_entry() {
+    let mut broker = margin_broker(100.0, 50.0);
+
+    assert!(broker.entry_long("L".to_owned(), 1, 20, 100.0, 2.0));
+
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.orders[0].price, 100.0);
+    assert_eq!(broker.position_size, 2.0);
+    assert_eq!(broker.cash, -100.0);
+    assert_eq!(broker.equity_value(100.0), 100.0);
+    assert_eq!(broker.open_trade_capital_held(100.0), Some(100.0));
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn margin_long_rejects_overleveraged_long_entry_without_mutating_account() {
+    let mut broker = margin_broker(100.0, 50.0);
+
+    assert!(!broker.entry_long("L".to_owned(), 1, 20, 100.0, 3.0));
+
+    assert!(broker.orders.is_empty());
+    assert!(broker.trades.is_empty());
+    assert!(broker.position.is_empty());
+    assert_eq!(broker.cash, 100.0);
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.open_trade_count(), 0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_MARGIN");
+}
+
+#[test]
+fn margin_long_rejects_unaffordable_limit_entry_at_fill_time() {
+    let mut broker = margin_broker(100.0, 100.0);
+
+    broker.place_pending_limit_long_entry("L".to_owned(), 2.0, 60.0, 0);
+    broker.fill_pending_limit_long_entries(1, 20, 59.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.cash, 100.0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_MARGIN");
+}
+
+#[test]
+fn margin_long_rejects_unaffordable_stop_entry_at_fill_time() {
+    let mut broker = margin_broker(100.0, 100.0);
+
+    broker.place_pending_stop_long_entry("L".to_owned(), 2.0, 60.0, 0);
+    broker.fill_pending_stop_long_entries(1, 20, 61.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.cash, 100.0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_MARGIN");
+}
+
+#[test]
+fn margin_long_rejects_unaffordable_stop_limit_entry_at_fill_time() {
+    let mut broker = margin_broker(100.0, 100.0);
+
+    broker.place_pending_stop_limit_long_entry("L".to_owned(), 2.0, 70.0, 60.0, 0);
+    broker.fill_pending_stop_limit_long_entries(1, 20, 71.0, 59.0);
+    broker.fill_pending_stop_limit_long_entries(2, 30, 65.0, 59.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.cash, 100.0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_MARGIN");
+}
+
+#[test]
+fn margin_rejected_pending_entry_clears_attached_exits() {
+    let mut broker = margin_broker(100.0, 100.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    broker.fill_pending_market_long_entries(1, 20, 100.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_MARGIN");
 }
 
 #[test]

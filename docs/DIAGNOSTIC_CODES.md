@@ -121,6 +121,8 @@ improved over time, but codes should remain stable once published.
 - `E_RUNTIME`: runtime execution emitted a host-visible diagnostic.
 - `E_STRATEGY_MODE`: strategy-only feature is used outside `strategy()` mode or
   an unsupported strategy mode was requested.
+- `E_STRATEGY_MARGIN`: supported strategy entry fill requires more margin than
+  available simulated equity.
 - `E_STRATEGY_PRICE`: strategy order fill price is not finite.
 - `E_STRATEGY_QTY`: strategy order quantity is not finite and positive.
 - `E_STRATEGY_EXIT_ENTRY`: `strategy.exit` could not find or use the referenced

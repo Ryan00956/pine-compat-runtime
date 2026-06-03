@@ -49,8 +49,9 @@ accepts a positive const numeric default entry percentage. When a supported
 `strategy.entry` omits `qty`, the percent-of-equity subset calculates the
 absolute quantity once at placement time as
 `strategy.equity * N / 100 / close`, using the current supported equity and
-current close. Cash sizing, contracts, margin constraints, forced liquidation,
-and currency conversion remain unsupported.
+current close. Cash sizing, contracts, margin constraints beyond the current
+supported long-entry affordability subset, forced liquidation, and currency
+conversion remain unsupported.
 `strategy(..., commission_type=strategy.commission.cash_per_contract,
 commission_value=N)` accepts a finite non-negative const numeric
 cash-per-contract commission. `strategy(...,
@@ -69,9 +70,10 @@ fill price. Other commission modes and richer fill models remain unsupported.
 `strategy(..., margin_long=N, margin_short=N)` accepts finite non-negative
 const numeric declaration values and stores their explicit presence in the
 internal strategy settings. Stage 7 Margin Slice M2 uses explicit active
-`margin_long` only for long-only `strategy.opentrades.capital_held`; it does
-not apply margin affordability, equity-snapshot changes, or forced liquidation
-yet.
+`margin_long` for long-only `strategy.opentrades.capital_held`; Stage 7 Margin
+Slice M3 also checks supported long entry affordability at the actual fill
+price. Forced liquidation, short margin behavior, margin liquidation price, and
+margin-specific equity-snapshot expansion remain unsupported.
 
 The current entry subset is `strategy.entry(id, strategy.long, qty=...)`,
 `strategy.entry(id, strategy.long)` when a fixed default quantity is configured,
@@ -265,7 +267,9 @@ Stage 7 Slice 35 adds `strategy.opentrades.capital_held` as the one variable
 inside the open-trade namespace. In the current no-margin subset it returns
 `na`; with explicit active `margin_long`, Stage 7 Margin Slice M2 returns the
 current supported open long position's market value times `margin_long / 100`,
-or `0.0` while flat. Margin affordability and forced liquidation remain
+or `0.0` while flat. Stage 7 Margin Slice M3 applies the same active
+`margin_long` account model to supported long entry affordability at the actual
+fill price, while forced liquidation and short margin behavior remain
 unsupported.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,

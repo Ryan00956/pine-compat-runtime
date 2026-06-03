@@ -325,6 +325,27 @@ fn runs_strategy_margin_capital_held_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_margin_entry_affordability_from_csv_to_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_margin_entry_affordability_long.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy margin entry affordability script should run");
+
+    assert!(output.contains("\"values\":[0,0,0,1]"));
+    assert!(output.contains("\"values\":[0,0,0,4]"));
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"covered-market\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.long\",\"qty\":1,\"price\":4}]"
+    ));
+    assert!(output.contains("\"position\":[{\"barIndex\":3,\"size\":1,\"avgPrice\":4}]"));
+    assert!(output.contains("\"code\":\"E_STRATEGY_MARGIN\""));
+    assert!(!output.contains("closedTrades"));
+    assert!(!output.contains("openTrades"));
+}
+
+#[test]
 fn runs_strategy_trade_outcome_counts_from_csv_to_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nif bar_index == 0\n    strategy.entry(\"W\", strategy.long, qty=1)\nif bar_index == 2\n    strategy.close(\"W\")\nif bar_index == 3\n    strategy.entry(\"L\", strategy.long, qty=1)\nif bar_index == 5\n    strategy.close(\"L\")\nif bar_index == 6\n    strategy.entry(\"E\", strategy.long, qty=1)\nif bar_index == 8\n    strategy.close(\"E\")\nplot(strategy.wintrades)\nplot(strategy.losstrades)\nplot(strategy.eventrades)\nplot(strategy.closedtrades)\nplot(strategy.grossprofit)\nplot(strategy.grossloss)\nplot(strategy.avg_trade)\nplot(strategy.avg_trade_percent)\nplot(strategy.avg_winning_trade)\nplot(strategy.avg_winning_trade_percent)\nplot(strategy.avg_losing_trade)\nplot(strategy.avg_losing_trade_percent)\n",

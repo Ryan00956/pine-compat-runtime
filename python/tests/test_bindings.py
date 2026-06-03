@@ -611,6 +611,54 @@ def test_run_script_returns_margin_capital_held_plot():
     assert "openTrades" not in result["strategy"]
 
 
+def test_run_script_returns_margin_entry_affordability_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_margin_entry_affordability_long.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0.0, 0.0, 0.0, 1.0],
+        [0.0, 0.0, 0.0, 4.0],
+    ]
+    assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "covered-market",
+            "barIndex": 3,
+            "time": 4,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 4.0,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 3, "size": 1.0, "avgPrice": 4.0}
+    ]
+    assert result["strategy"]["equity"][-1] == {
+        "barIndex": 3,
+        "cash": 0.0,
+        "marketValue": 4.0,
+        "equity": 4.0,
+        "netProfit": 0.0,
+    }
+    assert result["strategy"]["diagnostics"] == [
+        {
+            "code": "E_STRATEGY_MARGIN",
+            "message": "`strategy.entry` requires more margin than available equity",
+        },
+        {
+            "code": "E_STRATEGY_MARGIN",
+            "message": "`strategy.entry` requires more margin than available equity",
+        },
+    ]
+    assert "closedTrades" not in result["strategy"]
+    assert "openTrades" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_trade_outcome_count_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_trade_outcome_counts.pine").read_text()
     result = pine_compat.run_script(
