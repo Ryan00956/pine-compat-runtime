@@ -1,7 +1,7 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
-5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, and 17 closed on 2026-06-03.
+5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, and 18 closed on 2026-06-03.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -495,9 +495,48 @@ Evidence:
 - host parity tests cover CLI snapshots plus Python plot and trade/equity
   values.
 
+## Slice 18: Cash Per Order Commission
+
+Closed on 2026-06-03.
+
+Supported declaration subset:
+
+- `strategy(..., commission_type=strategy.commission.cash_per_order,
+  commission_value=N)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- `commission_value` must be a finite non-negative const numeric value;
+- each supported entry and exit fill debits one fixed `commission_value`;
+- closed trade `profit`, `strategy.netprofit`, and trade-count outcomes use net
+  realized profit after allocated entry commission plus exit commission for the
+  closed quantity;
+- partial exits allocate the original entry-order commission proportionally to
+  the closed quantity and leave the remainder attached to the open trade;
+- `strategy.closedtrades.commission(trade_num)` returns allocated entry
+  cash-per-order commission plus exit cash-per-order commission for the closed
+  quantity;
+- `strategy.opentrades.commission(trade_num)` returns the remaining open
+  cash-per-order entry commission for `trade_num == 0`;
+- equity snapshots and `strategy.equity` include supported commission cash
+  debits;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
+  output shape with no new top-level fields or public trade metric fields.
+
+Evidence:
+
+- runtime fixture:
+  `tests/fixtures/runtime/strategy_commission_cash_per_order.pine`;
+- semantic fixture:
+  `tests/fixtures/sema/supported_strategy_commission_cash_per_order.pine`;
+- unsupported percent commission remains covered by
+  `tests/fixtures/sema/unsupported_strategy_commission_percent.pine`;
+- host parity tests cover CLI snapshots plus Python plot and trade/equity
+  values.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting
-addition, such as another commission mode, slippage modeling, or another
-closed/open-trade field, only after documenting whether the behavior is
-script-only or public-output visible.
+addition, such as slippage modeling or another closed/open-trade field, only
+after documenting whether the behavior is script-only or public-output visible.

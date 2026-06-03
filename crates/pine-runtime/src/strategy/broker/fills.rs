@@ -23,8 +23,8 @@ impl BrokerState {
 
         let qty = self.position_size;
         let entry_price = self.avg_price;
-        let entry_commission = self.commission_for_quantity(qty);
-        let exit_commission = self.commission_for_quantity(qty);
+        let entry_commission = self.entry_commission_for_closed_quantity(qty);
+        let exit_commission = self.exit_commission_for_quantity(qty);
         let commission = entry_commission + exit_commission;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
@@ -53,6 +53,7 @@ impl BrokerState {
         self.entry_id = None;
         self.entry_bar_index = None;
         self.entry_time = None;
+        self.open_entry_commission = 0.0;
         self.open_trade_max_high = None;
         self.open_trade_min_low = None;
         self.position.push(StrategyPositionSnapshot {
@@ -78,8 +79,8 @@ impl BrokerState {
             return;
         }
         let entry_price = self.avg_price;
-        let entry_commission = self.commission_for_quantity(qty);
-        let exit_commission = self.commission_for_quantity(qty);
+        let entry_commission = self.entry_commission_for_closed_quantity(qty);
+        let exit_commission = self.exit_commission_for_quantity(qty);
         let commission = entry_commission + exit_commission;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
@@ -119,6 +120,7 @@ impl BrokerState {
             self.entry_id = None;
             self.entry_bar_index = None;
             self.entry_time = None;
+            self.open_entry_commission = 0.0;
             self.open_trade_max_high = None;
             self.open_trade_min_low = None;
             self.position.push(StrategyPositionSnapshot {
@@ -130,6 +132,7 @@ impl BrokerState {
         }
 
         self.position_size -= qty;
+        self.open_entry_commission -= entry_commission;
         self.position.push(StrategyPositionSnapshot {
             bar_index,
             size: self.position_size,

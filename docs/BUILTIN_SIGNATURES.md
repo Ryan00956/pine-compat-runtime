@@ -295,11 +295,11 @@ Unsupported named arguments should produce compatibility diagnostics.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
 use the configured or default fixed quantity. `strategy(...)` accepts only
-`commission_type=strategy.commission.cash_per_contract` with a finite
-non-negative const numeric `commission_value`; entry cash, exit cash, realized
-trade profit, `strategy.netprofit`, and `strategy.equity` include that
-cash-per-contract commission when configured. Other commission modes and
-slippage remain unsupported. Supported market-long entries fill at the next
+`commission_type=strategy.commission.cash_per_contract` or
+`commission_type=strategy.commission.cash_per_order` with a finite non-negative
+const numeric `commission_value`; entry cash, exit cash, realized trade profit,
+`strategy.netprofit`, and `strategy.equity` include that commission when
+configured. Other commission modes and slippage remain unsupported. Supported market-long entries fill at the next
 historical bar open. Supported long limit entries wait until a later
 historical bar where `low <= limit` and fill at the limit price. Supported long
 stop entries wait until a later historical bar where `high >= stop` and fill at
@@ -345,7 +345,7 @@ for the current supported long position.
 non-integer indexes return `na`. Closed- and open-trade `entry_id` return the
 retained entry id. Closed-trade `exit_id` returns the retained close or exit id.
 Closed- and open-trade `commission` return `0.0` without configured commission,
-or cash-per-contract commission when that declaration mode is configured.
+or supported cash commission when a declaration commission mode is configured.
 Open-trade `profit` returns the current close-based floating profit for the
 current supported long position. Closed- and open-trade
 `max_runup` return the largest high-based favorable excursion seen so far for

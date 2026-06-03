@@ -32,10 +32,10 @@ accepts `strategy(...)` with the common declaration metadata subset plus
 positive const numeric `initial_capital`. Phase L adds the fixed default
 quantity declaration subset:
 `default_qty_type=strategy.fixed, default_qty_value=N` with positive const
-numeric `N`. Stage 7 Slice 17 adds the cash-per-contract commission declaration
-subset:
-`commission_type=strategy.commission.cash_per_contract, commission_value=N`
-with finite non-negative const numeric `N`.
+numeric `N`. Stage 7 Slices 17 and 18 add cash commission declaration subsets:
+`commission_type=strategy.commission.cash_per_contract, commission_value=N` and
+`commission_type=strategy.commission.cash_per_order, commission_value=N` with
+finite non-negative const numeric `N`.
 `strategy.entry(id, strategy.long, qty=...)` is a strategy-mode side effect;
 `qty` may be omitted only when the fixed default quantity subset is configured,
 and explicit `qty` overrides the declaration default. The supported market-long
@@ -126,7 +126,7 @@ single-trigger/bracket/trailing exits, omitted-quantity multiple
 reservations, reservation behavior outside that subset,
 unmatched missing-entry pre-placement, entry-relative exit attachment to pending
 entries, `strategy.order`, broker settings beyond
-`initial_capital`, fixed default quantity, and cash-per-contract commission,
+`initial_capital`, fixed default quantity, and supported cash commission,
 realtime strategy handoff, and
 strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and
@@ -147,8 +147,8 @@ when flat. The supported closed-trade namespace functions are
 `strategy.closedtrades.max_runup`, and `strategy.closedtrades.max_drawdown`;
 they accept a zero-based integer `trade_num` and return `na` for missing,
 negative, out-of-range, or non-integer indexes. `commission` returns `0.0`
-without configured commission or entry-plus-exit cash-per-contract commission
-when configured. `max_runup` returns the largest
+without configured commission or supported entry-plus-exit commission when
+configured. `max_runup` returns the largest
 high-based favorable excursion retained for the closed trade quantity.
 `max_drawdown` returns the largest low-based adverse excursion retained for the
 closed trade quantity. `entry_id` returns the retained entry id, and `exit_id`
@@ -162,8 +162,8 @@ position's entry price for `trade_num == 0`,
 `strategy.opentrades.size`, which returns the current open position size, and
 `strategy.opentrades.profit`, which returns the current close-based floating
 profit for that open position, and `strategy.opentrades.commission`, which
-returns `0.0` without configured commission or the current open
-cash-per-contract entry commission when configured, and
+returns `0.0` without configured commission or the current open supported entry
+commission when configured, and
 `strategy.opentrades.max_runup`, which returns the largest high-based favorable
 excursion seen so far for that open position, and
 `strategy.opentrades.max_drawdown`, which returns the largest low-based adverse

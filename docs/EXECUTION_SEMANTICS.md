@@ -48,8 +48,10 @@ the only supported declaration quantity mode; percent-of-equity, cash sizing,
 contracts, margin, and currency conversion remain unsupported.
 `strategy(..., commission_type=strategy.commission.cash_per_contract,
 commission_value=N)` accepts a finite non-negative const numeric
-cash-per-contract commission. Other commission modes and slippage remain
-unsupported.
+cash-per-contract commission. `strategy(...,
+commission_type=strategy.commission.cash_per_order, commission_value=N)`
+accepts a finite non-negative const numeric cash-per-order commission. Other
+commission modes and slippage remain unsupported.
 
 The current entry subset is `strategy.entry(id, strategy.long, qty=...)`,
 `strategy.entry(id, strategy.long)` when a fixed default quantity is configured,
@@ -79,8 +81,8 @@ records no public order, trade, or pending-order output.
 
 `strategy.close(id)` closes the full matching long position at the current bar
 close. It records a closed trade with entry/exit bar indexes, entry/exit times,
-entry/exit prices, quantity, and net realized profit after supported
-cash-per-contract commission when configured, then appends a flat position
+entry/exit prices, quantity, and net realized profit after supported commission
+when configured, then appends a flat position
 snapshot with `size = 0` and `avgPrice = null`.
 If no position is open, the id does not match the open entry, or the position
 has already been closed, the close call is a no-op.
@@ -92,8 +94,9 @@ and the snapshot field `netProfit = equity - initial_capital`, so that public
 output field includes current open profit while a long position is open. The
 expression variable `strategy.netprofit` is narrower: it is cumulative realized
 closed-trade profit only and excludes current open profit. The current subset
-supports only `strategy.commission.cash_per_contract` commission and has no
-other commission modes, slippage, margin, percent sizing, currency conversion,
+supports only `strategy.commission.cash_per_contract` and
+`strategy.commission.cash_per_order` commission and has no other commission
+modes, slippage, margin, percent sizing, currency conversion,
 missing-entry pre-placement, or pyramiding. The only multiple-pending
 reservation subset is explicit fixed `qty` or `qty_percent` single-trigger or
 one-downside/one-upside bracket or trailing `strategy.exit` calls for the
@@ -110,8 +113,8 @@ price while long. `strategy.openprofit` is `(close - avg_price) * size` while
 long and `0` when flat. `strategy.netprofit` sums realized closed-trade profit.
 `strategy.equity` is cash plus current market value; without configured
 commission this equals `initial_capital + strategy.netprofit +
-strategy.openprofit`, and with cash-per-contract commission it also includes
-entry commission debits on open positions. `strategy.closedtrades` is the
+strategy.openprofit`, and with supported commission it also includes entry
+commission debits on open positions. `strategy.closedtrades` is the
 number of closed trades recorded by the broker. `strategy.wintrades`,
 `strategy.losstrades`, and
 `strategy.eventrades` count closed trades whose realized profit is positive,
@@ -138,8 +141,8 @@ The first supported closed-trade namespace functions are
 `strategy.closedtrades.entry_time(trade_num)` and
 `strategy.closedtrades.exit_time(trade_num)`. Stage 7 Slice 3 adds
 `strategy.closedtrades.commission(trade_num)`, which returns `0.0` without
-configured commission and entry-plus-exit cash-per-contract commission when
-configured. Stage 7
+configured commission and supported entry-plus-exit commission when configured.
+Stage 7
 Slice 4 adds `strategy.closedtrades.entry_id(trade_num)`, which returns the
 entry id already retained on the closed trade record. Stage 7 Slice 5 adds
 `strategy.closedtrades.exit_id(trade_num)`, which returns the close or
@@ -149,8 +152,9 @@ favorable excursion retained for the closed trade quantity. Stage 7 Slice 16
 adds `strategy.closedtrades.max_drawdown(trade_num)`, returning the largest
 low-based adverse excursion retained for the closed trade quantity. Stage 7
 Slice 17 adds cash-per-contract commission accounting for supported entries and
-exits without adding public schema fields. They read the current closed-trade
-list with a zero-based integer `trade_num`; missing,
+exits without adding public schema fields. Stage 7 Slice 18 adds cash-per-order
+commission accounting under the same public contract. They read the current
+closed-trade list with a zero-based integer `trade_num`; missing,
 negative, out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public
 runtime JSON, Python, or WASM fields.
@@ -168,8 +172,8 @@ the current close-based floating profit for the current open position. Stage 7
 Slice 11 adds `strategy.opentrades.entry_id(trade_num)`, returning the retained
 entry id for that open position. Stage 7 Slice 12 adds
 `strategy.opentrades.commission(trade_num)`, returning `0.0` for that open
-position without configured commission and the current open cash-per-contract
-entry commission when configured. Stage 7 Slice 13 adds
+position without configured commission and the current open supported entry
+commission when configured. Stage 7 Slice 13 adds
 `strategy.opentrades.max_runup(trade_num)`, returning the largest high-based
 favorable excursion seen so far for that open position. Stage 7 Slice 14 adds
 `strategy.opentrades.max_drawdown(trade_num)`, returning the largest low-based

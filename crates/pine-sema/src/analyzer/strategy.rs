@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 const STRATEGY_FIXED_DEFAULT_QTY_TYPE: &str = "strategy.fixed";
 const STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE: &str = "strategy.commission.cash_per_contract";
+const STRATEGY_CASH_PER_ORDER_COMMISSION_TYPE: &str = "strategy.commission.cash_per_order";
 
 const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.position_size",
@@ -135,7 +136,7 @@ impl Analyzer {
         let mut fixed_default_qty_type = false;
         let mut default_qty_value = None;
         let mut commission_type_arg = None;
-        let mut cash_per_contract_commission_type = false;
+        let mut commission_constructor: Option<fn(f64) -> pine_ir::StrategyCommission> = None;
         let mut commission_value_arg = None;
         let mut commission_value = None;
 
@@ -208,15 +209,28 @@ impl Analyzer {
                     let Some(commission_type) = const_string_value(&arg.value) else {
                         continue;
                     };
-                    if commission_type != STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE {
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            "`strategy` argument `commission_type` only supports strategy.commission.cash_per_contract",
-                            arg.span,
-                        ));
-                        continue;
+                    match commission_type.as_str() {
+                        STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE => {
+                            commission_constructor = Some(
+                                pine_ir::StrategyCommission::CashPerContract
+                                    as fn(f64) -> pine_ir::StrategyCommission,
+                            );
+                        }
+                        STRATEGY_CASH_PER_ORDER_COMMISSION_TYPE => {
+                            commission_constructor = Some(
+                                pine_ir::StrategyCommission::CashPerOrder
+                                    as fn(f64) -> pine_ir::StrategyCommission,
+                            );
+                        }
+                        _ => {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_CALL_ARG_VALUE",
+                                "`strategy` argument `commission_type` only supports strategy.commission.cash_per_contract or strategy.commission.cash_per_order",
+                                arg.span,
+                            ));
+                            continue;
+                        }
                     }
-                    cash_per_contract_commission_type = true;
                 }
                 "commission_value" => {
                     commission_value_arg = Some(arg);
@@ -249,16 +263,15 @@ impl Analyzer {
             if let Some(arg) = commission_value_arg {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_VALUE",
-                    "`strategy` argument `commission_value` requires commission_type=strategy.commission.cash_per_contract",
+                    "`strategy` argument `commission_value` requires a supported commission_type",
                     arg.span,
                 ));
             }
             return;
         }
-        if cash_per_contract_commission_type {
-            self.strategy_settings.commission = Some(pine_ir::StrategyCommission::CashPerContract(
-                commission_value.unwrap_or(0.0),
-            ));
+        if let Some(commission_constructor) = commission_constructor {
+            self.strategy_settings.commission =
+                Some(commission_constructor(commission_value.unwrap_or(0.0)));
         }
     }
 

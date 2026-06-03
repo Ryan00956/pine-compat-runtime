@@ -176,6 +176,27 @@ fn accepts_supported_strategy_commission_cash_per_contract_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_commission_cash_per_order_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_commission_cash_per_order.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("strategy declaration should lower");
+    assert_eq!(
+        hir.strategy_settings.commission,
+        Some(pine_ir::StrategyCommission::CashPerOrder(1.5))
+    );
+}
+
+#[test]
 fn reports_strategy_initial_capital_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_initial_capital.pine",

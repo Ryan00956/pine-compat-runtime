@@ -40,7 +40,8 @@ strategy model.
 Implemented and fixture-backed:
 
 - `strategy(...)` declaration with selected metadata, positive const
-  `initial_capital`, fixed default quantity, and cash-per-contract commission.
+  `initial_capital`, fixed default quantity, cash-per-contract commission, and
+  cash-per-order commission.
 - `strategy.entry(id, strategy.long, qty=...)` and default fixed quantity when
   configured.
 - `strategy.close(id)` as a full close of the matching long position.
@@ -306,23 +307,21 @@ could be isolated, but it should wait until the account model policy is explicit
 
 ### 10. Costs And Price Adjustments
 
-Current state: cash-per-contract commission is supported for configured
-strategy declarations. Other commission modes, slippage, and stricter
+Current state: cash-per-contract and cash-per-order commission are supported for
+configured strategy declarations. Other commission modes, slippage, and stricter
 limit-fill assumptions remain unsupported.
 
 Missing internal behavior:
 
 - percentage commission;
-- cash-per-order commission;
 - slippage applied to fills;
 - limit-order verification in ticks;
 - cost fields in trade data and performance variables.
 
 Gap size: medium to large.
 
-Best next slice: flat cash-per-order commission or slippage would be bounded,
-but either affects cash, profit, trade records, and public output expectations
-if costs are exposed.
+Best next slice: slippage would be bounded, but it affects fill prices, cash,
+profit, trade records, and public output expectations.
 
 ### 11. Strategy Information Variables
 
@@ -366,7 +365,8 @@ Slice 8 adds `strategy.opentrades.entry_time()`, and Slice 9 adds
 `strategy.closedtrades.max_drawdown()`. Stage 7 Slice 17 adds
 cash-per-contract commission accounting for supported entries/exits and updates
 closed/open trade commission functions without public runtime schema expansion.
-Other namespace functions are unsupported.
+Stage 7 Slice 18 adds cash-per-order commission accounting under the same
+public contract. Other namespace functions are unsupported.
 
 Missing internal behavior:
 

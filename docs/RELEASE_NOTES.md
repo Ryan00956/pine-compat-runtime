@@ -2,13 +2,22 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 18 cash-per-order commission
+  accounting. `strategy(...,
+  commission_type=strategy.commission.cash_per_order, commission_value=N)` now
+  applies one fixed commission per supported entry and exit fill, allocates
+  entry commission across partial closes, updates cash, equity, closed trade
+  profit, `strategy.netprofit`, and the closed/open trade `commission()` field
+  functions, and keeps public JSON, Python, and WASM strategy schemas
+  unchanged.
 - Added Strategy Internal Stage 7 Slice 17 cash-per-contract commission
   accounting. `strategy(...,
   commission_type=strategy.commission.cash_per_contract, commission_value=N)`
   now applies entry and exit commission to cash, equity, closed trade profit,
   `strategy.netprofit`, and the closed/open trade `commission()` field
   functions while leaving public JSON, Python, and WASM strategy schemas
-  unchanged; other commission modes and slippage remain unsupported.
+  unchanged; percent and other non-cash commission modes plus slippage remain
+  unsupported.
 - Added Strategy Internal Stage 7 Slice 16 closed-trade `max_drawdown()` field
   function. It exposes the largest low-based adverse excursion retained for the
   closed trade quantity, follows the same zero-based `trade_num` contract,

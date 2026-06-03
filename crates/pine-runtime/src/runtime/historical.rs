@@ -172,9 +172,9 @@ impl<'a> HistoricalRuntime<'a> {
             boxes: Vec::new(),
             tables: Vec::new(),
             alerts: Vec::new(),
-            strategy_broker: BrokerState::new_with_cash_per_contract_commission(
+            strategy_broker: BrokerState::new_with_commission(
                 program.strategy_settings.initial_capital,
-                program.strategy_settings.commission_cash_per_contract(),
+                program.strategy_settings.commission,
             ),
             next_label_id: 1,
             next_line_id: 1,

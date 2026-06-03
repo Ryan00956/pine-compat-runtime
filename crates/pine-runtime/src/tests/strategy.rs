@@ -2502,6 +2502,115 @@ plot(strategy.equity)
 }
 
 #[test]
+fn strategy_cash_per_order_commission_updates_profit_and_trade_fields() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("commission", commission_type=strategy.commission.cash_per_order, commission_value=1.5)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 2
+    strategy.close("L")
+plot(strategy.opentrades.commission(0))
+plot(strategy.closedtrades.commission(0))
+plot(strategy.netprofit)
+plot(strategy.equity)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert_eq!(
+        analysis.hir.as_ref().unwrap().strategy_settings.commission,
+        Some(pine_ir::StrategyCommission::CashPerOrder(1.5))
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            Bar {
+                time: 1,
+                open: 1.0,
+                high: 1.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 2,
+                open: 2.0,
+                high: 2.0,
+                low: 2.0,
+                close: 2.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 3,
+                open: 3.0,
+                high: 3.0,
+                low: 3.0,
+                close: 3.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 4,
+                open: 4.0,
+                high: 4.0,
+                low: 4.0,
+                close: 4.0,
+                volume: 1.0,
+            },
+        ],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(1.5),
+            PineValue::Na,
+            PineValue::Na,
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(3.0),
+            PineValue::Float(3.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(-1.0),
+            PineValue::Float(-1.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[3].values,
+        vec![
+            PineValue::Float(100_000.0),
+            PineValue::Float(99_998.5),
+            PineValue::Float(99_999.0),
+            PineValue::Float(99_999.0),
+        ]
+    );
+
+    let strategy = result.strategy.expect("strategy output");
+    assert_eq!(strategy.trades[0].profit, -1.0);
+    assert_eq!(strategy.equity[1].cash, 99_994.5);
+    assert_eq!(strategy.equity[1].equity, 99_998.5);
+    assert_eq!(strategy.equity[2].cash, 99_999.0);
+}
+
+#[test]
 fn strategy_close_without_matching_position_is_noop() {
     let source = SourceFile::new(
         "strategy.pine",

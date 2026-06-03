@@ -195,9 +195,7 @@ impl BrokerState {
     #[must_use]
     pub(crate) fn open_trade_commission(&self, trade_num: i64) -> Option<f64> {
         if trade_num == 0 && self.open_trade_count() == 1 {
-            Some(normalize_zero(
-                self.commission_for_quantity(self.position_size),
-            ))
+            Some(normalize_zero(self.open_entry_commission))
         } else {
             None
         }
