@@ -1,7 +1,8 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
-5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, and 18 closed on 2026-06-03.
+5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, and 19 closed on
+2026-06-03.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -535,8 +536,41 @@ Evidence:
 - host parity tests cover CLI snapshots plus Python plot and trade/equity
   values.
 
+## Slice 19: Fixed Tick Slippage
+
+Closed on 2026-06-03.
+
+Supported declaration subset:
+
+- `strategy(..., slippage=N)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- `slippage` must be a finite non-negative integer const tick count;
+- ticks convert through the current fixed `syminfo.mintick` subset;
+- supported long entry fill prices are worsened upward after trigger selection;
+- supported long close and `strategy.exit` fill prices are worsened downward
+  after trigger selection;
+- trigger conditions are unchanged by slippage;
+- order fill prices, trade entry/exit prices, realized profit, floating profit,
+  and equity snapshots use the adjusted fill prices;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
+  output shape with no new top-level fields or public trade metric fields.
+
+Evidence:
+
+- runtime fixtures: `tests/fixtures/runtime/strategy_slippage.pine` and
+  `tests/fixtures/runtime/strategy_exit_slippage.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_slippage.pine` and
+  `tests/fixtures/sema/unsupported_strategy_slippage.pine`;
+- host parity tests cover CLI snapshots plus Python plot and trade/equity
+  values.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting
-addition, such as slippage modeling or another closed/open-trade field, only
-after documenting whether the behavior is script-only or public-output visible.
+addition, such as a richer fill-model setting or another closed/open-trade
+field, only after documenting whether the behavior is script-only or
+public-output visible.

@@ -50,8 +50,10 @@ contracts, margin, and currency conversion remain unsupported.
 commission_value=N)` accepts a finite non-negative const numeric
 cash-per-contract commission. `strategy(...,
 commission_type=strategy.commission.cash_per_order, commission_value=N)`
-accepts a finite non-negative const numeric cash-per-order commission. Other
-commission modes and slippage remain unsupported.
+accepts a finite non-negative const numeric cash-per-order commission.
+`strategy(..., slippage=N)` accepts finite non-negative integer const ticks
+using the fixed `syminfo.mintick` subset. Other commission modes and richer
+fill models remain unsupported.
 
 The current entry subset is `strategy.entry(id, strategy.long, qty=...)`,
 `strategy.entry(id, strategy.long)` when a fixed default quantity is configured,
@@ -70,6 +72,8 @@ is supported; repeated entry calls while a position is open are ignored under
 the current no-pyramiding rule. Explicit `qty` overrides the declaration
 default. The resolved quantity, limit price, and stop price must be positive,
 and non-positive runtime values are reported in the strategy diagnostics array.
+Configured slippage worsens supported long entry fill prices after trigger
+selection.
 Supported `strategy.exit` calls use the pending-exit model described below.
 `strategy.cancel(id)` cancels matching internal pending entry ids and matching
 pending exit ids in the supported order subset. Unknown, already-filled, and
@@ -80,9 +84,10 @@ and pending exits. It is a no-op when no supported pending order exists and
 records no public order, trade, or pending-order output.
 
 `strategy.close(id)` closes the full matching long position at the current bar
-close. It records a closed trade with entry/exit bar indexes, entry/exit times,
-entry/exit prices, quantity, and net realized profit after supported commission
-when configured, then appends a flat position
+close. Configured slippage worsens the supported long close fill price after
+trigger selection. It records a closed trade with entry/exit bar indexes,
+entry/exit times, entry/exit prices, quantity, and net realized profit after
+supported commission when configured, then appends a flat position
 snapshot with `size = 0` and `avgPrice = null`.
 If no position is open, the id does not match the open entry, or the position
 has already been closed, the close call is a no-op.
@@ -94,9 +99,9 @@ and the snapshot field `netProfit = equity - initial_capital`, so that public
 output field includes current open profit while a long position is open. The
 expression variable `strategy.netprofit` is narrower: it is cumulative realized
 closed-trade profit only and excludes current open profit. The current subset
-supports only `strategy.commission.cash_per_contract` and
-`strategy.commission.cash_per_order` commission and has no other commission
-modes, slippage, margin, percent sizing, currency conversion,
+supports only `strategy.commission.cash_per_contract`,
+`strategy.commission.cash_per_order`, and fixed-tick slippage, and has no other
+commission modes, richer fill models, margin, percent sizing, currency conversion,
 missing-entry pre-placement, or pyramiding. The only multiple-pending
 reservation subset is explicit fixed `qty` or `qty_percent` single-trigger or
 one-downside/one-upside bracket or trailing `strategy.exit` calls for the
@@ -114,7 +119,9 @@ long and `0` when flat. `strategy.netprofit` sums realized closed-trade profit.
 `strategy.equity` is cash plus current market value; without configured
 commission this equals `initial_capital + strategy.netprofit +
 strategy.openprofit`, and with supported commission it also includes entry
-commission debits on open positions. `strategy.closedtrades` is the
+commission debits on open positions. Supported slippage changes entry and exit
+fill prices, so realized/floating profit and equity use those adjusted fill
+prices. `strategy.closedtrades` is the
 number of closed trades recorded by the broker. `strategy.wintrades`,
 `strategy.losstrades`, and
 `strategy.eventrades` count closed trades whose realized profit is positive,
@@ -153,7 +160,9 @@ adds `strategy.closedtrades.max_drawdown(trade_num)`, returning the largest
 low-based adverse excursion retained for the closed trade quantity. Stage 7
 Slice 17 adds cash-per-contract commission accounting for supported entries and
 exits without adding public schema fields. Stage 7 Slice 18 adds cash-per-order
-commission accounting under the same public contract. They read the current
+commission accounting under the same public contract. Stage 7 Slice 19 adds
+fixed-tick slippage to supported long entry, close, and exit fill prices
+without changing trigger conditions or public schema. They read the current
 closed-trade list with a zero-based integer `trade_num`; missing,
 negative, out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public
@@ -214,7 +223,9 @@ Profit/loss and trailing tick arguments convert positive tick distances from
 reuse the same pending-exit lifecycle: accepted calls are not eligible on the
 bar where they are created or replaced, and a later historical bar with
 `low <= stop/loss price` or `high >= limit/profit price` fills at the selected
-exit price. Single-trigger, bracket, and trailing exits with explicit fixed
+exit price. Configured slippage worsens the supported long exit fill price
+after trigger selection without changing trigger conditions. Single-trigger,
+bracket, and trailing exits with explicit fixed
 `qty` or `qty_percent` can keep multiple pending reservations for different
 identities and share one reservation pool for the current matching long entry.
 Same-side touched candidates fill in placement order. When downside

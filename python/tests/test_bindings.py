@@ -432,6 +432,44 @@ def test_run_script_returns_strategy_cash_per_order_commission_plots():
     assert result["strategy"]["equity"][1]["equity"] == 99998.5
 
 
+def test_run_script_returns_strategy_slippage_plots():
+    source = (ROOT / "tests/fixtures/runtime/strategy_slippage.pine").read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [None, None, 3.0, 3.0],
+        [None, None, 2.0, 2.0],
+        [None, None, -2.0, -2.0],
+        [100000.0, 99998.0, 99998.0, 99998.0],
+    ]
+    assert result["strategy"]["orders"][0]["price"] == 3.0
+    assert result["strategy"]["trades"][0]["entryPrice"] == 3.0
+    assert result["strategy"]["trades"][0]["exitPrice"] == 2.0
+    assert result["strategy"]["trades"][0]["profit"] == -2.0
+
+
+def test_run_script_returns_strategy_exit_slippage_plots():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_slippage.pine").read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [None, None, None, 2.0],
+        [None, None, None, -2.0],
+        [100000.0, 99998.0, 100000.0, 99998.0],
+    ]
+    assert result["strategy"]["orders"][0]["price"] == 3.0
+    assert result["strategy"]["orders"][1]["price"] == 2.0
+    assert result["strategy"]["trades"][0]["entryPrice"] == 3.0
+    assert result["strategy"]["trades"][0]["exitPrice"] == 2.0
+    assert result["strategy"]["trades"][0]["profit"] == -2.0
+
+
 def test_run_script_returns_strategy_opentrades_field_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_opentrades_fields.pine").read_text()
     result = pine_compat.run_script(

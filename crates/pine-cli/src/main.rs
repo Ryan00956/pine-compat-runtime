@@ -1058,6 +1058,14 @@ mod tests {
                 "tests/fixtures/runtime/strategy_commission_cash_per_order.pine",
             ),
             (
+                "runtime_strategy_slippage.json",
+                "tests/fixtures/runtime/strategy_slippage.pine",
+            ),
+            (
+                "runtime_strategy_exit_slippage.json",
+                "tests/fixtures/runtime/strategy_exit_slippage.pine",
+            ),
+            (
                 "runtime_strategy_position_state.json",
                 "tests/fixtures/runtime/strategy_position_state.pine",
             ),

@@ -100,6 +100,8 @@ mod tests {
         assert_eq!(signature.params[7].accepts, crate::Accepts::ConstString);
         assert_eq!(signature.params[8].name, "commission_value");
         assert_eq!(signature.params[8].accepts, crate::Accepts::ConstNumeric);
+        assert_eq!(signature.params[9].name, "slippage");
+        assert_eq!(signature.params[9].accepts, crate::Accepts::ConstNumeric);
         assert!(!signature.variadic);
     }
 

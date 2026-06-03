@@ -41,7 +41,7 @@ Implemented and fixture-backed:
 
 - `strategy(...)` declaration with selected metadata, positive const
   `initial_capital`, fixed default quantity, cash-per-contract commission, and
-  cash-per-order commission.
+  cash-per-order commission, and fixed-tick slippage.
 - `strategy.entry(id, strategy.long, qty=...)` and default fixed quantity when
   configured.
 - `strategy.close(id)` as a full close of the matching long position.
@@ -115,8 +115,9 @@ Missing internal behavior:
 - `default_qty_type=strategy.cash`
 - `default_qty_type=strategy.percent_of_equity`
 - `currency`
-- `slippage`
-- `commission_type` and `commission_value`
+- commission modes beyond `strategy.commission.cash_per_contract` and
+  `strategy.commission.cash_per_order`
+- fill models beyond fixed-tick slippage on supported long fills
 - `margin_long` and `margin_short`
 - `close_entries_rule`
 - `risk_free_rate`
@@ -307,21 +308,21 @@ could be isolated, but it should wait until the account model policy is explicit
 
 ### 10. Costs And Price Adjustments
 
-Current state: cash-per-contract and cash-per-order commission are supported for
-configured strategy declarations. Other commission modes, slippage, and stricter
-limit-fill assumptions remain unsupported.
+Current state: cash-per-contract commission, cash-per-order commission, and
+fixed-tick slippage are supported for configured strategy declarations. Other
+commission modes, richer fill models, and stricter limit-fill assumptions remain
+unsupported.
 
 Missing internal behavior:
 
 - percentage commission;
-- slippage applied to fills;
 - limit-order verification in ticks;
 - cost fields in trade data and performance variables.
 
 Gap size: medium to large.
 
-Best next slice: slippage would be bounded, but it affects fill prices, cash,
-profit, trade records, and public output expectations.
+Best next slice: limit-order verification in ticks would be bounded, but it
+needs a precise trigger/fill contract before implementation.
 
 ### 11. Strategy Information Variables
 
@@ -366,7 +367,9 @@ Slice 8 adds `strategy.opentrades.entry_time()`, and Slice 9 adds
 cash-per-contract commission accounting for supported entries/exits and updates
 closed/open trade commission functions without public runtime schema expansion.
 Stage 7 Slice 18 adds cash-per-order commission accounting under the same
-public contract. Other namespace functions are unsupported.
+public contract. Stage 7 Slice 19 adds fixed-tick slippage for supported long
+entry, close, and exit fill prices without public schema expansion. Other
+namespace functions are unsupported.
 
 Missing internal behavior:
 
@@ -447,7 +450,7 @@ orders but keep external delivery out of scope.
 6. `strategy.cancel()` and `strategy.cancel_all()` after a general pending-order
    book exists.
 7. Individual trade namespace functions for a small closed-trade subset.
-8. Additional commission/slippage/account-model slices.
+8. Additional commission/fill-model/account-model slices.
 9. Pyramiding, shorts, reversals, and multi-entry trade ledgers.
 10. Generic `strategy.order()` and full OCA behavior.
 

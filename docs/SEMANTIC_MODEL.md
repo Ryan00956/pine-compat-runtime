@@ -35,7 +35,9 @@ quantity declaration subset:
 numeric `N`. Stage 7 Slices 17 and 18 add cash commission declaration subsets:
 `commission_type=strategy.commission.cash_per_contract, commission_value=N` and
 `commission_type=strategy.commission.cash_per_order, commission_value=N` with
-finite non-negative const numeric `N`.
+finite non-negative const numeric `N`. Stage 7 Slice 19 adds `slippage=N` with
+finite non-negative integer const ticks using the fixed `syminfo.mintick`
+subset.
 `strategy.entry(id, strategy.long, qty=...)` is a strategy-mode side effect;
 `qty` may be omitted only when the fixed default quantity subset is configured,
 and explicit `qty` overrides the declaration default. The supported market-long
@@ -126,7 +128,8 @@ single-trigger/bracket/trailing exits, omitted-quantity multiple
 reservations, reservation behavior outside that subset,
 unmatched missing-entry pre-placement, entry-relative exit attachment to pending
 entries, `strategy.order`, broker settings beyond
-`initial_capital`, fixed default quantity, and supported cash commission,
+`initial_capital`, fixed default quantity, supported cash commission, and
+fixed-tick slippage,
 realtime strategy handoff, and
 strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and

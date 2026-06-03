@@ -172,9 +172,11 @@ impl<'a> HistoricalRuntime<'a> {
             boxes: Vec::new(),
             tables: Vec::new(),
             alerts: Vec::new(),
-            strategy_broker: BrokerState::new_with_commission(
+            strategy_broker: BrokerState::new_with_commission_and_slippage(
                 program.strategy_settings.initial_capital,
                 program.strategy_settings.commission,
+                program.strategy_settings.slippage_ticks
+                    * pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01),
             ),
             next_label_id: 1,
             next_line_id: 1,

@@ -21,6 +21,15 @@ impl BrokerState {
             return;
         }
 
+        let price = self.long_exit_fill_price(price);
+        if !price.is_finite() {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.close` slipped fill price must be finite".to_owned(),
+            });
+            return;
+        }
+
         let qty = self.position_size;
         let entry_price = self.avg_price;
         let entry_commission = self.entry_commission_for_closed_quantity(qty);
@@ -75,6 +84,14 @@ impl BrokerState {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_QTY".to_owned(),
                 message: "`strategy.exit` quantity must be finite and positive".to_owned(),
+            });
+            return;
+        }
+        let exit_price = self.long_exit_fill_price(exit_price);
+        if !exit_price.is_finite() {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.exit` slipped fill price must be finite".to_owned(),
             });
             return;
         }

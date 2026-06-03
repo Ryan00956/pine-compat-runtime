@@ -113,7 +113,8 @@ Out of scope:
 - Partial `strategy.close`.
 - Close ordering across multiple entries.
 - Rich trade namespace functions.
-- Commission, slippage, margin, or account-model changes.
+- Commission, slippage, margin, or account-model changes beyond the separately
+  closed Stage 7 cost slices.
 
 Acceptance:
 
@@ -229,8 +230,8 @@ Scope:
   script-variable-only contract is acceptable.
 - Add selected cost or account-model slices only after the output contract is
   explicit.
-- Candidate cost/account slices include additional commission modes, slippage,
-  cash sizing, and percent-of-equity sizing.
+- Candidate cost/account slices include additional commission modes, richer fill
+  models, cash sizing, and percent-of-equity sizing.
 
 Out of scope:
 

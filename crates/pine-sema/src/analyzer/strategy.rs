@@ -152,6 +152,7 @@ impl Analyzer {
                     "default_qty_value",
                     "commission_type",
                     "commission_value",
+                    "slippage",
                 ]
                 .get(index)
                 .copied()
@@ -246,6 +247,20 @@ impl Analyzer {
                         continue;
                     }
                     commission_value = Some(value);
+                }
+                "slippage" => {
+                    let Some(value) = const_numeric_value(&arg.value) else {
+                        continue;
+                    };
+                    if !value.is_finite() || value < 0.0 || value.fract() != 0.0 {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `slippage` must be a non-negative integer",
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    self.strategy_settings.slippage_ticks = value;
                 }
                 _ => {}
             }

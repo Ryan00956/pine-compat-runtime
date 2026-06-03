@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 19 fixed-tick slippage. `strategy(...,
+  slippage=N)` now accepts finite non-negative integer const ticks, converts
+  them through the fixed `syminfo.mintick` subset, worsens supported long entry
+  fill prices upward and supported long close/exit fill prices downward after
+  trigger selection, and keeps public JSON, Python, and WASM strategy schemas
+  unchanged.
 - Added Strategy Internal Stage 7 Slice 18 cash-per-order commission
   accounting. `strategy(...,
   commission_type=strategy.commission.cash_per_order, commission_value=N)` now
@@ -16,8 +22,8 @@
   now applies entry and exit commission to cash, equity, closed trade profit,
   `strategy.netprofit`, and the closed/open trade `commission()` field
   functions while leaving public JSON, Python, and WASM strategy schemas
-  unchanged; percent and other non-cash commission modes plus slippage remain
-  unsupported.
+  unchanged; percent and other non-cash commission modes plus richer fill models
+  remain unsupported.
 - Added Strategy Internal Stage 7 Slice 16 closed-trade `max_drawdown()` field
   function. It exposes the largest low-based adverse excursion retained for the
   closed trade quantity, follows the same zero-based `trade_num` contract,

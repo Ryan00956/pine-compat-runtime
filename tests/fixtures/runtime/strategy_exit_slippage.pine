@@ -1,0 +1,8 @@
+//@version=5
+strategy("Exit slippage", slippage=100)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XL", "L", limit=3)
+plot(strategy.closedtrades.exit_price(0))
+plot(strategy.closedtrades.profit(0))
+plot(strategy.equity)

@@ -16,6 +16,7 @@ pub struct StrategySettings {
     pub initial_capital: f64,
     pub default_qty: Option<StrategyDefaultQuantity>,
     pub commission: Option<StrategyCommission>,
+    pub slippage_ticks: f64,
 }
 
 impl Default for StrategySettings {
@@ -24,6 +25,7 @@ impl Default for StrategySettings {
             initial_capital: DEFAULT_STRATEGY_INITIAL_CAPITAL,
             default_qty: Some(StrategyDefaultQuantity::Fixed(1.0)),
             commission: None,
+            slippage_ticks: 0.0,
         }
     }
 }

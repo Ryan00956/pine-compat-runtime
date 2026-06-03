@@ -21,6 +21,7 @@ pub struct BrokerState {
     initial_capital: f64,
     commission: Option<StrategyCommission>,
     open_entry_commission: f64,
+    slippage_price_offset: f64,
     cash: f64,
     position_size: f64,
     avg_price: f64,
@@ -67,10 +68,20 @@ impl BrokerState {
         initial_capital: f64,
         commission: Option<StrategyCommission>,
     ) -> Self {
+        Self::new_with_commission_and_slippage(initial_capital, commission, 0.0)
+    }
+
+    #[must_use]
+    pub fn new_with_commission_and_slippage(
+        initial_capital: f64,
+        commission: Option<StrategyCommission>,
+        slippage_price_offset: f64,
+    ) -> Self {
         Self {
             initial_capital,
             commission,
             open_entry_commission: 0.0,
+            slippage_price_offset,
             cash: initial_capital,
             position_size: 0.0,
             avg_price: 0.0,
@@ -114,6 +125,14 @@ impl BrokerState {
         }
     }
 
+    fn long_entry_fill_price(&self, price: f64) -> f64 {
+        price + self.slippage_price_offset
+    }
+
+    fn long_exit_fill_price(&self, price: f64) -> f64 {
+        price - self.slippage_price_offset
+    }
+
     pub(crate) fn entry_long(
         &mut self,
         id: String,
@@ -140,27 +159,36 @@ impl BrokerState {
             return;
         }
 
+        let fill_price = self.long_entry_fill_price(price);
+        if !fill_price.is_finite() {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.entry` slipped fill price must be finite".to_owned(),
+            });
+            return;
+        }
+
         self.position_size = qty;
-        self.avg_price = price;
+        self.avg_price = fill_price;
         self.open_entry_commission = self.entry_commission_for_quantity(qty);
-        self.cash -= qty * price + self.open_entry_commission;
+        self.cash -= qty * fill_price + self.open_entry_commission;
         self.entry_id = Some(id.clone());
         self.entry_bar_index = Some(bar_index);
         self.entry_time = Some(time);
-        self.open_trade_max_high = Some(price);
-        self.open_trade_min_low = Some(price);
+        self.open_trade_max_high = Some(fill_price);
+        self.open_trade_min_low = Some(fill_price);
         self.orders.push(StrategyOrderEvent {
             id,
             bar_index,
             time,
             direction: "strategy.long".to_owned(),
             qty,
-            price,
+            price: fill_price,
         });
         self.position.push(StrategyPositionSnapshot {
             bar_index,
             size: qty,
-            avg_price: Some(price),
+            avg_price: Some(fill_price),
         });
     }
 

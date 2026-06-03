@@ -255,7 +255,7 @@ ohlc4 = (open + high + low + close) / 4
 ```text
 indicator(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric)
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric)
   -> void
@@ -299,7 +299,11 @@ use the configured or default fixed quantity. `strategy(...)` accepts only
 `commission_type=strategy.commission.cash_per_order` with a finite non-negative
 const numeric `commission_value`; entry cash, exit cash, realized trade profit,
 `strategy.netprofit`, and `strategy.equity` include that commission when
-configured. Other commission modes and slippage remain unsupported. Supported market-long entries fill at the next
+configured. `strategy(..., slippage=N)` accepts finite non-negative integer
+const ticks and uses the fixed `syminfo.mintick` subset; configured slippage
+worsens supported long entry fill prices upward and supported long exit/close
+fill prices downward after trigger selection. Other commission modes and richer
+fill models remain unsupported. Supported market-long entries fill at the next
 historical bar open. Supported long limit entries wait until a later
 historical bar where `low <= limit` and fill at the limit price. Supported long
 stop entries wait until a later historical bar where `high >= stop` and fill at
