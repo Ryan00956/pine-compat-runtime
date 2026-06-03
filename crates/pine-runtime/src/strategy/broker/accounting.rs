@@ -63,6 +63,17 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn gross_loss(&self) -> f64 {
+        normalize_zero(
+            self.trades
+                .iter()
+                .filter(|trade| trade.profit < 0.0)
+                .map(|trade| -trade.profit)
+                .sum(),
+        )
+    }
+
+    #[must_use]
     pub(crate) fn equity_value(&self, close: f64) -> f64 {
         normalize_zero(self.cash + self.position_size * close)
     }

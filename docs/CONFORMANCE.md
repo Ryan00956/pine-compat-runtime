@@ -108,10 +108,12 @@ position marked to the current close and is `0` when flat. `strategy.netprofit`
 is cumulative realized closed-trade profit only, excluding any current open
 profit. Stage 7 Slice 22 adds `strategy.grossprofit` as cumulative positive
 realized closed-trade profit only, excluding losing, flat, and current open
-trades. `strategy.equity` is cash plus current market value; without configured
-commission this is equivalent to `initial_capital + strategy.netprofit +
-strategy.openprofit` in the current subset, and with supported commission it
-also reflects entry commission debits on open positions.
+trades. Stage 7 Slice 23 adds `strategy.grossloss` as cumulative realized
+closed-trade loss as a positive value, excluding winning, flat, and current
+open trades. `strategy.equity` is cash plus current market value; without
+configured commission this is equivalent to `initial_capital +
+strategy.netprofit + strategy.openprofit` in the current subset, and with
+supported commission it also reflects entry commission debits on open positions.
 Supported market `strategy.entry`
 calls create an internal pending entry and fill on the next historical bar open.
 Supported long limit entries fill at the limit price before script statements
@@ -192,7 +194,9 @@ limit entry and supported long limit/profit exit fills while preserving the
 original limit fill price. Stage 7 Slice 21 adds percent commission accounting
 for supported entry/exit fills under the same public contract. Stage 7 Slice 22
 adds `strategy.grossprofit` as a script-visible read-only series float summing
-only positive realized closed-trade profit.
+only positive realized closed-trade profit. Stage 7 Slice 23 adds
+`strategy.grossloss` as a script-visible read-only series float summing
+realized closed-trade losses as positive values.
 `trade_num` is zero-based and integer-only; no matching trade, a negative
 index, an out-of-range index, or a non-integer argument returns `na`. Public
 open-trade records, open-trade namespace functions outside `entry_price`,
@@ -576,6 +580,7 @@ strategy.position_avg_price partial current long-only average entry price read-o
 strategy.openprofit partial       current long-only unrealized profit read-only series, 0 when flat, in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.netprofit  partial       cumulative realized closed-trade profit read-only series, excluding current open profit, in strategy-mode scripts only
 strategy.grossprofit partial      cumulative positive realized closed-trade profit read-only series, excluding losing, flat, and current open trades, in strategy-mode scripts only
+strategy.grossloss partial        cumulative realized closed-trade loss read-only series as a positive value, excluding winning, flat, and current open trades, in strategy-mode scripts only
 strategy.equity     partial       cash plus current market value read-only series in strategy-mode scripts only; without configured commission or slippage this matches initial_capital plus realized net profit plus current open profit, and with supported commission/slippage it reflects entry commission debits on open positions and slippage-adjusted fill prices
 strategy.closedtrades partial     closed-trade count read-only series int in strategy-mode scripts only; immediate after strategy.close or strategy.close_all and next-bar visible after pending strategy.exit fills
 strategy.closedtrades.* partial   closed-trade entry_price, entry_id, exit_price, exit_id, entry_bar_index, exit_bar_index, entry_time, exit_time, commission, size, profit, max_runup, and max_drawdown field functions in strategy-mode scripts only; entry_id returns the retained entry id; exit_id returns the retained close or exit id; commission is 0.0 without configured commission or supported entry-plus-exit commission when configured; max_runup returns the largest high-based favorable excursion retained for the closed trade quantity; max_drawdown returns the largest low-based adverse excursion retained for the closed trade quantity; trade_num is zero-based integer-only and invalid, negative, non-integer, or out-of-range indexes return na; no public runtime schema expansion

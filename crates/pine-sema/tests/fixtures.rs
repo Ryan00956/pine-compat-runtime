@@ -594,6 +594,7 @@ fn accepts_supported_strategy_profit_state_fixture() {
             "strategy.openprofit",
             "strategy.netprofit",
             "strategy.grossprofit",
+            "strategy.grossloss",
             "strategy.equity",
         ],
     );

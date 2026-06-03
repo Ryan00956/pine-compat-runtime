@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 23 `strategy.grossloss`. Strategy-mode
+  scripts can read cumulative realized closed-trade loss as a positive series
+  that excludes winning, flat, and current open trades while keeping public
+  JSON, Python, and WASM strategy schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 22 `strategy.grossprofit`. Strategy-mode
   scripts can read a cumulative positive realized closed-trade profit series
   that excludes losing, flat, and current open trades while keeping public JSON,

@@ -1,7 +1,7 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
-5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, and 22 closed
+5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, and 23 closed
 on 2026-06-03.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
@@ -657,6 +657,35 @@ Contract:
 - losing, flat, and current open trades do not change it;
 - supported commission, slippage, and limit verification feed into realized
   closed-trade profit before the positive-only sum;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing
+  strategy output shape with no new top-level fields.
+
+Evidence:
+
+- runtime fixture: `tests/fixtures/runtime/strategy_trade_outcome_counts.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_profit_state.pine`,
+  `tests/fixtures/sema/unsupported_strategy_state_indicator.pine`,
+  `tests/fixtures/sema/unsupported_request_strategy_state.pine`, and
+  `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
+- host parity tests cover CLI snapshots plus Python and WASM plot values.
+
+## Slice 23: Gross Loss State Variable
+
+Closed on 2026-06-03.
+
+Supported variable:
+
+- `strategy.grossloss`.
+
+Contract:
+
+- strategy-mode scripts only;
+- read-only `series float`;
+- returns cumulative realized closed-trade loss as a positive value;
+- winning, flat, and current open trades do not change it;
+- supported commission, slippage, and limit verification feed into realized
+  closed-trade profit/loss before the loss-only sum;
 - public CLI JSON, Python dictionaries, and WASM JSON keep the existing
   strategy output shape with no new top-level fields.
 

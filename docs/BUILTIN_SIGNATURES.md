@@ -266,6 +266,7 @@ strategy.cancel_all() -> void
 strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric)
   -> void
 strategy.grossprofit -> series float
+strategy.grossloss -> series float
 strategy.closedtrades.entry_price(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.entry_id(trade_num: series/simple numeric) -> series string
 strategy.closedtrades.exit_price(trade_num: series/simple numeric) -> series float
@@ -311,7 +312,9 @@ fixed `syminfo.mintick` ticks past the limit price while preserving the limit
 fill price. Other commission modes and richer fill models remain unsupported.
 `strategy.grossprofit` is a read-only strategy-mode series float that sums
 positive realized closed-trade profit only. Losing, flat, and current open
-trades do not change it.
+trades do not change it. `strategy.grossloss` is a read-only strategy-mode
+series float that sums realized closed-trade losses as positive values.
+Winning, flat, and current open trades do not change it.
 Supported market-long entries fill at the next
 historical bar open. Supported long limit entries wait until a later
 historical bar where `low <= limit`, or below the configured verified limit

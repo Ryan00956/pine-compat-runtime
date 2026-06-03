@@ -3565,6 +3565,7 @@ plot(strategy.losstrades)
 plot(strategy.eventrades)
 plot(strategy.closedtrades)
 plot(strategy.grossprofit)
+plot(strategy.grossloss)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -3658,6 +3659,20 @@ plot(strategy.grossprofit)
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(1.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[5].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
         ]
     );
     let strategy = result.strategy.as_ref().expect("strategy result");

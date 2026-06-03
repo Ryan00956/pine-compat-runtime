@@ -138,10 +138,13 @@ realtime strategy handoff, and
 strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and
 `strategy.opentrades` count variables, the Stage 3 outcome count variables, the
-Stage 7 script-visible trade field functions, and the gross-profit variable.
+Stage 7 script-visible trade field functions, and the gross profit/loss
+variables.
 `strategy.grossprofit` is a read-only strategy-mode `series float` that sums
 positive realized closed-trade profit only; losing, flat, and current open
-trades do not change it. The count variables are
+trades do not change it. `strategy.grossloss` is a read-only strategy-mode
+`series float` that sums realized closed-trade losses as positive values;
+winning, flat, and current open trades do not change it. The count variables are
 read-only strategy-mode `series int` values for the current long-only broker:
 `strategy.closedtrades` counts closed trades recorded by broker state;
 `strategy.wintrades`, `strategy.losstrades`, and `strategy.eventrades` count

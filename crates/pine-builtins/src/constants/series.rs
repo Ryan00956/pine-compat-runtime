@@ -24,6 +24,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.grossloss",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "strategy.equity",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
@@ -138,6 +142,7 @@ mod tests {
             "strategy.openprofit",
             "strategy.netprofit",
             "strategy.grossprofit",
+            "strategy.grossloss",
             "strategy.equity",
         ] {
             assert_eq!(

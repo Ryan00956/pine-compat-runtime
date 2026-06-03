@@ -54,6 +54,7 @@ Implemented and fixture-backed:
   - `strategy.openprofit`
   - `strategy.netprofit`
   - `strategy.grossprofit`
+  - `strategy.grossloss`
   - `strategy.equity`
   - `strategy.closedtrades`
   - `strategy.opentrades`
@@ -332,12 +333,12 @@ implementation.
 ### 11. Strategy Information Variables
 
 Current state: position size, average price, open profit, net profit, gross
-profit, equity, closed/open trade counts, and win/loss/even trade counts are
-supported.
+profit, gross loss, equity, closed/open trade counts, and win/loss/even trade
+counts are supported.
 
 Missing internal behavior:
 
-- gross loss, average trade, winning trade, losing trade, runup, drawdown, and percent
+- average trade, winning trade, losing trade, runup, drawdown, and percent
   variants;
 - max contracts/shares held;
 - capital held;
@@ -345,9 +346,8 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best next slice: choose another read-only performance variable such as gross
-loss or a narrow average-trade variable, preserving the current public output
-shape.
+Best next slice: choose another read-only performance variable such as a narrow
+average-trade variable, preserving the current public output shape.
 
 ### 12. Individual Trade Namespaces
 
@@ -379,7 +379,8 @@ entry and supported long limit/profit exit fills without public schema
 expansion. Stage 7 Slice 21 adds percent commission accounting for supported
 entry/exit fills under the same public contract. Stage 7 Slice 22 adds
 `strategy.grossprofit` as a script-visible read-only series float without
-public schema expansion. Other namespace functions are unsupported.
+public schema expansion. Stage 7 Slice 23 adds `strategy.grossloss` under the
+same public-output contract. Other namespace functions are unsupported.
 
 Missing internal behavior:
 
