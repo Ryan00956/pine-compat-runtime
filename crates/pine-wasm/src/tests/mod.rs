@@ -280,6 +280,21 @@ fn runs_strategy_closedtrades_fields_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_opentrades_fields_from_csv_to_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_opentrades_fields.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy open trade fields script should run");
+
+    assert!(output.contains("\"values\":[null,2,null,null]"));
+    assert!(output.contains("\"values\":[null,null,null,null]"));
+    assert!(output.contains("\"trades\":["));
+    assert!(!output.contains("closedTrades"));
+    assert!(!output.contains("openTrades"));
+}
+
+#[test]
 fn runs_strategy_trade_outcome_counts_from_csv_to_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nif bar_index == 0\n    strategy.entry(\"W\", strategy.long, qty=1)\nif bar_index == 2\n    strategy.close(\"W\")\nif bar_index == 3\n    strategy.entry(\"L\", strategy.long, qty=1)\nif bar_index == 5\n    strategy.close(\"L\")\nif bar_index == 6\n    strategy.entry(\"E\", strategy.long, qty=1)\nif bar_index == 8\n    strategy.close(\"E\")\nplot(strategy.wintrades)\nplot(strategy.losstrades)\nplot(strategy.eventrades)\nplot(strategy.closedtrades)\n",

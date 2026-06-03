@@ -207,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn registers_strategy_closed_trade_field_signatures() {
+    fn registers_strategy_trade_field_signatures() {
         for name in [
             "strategy.closedtrades.entry_price",
             "strategy.closedtrades.entry_id",
@@ -220,8 +220,9 @@ mod tests {
             "strategy.closedtrades.commission",
             "strategy.closedtrades.size",
             "strategy.closedtrades.profit",
+            "strategy.opentrades.entry_price",
         ] {
-            let signature = get_phase_1_builtin(name).expect("closed trade field signature");
+            let signature = get_phase_1_builtin(name).expect("trade field signature");
             assert_eq!(signature.params.len(), 1, "{name}");
             assert_eq!(signature.params[0].name, "trade_num", "{name}");
             assert_eq!(

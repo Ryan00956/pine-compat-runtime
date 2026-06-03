@@ -84,6 +84,7 @@ mod tests {
                 || signature.name == "strategy.closedtrades.commission"
                 || signature.name == "strategy.closedtrades.size"
                 || signature.name == "strategy.closedtrades.profit"
+                || signature.name == "strategy.opentrades.entry_price"
                 || signature.name == "alert"
                 || signature.name == "alertcondition"
             {
@@ -1084,6 +1085,10 @@ mod tests {
             (
                 "runtime_strategy_closedtrades_fields.json",
                 "tests/fixtures/runtime/strategy_closedtrades_fields.pine",
+            ),
+            (
+                "runtime_strategy_opentrades_fields.json",
+                "tests/fixtures/runtime/strategy_opentrades_fields.pine",
             ),
             (
                 "runtime_strategy_trade_outcome_counts.json",

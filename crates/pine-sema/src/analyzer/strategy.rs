@@ -29,6 +29,8 @@ const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.closedtrades.profit",
 ];
 
+const STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS: &[&str] = &["strategy.opentrades.entry_price"];
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum StrategyExitArgFamily {
     Identity,
@@ -67,8 +69,9 @@ pub(crate) fn is_supported_strategy_state_variable(name: &str) -> bool {
     STRATEGY_STATE_VARIABLES.contains(&name)
 }
 
-pub(crate) fn is_supported_strategy_closed_trade_field_function(name: &str) -> bool {
+pub(crate) fn is_supported_strategy_trade_field_function(name: &str) -> bool {
     STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS.contains(&name)
+        || STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS.contains(&name)
 }
 
 impl Analyzer {
@@ -228,8 +231,8 @@ impl Analyzer {
         }
     }
 
-    pub(crate) fn validate_strategy_closed_trade_field_call(&mut self, name: &str, span: Span) {
-        if !is_supported_strategy_closed_trade_field_function(name) {
+    pub(crate) fn validate_strategy_trade_field_call(&mut self, name: &str, span: Span) {
+        if !is_supported_strategy_trade_field_function(name) {
             return;
         }
 

@@ -97,6 +97,15 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn open_trade_entry_price(&self, trade_num: i64) -> Option<f64> {
+        if trade_num == 0 && self.open_trade_count() == 1 {
+            Some(self.avg_price)
+        } else {
+            None
+        }
+    }
+
+    #[must_use]
     pub(crate) fn position_avg_price_value(&self) -> PineValue {
         if self.position_size > 0.0 {
             PineValue::Float(self.avg_price)

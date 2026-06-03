@@ -1,7 +1,7 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
-Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4
-and 5 closed on 2026-06-03.
+Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
+5, and 6 closed on 2026-06-03.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -38,7 +38,7 @@ Evidence:
 
 Still unsupported:
 
-- all `strategy.opentrades.*` namespace functions;
+- `strategy.opentrades.*` namespace functions outside `entry_price`;
 - closed-trade field functions beyond `entry_price`, `entry_id`, `exit_price`,
   `exit_id`, `entry_bar_index`, `exit_bar_index`, `entry_time`, `exit_time`,
   `commission`, `size`, and `profit`;
@@ -141,9 +141,37 @@ Contract:
 - public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
   output shape with no new top-level fields.
 
+## Slice 6: Open Trade Entry Price Function
+
+Closed on 2026-06-03.
+
+Supported script-visible function:
+
+- `strategy.opentrades.entry_price(trade_num)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- `trade_num == 0` addresses the current supported single open long position;
+- missing, negative, out-of-range, or non-integer indexes return `na`;
+- flat state returns `na`;
+- the value reads the current open position average entry price already tracked
+  by the broker;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
+  output shape with no new top-level fields or open-trade records.
+
+Evidence:
+
+- runtime fixture: `tests/fixtures/runtime/strategy_opentrades_fields.pine`;
+- semantic fixture:
+  `tests/fixtures/sema/supported_strategy_opentrades_fields.pine`;
+- unsupported namespace fixture keeps other open-trade fields out of scope with
+  `strategy.opentrades.entry_id(0)`;
+- host parity tests cover CLI snapshots plus Python and WASM plot values.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting
 addition, such as real commission/slippage modeling, runup/drawdown, or another
-closed-trade field, only after documenting whether the behavior is script-only
-or public-output visible.
+closed/open-trade field, only after documenting whether the behavior is
+script-only or public-output visible.

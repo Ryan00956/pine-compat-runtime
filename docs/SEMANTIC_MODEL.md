@@ -127,7 +127,7 @@ entries, `strategy.order`, broker settings beyond
 strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and
 `strategy.opentrades` count variables, the Stage 3 outcome count variables, and
-the Stage 7 Slice 0 closed-trade field functions. The count variables are
+the Stage 7 script-visible trade field functions. The count variables are
 read-only strategy-mode `series int` values for the current long-only broker:
 `strategy.closedtrades` counts closed trades recorded by broker state;
 `strategy.wintrades`, `strategy.losstrades`, and `strategy.eventrades` count
@@ -144,7 +144,10 @@ zero-based integer `trade_num` and return `na` for missing, negative,
 out-of-range, or non-integer indexes. `commission` returns `0.0` in the current
 no-commission account model. `entry_id` returns the retained entry id, and
 `exit_id` returns the retained close or exit id. Other trade details and
-open-trade namespace functions remain unsupported. Phase M and
+open-trade namespace functions remain unsupported except for
+`strategy.opentrades.entry_price`, which returns the current supported long
+position's entry price for `trade_num == 0` and `na` when flat or invalid.
+Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
 outside the public output model, and Phases R, S, U, V, W, X, and Y keep that
 public contract unchanged for brackets, trailing exits, fixed `qty` exits,

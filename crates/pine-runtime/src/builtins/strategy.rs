@@ -36,6 +36,7 @@ impl<'a> HistoricalRuntime<'a> {
             | "strategy.closedtrades.commission"
             | "strategy.closedtrades.size"
             | "strategy.closedtrades.profit" => self.eval_strategy_closed_trade_field(callee, args),
+            "strategy.opentrades.entry_price" => self.eval_strategy_open_trade_field(callee, args),
             _ => return None,
         })
     }
@@ -71,6 +72,27 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.closedtrades.commission" => PineValue::Float(0.0),
             "strategy.closedtrades.size" => PineValue::Float(trade.qty),
             "strategy.closedtrades.profit" => PineValue::Float(trade.profit),
+            _ => PineValue::Na,
+        })
+    }
+
+    fn eval_strategy_open_trade_field(
+        &mut self,
+        callee: &str,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(trade_num_expr) = call_arg_expr(args, 0, "trade_num") else {
+            return Ok(PineValue::Na);
+        };
+        let Some(trade_num) = self.eval_expr(trade_num_expr)?.as_i64() else {
+            return Ok(PineValue::Na);
+        };
+
+        Ok(match callee {
+            "strategy.opentrades.entry_price" => self
+                .strategy_broker
+                .open_trade_entry_price(trade_num)
+                .map_or(PineValue::Na, PineValue::Float),
             _ => PineValue::Na,
         })
     }

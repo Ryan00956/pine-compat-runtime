@@ -390,6 +390,26 @@ def test_run_script_returns_strategy_closedtrades_field_plots():
     assert "openTrades" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_opentrades_field_plots():
+    source = (ROOT / "tests/fixtures/runtime/strategy_opentrades_fields.pine").read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [None, 2.0, None, None],
+        [None, None, None, None],
+        [None, None, None, None],
+        [None, None, None, None],
+    ]
+    assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
+    assert result["strategy"]["trades"][0]["entryPrice"] == 2.0
+    assert result["strategy"]["trades"][0]["exitPrice"] == 3.0
+    assert "closedTrades" not in result["strategy"]
+    assert "openTrades" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_trade_outcome_count_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_trade_outcome_counts.pine").read_text()
     result = pine_compat.run_script(

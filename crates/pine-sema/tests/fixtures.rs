@@ -518,6 +518,14 @@ fn accepts_supported_strategy_closedtrades_fields_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_opentrades_fields_fixture() {
+    assert_strategy_state_supported_fixture(
+        "tests/fixtures/sema/supported_strategy_opentrades_fields.pine",
+        &["strategy.opentrades.entry_price"],
+    );
+}
+
+#[test]
 fn accepts_supported_strategy_trade_count_interactions_fixture() {
     assert_strategy_state_supported_fixture(
         "tests/fixtures/sema/supported_strategy_trade_count_interactions.pine",
@@ -582,7 +590,7 @@ fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
         &[
             "strategy.risk.max_drawdown",
             "strategy.closedtrades.max_runup",
-            "strategy.opentrades.entry_price",
+            "strategy.opentrades.entry_id",
         ],
     );
 }

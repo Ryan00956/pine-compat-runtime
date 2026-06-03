@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 6 open-trade `entry_price()` field
+  function. It exposes the current supported long position's entry price for
+  `trade_num == 0`, returns `na` when flat or for invalid indexes, and keeps
+  public JSON, Python, and WASM strategy schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 5 closed-trade `exit_id()` field
   function. It returns the retained close id for `strategy.close` /
   `strategy.close_all` fills and the pending exit id for `strategy.exit` fills,

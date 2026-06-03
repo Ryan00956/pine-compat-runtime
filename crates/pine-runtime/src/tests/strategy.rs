@@ -2708,6 +2708,77 @@ plot(strategy.closedtrades.entry_price(0.5))
 }
 
 #[test]
+fn strategy_open_trade_entry_price_reads_current_position() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("open trade fields")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 2
+    strategy.close("L")
+plot(strategy.opentrades.entry_price(0))
+plot(strategy.opentrades.entry_price(1))
+plot(strategy.opentrades.entry_price(-1))
+plot(strategy.opentrades.entry_price(0.5))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            Bar {
+                time: 10,
+                open: 1.0,
+                high: 1.0,
+                low: 1.0,
+                close: 1.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 20,
+                open: 2.0,
+                high: 2.0,
+                low: 2.0,
+                close: 2.0,
+                volume: 1.0,
+            },
+            Bar {
+                time: 30,
+                open: 3.0,
+                high: 3.0,
+                low: 3.0,
+                close: 3.0,
+                volume: 1.0,
+            },
+        ],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[3].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+}
+
+#[test]
 fn strategy_closed_trade_exit_id_reads_pending_exit_identity() {
     let source = SourceFile::new(
         "strategy.pine",

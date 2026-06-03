@@ -1,0 +1,3 @@
+//@version=5
+strategy("Supported open trade fields")
+plot(strategy.opentrades.entry_price(0))

@@ -138,6 +138,11 @@ closed-trade list with a zero-based integer `trade_num`; missing, negative,
 out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public
 runtime JSON, Python, or WASM fields.
+Stage 7 Slice 6 adds `strategy.opentrades.entry_price(trade_num)` for the
+current supported long position. It returns the current open position average
+entry price for `trade_num == 0`; when flat, out of range, negative, or
+non-integer, it returns `na`. Other open-trade namespace functions and public
+open-trade record output remain unsupported.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants
