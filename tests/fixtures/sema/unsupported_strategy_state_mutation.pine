@@ -24,3 +24,4 @@ strategy.wintrades := 1
 strategy.losstrades := 1
 strategy.eventrades := 1
 strategy.opentrades := 1
+strategy.opentrades.capital_held := 1

@@ -255,6 +255,10 @@ favorable excursion seen so far for that open position. Stage 7 Slice 14 adds
 `strategy.opentrades.max_drawdown(trade_num)`, returning the largest low-based
 adverse excursion seen so far for that open position. Other open-trade
 namespace functions and public open-trade record output remain unsupported.
+Stage 7 Slice 35 adds `strategy.opentrades.capital_held` as the one variable
+inside the open-trade namespace. In the current no-margin subset it returns
+`na`; margin-backed capital reservation and forced liquidation remain
+unsupported.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants

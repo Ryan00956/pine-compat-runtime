@@ -587,6 +587,7 @@ def test_run_script_returns_strategy_opentrades_field_plots():
         [None, 0.0, None],
         [None, 4.0, None],
         [None, 2.0, None],
+        [None, None, None],
     ] + [[None, None, None] for _ in range(27)]
     assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
     assert result["strategy"]["trades"][0]["entryPrice"] == 2.0

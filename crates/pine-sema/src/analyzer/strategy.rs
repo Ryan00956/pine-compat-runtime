@@ -35,6 +35,7 @@ const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.losstrades",
     "strategy.eventrades",
     "strategy.opentrades",
+    "strategy.opentrades.capital_held",
 ];
 
 const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[

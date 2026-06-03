@@ -157,6 +157,9 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "strategy.opentrades" {
             return PineValue::Int(self.strategy_broker.open_trade_count());
         }
+        if name == "strategy.opentrades.capital_held" {
+            return PineValue::Na;
+        }
         if name == "strategy.openprofit" {
             return self.current_bar.map_or(PineValue::Na, |bar| {
                 PineValue::Float(self.strategy_broker.open_profit(bar.close))

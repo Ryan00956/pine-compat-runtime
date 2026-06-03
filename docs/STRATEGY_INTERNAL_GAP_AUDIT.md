@@ -308,7 +308,7 @@ Missing internal behavior:
 - contract/share minimum and rounding behavior;
 - currency selection and conversion;
 - margin requirements and forced liquidation;
-- capital held for open trades;
+- margin-backed capital held for open trades;
 - account constraints that can prevent fills.
 
 Gap size: large.
@@ -346,7 +346,7 @@ Missing internal behavior:
 
 - remaining percent variants outside the supported profit/average-trade/run-up
   and drawdown subset;
-- capital held;
+- margin-backed capital held;
 - built-ins whose value depends on costs, margin, or individual trade records.
 
 Gap size: medium.
@@ -403,13 +403,17 @@ adds `strategy.avg_trade_percent`, `strategy.avg_winning_trade_percent`, and
 `strategy.avg_losing_trade_percent` without expanding public output. Stage 7
 Slice 34 adds `strategy.max_contracts_held_all`,
 `strategy.max_contracts_held_long`, and `strategy.max_contracts_held_short`
-without expanding public output. Other namespace functions are unsupported.
+without expanding public output. Stage 7 Slice 35 adds
+`strategy.opentrades.capital_held` as a read-only variable in the current
+no-margin subset, returning `na` until margin-backed funding simulation is
+implemented. Other namespace functions are unsupported.
 
 Missing internal behavior:
 
 - `strategy.closedtrades.*()` fields beyond the supported price/id/bar-index,
   time, commission, size, profit, runup, and drawdown subset;
 - indexed trade access;
+- margin-backed `strategy.opentrades.capital_held` values;
 - open-trade and closed-trade records with enough retained metadata.
 
 Gap size: large.

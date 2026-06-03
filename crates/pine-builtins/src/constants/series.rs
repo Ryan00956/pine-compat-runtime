@@ -116,6 +116,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Int),
     ),
     (
+        "strategy.opentrades.capital_held",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "barstate.isfirst",
         PineType::new(Qualifier::Series, ValueKind::Bool),
     ),
@@ -223,6 +227,7 @@ mod tests {
             "strategy.max_contracts_held_all",
             "strategy.max_contracts_held_long",
             "strategy.max_contracts_held_short",
+            "strategy.opentrades.capital_held",
             "strategy.equity",
         ] {
             assert_eq!(

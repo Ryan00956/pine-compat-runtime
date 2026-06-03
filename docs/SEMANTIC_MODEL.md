@@ -219,8 +219,10 @@ commission when configured, and
 `strategy.opentrades.max_runup`, which returns the largest high-based favorable
 excursion seen so far for that open position, and
 `strategy.opentrades.max_drawdown`, which returns the largest low-based adverse
-excursion seen so far for that open position. All return `na` when flat or
-invalid.
+excursion seen so far for that open position. All field functions return `na`
+when flat or invalid. `strategy.opentrades.capital_held` is a read-only
+strategy-mode variable and returns `na` in the current no-margin subset;
+nonzero margin-backed funding simulation remains unsupported.
 Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
 outside the public output model, and Phases R, S, U, V, W, X, and Y keep that

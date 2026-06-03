@@ -2,7 +2,7 @@
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-25, 26, and 27 closed on 2026-06-03.
+25, 26, 27, 28, 29, 30, 31, 32, 33, 34, and 35 closed on 2026-06-03.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -1068,9 +1068,40 @@ Evidence:
   `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
+## Slice 35: Open-Trade Capital Held Variable
+
+Closed on 2026-06-03.
+
+Supported variable:
+
+- `strategy.opentrades.capital_held`.
+
+Contract:
+
+- strategy-mode scripts only;
+- read-only `series float`;
+- supported as the unique variable under the `strategy.opentrades.*`
+  namespace, not as a `trade_num` field function;
+- returns `na` in the current no-margin subset, matching Pine's behavior when
+  the strategy does not simulate funding trades with nonzero margin settings;
+- nonzero `margin_long` / `margin_short` funding simulation, capital
+  reservation, and forced liquidation remain unsupported;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing
+  strategy output shape with no new top-level fields.
+
+Evidence:
+
+- runtime fixture:
+  `tests/fixtures/runtime/strategy_opentrades_fields.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_opentrades_fields.pine`,
+  `tests/fixtures/sema/unsupported_strategy_state_indicator.pine`,
+  `tests/fixtures/sema/unsupported_request_strategy_state.pine`, and
+  `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
+- host parity tests cover CLI snapshots plus Python and WASM plot values.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting
-addition, such as another reporting helper or a documented sizing/account-model
-subslice, only after
+addition, such as a documented margin/account-model subslice, only after
 documenting whether the behavior is script-only or public-output visible.

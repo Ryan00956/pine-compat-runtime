@@ -707,6 +707,7 @@ fn accepts_supported_strategy_opentrades_fields_fixture() {
             "strategy.opentrades.commission",
             "strategy.opentrades.max_runup",
             "strategy.opentrades.max_drawdown",
+            "strategy.opentrades.capital_held",
         ],
     );
 }

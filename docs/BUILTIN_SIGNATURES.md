@@ -296,6 +296,7 @@ strategy.closedtrades.size(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.profit(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.max_runup(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.max_drawdown(trade_num: series/simple numeric) -> series float
+strategy.opentrades.capital_held -> series float
 strategy.opentrades.entry_price(trade_num: series/simple numeric) -> series float
 strategy.opentrades.entry_id(trade_num: series/simple numeric) -> series string
 strategy.opentrades.entry_bar_index(trade_num: series/simple numeric) -> series int
@@ -413,6 +414,9 @@ read-only strategy-mode field functions over the current closed-trade list.
 `strategy.opentrades.commission`, `strategy.opentrades.max_runup`, and
 `strategy.opentrades.max_drawdown` are read-only strategy-mode field functions
 for the current supported long position.
+`strategy.opentrades.capital_held` is a read-only strategy-mode variable. The
+current no-margin subset returns `na`; nonzero `margin_long`/`margin_short`
+funding simulation remains unsupported.
 `trade_num` is a zero-based integer index; missing, negative, out-of-range, or
 non-integer indexes return `na`. Closed- and open-trade `entry_id` return the
 retained entry id. Closed-trade `exit_id` returns the retained close or exit id.

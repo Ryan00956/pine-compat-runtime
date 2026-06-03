@@ -3463,6 +3463,7 @@ plot(strategy.opentrades.profit(0))
 plot(strategy.opentrades.commission(0))
 plot(strategy.opentrades.max_runup(0))
 plot(strategy.opentrades.max_drawdown(0))
+plot(strategy.opentrades.capital_held)
 plot(strategy.opentrades.entry_price(1))
 plot(na(strategy.opentrades.entry_id(1)) ? na : 0)
 plot(strategy.opentrades.entry_bar_index(1))
@@ -3566,7 +3567,11 @@ plot(strategy.opentrades.max_drawdown(0.5))
         result.plots[8].values,
         vec![PineValue::Na, PineValue::Float(2.0), PineValue::Na]
     );
-    for plot in &result.plots[9..] {
+    assert_eq!(
+        result.plots[9].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    for plot in &result.plots[10..] {
         assert_eq!(
             plot.values,
             vec![PineValue::Na, PineValue::Na, PineValue::Na]

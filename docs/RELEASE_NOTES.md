@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 35
+  `strategy.opentrades.capital_held` as a read-only strategy-mode variable. In
+  the current no-margin subset it returns `na`, matching Pine's behavior when a
+  strategy does not simulate funding trades with `margin_long` or
+  `margin_short`, while public JSON, Python, and WASM strategy schemas remain
+  unchanged.
 - Added Strategy Internal Stage 7 Slice 34
   `strategy.max_contracts_held_all`, `strategy.max_contracts_held_long`, and
   `strategy.max_contracts_held_short`. Strategy-mode scripts can read maximum
