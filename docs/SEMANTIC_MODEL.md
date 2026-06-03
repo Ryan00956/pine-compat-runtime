@@ -150,6 +150,10 @@ positive realized closed-trade profit only; losing, flat, and current open
 trades do not change it. `strategy.netprofit_percent`,
 `strategy.grossprofit_percent`, and `strategy.grossloss_percent` divide the
 corresponding realized amount by `initial_capital` and multiply by 100.
+`strategy.avg_trade_percent`, `strategy.avg_winning_trade_percent`, and
+`strategy.avg_losing_trade_percent` average per-closed-trade percentage
+profit/loss values, using each closed trade's entry price times quantity as the
+denominator; the losing variant returns positive loss percentages.
 `strategy.grossloss` is a read-only strategy-mode
 `series float` that sums realized closed-trade losses as positive values;
 winning, flat, and current open trades do not change it. `strategy.avg_trade`

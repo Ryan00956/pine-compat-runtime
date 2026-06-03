@@ -607,8 +607,11 @@ def test_run_script_returns_strategy_trade_outcome_count_plots():
         [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
         [0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 2.0],
         [None, None, 1.0, 1.0, 1.0, -0.5, -0.5, -0.5, -1.0 / 3.0],
+        [None, None, 50.0, 50.0, 50.0, 0.0, 0.0, 0.0, 0.0],
         [None, None, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+        [None, None, 50.0, 50.0, 50.0, 50.0, 50.0, 50.0, 50.0],
         [None, None, None, None, None, 2.0, 2.0, 2.0, 2.0],
+        [None, None, None, None, None, 50.0, 50.0, 50.0, 50.0],
     ]
     assert [trade["profit"] for trade in result["strategy"]["trades"]] == [1.0, -2.0, 0.0]
     assert "winTrades" not in result["strategy"]

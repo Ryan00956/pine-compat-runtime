@@ -694,6 +694,7 @@ impl BrokerState {
 #[derive(Debug, Clone, PartialEq)]
 struct ClosedTradeMetrics {
     commission: f64,
+    profit_percent: f64,
     max_runup: f64,
     max_drawdown: f64,
 }

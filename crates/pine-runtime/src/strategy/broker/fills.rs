@@ -1,6 +1,18 @@
 use super::{BrokerState, ClosedTradeMetrics, exits::PendingExit};
 use crate::{RuntimeDiagnostic, StrategyOrderEvent, StrategyPositionSnapshot, StrategyTrade};
 
+fn normalize_zero(value: f64) -> f64 {
+    if value == 0.0 { 0.0 } else { value }
+}
+
+fn closed_trade_profit_percent(entry_price: f64, qty: f64, profit: f64) -> f64 {
+    let denominator = entry_price * qty;
+    if !profit.is_finite() || !denominator.is_finite() || denominator <= 0.0 {
+        return 0.0;
+    }
+    normalize_zero(profit / denominator * 100.0)
+}
+
 impl BrokerState {
     pub(crate) fn close_all_long(&mut self, bar_index: usize, time: i64, price: f64) {
         let Some(id) = self.entry_id.clone() else {
@@ -35,6 +47,7 @@ impl BrokerState {
         let entry_commission = self.entry_commission_for_closed_quantity(qty);
         let exit_commission = self.exit_commission_for_fill(qty, price);
         let commission = entry_commission + exit_commission;
+        let profit = (price - entry_price) * qty - commission;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
         self.cancel_exit_for_entry(&id);
@@ -48,10 +61,11 @@ impl BrokerState {
             entry_price,
             exit_price: price,
             qty,
-            profit: (price - entry_price) * qty - commission,
+            profit,
         });
         self.closed_trade_metrics.push(ClosedTradeMetrics {
             commission,
+            profit_percent: closed_trade_profit_percent(entry_price, qty, profit),
             max_runup: self.current_open_trade_max_runup_for_quantity(qty),
             max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });
@@ -104,6 +118,7 @@ impl BrokerState {
         let entry_commission = self.entry_commission_for_closed_quantity(qty);
         let exit_commission = self.exit_commission_for_fill(qty, exit_price);
         let commission = entry_commission + exit_commission;
+        let profit = (exit_price - entry_price) * qty - commission;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
         let exit_id = pending_exit.id;
@@ -127,10 +142,11 @@ impl BrokerState {
             entry_price,
             exit_price,
             qty,
-            profit: (exit_price - entry_price) * qty - commission,
+            profit,
         });
         self.closed_trade_metrics.push(ClosedTradeMetrics {
             commission,
+            profit_percent: closed_trade_profit_percent(entry_price, qty, profit),
             max_runup: self.current_open_trade_max_runup_for_quantity(qty),
             max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });

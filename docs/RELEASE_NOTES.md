@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 33
+  `strategy.avg_trade_percent`, `strategy.avg_winning_trade_percent`, and
+  `strategy.avg_losing_trade_percent`. Strategy-mode scripts can read average
+  per-trade percentage profit/loss values while public JSON, Python, and WASM
+  strategy schemas remain unchanged.
 - Added Strategy Internal Stage 7 Slice 32
   `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
   `strategy.grossloss_percent`. Strategy-mode scripts can read realized

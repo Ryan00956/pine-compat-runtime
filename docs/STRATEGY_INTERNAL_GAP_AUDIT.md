@@ -337,13 +337,14 @@ implementation.
 
 Current state: position size, average price, open profit, net profit, net profit
 percent, gross profit, gross profit percent, gross loss, gross loss percent,
-average trade, average winning trade, average losing trade, max run-up amount
-and percent, max drawdown amount and percent, equity, closed/open trade counts,
-and win/loss/even trade counts are supported.
+average trade, average winning trade, average losing trade, their percent
+variants, max run-up amount and percent, max drawdown amount and percent,
+equity, closed/open trade counts, and win/loss/even trade counts are supported.
 
 Missing internal behavior:
 
-- remaining percent variants outside the supported profit/run-up/drawdown subset;
+- remaining percent variants outside the supported profit/average-trade/run-up
+  and drawdown subset;
 - max contracts/shares held;
 - capital held;
 - built-ins whose value depends on costs, margin, or individual trade records.
@@ -397,7 +398,9 @@ public-output contract. Stage 7 Slice 30 adds `strategy.max_runup_percent` and
 Slice 31 adds `default_qty_type=strategy.percent_of_equity` for supported entry
 default sizing without expanding public output. Stage 7 Slice 32 adds
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
-`strategy.grossloss_percent` without expanding public output. Other
+`strategy.grossloss_percent` without expanding public output. Stage 7 Slice 33
+adds `strategy.avg_trade_percent`, `strategy.avg_winning_trade_percent`, and
+`strategy.avg_losing_trade_percent` without expanding public output. Other
 namespace functions are unsupported.
 
 Missing internal behavior:

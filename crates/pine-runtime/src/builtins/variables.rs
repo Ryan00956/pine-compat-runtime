@@ -186,16 +186,34 @@ impl<'a> HistoricalRuntime<'a> {
                 .average_trade()
                 .map_or(PineValue::Na, PineValue::Float);
         }
+        if name == "strategy.avg_trade_percent" {
+            return self
+                .strategy_broker
+                .average_trade_percent()
+                .map_or(PineValue::Na, PineValue::Float);
+        }
         if name == "strategy.avg_winning_trade" {
             return self
                 .strategy_broker
                 .average_winning_trade()
                 .map_or(PineValue::Na, PineValue::Float);
         }
+        if name == "strategy.avg_winning_trade_percent" {
+            return self
+                .strategy_broker
+                .average_winning_trade_percent()
+                .map_or(PineValue::Na, PineValue::Float);
+        }
         if name == "strategy.avg_losing_trade" {
             return self
                 .strategy_broker
                 .average_losing_trade()
+                .map_or(PineValue::Na, PineValue::Float);
+        }
+        if name == "strategy.avg_losing_trade_percent" {
+            return self
+                .strategy_broker
+                .average_losing_trade_percent()
                 .map_or(PineValue::Na, PineValue::Float);
         }
         if name == "strategy.max_runup" {

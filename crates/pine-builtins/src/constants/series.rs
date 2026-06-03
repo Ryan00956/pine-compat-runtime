@@ -44,11 +44,23 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.avg_trade_percent",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "strategy.avg_winning_trade",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.avg_winning_trade_percent",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "strategy.avg_losing_trade",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
+        "strategy.avg_losing_trade_percent",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
@@ -187,8 +199,11 @@ mod tests {
             "strategy.grossloss",
             "strategy.grossloss_percent",
             "strategy.avg_trade",
+            "strategy.avg_trade_percent",
             "strategy.avg_winning_trade",
+            "strategy.avg_winning_trade_percent",
             "strategy.avg_losing_trade",
+            "strategy.avg_losing_trade_percent",
             "strategy.max_runup",
             "strategy.max_runup_percent",
             "strategy.max_drawdown",

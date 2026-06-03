@@ -221,11 +221,15 @@ public-output contract. Stage 7 Slice 28 adds `strategy.max_runup` under the
 same public-output contract. Stage 7 Slice 32 adds
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` under the same public-output contract, using
-`amount / initial_capital * 100`. They read the current
-closed-trade list with a zero-based integer `trade_num`; missing,
-negative, out-of-range, or non-integer indexes return `na`. These functions are
-script-observable only through ordinary series outputs and do not add public
-runtime JSON, Python, or WASM fields.
+`amount / initial_capital * 100`. Stage 7 Slice 33 adds
+`strategy.avg_trade_percent`, `strategy.avg_winning_trade_percent`, and
+`strategy.avg_losing_trade_percent` under the same public-output contract,
+averaging per-closed-trade percentage profit/loss values using each trade's
+entry value as denominator. These state variables read the current closed-trade
+list and are script-observable only through ordinary series outputs; they do
+not add public runtime JSON, Python, or WASM fields. Closed/open trade namespace
+functions read the current trade lists with a zero-based integer `trade_num`;
+missing, negative, out-of-range, or non-integer indexes return `na`.
 Stage 7 Slice 6 adds `strategy.opentrades.entry_price(trade_num)` for the
 current supported long position. It returns the current open position average
 entry price for `trade_num == 0`; when flat, out of range, negative, or

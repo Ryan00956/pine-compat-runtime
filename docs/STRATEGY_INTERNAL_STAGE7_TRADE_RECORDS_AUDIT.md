@@ -990,6 +990,47 @@ Evidence:
   `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
+## Slice 33: Average Trade Percent Variables
+
+Closed on 2026-06-03.
+
+Supported variables:
+
+- `strategy.avg_trade_percent`;
+- `strategy.avg_winning_trade_percent`;
+- `strategy.avg_losing_trade_percent`.
+
+Contract:
+
+- strategy-mode scripts only;
+- read-only `series float`;
+- each closed trade records an internal percentage value as net closed-trade
+  profit divided by that closed trade's entry price times quantity, multiplied
+  by 100;
+- `strategy.avg_trade_percent` averages all closed-trade percentage values and
+  returns `na` before the first closed trade;
+- `strategy.avg_winning_trade_percent` averages winning closed-trade
+  percentage values only and returns `na` before the first winning trade;
+- `strategy.avg_losing_trade_percent` averages losing closed-trade percentage
+  values as positive percentages and returns `na` before the first losing
+  trade;
+- current open trades do not affect any of the values;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing
+  strategy output shape with no new top-level fields or trade fields.
+
+Evidence:
+
+- runtime test:
+  `strategy_trade_outcome_count_variables_follow_closed_trade_profits`;
+- runtime fixture:
+  `tests/fixtures/runtime/strategy_trade_outcome_counts.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_profit_state.pine`,
+  `tests/fixtures/sema/unsupported_strategy_state_indicator.pine`,
+  `tests/fixtures/sema/unsupported_request_strategy_state.pine`, and
+  `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
+- host parity tests cover CLI snapshots plus Python and WASM plot values.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting

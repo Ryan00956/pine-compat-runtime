@@ -120,6 +120,11 @@ Stage 7 Slice 24 adds `strategy.avg_trade` as average realized
 profit/loss per closed trade, returning `na` until at least one trade is
 closed. Stage 7 Slice 25 adds `strategy.avg_winning_trade` as average realized
 profit among winning closed trades only, returning `na` until at least one
+winning trade exists. Stage 7 Slice 33 adds `strategy.avg_trade_percent`,
+`strategy.avg_winning_trade_percent`, and
+`strategy.avg_losing_trade_percent` as averages of per-closed-trade percentage
+profit/loss values, using each trade's entry price times quantity as the
+denominator and returning `na` until the matching trade set exists.
 winning trade is closed. Stage 7 Slice 26 adds `strategy.avg_losing_trade` as
 average realized loss among losing closed trades only as a positive value,
 returning `na` until at least one losing trade is closed. Stage 7 Slice 27 adds
@@ -621,8 +626,11 @@ strategy.grossprofit_percent partial cumulative positive realized closed-trade p
 strategy.grossloss partial        cumulative realized closed-trade loss read-only series as a positive value, excluding winning, flat, and current open trades, in strategy-mode scripts only
 strategy.grossloss_percent partial cumulative realized closed-trade loss as a positive percentage of initial_capital, excluding winning, flat, and current open trades, in strategy-mode scripts only
 strategy.avg_trade partial        average realized profit/loss per closed trade read-only series, na before the first closed trade and excluding current open trades, in strategy-mode scripts only
+strategy.avg_trade_percent partial average realized per-trade profit/loss percentage read-only series, using each closed trade entry value as denominator, na before the first closed trade and excluding current open trades, in strategy-mode scripts only
 strategy.avg_winning_trade partial average realized profit among winning closed trades only, na before the first winning closed trade and excluding losing, flat, and current open trades, in strategy-mode scripts only
+strategy.avg_winning_trade_percent partial average realized percentage gain among winning closed trades only, using each closed trade entry value as denominator, na before the first winning trade and excluding losing, flat, and current open trades, in strategy-mode scripts only
 strategy.avg_losing_trade partial average realized loss among losing closed trades only as a positive value, na before the first losing closed trade and excluding winning, flat, and current open trades, in strategy-mode scripts only
+strategy.avg_losing_trade_percent partial average realized percentage loss among losing closed trades only as a positive value, using each closed trade entry value as denominator, na before the first losing trade and excluding winning, flat, and current open trades, in strategy-mode scripts only
 strategy.max_runup partial        maximum intrabar equity run-up amount read-only series over the current supported long-only trading interval, using supported entry equity, minimum equity before that entry, and the highest high reached while the supported position is open
 strategy.max_runup_percent partial maximum intrabar equity run-up percentage read-only series over the current supported long-only trading interval, dividing the supported run-up amount by entry price times current supported position quantity and multiplying by 100
 strategy.max_drawdown partial     maximum intrabar equity drawdown amount read-only series over the current supported long-only trading interval, using supported entry equity, maximum equity before that entry, and the lowest low reached while the supported position is open

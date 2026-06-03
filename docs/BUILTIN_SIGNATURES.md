@@ -271,8 +271,11 @@ strategy.grossprofit_percent -> series float
 strategy.grossloss -> series float
 strategy.grossloss_percent -> series float
 strategy.avg_trade -> series float
+strategy.avg_trade_percent -> series float
 strategy.avg_winning_trade -> series float
+strategy.avg_winning_trade_percent -> series float
 strategy.avg_losing_trade -> series float
+strategy.avg_losing_trade_percent -> series float
 strategy.max_runup -> series float
 strategy.max_runup_percent -> series float
 strategy.max_drawdown -> series float
@@ -334,6 +337,11 @@ series float that sums realized closed-trade losses as positive values.
 Winning, flat, and current open trades do not change it. `strategy.avg_trade`
 is a read-only strategy-mode series float that returns average realized
 profit/loss per closed trade, or `na` before the first closed trade.
+`strategy.avg_trade_percent`, `strategy.avg_winning_trade_percent`, and
+`strategy.avg_losing_trade_percent` are read-only strategy-mode series floats
+that average per-closed-trade percentage profit/loss values, using each closed
+trade's net profit divided by that trade's entry price times quantity; the
+losing variant returns positive loss percentages.
 `strategy.avg_winning_trade` is a read-only strategy-mode series float that
 returns average realized profit among winning closed trades only, or `na`
 before the first winning closed trade.
