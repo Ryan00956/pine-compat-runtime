@@ -189,6 +189,9 @@ impl<'a> HistoricalRuntime<'a> {
                 .average_losing_trade()
                 .map_or(PineValue::Na, PineValue::Float);
         }
+        if name == "strategy.max_runup" {
+            return PineValue::Float(self.strategy_broker.max_runup());
+        }
         if name == "strategy.max_drawdown" {
             return self.current_bar.map_or(PineValue::Na, |bar| {
                 PineValue::Float(

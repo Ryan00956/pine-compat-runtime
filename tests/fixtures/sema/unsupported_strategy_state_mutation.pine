@@ -6,6 +6,7 @@ strategy.grossloss := 1
 strategy.avg_trade := 1
 strategy.avg_winning_trade := 1
 strategy.avg_losing_trade := 1
+strategy.max_runup := 1
 strategy.max_drawdown := 1
 strategy.closedtrades := 1
 strategy.wintrades := 1

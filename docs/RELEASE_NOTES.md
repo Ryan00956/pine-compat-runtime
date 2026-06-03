@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 28 `strategy.max_runup`.
+  Strategy-mode scripts can read maximum intrabar equity run-up amount over the
+  current supported long-only trading interval, while keeping public JSON,
+  Python, and WASM strategy schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 27 `strategy.max_drawdown`.
   Strategy-mode scripts can read maximum equity peak-to-trough drawdown amount
   over the current supported trading interval using current close

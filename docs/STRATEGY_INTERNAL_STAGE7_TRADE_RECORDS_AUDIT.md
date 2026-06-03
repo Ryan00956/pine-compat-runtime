@@ -825,9 +825,41 @@ Evidence:
   `strategy.max_drawdown_percent` unsupported;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
+## Slice 28: Maximum Run-Up State Variable
+
+Closed on 2026-06-03.
+
+Supported variable:
+
+- `strategy.max_runup`.
+
+Contract:
+
+- strategy-mode scripts only;
+- read-only `series float`;
+- returns the maximum intrabar equity run-up amount over the current supported
+  long-only trading interval;
+- uses the supported entry equity, the minimum equity before that entry, and
+  the highest high reached while the supported position is open;
+- returns `0` before any run-up from the minimum equity baseline;
+- `strategy.max_runup_percent` remains unsupported;
+- margin, currency conversion, pyramiding, and short exposure remain outside
+  the current account model;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing
+  strategy output shape with no new top-level fields.
+
+Evidence:
+
+- runtime fixture: `tests/fixtures/runtime/strategy_profit_state.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_profit_state.pine`,
+  `tests/fixtures/sema/unsupported_strategy_state_indicator.pine`,
+  `tests/fixtures/sema/unsupported_request_strategy_state.pine`, and
+  `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
+- host parity tests cover CLI snapshots plus Python and WASM plot values.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting
-addition, such as a richer fill-model setting or another closed/open-trade
-field, only after documenting whether the behavior is script-only or
-public-output visible.
+addition, such as a percent variant or another reporting helper, only after
+documenting whether the behavior is script-only or public-output visible.

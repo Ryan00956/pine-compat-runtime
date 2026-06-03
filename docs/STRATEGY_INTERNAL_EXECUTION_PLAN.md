@@ -218,7 +218,7 @@ Acceptance:
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-25, 26, and 27 closed on 2026-06-03; see
+25, 26, 27, and 28 closed on 2026-06-03; see
 `docs/STRATEGY_INTERNAL_STAGE7_TRADE_RECORDS_AUDIT.md`.
 
 Goal: enrich strategy reporting and accounting without jumping directly to a

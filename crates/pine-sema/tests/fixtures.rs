@@ -598,6 +598,7 @@ fn accepts_supported_strategy_profit_state_fixture() {
             "strategy.avg_trade",
             "strategy.avg_winning_trade",
             "strategy.avg_losing_trade",
+            "strategy.max_runup",
             "strategy.max_drawdown",
             "strategy.equity",
         ],

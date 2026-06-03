@@ -57,6 +57,7 @@ impl BrokerState {
         });
 
         self.cash += qty * price - exit_commission;
+        self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
         self.position_size = 0.0;
         self.avg_price = 0.0;
         self.entry_id = None;
@@ -65,6 +66,8 @@ impl BrokerState {
         self.open_entry_commission = 0.0;
         self.open_trade_max_high = None;
         self.open_trade_min_low = None;
+        self.open_trade_equity_on_entry = None;
+        self.open_trade_min_equity_before_entry = None;
         self.position.push(StrategyPositionSnapshot {
             bar_index,
             size: 0.0,
@@ -132,6 +135,7 @@ impl BrokerState {
 
         self.cash += qty * exit_price - exit_commission;
         if qty >= self.position_size {
+            self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
             self.position_size = 0.0;
             self.avg_price = 0.0;
             self.entry_id = None;
@@ -140,6 +144,8 @@ impl BrokerState {
             self.open_entry_commission = 0.0;
             self.open_trade_max_high = None;
             self.open_trade_min_low = None;
+            self.open_trade_equity_on_entry = None;
+            self.open_trade_min_equity_before_entry = None;
             self.position.push(StrategyPositionSnapshot {
                 bar_index,
                 size: 0.0,

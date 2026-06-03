@@ -139,7 +139,7 @@ strategy metrics beyond the Phase L position/profit/equity variables remain
 unsupported except for the Phase O `strategy.closedtrades` and
 `strategy.opentrades` count variables, the Stage 3 outcome count variables, the
 Stage 7 script-visible trade field functions, and the gross profit/loss
-plus average-trade variables.
+plus average-trade and max run-up/drawdown variables.
 `strategy.grossprofit` is a read-only strategy-mode `series float` that sums
 positive realized closed-trade profit only; losing, flat, and current open
 trades do not change it. `strategy.grossloss` is a read-only strategy-mode
@@ -152,7 +152,12 @@ returns average realized profit among winning closed trades only and `na`
 before the first winning closed trade. `strategy.avg_losing_trade` is a
 read-only strategy-mode `series float` that returns average realized loss among
 losing closed trades only as a positive value and `na` before the first losing
-closed trade. `strategy.max_drawdown` is a read-only strategy-mode
+closed trade. `strategy.max_runup` is a read-only strategy-mode `series float`
+that returns the maximum intrabar equity run-up amount over the current
+supported long-only trading interval, using the supported entry equity, the
+minimum equity before that entry, and the highest high reached while the
+supported position is open; the percent variant remains unsupported.
+`strategy.max_drawdown` is a read-only strategy-mode
 `series float` that returns the maximum equity peak-to-trough drawdown amount
 over the current supported trading interval using current close mark-to-market
 equity, including current open profit/loss; the percent variant remains

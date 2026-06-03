@@ -338,12 +338,13 @@ implementation.
 
 Current state: position size, average price, open profit, net profit, gross
 profit, gross loss, average trade, average winning trade, average losing trade,
-max drawdown amount, equity, closed/open trade counts, and win/loss/even trade
-counts are supported.
+max run-up amount, max drawdown amount, equity, closed/open trade counts, and
+win/loss/even trade counts are supported.
 
 Missing internal behavior:
 
-- runup and percent variants, including `strategy.max_drawdown_percent`;
+- percent variants, including `strategy.max_runup_percent` and
+  `strategy.max_drawdown_percent`;
 - max contracts/shares held;
 - capital held;
 - built-ins whose value depends on costs, margin, or individual trade records.
@@ -351,7 +352,7 @@ Missing internal behavior:
 Gap size: medium.
 
 Best next slice: choose another read-only performance variable such as a narrow
-runup or percent-variant variable, preserving the current public output shape.
+percent-variant variable, preserving the current public output shape.
 
 ### 12. Individual Trade Namespaces
 
@@ -389,7 +390,8 @@ the same public-output contract. Stage 7 Slice 25 adds
 `strategy.avg_winning_trade` under the same public-output contract. Stage 7
 Slice 26 adds `strategy.avg_losing_trade` under the same public-output
 contract. Stage 7 Slice 27 adds `strategy.max_drawdown` under the same
-public-output contract. Other namespace functions are unsupported.
+public-output contract. Stage 7 Slice 28 adds `strategy.max_runup` under the
+same public-output contract. Other namespace functions are unsupported.
 
 Missing internal behavior:
 

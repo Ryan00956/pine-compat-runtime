@@ -270,6 +270,7 @@ strategy.grossloss -> series float
 strategy.avg_trade -> series float
 strategy.avg_winning_trade -> series float
 strategy.avg_losing_trade -> series float
+strategy.max_runup -> series float
 strategy.max_drawdown -> series float
 strategy.closedtrades.entry_price(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.entry_id(trade_num: series/simple numeric) -> series string
@@ -327,6 +328,11 @@ before the first winning closed trade.
 `strategy.avg_losing_trade` is a read-only strategy-mode series float that
 returns average realized loss among losing closed trades only as a positive
 value, or `na` before the first losing closed trade.
+`strategy.max_runup` is a read-only strategy-mode series float that returns the
+maximum intrabar equity run-up amount over the current supported long-only
+trading interval, using the supported entry equity, the minimum equity before
+that entry, and the highest high reached while the supported position is open.
+`strategy.max_runup_percent` remains unsupported.
 `strategy.max_drawdown` is a read-only strategy-mode series float that returns
 the maximum equity peak-to-trough drawdown amount over the current supported
 trading interval, using current close mark-to-market equity and including

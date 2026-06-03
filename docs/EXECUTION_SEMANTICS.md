@@ -122,7 +122,7 @@ Strategy-mode scripts can read `strategy.position_size` and
 `strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`,
 `strategy.grossprofit`, `strategy.grossloss`, `strategy.avg_trade`,
 `strategy.avg_winning_trade`, `strategy.avg_losing_trade`,
-`strategy.max_drawdown`, and
+`strategy.max_runup`, `strategy.max_drawdown`, and
 `strategy.equity` as historical series floats. They can also read `strategy.closedtrades` and
 `strategy.opentrades` as historical series ints in the current count-only
 reporting subset. In the current long-only subset,
@@ -145,7 +145,11 @@ trade.
 amount over the current supported trading interval, using current close
 mark-to-market equity and including current open profit/loss. It returns `0`
 before any equity decline from a peak. `strategy.max_drawdown_percent` remains
-unsupported.
+unsupported. `strategy.max_runup` returns the maximum intrabar equity run-up
+amount over the current supported long-only trading interval, using the
+supported entry equity, the minimum equity before that entry, and the highest
+high reached while the supported position is open. `strategy.max_runup_percent`
+remains unsupported.
 `strategy.equity` is cash plus current market value; without configured
 commission this equals `initial_capital + strategy.netprofit +
 strategy.openprofit`, and with supported commission it also includes entry
@@ -204,7 +208,8 @@ adds `strategy.avg_trade` under the same public-output contract. Stage 7 Slice
 25 adds `strategy.avg_winning_trade` under the same public-output contract.
 Stage 7 Slice 26 adds `strategy.avg_losing_trade` under the same public-output
 contract. Stage 7 Slice 27 adds `strategy.max_drawdown` under the same
-public-output contract. They read the current
+public-output contract. Stage 7 Slice 28 adds `strategy.max_runup` under the
+same public-output contract. They read the current
 closed-trade list with a zero-based integer `trade_num`; missing,
 negative, out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public
@@ -237,7 +242,7 @@ beyond the supported single-trigger, one-downside/one-upside bracket,
 trailing-stop, fixed-quantity, percent-quantity, explicit single-trigger or
 bracket/trailing reservation subset, `strategy.cancel(id)`, and
 `strategy.cancel_all()`, `strategy.order`, rich order families, strategy
-reporting helpers beyond the supported position/profit/equity/count variables,
+reporting helpers beyond the supported position/profit/equity/count/run-up/drawdown variables,
 requested-context strategy state, strategy state mutation, and realtime
 strategy handoff remain unsupported until later strategy-maintenance slices
 define and fixture those semantics. Phase M

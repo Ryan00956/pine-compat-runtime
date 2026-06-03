@@ -31,6 +31,10 @@ pub struct BrokerState {
     entry_time: Option<i64>,
     open_trade_max_high: Option<f64>,
     open_trade_min_low: Option<f64>,
+    open_trade_equity_on_entry: Option<f64>,
+    open_trade_min_equity_before_entry: Option<f64>,
+    min_equity_before_open_trade: f64,
+    max_runup: f64,
     orders: Vec<StrategyOrderEvent>,
     trades: Vec<StrategyTrade>,
     closed_trade_metrics: Vec<ClosedTradeMetrics>,
@@ -107,6 +111,10 @@ impl BrokerState {
             entry_time: None,
             open_trade_max_high: None,
             open_trade_min_low: None,
+            open_trade_equity_on_entry: None,
+            open_trade_min_equity_before_entry: None,
+            min_equity_before_open_trade: initial_capital,
+            max_runup: 0.0,
             orders: Vec::new(),
             trades: Vec::new(),
             closed_trade_metrics: Vec::new(),
@@ -190,6 +198,8 @@ impl BrokerState {
             return;
         }
 
+        let equity_on_entry = self.cash;
+        let min_equity_before_entry = self.min_equity_before_open_trade;
         self.position_size = qty;
         self.avg_price = fill_price;
         self.open_entry_commission = self.entry_commission_for_fill(qty, fill_price);
@@ -199,6 +209,8 @@ impl BrokerState {
         self.entry_time = Some(time);
         self.open_trade_max_high = Some(fill_price);
         self.open_trade_min_low = Some(fill_price);
+        self.open_trade_equity_on_entry = Some(equity_on_entry);
+        self.open_trade_min_equity_before_entry = Some(min_equity_before_entry);
         self.orders.push(StrategyOrderEvent {
             id,
             bar_index,

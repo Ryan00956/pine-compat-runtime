@@ -35,6 +35,7 @@ impl BrokerState {
                     .map_or(low, |current| current.min(low)),
             );
         }
+        self.update_open_trade_max_runup();
     }
 
     #[must_use]
@@ -132,6 +133,11 @@ impl BrokerState {
             max_drawdown = f64::max(max_drawdown, peak - equity);
         }
         normalize_zero(max_drawdown)
+    }
+
+    #[must_use]
+    pub(crate) fn max_runup(&self) -> f64 {
+        normalize_zero(self.max_runup)
     }
 
     #[must_use]
@@ -314,6 +320,26 @@ impl BrokerState {
             return 0.0;
         };
         normalize_zero((max_high - self.avg_price).max(0.0) * qty)
+    }
+
+    fn current_open_strategy_max_runup(&self) -> Option<f64> {
+        if self.open_trade_count() != 1 {
+            return None;
+        }
+        let equity_on_entry = self.open_trade_equity_on_entry?;
+        let min_equity_before_entry = self.open_trade_min_equity_before_entry?;
+        let max_high = self.open_trade_max_high?;
+        Some(normalize_zero(
+            (equity_on_entry - min_equity_before_entry
+                + (max_high - self.avg_price).max(0.0) * self.position_size)
+                .max(0.0),
+        ))
+    }
+
+    fn update_open_trade_max_runup(&mut self) {
+        if let Some(runup) = self.current_open_strategy_max_runup() {
+            self.max_runup = self.max_runup.max(runup);
+        }
     }
 
     #[must_use]
