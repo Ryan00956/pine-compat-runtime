@@ -145,8 +145,10 @@ non-integer, it returns `na`. Stage 7 Slice 7 adds
 `strategy.opentrades.entry_bar_index(trade_num)` under the same contract,
 returning the current open position's entry fill bar. Stage 7 Slice 8 adds
 `strategy.opentrades.entry_time(trade_num)`, returning the current open
-position's entry fill timestamp. Other open-trade namespace functions and
-public open-trade record output remain unsupported.
+position's entry fill timestamp. Stage 7 Slice 9 adds
+`strategy.opentrades.size(trade_num)`, returning the current open position
+size. Other open-trade namespace functions and public open-trade record output
+remain unsupported.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants

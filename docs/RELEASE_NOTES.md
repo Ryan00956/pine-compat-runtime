@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 9 open-trade `size()` field function.
+  It exposes the current supported long position size for `trade_num == 0`,
+  returns `na` when flat or for invalid indexes, and keeps public JSON, Python,
+  and WASM strategy schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 8 open-trade `entry_time()` field
   function. It exposes the current supported long position's entry fill
   timestamp for `trade_num == 0`, returns `na` when flat or for invalid

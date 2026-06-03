@@ -354,13 +354,13 @@ closed-trade list without public runtime schema expansion. Stage 7 Slice 6
 also supports `strategy.opentrades.entry_price()` for the current supported
 single open long position. Stage 7 Slice 7 adds
 `strategy.opentrades.entry_bar_index()` for that same open position. Stage 7
-Slice 8 adds `strategy.opentrades.entry_time()`. Other namespace functions are
-unsupported.
+Slice 8 adds `strategy.opentrades.entry_time()`, and Slice 9 adds
+`strategy.opentrades.size()`. Other namespace functions are unsupported.
 
 Missing internal behavior:
 
-- `strategy.opentrades.entry_id()`, `.size()`, `.profit()`, `.commission()`,
-  runup, and drawdown;
+- `strategy.opentrades.entry_id()`, `.profit()`, `.commission()`, runup, and
+  drawdown;
 - `strategy.closedtrades.*()` fields beyond the supported price/id/bar-index
   and time subset, plus runup and drawdown;
 - indexed trade access;

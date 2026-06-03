@@ -148,7 +148,8 @@ open-trade namespace functions remain unsupported except for
 `strategy.opentrades.entry_price`, which returns the current supported long
 position's entry price for `trade_num == 0`, and
 `strategy.opentrades.entry_bar_index`, which returns its entry fill bar, and
-`strategy.opentrades.entry_time`, which returns its entry fill timestamp. All
+`strategy.opentrades.entry_time`, which returns its entry fill timestamp, and
+`strategy.opentrades.size`, which returns the current open position size. All
 return `na` when flat or invalid.
 Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
