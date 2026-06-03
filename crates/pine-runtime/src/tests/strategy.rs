@@ -2723,6 +2723,7 @@ plot(strategy.opentrades.entry_time(0))
 plot(strategy.opentrades.size(0))
 plot(strategy.opentrades.profit(0))
 plot(strategy.opentrades.commission(0))
+plot(strategy.opentrades.max_runup(0))
 plot(strategy.opentrades.entry_price(1))
 plot(na(strategy.opentrades.entry_id(1)) ? na : 0)
 plot(strategy.opentrades.entry_bar_index(1))
@@ -2730,6 +2731,7 @@ plot(strategy.opentrades.entry_time(1))
 plot(strategy.opentrades.size(1))
 plot(strategy.opentrades.profit(1))
 plot(strategy.opentrades.commission(1))
+plot(strategy.opentrades.max_runup(1))
 plot(strategy.opentrades.entry_price(-1))
 plot(na(strategy.opentrades.entry_id(-1)) ? na : 0)
 plot(strategy.opentrades.entry_bar_index(-1))
@@ -2737,6 +2739,7 @@ plot(strategy.opentrades.entry_time(-1))
 plot(strategy.opentrades.size(-1))
 plot(strategy.opentrades.profit(-1))
 plot(strategy.opentrades.commission(-1))
+plot(strategy.opentrades.max_runup(-1))
 plot(strategy.opentrades.entry_price(0.5))
 plot(na(strategy.opentrades.entry_id(0.5)) ? na : 0)
 plot(strategy.opentrades.entry_bar_index(0.5))
@@ -2744,6 +2747,7 @@ plot(strategy.opentrades.entry_time(0.5))
 plot(strategy.opentrades.size(0.5))
 plot(strategy.opentrades.profit(0.5))
 plot(strategy.opentrades.commission(0.5))
+plot(strategy.opentrades.max_runup(0.5))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -2767,7 +2771,7 @@ plot(strategy.opentrades.commission(0.5))
             Bar {
                 time: 20,
                 open: 2.0,
-                high: 2.0,
+                high: 4.0,
                 low: 2.0,
                 close: 2.0,
                 volume: 1.0,
@@ -2812,7 +2816,11 @@ plot(strategy.opentrades.commission(0.5))
         result.plots[6].values,
         vec![PineValue::Na, PineValue::Float(0.0), PineValue::Na]
     );
-    for plot in &result.plots[7..] {
+    assert_eq!(
+        result.plots[7].values,
+        vec![PineValue::Na, PineValue::Float(4.0), PineValue::Na]
+    );
+    for plot in &result.plots[8..] {
         assert_eq!(
             plot.values,
             vec![PineValue::Na, PineValue::Na, PineValue::Na]

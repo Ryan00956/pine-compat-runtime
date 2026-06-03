@@ -45,6 +45,7 @@ impl BrokerState {
         self.entry_id = None;
         self.entry_bar_index = None;
         self.entry_time = None;
+        self.open_trade_max_high = None;
         self.position.push(StrategyPositionSnapshot {
             bar_index,
             size: 0.0,
@@ -101,6 +102,7 @@ impl BrokerState {
             self.entry_id = None;
             self.entry_bar_index = None;
             self.entry_time = None;
+            self.open_trade_max_high = None;
             self.position.push(StrategyPositionSnapshot {
                 bar_index,
                 size: 0.0,

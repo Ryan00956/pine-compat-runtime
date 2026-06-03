@@ -42,7 +42,8 @@ impl<'a> HistoricalRuntime<'a> {
             | "strategy.opentrades.entry_time"
             | "strategy.opentrades.size"
             | "strategy.opentrades.profit"
-            | "strategy.opentrades.commission" => self.eval_strategy_open_trade_field(callee, args),
+            | "strategy.opentrades.commission"
+            | "strategy.opentrades.max_runup" => self.eval_strategy_open_trade_field(callee, args),
             _ => return None,
         })
     }
@@ -128,6 +129,10 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.opentrades.commission" => self
                 .strategy_broker
                 .open_trade_commission(trade_num)
+                .map_or(PineValue::Na, PineValue::Float),
+            "strategy.opentrades.max_runup" => self
+                .strategy_broker
+                .open_trade_max_runup(trade_num)
                 .map_or(PineValue::Na, PineValue::Float),
             _ => PineValue::Na,
         })

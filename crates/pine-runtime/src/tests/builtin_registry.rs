@@ -200,6 +200,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "strategy.opentrades.size",
     "strategy.opentrades.profit",
     "strategy.opentrades.commission",
+    "strategy.opentrades.max_runup",
     "strategy.entry",
     "strategy.exit",
     "string",

@@ -91,6 +91,7 @@ mod tests {
                 || signature.name == "strategy.opentrades.size"
                 || signature.name == "strategy.opentrades.profit"
                 || signature.name == "strategy.opentrades.commission"
+                || signature.name == "strategy.opentrades.max_runup"
                 || signature.name == "alert"
                 || signature.name == "alertcondition"
             {
@@ -1428,6 +1429,9 @@ mod tests {
                 include_str!(
                     "../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_bars.csv"
                 )
+            }
+            "tests/fixtures/runtime/strategy_opentrades_fields.pine" => {
+                include_str!("../../../tests/fixtures/runtime/strategy_opentrades_fields_bars.csv")
             }
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }

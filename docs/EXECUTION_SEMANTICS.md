@@ -152,7 +152,9 @@ the current close-based floating profit for the current open position. Stage 7
 Slice 11 adds `strategy.opentrades.entry_id(trade_num)`, returning the retained
 entry id for that open position. Stage 7 Slice 12 adds
 `strategy.opentrades.commission(trade_num)`, returning `0.0` for that open
-position under the current no-commission account model. Other open-trade
+position under the current no-commission account model. Stage 7 Slice 13 adds
+`strategy.opentrades.max_runup(trade_num)`, returning the largest high-based
+favorable excursion seen so far for that open position. Other open-trade
 namespace functions and public open-trade record output remain unsupported.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,

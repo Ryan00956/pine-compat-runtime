@@ -25,6 +25,7 @@ pub struct BrokerState {
     entry_id: Option<String>,
     entry_bar_index: Option<usize>,
     entry_time: Option<i64>,
+    open_trade_max_high: Option<f64>,
     orders: Vec<StrategyOrderEvent>,
     trades: Vec<StrategyTrade>,
     position: Vec<StrategyPositionSnapshot>,
@@ -51,6 +52,7 @@ impl BrokerState {
             entry_id: None,
             entry_bar_index: None,
             entry_time: None,
+            open_trade_max_high: None,
             orders: Vec::new(),
             trades: Vec::new(),
             position: Vec::new(),
@@ -93,6 +95,7 @@ impl BrokerState {
         self.entry_id = Some(id.clone());
         self.entry_bar_index = Some(bar_index);
         self.entry_time = Some(time);
+        self.open_trade_max_high = Some(price);
         self.orders.push(StrategyOrderEvent {
             id,
             bar_index,

@@ -19,6 +19,16 @@ impl BrokerState {
         });
     }
 
+    pub(crate) fn update_open_trade_extremes(&mut self, high: f64) {
+        if self.open_trade_count() != 1 || !high.is_finite() {
+            return;
+        }
+        self.open_trade_max_high = Some(
+            self.open_trade_max_high
+                .map_or(high, |current| current.max(high)),
+        );
+    }
+
     #[must_use]
     pub(crate) fn open_profit(&self, close: f64) -> f64 {
         if self.position_size > 0.0 {
@@ -154,6 +164,18 @@ impl BrokerState {
     pub(crate) fn open_trade_commission(&self, trade_num: i64) -> Option<f64> {
         if trade_num == 0 && self.open_trade_count() == 1 {
             Some(0.0)
+        } else {
+            None
+        }
+    }
+
+    #[must_use]
+    pub(crate) fn open_trade_max_runup(&self, trade_num: i64) -> Option<f64> {
+        if trade_num == 0 && self.open_trade_count() == 1 {
+            let max_high = self.open_trade_max_high?;
+            Some(normalize_zero(
+                (max_high - self.avg_price).max(0.0) * self.position_size,
+            ))
         } else {
             None
         }
