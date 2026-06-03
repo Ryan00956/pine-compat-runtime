@@ -152,7 +152,9 @@ position's entry price for `trade_num == 0`,
 `strategy.opentrades.entry_time`, which returns its entry fill timestamp, and
 `strategy.opentrades.size`, which returns the current open position size, and
 `strategy.opentrades.profit`, which returns the current close-based floating
-profit for that open position. All return `na` when flat or invalid.
+profit for that open position, and `strategy.opentrades.commission`, which
+returns `0.0` under the current no-commission account model. All return `na`
+when flat or invalid.
 Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
 outside the public output model, and Phases R, S, U, V, W, X, and Y keep that

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 12 open-trade `commission()` field
+  function. It exposes `0.0` for the current supported long position under the
+  current no-commission account model when `trade_num == 0`, returns `na` when
+  flat or for invalid indexes, and keeps public JSON, Python, and WASM strategy
+  schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 11 open-trade `entry_id()` field
   function. It exposes the current supported long position entry id when
   `trade_num == 0`, returns `na` when flat or for invalid indexes, and keeps

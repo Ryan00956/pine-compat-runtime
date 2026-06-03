@@ -226,6 +226,7 @@ mod tests {
             "strategy.opentrades.entry_time",
             "strategy.opentrades.size",
             "strategy.opentrades.profit",
+            "strategy.opentrades.commission",
         ] {
             let signature = get_phase_1_builtin(name).expect("trade field signature");
             assert_eq!(signature.params.len(), 1, "{name}");

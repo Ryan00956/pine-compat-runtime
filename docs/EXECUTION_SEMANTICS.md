@@ -150,8 +150,10 @@ position's entry fill timestamp. Stage 7 Slice 9 adds
 size. Stage 7 Slice 10 adds `strategy.opentrades.profit(trade_num)`, returning
 the current close-based floating profit for the current open position. Stage 7
 Slice 11 adds `strategy.opentrades.entry_id(trade_num)`, returning the retained
-entry id for that open position. Other open-trade namespace functions and
-public open-trade record output remain unsupported.
+entry id for that open position. Stage 7 Slice 12 adds
+`strategy.opentrades.commission(trade_num)`, returning `0.0` for that open
+position under the current no-commission account model. Other open-trade
+namespace functions and public open-trade record output remain unsupported.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants

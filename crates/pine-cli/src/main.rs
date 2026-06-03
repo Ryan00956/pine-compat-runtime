@@ -90,6 +90,7 @@ mod tests {
                 || signature.name == "strategy.opentrades.entry_time"
                 || signature.name == "strategy.opentrades.size"
                 || signature.name == "strategy.opentrades.profit"
+                || signature.name == "strategy.opentrades.commission"
                 || signature.name == "alert"
                 || signature.name == "alertcondition"
             {
