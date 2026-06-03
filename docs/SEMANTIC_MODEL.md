@@ -146,7 +146,9 @@ no-commission account model. `entry_id` returns the retained entry id, and
 `exit_id` returns the retained close or exit id. Other trade details and
 open-trade namespace functions remain unsupported except for
 `strategy.opentrades.entry_price`, which returns the current supported long
-position's entry price for `trade_num == 0` and `na` when flat or invalid.
+position's entry price for `trade_num == 0`, and
+`strategy.opentrades.entry_bar_index`, which returns its entry fill bar. Both
+return `na` when flat or invalid.
 Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
 outside the public output model, and Phases R, S, U, V, W, X, and Y keep that

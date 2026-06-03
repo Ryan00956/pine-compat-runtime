@@ -5,6 +5,10 @@ if bar_index == 0
 if bar_index == 2
     strategy.close("L")
 plot(strategy.opentrades.entry_price(0))
+plot(strategy.opentrades.entry_bar_index(0))
 plot(strategy.opentrades.entry_price(1))
+plot(strategy.opentrades.entry_bar_index(1))
 plot(strategy.opentrades.entry_price(-1))
+plot(strategy.opentrades.entry_bar_index(-1))
 plot(strategy.opentrades.entry_price(0.5))
+plot(strategy.opentrades.entry_bar_index(0.5))

@@ -288,6 +288,7 @@ fn runs_strategy_opentrades_fields_from_csv_to_json() {
     .expect("strategy open trade fields script should run");
 
     assert!(output.contains("\"values\":[null,2,null,null]"));
+    assert!(output.contains("\"values\":[null,1,null,null]"));
     assert!(output.contains("\"values\":[null,null,null,null]"));
     assert!(output.contains("\"trades\":["));
     assert!(!output.contains("closedTrades"));

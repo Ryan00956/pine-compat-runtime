@@ -29,7 +29,10 @@ const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.closedtrades.profit",
 ];
 
-const STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS: &[&str] = &["strategy.opentrades.entry_price"];
+const STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS: &[&str] = &[
+    "strategy.opentrades.entry_price",
+    "strategy.opentrades.entry_bar_index",
+];
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum StrategyExitArgFamily {

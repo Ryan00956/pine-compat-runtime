@@ -2708,7 +2708,7 @@ plot(strategy.closedtrades.entry_price(0.5))
 }
 
 #[test]
-fn strategy_open_trade_entry_price_reads_current_position() {
+fn strategy_open_trade_fields_read_current_position() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"strategy("open trade fields")
@@ -2717,9 +2717,13 @@ if bar_index == 0
 if bar_index == 2
     strategy.close("L")
 plot(strategy.opentrades.entry_price(0))
+plot(strategy.opentrades.entry_bar_index(0))
 plot(strategy.opentrades.entry_price(1))
+plot(strategy.opentrades.entry_bar_index(1))
 plot(strategy.opentrades.entry_price(-1))
+plot(strategy.opentrades.entry_bar_index(-1))
 plot(strategy.opentrades.entry_price(0.5))
+plot(strategy.opentrades.entry_bar_index(0.5))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -2766,7 +2770,7 @@ plot(strategy.opentrades.entry_price(0.5))
     );
     assert_eq!(
         result.plots[1].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+        vec![PineValue::Na, PineValue::Int(1), PineValue::Na]
     );
     assert_eq!(
         result.plots[2].values,
@@ -2774,6 +2778,22 @@ plot(strategy.opentrades.entry_price(0.5))
     );
     assert_eq!(
         result.plots[3].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[4].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[5].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[6].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[7].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Na]
     );
 }

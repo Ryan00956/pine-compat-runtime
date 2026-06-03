@@ -521,7 +521,10 @@ fn accepts_supported_strategy_closedtrades_fields_fixture() {
 fn accepts_supported_strategy_opentrades_fields_fixture() {
     assert_strategy_state_supported_fixture(
         "tests/fixtures/sema/supported_strategy_opentrades_fields.pine",
-        &["strategy.opentrades.entry_price"],
+        &[
+            "strategy.opentrades.entry_price",
+            "strategy.opentrades.entry_bar_index",
+        ],
     );
 }
 

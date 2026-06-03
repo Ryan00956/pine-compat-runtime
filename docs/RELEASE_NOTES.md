@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 7 open-trade `entry_bar_index()` field
+  function. It exposes the current supported long position's entry fill bar for
+  `trade_num == 0`, returns `na` when flat or for invalid indexes, and keeps
+  public JSON, Python, and WASM strategy schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 6 open-trade `entry_price()` field
   function. It exposes the current supported long position's entry price for
   `trade_num == 0`, returns `na` when flat or for invalid indexes, and keeps

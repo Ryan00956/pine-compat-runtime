@@ -352,12 +352,14 @@ variables. Stage 7 Slice 0 also supports script-visible
 `.entry_id()`, `.exit_id()`, `.size()`, and `.profit()` over the current
 closed-trade list without public runtime schema expansion. Stage 7 Slice 6
 also supports `strategy.opentrades.entry_price()` for the current supported
-single open long position. Other namespace functions are unsupported.
+single open long position. Stage 7 Slice 7 adds
+`strategy.opentrades.entry_bar_index()` for that same open position. Other
+namespace functions are unsupported.
 
 Missing internal behavior:
 
-- `strategy.opentrades.entry_id()`, `.entry_bar_index()`, `.entry_time()`,
-  `.size()`, `.profit()`, `.commission()`, runup, and drawdown;
+- `strategy.opentrades.entry_id()`, `.entry_time()`, `.size()`, `.profit()`,
+  `.commission()`, runup, and drawdown;
 - `strategy.closedtrades.*()` fields beyond the supported price/id/bar-index
   and time subset, plus runup and drawdown;
 - indexed trade access;
