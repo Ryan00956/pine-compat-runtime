@@ -216,7 +216,7 @@ Acceptance:
 ## Stage 7: Trade Records, Costs, And Account Model
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
-5, 6, 7, 8, 9, 10, 11, 12, 13, 14, and 15 closed on 2026-06-03; see
+5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, and 16 closed on 2026-06-03; see
 `docs/STRATEGY_INTERNAL_STAGE7_TRADE_RECORDS_AUDIT.md`.
 
 Goal: enrich strategy reporting and accounting without jumping directly to a
@@ -235,8 +235,8 @@ Scope:
 Out of scope:
 
 - Full trade namespace coverage.
-- Remaining runup/drawdown fields beyond the current open-trade lifecycle and
-  closed-trade max-runup slices.
+- Remaining trade namespace fields beyond the current closed/open-trade field
+  slices.
 - Margin and forced liquidation until account constraints are designed.
 - Public JSON expansion without an explicit host contract.
 

@@ -361,12 +361,14 @@ Slice 8 adds `strategy.opentrades.entry_time()`, and Slice 9 adds
 `strategy.opentrades.commission()`. Stage 7 Slice 13 adds
 `strategy.opentrades.max_runup()`. Stage 7 Slice 14 adds
 `strategy.opentrades.max_drawdown()`. Stage 7 Slice 15 adds
-`strategy.closedtrades.max_runup()`. Other namespace functions are unsupported.
+`strategy.closedtrades.max_runup()`. Stage 7 Slice 16 adds
+`strategy.closedtrades.max_drawdown()`. Other namespace functions are
+unsupported.
 
 Missing internal behavior:
 
 - `strategy.closedtrades.*()` fields beyond the supported price/id/bar-index,
-  time, commission, size, profit, and max-runup subset, including drawdown;
+  time, commission, size, profit, runup, and drawdown subset;
 - indexed trade access;
 - open-trade and closed-trade records with enough retained metadata.
 

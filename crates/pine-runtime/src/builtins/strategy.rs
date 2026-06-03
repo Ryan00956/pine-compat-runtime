@@ -36,7 +36,8 @@ impl<'a> HistoricalRuntime<'a> {
             | "strategy.closedtrades.commission"
             | "strategy.closedtrades.size"
             | "strategy.closedtrades.profit"
-            | "strategy.closedtrades.max_runup" => {
+            | "strategy.closedtrades.max_runup"
+            | "strategy.closedtrades.max_drawdown" => {
                 self.eval_strategy_closed_trade_field(callee, args)
             }
             "strategy.opentrades.entry_price"
@@ -88,6 +89,10 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.closedtrades.max_runup" => self
                 .strategy_broker
                 .closed_trade_max_runup(trade_num)
+                .map_or(PineValue::Na, PineValue::Float),
+            "strategy.closedtrades.max_drawdown" => self
+                .strategy_broker
+                .closed_trade_max_drawdown(trade_num)
                 .map_or(PineValue::Na, PineValue::Float),
             _ => PineValue::Na,
         })

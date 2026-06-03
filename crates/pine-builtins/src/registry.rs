@@ -221,6 +221,7 @@ mod tests {
             "strategy.closedtrades.size",
             "strategy.closedtrades.profit",
             "strategy.closedtrades.max_runup",
+            "strategy.closedtrades.max_drawdown",
             "strategy.opentrades.entry_price",
             "strategy.opentrades.entry_id",
             "strategy.opentrades.entry_bar_index",

@@ -564,6 +564,7 @@ impl BrokerState {
 #[derive(Debug, Clone, PartialEq)]
 struct ClosedTradeMetrics {
     max_runup: f64,
+    max_drawdown: f64,
 }
 
 #[cfg(test)]

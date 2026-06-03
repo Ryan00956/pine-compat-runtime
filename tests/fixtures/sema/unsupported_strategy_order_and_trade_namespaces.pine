@@ -1,5 +1,5 @@
 //@version=5
 strategy("Unsupported strategy order and trade namespaces")
 strategy.risk.max_drawdown(10)
-plot(strategy.closedtrades.max_drawdown(0))
+plot(strategy.closedtrades.exit_comment(0))
 plot(strategy.opentrades.entry_comment(0))

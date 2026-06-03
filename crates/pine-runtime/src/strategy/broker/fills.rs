@@ -40,6 +40,7 @@ impl BrokerState {
         });
         self.closed_trade_metrics.push(ClosedTradeMetrics {
             max_runup: self.current_open_trade_max_runup_for_quantity(qty),
+            max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });
 
         self.cash += qty * price;
@@ -100,6 +101,7 @@ impl BrokerState {
         });
         self.closed_trade_metrics.push(ClosedTradeMetrics {
             max_runup: self.current_open_trade_max_runup_for_quantity(qty),
+            max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });
 
         self.cash += qty * exit_price;

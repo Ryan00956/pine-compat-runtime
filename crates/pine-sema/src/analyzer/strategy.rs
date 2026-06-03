@@ -28,6 +28,7 @@ const STRATEGY_CLOSED_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.closedtrades.size",
     "strategy.closedtrades.profit",
     "strategy.closedtrades.max_runup",
+    "strategy.closedtrades.max_drawdown",
 ];
 
 const STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS: &[&str] = &[
