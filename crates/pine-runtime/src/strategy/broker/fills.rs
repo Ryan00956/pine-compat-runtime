@@ -27,6 +27,7 @@ impl BrokerState {
         let entry_time = self.entry_time.unwrap_or(time);
         self.cancel_exit_for_entry(&id);
         self.trades.push(StrategyTrade {
+            exit_id: id.clone(),
             id,
             entry_bar_index,
             exit_bar_index: bar_index,
@@ -69,9 +70,11 @@ impl BrokerState {
         let entry_price = self.avg_price;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
+        let exit_id = pending_exit.id;
+        let entry_id = pending_exit.from_entry;
 
         self.orders.push(StrategyOrderEvent {
-            id: pending_exit.id,
+            id: exit_id.clone(),
             bar_index,
             time,
             direction: "strategy.exit".to_owned(),
@@ -79,7 +82,8 @@ impl BrokerState {
             price: exit_price,
         });
         self.trades.push(StrategyTrade {
-            id: pending_exit.from_entry,
+            id: entry_id,
+            exit_id,
             entry_bar_index,
             exit_bar_index: bar_index,
             entry_time,

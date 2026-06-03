@@ -212,6 +212,7 @@ mod tests {
             "strategy.closedtrades.entry_price",
             "strategy.closedtrades.entry_id",
             "strategy.closedtrades.exit_price",
+            "strategy.closedtrades.exit_id",
             "strategy.closedtrades.entry_bar_index",
             "strategy.closedtrades.exit_bar_index",
             "strategy.closedtrades.entry_time",

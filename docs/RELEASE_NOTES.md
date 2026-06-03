@@ -2,11 +2,16 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 5 closed-trade `exit_id()` field
+  function. It returns the retained close id for `strategy.close` /
+  `strategy.close_all` fills and the pending exit id for `strategy.exit` fills,
+  follows the same zero-based `trade_num` contract, and keeps public JSON,
+  Python, and WASM strategy trade schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 4 closed-trade `entry_id()` field
   function. It returns the entry id already retained on closed trade records,
   follows the same zero-based `trade_num` contract, returns `na` for invalid
   indexes, and keeps public JSON, Python, and WASM strategy trade schemas
-  unchanged. `exit_id()` remains unsupported until exit id metadata is retained.
+  unchanged.
 - Added Strategy Internal Stage 7 Slice 3 closed-trade `commission()` field
   function. It follows the same zero-based `trade_num` contract as the existing
   script-visible closed-trade fields and returns `0.0` in the current

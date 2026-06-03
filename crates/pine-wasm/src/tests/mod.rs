@@ -265,7 +265,9 @@ fn runs_strategy_closedtrades_fields_from_csv_to_json() {
     assert!(output.contains("\"values\":[null,null,2,2]"));
     assert!(output.contains("\"values\":[0,0,1,1]"));
     assert!(output.contains("\"values\":[null,null,3,3]"));
+    assert!(output.contains("\"values\":[0,0,1,1]"));
     assert!(output.contains("\"values\":[null,null,0,0]"));
+    assert!(output.contains("\"values\":[1,1,1,1]"));
     assert!(output.contains("\"values\":[1,1,1,1]"));
     assert!(output.contains("\"values\":[null,null,null,null]"));
     assert!(output.contains("\"entryTime\":2"));

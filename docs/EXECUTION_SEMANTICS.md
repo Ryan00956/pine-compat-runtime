@@ -131,7 +131,9 @@ The first supported closed-trade namespace functions are
 `strategy.closedtrades.commission(trade_num)`, which returns `0.0` for closed
 trades because the current account model has no commission calculation. Stage 7
 Slice 4 adds `strategy.closedtrades.entry_id(trade_num)`, which returns the
-entry id already retained on the closed trade record. They read the current
+entry id already retained on the closed trade record. Stage 7 Slice 5 adds
+`strategy.closedtrades.exit_id(trade_num)`, which returns the close or
+`strategy.exit` id retained on the closed trade record. They read the current
 closed-trade list with a zero-based integer `trade_num`; missing, negative,
 out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public
@@ -202,9 +204,9 @@ metadata, trailing-state fields, activation fields, exit reason fields, or
 top-level runtime schema fields.
 Phase O does not add public
 open-trade records. Stage 7 adds only script-visible closed-trade
-`entry_id`, `entry_price`, `exit_price`, `entry_bar_index`, `exit_bar_index`,
-`entry_time`, `exit_time`, `commission`, `size`, and `profit` namespace
-functions; it does not add public trade-namespace fields. The prior Phase L
+`entry_id`, `exit_id`, `entry_price`, `exit_price`, `entry_bar_index`,
+`exit_bar_index`, `entry_time`, `exit_time`, `commission`, `size`, and `profit`
+namespace functions; it does not add public trade-namespace fields. The prior Phase L
 boundary is
 summarized in
 `docs/PHASE_L_AUDIT.md`; the closed Phase M and Phase N exit subsets are

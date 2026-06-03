@@ -173,6 +173,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "strategy.closedtrades.exit_id",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_CLOSED_TRADE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_STRING),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "strategy.closedtrades.entry_bar_index",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_CLOSED_TRADE_PARAMS,

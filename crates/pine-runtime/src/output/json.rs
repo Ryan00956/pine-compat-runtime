@@ -857,6 +857,7 @@ mod tests {
             }],
             trades: vec![StrategyTrade {
                 id: "T".to_owned(),
+                exit_id: "X".to_owned(),
                 entry_bar_index: 0,
                 exit_bar_index: 1,
                 entry_time: 10,

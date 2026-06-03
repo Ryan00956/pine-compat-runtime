@@ -135,14 +135,16 @@ closed trades with positive, negative, and zero realized profit; and
 `strategy.opentrades` is `1` while the supported long position is open and `0`
 when flat. The supported closed-trade namespace functions are
 `strategy.closedtrades.entry_price`, `strategy.closedtrades.entry_id`,
-`strategy.closedtrades.exit_price`, `strategy.closedtrades.entry_bar_index`,
-`strategy.closedtrades.exit_bar_index`, `strategy.closedtrades.entry_time`,
-`strategy.closedtrades.exit_time`, `strategy.closedtrades.commission`,
+`strategy.closedtrades.exit_price`, `strategy.closedtrades.exit_id`,
+`strategy.closedtrades.entry_bar_index`, `strategy.closedtrades.exit_bar_index`,
+`strategy.closedtrades.entry_time`, `strategy.closedtrades.exit_time`,
+`strategy.closedtrades.commission`,
 `strategy.closedtrades.size`, and `strategy.closedtrades.profit`; they accept a
 zero-based integer `trade_num` and return `na` for missing, negative,
 out-of-range, or non-integer indexes. `commission` returns `0.0` in the current
-no-commission account model. `entry_id` returns the retained entry id. Other
-trade details and open-trade namespace functions remain unsupported. Phase M and
+no-commission account model. `entry_id` returns the retained entry id, and
+`exit_id` returns the retained close or exit id. Other trade details and
+open-trade namespace functions remain unsupported. Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
 outside the public output model, and Phases R, S, U, V, W, X, and Y keep that
 public contract unchanged for brackets, trailing exits, fixed `qty` exits,

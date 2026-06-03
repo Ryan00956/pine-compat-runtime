@@ -904,6 +904,7 @@ plot(strategy.opentrades)
     assert_eq!(strategy.orders[0].bar_index, 1);
     assert_eq!(strategy.trades.len(), 1);
     assert_eq!(strategy.trades[0].id, "L");
+    assert_eq!(strategy.trades[0].exit_id, "L");
     assert_eq!(strategy.trades[0].entry_bar_index, 1);
     assert_eq!(strategy.trades[0].exit_bar_index, 2);
     assert_eq!(strategy.trades[0].entry_price, 2.0);
@@ -1534,6 +1535,7 @@ if bar_index == 0
     assert_eq!(strategy.orders[1].price, 12.0);
     assert_eq!(strategy.trades.len(), 1);
     assert_eq!(strategy.trades[0].id, "L");
+    assert_eq!(strategy.trades[0].exit_id, "XL");
     assert_eq!(strategy.trades[0].exit_price, 12.0);
     assert_eq!(strategy.trades[0].profit, 2.0);
     assert_eq!(strategy.position[1].size, 0.0);
@@ -2595,6 +2597,7 @@ if bar_index == 1
 plot(strategy.closedtrades.entry_price(0))
 plot(strategy.closedtrades.entry_id(0) == "L" ? 1 : 0)
 plot(strategy.closedtrades.exit_price(0))
+plot(strategy.closedtrades.exit_id(0) == "L" ? 1 : 0)
 plot(strategy.closedtrades.entry_bar_index(0))
 plot(strategy.closedtrades.exit_bar_index(0))
 plot(strategy.closedtrades.entry_time(0))
@@ -2603,6 +2606,7 @@ plot(strategy.closedtrades.commission(0))
 plot(strategy.closedtrades.size(0))
 plot(strategy.closedtrades.profit(0))
 plot(na(strategy.closedtrades.entry_id(1)) ? 1 : 0)
+plot(na(strategy.closedtrades.exit_id(1)) ? 1 : 0)
 plot(strategy.closedtrades.entry_price(1))
 plot(strategy.closedtrades.entry_price(-1))
 plot(strategy.closedtrades.entry_price(0.5))
@@ -2660,7 +2664,7 @@ plot(strategy.closedtrades.entry_price(0.5))
     );
     assert_eq!(
         result.plots[3].values,
-        vec![PineValue::Na, PineValue::Int(1), PineValue::Int(1)]
+        vec![PineValue::Int(0), PineValue::Int(1), PineValue::Int(1)]
     );
     assert_eq!(
         result.plots[4].values,
@@ -2668,7 +2672,7 @@ plot(strategy.closedtrades.entry_price(0.5))
     );
     assert_eq!(
         result.plots[5].values,
-        vec![PineValue::Na, PineValue::Int(20), PineValue::Int(20)]
+        vec![PineValue::Na, PineValue::Int(1), PineValue::Int(1)]
     );
     assert_eq!(
         result.plots[6].values,
@@ -2676,11 +2680,11 @@ plot(strategy.closedtrades.entry_price(0.5))
     );
     assert_eq!(
         result.plots[7].values,
-        vec![PineValue::Na, PineValue::Float(0.0), PineValue::Float(0.0),]
+        vec![PineValue::Na, PineValue::Int(20), PineValue::Int(20)]
     );
     assert_eq!(
         result.plots[8].values,
-        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(2.0),]
+        vec![PineValue::Na, PineValue::Float(0.0), PineValue::Float(0.0),]
     );
     assert_eq!(
         result.plots[9].values,
@@ -2688,11 +2692,57 @@ plot(strategy.closedtrades.entry_price(0.5))
     );
     assert_eq!(
         result.plots[10].values,
+        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Float(2.0),]
+    );
+    assert_eq!(
+        result.plots[11].values,
         vec![PineValue::Int(1), PineValue::Int(1), PineValue::Int(1)]
     );
-    for values in result.plots[11..].iter().map(|plot| &plot.values) {
+    assert_eq!(
+        result.plots[12].values,
+        vec![PineValue::Int(1), PineValue::Int(1), PineValue::Int(1)]
+    );
+    for values in result.plots[13..].iter().map(|plot| &plot.values) {
         assert_eq!(values, &vec![PineValue::Na, PineValue::Na, PineValue::Na]);
     }
+}
+
+#[test]
+fn strategy_closed_trade_exit_id_reads_pending_exit_identity() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("closed trade exit id")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+    strategy.exit("XL", "L", limit=12)
+plot(strategy.closedtrades.exit_id(0) == "XL" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(11.0, 12.0, 10.0, 11.0),
+            bar_ohlc(13.0, 13.0, 13.0, 13.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Int(0), PineValue::Int(0), PineValue::Int(1)]
+    );
+    assert_eq!(strategy.trades.len(), 1);
+    assert_eq!(strategy.trades[0].id, "L");
+    assert_eq!(strategy.trades[0].exit_id, "XL");
 }
 
 #[test]

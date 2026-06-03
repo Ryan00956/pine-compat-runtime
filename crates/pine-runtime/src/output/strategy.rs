@@ -22,6 +22,7 @@ pub struct StrategyOrderEvent {
 #[derive(Debug, Clone, PartialEq)]
 pub struct StrategyTrade {
     pub id: String,
+    pub exit_id: String,
     pub entry_bar_index: usize,
     pub exit_bar_index: usize,
     pub entry_time: i64,
