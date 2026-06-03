@@ -155,6 +155,8 @@ position's entry price for `trade_num == 0`,
 profit for that open position, and `strategy.opentrades.commission`, which
 returns `0.0` under the current no-commission account model, and
 `strategy.opentrades.max_runup`, which returns the largest high-based favorable
+excursion seen so far for that open position, and
+`strategy.opentrades.max_drawdown`, which returns the largest low-based adverse
 excursion seen so far for that open position. All return `na` when flat or
 invalid.
 Phase M and

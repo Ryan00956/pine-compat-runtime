@@ -1,7 +1,7 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
-5, 6, 7, 8, 9, 10, 11, 12, and 13 closed on 2026-06-03.
+5, 6, 7, 8, 9, 10, 11, 12, 13, and 14 closed on 2026-06-03.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -40,7 +40,7 @@ Still unsupported:
 
 - `strategy.opentrades.*` namespace functions outside `entry_price`,
   `entry_id`, `entry_bar_index`, `entry_time`, `size`, `profit`, and
-  `commission`, and `max_runup`;
+  `commission`, `max_runup`, and `max_drawdown`;
 - closed-trade field functions beyond `entry_price`, `entry_id`, `exit_price`,
   `exit_id`, `entry_bar_index`, `exit_bar_index`, `entry_time`, `exit_time`,
   `commission`, `size`, and `profit`;
@@ -168,7 +168,7 @@ Evidence:
 - semantic fixture:
   `tests/fixtures/sema/supported_strategy_opentrades_fields.pine`;
 - unsupported namespace fixture keeps other open-trade fields out of scope with
-  `strategy.opentrades.max_drawdown(0)`;
+  `strategy.opentrades.entry_comment(0)`;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
 ## Slice 7: Open Trade Entry Bar Index Function
@@ -308,7 +308,7 @@ Evidence:
 - requested-context negative fixture:
   `tests/fixtures/sema/unsupported_request_strategy_state.pine`;
 - unsupported namespace fixture keeps other open-trade fields out of scope with
-  `strategy.opentrades.max_drawdown(0)`;
+  `strategy.opentrades.entry_comment(0)`;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
 ## Slice 12: Open Trade Commission Function
@@ -337,7 +337,7 @@ Evidence:
 - requested-context negative fixture:
   `tests/fixtures/sema/unsupported_request_strategy_state.pine`;
 - unsupported namespace fixture keeps other open-trade fields out of scope with
-  `strategy.opentrades.max_drawdown(0)`;
+  `strategy.opentrades.entry_comment(0)`;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
 ## Slice 13: Open Trade Max Runup Function
@@ -367,13 +367,42 @@ Evidence:
 - requested-context negative fixture:
   `tests/fixtures/sema/unsupported_request_strategy_state.pine`;
 - unsupported namespace fixture keeps other open-trade fields out of scope with
-  `strategy.opentrades.max_drawdown(0)`;
+  `strategy.opentrades.entry_comment(0)`;
+- host parity tests cover CLI snapshots plus Python and WASM plot values.
+
+## Slice 14: Open Trade Max Drawdown Function
+
+Closed on 2026-06-03.
+
+Supported script-visible function:
+
+- `strategy.opentrades.max_drawdown(trade_num)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- `trade_num == 0` addresses the current supported single open long position;
+- missing, negative, out-of-range, or non-integer indexes return `na`;
+- flat state returns `na`;
+- the value is the largest low-based adverse excursion seen so far for the
+  current supported open long position;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
+  output shape with no new top-level fields or open-trade records.
+
+Evidence:
+
+- runtime fixture: `tests/fixtures/runtime/strategy_opentrades_fields.pine`;
+- semantic fixture:
+  `tests/fixtures/sema/supported_strategy_opentrades_fields.pine`;
+- requested-context negative fixture:
+  `tests/fixtures/sema/unsupported_request_strategy_state.pine`;
+- unsupported namespace fixture keeps other open-trade fields out of scope with
+  `strategy.opentrades.entry_comment(0)`;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting
-addition, such as `strategy.opentrades.max_drawdown`, real
-commission/slippage modeling, closed-trade runup/drawdown, or another
-closed/open-trade field, only after documenting whether the behavior is
-script-only or public-output visible.
+addition, such as real commission/slippage modeling, closed-trade
+runup/drawdown, or another closed/open-trade field, only after documenting
+whether the behavior is script-only or public-output visible.

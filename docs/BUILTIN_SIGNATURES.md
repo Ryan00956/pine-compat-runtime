@@ -284,6 +284,7 @@ strategy.opentrades.size(trade_num: series/simple numeric) -> series float
 strategy.opentrades.profit(trade_num: series/simple numeric) -> series float
 strategy.opentrades.commission(trade_num: series/simple numeric) -> series float
 strategy.opentrades.max_runup(trade_num: series/simple numeric) -> series float
+strategy.opentrades.max_drawdown(trade_num: series/simple numeric) -> series float
 ```
 
 Only metadata arguments needed by the output and history-retention model should
@@ -329,9 +330,9 @@ strategy-mode field functions over the current closed-trade list.
 `strategy.opentrades.entry_price`, `strategy.opentrades.entry_id`, and
 `strategy.opentrades.entry_bar_index`, `strategy.opentrades.entry_time`, and
 `strategy.opentrades.size`, `strategy.opentrades.profit`, and
-`strategy.opentrades.commission`, and `strategy.opentrades.max_runup` are
-read-only strategy-mode field functions for the current supported long
-position.
+`strategy.opentrades.commission`, `strategy.opentrades.max_runup`, and
+`strategy.opentrades.max_drawdown` are read-only strategy-mode field functions
+for the current supported long position.
 `trade_num` is a zero-based integer index; missing, negative, out-of-range, or
 non-integer indexes return `na`. Closed- and open-trade `entry_id` return the
 retained entry id. Closed-trade `exit_id` returns the retained close or exit id.
@@ -339,10 +340,12 @@ Closed- and open-trade `commission` return `0.0` in the current no-commission
 account model. Open-trade `profit` returns the current close-based floating
 profit for the current supported long position. Open-trade `max_runup` returns
 the largest high-based favorable excursion seen so far for the current
-supported long position. They do not add public runtime schema fields. Other
-closed-trade fields and open-trade namespace functions outside `entry_price`,
-`entry_id`, `entry_bar_index`, `entry_time`, `size`, `profit`, `commission`,
-and `max_runup` remain unsupported.
+supported long position. Open-trade `max_drawdown` returns the largest
+low-based adverse excursion seen so far for the current supported long
+position. They do not add public runtime schema fields. Other closed-trade
+fields and open-trade namespace functions outside `entry_price`, `entry_id`,
+`entry_bar_index`, `entry_time`, `size`, `profit`, `commission`, `max_runup`,
+and `max_drawdown` remain unsupported.
 
 ## Inputs
 

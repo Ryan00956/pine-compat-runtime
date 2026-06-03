@@ -19,14 +19,22 @@ impl BrokerState {
         });
     }
 
-    pub(crate) fn update_open_trade_extremes(&mut self, high: f64) {
-        if self.open_trade_count() != 1 || !high.is_finite() {
+    pub(crate) fn update_open_trade_extremes(&mut self, high: f64, low: f64) {
+        if self.open_trade_count() != 1 {
             return;
         }
-        self.open_trade_max_high = Some(
-            self.open_trade_max_high
-                .map_or(high, |current| current.max(high)),
-        );
+        if high.is_finite() {
+            self.open_trade_max_high = Some(
+                self.open_trade_max_high
+                    .map_or(high, |current| current.max(high)),
+            );
+        }
+        if low.is_finite() {
+            self.open_trade_min_low = Some(
+                self.open_trade_min_low
+                    .map_or(low, |current| current.min(low)),
+            );
+        }
     }
 
     #[must_use]
@@ -175,6 +183,18 @@ impl BrokerState {
             let max_high = self.open_trade_max_high?;
             Some(normalize_zero(
                 (max_high - self.avg_price).max(0.0) * self.position_size,
+            ))
+        } else {
+            None
+        }
+    }
+
+    #[must_use]
+    pub(crate) fn open_trade_max_drawdown(&self, trade_num: i64) -> Option<f64> {
+        if trade_num == 0 && self.open_trade_count() == 1 {
+            let min_low = self.open_trade_min_low?;
+            Some(normalize_zero(
+                (self.avg_price - min_low).max(0.0) * self.position_size,
             ))
         } else {
             None

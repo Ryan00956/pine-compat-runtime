@@ -154,7 +154,9 @@ entry id for that open position. Stage 7 Slice 12 adds
 `strategy.opentrades.commission(trade_num)`, returning `0.0` for that open
 position under the current no-commission account model. Stage 7 Slice 13 adds
 `strategy.opentrades.max_runup(trade_num)`, returning the largest high-based
-favorable excursion seen so far for that open position. Other open-trade
+favorable excursion seen so far for that open position. Stage 7 Slice 14 adds
+`strategy.opentrades.max_drawdown(trade_num)`, returning the largest low-based
+adverse excursion seen so far for that open position. Other open-trade
 namespace functions and public open-trade record output remain unsupported.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,

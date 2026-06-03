@@ -38,6 +38,7 @@ const STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.opentrades.profit",
     "strategy.opentrades.commission",
     "strategy.opentrades.max_runup",
+    "strategy.opentrades.max_drawdown",
 ];
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

@@ -60,41 +60,7 @@ mod tests {
         let entries = conformance_entries();
 
         for signature in pine_builtins::PHASE_1_BUILTINS {
-            let expected_status = if signature.name.starts_with("array.")
-                || signature.name.starts_with("label.")
-                || signature.name.starts_with("line.")
-                || signature.name.starts_with("box.")
-                || signature.name.starts_with("table.")
-                || signature.name == "request.security"
-                || signature.name == "strategy"
-                || signature.name == "strategy.entry"
-                || signature.name == "strategy.close"
-                || signature.name == "strategy.close_all"
-                || signature.name == "strategy.cancel"
-                || signature.name == "strategy.cancel_all"
-                || signature.name == "strategy.exit"
-                || signature.name == "strategy.closedtrades.entry_price"
-                || signature.name == "strategy.closedtrades.entry_id"
-                || signature.name == "strategy.closedtrades.exit_price"
-                || signature.name == "strategy.closedtrades.exit_id"
-                || signature.name == "strategy.closedtrades.entry_bar_index"
-                || signature.name == "strategy.closedtrades.exit_bar_index"
-                || signature.name == "strategy.closedtrades.entry_time"
-                || signature.name == "strategy.closedtrades.exit_time"
-                || signature.name == "strategy.closedtrades.commission"
-                || signature.name == "strategy.closedtrades.size"
-                || signature.name == "strategy.closedtrades.profit"
-                || signature.name == "strategy.opentrades.entry_price"
-                || signature.name == "strategy.opentrades.entry_id"
-                || signature.name == "strategy.opentrades.entry_bar_index"
-                || signature.name == "strategy.opentrades.entry_time"
-                || signature.name == "strategy.opentrades.size"
-                || signature.name == "strategy.opentrades.profit"
-                || signature.name == "strategy.opentrades.commission"
-                || signature.name == "strategy.opentrades.max_runup"
-                || signature.name == "alert"
-                || signature.name == "alertcondition"
-            {
+            let expected_status = if expected_partial_builtin(signature.name) {
                 "partial"
             } else {
                 "supported"
@@ -145,6 +111,16 @@ mod tests {
                 .iter()
                 .any(|entry| entry.feature == "varip" && entry.status == "partial")
         );
+    }
+
+    fn expected_partial_builtin(name: &str) -> bool {
+        ["array.", "label.", "line.", "box.", "table.", "strategy."]
+            .iter()
+            .any(|prefix| name.starts_with(prefix))
+            || matches!(
+                name,
+                "request.security" | "strategy" | "alert" | "alertcondition"
+            )
     }
 
     #[test]

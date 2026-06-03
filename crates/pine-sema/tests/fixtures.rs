@@ -530,6 +530,7 @@ fn accepts_supported_strategy_opentrades_fields_fixture() {
             "strategy.opentrades.profit",
             "strategy.opentrades.commission",
             "strategy.opentrades.max_runup",
+            "strategy.opentrades.max_drawdown",
         ],
     );
 }
@@ -599,7 +600,7 @@ fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
         &[
             "strategy.risk.max_drawdown",
             "strategy.closedtrades.max_runup",
-            "strategy.opentrades.max_drawdown",
+            "strategy.opentrades.entry_comment",
         ],
     );
 }

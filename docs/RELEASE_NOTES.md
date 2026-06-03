@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 14 open-trade `max_drawdown()` field
+  function. It exposes the largest low-based adverse excursion seen so far for
+  the current supported long position when `trade_num == 0`, returns `na` when
+  flat or for invalid indexes, and keeps public JSON, Python, and WASM strategy
+  schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 13 open-trade `max_runup()` field
   function. It exposes the largest high-based favorable excursion seen so far
   for the current supported long position when `trade_num == 0`, returns `na`

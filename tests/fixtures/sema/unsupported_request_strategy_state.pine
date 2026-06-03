@@ -24,3 +24,4 @@ plot(request.security(syminfo.tickerid, timeframe.period, strategy.opentrades.si
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.opentrades.profit(0)))
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.opentrades.commission(0)))
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.opentrades.max_runup(0)))
+plot(request.security(syminfo.tickerid, timeframe.period, strategy.opentrades.max_drawdown(0)))

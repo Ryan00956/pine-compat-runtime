@@ -228,6 +228,7 @@ mod tests {
             "strategy.opentrades.profit",
             "strategy.opentrades.commission",
             "strategy.opentrades.max_runup",
+            "strategy.opentrades.max_drawdown",
         ] {
             let signature = get_phase_1_builtin(name).expect("trade field signature");
             assert_eq!(signature.params.len(), 1, "{name}");
