@@ -154,6 +154,11 @@ corresponding realized amount by `initial_capital` and multiply by 100.
 `strategy.avg_losing_trade_percent` average per-closed-trade percentage
 profit/loss values, using each closed trade's entry price times quantity as the
 denominator; the losing variant returns positive loss percentages.
+`strategy.max_contracts_held_all`, `strategy.max_contracts_held_long`, and
+`strategy.max_contracts_held_short` report the maximum
+contracts/shares/lots/units held over the whole trading range. In the current
+long-only subset, `all` and `long` track the maximum supported filled long
+entry quantity, while `short` stays `0` because short entries are unsupported.
 `strategy.grossloss` is a read-only strategy-mode
 `series float` that sums realized closed-trade losses as positive values;
 winning, flat, and current open trades do not change it. `strategy.avg_trade`

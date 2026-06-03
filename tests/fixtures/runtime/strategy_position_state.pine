@@ -10,3 +10,6 @@ if bar_index == 2
     strategy.close("L")
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
+plot(strategy.max_contracts_held_all)
+plot(strategy.max_contracts_held_long)
+plot(strategy.max_contracts_held_short)

@@ -227,7 +227,11 @@ same public-output contract. Stage 7 Slice 32 adds
 averaging per-closed-trade percentage profit/loss values using each trade's
 entry value as denominator. These state variables read the current closed-trade
 list and are script-observable only through ordinary series outputs; they do
-not add public runtime JSON, Python, or WASM fields. Closed/open trade namespace
+not add public runtime JSON, Python, or WASM fields. Stage 7 Slice 34 adds
+`strategy.max_contracts_held_all`, `strategy.max_contracts_held_long`, and
+`strategy.max_contracts_held_short` under the same public-output contract; in
+the current long-only subset, `all` and `long` track the maximum filled long
+entry quantity and `short` remains `0`. Closed/open trade namespace
 functions read the current trade lists with a zero-based integer `trade_num`;
 missing, negative, out-of-range, or non-integer indexes return `na`.
 Stage 7 Slice 6 adds `strategy.opentrades.entry_price(trade_num)` for the

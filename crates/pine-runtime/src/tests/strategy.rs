@@ -3131,6 +3131,9 @@ if bar_index == 2
     strategy.close("L")
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
+plot(strategy.max_contracts_held_all)
+plot(strategy.max_contracts_held_long)
+plot(strategy.max_contracts_held_short)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -3194,6 +3197,33 @@ plot(strategy.position_avg_price)
     assert_eq!(
         result.plots[5].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Na, PineValue::Na,]
+    );
+    assert_eq!(
+        result.plots[6].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[7].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[8].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+        ]
     );
 }
 

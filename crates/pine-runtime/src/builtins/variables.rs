@@ -228,6 +228,15 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "strategy.max_drawdown_percent" {
             return PineValue::Float(self.strategy_broker.max_drawdown_percent());
         }
+        if name == "strategy.max_contracts_held_all" {
+            return PineValue::Float(self.strategy_broker.max_contracts_held_all());
+        }
+        if name == "strategy.max_contracts_held_long" {
+            return PineValue::Float(self.strategy_broker.max_contracts_held_long());
+        }
+        if name == "strategy.max_contracts_held_short" {
+            return PineValue::Float(self.strategy_broker.max_contracts_held_short());
+        }
         if name == "strategy.equity" {
             return self.current_bar.map_or(PineValue::Na, |bar| {
                 PineValue::Float(self.strategy_broker.equity_value(bar.close))

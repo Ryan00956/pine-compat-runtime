@@ -191,6 +191,21 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn max_contracts_held_all(&self) -> f64 {
+        self.max_contracts_held_long()
+    }
+
+    #[must_use]
+    pub(crate) fn max_contracts_held_long(&self) -> f64 {
+        normalize_zero(self.max_contracts_held_long)
+    }
+
+    #[must_use]
+    pub(crate) fn max_contracts_held_short(&self) -> f64 {
+        0.0
+    }
+
+    #[must_use]
     pub(crate) fn equity_value(&self, close: f64) -> f64 {
         normalize_zero(self.cash + self.position_size * close)
     }

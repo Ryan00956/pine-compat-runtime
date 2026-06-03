@@ -1031,6 +1031,43 @@ Evidence:
   `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
+## Slice 34: Maximum Contracts Held Variables
+
+Closed on 2026-06-03.
+
+Supported variables:
+
+- `strategy.max_contracts_held_all`;
+- `strategy.max_contracts_held_long`;
+- `strategy.max_contracts_held_short`.
+
+Contract:
+
+- strategy-mode scripts only;
+- read-only `series float`;
+- report the maximum contracts/shares/lots/units held over the whole trading
+  range;
+- in the current long-only, one-net-position subset, `all` and `long` track the
+  maximum filled long-entry quantity seen so far;
+- `short` remains `0.0` because short entries are unsupported;
+- current open trades and closed trades are both included once their entry fill
+  has occurred;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing
+  strategy output shape with no new top-level fields.
+
+Evidence:
+
+- runtime test:
+  `strategy_position_state_variables_follow_broker_mutations`;
+- runtime fixture:
+  `tests/fixtures/runtime/strategy_position_state.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_position_state.pine`,
+  `tests/fixtures/sema/unsupported_strategy_state_indicator.pine`,
+  `tests/fixtures/sema/unsupported_request_strategy_state.pine`, and
+  `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
+- host parity tests cover CLI snapshots plus Python and WASM plot values.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting

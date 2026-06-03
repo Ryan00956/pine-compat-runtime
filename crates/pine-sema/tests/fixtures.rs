@@ -614,7 +614,13 @@ fn accepts_supported_strategy_close_all_fixture() {
 fn accepts_supported_strategy_position_state_fixture() {
     assert_strategy_state_supported_fixture(
         "tests/fixtures/sema/supported_strategy_position_state.pine",
-        &["strategy.position_size", "strategy.position_avg_price"],
+        &[
+            "strategy.position_size",
+            "strategy.position_avg_price",
+            "strategy.max_contracts_held_all",
+            "strategy.max_contracts_held_long",
+            "strategy.max_contracts_held_short",
+        ],
     );
 }
 
@@ -1282,7 +1288,7 @@ fn assert_strategy_state_unsupported_fixture(path: &str) {
     let text = fs::read_to_string(&path).expect("fixture should be readable");
     let source = SourceFile::new(path.display().to_string(), text);
     let analysis = analyze_source(&source);
-    let variables = ["strategy.max_contracts_held_all"];
+    let variables = ["strategy.buy_and_hold_return_percent"];
 
     for variable in variables {
         assert!(

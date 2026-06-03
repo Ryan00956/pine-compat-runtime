@@ -40,6 +40,7 @@ pub struct BrokerState {
     max_runup_percent: f64,
     max_drawdown: f64,
     max_drawdown_percent: f64,
+    max_contracts_held_long: f64,
     orders: Vec<StrategyOrderEvent>,
     trades: Vec<StrategyTrade>,
     closed_trade_metrics: Vec<ClosedTradeMetrics>,
@@ -125,6 +126,7 @@ impl BrokerState {
             max_runup_percent: 0.0,
             max_drawdown: 0.0,
             max_drawdown_percent: 0.0,
+            max_contracts_held_long: 0.0,
             orders: Vec::new(),
             trades: Vec::new(),
             closed_trade_metrics: Vec::new(),
@@ -212,6 +214,7 @@ impl BrokerState {
         let min_equity_before_entry = self.min_equity_before_open_trade;
         let max_equity_before_entry = self.max_equity_before_open_trade;
         self.position_size = qty;
+        self.max_contracts_held_long = self.max_contracts_held_long.max(qty);
         self.avg_price = fill_price;
         self.open_entry_commission = self.entry_commission_for_fill(qty, fill_price);
         self.cash -= qty * fill_price + self.open_entry_commission;

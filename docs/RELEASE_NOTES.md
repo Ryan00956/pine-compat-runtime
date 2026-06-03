@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 34
+  `strategy.max_contracts_held_all`, `strategy.max_contracts_held_long`, and
+  `strategy.max_contracts_held_short`. Strategy-mode scripts can read maximum
+  held quantity metrics for the current long-only subset while public JSON,
+  Python, and WASM strategy schemas remain unchanged.
 - Added Strategy Internal Stage 7 Slice 33
   `strategy.avg_trade_percent`, `strategy.avg_winning_trade_percent`, and
   `strategy.avg_losing_trade_percent`. Strategy-mode scripts can read average
