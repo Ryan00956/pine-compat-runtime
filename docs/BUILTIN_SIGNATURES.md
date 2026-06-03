@@ -276,6 +276,7 @@ strategy.closedtrades.exit_time(trade_num: series/simple numeric) -> series int
 strategy.closedtrades.commission(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.size(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.profit(trade_num: series/simple numeric) -> series float
+strategy.closedtrades.max_runup(trade_num: series/simple numeric) -> series float
 strategy.opentrades.entry_price(trade_num: series/simple numeric) -> series float
 strategy.opentrades.entry_id(trade_num: series/simple numeric) -> series string
 strategy.opentrades.entry_bar_index(trade_num: series/simple numeric) -> series int
@@ -325,8 +326,9 @@ unsupported.
 `strategy.closedtrades.entry_bar_index`, and
 `strategy.closedtrades.exit_bar_index`, `strategy.closedtrades.entry_time`,
 `strategy.closedtrades.exit_time`, `strategy.closedtrades.commission`,
-`strategy.closedtrades.size`, and `strategy.closedtrades.profit` are read-only
-strategy-mode field functions over the current closed-trade list.
+`strategy.closedtrades.size`, `strategy.closedtrades.profit`, and
+`strategy.closedtrades.max_runup` are read-only strategy-mode field functions
+over the current closed-trade list.
 `strategy.opentrades.entry_price`, `strategy.opentrades.entry_id`, and
 `strategy.opentrades.entry_bar_index`, `strategy.opentrades.entry_time`, and
 `strategy.opentrades.size`, `strategy.opentrades.profit`, and
@@ -338,14 +340,17 @@ non-integer indexes return `na`. Closed- and open-trade `entry_id` return the
 retained entry id. Closed-trade `exit_id` returns the retained close or exit id.
 Closed- and open-trade `commission` return `0.0` in the current no-commission
 account model. Open-trade `profit` returns the current close-based floating
-profit for the current supported long position. Open-trade `max_runup` returns
-the largest high-based favorable excursion seen so far for the current
-supported long position. Open-trade `max_drawdown` returns the largest
+profit for the current supported long position. Closed- and open-trade
+`max_runup` return the largest high-based favorable excursion seen so far for
+the retained trade quantity. Open-trade `max_drawdown` returns the largest
 low-based adverse excursion seen so far for the current supported long
 position. They do not add public runtime schema fields. Other closed-trade
-fields and open-trade namespace functions outside `entry_price`, `entry_id`,
-`entry_bar_index`, `entry_time`, `size`, `profit`, `commission`, `max_runup`,
-and `max_drawdown` remain unsupported.
+fields outside `entry_price`, `entry_id`, `exit_price`, `exit_id`,
+`entry_bar_index`, `exit_bar_index`, `entry_time`, `exit_time`, `size`,
+`profit`, `commission`, and `max_runup` remain unsupported. Other open-trade
+namespace functions outside `entry_price`, `entry_id`, `entry_bar_index`,
+`entry_time`, `size`, `profit`, `commission`, `max_runup`, and `max_drawdown`
+remain unsupported.
 
 ## Inputs
 

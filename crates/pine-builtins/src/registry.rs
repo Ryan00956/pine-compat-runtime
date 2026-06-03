@@ -220,6 +220,7 @@ mod tests {
             "strategy.closedtrades.commission",
             "strategy.closedtrades.size",
             "strategy.closedtrades.profit",
+            "strategy.closedtrades.max_runup",
             "strategy.opentrades.entry_price",
             "strategy.opentrades.entry_id",
             "strategy.opentrades.entry_bar_index",

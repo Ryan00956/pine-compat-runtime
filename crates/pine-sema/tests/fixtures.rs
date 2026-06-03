@@ -513,6 +513,7 @@ fn accepts_supported_strategy_closedtrades_fields_fixture() {
             "strategy.closedtrades.commission",
             "strategy.closedtrades.size",
             "strategy.closedtrades.profit",
+            "strategy.closedtrades.max_runup",
         ],
     );
 }
@@ -599,7 +600,7 @@ fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
         "tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine",
         &[
             "strategy.risk.max_drawdown",
-            "strategy.closedtrades.max_runup",
+            "strategy.closedtrades.max_drawdown",
             "strategy.opentrades.entry_comment",
         ],
     );

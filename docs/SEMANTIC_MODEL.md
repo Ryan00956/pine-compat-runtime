@@ -139,11 +139,13 @@ when flat. The supported closed-trade namespace functions are
 `strategy.closedtrades.entry_bar_index`, `strategy.closedtrades.exit_bar_index`,
 `strategy.closedtrades.entry_time`, `strategy.closedtrades.exit_time`,
 `strategy.closedtrades.commission`,
-`strategy.closedtrades.size`, and `strategy.closedtrades.profit`; they accept a
-zero-based integer `trade_num` and return `na` for missing, negative,
-out-of-range, or non-integer indexes. `commission` returns `0.0` in the current
-no-commission account model. `entry_id` returns the retained entry id, and
-`exit_id` returns the retained close or exit id. Other trade details and
+`strategy.closedtrades.size`, `strategy.closedtrades.profit`, and
+`strategy.closedtrades.max_runup`; they accept a zero-based integer `trade_num`
+and return `na` for missing, negative, out-of-range, or non-integer indexes.
+`commission` returns `0.0` in the current no-commission account model.
+`max_runup` returns the largest high-based favorable excursion retained for the
+closed trade quantity. `entry_id` returns the retained entry id, and `exit_id`
+returns the retained close or exit id. Other trade details and
 open-trade namespace functions remain unsupported except for
 `strategy.opentrades.entry_price`, which returns the current supported long
 position's entry price for `trade_num == 0`,

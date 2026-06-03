@@ -375,6 +375,7 @@ def test_run_script_returns_strategy_closedtrades_field_plots():
         [None, None, 0.0, 0.0],
         [None, None, 2.0, 2.0],
         [None, None, 2.0, 2.0],
+        [None, None, 2.0, 2.0],
         [1, 1, 1, 1],
         [1, 1, 1, 1],
         [None, None, None, None],

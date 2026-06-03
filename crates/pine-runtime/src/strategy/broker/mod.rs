@@ -29,6 +29,7 @@ pub struct BrokerState {
     open_trade_min_low: Option<f64>,
     orders: Vec<StrategyOrderEvent>,
     trades: Vec<StrategyTrade>,
+    closed_trade_metrics: Vec<ClosedTradeMetrics>,
     position: Vec<StrategyPositionSnapshot>,
     equity: Vec<StrategyEquitySnapshot>,
     diagnostics: Vec<RuntimeDiagnostic>,
@@ -57,6 +58,7 @@ impl BrokerState {
             open_trade_min_low: None,
             orders: Vec::new(),
             trades: Vec::new(),
+            closed_trade_metrics: Vec::new(),
             position: Vec::new(),
             equity: Vec::new(),
             diagnostics: Vec::new(),
@@ -557,6 +559,11 @@ impl BrokerState {
             diagnostics: self.diagnostics.clone(),
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct ClosedTradeMetrics {
+    max_runup: f64,
 }
 
 #[cfg(test)]

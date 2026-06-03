@@ -229,6 +229,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "strategy.closedtrades.max_runup",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "strategy.opentrades.entry_price",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_TRADE_FIELD_PARAMS,

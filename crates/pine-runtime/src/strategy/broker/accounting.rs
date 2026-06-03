@@ -73,6 +73,14 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn closed_trade_max_runup(&self, trade_num: i64) -> Option<f64> {
+        let index = usize::try_from(trade_num).ok()?;
+        self.closed_trade_metrics
+            .get(index)
+            .map(|metrics| metrics.max_runup)
+    }
+
+    #[must_use]
     pub fn winning_trade_count(&self) -> i64 {
         i64::try_from(
             self.trades
@@ -199,6 +207,14 @@ impl BrokerState {
         } else {
             None
         }
+    }
+
+    #[must_use]
+    pub(super) fn current_open_trade_max_runup_for_quantity(&self, qty: f64) -> f64 {
+        let Some(max_high) = self.open_trade_max_high else {
+            return 0.0;
+        };
+        normalize_zero((max_high - self.avg_price).max(0.0) * qty)
     }
 
     #[must_use]

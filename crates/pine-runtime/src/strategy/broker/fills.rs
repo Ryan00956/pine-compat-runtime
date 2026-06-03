@@ -1,4 +1,4 @@
-use super::{BrokerState, exits::PendingExit};
+use super::{BrokerState, ClosedTradeMetrics, exits::PendingExit};
 use crate::{RuntimeDiagnostic, StrategyOrderEvent, StrategyPositionSnapshot, StrategyTrade};
 
 impl BrokerState {
@@ -37,6 +37,9 @@ impl BrokerState {
             exit_price: price,
             qty,
             profit: (price - entry_price) * qty,
+        });
+        self.closed_trade_metrics.push(ClosedTradeMetrics {
+            max_runup: self.current_open_trade_max_runup_for_quantity(qty),
         });
 
         self.cash += qty * price;
@@ -94,6 +97,9 @@ impl BrokerState {
             exit_price,
             qty,
             profit: (exit_price - entry_price) * qty,
+        });
+        self.closed_trade_metrics.push(ClosedTradeMetrics {
+            max_runup: self.current_open_trade_max_runup_for_quantity(qty),
         });
 
         self.cash += qty * exit_price;

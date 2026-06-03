@@ -193,6 +193,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "strategy.closedtrades.commission",
     "strategy.closedtrades.profit",
     "strategy.closedtrades.size",
+    "strategy.closedtrades.max_runup",
     "strategy.opentrades.entry_bar_index",
     "strategy.opentrades.entry_id",
     "strategy.opentrades.entry_price",

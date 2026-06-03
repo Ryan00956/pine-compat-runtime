@@ -133,9 +133,11 @@ trades because the current account model has no commission calculation. Stage 7
 Slice 4 adds `strategy.closedtrades.entry_id(trade_num)`, which returns the
 entry id already retained on the closed trade record. Stage 7 Slice 5 adds
 `strategy.closedtrades.exit_id(trade_num)`, which returns the close or
-`strategy.exit` id retained on the closed trade record. They read the current
-closed-trade list with a zero-based integer `trade_num`; missing, negative,
-out-of-range, or non-integer indexes return `na`. These functions are
+`strategy.exit` id retained on the closed trade record. Stage 7 Slice 15 adds
+`strategy.closedtrades.max_runup(trade_num)`, returning the largest high-based
+favorable excursion retained for the closed trade quantity. They read the
+current closed-trade list with a zero-based integer `trade_num`; missing,
+negative, out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public
 runtime JSON, Python, or WASM fields.
 Stage 7 Slice 6 adds `strategy.opentrades.entry_price(trade_num)` for the
@@ -225,8 +227,9 @@ top-level runtime schema fields.
 Phase O does not add public
 open-trade records. Stage 7 adds only script-visible closed-trade
 `entry_id`, `exit_id`, `entry_price`, `exit_price`, `entry_bar_index`,
-`exit_bar_index`, `entry_time`, `exit_time`, `commission`, `size`, and `profit`
-namespace functions; it does not add public trade-namespace fields. The prior Phase L
+`exit_bar_index`, `entry_time`, `exit_time`, `commission`, `size`, `profit`,
+and `max_runup` namespace functions; it does not add public trade-namespace
+fields. The prior Phase L
 boundary is
 summarized in
 `docs/PHASE_L_AUDIT.md`; the closed Phase M and Phase N exit subsets are
