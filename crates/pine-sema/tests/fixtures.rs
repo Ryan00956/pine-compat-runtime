@@ -523,6 +523,7 @@ fn accepts_supported_strategy_opentrades_fields_fixture() {
         "tests/fixtures/sema/supported_strategy_opentrades_fields.pine",
         &[
             "strategy.opentrades.entry_price",
+            "strategy.opentrades.entry_id",
             "strategy.opentrades.entry_bar_index",
             "strategy.opentrades.entry_time",
             "strategy.opentrades.size",
@@ -596,7 +597,7 @@ fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
         &[
             "strategy.risk.max_drawdown",
             "strategy.closedtrades.max_runup",
-            "strategy.opentrades.entry_id",
+            "strategy.opentrades.commission",
         ],
     );
 }

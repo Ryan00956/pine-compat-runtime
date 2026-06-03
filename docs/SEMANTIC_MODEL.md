@@ -146,7 +146,8 @@ no-commission account model. `entry_id` returns the retained entry id, and
 `exit_id` returns the retained close or exit id. Other trade details and
 open-trade namespace functions remain unsupported except for
 `strategy.opentrades.entry_price`, which returns the current supported long
-position's entry price for `trade_num == 0`, and
+position's entry price for `trade_num == 0`,
+`strategy.opentrades.entry_id`, which returns its retained entry id, and
 `strategy.opentrades.entry_bar_index`, which returns its entry fill bar, and
 `strategy.opentrades.entry_time`, which returns its entry fill timestamp, and
 `strategy.opentrades.size`, which returns the current open position size, and

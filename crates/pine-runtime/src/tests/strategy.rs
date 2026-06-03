@@ -2717,21 +2717,25 @@ if bar_index == 0
 if bar_index == 2
     strategy.close("L")
 plot(strategy.opentrades.entry_price(0))
+plot(na(strategy.opentrades.entry_id(0)) ? na : strategy.opentrades.entry_id(0) == "L" ? 1 : 0)
 plot(strategy.opentrades.entry_bar_index(0))
 plot(strategy.opentrades.entry_time(0))
 plot(strategy.opentrades.size(0))
 plot(strategy.opentrades.profit(0))
 plot(strategy.opentrades.entry_price(1))
+plot(na(strategy.opentrades.entry_id(1)) ? na : 0)
 plot(strategy.opentrades.entry_bar_index(1))
 plot(strategy.opentrades.entry_time(1))
 plot(strategy.opentrades.size(1))
 plot(strategy.opentrades.profit(1))
 plot(strategy.opentrades.entry_price(-1))
+plot(na(strategy.opentrades.entry_id(-1)) ? na : 0)
 plot(strategy.opentrades.entry_bar_index(-1))
 plot(strategy.opentrades.entry_time(-1))
 plot(strategy.opentrades.size(-1))
 plot(strategy.opentrades.profit(-1))
 plot(strategy.opentrades.entry_price(0.5))
+plot(na(strategy.opentrades.entry_id(0.5)) ? na : 0)
 plot(strategy.opentrades.entry_bar_index(0.5))
 plot(strategy.opentrades.entry_time(0.5))
 plot(strategy.opentrades.size(0.5))
@@ -2786,19 +2790,19 @@ plot(strategy.opentrades.profit(0.5))
     );
     assert_eq!(
         result.plots[2].values,
-        vec![PineValue::Na, PineValue::Int(20), PineValue::Na]
+        vec![PineValue::Na, PineValue::Int(1), PineValue::Na]
     );
     assert_eq!(
         result.plots[3].values,
-        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Na]
+        vec![PineValue::Na, PineValue::Int(20), PineValue::Na]
     );
     assert_eq!(
         result.plots[4].values,
-        vec![PineValue::Na, PineValue::Float(0.0), PineValue::Na]
+        vec![PineValue::Na, PineValue::Float(2.0), PineValue::Na]
     );
     assert_eq!(
         result.plots[5].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+        vec![PineValue::Na, PineValue::Float(0.0), PineValue::Na]
     );
     assert_eq!(
         result.plots[6].values,
@@ -2854,6 +2858,22 @@ plot(strategy.opentrades.profit(0.5))
     );
     assert_eq!(
         result.plots[19].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[20].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[21].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[22].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[23].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Na]
     );
 }

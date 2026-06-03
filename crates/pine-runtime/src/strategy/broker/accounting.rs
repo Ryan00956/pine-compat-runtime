@@ -106,6 +106,15 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn open_trade_entry_id(&self, trade_num: i64) -> Option<&str> {
+        if trade_num == 0 && self.open_trade_count() == 1 {
+            self.entry_id.as_deref()
+        } else {
+            None
+        }
+    }
+
+    #[must_use]
     pub(crate) fn open_trade_entry_bar_index(&self, trade_num: i64) -> Option<usize> {
         if trade_num == 0 && self.open_trade_count() == 1 {
             self.entry_bar_index

@@ -356,11 +356,12 @@ single open long position. Stage 7 Slice 7 adds
 `strategy.opentrades.entry_bar_index()` for that same open position. Stage 7
 Slice 8 adds `strategy.opentrades.entry_time()`, and Slice 9 adds
 `strategy.opentrades.size()`. Stage 7 Slice 10 adds
-`strategy.opentrades.profit()`. Other namespace functions are unsupported.
+`strategy.opentrades.profit()`. Stage 7 Slice 11 adds
+`strategy.opentrades.entry_id()`. Other namespace functions are unsupported.
 
 Missing internal behavior:
 
-- `strategy.opentrades.entry_id()`, `.commission()`, runup, and drawdown;
+- `strategy.opentrades.commission()`, runup, and drawdown;
 - `strategy.closedtrades.*()` fields beyond the supported price/id/bar-index
   and time subset, plus runup and drawdown;
 - indexed trade access;

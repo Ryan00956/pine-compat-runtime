@@ -194,6 +194,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "strategy.closedtrades.profit",
     "strategy.closedtrades.size",
     "strategy.opentrades.entry_bar_index",
+    "strategy.opentrades.entry_id",
     "strategy.opentrades.entry_price",
     "strategy.opentrades.entry_time",
     "strategy.opentrades.size",

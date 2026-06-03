@@ -221,6 +221,7 @@ mod tests {
             "strategy.closedtrades.size",
             "strategy.closedtrades.profit",
             "strategy.opentrades.entry_price",
+            "strategy.opentrades.entry_id",
             "strategy.opentrades.entry_bar_index",
             "strategy.opentrades.entry_time",
             "strategy.opentrades.size",

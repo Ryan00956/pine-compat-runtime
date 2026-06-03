@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 11 open-trade `entry_id()` field
+  function. It exposes the current supported long position entry id when
+  `trade_num == 0`, returns `na` when flat or for invalid indexes, and keeps
+  public JSON, Python, and WASM strategy schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 10 open-trade `profit()` field
   function. It exposes the current close-based floating profit for the current
   supported long position when `trade_num == 0`, returns `na` when flat or for
