@@ -118,20 +118,21 @@ impl BrokerState {
         }
     }
 
-    fn commission_for_quantity(&self, qty: f64) -> f64 {
+    fn commission_for_fill(&self, qty: f64, price: f64) -> f64 {
         match self.commission {
             Some(StrategyCommission::CashPerContract(value)) => qty * value,
             Some(StrategyCommission::CashPerOrder(value)) => value,
+            Some(StrategyCommission::Percent(value)) => qty * price * (value / 100.0),
             None => 0.0,
         }
     }
 
-    fn entry_commission_for_quantity(&self, qty: f64) -> f64 {
-        self.commission_for_quantity(qty)
+    fn entry_commission_for_fill(&self, qty: f64, price: f64) -> f64 {
+        self.commission_for_fill(qty, price)
     }
 
-    fn exit_commission_for_quantity(&self, qty: f64) -> f64 {
-        self.commission_for_quantity(qty)
+    fn exit_commission_for_fill(&self, qty: f64, price: f64) -> f64 {
+        self.commission_for_fill(qty, price)
     }
 
     fn entry_commission_for_closed_quantity(&self, qty: f64) -> f64 {
@@ -191,7 +192,7 @@ impl BrokerState {
 
         self.position_size = qty;
         self.avg_price = fill_price;
-        self.open_entry_commission = self.entry_commission_for_quantity(qty);
+        self.open_entry_commission = self.entry_commission_for_fill(qty, fill_price);
         self.cash -= qty * fill_price + self.open_entry_commission;
         self.entry_id = Some(id.clone());
         self.entry_bar_index = Some(bar_index);

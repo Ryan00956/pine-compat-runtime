@@ -32,10 +32,12 @@ accepts `strategy(...)` with the common declaration metadata subset plus
 positive const numeric `initial_capital`. Phase L adds the fixed default
 quantity declaration subset:
 `default_qty_type=strategy.fixed, default_qty_value=N` with positive const
-numeric `N`. Stage 7 Slices 17 and 18 add cash commission declaration subsets:
+numeric `N`. Stage 7 Slices 17, 18, and 21 add supported commission declaration subsets:
 `commission_type=strategy.commission.cash_per_contract, commission_value=N` and
 `commission_type=strategy.commission.cash_per_order, commission_value=N` with
-finite non-negative const numeric `N`. Stage 7 Slice 19 adds `slippage=N` with
+finite non-negative const numeric `N`, plus
+`commission_type=strategy.commission.percent, commission_value=N` where
+supported fills debit `qty * fill_price * N / 100`. Stage 7 Slice 19 adds `slippage=N` with
 finite non-negative integer const ticks using the fixed `syminfo.mintick`
 subset. Stage 7 Slice 20 adds `backtest_fill_limits_assumption=N` with finite
 non-negative integer const ticks for supported limit-order verification.

@@ -40,8 +40,8 @@ strategy model.
 Implemented and fixture-backed:
 
 - `strategy(...)` declaration with selected metadata, positive const
-  `initial_capital`, fixed default quantity, cash-per-contract commission, and
-  cash-per-order commission, fixed-tick slippage, and fixed-tick limit
+  `initial_capital`, fixed default quantity, cash-per-contract,
+  cash-per-order, and percent commission, fixed-tick slippage, and fixed-tick limit
   verification.
 - `strategy.entry(id, strategy.long, qty=...)` and default fixed quantity when
   configured.
@@ -116,8 +116,8 @@ Missing internal behavior:
 - `default_qty_type=strategy.cash`
 - `default_qty_type=strategy.percent_of_equity`
 - `currency`
-- commission modes beyond `strategy.commission.cash_per_contract` and
-  `strategy.commission.cash_per_order`
+- commission modes beyond `strategy.commission.cash_per_contract`,
+  `strategy.commission.cash_per_order`, and `strategy.commission.percent`
 - fill models beyond fixed-tick slippage and fixed-tick limit verification on
   supported long fills
 - `margin_long` and `margin_short`
@@ -310,20 +310,20 @@ could be isolated, but it should wait until the account model policy is explicit
 
 ### 10. Costs And Price Adjustments
 
-Current state: cash-per-contract commission, cash-per-order commission,
-fixed-tick slippage, and fixed-tick limit-order verification are supported for
-configured strategy declarations. Other commission modes and richer fill models
-remain unsupported.
+Current state: cash-per-contract commission, cash-per-order commission, percent
+commission, fixed-tick slippage, and fixed-tick limit-order verification are
+supported for configured strategy declarations. Other commission modes and
+richer fill models remain unsupported.
 
 Missing internal behavior:
 
-- percentage commission;
 - cost fields in trade data and performance variables.
 
 Gap size: medium to large.
 
-Best next slice: percentage commission would be bounded, but it needs a precise
-cash/equity/trade-field contract before implementation.
+Best next slice: a narrow cost field or account-model setting would be bounded,
+but it needs a precise script-visible versus public-output contract before
+implementation.
 
 ### 11. Strategy Information Variables
 
@@ -372,7 +372,9 @@ public contract. Stage 7 Slice 19 adds fixed-tick slippage for supported long
 entry, close, and exit fill prices without public schema expansion. Stage 7
 Slice 20 adds fixed-tick limit-order verification for supported long limit
 entry and supported long limit/profit exit fills without public schema
-expansion. Other namespace functions are unsupported.
+expansion. Stage 7 Slice 21 adds percent commission accounting for supported
+entry/exit fills under the same public contract. Other namespace functions are
+unsupported.
 
 Missing internal behavior:
 

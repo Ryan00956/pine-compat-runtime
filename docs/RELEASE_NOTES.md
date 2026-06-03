@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 21 percent commission accounting.
+  `strategy(..., commission_type=strategy.commission.percent,
+  commission_value=N)` now debits `qty * fill_price * N / 100` on supported
+  entry and exit fills, updates cash, equity, closed trade profit,
+  `strategy.netprofit`, and closed/open trade `commission()` field functions,
+  and keeps public JSON, Python, and WASM strategy schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 20 fixed-tick limit verification.
   `strategy(..., backtest_fill_limits_assumption=N)` now accepts finite
   non-negative integer const ticks, requires supported long limit entry and
@@ -29,8 +35,8 @@
   now applies entry and exit commission to cash, equity, closed trade profit,
   `strategy.netprofit`, and the closed/open trade `commission()` field
   functions while leaving public JSON, Python, and WASM strategy schemas
-  unchanged; percent and other non-cash commission modes plus richer fill models
-  remain unsupported.
+  unchanged; unsupported commission modes beyond the current listed subset plus
+  richer fill models remain unsupported.
 - Added Strategy Internal Stage 7 Slice 16 closed-trade `max_drawdown()` field
   function. It exposes the largest low-based adverse excursion retained for the
   closed trade quantity, follows the same zero-based `trade_num` contract,

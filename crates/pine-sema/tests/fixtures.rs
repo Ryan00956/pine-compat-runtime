@@ -197,6 +197,26 @@ fn accepts_supported_strategy_commission_cash_per_order_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_commission_percent_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_commission_percent.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("strategy declaration should lower");
+    assert_eq!(
+        hir.strategy_settings.commission,
+        Some(pine_ir::StrategyCommission::Percent(10.0))
+    );
+}
+
+#[test]
 fn accepts_supported_strategy_slippage_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_strategy_slippage.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -247,9 +267,9 @@ fn reports_unsupported_strategy_default_quantity_fixture() {
 }
 
 #[test]
-fn reports_unsupported_strategy_commission_percent_fixture() {
+fn reports_unsupported_strategy_commission_unknown_fixture() {
     assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_strategy_commission_percent.pine",
+        "tests/fixtures/sema/unsupported_strategy_commission_unknown.pine",
         "E_CALL_ARG_VALUE",
     );
 }

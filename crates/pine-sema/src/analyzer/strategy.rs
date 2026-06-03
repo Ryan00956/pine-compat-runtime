@@ -3,6 +3,7 @@ use crate::prelude::*;
 const STRATEGY_FIXED_DEFAULT_QTY_TYPE: &str = "strategy.fixed";
 const STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE: &str = "strategy.commission.cash_per_contract";
 const STRATEGY_CASH_PER_ORDER_COMMISSION_TYPE: &str = "strategy.commission.cash_per_order";
+const STRATEGY_PERCENT_COMMISSION_TYPE: &str = "strategy.commission.percent";
 
 const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.position_size",
@@ -224,10 +225,16 @@ impl Analyzer {
                                     as fn(f64) -> pine_ir::StrategyCommission,
                             );
                         }
+                        STRATEGY_PERCENT_COMMISSION_TYPE => {
+                            commission_constructor = Some(
+                                pine_ir::StrategyCommission::Percent
+                                    as fn(f64) -> pine_ir::StrategyCommission,
+                            );
+                        }
                         _ => {
                             self.diagnostics.push(Diagnostic::error(
                                 "E_CALL_ARG_VALUE",
-                                "`strategy` argument `commission_type` only supports strategy.commission.cash_per_contract or strategy.commission.cash_per_order",
+                                "`strategy` argument `commission_type` only supports strategy.commission.cash_per_contract, strategy.commission.cash_per_order, or strategy.commission.percent",
                                 arg.span,
                             ));
                             continue;

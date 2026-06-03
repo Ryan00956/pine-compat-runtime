@@ -33,7 +33,7 @@ impl BrokerState {
         let qty = self.position_size;
         let entry_price = self.avg_price;
         let entry_commission = self.entry_commission_for_closed_quantity(qty);
-        let exit_commission = self.exit_commission_for_quantity(qty);
+        let exit_commission = self.exit_commission_for_fill(qty, price);
         let commission = entry_commission + exit_commission;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
@@ -97,7 +97,7 @@ impl BrokerState {
         }
         let entry_price = self.avg_price;
         let entry_commission = self.entry_commission_for_closed_quantity(qty);
-        let exit_commission = self.exit_commission_for_quantity(qty);
+        let exit_commission = self.exit_commission_for_fill(qty, exit_price);
         let commission = entry_commission + exit_commission;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);

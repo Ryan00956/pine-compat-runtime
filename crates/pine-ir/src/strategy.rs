@@ -9,6 +9,7 @@ pub enum StrategyDefaultQuantity {
 pub enum StrategyCommission {
     CashPerContract(f64),
     CashPerOrder(f64),
+    Percent(f64),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -43,7 +44,9 @@ impl StrategySettings {
     pub fn commission_cash_per_contract(self) -> f64 {
         match self.commission {
             Some(StrategyCommission::CashPerContract(value)) => value,
-            Some(StrategyCommission::CashPerOrder(_)) | None => 0.0,
+            Some(StrategyCommission::CashPerOrder(_))
+            | Some(StrategyCommission::Percent(_))
+            | None => 0.0,
         }
     }
 }

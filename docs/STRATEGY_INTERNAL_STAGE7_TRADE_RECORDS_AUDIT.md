@@ -492,7 +492,7 @@ Evidence:
   `tests/fixtures/runtime/strategy_commission_cash_per_contract.pine`;
 - semantic fixtures:
   `tests/fixtures/sema/supported_strategy_commission_cash_per_contract.pine`
-  and `tests/fixtures/sema/unsupported_strategy_commission_percent.pine`;
+  and `tests/fixtures/sema/unsupported_strategy_commission_unknown.pine`;
 - host parity tests cover CLI snapshots plus Python plot and trade/equity
   values.
 
@@ -531,8 +531,8 @@ Evidence:
   `tests/fixtures/runtime/strategy_commission_cash_per_order.pine`;
 - semantic fixture:
   `tests/fixtures/sema/supported_strategy_commission_cash_per_order.pine`;
-- unsupported percent commission remains covered by
-  `tests/fixtures/sema/unsupported_strategy_commission_percent.pine`;
+- unsupported commission modes remain covered by
+  `tests/fixtures/sema/unsupported_strategy_commission_unknown.pine`;
 - host parity tests cover CLI snapshots plus Python plot and trade/equity
   values.
 
@@ -601,6 +601,45 @@ Evidence:
   `tests/fixtures/sema/supported_strategy_limit_verification.pine` and
   `tests/fixtures/sema/unsupported_strategy_limit_verification.pine`;
 - host parity tests cover CLI snapshots plus Python trade/order values.
+
+## Slice 21: Percent Commission
+
+Closed on 2026-06-03.
+
+Supported declaration subset:
+
+- `strategy(..., commission_type=strategy.commission.percent,
+  commission_value=N)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- `commission_value` must be a finite non-negative const numeric value;
+- each supported entry and exit fill debits
+  `qty * fill_price * commission_value / 100`;
+- closed trade `profit`, `strategy.netprofit`, and trade-count outcomes use net
+  realized profit after allocated entry commission plus exit commission for the
+  closed quantity;
+- partial exits allocate the original entry percentage commission
+  proportionally to the closed quantity and leave the remainder attached to the
+  open trade;
+- `strategy.closedtrades.commission(trade_num)` returns allocated entry
+  percent commission plus exit percent commission for the closed quantity;
+- `strategy.opentrades.commission(trade_num)` returns the remaining open entry
+  percent commission for `trade_num == 0`;
+- equity snapshots and `strategy.equity` include supported percent commission
+  cash debits;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
+  output shape with no new top-level fields or public trade metric fields.
+
+Evidence:
+
+- runtime fixture: `tests/fixtures/runtime/strategy_commission_percent.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_commission_percent.pine` and
+  `tests/fixtures/sema/unsupported_strategy_commission_unknown.pine`;
+- host parity tests cover CLI snapshots plus Python plot and trade/equity
+  values.
 
 ## Remaining Stage 7 Work
 

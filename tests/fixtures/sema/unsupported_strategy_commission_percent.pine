@@ -1,3 +1,0 @@
-//@version=5
-strategy("Unsupported commission percent", commission_type="strategy.commission.percent", commission_value=0.5)
-plot(close)

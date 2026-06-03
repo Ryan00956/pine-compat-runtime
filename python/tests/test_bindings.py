@@ -432,6 +432,24 @@ def test_run_script_returns_strategy_cash_per_order_commission_plots():
     assert result["strategy"]["equity"][1]["equity"] == 99998.5
 
 
+def test_run_script_returns_strategy_percent_commission_plots():
+    source = (ROOT / "tests/fixtures/runtime/strategy_commission_percent.pine").read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [None, 0.4, None, None],
+        [None, None, 1.0, 1.0],
+        [0.0, 0.0, 1.0, 1.0],
+        [100000.0, 99999.6, 100001.0, 100001.0],
+    ]
+    assert result["strategy"]["trades"][0]["profit"] == 1.0
+    assert result["strategy"]["equity"][1]["cash"] == 99995.6
+    assert result["strategy"]["equity"][1]["equity"] == 99999.6
+
+
 def test_run_script_returns_strategy_slippage_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_slippage.pine").read_text()
     result = pine_compat.run_script(

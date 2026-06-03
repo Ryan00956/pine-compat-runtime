@@ -51,6 +51,10 @@ commission_value=N)` accepts a finite non-negative const numeric
 cash-per-contract commission. `strategy(...,
 commission_type=strategy.commission.cash_per_order, commission_value=N)`
 accepts a finite non-negative const numeric cash-per-order commission.
+`strategy(..., commission_type=strategy.commission.percent,
+commission_value=N)` accepts a finite non-negative const numeric percentage
+commission and debits `qty * fill_price * N / 100` on each supported entry and
+exit fill.
 `strategy(..., slippage=N)` accepts finite non-negative integer const ticks
 using the fixed `syminfo.mintick` subset.
 `strategy(..., backtest_fill_limits_assumption=N)` accepts finite non-negative
@@ -105,8 +109,9 @@ output field includes current open profit while a long position is open. The
 expression variable `strategy.netprofit` is narrower: it is cumulative realized
 closed-trade profit only and excludes current open profit. The current subset
 supports only `strategy.commission.cash_per_contract`,
-`strategy.commission.cash_per_order`, fixed-tick slippage, and fixed-tick limit
-verification, and has no other commission modes, richer fill models, margin,
+`strategy.commission.cash_per_order`, `strategy.commission.percent`,
+fixed-tick slippage, and fixed-tick limit verification, and has no other
+commission modes, richer fill models, margin,
 percent sizing, currency conversion,
 missing-entry pre-placement, or pyramiding. The only multiple-pending
 reservation subset is explicit fixed `qty` or `qty_percent` single-trigger or
@@ -171,7 +176,8 @@ fixed-tick slippage to supported long entry, close, and exit fill prices
 without changing trigger conditions or public schema. Stage 7 Slice 20 adds
 fixed-tick limit-order verification for supported long limit entry and
 supported long limit/profit exit fills while preserving the original limit fill
-price. They read the current
+price. Stage 7 Slice 21 adds percent commission accounting for supported
+entry/exit fills under the same public contract. They read the current
 closed-trade list with a zero-based integer `trade_num`; missing,
 negative, out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public

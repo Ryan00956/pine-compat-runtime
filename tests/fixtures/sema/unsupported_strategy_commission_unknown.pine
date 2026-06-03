@@ -1,0 +1,3 @@
+//@version=5
+strategy("Unsupported commission mode", commission_type="strategy.commission.unknown", commission_value=0.5)
+plot(close)

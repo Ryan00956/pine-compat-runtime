@@ -549,6 +549,7 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn runtime_outputs_match_golden_snapshots() {
         for (snapshot, fixture) in [
             (
@@ -1049,18 +1050,10 @@ mod tests {
                 "runtime_strategy_exit_qty_percent_state.json",
                 "tests/fixtures/runtime/strategy_exit_qty_percent_state.pine",
             ),
-            (
-                "runtime_strategy_equity.json",
-                "tests/fixtures/runtime/strategy_equity.pine",
-            ),
-            (
-                "runtime_strategy_commission_cash_per_contract.json",
-                "tests/fixtures/runtime/strategy_commission_cash_per_contract.pine",
-            ),
-            (
-                "runtime_strategy_commission_cash_per_order.json",
-                "tests/fixtures/runtime/strategy_commission_cash_per_order.pine",
-            ),
+            ("runtime_strategy_equity.json", "tests/fixtures/runtime/strategy_equity.pine"),
+            ("runtime_strategy_commission_cash_per_contract.json", "tests/fixtures/runtime/strategy_commission_cash_per_contract.pine"),
+            ("runtime_strategy_commission_cash_per_order.json", "tests/fixtures/runtime/strategy_commission_cash_per_order.pine"),
+            ("runtime_strategy_commission_percent.json", "tests/fixtures/runtime/strategy_commission_percent.pine"),
             (
                 "runtime_strategy_slippage.json",
                 "tests/fixtures/runtime/strategy_slippage.pine",

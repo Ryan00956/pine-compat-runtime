@@ -294,12 +294,13 @@ be accepted in Phase 1. `max_bars_back` must be non-negative when provided.
 Unsupported named arguments should produce compatibility diagnostics.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
-use the configured or default fixed quantity. `strategy(...)` accepts only
-`commission_type=strategy.commission.cash_per_contract` or
-`commission_type=strategy.commission.cash_per_order` with a finite non-negative
-const numeric `commission_value`; entry cash, exit cash, realized trade profit,
-`strategy.netprofit`, and `strategy.equity` include that commission when
-configured. `strategy(..., slippage=N)` accepts finite non-negative integer
+use the configured or default fixed quantity. `strategy(...)` accepts
+`commission_type=strategy.commission.cash_per_contract`,
+`strategy.commission.cash_per_order`, or `strategy.commission.percent` with a
+finite non-negative const numeric `commission_value`; entry cash, exit cash,
+realized trade profit, `strategy.netprofit`, and `strategy.equity` include that
+commission when configured. `strategy(..., slippage=N)` accepts finite
+non-negative integer
 const ticks and uses the fixed `syminfo.mintick` subset; configured slippage
 worsens supported long entry fill prices upward and supported long exit/close
 fill prices downward after trigger selection.
