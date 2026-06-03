@@ -180,6 +180,8 @@ Stop condition:
 
 ### Slice M2: Long-Only Capital Held
 
+Closed on 2026-06-03.
+
 Implement script-visible `strategy.opentrades.capital_held` for the current
 one-net-long model when active long margin is configured.
 

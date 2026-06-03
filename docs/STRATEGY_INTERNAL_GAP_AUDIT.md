@@ -308,7 +308,8 @@ Missing internal behavior:
 - contract/share minimum and rounding behavior;
 - currency selection and conversion;
 - margin requirements and forced liquidation;
-- margin-backed capital held for open trades;
+- margin-backed capital-held behavior beyond the current long-only explicit
+  `margin_long` subset;
 - account constraints that can prevent fills.
 
 Gap size: large.
@@ -347,7 +348,8 @@ Missing internal behavior:
 
 - remaining percent variants outside the supported profit/average-trade/run-up
   and drawdown subset;
-- margin-backed capital held;
+- margin-backed capital-held behavior beyond the current long-only explicit
+  `margin_long` subset;
 - built-ins whose value depends on costs, margin, or individual trade records.
 
 Gap size: medium.
@@ -408,15 +410,18 @@ Slice 34 adds `strategy.max_contracts_held_all`,
 `strategy.max_contracts_held_long`, and `strategy.max_contracts_held_short`
 without expanding public output. Stage 7 Slice 35 adds
 `strategy.opentrades.capital_held` as a read-only variable in the current
-no-margin subset, returning `na` until margin-backed funding simulation is
-implemented. Other namespace functions are unsupported.
+no-margin subset, returning `na`. Strategy Internal Margin Slice M2 adds the
+current long-only explicit-`margin_long` subset, where `capital_held` returns
+`0.0` while flat and current open long market value times `margin_long / 100`
+while open. Other namespace functions are unsupported.
 
 Missing internal behavior:
 
 - `strategy.closedtrades.*()` fields beyond the supported price/id/bar-index,
   time, commission, size, profit, runup, and drawdown subset;
 - indexed trade access;
-- margin-backed `strategy.opentrades.capital_held` values;
+- `strategy.opentrades.capital_held` behavior beyond the current long-only
+  explicit-`margin_long` subset;
 - open-trade and closed-trade records with enough retained metadata.
 
 Gap size: large.

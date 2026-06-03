@@ -172,13 +172,15 @@ impl<'a> HistoricalRuntime<'a> {
             boxes: Vec::new(),
             tables: Vec::new(),
             alerts: Vec::new(),
-            strategy_broker: BrokerState::new_with_commission_slippage_and_limit_verification(
+            strategy_broker: BrokerState::new_with_account_settings(
                 program.strategy_settings.initial_capital,
                 program.strategy_settings.commission,
                 program.strategy_settings.slippage_ticks
                     * pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01),
                 program.strategy_settings.backtest_fill_limit_ticks
                     * pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01),
+                program.strategy_settings.margin_long,
+                program.strategy_settings.margin_short,
             ),
             next_label_id: 1,
             next_line_id: 1,

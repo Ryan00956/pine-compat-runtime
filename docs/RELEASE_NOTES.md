@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Implemented Strategy Internal Margin Slice M2. With explicit active
+  `margin_long`, `strategy.opentrades.capital_held` now returns current open
+  long market value times `margin_long / 100`, returns `0.0` while flat, and
+  preserves `na` in the no-margin subset; margin affordability and forced
+  liquidation remain unsupported.
 - Implemented Strategy Internal Margin Slice M1. `strategy(..., margin_long=N,
   margin_short=N)` now accepts finite non-negative const numeric declaration
   values and stores their explicit presence in IR, without enabling runtime

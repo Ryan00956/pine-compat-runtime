@@ -1084,8 +1084,11 @@ Contract:
   namespace, not as a `trade_num` field function;
 - returns `na` in the current no-margin subset, matching Pine's behavior when
   the strategy does not simulate funding trades with nonzero margin settings;
-- nonzero `margin_long` / `margin_short` funding simulation, capital
-  reservation, and forced liquidation remain unsupported;
+- Strategy Internal Margin Slice M2 adds the current long-only explicit
+  `margin_long` subset, where the variable returns `0.0` while flat and
+  current open long market value times `margin_long / 100` while open;
+- entry affordability, account constraints, `margin_short`, and forced
+  liquidation remain unsupported;
 - public CLI JSON, Python dictionaries, and WASM JSON keep the existing
   strategy output shape with no new top-level fields.
 
@@ -1093,6 +1096,8 @@ Evidence:
 
 - runtime fixture:
   `tests/fixtures/runtime/strategy_opentrades_fields.pine`;
+- runtime fixture:
+  `tests/fixtures/runtime/strategy_margin_capital_held_long.pine`;
 - semantic fixtures:
   `tests/fixtures/sema/supported_strategy_opentrades_fields.pine`,
   `tests/fixtures/sema/unsupported_strategy_state_indicator.pine`,

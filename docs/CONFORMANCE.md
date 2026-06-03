@@ -76,7 +76,9 @@ accepts `default_qty_type=strategy.fixed` with positive const numeric
 `default_qty_type=strategy.percent_of_equity` with positive const numeric
 `default_qty_value`, resolving omitted entry `qty` at placement time from the
 current supported equity and current close. Margin parameters are currently
-declaration/IR-only and do not enable runtime margin behavior. Stage 7 Slice 17 accepts
+limited to declaration/IR storage plus long-only
+`strategy.opentrades.capital_held`; they do not enable margin affordability,
+equity-snapshot changes, or forced liquidation. Stage 7 Slice 17 accepts
 `commission_type=strategy.commission.cash_per_contract`, and Stage 7 Slice 18
 accepts `commission_type=strategy.commission.cash_per_order`, both with finite
 non-negative const numeric `commission_value`. Stage 7 Slice 21 accepts
@@ -209,9 +211,10 @@ high-based favorable excursion seen so far for that current supported open
 position. Stage 7 Slice 14 adds
 `strategy.opentrades.max_drawdown(trade_num)`, returning the largest low-based
 adverse excursion seen so far for that current supported open position. Stage
-7 Slice 35 adds `strategy.opentrades.capital_held` as a read-only variable;
-in the current no-margin subset it returns `na` because margin-backed funding
-simulation is not implemented. Stage 7 Slice 15 adds
+7 Slice 35 adds `strategy.opentrades.capital_held` as a read-only variable.
+In the no-margin subset it returns `na`; Stage 7 Margin Slice M2 returns
+current open long market value times `margin_long / 100` when explicit active
+`margin_long` is configured. Stage 7 Slice 15 adds
 `strategy.closedtrades.max_runup(trade_num)`, returning the
 largest high-based favorable excursion retained for the closed trade quantity.
 Stage 7 Slice 16 adds `strategy.closedtrades.max_drawdown(trade_num)`,
@@ -651,8 +654,8 @@ strategy.wintrades partial        closed winning-trade count read-only series in
 strategy.losstrades partial       closed losing-trade count read-only series int in strategy-mode scripts only; counts closed trades with negative realized profit
 strategy.eventrades partial       closed even-trade count read-only series int in strategy-mode scripts only; counts closed trades with zero realized profit
 strategy.opentrades partial       open-trade count read-only series int in strategy-mode scripts only; 1 for the current supported long position and 0 when flat
-strategy.opentrades.* partial     open-trade field function subset limited to entry_price, entry_id, entry_bar_index, entry_time, size, profit, commission, max_runup, and max_drawdown for the current supported long position, plus the capital_held variable in the current no-margin subset; trade_num must be 0 and invalid or flat-state function reads return na; commission returns 0.0 without configured commission or current open supported entry commission when configured; max_runup returns the largest high-based favorable excursion seen so far; max_drawdown returns the largest low-based adverse excursion seen so far; capital_held returns na until margin-backed funding simulation is implemented; no public runtime schema expansion
-strategy.opentrades.capital_held partial open-trade capital held variable in strategy-mode scripts only; returns na in the current no-margin subset; no public runtime schema expansion
+strategy.opentrades.* partial     open-trade field function subset limited to entry_price, entry_id, entry_bar_index, entry_time, size, profit, commission, max_runup, and max_drawdown for the current supported long position, plus the capital_held variable; trade_num must be 0 and invalid or flat-state function reads return na; commission returns 0.0 without configured commission or current open supported entry commission when configured; max_runup returns the largest high-based favorable excursion seen so far; max_drawdown returns the largest low-based adverse excursion seen so far; capital_held returns na without active margin and current open long market value times margin_long / 100 with explicit active margin_long; no public runtime schema expansion
+strategy.opentrades.capital_held partial open-trade capital held variable in strategy-mode scripts only; returns na in the no-margin subset, 0.0 while flat with active margin, and current open long market value times margin_long / 100 while the supported long position is open; no public runtime schema expansion
 strategy.opentrades.entry_price partial current open-trade entry price field function in strategy-mode scripts only; no public runtime schema expansion
 strategy.opentrades.entry_id partial current open-trade entry id field function in strategy-mode scripts only; no public runtime schema expansion
 strategy.opentrades.entry_bar_index partial current open-trade entry bar index field function in strategy-mode scripts only; no public runtime schema expansion

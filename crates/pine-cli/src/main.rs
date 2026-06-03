@@ -1095,6 +1095,9 @@ mod tests {
                 "tests/fixtures/runtime/strategy_opentrades_fields.pine",
             ),
             (
+                "runtime_strategy_margin_capital_held_long.json", "tests/fixtures/runtime/strategy_margin_capital_held_long.pine",
+            ),
+            (
                 "runtime_strategy_trade_outcome_counts.json",
                 "tests/fixtures/runtime/strategy_trade_outcome_counts.pine",
             ),

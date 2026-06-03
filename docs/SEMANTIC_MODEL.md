@@ -221,8 +221,10 @@ excursion seen so far for that open position, and
 `strategy.opentrades.max_drawdown`, which returns the largest low-based adverse
 excursion seen so far for that open position. All field functions return `na`
 when flat or invalid. `strategy.opentrades.capital_held` is a read-only
-strategy-mode variable and returns `na` in the current no-margin subset;
-nonzero margin-backed funding simulation remains unsupported.
+strategy-mode variable and returns `na` in the current no-margin subset. With
+explicit active `margin_long`, the current long-only subset returns `0.0` while
+flat and current open long market value times `margin_long / 100` while open.
+Margin affordability and forced liquidation remain unsupported.
 Phase M and
 Phase N keep pending-order records, partial fill fields, and exit reason fields
 outside the public output model, and Phases R, S, U, V, W, X, and Y keep that

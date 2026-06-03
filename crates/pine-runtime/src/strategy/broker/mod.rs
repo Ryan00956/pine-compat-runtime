@@ -3,7 +3,7 @@ mod entries;
 mod exits;
 mod fills;
 
-use pine_ir::{DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCommission};
+use pine_ir::{DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCommission, StrategyMarginSetting};
 
 use entries::{PendingEntryBook, PendingEntryKind};
 use exits::{
@@ -20,6 +20,8 @@ use crate::{
 pub struct BrokerState {
     initial_capital: f64,
     commission: Option<StrategyCommission>,
+    margin_long: StrategyMarginSetting,
+    margin_short: StrategyMarginSetting,
     open_entry_commission: f64,
     slippage_price_offset: f64,
     limit_verification_price_offset: f64,
@@ -103,9 +105,30 @@ impl BrokerState {
         slippage_price_offset: f64,
         limit_verification_price_offset: f64,
     ) -> Self {
+        Self::new_with_account_settings(
+            initial_capital,
+            commission,
+            slippage_price_offset,
+            limit_verification_price_offset,
+            StrategyMarginSetting::default(),
+            StrategyMarginSetting::default(),
+        )
+    }
+
+    #[must_use]
+    pub fn new_with_account_settings(
+        initial_capital: f64,
+        commission: Option<StrategyCommission>,
+        slippage_price_offset: f64,
+        limit_verification_price_offset: f64,
+        margin_long: StrategyMarginSetting,
+        margin_short: StrategyMarginSetting,
+    ) -> Self {
         Self {
             initial_capital,
             commission,
+            margin_long,
+            margin_short,
             open_entry_commission: 0.0,
             slippage_price_offset,
             limit_verification_price_offset,
