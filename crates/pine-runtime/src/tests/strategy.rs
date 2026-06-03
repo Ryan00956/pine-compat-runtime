@@ -2720,18 +2720,22 @@ plot(strategy.opentrades.entry_price(0))
 plot(strategy.opentrades.entry_bar_index(0))
 plot(strategy.opentrades.entry_time(0))
 plot(strategy.opentrades.size(0))
+plot(strategy.opentrades.profit(0))
 plot(strategy.opentrades.entry_price(1))
 plot(strategy.opentrades.entry_bar_index(1))
 plot(strategy.opentrades.entry_time(1))
 plot(strategy.opentrades.size(1))
+plot(strategy.opentrades.profit(1))
 plot(strategy.opentrades.entry_price(-1))
 plot(strategy.opentrades.entry_bar_index(-1))
 plot(strategy.opentrades.entry_time(-1))
 plot(strategy.opentrades.size(-1))
+plot(strategy.opentrades.profit(-1))
 plot(strategy.opentrades.entry_price(0.5))
 plot(strategy.opentrades.entry_bar_index(0.5))
 plot(strategy.opentrades.entry_time(0.5))
 plot(strategy.opentrades.size(0.5))
+plot(strategy.opentrades.profit(0.5))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -2790,7 +2794,7 @@ plot(strategy.opentrades.size(0.5))
     );
     assert_eq!(
         result.plots[4].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+        vec![PineValue::Na, PineValue::Float(0.0), PineValue::Na]
     );
     assert_eq!(
         result.plots[5].values,
@@ -2834,6 +2838,22 @@ plot(strategy.opentrades.size(0.5))
     );
     assert_eq!(
         result.plots[15].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[16].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[17].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[18].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[19].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Na]
     );
 }

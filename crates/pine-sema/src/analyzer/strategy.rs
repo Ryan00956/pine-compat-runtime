@@ -34,6 +34,7 @@ const STRATEGY_OPEN_TRADE_FIELD_FUNCTIONS: &[&str] = &[
     "strategy.opentrades.entry_bar_index",
     "strategy.opentrades.entry_time",
     "strategy.opentrades.size",
+    "strategy.opentrades.profit",
 ];
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

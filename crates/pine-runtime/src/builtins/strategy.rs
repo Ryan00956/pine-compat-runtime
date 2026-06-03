@@ -39,7 +39,8 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.opentrades.entry_price"
             | "strategy.opentrades.entry_bar_index"
             | "strategy.opentrades.entry_time"
-            | "strategy.opentrades.size" => self.eval_strategy_open_trade_field(callee, args),
+            | "strategy.opentrades.size"
+            | "strategy.opentrades.profit" => self.eval_strategy_open_trade_field(callee, args),
             _ => return None,
         })
     }
@@ -109,6 +110,14 @@ impl<'a> HistoricalRuntime<'a> {
                 .strategy_broker
                 .open_trade_size(trade_num)
                 .map_or(PineValue::Na, PineValue::Float),
+            "strategy.opentrades.profit" => {
+                let Some(bar) = self.current_bar else {
+                    return Ok(PineValue::Na);
+                };
+                self.strategy_broker
+                    .open_trade_profit(trade_num, bar.close)
+                    .map_or(PineValue::Na, PineValue::Float)
+            }
             _ => PineValue::Na,
         })
     }

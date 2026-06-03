@@ -256,4 +256,11 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
+    BuiltinSignature {
+        name: "strategy.opentrades.profit",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
 ];

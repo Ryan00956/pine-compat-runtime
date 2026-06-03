@@ -526,6 +526,7 @@ fn accepts_supported_strategy_opentrades_fields_fixture() {
             "strategy.opentrades.entry_bar_index",
             "strategy.opentrades.entry_time",
             "strategy.opentrades.size",
+            "strategy.opentrades.profit",
         ],
     );
 }
