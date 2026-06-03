@@ -2718,12 +2718,16 @@ if bar_index == 2
     strategy.close("L")
 plot(strategy.opentrades.entry_price(0))
 plot(strategy.opentrades.entry_bar_index(0))
+plot(strategy.opentrades.entry_time(0))
 plot(strategy.opentrades.entry_price(1))
 plot(strategy.opentrades.entry_bar_index(1))
+plot(strategy.opentrades.entry_time(1))
 plot(strategy.opentrades.entry_price(-1))
 plot(strategy.opentrades.entry_bar_index(-1))
+plot(strategy.opentrades.entry_time(-1))
 plot(strategy.opentrades.entry_price(0.5))
 plot(strategy.opentrades.entry_bar_index(0.5))
+plot(strategy.opentrades.entry_time(0.5))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -2774,7 +2778,7 @@ plot(strategy.opentrades.entry_bar_index(0.5))
     );
     assert_eq!(
         result.plots[2].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+        vec![PineValue::Na, PineValue::Int(20), PineValue::Na]
     );
     assert_eq!(
         result.plots[3].values,
@@ -2794,6 +2798,22 @@ plot(strategy.opentrades.entry_bar_index(0.5))
     );
     assert_eq!(
         result.plots[7].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[8].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[9].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[10].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na]
+    );
+    assert_eq!(
+        result.plots[11].values,
         vec![PineValue::Na, PineValue::Na, PineValue::Na]
     );
 }

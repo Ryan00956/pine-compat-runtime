@@ -143,8 +143,10 @@ current supported long position. It returns the current open position average
 entry price for `trade_num == 0`; when flat, out of range, negative, or
 non-integer, it returns `na`. Stage 7 Slice 7 adds
 `strategy.opentrades.entry_bar_index(trade_num)` under the same contract,
-returning the current open position's entry fill bar. Other open-trade
-namespace functions and public open-trade record output remain unsupported.
+returning the current open position's entry fill bar. Stage 7 Slice 8 adds
+`strategy.opentrades.entry_time(trade_num)`, returning the current open
+position's entry fill timestamp. Other open-trade namespace functions and
+public open-trade record output remain unsupported.
 
 The strategy contract is host-independent and exposed consistently by CLI JSON,
 Python dictionaries, and WASM JSON. Short entries, `strategy.exit` variants

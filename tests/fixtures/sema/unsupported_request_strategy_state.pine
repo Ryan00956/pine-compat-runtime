@@ -18,3 +18,4 @@ plot(request.security(syminfo.tickerid, timeframe.period, strategy.closedtrades.
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.closedtrades.commission(0)))
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.opentrades.entry_price(0)))
 plot(request.security(syminfo.tickerid, timeframe.period, strategy.opentrades.entry_bar_index(0)))
+plot(request.security(syminfo.tickerid, timeframe.period, strategy.opentrades.entry_time(0)))

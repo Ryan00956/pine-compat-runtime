@@ -36,9 +36,9 @@ impl<'a> HistoricalRuntime<'a> {
             | "strategy.closedtrades.commission"
             | "strategy.closedtrades.size"
             | "strategy.closedtrades.profit" => self.eval_strategy_closed_trade_field(callee, args),
-            "strategy.opentrades.entry_price" | "strategy.opentrades.entry_bar_index" => {
-                self.eval_strategy_open_trade_field(callee, args)
-            }
+            "strategy.opentrades.entry_price"
+            | "strategy.opentrades.entry_bar_index"
+            | "strategy.opentrades.entry_time" => self.eval_strategy_open_trade_field(callee, args),
             _ => return None,
         })
     }
@@ -100,6 +100,10 @@ impl<'a> HistoricalRuntime<'a> {
                 .open_trade_entry_bar_index(trade_num)
                 .map(|value| PineValue::Int(i64::try_from(value).unwrap_or(i64::MAX)))
                 .unwrap_or(PineValue::Na),
+            "strategy.opentrades.entry_time" => self
+                .strategy_broker
+                .open_trade_entry_time(trade_num)
+                .map_or(PineValue::Na, PineValue::Int),
             _ => PineValue::Na,
         })
     }

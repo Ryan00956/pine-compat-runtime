@@ -278,6 +278,7 @@ strategy.closedtrades.size(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.profit(trade_num: series/simple numeric) -> series float
 strategy.opentrades.entry_price(trade_num: series/simple numeric) -> series float
 strategy.opentrades.entry_bar_index(trade_num: series/simple numeric) -> series int
+strategy.opentrades.entry_time(trade_num: series/simple numeric) -> series int
 ```
 
 Only metadata arguments needed by the output and history-retention model should
@@ -321,14 +322,15 @@ unsupported.
 `strategy.closedtrades.size`, and `strategy.closedtrades.profit` are read-only
 strategy-mode field functions over the current closed-trade list.
 `strategy.opentrades.entry_price` and
-`strategy.opentrades.entry_bar_index` are read-only strategy-mode field
-functions for the current supported long position. `trade_num` is a zero-based
-integer index; missing, negative, out-of-range, or non-integer indexes return
-`na`. `entry_id` returns the retained entry id. `exit_id` returns the retained
-close or exit id. `commission` returns `0.0` in the current no-commission
-account model. They do not add public runtime schema fields. Other closed-trade
-fields and open-trade namespace functions outside `entry_price` and
-`entry_bar_index` remain unsupported.
+`strategy.opentrades.entry_bar_index`, and `strategy.opentrades.entry_time` are
+read-only strategy-mode field functions for the current supported long
+position. `trade_num` is a zero-based integer index; missing, negative,
+out-of-range, or non-integer indexes return `na`. `entry_id` returns the
+retained entry id. `exit_id` returns the retained close or exit id.
+`commission` returns `0.0` in the current no-commission account model. They do
+not add public runtime schema fields. Other closed-trade fields and open-trade
+namespace functions outside `entry_price`, `entry_bar_index`, and `entry_time`
+remain unsupported.
 
 ## Inputs
 

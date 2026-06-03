@@ -242,4 +242,11 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         returns: ReturnSpec::Fixed(SERIES_INT),
         variadic: false,
     },
+    BuiltinSignature {
+        name: "strategy.opentrades.entry_time",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
+        variadic: false,
+    },
 ];

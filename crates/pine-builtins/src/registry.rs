@@ -222,6 +222,7 @@ mod tests {
             "strategy.closedtrades.profit",
             "strategy.opentrades.entry_price",
             "strategy.opentrades.entry_bar_index",
+            "strategy.opentrades.entry_time",
         ] {
             let signature = get_phase_1_builtin(name).expect("trade field signature");
             assert_eq!(signature.params.len(), 1, "{name}");

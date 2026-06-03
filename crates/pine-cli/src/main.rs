@@ -86,6 +86,7 @@ mod tests {
                 || signature.name == "strategy.closedtrades.profit"
                 || signature.name == "strategy.opentrades.entry_price"
                 || signature.name == "strategy.opentrades.entry_bar_index"
+                || signature.name == "strategy.opentrades.entry_time"
                 || signature.name == "alert"
                 || signature.name == "alertcondition"
             {

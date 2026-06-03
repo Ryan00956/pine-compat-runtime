@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 8 open-trade `entry_time()` field
+  function. It exposes the current supported long position's entry fill
+  timestamp for `trade_num == 0`, returns `na` when flat or for invalid
+  indexes, and keeps public JSON, Python, and WASM strategy schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 7 open-trade `entry_bar_index()` field
   function. It exposes the current supported long position's entry fill bar for
   `trade_num == 0`, returns `na` when flat or for invalid indexes, and keeps

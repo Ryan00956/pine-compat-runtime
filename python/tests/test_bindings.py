@@ -400,6 +400,10 @@ def test_run_script_returns_strategy_opentrades_field_plots():
     assert [plot["values"] for plot in result["plots"]] == [
         [None, 2.0, None, None],
         [None, 1, None, None],
+        [None, 2, None, None],
+        [None, None, None, None],
+        [None, None, None, None],
+        [None, None, None, None],
         [None, None, None, None],
         [None, None, None, None],
         [None, None, None, None],
