@@ -145,12 +145,15 @@ trade.
 over the current supported trading interval, using the supported entry equity,
 the maximum equity before that entry, and the lowest low reached while the
 supported position is open. It returns `0`
-before any drawdown from the maximum equity baseline. `strategy.max_drawdown_percent` remains
-unsupported. `strategy.max_runup` returns the maximum intrabar equity run-up
+before any drawdown from the maximum equity baseline.
+`strategy.max_drawdown_percent` divides the supported drawdown amount by entry
+price times current supported position quantity and multiplies by 100.
+`strategy.max_runup` returns the maximum intrabar equity run-up
 amount over the current supported long-only trading interval, using the
 supported entry equity, the minimum equity before that entry, and the highest
 high reached while the supported position is open. `strategy.max_runup_percent`
-remains unsupported.
+divides the supported run-up amount by entry price times current supported
+position quantity and multiplies by 100.
 `strategy.equity` is cash plus current market value; without configured
 commission this equals `initial_capital + strategy.netprofit +
 strategy.openprofit`, and with supported commission it also includes entry

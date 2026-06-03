@@ -126,8 +126,18 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn max_drawdown_percent(&self) -> f64 {
+        normalize_zero(self.max_drawdown_percent)
+    }
+
+    #[must_use]
     pub(crate) fn max_runup(&self) -> f64 {
         normalize_zero(self.max_runup)
+    }
+
+    #[must_use]
+    pub(crate) fn max_runup_percent(&self) -> f64 {
+        normalize_zero(self.max_runup_percent)
     }
 
     #[must_use]
@@ -329,6 +339,9 @@ impl BrokerState {
     fn update_open_trade_max_runup(&mut self) {
         if let Some(runup) = self.current_open_strategy_max_runup() {
             self.max_runup = self.max_runup.max(runup);
+            if let Some(percent) = self.current_open_strategy_percent(runup) {
+                self.max_runup_percent = self.max_runup_percent.max(percent);
+            }
         }
     }
 
@@ -349,7 +362,21 @@ impl BrokerState {
     fn update_open_trade_max_drawdown(&mut self) {
         if let Some(drawdown) = self.current_open_strategy_max_drawdown() {
             self.max_drawdown = self.max_drawdown.max(drawdown);
+            if let Some(percent) = self.current_open_strategy_percent(drawdown) {
+                self.max_drawdown_percent = self.max_drawdown_percent.max(percent);
+            }
         }
+    }
+
+    fn current_open_strategy_percent(&self, amount: f64) -> Option<f64> {
+        if self.open_trade_count() != 1 {
+            return None;
+        }
+        let denominator = self.avg_price * self.position_size;
+        if !amount.is_finite() || !denominator.is_finite() || denominator <= 0.0 {
+            return None;
+        }
+        Some(normalize_zero(amount / denominator * 100.0))
     }
 
     #[must_use]

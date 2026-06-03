@@ -156,12 +156,16 @@ closed trade. `strategy.max_runup` is a read-only strategy-mode `series float`
 that returns the maximum intrabar equity run-up amount over the current
 supported long-only trading interval, using the supported entry equity, the
 minimum equity before that entry, and the highest high reached while the
-supported position is open; the percent variant remains unsupported.
+supported position is open. `strategy.max_runup_percent` divides the supported
+run-up amount by entry price times current supported position quantity and
+multiplies by 100.
 `strategy.max_drawdown` is a read-only strategy-mode
 `series float` that returns the maximum intrabar equity drawdown amount over
 the current supported trading interval, using the supported entry equity, the
 maximum equity before that entry, and the lowest low reached while the
-supported position is open; the percent variant remains
+supported position is open. `strategy.max_drawdown_percent` divides the
+supported drawdown amount by entry price times current supported position
+quantity and multiplies by 100. Other percent variants remain
 unsupported. The count variables are
 read-only strategy-mode `series int` values for the current long-only broker:
 `strategy.closedtrades` counts closed trades recorded by broker state;

@@ -3816,116 +3816,77 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
     )
     .expect("runtime result");
 
-    assert_eq!(
-        result.plots[0].values,
-        vec![
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(-4.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-        ]
-    );
-    assert_eq!(
-        result.plots[1].values,
-        vec![
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(-4.0),
-            PineValue::Float(-4.0),
-        ]
-    );
-    assert_eq!(
-        result.plots[2].values,
-        vec![
-            PineValue::Float(1000.0),
-            PineValue::Float(1000.0),
-            PineValue::Float(1000.0),
-            PineValue::Float(996.0),
-            PineValue::Float(996.0),
-            PineValue::Float(996.0),
-        ]
-    );
-    assert_eq!(
-        result.plots[3].values,
-        vec![
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-        ]
-    );
-    assert_eq!(
-        result.plots[4].values,
-        vec![
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(4.0),
-            PineValue::Float(4.0),
-            PineValue::Float(4.0),
-        ]
-    );
-    assert_eq!(
-        result.plots[5].values,
-        vec![
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-        ]
-    );
-    assert_eq!(
-        result.plots[6].values,
-        vec![
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(-4.0),
-            PineValue::Float(-4.0),
-            PineValue::Float(-4.0),
-        ]
-    );
-    assert_eq!(
-        result.plots[7].values,
-        vec![
-            PineValue::Float(1000.0),
-            PineValue::Float(1000.0),
-            PineValue::Float(1000.0),
-            PineValue::Float(996.0),
-            PineValue::Float(996.0),
-            PineValue::Float(996.0),
-        ]
-    );
-    assert_eq!(
-        result.plots[8].values,
-        vec![
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-        ]
-    );
-    assert_eq!(
-        result.plots[9].values,
-        vec![
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(4.0),
-            PineValue::Float(4.0),
-            PineValue::Float(4.0),
-        ]
-    );
+    let zero_series = vec![
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+    ];
+    let open_profit = vec![
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(-4.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+    ];
+    let net_profit = vec![
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(-4.0),
+        PineValue::Float(-4.0),
+    ];
+    let net_profit_after_close = vec![
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(-4.0),
+        PineValue::Float(-4.0),
+        PineValue::Float(-4.0),
+    ];
+    let equity = vec![
+        PineValue::Float(1000.0),
+        PineValue::Float(1000.0),
+        PineValue::Float(1000.0),
+        PineValue::Float(996.0),
+        PineValue::Float(996.0),
+        PineValue::Float(996.0),
+    ];
+    let max_drawdown = vec![
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(4.0),
+        PineValue::Float(4.0),
+        PineValue::Float(4.0),
+    ];
+    let max_drawdown_percent = vec![
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(4.0 / 6.0 * 100.0),
+        PineValue::Float(4.0 / 6.0 * 100.0),
+        PineValue::Float(4.0 / 6.0 * 100.0),
+    ];
+
+    assert_eq!(result.plots[0].values, open_profit);
+    assert_eq!(result.plots[1].values, net_profit.clone());
+    assert_eq!(result.plots[2].values, equity.clone());
+    assert_eq!(result.plots[3].values, zero_series.clone());
+    assert_eq!(result.plots[4].values, zero_series.clone());
+    assert_eq!(result.plots[5].values, max_drawdown.clone());
+    assert_eq!(result.plots[6].values, max_drawdown_percent.clone());
+    assert_eq!(result.plots[7].values, zero_series.clone());
+    assert_eq!(result.plots[8].values, net_profit_after_close);
+    assert_eq!(result.plots[9].values, equity);
+    assert_eq!(result.plots[10].values, zero_series.clone());
+    assert_eq!(result.plots[11].values, zero_series);
+    assert_eq!(result.plots[12].values, max_drawdown);
+    assert_eq!(result.plots[13].values, max_drawdown_percent);
 }
 
 #[test]
@@ -4050,6 +4011,52 @@ if bar_index == 6
             PineValue::Float(20.0),
             PineValue::Float(20.0),
             PineValue::Float(30.0),
+        ]
+    );
+}
+
+#[test]
+fn strategy_max_runup_and_drawdown_percent_use_trade_value_denominator() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("percent", initial_capital=1000)
+plot(strategy.max_runup_percent)
+plot(strategy.max_drawdown_percent)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=10)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar(10.0),
+            bar_ohlc(10.0, 12.0, 8.0, 10.0),
+            bar_ohlc(10.0, 11.0, 9.0, 10.0),
+        ],
+    )
+    .expect("runtime result");
+
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(20.0),
+            PineValue::Float(20.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(20.0),
+            PineValue::Float(20.0),
         ]
     );
 }

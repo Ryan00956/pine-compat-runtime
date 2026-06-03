@@ -599,7 +599,9 @@ fn accepts_supported_strategy_profit_state_fixture() {
             "strategy.avg_winning_trade",
             "strategy.avg_losing_trade",
             "strategy.max_runup",
+            "strategy.max_runup_percent",
             "strategy.max_drawdown",
+            "strategy.max_drawdown_percent",
             "strategy.equity",
         ],
     );
@@ -1242,7 +1244,7 @@ fn assert_strategy_state_unsupported_fixture(path: &str) {
     let text = fs::read_to_string(&path).expect("fixture should be readable");
     let source = SourceFile::new(path.display().to_string(), text);
     let analysis = analyze_source(&source);
-    let variables = ["strategy.max_drawdown_percent"];
+    let variables = ["strategy.max_contracts_held_all"];
 
     for variable in variables {
         assert!(

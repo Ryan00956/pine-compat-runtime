@@ -44,7 +44,15 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.max_runup_percent",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "strategy.max_drawdown",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
+        "strategy.max_drawdown_percent",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
@@ -167,7 +175,9 @@ mod tests {
             "strategy.avg_winning_trade",
             "strategy.avg_losing_trade",
             "strategy.max_runup",
+            "strategy.max_runup_percent",
             "strategy.max_drawdown",
+            "strategy.max_drawdown_percent",
             "strategy.equity",
         ] {
             assert_eq!(

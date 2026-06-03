@@ -271,7 +271,9 @@ strategy.avg_trade -> series float
 strategy.avg_winning_trade -> series float
 strategy.avg_losing_trade -> series float
 strategy.max_runup -> series float
+strategy.max_runup_percent -> series float
 strategy.max_drawdown -> series float
+strategy.max_drawdown_percent -> series float
 strategy.closedtrades.entry_price(trade_num: series/simple numeric) -> series float
 strategy.closedtrades.entry_id(trade_num: series/simple numeric) -> series string
 strategy.closedtrades.exit_price(trade_num: series/simple numeric) -> series float
@@ -332,12 +334,16 @@ value, or `na` before the first losing closed trade.
 maximum intrabar equity run-up amount over the current supported long-only
 trading interval, using the supported entry equity, the minimum equity before
 that entry, and the highest high reached while the supported position is open.
-`strategy.max_runup_percent` remains unsupported.
+`strategy.max_runup_percent` is a read-only strategy-mode series float that
+divides the supported run-up amount by entry price times current supported
+position quantity and multiplies by 100.
 `strategy.max_drawdown` is a read-only strategy-mode series float that returns
 the maximum intrabar equity drawdown amount over the current supported trading
 interval, using the supported entry equity, the maximum equity before that
 entry, and the lowest low reached while the supported position is open.
-`strategy.max_drawdown_percent` remains unsupported.
+`strategy.max_drawdown_percent` is a read-only strategy-mode series float that
+divides the supported drawdown amount by entry price times current supported
+position quantity and multiplies by 100.
 Supported market-long entries fill at the next
 historical bar open. Supported long limit entries wait until a later
 historical bar where `low <= limit`, or below the configured verified limit

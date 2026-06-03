@@ -807,7 +807,6 @@ Contract:
 - uses the supported entry equity, the maximum equity before that entry, and
   the lowest low reached while the supported position is open;
 - returns `0` before any drawdown from the maximum equity baseline;
-- `strategy.max_drawdown_percent` remains unsupported;
 - margin, currency conversion, pyramiding, and short exposure remain outside
   the current account model;
 - public CLI JSON, Python dictionaries, and WASM JSON keep the existing
@@ -821,8 +820,6 @@ Evidence:
   `tests/fixtures/sema/unsupported_strategy_state_indicator.pine`,
   `tests/fixtures/sema/unsupported_request_strategy_state.pine`, and
   `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
-- `tests/fixtures/sema/unsupported_strategy_state_variables.pine` keeps
-  `strategy.max_drawdown_percent` unsupported;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
 ## Slice 28: Maximum Run-Up State Variable
@@ -842,7 +839,6 @@ Contract:
 - uses the supported entry equity, the minimum equity before that entry, and
   the highest high reached while the supported position is open;
 - returns `0` before any run-up from the minimum equity baseline;
-- `strategy.max_runup_percent` remains unsupported;
 - margin, currency conversion, pyramiding, and short exposure remain outside
   the current account model;
 - public CLI JSON, Python dictionaries, and WASM JSON keep the existing
@@ -883,8 +879,44 @@ Evidence:
 - host parity tests continue to cover CLI snapshots plus Python and WASM plot
   values.
 
+## Slice 30: Maximum Run-Up/Drawdown Percent State Variables
+
+Closed on 2026-06-03.
+
+Supported variables:
+
+- `strategy.max_runup_percent`;
+- `strategy.max_drawdown_percent`.
+
+Contract:
+
+- strategy-mode scripts only;
+- read-only `series float`;
+- return the maximum intrabar equity run-up or drawdown percentage over the
+  current supported long-only trading interval;
+- divide the supported run-up or drawdown amount by entry price times current
+  supported position quantity and multiply by 100;
+- return `0` before any run-up or drawdown from the relevant equity baseline;
+- margin, currency conversion, pyramiding, and short exposure remain outside
+  the current account model;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing
+  strategy output shape with no new top-level fields.
+
+Evidence:
+
+- runtime tests:
+  `strategy_max_runup_and_drawdown_percent_use_trade_value_denominator` and
+  `strategy_profit_state_variables_follow_realized_and_open_profit`;
+- runtime fixture: `tests/fixtures/runtime/strategy_profit_state.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_profit_state.pine`,
+  `tests/fixtures/sema/unsupported_strategy_state_indicator.pine`,
+  `tests/fixtures/sema/unsupported_request_strategy_state.pine`, and
+  `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
+- host parity tests cover CLI snapshots plus Python and WASM plot values.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting
-addition, such as a percent variant or another reporting helper, only after
+addition, such as another reporting helper, only after
 documenting whether the behavior is script-only or public-output visible.

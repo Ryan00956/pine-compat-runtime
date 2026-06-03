@@ -338,13 +338,12 @@ implementation.
 
 Current state: position size, average price, open profit, net profit, gross
 profit, gross loss, average trade, average winning trade, average losing trade,
-max run-up amount, max drawdown amount, equity, closed/open trade counts, and
-win/loss/even trade counts are supported.
+max run-up amount and percent, max drawdown amount and percent, equity,
+closed/open trade counts, and win/loss/even trade counts are supported.
 
 Missing internal behavior:
 
-- percent variants, including `strategy.max_runup_percent` and
-  `strategy.max_drawdown_percent`;
+- other percent variants;
 - max contracts/shares held;
 - capital held;
 - built-ins whose value depends on costs, margin, or individual trade records.
@@ -393,7 +392,9 @@ contract. Stage 7 Slice 27 adds `strategy.max_drawdown` under the same
 public-output contract. Stage 7 Slice 28 adds `strategy.max_runup` under the
 same public-output contract. Stage 7 Slice 29 aligns `strategy.max_drawdown`
 with the official intrabar long-trade drawdown formula under the same
-public-output contract. Other namespace functions are unsupported.
+public-output contract. Stage 7 Slice 30 adds `strategy.max_runup_percent` and
+`strategy.max_drawdown_percent` under the same public-output contract. Other
+namespace functions are unsupported.
 
 Missing internal behavior:
 
