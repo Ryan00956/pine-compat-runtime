@@ -20,6 +20,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
     (
+        "strategy.grossprofit",
+        PineType::new(Qualifier::Series, ValueKind::Float),
+    ),
+    (
         "strategy.equity",
         PineType::new(Qualifier::Series, ValueKind::Float),
     ),
@@ -124,6 +128,21 @@ mod tests {
             assert_eq!(
                 builtin_series_value_type(name),
                 Some(PineType::new(Qualifier::Series, ValueKind::Int))
+            );
+        }
+    }
+
+    #[test]
+    fn registers_strategy_profit_series_values() {
+        for name in [
+            "strategy.openprofit",
+            "strategy.netprofit",
+            "strategy.grossprofit",
+            "strategy.equity",
+        ] {
+            assert_eq!(
+                builtin_series_value_type(name),
+                Some(PineType::new(Qualifier::Series, ValueKind::Float))
             );
         }
     }

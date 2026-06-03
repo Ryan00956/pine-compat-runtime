@@ -165,6 +165,9 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "strategy.netprofit" {
             return PineValue::Float(self.strategy_broker.realized_profit());
         }
+        if name == "strategy.grossprofit" {
+            return PineValue::Float(self.strategy_broker.gross_profit());
+        }
         if name == "strategy.equity" {
             return self.current_bar.map_or(PineValue::Na, |bar| {
                 PineValue::Float(self.strategy_broker.equity_value(bar.close))

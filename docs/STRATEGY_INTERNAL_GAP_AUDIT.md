@@ -53,9 +53,13 @@ Implemented and fixture-backed:
   - `strategy.position_avg_price`
   - `strategy.openprofit`
   - `strategy.netprofit`
+  - `strategy.grossprofit`
   - `strategy.equity`
   - `strategy.closedtrades`
   - `strategy.opentrades`
+  - `strategy.wintrades`
+  - `strategy.losstrades`
+  - `strategy.eventrades`
 - `strategy.exit` for:
   - single triggers: `stop`, `limit`, `profit`, `loss`;
   - one-downside/one-upside brackets: `stop + limit`, `stop + profit`,
@@ -327,13 +331,13 @@ implementation.
 
 ### 11. Strategy Information Variables
 
-Current state: only position size, average price, open profit, net profit,
-equity, closed-trade count, and open-trade count are supported.
+Current state: position size, average price, open profit, net profit, gross
+profit, equity, closed/open trade counts, and win/loss/even trade counts are
+supported.
 
 Missing internal behavior:
 
-- `strategy.wintrades`, `strategy.losstrades`, `strategy.eventrades`;
-- average trade, winning trade, losing trade, runup, drawdown, and percent
+- gross loss, average trade, winning trade, losing trade, runup, drawdown, and percent
   variants;
 - max contracts/shares held;
 - capital held;
@@ -341,9 +345,9 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best first slice: win/loss/even trade counts for the current long-only closed
-trade list. This preserves the current output shape if exposed only as
-read-only script variables.
+Best next slice: choose another read-only performance variable such as gross
+loss or a narrow average-trade variable, preserving the current public output
+shape.
 
 ### 12. Individual Trade Namespaces
 
@@ -373,8 +377,9 @@ entry, close, and exit fill prices without public schema expansion. Stage 7
 Slice 20 adds fixed-tick limit-order verification for supported long limit
 entry and supported long limit/profit exit fills without public schema
 expansion. Stage 7 Slice 21 adds percent commission accounting for supported
-entry/exit fills under the same public contract. Other namespace functions are
-unsupported.
+entry/exit fills under the same public contract. Stage 7 Slice 22 adds
+`strategy.grossprofit` as a script-visible read-only series float without
+public schema expansion. Other namespace functions are unsupported.
 
 Missing internal behavior:
 

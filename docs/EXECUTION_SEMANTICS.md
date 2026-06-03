@@ -119,14 +119,16 @@ one-downside/one-upside bracket or trailing `strategy.exit` calls for the
 current matching long entry.
 
 Strategy-mode scripts can read `strategy.position_size` and
-`strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`, and
-`strategy.equity` as historical series floats. They can also read
-`strategy.closedtrades` and `strategy.opentrades` as historical series ints in
-the current count-only reporting subset. In the current long-only subset,
+`strategy.position_avg_price`, `strategy.openprofit`, `strategy.netprofit`,
+`strategy.grossprofit`, and `strategy.equity` as historical series floats. They
+can also read `strategy.closedtrades` and `strategy.opentrades` as historical
+series ints in the current count-only reporting subset. In the current long-only subset,
 `strategy.position_size` is `0` when flat and positive while long.
 `strategy.position_avg_price` is `na` when flat and the current average entry
 price while long. `strategy.openprofit` is `(close - avg_price) * size` while
 long and `0` when flat. `strategy.netprofit` sums realized closed-trade profit.
+`strategy.grossprofit` sums only positive realized closed-trade profit, so
+losing, flat, and current open trades do not change it.
 `strategy.equity` is cash plus current market value; without configured
 commission this equals `initial_capital + strategy.netprofit +
 strategy.openprofit`, and with supported commission it also includes entry
@@ -177,7 +179,9 @@ without changing trigger conditions or public schema. Stage 7 Slice 20 adds
 fixed-tick limit-order verification for supported long limit entry and
 supported long limit/profit exit fills while preserving the original limit fill
 price. Stage 7 Slice 21 adds percent commission accounting for supported
-entry/exit fills under the same public contract. They read the current
+entry/exit fills under the same public contract. Stage 7 Slice 22 adds
+`strategy.grossprofit` as a script-visible read-only series float over the
+closed-trade list without changing public output shape. They read the current
 closed-trade list with a zero-based integer `trade_num`; missing,
 negative, out-of-range, or non-integer indexes return `na`. These functions are
 script-observable only through ordinary series outputs and do not add public

@@ -217,7 +217,7 @@ Acceptance:
 ## Stage 7: Trade Records, Costs, And Account Model
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
-5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, and 21 closed on
+5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, and 22 closed on
 2026-06-03; see
 `docs/STRATEGY_INTERNAL_STAGE7_TRADE_RECORDS_AUDIT.md`.
 

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 22 `strategy.grossprofit`. Strategy-mode
+  scripts can read a cumulative positive realized closed-trade profit series
+  that excludes losing, flat, and current open trades while keeping public JSON,
+  Python, and WASM strategy schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 21 percent commission accounting.
   `strategy(..., commission_type=strategy.commission.percent,
   commission_value=N)` now debits `qty * fill_price * N / 100` on supported
