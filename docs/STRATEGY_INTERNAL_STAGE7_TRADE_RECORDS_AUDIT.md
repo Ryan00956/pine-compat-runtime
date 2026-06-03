@@ -802,11 +802,11 @@ Contract:
 
 - strategy-mode scripts only;
 - read-only `series float`;
-- returns the maximum equity peak-to-trough drawdown amount over the current
-  supported trading interval;
-- uses current close mark-to-market equity and includes current open
-  profit/loss;
-- returns `0` before any equity decline from a peak;
+- returns the maximum intrabar equity drawdown amount over the current
+  supported long-only trading interval;
+- uses the supported entry equity, the maximum equity before that entry, and
+  the lowest low reached while the supported position is open;
+- returns `0` before any drawdown from the maximum equity baseline;
 - `strategy.max_drawdown_percent` remains unsupported;
 - margin, currency conversion, pyramiding, and short exposure remain outside
   the current account model;
@@ -857,6 +857,31 @@ Evidence:
   `tests/fixtures/sema/unsupported_request_strategy_state.pine`, and
   `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
+
+## Slice 29: Maximum Drawdown Official Intrabar Alignment
+
+Closed on 2026-06-03.
+
+Correction:
+
+- `strategy.max_drawdown` now uses the TradingView-documented intrabar
+  long-trade drawdown formula for the current supported long-only account
+  model;
+- the runtime tracks the maximum equity before each supported entry, the entry
+  equity, and the lowest low reached while the position is open;
+- a dedicated runtime regression test covers a bar whose close returns to entry
+  price while intrabar low still produces drawdown;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing
+  strategy output shape with no new top-level fields.
+
+Evidence:
+
+- runtime tests:
+  `strategy_max_drawdown_follows_intrabar_low_and_max_equity` and
+  `strategy_max_drawdown_uses_intrabar_low`;
+- runtime fixture: `tests/fixtures/runtime/strategy_profit_state.pine`;
+- host parity tests continue to cover CLI snapshots plus Python and WASM plot
+  values.
 
 ## Remaining Stage 7 Work
 

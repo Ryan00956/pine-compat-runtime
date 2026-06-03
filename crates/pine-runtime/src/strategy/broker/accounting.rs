@@ -36,6 +36,7 @@ impl BrokerState {
             );
         }
         self.update_open_trade_max_runup();
+        self.update_open_trade_max_drawdown();
     }
 
     #[must_use]
@@ -120,19 +121,8 @@ impl BrokerState {
     }
 
     #[must_use]
-    pub(crate) fn max_drawdown(&self, current_equity: f64) -> f64 {
-        let mut peak = self.initial_capital;
-        let mut max_drawdown = 0.0;
-        for equity in self
-            .equity
-            .iter()
-            .map(|snapshot| snapshot.equity)
-            .chain(std::iter::once(current_equity))
-        {
-            peak = peak.max(equity);
-            max_drawdown = f64::max(max_drawdown, peak - equity);
-        }
-        normalize_zero(max_drawdown)
+    pub(crate) fn max_drawdown(&self) -> f64 {
+        normalize_zero(self.max_drawdown)
     }
 
     #[must_use]
@@ -339,6 +329,26 @@ impl BrokerState {
     fn update_open_trade_max_runup(&mut self) {
         if let Some(runup) = self.current_open_strategy_max_runup() {
             self.max_runup = self.max_runup.max(runup);
+        }
+    }
+
+    fn current_open_strategy_max_drawdown(&self) -> Option<f64> {
+        if self.open_trade_count() != 1 {
+            return None;
+        }
+        let equity_on_entry = self.open_trade_equity_on_entry?;
+        let max_equity_before_entry = self.open_trade_max_equity_before_entry?;
+        let min_low = self.open_trade_min_low?;
+        Some(normalize_zero(
+            (max_equity_before_entry - equity_on_entry
+                + (self.avg_price - min_low).max(0.0) * self.position_size)
+                .max(0.0),
+        ))
+    }
+
+    fn update_open_trade_max_drawdown(&mut self) {
+        if let Some(drawdown) = self.current_open_strategy_max_drawdown() {
+            self.max_drawdown = self.max_drawdown.max(drawdown);
         }
     }
 

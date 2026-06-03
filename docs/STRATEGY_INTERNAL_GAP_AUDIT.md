@@ -391,7 +391,9 @@ the same public-output contract. Stage 7 Slice 25 adds
 Slice 26 adds `strategy.avg_losing_trade` under the same public-output
 contract. Stage 7 Slice 27 adds `strategy.max_drawdown` under the same
 public-output contract. Stage 7 Slice 28 adds `strategy.max_runup` under the
-same public-output contract. Other namespace functions are unsupported.
+same public-output contract. Stage 7 Slice 29 aligns `strategy.max_drawdown`
+with the official intrabar long-trade drawdown formula under the same
+public-output contract. Other namespace functions are unsupported.
 
 Missing internal behavior:
 

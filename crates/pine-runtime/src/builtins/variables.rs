@@ -193,12 +193,7 @@ impl<'a> HistoricalRuntime<'a> {
             return PineValue::Float(self.strategy_broker.max_runup());
         }
         if name == "strategy.max_drawdown" {
-            return self.current_bar.map_or(PineValue::Na, |bar| {
-                PineValue::Float(
-                    self.strategy_broker
-                        .max_drawdown(self.strategy_broker.equity_value(bar.close)),
-                )
-            });
+            return PineValue::Float(self.strategy_broker.max_drawdown());
         }
         if name == "strategy.equity" {
             return self.current_bar.map_or(PineValue::Na, |bar| {

@@ -141,10 +141,11 @@ closed trades only, and `na` before the first winning closed trade.
 `strategy.avg_losing_trade` returns the average realized loss among losing
 closed trades only as a positive value, and `na` before the first losing closed
 trade.
-`strategy.max_drawdown` returns the maximum equity peak-to-trough drawdown
-amount over the current supported trading interval, using current close
-mark-to-market equity and including current open profit/loss. It returns `0`
-before any equity decline from a peak. `strategy.max_drawdown_percent` remains
+`strategy.max_drawdown` returns the maximum intrabar equity drawdown amount
+over the current supported trading interval, using the supported entry equity,
+the maximum equity before that entry, and the lowest low reached while the
+supported position is open. It returns `0`
+before any drawdown from the maximum equity baseline. `strategy.max_drawdown_percent` remains
 unsupported. `strategy.max_runup` returns the maximum intrabar equity run-up
 amount over the current supported long-only trading interval, using the
 supported entry equity, the minimum equity before that entry, and the highest

@@ -158,9 +158,10 @@ supported long-only trading interval, using the supported entry equity, the
 minimum equity before that entry, and the highest high reached while the
 supported position is open; the percent variant remains unsupported.
 `strategy.max_drawdown` is a read-only strategy-mode
-`series float` that returns the maximum equity peak-to-trough drawdown amount
-over the current supported trading interval using current close mark-to-market
-equity, including current open profit/loss; the percent variant remains
+`series float` that returns the maximum intrabar equity drawdown amount over
+the current supported trading interval, using the supported entry equity, the
+maximum equity before that entry, and the lowest low reached while the
+supported position is open; the percent variant remains
 unsupported. The count variables are
 read-only strategy-mode `series int` values for the current long-only broker:
 `strategy.closedtrades` counts closed trades recorded by broker state;

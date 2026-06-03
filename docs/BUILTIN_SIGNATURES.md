@@ -334,9 +334,10 @@ trading interval, using the supported entry equity, the minimum equity before
 that entry, and the highest high reached while the supported position is open.
 `strategy.max_runup_percent` remains unsupported.
 `strategy.max_drawdown` is a read-only strategy-mode series float that returns
-the maximum equity peak-to-trough drawdown amount over the current supported
-trading interval, using current close mark-to-market equity and including
-current open profit/loss. `strategy.max_drawdown_percent` remains unsupported.
+the maximum intrabar equity drawdown amount over the current supported trading
+interval, using the supported entry equity, the maximum equity before that
+entry, and the lowest low reached while the supported position is open.
+`strategy.max_drawdown_percent` remains unsupported.
 Supported market-long entries fill at the next
 historical bar open. Supported long limit entries wait until a later
 historical bar where `low <= limit`, or below the configured verified limit

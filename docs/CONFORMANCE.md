@@ -118,8 +118,9 @@ winning trade is closed. Stage 7 Slice 26 adds `strategy.avg_losing_trade` as
 average realized loss among losing closed trades only as a positive value,
 returning `na` until at least one losing trade is closed. Stage 7 Slice 27 adds
 `strategy.max_drawdown` as the maximum equity peak-to-trough drawdown amount
-over the current supported trading interval, using current close mark-to-market
-equity. Stage 7 Slice 28 adds `strategy.max_runup` as the maximum intrabar
+over the current supported trading interval, using the supported entry equity,
+the maximum equity before that entry, and the lowest low reached while the
+supported position is open. Stage 7 Slice 28 adds `strategy.max_runup` as the maximum intrabar
 equity run-up amount over the current supported long-only trading interval,
 using the supported entry equity, the minimum equity before that entry, and the
 highest high reached while the supported position is open. `strategy.equity` is
@@ -217,7 +218,7 @@ average realized profit among winning closed trades only. Stage 7 Slice 26
 adds `strategy.avg_losing_trade` as a script-visible read-only series float for
 average realized loss among losing closed trades only as a positive value.
 Stage 7 Slice 27 adds `strategy.max_drawdown` as a script-visible read-only
-series float for maximum equity peak-to-trough drawdown amount. Stage 7 Slice
+series float for maximum intrabar equity drawdown amount. Stage 7 Slice
 28 adds `strategy.max_runup` as a script-visible read-only series float for
 maximum intrabar equity run-up amount.
 `trade_num` is zero-based and integer-only; no matching trade, a negative
@@ -608,7 +609,7 @@ strategy.avg_trade partial        average realized profit/loss per closed trade 
 strategy.avg_winning_trade partial average realized profit among winning closed trades only, na before the first winning closed trade and excluding losing, flat, and current open trades, in strategy-mode scripts only
 strategy.avg_losing_trade partial average realized loss among losing closed trades only as a positive value, na before the first losing closed trade and excluding winning, flat, and current open trades, in strategy-mode scripts only
 strategy.max_runup partial        maximum intrabar equity run-up amount read-only series over the current supported long-only trading interval, using supported entry equity, minimum equity before that entry, and the highest high reached while the supported position is open; percent variant remains unsupported
-strategy.max_drawdown partial     maximum equity peak-to-trough drawdown amount read-only series over the current supported long-only trading interval, using current close mark-to-market equity and including current open profit/loss; percent variant remains unsupported
+strategy.max_drawdown partial     maximum intrabar equity drawdown amount read-only series over the current supported long-only trading interval, using supported entry equity, maximum equity before that entry, and the lowest low reached while the supported position is open; percent variant remains unsupported
 strategy.equity     partial       cash plus current market value read-only series in strategy-mode scripts only; without configured commission or slippage this matches initial_capital plus realized net profit plus current open profit, and with supported commission/slippage it reflects entry commission debits on open positions and slippage-adjusted fill prices
 strategy.closedtrades partial     closed-trade count read-only series int in strategy-mode scripts only; immediate after strategy.close or strategy.close_all and next-bar visible after pending strategy.exit fills
 strategy.closedtrades.* partial   closed-trade entry_price, entry_id, exit_price, exit_id, entry_bar_index, exit_bar_index, entry_time, exit_time, commission, size, profit, max_runup, and max_drawdown field functions in strategy-mode scripts only; entry_id returns the retained entry id; exit_id returns the retained close or exit id; commission is 0.0 without configured commission or supported entry-plus-exit commission when configured; max_runup returns the largest high-based favorable excursion retained for the closed trade quantity; max_drawdown returns the largest low-based adverse excursion retained for the closed trade quantity; trade_num is zero-based integer-only and invalid, negative, non-integer, or out-of-range indexes return na; no public runtime schema expansion
