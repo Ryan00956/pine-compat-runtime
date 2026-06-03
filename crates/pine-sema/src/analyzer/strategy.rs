@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 const STRATEGY_FIXED_DEFAULT_QTY_TYPE: &str = "strategy.fixed";
+const STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE: &str = "strategy.commission.cash_per_contract";
 
 const STRATEGY_STATE_VARIABLES: &[&str] = &[
     "strategy.position_size",
@@ -133,6 +134,10 @@ impl Analyzer {
         let mut default_qty_value_arg = None;
         let mut fixed_default_qty_type = false;
         let mut default_qty_value = None;
+        let mut commission_type_arg = None;
+        let mut cash_per_contract_commission_type = false;
+        let mut commission_value_arg = None;
+        let mut commission_value = None;
 
         for (index, arg) in args.iter().enumerate() {
             let Some(name) = arg.name.as_deref().or_else(|| {
@@ -144,6 +149,8 @@ impl Analyzer {
                     "initial_capital",
                     "default_qty_type",
                     "default_qty_value",
+                    "commission_type",
+                    "commission_value",
                 ]
                 .get(index)
                 .copied()
@@ -196,6 +203,36 @@ impl Analyzer {
                     }
                     default_qty_value = Some(qty);
                 }
+                "commission_type" => {
+                    commission_type_arg = Some(arg);
+                    let Some(commission_type) = const_string_value(&arg.value) else {
+                        continue;
+                    };
+                    if commission_type != STRATEGY_CASH_PER_CONTRACT_COMMISSION_TYPE {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `commission_type` only supports strategy.commission.cash_per_contract",
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    cash_per_contract_commission_type = true;
+                }
+                "commission_value" => {
+                    commission_value_arg = Some(arg);
+                    let Some(value) = const_numeric_value(&arg.value) else {
+                        continue;
+                    };
+                    if !value.is_finite() || value < 0.0 {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `commission_value` must be non-negative",
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    commission_value = Some(value);
+                }
                 _ => {}
             }
         }
@@ -207,6 +244,21 @@ impl Analyzer {
             default_qty_value,
         ) {
             self.strategy_settings.default_qty = Some(pine_ir::StrategyDefaultQuantity::Fixed(qty));
+        }
+        if commission_value_arg.is_some() && commission_type_arg.is_none() {
+            if let Some(arg) = commission_value_arg {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`strategy` argument `commission_value` requires commission_type=strategy.commission.cash_per_contract",
+                    arg.span,
+                ));
+            }
+            return;
+        }
+        if cash_per_contract_commission_type {
+            self.strategy_settings.commission = Some(pine_ir::StrategyCommission::CashPerContract(
+                commission_value.unwrap_or(0.0),
+            ));
         }
     }
 

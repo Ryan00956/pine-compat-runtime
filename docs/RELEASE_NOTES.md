@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 7 Slice 17 cash-per-contract commission
+  accounting. `strategy(...,
+  commission_type=strategy.commission.cash_per_contract, commission_value=N)`
+  now applies entry and exit commission to cash, equity, closed trade profit,
+  `strategy.netprofit`, and the closed/open trade `commission()` field
+  functions while leaving public JSON, Python, and WASM strategy schemas
+  unchanged; other commission modes and slippage remain unsupported.
 - Added Strategy Internal Stage 7 Slice 16 closed-trade `max_drawdown()` field
   function. It exposes the largest low-based adverse excursion retained for the
   closed trade quantity, follows the same zero-based `trade_num` contract,
@@ -23,10 +30,10 @@
   when flat or for invalid indexes, and keeps public JSON, Python, and WASM
   strategy schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 12 open-trade `commission()` field
-  function. It exposes `0.0` for the current supported long position under the
-  current no-commission account model when `trade_num == 0`, returns `na` when
-  flat or for invalid indexes, and keeps public JSON, Python, and WASM strategy
-  schemas unchanged.
+  function. It exposes `0.0` without configured commission, later reports the
+  supported cash-per-contract entry commission when configured, returns `na`
+  when flat or for invalid indexes, and keeps public JSON, Python, and WASM
+  strategy schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 11 open-trade `entry_id()` field
   function. It exposes the current supported long position entry id when
   `trade_num == 0`, returns `na` when flat or for invalid indexes, and keeps
@@ -64,9 +71,10 @@
   unchanged.
 - Added Strategy Internal Stage 7 Slice 3 closed-trade `commission()` field
   function. It follows the same zero-based `trade_num` contract as the existing
-  script-visible closed-trade fields and returns `0.0` in the current
-  no-commission account model without expanding public JSON, Python, or WASM
-  strategy trade schemas.
+  script-visible closed-trade fields and returns `0.0` without configured
+  commission, later reports supported entry-plus-exit cash-per-contract
+  commission when configured, and keeps public JSON, Python, and WASM strategy
+  trade schemas unchanged.
 - Added Strategy Internal Stage 7 Slice 2 closed-trade `entry_time` and
   `exit_time` field functions. They expose the timestamps already retained on
   closed trade records, use the same zero-based `trade_num` contract, and keep

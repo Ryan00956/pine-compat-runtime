@@ -19,6 +19,7 @@ use crate::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct BrokerState {
     initial_capital: f64,
+    commission_per_contract: f64,
     cash: f64,
     position_size: f64,
     avg_price: f64,
@@ -46,8 +47,17 @@ impl Default for BrokerState {
 impl BrokerState {
     #[must_use]
     pub fn new(initial_capital: f64) -> Self {
+        Self::new_with_cash_per_contract_commission(initial_capital, 0.0)
+    }
+
+    #[must_use]
+    pub fn new_with_cash_per_contract_commission(
+        initial_capital: f64,
+        commission_per_contract: f64,
+    ) -> Self {
         Self {
             initial_capital,
+            commission_per_contract,
             cash: initial_capital,
             position_size: 0.0,
             avg_price: 0.0,
@@ -65,6 +75,10 @@ impl BrokerState {
             pending_entries: PendingEntryBook::new(),
             pending_exits: PendingExitBook::new(),
         }
+    }
+
+    fn commission_for_quantity(&self, qty: f64) -> f64 {
+        qty * self.commission_per_contract
     }
 
     pub(crate) fn entry_long(
@@ -95,7 +109,7 @@ impl BrokerState {
 
         self.position_size = qty;
         self.avg_price = price;
-        self.cash -= qty * price;
+        self.cash -= qty * price + self.commission_for_quantity(qty);
         self.entry_id = Some(id.clone());
         self.entry_bar_index = Some(bar_index);
         self.entry_time = Some(time);
@@ -563,6 +577,7 @@ impl BrokerState {
 
 #[derive(Debug, Clone, PartialEq)]
 struct ClosedTradeMetrics {
+    commission: f64,
     max_runup: f64,
     max_drawdown: f64,
 }

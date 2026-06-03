@@ -216,7 +216,7 @@ Acceptance:
 ## Stage 7: Trade Records, Costs, And Account Model
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
-5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, and 16 closed on 2026-06-03; see
+5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, and 17 closed on 2026-06-03; see
 `docs/STRATEGY_INTERNAL_STAGE7_TRADE_RECORDS_AUDIT.md`.
 
 Goal: enrich strategy reporting and accounting without jumping directly to a
@@ -229,8 +229,8 @@ Scope:
   script-variable-only contract is acceptable.
 - Add selected cost or account-model slices only after the output contract is
   explicit.
-- Candidate cost/account slices include commission, slippage, cash sizing, and
-  percent-of-equity sizing.
+- Candidate cost/account slices include additional commission modes, slippage,
+  cash sizing, and percent-of-equity sizing.
 
 Out of scope:
 

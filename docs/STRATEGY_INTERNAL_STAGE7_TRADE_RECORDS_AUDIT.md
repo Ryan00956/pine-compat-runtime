@@ -1,7 +1,7 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
 Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
-5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, and 16 closed on 2026-06-03.
+5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, and 17 closed on 2026-06-03.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -101,8 +101,9 @@ Contract:
 - `trade_num` follows the same zero-based integer index contract as Slices 0,
   1, and 2;
 - missing, negative, out-of-range, or non-integer indexes return `na`;
-- `commission` returns `0.0` for closed trades because the current account model
-  has no commission calculation;
+- `commission` returns `0.0` without configured commission, and later cost
+  slices may wire supported commission models into the same script-visible
+  function;
 - public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
   output shape with no new top-level fields.
 
@@ -325,7 +326,8 @@ Contract:
 - `trade_num == 0` addresses the current supported single open long position;
 - missing, negative, out-of-range, or non-integer indexes return `na`;
 - flat state returns `na`;
-- the value is `0.0` under the current no-commission account model;
+- the value is `0.0` without configured commission, and later cost slices may
+  wire supported commission models into the same script-visible function;
 - public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
   output shape with no new top-level fields or open-trade records.
 
@@ -458,9 +460,44 @@ Evidence:
   with `strategy.closedtrades.exit_comment(0)`;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
+## Slice 17: Cash Per Contract Commission
+
+Closed on 2026-06-03.
+
+Supported declaration subset:
+
+- `strategy(..., commission_type=strategy.commission.cash_per_contract,
+  commission_value=N)`.
+
+Contract:
+
+- strategy-mode scripts only;
+- `commission_value` must be a finite non-negative const numeric value;
+- each supported entry and exit debits `qty * commission_value`;
+- closed trade `profit`, `strategy.netprofit`, and trade-count outcomes use net
+  realized profit after entry-plus-exit commission for the closed quantity;
+- `strategy.closedtrades.commission(trade_num)` returns entry-plus-exit
+  cash-per-contract commission for the closed quantity;
+- `strategy.opentrades.commission(trade_num)` returns the current open
+  cash-per-contract entry commission for `trade_num == 0`;
+- equity snapshots and `strategy.equity` include supported commission cash
+  debits;
+- public CLI JSON, Python dictionaries, and WASM JSON keep the existing strategy
+  output shape with no new top-level fields or public trade metric fields.
+
+Evidence:
+
+- runtime fixture:
+  `tests/fixtures/runtime/strategy_commission_cash_per_contract.pine`;
+- semantic fixtures:
+  `tests/fixtures/sema/supported_strategy_commission_cash_per_contract.pine`
+  and `tests/fixtures/sema/unsupported_strategy_commission_percent.pine`;
+- host parity tests cover CLI snapshots plus Python plot and trade/equity
+  values.
+
 ## Remaining Stage 7 Work
 
 The next slice should choose one explicitly bounded accounting/reporting
-addition, such as real commission/slippage modeling or another closed/open-trade
-field, only after documenting whether the behavior is script-only or
-public-output visible.
+addition, such as another commission mode, slippage modeling, or another
+closed/open-trade field, only after documenting whether the behavior is
+script-only or public-output visible.

@@ -63,6 +63,16 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "commission_type",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "commission_value",
+        accepts: Accepts::ConstNumeric,
+        optional: true,
+    },
 ];
 
 const INPUT_PARAMS: &[BuiltinParam] = &[

@@ -40,7 +40,7 @@ strategy model.
 Implemented and fixture-backed:
 
 - `strategy(...)` declaration with selected metadata, positive const
-  `initial_capital`, and fixed default quantity.
+  `initial_capital`, fixed default quantity, and cash-per-contract commission.
 - `strategy.entry(id, strategy.long, qty=...)` and default fixed quantity when
   configured.
 - `strategy.close(id)` as a full close of the matching long position.
@@ -306,12 +306,13 @@ could be isolated, but it should wait until the account model policy is explicit
 
 ### 10. Costs And Price Adjustments
 
-Current state: no commission, slippage, or stricter limit-fill assumption.
+Current state: cash-per-contract commission is supported for configured
+strategy declarations. Other commission modes, slippage, and stricter
+limit-fill assumptions remain unsupported.
 
 Missing internal behavior:
 
 - percentage commission;
-- cash-per-contract commission;
 - cash-per-order commission;
 - slippage applied to fills;
 - limit-order verification in ticks;
@@ -319,9 +320,9 @@ Missing internal behavior:
 
 Gap size: medium to large.
 
-Best first slice: flat cash-per-order commission would be the smallest internal
-cost model, but it affects cash, profit, trade records, and public output
-expectations if costs are exposed.
+Best next slice: flat cash-per-order commission or slippage would be bounded,
+but either affects cash, profit, trade records, and public output expectations
+if costs are exposed.
 
 ### 11. Strategy Information Variables
 
@@ -362,8 +363,10 @@ Slice 8 adds `strategy.opentrades.entry_time()`, and Slice 9 adds
 `strategy.opentrades.max_runup()`. Stage 7 Slice 14 adds
 `strategy.opentrades.max_drawdown()`. Stage 7 Slice 15 adds
 `strategy.closedtrades.max_runup()`. Stage 7 Slice 16 adds
-`strategy.closedtrades.max_drawdown()`. Other namespace functions are
-unsupported.
+`strategy.closedtrades.max_drawdown()`. Stage 7 Slice 17 adds
+cash-per-contract commission accounting for supported entries/exits and updates
+closed/open trade commission functions without public runtime schema expansion.
+Other namespace functions are unsupported.
 
 Missing internal behavior:
 
@@ -386,8 +389,9 @@ runtime schema.
 Third slice closed: closed-trade `entry_time` and `exit_time` expose the
 already-retained timestamps under the same script-variable-only contract.
 
-Fourth slice closed: closed-trade `commission` returns `0.0` under the current
-no-commission account model and keeps the same script-variable-only contract.
+Fourth slice closed: closed-trade `commission` returns `0.0` until a supported
+commission model is configured and keeps the same script-variable-only
+contract.
 
 Fifth slice closed: closed-trade `entry_id` exposes the retained entry id under
 the same script-variable-only contract.
@@ -443,7 +447,7 @@ orders but keep external delivery out of scope.
 6. `strategy.cancel()` and `strategy.cancel_all()` after a general pending-order
    book exists.
 7. Individual trade namespace functions for a small closed-trade subset.
-8. Commission/slippage/account-model slices.
+8. Additional commission/slippage/account-model slices.
 9. Pyramiding, shorts, reversals, and multi-entry trade ledgers.
 10. Generic `strategy.order()` and full OCA behavior.
 

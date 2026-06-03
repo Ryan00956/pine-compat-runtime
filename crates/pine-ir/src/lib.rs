@@ -1,5 +1,11 @@
 //! Host-independent intermediate representation scaffolding.
 
+mod strategy;
+
+pub use strategy::{
+    DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCommission, StrategyDefaultQuantity, StrategySettings,
+};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct SeriesId(pub u32);
 
@@ -23,36 +29,6 @@ pub enum PersistenceKind {
 pub enum ScriptMode {
     Indicator,
     Strategy,
-}
-
-pub const DEFAULT_STRATEGY_INITIAL_CAPITAL: f64 = 100_000.0;
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum StrategyDefaultQuantity {
-    Fixed(f64),
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct StrategySettings {
-    pub initial_capital: f64,
-    pub default_qty: Option<StrategyDefaultQuantity>,
-}
-
-impl Default for StrategySettings {
-    fn default() -> Self {
-        Self {
-            initial_capital: DEFAULT_STRATEGY_INITIAL_CAPITAL,
-            default_qty: Some(StrategyDefaultQuantity::Fixed(1.0)),
-        }
-    }
-}
-
-impl StrategySettings {
-    #[must_use]
-    pub fn default_entry_qty(self) -> Option<f64> {
-        self.default_qty
-            .map(|StrategyDefaultQuantity::Fixed(qty)| qty)
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

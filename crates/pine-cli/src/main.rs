@@ -1050,6 +1050,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_equity.pine",
             ),
             (
+                "runtime_strategy_commission_cash_per_contract.json",
+                "tests/fixtures/runtime/strategy_commission_cash_per_contract.pine",
+            ),
+            (
                 "runtime_strategy_position_state.json",
                 "tests/fixtures/runtime/strategy_position_state.pine",
             ),

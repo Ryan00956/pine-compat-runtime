@@ -255,7 +255,7 @@ ohlc4 = (open + high + low + close) / 4
 ```text
 indicator(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric)
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric)
   -> void
@@ -294,8 +294,13 @@ be accepted in Phase 1. `max_bars_back` must be non-negative when provided.
 Unsupported named arguments should produce compatibility diagnostics.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
-use the configured or default fixed quantity. Supported market-long entries fill
-at the next historical bar open. Supported long limit entries wait until a later
+use the configured or default fixed quantity. `strategy(...)` accepts only
+`commission_type=strategy.commission.cash_per_contract` with a finite
+non-negative const numeric `commission_value`; entry cash, exit cash, realized
+trade profit, `strategy.netprofit`, and `strategy.equity` include that
+cash-per-contract commission when configured. Other commission modes and
+slippage remain unsupported. Supported market-long entries fill at the next
+historical bar open. Supported long limit entries wait until a later
 historical bar where `low <= limit` and fill at the limit price. Supported long
 stop entries wait until a later historical bar where `high >= stop` and fill at
 the stop price. Supported long stop-limit entries wait until a later historical
@@ -339,9 +344,10 @@ for the current supported long position.
 `trade_num` is a zero-based integer index; missing, negative, out-of-range, or
 non-integer indexes return `na`. Closed- and open-trade `entry_id` return the
 retained entry id. Closed-trade `exit_id` returns the retained close or exit id.
-Closed- and open-trade `commission` return `0.0` in the current no-commission
-account model. Open-trade `profit` returns the current close-based floating
-profit for the current supported long position. Closed- and open-trade
+Closed- and open-trade `commission` return `0.0` without configured commission,
+or cash-per-contract commission when that declaration mode is configured.
+Open-trade `profit` returns the current close-based floating profit for the
+current supported long position. Closed- and open-trade
 `max_runup` return the largest high-based favorable excursion seen so far for
 the retained trade quantity. Closed- and open-trade `max_drawdown` return the
 largest low-based adverse excursion seen so far for the retained trade

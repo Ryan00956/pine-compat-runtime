@@ -392,6 +392,26 @@ def test_run_script_returns_strategy_closedtrades_field_plots():
     assert "openTrades" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_cash_per_contract_commission_plots():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_commission_cash_per_contract.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [None, 1.0, None, None],
+        [None, None, 2.0, 2.0],
+        [0.0, 0.0, 0.0, 0.0],
+        [100000.0, 99999.0, 100000.0, 100000.0],
+    ]
+    assert result["strategy"]["trades"][0]["profit"] == 0.0
+    assert result["strategy"]["equity"][1]["cash"] == 99995.0
+    assert result["strategy"]["equity"][1]["equity"] == 99999.0
+
+
 def test_run_script_returns_strategy_opentrades_field_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_opentrades_fields.pine").read_text()
     result = pine_compat.run_script(

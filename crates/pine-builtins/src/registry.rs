@@ -96,6 +96,10 @@ mod tests {
         assert_eq!(signature.params[5].accepts, crate::Accepts::ConstString);
         assert_eq!(signature.params[6].name, "default_qty_value");
         assert_eq!(signature.params[6].accepts, crate::Accepts::ConstNumeric);
+        assert_eq!(signature.params[7].name, "commission_type");
+        assert_eq!(signature.params[7].accepts, crate::Accepts::ConstString);
+        assert_eq!(signature.params[8].name, "commission_value");
+        assert_eq!(signature.params[8].accepts, crate::Accepts::ConstNumeric);
         assert!(!signature.variadic);
     }
 

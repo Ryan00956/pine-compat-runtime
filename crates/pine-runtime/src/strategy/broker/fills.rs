@@ -23,6 +23,9 @@ impl BrokerState {
 
         let qty = self.position_size;
         let entry_price = self.avg_price;
+        let entry_commission = self.commission_for_quantity(qty);
+        let exit_commission = self.commission_for_quantity(qty);
+        let commission = entry_commission + exit_commission;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
         self.cancel_exit_for_entry(&id);
@@ -36,14 +39,15 @@ impl BrokerState {
             entry_price,
             exit_price: price,
             qty,
-            profit: (price - entry_price) * qty,
+            profit: (price - entry_price) * qty - commission,
         });
         self.closed_trade_metrics.push(ClosedTradeMetrics {
+            commission,
             max_runup: self.current_open_trade_max_runup_for_quantity(qty),
             max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });
 
-        self.cash += qty * price;
+        self.cash += qty * price - exit_commission;
         self.position_size = 0.0;
         self.avg_price = 0.0;
         self.entry_id = None;
@@ -74,6 +78,9 @@ impl BrokerState {
             return;
         }
         let entry_price = self.avg_price;
+        let entry_commission = self.commission_for_quantity(qty);
+        let exit_commission = self.commission_for_quantity(qty);
+        let commission = entry_commission + exit_commission;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
         let exit_id = pending_exit.id;
@@ -97,14 +104,15 @@ impl BrokerState {
             entry_price,
             exit_price,
             qty,
-            profit: (exit_price - entry_price) * qty,
+            profit: (exit_price - entry_price) * qty - commission,
         });
         self.closed_trade_metrics.push(ClosedTradeMetrics {
+            commission,
             max_runup: self.current_open_trade_max_runup_for_quantity(qty),
             max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });
 
-        self.cash += qty * exit_price;
+        self.cash += qty * exit_price - exit_commission;
         if qty >= self.position_size {
             self.position_size = 0.0;
             self.avg_price = 0.0;

@@ -68,16 +68,19 @@ until a JSON mode is added.
 
 Phase G marks `strategy` as partial. The executable subset accepts
 `strategy(title, shorttitle, overlay, max_bars_back, initial_capital,
-default_qty_type, default_qty_value)` where `initial_capital` must be a positive
-const numeric value when provided. Phase L accepts only
-`default_qty_type=strategy.fixed` with positive const numeric
-`default_qty_value`; percent-of-equity, cash sizing, contracts, and currency
-conversion remain unsupported. Strategy mode output includes `orders`, `trades`,
-`position`, `equity`, and
+default_qty_type, default_qty_value, commission_type, commission_value)` where
+`initial_capital` must be a positive const numeric value when provided. Phase L
+accepts only `default_qty_type=strategy.fixed` with positive const numeric
+`default_qty_value`; Stage 7 Slice 17 accepts only
+`commission_type=strategy.commission.cash_per_contract` with finite
+non-negative const numeric `commission_value`. Percent-of-equity, cash sizing,
+contracts, other commission modes, slippage, and currency conversion remain
+unsupported. Strategy mode output includes `orders`, `trades`, `position`, `equity`, and
 `diagnostics`. Equity snapshots are emitted once per historical bar with
 `barIndex`, `cash`, `marketValue`, `equity`, and `netProfit`, using current
-bar-close mark-to-market accounting for the long-only order subset. Commission,
-slippage, margin, percent sizing, currency conversion, pyramiding, short orders,
+bar-close mark-to-market accounting for the long-only order subset and applying
+cash-per-contract commission debits when configured. Slippage, margin, percent
+sizing, currency conversion, pyramiding, short orders,
 `strategy.exit` same-side/3+ trigger/invalid trailing variants, reservation
 behavior outside the explicit fixed-`qty` or `qty_percent`
 single-trigger/bracket/trailing subset, omitted-quantity multiple
@@ -91,8 +94,11 @@ is a series float that is `na` when flat and the current average entry price
 when long. `strategy.openprofit` is unrealized profit for the current long
 position marked to the current close and is `0` when flat. `strategy.netprofit`
 is cumulative realized closed-trade profit only, excluding any current open
-profit. `strategy.equity` is `initial_capital + strategy.netprofit +
-strategy.openprofit` in the current subset. Supported market `strategy.entry`
+profit. `strategy.equity` is cash plus current market value; without configured
+commission this is equivalent to `initial_capital + strategy.netprofit +
+strategy.openprofit` in the current subset, and with cash-per-contract
+commission it also reflects entry commission debits on open positions.
+Supported market `strategy.entry`
 calls create an internal pending entry and fill on the next historical bar open.
 Supported long limit entries fill at the limit price before script statements
 on a later historical bar when `low <= limit`. Supported long stop entries fill
@@ -132,8 +138,9 @@ strategy-mode field functions over the current closed-trade list. Stage 7 Slice
 `strategy.closedtrades.profit(trade_num)` under the same contract. Stage 7
 Slice 2 adds `strategy.closedtrades.entry_time(trade_num)` and
 `strategy.closedtrades.exit_time(trade_num)`. Stage 7 Slice 3 adds
-`strategy.closedtrades.commission(trade_num)`, returning `0.0` for closed
-trades under the current no-commission account model. Stage 7 Slice 4 adds
+`strategy.closedtrades.commission(trade_num)`, returning `0.0` without
+configured commission and cash-per-contract entry-plus-exit commission when
+configured. Stage 7 Slice 4 adds
 `strategy.closedtrades.entry_id(trade_num)`, returning the retained entry id.
 Stage 7 Slice 5 adds `strategy.closedtrades.exit_id(trade_num)`, returning the
 retained close or exit id. Stage 7 Slice 6 adds
@@ -149,8 +156,9 @@ supported long position size for `trade_num == 0`. Stage 7 Slice 10 adds
 floating profit for that same supported open position. Stage 7 Slice 11 adds
 `strategy.opentrades.entry_id(trade_num)`, returning the retained entry id for
 that same supported open position. Stage 7 Slice 12 adds
-`strategy.opentrades.commission(trade_num)`, returning `0.0` for the current
-supported open position under the no-commission account model. Stage 7 Slice 13
+`strategy.opentrades.commission(trade_num)`, returning `0.0` without configured
+commission and the current open cash-per-contract entry commission when
+configured. Stage 7 Slice 13
 adds `strategy.opentrades.max_runup(trade_num)`, returning the largest
 high-based favorable excursion seen so far for that current supported open
 position. Stage 7 Slice 14 adds
@@ -160,7 +168,8 @@ adverse excursion seen so far for that current supported open position. Stage
 largest high-based favorable excursion retained for the closed trade quantity.
 Stage 7 Slice 16 adds `strategy.closedtrades.max_drawdown(trade_num)`,
 returning the largest low-based adverse excursion retained for the closed trade
-quantity.
+quantity. Stage 7 Slice 17 adds cash-per-contract commission accounting for
+supported entries and exits without adding public schema fields.
 `trade_num` is zero-based and integer-only; no matching trade, a negative
 index, an out-of-range index, or a non-integer argument returns `na`. Public
 open-trade records, open-trade namespace functions outside `entry_price`,
@@ -538,32 +547,32 @@ strategy.close       partial      full long-position close at current bar close;
 strategy.close_all   partial      full close of the current supported long position at current bar close; flat or already-closed calls are no-op; closed trade output uses the current entry id
 strategy.cancel      partial      cancels matching internal pending entry ids and pending exit ids in the supported order subset; filled, unknown, and already-cancelled ids are no-op; no public pending-order output or cancellation records
 strategy.cancel_all  partial      cancels all supported internal pending entries and pending exits; no-op when there are no pending orders; no public pending-order output or cancellation records
-strategy equity      partial      per-bar cash, marketValue, equity, and netProfit snapshots
+strategy equity      partial      per-bar cash, marketValue, equity, and netProfit snapshots; supports strategy.commission.cash_per_contract commission debits
 strategy.position_size partial    current long-only position size read-only series in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.position_avg_price partial current long-only average entry price read-only series, na when flat, in strategy-mode scripts only
 strategy.openprofit partial       current long-only unrealized profit read-only series, 0 when flat, in strategy-mode scripts only; supports fixture-backed control-flow, UDF argument, and history-reference interactions
 strategy.netprofit  partial       cumulative realized closed-trade profit read-only series, excluding current open profit, in strategy-mode scripts only
-strategy.equity     partial       initial_capital plus realized net profit plus current open profit read-only series in strategy-mode scripts only
+strategy.equity     partial       cash plus current market value read-only series in strategy-mode scripts only; without configured commission this matches initial_capital plus realized net profit plus current open profit, and with cash-per-contract commission it includes entry commission debits on open positions
 strategy.closedtrades partial     closed-trade count read-only series int in strategy-mode scripts only; immediate after strategy.close or strategy.close_all and next-bar visible after pending strategy.exit fills
-strategy.closedtrades.* partial   closed-trade entry_price, entry_id, exit_price, exit_id, entry_bar_index, exit_bar_index, entry_time, exit_time, commission, size, profit, max_runup, and max_drawdown field functions in strategy-mode scripts only; entry_id returns the retained entry id; exit_id returns the retained close or exit id; commission is 0.0 in the current no-commission account model; max_runup returns the largest high-based favorable excursion retained for the closed trade quantity; max_drawdown returns the largest low-based adverse excursion retained for the closed trade quantity; trade_num is zero-based integer-only and invalid, negative, non-integer, or out-of-range indexes return na; no public runtime schema expansion
+strategy.closedtrades.* partial   closed-trade entry_price, entry_id, exit_price, exit_id, entry_bar_index, exit_bar_index, entry_time, exit_time, commission, size, profit, max_runup, and max_drawdown field functions in strategy-mode scripts only; entry_id returns the retained entry id; exit_id returns the retained close or exit id; commission is 0.0 without configured commission or entry-plus-exit cash-per-contract commission when configured; max_runup returns the largest high-based favorable excursion retained for the closed trade quantity; max_drawdown returns the largest low-based adverse excursion retained for the closed trade quantity; trade_num is zero-based integer-only and invalid, negative, non-integer, or out-of-range indexes return na; no public runtime schema expansion
 strategy.closedtrades.max_runup partial closed-trade max runup field function in strategy-mode scripts only; uses the largest high-based favorable excursion retained for the closed trade quantity; no public runtime schema expansion
 strategy.closedtrades.max_drawdown partial closed-trade max drawdown field function in strategy-mode scripts only; uses the largest low-based adverse excursion retained for the closed trade quantity; no public runtime schema expansion
 strategy.wintrades partial        closed winning-trade count read-only series int in strategy-mode scripts only; counts closed trades with positive realized profit
 strategy.losstrades partial       closed losing-trade count read-only series int in strategy-mode scripts only; counts closed trades with negative realized profit
 strategy.eventrades partial       closed even-trade count read-only series int in strategy-mode scripts only; counts closed trades with zero realized profit
 strategy.opentrades partial       open-trade count read-only series int in strategy-mode scripts only; 1 for the current supported long position and 0 when flat
-strategy.opentrades.* partial     open-trade field function subset limited to entry_price, entry_id, entry_bar_index, entry_time, size, profit, commission, max_runup, and max_drawdown for the current supported long position; trade_num must be 0 and invalid or flat-state reads return na; commission returns 0.0 in the current no-commission account model; max_runup returns the largest high-based favorable excursion seen so far; max_drawdown returns the largest low-based adverse excursion seen so far; no public runtime schema expansion
+strategy.opentrades.* partial     open-trade field function subset limited to entry_price, entry_id, entry_bar_index, entry_time, size, profit, commission, max_runup, and max_drawdown for the current supported long position; trade_num must be 0 and invalid or flat-state reads return na; commission returns 0.0 without configured commission or current open cash-per-contract entry commission when configured; max_runup returns the largest high-based favorable excursion seen so far; max_drawdown returns the largest low-based adverse excursion seen so far; no public runtime schema expansion
 strategy.opentrades.entry_price partial current open-trade entry price field function in strategy-mode scripts only; no public runtime schema expansion
 strategy.opentrades.entry_id partial current open-trade entry id field function in strategy-mode scripts only; no public runtime schema expansion
 strategy.opentrades.entry_bar_index partial current open-trade entry bar index field function in strategy-mode scripts only; no public runtime schema expansion
 strategy.opentrades.entry_time partial current open-trade entry time field function in strategy-mode scripts only; no public runtime schema expansion
 strategy.opentrades.size partial  current open-trade size field function in strategy-mode scripts only; no public runtime schema expansion
 strategy.opentrades.profit partial current open-trade floating profit field function in strategy-mode scripts only; no public runtime schema expansion
-strategy.opentrades.commission partial current open-trade commission field function in strategy-mode scripts only; returns 0.0 in the current no-commission account model; no public runtime schema expansion
+strategy.opentrades.commission partial current open-trade commission field function in strategy-mode scripts only; returns 0.0 without configured commission or current open cash-per-contract entry commission when configured; no public runtime schema expansion
 strategy.opentrades.max_runup partial current open-trade max runup field function in strategy-mode scripts only; uses the largest high-based favorable excursion seen so far; no public runtime schema expansion
 strategy.opentrades.max_drawdown partial current open-trade max drawdown field function in strategy-mode scripts only; uses the largest low-based adverse excursion seen so far; no public runtime schema expansion
 strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent long exits; same-calculation absolute stop/limit/trail_price attachment to a pending entry is supported for the active entry id; same-calculation entry-relative profit/loss/trail_points attachment remains unsupported until deferred price resolution; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; qty is placement-time finite positive absolute quantity; qty_percent is placement-time finite positive percent resolved to an absolute quantity against current position size or matching pending entry quantity; when qty and qty_percent are both supplied, qty determines the reserved or filled quantity; omitted qty and qty_percent keep full-position one-effective-pending replacement behavior; explicit fixed-qty or qty-percent single-trigger, bracket, and trailing calls can keep multiple reserved pending exits; fills clamp to current position size, leave remaining long position open when partial, and expose only absolute filled qty; later-bar low <= stop/loss/active trailing stop or high >= limit/profit/activation price drives fills/activation; same-side touched exits fill in placement order; mixed downside/upside same-bar touches fill downside candidates only; bracket both-leg touches contribute the downside candidate; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
-strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all and the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger/bracket/trailing multiple-exit reservation subset; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/multiple-pending outside that subset/omitted-quantity multiple reservations/reservation outside that subset/missing-entry forms; rich order types, percent/cash/contracts sizing, mutable strategy state, open-trade namespace functions outside entry_price/entry_id/entry_bar_index/entry_time/size/profit/commission/max_runup/max_drawdown, closed-trade namespace functions outside entry_price/entry_id/exit_price/exit_id/entry_bar_index/exit_bar_index/entry_time/exit_time/commission/size/profit/max_runup/max_drawdown, real commission/slippage modeling, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count and supported trade field variables are not implemented
+strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all and the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger/bracket/trailing multiple-exit reservation subset; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/multiple-pending outside that subset/omitted-quantity multiple reservations/reservation outside that subset/missing-entry forms; rich order types, percent/cash/contracts sizing, mutable strategy state, open-trade namespace functions outside entry_price/entry_id/entry_bar_index/entry_time/size/profit/commission/max_runup/max_drawdown, closed-trade namespace functions outside entry_price/entry_id/exit_price/exit_id/entry_bar_index/exit_bar_index/entry_time/exit_time/commission/size/profit/max_runup/max_drawdown, commission modes outside strategy.commission.cash_per_contract, slippage modeling, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count and supported trade field variables are not implemented
 array.*              partial      float/int/bool/string/color creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, join, mutation, and helper fixture subset only
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets

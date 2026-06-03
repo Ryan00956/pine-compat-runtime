@@ -53,7 +53,7 @@ impl BrokerState {
 
     #[must_use]
     pub(crate) fn equity_value(&self, close: f64) -> f64 {
-        normalize_zero(self.initial_capital + self.realized_profit() + self.open_profit(close))
+        normalize_zero(self.cash + self.position_size * close)
     }
 
     #[must_use]
@@ -78,6 +78,14 @@ impl BrokerState {
         self.closed_trade_metrics
             .get(index)
             .map(|metrics| metrics.max_runup)
+    }
+
+    #[must_use]
+    pub(crate) fn closed_trade_commission(&self, trade_num: i64) -> Option<f64> {
+        let index = usize::try_from(trade_num).ok()?;
+        self.closed_trade_metrics
+            .get(index)
+            .map(|metrics| metrics.commission)
     }
 
     #[must_use]
@@ -187,7 +195,9 @@ impl BrokerState {
     #[must_use]
     pub(crate) fn open_trade_commission(&self, trade_num: i64) -> Option<f64> {
         if trade_num == 0 && self.open_trade_count() == 1 {
-            Some(0.0)
+            Some(normalize_zero(
+                self.commission_for_quantity(self.position_size),
+            ))
         } else {
             None
         }

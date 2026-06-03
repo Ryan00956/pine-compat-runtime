@@ -83,7 +83,10 @@ impl<'a> HistoricalRuntime<'a> {
             }
             "strategy.closedtrades.entry_time" => PineValue::Int(trade.entry_time),
             "strategy.closedtrades.exit_time" => PineValue::Int(trade.exit_time),
-            "strategy.closedtrades.commission" => PineValue::Float(0.0),
+            "strategy.closedtrades.commission" => self
+                .strategy_broker
+                .closed_trade_commission(trade_num)
+                .map_or(PineValue::Na, PineValue::Float),
             "strategy.closedtrades.size" => PineValue::Float(trade.qty),
             "strategy.closedtrades.profit" => PineValue::Float(trade.profit),
             "strategy.closedtrades.max_runup" => self
