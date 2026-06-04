@@ -491,7 +491,28 @@ Stop condition:
 
 ### Slice 5: First Compatibility Widening Candidate
 
+Status: closed on 2026-06-04 by choosing the internal-only
+multiple-open-trade skeleton. This slice does not widen accepted Pine syntax,
+runtime behavior, conformance support, or public output.
+
 Choose only one after Slices 2 through 4 are stable.
+
+Chosen candidate:
+
+- internal-only multiple-open-trade skeleton that preserves the current
+  no-pyramiding external behavior.
+
+Implemented:
+
+- `TradeLedger` now stores open trades as an internal list, while current entry
+  behavior still clears the list before adding the one supported long open
+  trade;
+- net position is rebuilt from the internal open-trade list, preserving the
+  current single-long size and average price;
+- partial and final reductions continue to operate on the one supported open
+  trade, with tests asserting the list remains single-entry until flat;
+- `pyramiding=1`, short entries, reversals, generic `strategy.order()`, and
+  custom OCA remain unsupported.
 
 Preferred first candidates:
 

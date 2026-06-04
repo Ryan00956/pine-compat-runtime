@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed the Strategy Internal Stage 8 Slice 5 first widening candidate by
+  choosing an internal-only multiple-open-trade skeleton. `TradeLedger` now
+  stores open trades as an internal list and rebuilds net position from that
+  list, while current runtime behavior still permits only one supported long
+  open trade and keeps public output and conformance unchanged.
 - Closed the Strategy Internal Stage 8 Slice 4 multiple-open-trade allocation
   design gate. The plan now fixes future `from_entry`, omitted-`from_entry`,
   FIFO close ordering, partial-exit commission/run-up/drawdown allocation,

@@ -36,26 +36,24 @@ impl Default for NetPosition {
 
 #[derive(Debug, Clone, Default, PartialEq)]
 pub(super) struct TradeLedger {
-    open_trade: Option<OpenTrade>,
+    open_trades: Vec<OpenTrade>,
     net_position: NetPosition,
 }
 
 impl TradeLedger {
     pub(super) fn open_long(&mut self, trade: OpenTrade) {
-        self.net_position = NetPosition {
-            signed_size: trade.quantity,
-            avg_price: trade.entry_price,
-        };
-        self.open_trade = Some(trade);
+        self.open_trades.clear();
+        self.open_trades.push(trade);
+        self.rebuild_net_position();
     }
 
     pub(super) fn reduce_open_trade(&mut self, quantity: f64, entry_commission: f64) {
-        let Some(open_trade) = self.open_trade.as_mut() else {
-            return;
-        };
         if !quantity.is_finite() || quantity <= 0.0 {
             return;
         }
+        let Some(open_trade) = self.open_trades.first_mut() else {
+            return;
+        };
         if quantity >= open_trade.quantity {
             self.clear_open_trade();
             return;
@@ -63,17 +61,16 @@ impl TradeLedger {
 
         open_trade.quantity -= quantity;
         open_trade.entry_commission -= entry_commission;
-        self.net_position.signed_size = open_trade.quantity;
-        self.net_position.avg_price = open_trade.entry_price;
+        self.rebuild_net_position();
     }
 
     pub(super) fn clear_open_trade(&mut self) {
-        self.open_trade = None;
+        self.open_trades.clear();
         self.net_position = NetPosition::default();
     }
 
     pub(super) fn update_extremes(&mut self, high: f64, low: f64) {
-        let Some(open_trade) = self.open_trade.as_mut() else {
+        let Some(open_trade) = self.open_trades.first_mut() else {
             return;
         };
         if high.is_finite() {
@@ -88,9 +85,32 @@ impl TradeLedger {
         }
     }
 
+    fn rebuild_net_position(&mut self) {
+        let signed_size: f64 = self.open_trades.iter().map(|trade| trade.quantity).sum();
+        if signed_size <= 0.0 {
+            self.net_position = NetPosition::default();
+            return;
+        }
+
+        let weighted_entry_value: f64 = self
+            .open_trades
+            .iter()
+            .map(|trade| trade.quantity * trade.entry_price)
+            .sum();
+        self.net_position = NetPosition {
+            signed_size,
+            avg_price: weighted_entry_value / signed_size,
+        };
+    }
+
     #[cfg(test)]
     pub(super) fn open_trade(&self) -> Option<&OpenTrade> {
-        self.open_trade.as_ref()
+        self.open_trades.first()
+    }
+
+    #[cfg(test)]
+    pub(super) fn open_trades(&self) -> &[OpenTrade] {
+        &self.open_trades
     }
 
     #[cfg(test)]

@@ -119,6 +119,7 @@ fn trade_ledger_mirrors_current_single_long_entry() {
     assert!(broker.entry_long("L".to_owned(), 3, 30, 100.0, 2.0));
     broker.update_open_trade_extremes(112.0, 94.0);
 
+    assert_eq!(broker.trade_ledger.open_trades().len(), 1);
     let open_trade = broker.trade_ledger.open_trade().expect("open trade");
     assert_eq!(open_trade.id, "L");
     assert_eq!(open_trade.direction, TradeDirection::Long);
@@ -155,6 +156,7 @@ fn trade_ledger_tracks_partial_and_final_long_reductions() {
     broker.evaluate_pending_exits(1, 20, 110.0, 100.0);
 
     let open_trade = broker.trade_ledger.open_trade().expect("open trade");
+    assert_eq!(broker.trade_ledger.open_trades().len(), 1);
     assert_eq!(broker.position_size, 1.25);
     assert_eq!(open_trade.quantity, broker.position_size);
     assert_eq!(broker.trade_ledger.net_position().signed_size, 1.25);
@@ -162,6 +164,7 @@ fn trade_ledger_tracks_partial_and_final_long_reductions() {
     broker.close_long("L".to_owned(), 2, 30, 108.0);
 
     assert!(broker.trade_ledger.open_trade().is_none());
+    assert!(broker.trade_ledger.open_trades().is_empty());
     assert_eq!(broker.trade_ledger.net_position(), NetPosition::default());
     assert_eq!(broker.position_size, 0.0);
 }
