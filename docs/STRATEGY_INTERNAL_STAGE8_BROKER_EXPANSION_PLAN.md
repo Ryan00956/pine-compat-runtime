@@ -1,7 +1,7 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
 Status: initial design gate and behavior-preserving internal skeleton closed
-on 2026-06-04 through Slices 0-9. Do not widen runtime broker compatibility
+on 2026-06-04 through Slices 0-10. Do not widen runtime broker compatibility
 until a later slice adds fixture-backed behavior, conformance metadata, host
 snapshots, and release verification.
 
@@ -671,6 +671,39 @@ Acceptance:
 Stop condition:
 
 - stop before splitting one public fill into multiple public trades unless a
+  later schema and fixture plan explicitly requires that output shape.
+
+### Slice 10: Closed Trade Fill Recorder
+
+Status: closed on 2026-06-04 as a behavior-preserving internal trade-recording
+refactor. This slice does not add multiple runtime entries, widen conformance,
+or change public output.
+
+Goal:
+
+- consolidate public trade and closed-trade-metric recording behind one
+  internal fill recorder before any future multi-allocation trade emission.
+
+Implemented:
+
+- added an internal `ClosedTradeFill` summary in the broker fill path;
+- added `BrokerState::record_closed_trade_fill` to write the existing
+  `StrategyTrade` and `ClosedTradeMetrics` outputs in one place;
+- routed long margin-call liquidation, `strategy.close`, and supported pending
+  `strategy.exit` trade recording through that helper;
+- preserved current one-position public trade fields and closed-trade metrics.
+
+Acceptance:
+
+- current single-position close, exit, and long margin-call behavior remains
+  unchanged;
+- current CLI golden snapshots remain unchanged;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop before recording multiple public trades for one order fill unless a
   later schema and fixture plan explicitly requires that output shape.
 
 ## Verification Plan

@@ -50,7 +50,45 @@ impl AllocatedEntryFill {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+struct ClosedTradeFill {
+    entry_id: String,
+    exit_id: String,
+    entry_fill: AllocatedEntryFill,
+    exit_bar_index: usize,
+    exit_time: i64,
+    exit_price: f64,
+    qty: f64,
+    profit: f64,
+    commission: f64,
+}
+
 impl BrokerState {
+    fn record_closed_trade_fill(&mut self, fill: ClosedTradeFill) {
+        self.trades.push(StrategyTrade {
+            id: fill.entry_id,
+            exit_id: fill.exit_id,
+            entry_bar_index: fill.entry_fill.entry_bar_index,
+            exit_bar_index: fill.exit_bar_index,
+            entry_time: fill.entry_fill.entry_time,
+            exit_time: fill.exit_time,
+            entry_price: fill.entry_fill.entry_price,
+            exit_price: fill.exit_price,
+            qty: fill.qty,
+            profit: fill.profit,
+        });
+        self.closed_trade_metrics.push(ClosedTradeMetrics {
+            commission: fill.commission,
+            profit_percent: closed_trade_profit_percent(
+                fill.entry_fill.entry_price,
+                fill.qty,
+                fill.profit,
+            ),
+            max_runup: self.current_open_trade_max_runup_for_quantity(fill.qty),
+            max_drawdown: self.current_open_trade_max_drawdown_for_quantity(fill.qty),
+        });
+    }
+
     pub(crate) fn evaluate_margin_call_long(
         &mut self,
         bar_index: usize,
@@ -102,23 +140,16 @@ impl BrokerState {
             qty,
             price: current_price,
         });
-        self.trades.push(StrategyTrade {
-            id: entry_id,
+        self.record_closed_trade_fill(ClosedTradeFill {
+            entry_id,
             exit_id,
-            entry_bar_index: entry_fill.entry_bar_index,
+            entry_fill,
             exit_bar_index: bar_index,
-            entry_time: entry_fill.entry_time,
             exit_time: time,
-            entry_price: entry_fill.entry_price,
             exit_price: current_price,
             qty,
             profit,
-        });
-        self.closed_trade_metrics.push(ClosedTradeMetrics {
             commission,
-            profit_percent: closed_trade_profit_percent(entry_fill.entry_price, qty, profit),
-            max_runup: self.current_open_trade_max_runup_for_quantity(qty),
-            max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });
 
         self.cash += qty * current_price - exit_commission;
@@ -199,23 +230,16 @@ impl BrokerState {
         let commission = entry_fill.entry_commission + exit_commission;
         let profit = (price - entry_fill.entry_price) * qty - commission;
         self.cancel_exit_for_entry(&id);
-        self.trades.push(StrategyTrade {
-            exit_id: id.clone(),
-            id,
-            entry_bar_index: entry_fill.entry_bar_index,
+        self.record_closed_trade_fill(ClosedTradeFill {
+            entry_id: id.clone(),
+            exit_id: id,
+            entry_fill,
             exit_bar_index: bar_index,
-            entry_time: entry_fill.entry_time,
             exit_time: time,
-            entry_price: entry_fill.entry_price,
             exit_price: price,
             qty,
             profit,
-        });
-        self.closed_trade_metrics.push(ClosedTradeMetrics {
             commission,
-            profit_percent: closed_trade_profit_percent(entry_fill.entry_price, qty, profit),
-            max_runup: self.current_open_trade_max_runup_for_quantity(qty),
-            max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });
 
         self.cash += qty * price - exit_commission;
@@ -290,23 +314,16 @@ impl BrokerState {
             qty,
             price: exit_price,
         });
-        self.trades.push(StrategyTrade {
-            id: entry_id,
+        self.record_closed_trade_fill(ClosedTradeFill {
+            entry_id,
             exit_id,
-            entry_bar_index: entry_fill.entry_bar_index,
+            entry_fill,
             exit_bar_index: bar_index,
-            entry_time: entry_fill.entry_time,
             exit_time: time,
-            entry_price: entry_fill.entry_price,
             exit_price,
             qty,
             profit,
-        });
-        self.closed_trade_metrics.push(ClosedTradeMetrics {
             commission,
-            profit_percent: closed_trade_profit_percent(entry_fill.entry_price, qty, profit),
-            max_runup: self.current_open_trade_max_runup_for_quantity(qty),
-            max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });
 
         self.cash += qty * exit_price - exit_commission;

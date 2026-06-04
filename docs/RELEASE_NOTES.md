@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 8 Slice 10 closed trade fill recorder. The
+  current long margin-call, `strategy.close`, and supported pending
+  `strategy.exit` paths now record existing `StrategyTrade` and
+  `ClosedTradeMetrics` outputs through one internal `ClosedTradeFill` helper
+  while preserving public output and conformance.
 - Closed Strategy Internal Stage 8 Slice 9 allocated entry fill summary. The
   current long margin-call, `strategy.close`, and supported pending
   `strategy.exit` trade-emission paths now share an internal
