@@ -605,8 +605,8 @@ Closeout evidence:
 
 Out of scope until separately designed:
 
-- Combined trigger brackets, missing-entry pre-placement, multiple pending
-  exits, and richer order modification rules.
+- Combined trigger brackets, active-entry or future-entry exit attachment,
+  multiple pending exits, and richer order modification rules.
 - Short exposure, reversals, pyramiding, partial exits, trailing stops,
   commission, slippage, margin, currency conversion, strategy order namespaces,
   strategy alerts, and realtime strategy execution.
@@ -749,9 +749,10 @@ Out of scope until a later behavior phase:
   brackets.
 - Public pending-order records, partial-fill fields, exit-reason fields, or a
   runtime schema bump.
-- Partial exits, quantity reservation, missing-entry pre-placement, multiple
-  pending exits, pyramiding, short exposure, trailing stops, commission,
-  slippage, margin, strategy alerts, and realtime broker rollback.
+- Partial exits, quantity reservation, active-entry or future-entry exit
+  attachment, multiple pending exits, pyramiding, short exposure, trailing
+  stops, commission, slippage, margin, strategy alerts, and realtime broker
+  rollback.
 
 ## Phase R: Strategy Exit Bracket Implementation
 
@@ -1057,19 +1058,24 @@ Still deferred:
 - Public pending-order records, reservation fields, remaining-quantity fields,
   trigger-side fields, activation fields, exit-reason fields, or a runtime
   schema bump.
-- Richer order APIs and broker behavior, including `strategy.order`,
-  `strategy.cancel`, OCA APIs, commission, slippage, margin, and realtime
+- Richer broker behavior beyond the current fixture-backed subset, including
+  `strategy.order`, full OCA APIs, short exposure, pyramiding, reversals,
+  margin behavior beyond the supported long-only account subset, and realtime
   strategy handoff.
 
 ## Backlog Priority
 
 Recommended order from the current state:
 
+The seven broad interpreter-internal task directions are summarized in
+`docs/NEXT_INTERNAL_CAPABILITY_PLAN.md`. The order below remains the roadmap
+priority for choosing one small fixture-backed slice at a time.
+
 1. Keep strategy maintenance narrow and fixture-backed. The next strategy work
-   should target one deferred broker tail at a time, such as missing-entry
-   pre-placement, public pending-order records, richer order APIs, or
-   short/pyramiding behavior, with semantic, runtime, incremental, host,
-   conformance, and closeout evidence before any compatibility claim widens.
+   should start with a Stage 8 broker-expansion design gate for multi-entry
+   ledgers, short/reversal behavior, pyramiding, generic order APIs, OCA
+   allocation, and any public-output contract decision before runtime
+   compatibility claims widen.
 2. Phase J maintenance only when a small, fixture-backed change widens the
    already claimed import, UDT, or method subsets.
 3. Phase E/F/H/I maintenance only when a small, fixture-backed change widens an

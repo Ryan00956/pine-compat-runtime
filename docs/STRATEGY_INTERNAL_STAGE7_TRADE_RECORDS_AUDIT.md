@@ -1,8 +1,12 @@
 # Strategy Internal Stage 7 Trade Records Audit
 
-Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
-5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-25, 26, 27, 28, 29, 30, 31, 32, 33, 34, and 35 closed on 2026-06-03.
+Status: closed on 2026-06-04 for the current long-only trade-record,
+cost, reporting, default-sizing, and active-margin account subset. Slices 0,
+1, 2, and 3 closed on 2026-06-02; Slices 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+33, 34, and 35 closed on 2026-06-03; the long-only margin/account model closed
+through `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` Slice M5 on
+2026-06-03.
 
 Stage 7 enriches strategy reporting and accounting while preserving the current
 one-net-long broker and public output contract unless a later slice explicitly
@@ -41,8 +45,8 @@ Evidence:
 Still unsupported:
 
 - `strategy.opentrades.*` namespace functions outside `entry_price`,
-  `entry_id`, `entry_bar_index`, `entry_time`, `size`, `profit`, and
-  `commission`, `max_runup`, and `max_drawdown`;
+  `entry_id`, `entry_bar_index`, `entry_time`, `size`, `profit`,
+  `commission`, `max_runup`, `max_drawdown`, and the `capital_held` variable;
 - closed-trade field functions beyond `entry_price`, `entry_id`, `exit_price`,
   `exit_id`, `entry_bar_index`, `exit_bar_index`, `entry_time`, `exit_time`,
   `commission`, `size`, `profit`, `max_runup`, and `max_drawdown`;
@@ -1109,12 +1113,29 @@ Evidence:
   `tests/fixtures/sema/unsupported_strategy_state_mutation.pine`;
 - host parity tests cover CLI snapshots plus Python and WASM plot values.
 
-## Remaining Stage 7 Work
+## Stage 7 Closeout Boundary
 
-The next slice should choose one explicitly bounded accounting/reporting
-addition, such as a documented margin/account-model subslice, only after
-documenting whether the behavior is script-only or public-output visible. The
-margin/account-model direction is captured in
-`docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md`; runtime support should
-not widen before that design gate's slice order and stop conditions are
-followed.
+Stage 7 is closed for the current fixture-backed one-net-long reporting and
+accounting subset. Runtime support now covers the documented closed/open trade
+field functions, supported commission modes, fixed-tick slippage, fixed-tick
+limit verification, percent-of-equity default entry sizing, supported
+profit/run-up/drawdown reporting variables, maximum contracts held variables,
+`strategy.opentrades.capital_held`, explicit active `margin_long` long-entry
+affordability checks, and the first long-only forced-liquidation subset.
+
+Still deferred:
+
+- public open-trade or pending-order records;
+- public reservation, liquidation-price, exit-reason, bracket-leg, or trailing
+  state fields;
+- `strategy.margin_liquidation_price`;
+- short-margin behavior, shorts, reversals, pyramiding, and per-entry ledgers;
+- generic `strategy.order()` and full OCA behavior;
+- symbol precision rounding, currency conversion, and richer broker fill
+  models beyond the documented long-only subset.
+
+The next strategy step should start as a Stage 8 broker-expansion design gate,
+not as a runtime compatibility patch. That design needs to settle multi-entry
+ledgers, net-position accounting, short/reversal behavior, OCA allocation,
+same-bar precedence, and whether any public JSON/Python/WASM contract must
+change before conformance is widened.

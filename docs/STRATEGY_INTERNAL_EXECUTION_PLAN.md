@@ -216,10 +216,13 @@ Acceptance:
 
 ## Stage 7: Trade Records, Costs, And Account Model
 
-Status: in progress. Slices 0, 1, 2, and 3 closed on 2026-06-02; Slices 4,
-5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-25, 26, 27, 28, 29, 30, 31, 32, 33, 34, and 35 closed on 2026-06-03; see
-`docs/STRATEGY_INTERNAL_STAGE7_TRADE_RECORDS_AUDIT.md`.
+Status: closed on 2026-06-04 for the current long-only trade-record, cost,
+reporting, default-sizing, and active-margin account subset. Slices 0, 1, 2,
+and 3 closed on 2026-06-02; Slices 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34,
+and 35 closed on 2026-06-03; the long-only margin/account model closed through
+`docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` Slice M5 on
+2026-06-03. See `docs/STRATEGY_INTERNAL_STAGE7_TRADE_RECORDS_AUDIT.md`.
 
 Goal: enrich strategy reporting and accounting without jumping directly to a
 multi-position broker.
@@ -261,6 +264,10 @@ Acceptance:
   updated with clear audit notes.
 
 ## Stage 8: Full Broker Expansion
+
+Status: design gate recommended next. Do not implement runtime broker expansion
+until the internal ledger model, order allocation rules, same-bar precedence,
+account interactions, and public-output boundary are documented.
 
 Goal: move from the current one-net-long model toward Pine's broader broker
 semantics.

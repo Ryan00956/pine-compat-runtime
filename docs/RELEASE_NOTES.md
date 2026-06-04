@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed the current Strategy Internal Stage 7 planning boundary in docs. The
+  Stage 7 audit and execution plan now mark the fixture-backed long-only
+  trade-record, cost, reporting, default-sizing, and active-margin account
+  subset closed, and point the next strategy step at a Stage 8 broker-expansion
+  design gate rather than another runtime patch.
 - Closed the Strategy Internal active-entry exit attachment evidence slice.
   A same-calculation absolute `strategy.exit` can target a matching active
   pending long entry id and later fill through the existing public

@@ -264,9 +264,11 @@ Missing internal behavior:
 Gap size: medium.
 
 Best first slice: active-entry absolute attachment is now closed for the current
-supported subset. The current `qty + qty_percent` rejection is intentionally
-narrower than Pine and should be changed only with semantic and runtime
-fixtures proving that `qty` wins.
+supported subset. The `qty + qty_percent` precedence gap is also closed for the
+supported `strategy.exit` trigger shapes: `qty` determines the reserved or
+filled quantity. Remaining exit work should avoid syntax-tail expansion and
+instead wait for a broader broker-model design when it depends on multi-entry
+ledgers, short exposure, or OCA allocation.
 
 ### 7. OCA Groups And Reservation Semantics
 

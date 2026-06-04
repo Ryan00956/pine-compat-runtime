@@ -58,6 +58,8 @@ able to integrate it through adapters.
 - [Phase F Request Platform Audit](docs/PHASE_F_AUDIT.md)
 - [Phase H Alert Audit](docs/PHASE_H_AUDIT.md)
 - [Next Language Expansion Playbook](docs/NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md)
+- [Next Internal Capability Plan](docs/NEXT_INTERNAL_CAPABILITY_PLAN.md)
+- [Strategy Internal Gap Audit](docs/STRATEGY_INTERNAL_GAP_AUDIT.md)
 - [Task Breakdown](docs/TASK_BREAKDOWN.md)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
 - [Compatibility, Legal, and Branding Boundaries](docs/COMPATIBILITY_AND_LEGAL.md)
@@ -119,14 +121,16 @@ percent-quantity single-trigger, bracket, and trailing multiple-exit
 reservations, Python bindings, and a thin WASM binding.
 
 The runtime intentionally rejects unsupported features such as strategy order
-families beyond the current `strategy.entry`/`strategy.close`/`strategy.exit`
+families beyond the current `strategy.entry`/`strategy.close`/
+`strategy.close_all`/`strategy.cancel`/`strategy.cancel_all`/`strategy.exit`
 subset, same-side, 3+ trigger, or invalid trailing strategy exits, request
-variants outside the narrow `request.security` subset, `qty + qty_percent`,
-multiple pending exits outside explicit fixed-quantity or percent-quantity
-single-trigger, bracket, and trailing `strategy.exit` reservations, including
-omitted-quantity multiple reservations, reservation behavior outside that
-subset, missing-entry pre-placement, alert frequency modes and placeholder
-interpolation, remote library lookup, re-exports, imported UDTs,
+variants outside the narrow `request.security` subset, multiple pending exits
+outside explicit fixed-quantity or percent-quantity single-trigger, bracket,
+and trailing `strategy.exit` reservations, including omitted-quantity multiple
+reservations, reservation behavior outside that subset, missing-entry future
+binding beyond the supported active-entry attachment subset, alert frequency
+modes and placeholder interpolation, remote library lookup, re-exports,
+imported UDTs,
 imported methods, side-effecting exported library functions, advanced drawing
 families and methods, unsupported collection families and element types, recursive
 functions, function side effects, and unsupported `varip` value families such
