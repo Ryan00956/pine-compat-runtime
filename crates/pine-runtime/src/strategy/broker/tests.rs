@@ -112,6 +112,60 @@ fn assert_active_trailing_stop_by_id(broker: &BrokerState, id: &str, expected_st
 }
 
 #[test]
+fn trade_ledger_mirrors_current_single_long_entry() {
+    let mut broker = BrokerState::new_with_cash_per_contract_commission(100_000.0, 1.5);
+
+    assert!(broker.entry_long("L".to_owned(), 3, 30, 100.0, 2.0));
+    broker.update_open_trade_extremes(112.0, 94.0);
+
+    let open_trade = broker.trade_ledger.open_trade().expect("open trade");
+    assert_eq!(open_trade.id, "L");
+    assert_eq!(open_trade.direction, TradeDirection::Long);
+    assert_eq!(open_trade.quantity, broker.position_size);
+    assert_eq!(open_trade.entry_price, broker.avg_price);
+    assert_eq!(open_trade.entry_bar_index, 3);
+    assert_eq!(open_trade.entry_time, 30);
+    assert_eq!(open_trade.entry_commission, broker.open_entry_commission);
+    assert_eq!(open_trade.max_high, broker.open_trade_max_high);
+    assert_eq!(open_trade.min_low, broker.open_trade_min_low);
+    assert_eq!(
+        open_trade.equity_on_entry,
+        broker.open_trade_equity_on_entry
+    );
+    assert_eq!(
+        open_trade.min_equity_before_entry,
+        broker.open_trade_min_equity_before_entry
+    );
+    assert_eq!(
+        open_trade.max_equity_before_entry,
+        broker.open_trade_max_equity_before_entry
+    );
+
+    let net_position = broker.trade_ledger.net_position();
+    assert_eq!(net_position.signed_size, broker.position_size);
+    assert_eq!(net_position.avg_price, broker.avg_price);
+}
+
+#[test]
+fn trade_ledger_tracks_partial_and_final_long_reductions() {
+    let mut broker = broker_with_long_entry();
+
+    broker.place_exit_limit_qty("XL1".to_owned(), "L".to_owned(), 110.0, 0.75, 0);
+    broker.evaluate_pending_exits(1, 20, 110.0, 100.0);
+
+    let open_trade = broker.trade_ledger.open_trade().expect("open trade");
+    assert_eq!(broker.position_size, 1.25);
+    assert_eq!(open_trade.quantity, broker.position_size);
+    assert_eq!(broker.trade_ledger.net_position().signed_size, 1.25);
+
+    broker.close_long("L".to_owned(), 2, 30, 108.0);
+
+    assert!(broker.trade_ledger.open_trade().is_none());
+    assert_eq!(broker.trade_ledger.net_position(), NetPosition::default());
+    assert_eq!(broker.position_size, 0.0);
+}
+
+#[test]
 fn cancel_pending_order_removes_matching_pending_entry() {
     let mut broker = BrokerState::new(100_000.0);
     broker.place_pending_limit_long_entry("L".to_owned(), 2.0, 95.0, 0);

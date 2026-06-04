@@ -35,6 +35,7 @@ impl BrokerState {
                     .map_or(low, |current| current.min(low)),
             );
         }
+        self.trade_ledger.update_extremes(high, low);
         self.update_open_trade_max_runup();
         self.update_open_trade_max_drawdown();
     }

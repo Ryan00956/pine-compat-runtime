@@ -334,7 +334,22 @@ Stop condition:
 
 ### Slice 2: Behavior-Preserving Ledger Skeleton
 
+Status: closed on 2026-06-04 for the first behavior-preserving internal
+ledger skeleton.
+
 Introduce internal ledger types while preserving all public behavior.
+
+Implemented:
+
+- added an internal broker `ledger` module with `OpenTrade`, `NetPosition`,
+  and `TradeLedger`;
+- mirrored the current single long entry, open-trade extremes, partial exit
+  reductions, margin-call reductions, and final flat transitions into the
+  ledger;
+- kept existing `BrokerState` fields as the compatibility source for public
+  output and strategy metrics;
+- added broker unit tests for long-entry mirroring and partial/final long
+  reductions.
 
 Suggested work:
 

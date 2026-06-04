@@ -2,6 +2,7 @@ mod accounting;
 mod entries;
 mod exits;
 mod fills;
+mod ledger;
 
 use pine_ir::{DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCommission, StrategyMarginSetting};
 
@@ -10,6 +11,9 @@ use exits::{
     PendingExit, PendingExitBook, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
 };
 pub(crate) use exits::{TrailPointsExitSpec, TrailPriceExitSpec};
+#[cfg(test)]
+use ledger::NetPosition;
+use ledger::{OpenTrade, TradeDirection, TradeLedger};
 
 use crate::{
     RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent, StrategyPositionSnapshot,
@@ -51,6 +55,7 @@ pub struct BrokerState {
     diagnostics: Vec<RuntimeDiagnostic>,
     pending_entries: PendingEntryBook,
     pending_exits: PendingExitBook,
+    trade_ledger: TradeLedger,
 }
 
 impl Default for BrokerState {
@@ -158,6 +163,7 @@ impl BrokerState {
             diagnostics: Vec::new(),
             pending_entries: PendingEntryBook::new(),
             pending_exits: PendingExitBook::new(),
+            trade_ledger: TradeLedger::default(),
         }
     }
 
@@ -256,6 +262,20 @@ impl BrokerState {
         self.open_trade_equity_on_entry = Some(equity_on_entry);
         self.open_trade_min_equity_before_entry = Some(min_equity_before_entry);
         self.open_trade_max_equity_before_entry = Some(max_equity_before_entry);
+        self.trade_ledger.open_long(OpenTrade {
+            id: id.clone(),
+            direction: TradeDirection::Long,
+            quantity: qty,
+            entry_price: fill_price,
+            entry_bar_index: bar_index,
+            entry_time: time,
+            entry_commission: self.open_entry_commission,
+            max_high: Some(fill_price),
+            min_low: Some(fill_price),
+            equity_on_entry: Some(equity_on_entry),
+            min_equity_before_entry: Some(min_equity_before_entry),
+            max_equity_before_entry: Some(max_equity_before_entry),
+        });
         self.orders.push(StrategyOrderEvent {
             id,
             bar_index,

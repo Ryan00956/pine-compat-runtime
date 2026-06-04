@@ -95,6 +95,7 @@ impl BrokerState {
             self.open_trade_equity_on_entry = None;
             self.open_trade_min_equity_before_entry = None;
             self.open_trade_max_equity_before_entry = None;
+            self.trade_ledger.clear_open_trade();
             self.position.push(StrategyPositionSnapshot {
                 bar_index,
                 size: 0.0,
@@ -105,6 +106,7 @@ impl BrokerState {
 
         self.position_size -= qty;
         self.open_entry_commission -= entry_commission;
+        self.trade_ledger.reduce_open_trade(qty, entry_commission);
         self.position.push(StrategyPositionSnapshot {
             bar_index,
             size: self.position_size,
@@ -182,6 +184,7 @@ impl BrokerState {
         self.open_trade_equity_on_entry = None;
         self.open_trade_min_equity_before_entry = None;
         self.open_trade_max_equity_before_entry = None;
+        self.trade_ledger.clear_open_trade();
         self.position.push(StrategyPositionSnapshot {
             bar_index,
             size: 0.0,
@@ -264,6 +267,7 @@ impl BrokerState {
             self.open_trade_equity_on_entry = None;
             self.open_trade_min_equity_before_entry = None;
             self.open_trade_max_equity_before_entry = None;
+            self.trade_ledger.clear_open_trade();
             self.position.push(StrategyPositionSnapshot {
                 bar_index,
                 size: 0.0,
@@ -274,6 +278,7 @@ impl BrokerState {
 
         self.position_size -= qty;
         self.open_entry_commission -= entry_commission;
+        self.trade_ledger.reduce_open_trade(qty, entry_commission);
         self.position.push(StrategyPositionSnapshot {
             bar_index,
             size: self.position_size,

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added the Strategy Internal Stage 8 Slice 2 broker ledger skeleton. The
+  runtime now mirrors the existing single long open trade and net position into
+  internal `TradeLedger` state across entry, open-trade extremes, partial
+  reductions, margin-call reductions, and final flat transitions while keeping
+  public strategy output, conformance status, and current metric behavior
+  unchanged.
 - Closed Strategy Internal Stage 8 Slice 1 boundary lock for the first semantic
   guardrail subset. Added dedicated negative fixtures for unsupported
   `pyramiding=2` and `strategy.exit(..., oca_name=...)` while keeping runtime
