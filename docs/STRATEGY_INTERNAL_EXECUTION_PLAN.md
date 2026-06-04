@@ -297,8 +297,9 @@ Acceptance:
 
 ## Stage 9: Entry-Relative Active-Entry Exits
 
-Status: Slices 0-5 closed on 2026-06-04. See
-`docs/STRATEGY_INTERNAL_STAGE9_ENTRY_RELATIVE_EXIT_PLAN.md`.
+Status: closed on 2026-06-04. See
+`docs/STRATEGY_INTERNAL_STAGE9_ENTRY_RELATIVE_EXIT_PLAN.md` and
+`docs/STRATEGY_INTERNAL_STAGE9_ENTRY_RELATIVE_EXIT_AUDIT.md`.
 
 Goal: close the remaining same-calculation active-entry `strategy.exit`
 attachment gap for entry-relative `profit`, `loss`, and `trail_points`
@@ -319,9 +320,7 @@ Current supported Stage 9 subset:
 
 Remaining Stage 9 subset:
 
-- same-calculation relative-leg active-entry bracket forms;
-- stage closeout audit after host parity and conformance are synchronized for
-  the full Stage 9 subset.
+- none. Stage 9 stops at the documented single-trigger active-entry subset.
 
 Scope:
 
@@ -330,6 +329,14 @@ Scope:
 - Existing public `StrategyResult` schema.
 - Fixture-backed CLI, Python, and WASM parity before compatibility claims
   widen.
+
+Next direction boundary:
+
+- Same-calculation relative-leg active-entry bracket forms are official Pine
+  behavior, but they are not part of the closed Stage 9 subset. Implement them
+  only through a new bracket-specific design slice that covers deferred
+  relative legs, bracket precedence, reservations, quantity handling,
+  conformance, and host parity together.
 
 Out of scope:
 

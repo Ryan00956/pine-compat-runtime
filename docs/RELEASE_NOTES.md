@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 9 with an entry-relative active-entry exit
+  audit. The closeout records the supported single-trigger `profit`, `loss`,
+  and `trail_points + trail_offset` pending-entry subset, keeps the public
+  strategy result schema unchanged, and leaves active-entry relative brackets
+  for a separate bracket-specific design slice.
 - Closed Strategy Internal Stage 9 Slice 5 `trail_points + trail_offset`
   active-entry attachment. Same-calculation trailing exits can now attach to a
   matching active pending long entry, resolve activation from the actual entry

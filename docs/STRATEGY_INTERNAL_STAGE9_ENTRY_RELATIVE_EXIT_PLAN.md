@@ -1,11 +1,13 @@
 # Strategy Internal Stage 9 Entry-Relative Exit Plan
 
-Status: Slices 0-5 closed on 2026-06-04. Same-calculation
+Status: closed on 2026-06-04. Same-calculation
 `strategy.exit(..., profit=...)`, `strategy.exit(..., loss=...)`, and
 `strategy.exit(..., trail_points=..., trail_offset=...)` can now attach to a
-matching active pending long entry. Do not widen relative-leg active-entry
-brackets until a later slice adds fixture-backed behavior, conformance
-metadata, host snapshots, and release verification.
+matching active pending long entry. See
+`docs/STRATEGY_INTERNAL_STAGE9_ENTRY_RELATIVE_EXIT_AUDIT.md` for closeout
+evidence and remaining unsupported boundaries. Do not widen relative-leg
+active-entry brackets until a later slice adds fixture-backed behavior,
+conformance metadata, host snapshots, and release verification.
 
 Stage 9 targets the remaining same-calculation active-entry attachment gap for
 entry-relative `strategy.exit` triggers:
@@ -56,7 +58,7 @@ The current repo baseline is:
 
 ## Compatibility Boundary
 
-Stage 9 may support only this first subset:
+Stage 9 supports only this first subset:
 
 - long-only strategy mode;
 - one active pending entry id matching `from_entry`;
@@ -307,10 +309,22 @@ Implementation notes:
 
 ### Slice 6: Host Parity, Conformance, And Audit
 
+Status: Closed on 2026-06-04. See
+`docs/STRATEGY_INTERNAL_STAGE9_ENTRY_RELATIVE_EXIT_AUDIT.md`.
+
 Goal:
 
 - close Stage 9 with synchronized host parity, conformance, matrix snapshot,
   docs, release notes, and an audit.
+
+Closed evidence:
+
+- CLI, Python, and WASM expose public strategy output for representative
+  `profit`, `loss`, and `trail_points + trail_offset` active-entry fixtures;
+- conformance now names the supported single-trigger active-entry subset
+  without claiming active-entry relative brackets;
+- broader missing-entry, pyramiding, short, reversal, generic-order, public
+  pending-order, and active-entry bracket behavior remains unsupported.
 
 Acceptance:
 
