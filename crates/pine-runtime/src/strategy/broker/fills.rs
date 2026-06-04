@@ -13,31 +13,41 @@ fn closed_trade_profit_percent(entry_price: f64, qty: f64, profit: f64) -> f64 {
     normalize_zero(profit / denominator * 100.0)
 }
 
-fn allocated_entry_commission(allocations: &[TradeAllocation]) -> Option<f64> {
-    if allocations.is_empty() {
-        None
-    } else {
-        Some(
-            allocations
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct AllocatedEntryFill {
+    entry_price: f64,
+    entry_bar_index: usize,
+    entry_time: i64,
+    entry_commission: f64,
+}
+
+impl AllocatedEntryFill {
+    fn from_allocations(
+        allocations: &[TradeAllocation],
+        fallback_entry_price: f64,
+        fallback_entry_bar_index: usize,
+        fallback_entry_time: i64,
+        fallback_entry_commission: f64,
+    ) -> Self {
+        let Some(first_allocation) = allocations.first() else {
+            return Self {
+                entry_price: fallback_entry_price,
+                entry_bar_index: fallback_entry_bar_index,
+                entry_time: fallback_entry_time,
+                entry_commission: fallback_entry_commission,
+            };
+        };
+
+        Self {
+            entry_price: first_allocation.entry_price,
+            entry_bar_index: first_allocation.entry_bar_index,
+            entry_time: first_allocation.entry_time,
+            entry_commission: allocations
                 .iter()
                 .map(|allocation| allocation.entry_commission)
                 .sum(),
-        )
+        }
     }
-}
-
-fn allocated_entry_price(allocations: &[TradeAllocation]) -> Option<f64> {
-    allocations.first().map(|allocation| allocation.entry_price)
-}
-
-fn allocated_entry_bar_index(allocations: &[TradeAllocation]) -> Option<usize> {
-    allocations
-        .first()
-        .map(|allocation| allocation.entry_bar_index)
-}
-
-fn allocated_entry_time(allocations: &[TradeAllocation]) -> Option<i64> {
-    allocations.first().map(|allocation| allocation.entry_time)
 }
 
 impl BrokerState {
@@ -72,16 +82,16 @@ impl BrokerState {
             .unwrap_or_else(|| "Margin Call".to_owned());
         let exit_id = "Margin Call".to_owned();
         let allocations = self.trade_ledger.allocate_exit_fifo(None, qty);
-        let entry_price = allocated_entry_price(&allocations).unwrap_or(self.avg_price);
-        let entry_bar_index = allocated_entry_bar_index(&allocations)
-            .unwrap_or_else(|| self.entry_bar_index.unwrap_or(bar_index));
-        let entry_time =
-            allocated_entry_time(&allocations).unwrap_or_else(|| self.entry_time.unwrap_or(time));
-        let entry_commission = allocated_entry_commission(&allocations)
-            .unwrap_or_else(|| self.entry_commission_for_closed_quantity(qty));
+        let entry_fill = AllocatedEntryFill::from_allocations(
+            &allocations,
+            self.avg_price,
+            self.entry_bar_index.unwrap_or(bar_index),
+            self.entry_time.unwrap_or(time),
+            self.entry_commission_for_closed_quantity(qty),
+        );
         let exit_commission = self.exit_commission_for_fill(qty, current_price);
-        let commission = entry_commission + exit_commission;
-        let profit = (current_price - entry_price) * qty - commission;
+        let commission = entry_fill.entry_commission + exit_commission;
+        let profit = (current_price - entry_fill.entry_price) * qty - commission;
 
         self.order_book.exits_mut().clear_for_entry(&entry_id);
         self.orders.push(StrategyOrderEvent {
@@ -95,18 +105,18 @@ impl BrokerState {
         self.trades.push(StrategyTrade {
             id: entry_id,
             exit_id,
-            entry_bar_index,
+            entry_bar_index: entry_fill.entry_bar_index,
             exit_bar_index: bar_index,
-            entry_time,
+            entry_time: entry_fill.entry_time,
             exit_time: time,
-            entry_price,
+            entry_price: entry_fill.entry_price,
             exit_price: current_price,
             qty,
             profit,
         });
         self.closed_trade_metrics.push(ClosedTradeMetrics {
             commission,
-            profit_percent: closed_trade_profit_percent(entry_price, qty, profit),
+            profit_percent: closed_trade_profit_percent(entry_fill.entry_price, qty, profit),
             max_runup: self.current_open_trade_max_runup_for_quantity(qty),
             max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });
@@ -139,7 +149,7 @@ impl BrokerState {
         }
 
         self.position_size -= qty;
-        self.open_entry_commission -= entry_commission;
+        self.open_entry_commission -= entry_fill.entry_commission;
         self.trade_ledger.apply_allocations(&allocations);
         self.position.push(StrategyPositionSnapshot {
             bar_index,
@@ -178,32 +188,32 @@ impl BrokerState {
 
         let qty = self.position_size;
         let allocations = self.trade_ledger.allocate_exit_fifo(Some(&id), qty);
-        let entry_price = allocated_entry_price(&allocations).unwrap_or(self.avg_price);
-        let entry_commission = allocated_entry_commission(&allocations)
-            .unwrap_or_else(|| self.entry_commission_for_closed_quantity(qty));
+        let entry_fill = AllocatedEntryFill::from_allocations(
+            &allocations,
+            self.avg_price,
+            self.entry_bar_index.unwrap_or(bar_index),
+            self.entry_time.unwrap_or(time),
+            self.entry_commission_for_closed_quantity(qty),
+        );
         let exit_commission = self.exit_commission_for_fill(qty, price);
-        let commission = entry_commission + exit_commission;
-        let profit = (price - entry_price) * qty - commission;
-        let entry_bar_index = allocated_entry_bar_index(&allocations)
-            .unwrap_or_else(|| self.entry_bar_index.unwrap_or(bar_index));
-        let entry_time =
-            allocated_entry_time(&allocations).unwrap_or_else(|| self.entry_time.unwrap_or(time));
+        let commission = entry_fill.entry_commission + exit_commission;
+        let profit = (price - entry_fill.entry_price) * qty - commission;
         self.cancel_exit_for_entry(&id);
         self.trades.push(StrategyTrade {
             exit_id: id.clone(),
             id,
-            entry_bar_index,
+            entry_bar_index: entry_fill.entry_bar_index,
             exit_bar_index: bar_index,
-            entry_time,
+            entry_time: entry_fill.entry_time,
             exit_time: time,
-            entry_price,
+            entry_price: entry_fill.entry_price,
             exit_price: price,
             qty,
             profit,
         });
         self.closed_trade_metrics.push(ClosedTradeMetrics {
             commission,
-            profit_percent: closed_trade_profit_percent(entry_price, qty, profit),
+            profit_percent: closed_trade_profit_percent(entry_fill.entry_price, qty, profit),
             max_runup: self.current_open_trade_max_runup_for_quantity(qty),
             max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });
@@ -259,16 +269,16 @@ impl BrokerState {
         let allocations = self
             .trade_ledger
             .allocate_exit_fifo(Some(&pending_exit.from_entry), qty);
-        let entry_price = allocated_entry_price(&allocations).unwrap_or(self.avg_price);
-        let entry_commission = allocated_entry_commission(&allocations)
-            .unwrap_or_else(|| self.entry_commission_for_closed_quantity(qty));
+        let entry_fill = AllocatedEntryFill::from_allocations(
+            &allocations,
+            self.avg_price,
+            self.entry_bar_index.unwrap_or(bar_index),
+            self.entry_time.unwrap_or(time),
+            self.entry_commission_for_closed_quantity(qty),
+        );
         let exit_commission = self.exit_commission_for_fill(qty, exit_price);
-        let commission = entry_commission + exit_commission;
-        let profit = (exit_price - entry_price) * qty - commission;
-        let entry_bar_index = allocated_entry_bar_index(&allocations)
-            .unwrap_or_else(|| self.entry_bar_index.unwrap_or(bar_index));
-        let entry_time =
-            allocated_entry_time(&allocations).unwrap_or_else(|| self.entry_time.unwrap_or(time));
+        let commission = entry_fill.entry_commission + exit_commission;
+        let profit = (exit_price - entry_fill.entry_price) * qty - commission;
         let exit_id = pending_exit.id;
         let entry_id = pending_exit.from_entry;
 
@@ -283,18 +293,18 @@ impl BrokerState {
         self.trades.push(StrategyTrade {
             id: entry_id,
             exit_id,
-            entry_bar_index,
+            entry_bar_index: entry_fill.entry_bar_index,
             exit_bar_index: bar_index,
-            entry_time,
+            entry_time: entry_fill.entry_time,
             exit_time: time,
-            entry_price,
+            entry_price: entry_fill.entry_price,
             exit_price,
             qty,
             profit,
         });
         self.closed_trade_metrics.push(ClosedTradeMetrics {
             commission,
-            profit_percent: closed_trade_profit_percent(entry_price, qty, profit),
+            profit_percent: closed_trade_profit_percent(entry_fill.entry_price, qty, profit),
             max_runup: self.current_open_trade_max_runup_for_quantity(qty),
             max_drawdown: self.current_open_trade_max_drawdown_for_quantity(qty),
         });
@@ -327,7 +337,7 @@ impl BrokerState {
         }
 
         self.position_size -= qty;
-        self.open_entry_commission -= entry_commission;
+        self.open_entry_commission -= entry_fill.entry_commission;
         self.trade_ledger.apply_allocations(&allocations);
         self.position.push(StrategyPositionSnapshot {
             bar_index,

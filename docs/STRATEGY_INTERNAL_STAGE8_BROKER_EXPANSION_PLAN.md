@@ -1,7 +1,7 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
 Status: initial design gate and behavior-preserving internal skeleton closed
-on 2026-06-04 through Slices 0-8. Do not widen runtime broker compatibility
+on 2026-06-04 through Slices 0-9. Do not widen runtime broker compatibility
 until a later slice adds fixture-backed behavior, conformance metadata, host
 snapshots, and release verification.
 
@@ -637,6 +637,41 @@ Stop condition:
 
 - stop before emitting multiple public trades from one order fill unless the
   schema and fixture plan explicitly accepts that public-output shape.
+
+### Slice 9: Allocated Entry Fill Summary
+
+Status: closed on 2026-06-04 as a behavior-preserving internal fill-summary
+refactor. This slice does not add multiple runtime entries, widen conformance,
+or change public output.
+
+Goal:
+
+- consolidate the current close, exit, and margin-call trade-emission paths so
+  they read one internal allocation summary instead of repeating allocation
+  metadata fallback logic.
+
+Implemented:
+
+- added an internal `AllocatedEntryFill` summary in the broker fill path;
+- centralized entry price, entry bar index, entry time, and allocated entry
+  commission fallback handling;
+- routed long margin-call liquidation, `strategy.close`, and supported pending
+  `strategy.exit` trade emission through that summary;
+- preserved current one-position public trade fields and ledger allocation
+  application.
+
+Acceptance:
+
+- current single-position close, exit, and long margin-call behavior remains
+  unchanged;
+- current CLI golden snapshots remain unchanged;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop before splitting one public fill into multiple public trades unless a
+  later schema and fixture plan explicitly requires that output shape.
 
 ## Verification Plan
 

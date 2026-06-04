@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 8 Slice 9 allocated entry fill summary. The
+  current long margin-call, `strategy.close`, and supported pending
+  `strategy.exit` trade-emission paths now share an internal
+  `AllocatedEntryFill` summary for allocation metadata and commission fallback
+  handling while preserving existing public output and conformance.
 - Closed Strategy Internal Stage 8 Slice 8 allocation entry metadata. Internal
   `TradeAllocation` slices now carry entry price, entry bar index, and entry
   time from `OpenTrade`, and current margin-call, `strategy.close`, and
