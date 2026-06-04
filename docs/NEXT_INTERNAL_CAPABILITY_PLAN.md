@@ -25,10 +25,10 @@ turning it into a full broker simulator.
 
 Good next slices:
 
-- Stage 8 broker-expansion design gate: document the internal ledger,
-  net-position accounting, same-bar precedence, and public-output boundary
-  before any short, reversal, pyramiding, generic order, or OCA work begins.
-  See `docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_PLAN.md`.
+- Stage 8 follow-up behavior slice: choose one fixture-backed widening from
+  `docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_PLAN.md` only after the
+  internal ledger/order-book skeleton remains stable under release
+  verification.
 - Clearer no-position and wrong-entry diagnostics for supported exit shapes.
 - More fixture-backed strategy state variables or count helpers.
 - Narrow order/trade accounting improvements that keep the current public output
@@ -43,13 +43,13 @@ Keep out of scope until separately designed:
 - Public pending-order, reservation, remaining-quantity, or exit-reason records.
 - Realtime strategy handoff and intrabar path reconstruction.
 
-Recommended first slice: close
-`docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_PLAN.md` as the Stage 8
-broker-expansion design gate. The active-entry absolute attachment evidence
-slice is already closed, as are the current long-only Stage 7 reporting, cost,
-default-sizing, and active-margin account subsets. The next strategy runtime
-expansion crosses into broker-model work and should not widen conformance
-before the design boundary is explicit.
+Recommended first slice: select one Stage 8 follow-up from the concrete
+fixture gates in `docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_PLAN.md`,
+preferably the smallest behavior-preserving allocation skeleton or a narrowly
+fixture-backed active-entry exit extension. Do not add pyramiding, short
+exposure, generic `strategy.order()`, custom OCA, public pending-order fields,
+or any conformance widening without runtime behavior and host-parity evidence
+in the same slice.
 
 ## Direction 2: Built-In Coverage
 

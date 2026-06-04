@@ -1,15 +1,16 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
-Status: design gate. Do not implement runtime broker expansion until Slice 0
-closes and the first behavior-preserving refactor slice has an explicit test
-plan.
+Status: initial design gate and behavior-preserving internal skeleton closed
+on 2026-06-04 through Slices 0-5. Do not widen runtime broker compatibility
+until a later slice adds fixture-backed behavior, conformance metadata, host
+snapshots, and release verification.
 
 Stage 8 is the transition from the current one-net-long strategy broker to an
 internal model that can eventually support multiple entries, pyramiding,
 shorts, reversals, generic orders, and OCA behavior. This document is a design
-gate only. It does not claim new compatibility, does not widen
-`tests/fixtures/conformance.tsv`, and does not change public CLI, Python, or
-WASM strategy output.
+gate plus the first behavior-preserving internal skeleton. It does not claim
+new Pine compatibility, does not widen `tests/fixtures/conformance.tsv`, and
+does not change public CLI, Python, or WASM strategy output.
 
 ## Starting Point
 
