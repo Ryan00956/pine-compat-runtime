@@ -164,6 +164,12 @@ fills are rejected at the actual fill price if simulated equity cannot cover
 the required margin. Rejected fills emit a strategy diagnostic, produce no
 public order/position/trade event, remove the triggered pending entry, and clear
 attached pending exits for that entry id.
+Supported same-calculation absolute `strategy.exit` attachment may target an
+active pending entry id. The attachment remains internal while the entry is
+pending and can fill through the existing `strategy.exit` public order/trade
+shape after the matching entry fills. Unmatched missing-entry exits and
+entry-relative pending-entry exits using `profit`, `loss`, or `trail_points`
+remain unsupported.
 Supported `strategy.close` and
 `strategy.close_all` calls still update immediately for later statements on the
 same bar. They behave like read-only series floats in supported expression

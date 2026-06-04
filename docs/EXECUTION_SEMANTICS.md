@@ -98,6 +98,8 @@ and non-positive runtime values are reported in the strategy diagnostics array.
 Configured slippage worsens supported long entry fill prices after trigger
 selection.
 Supported `strategy.exit` calls use the pending-exit model described below.
+Same-calculation absolute `strategy.exit` attachment may target a matching
+active pending entry id and remains internal until that entry fills.
 `strategy.cancel(id)` cancels matching internal pending entry ids and matching
 pending exit ids in the supported order subset. Unknown, already-filled, and
 already-cancelled ids are no-op. Cancellation records no public order, trade, or
@@ -127,7 +129,8 @@ supports only `strategy.commission.cash_per_contract`,
 fixed-tick slippage, and fixed-tick limit verification, and has no other
 commission modes, richer fill models, margin,
 percent sizing, currency conversion,
-missing-entry pre-placement, or pyramiding. The only multiple-pending
+unmatched missing-entry future binding, entry-relative pending-entry exit
+attachment, or pyramiding. The only multiple-pending
 reservation subset is explicit fixed `qty` or `qty_percent` single-trigger or
 one-downside/one-upside bracket or trailing `strategy.exit` calls for the
 current matching long entry.

@@ -1,20 +1,20 @@
 # Strategy Internal Active-Entry Exit Attachment Plan
 
-Status: open. No compatibility claim widens until each slice closes with
-fixtures, conformance metadata, host parity, docs, and verification evidence.
+Status: closed on 2026-06-04 for the supported absolute active-entry
+attachment subset through Slice A1.
 
 This plan defines the next narrow strategy-maintenance phase after the
 long-only margin account subset closed through
 `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` Slice M5.
 
-The target is not arbitrary future binding. The target is the Pine-compatible
-case where a supported `strategy.exit(...)` call can attach to an active
-matching `strategy.entry(...)` order that exists before it fills. TradingView's
-strategy manual shows same-block `strategy.entry("buy", ...)` plus
-`strategy.exit("exit", "buy", ...)` and states that a `from_entry` value with no
-matching current-position entry creates no exit orders. This plan keeps that
-boundary: unmatched missing-entry exits do not persist forever waiting for a
-future unrelated entry.
+The target was not arbitrary future binding. The target was the
+Pine-compatible case where a supported `strategy.exit(...)` call can attach to
+an active matching `strategy.entry(...)` order that exists before it fills.
+TradingView's strategy manual shows same-block `strategy.entry("buy", ...)`
+plus `strategy.exit("exit", "buy", ...)` and states that a `from_entry` value
+with no matching current-position entry creates no exit orders. This plan keeps
+that boundary: unmatched missing-entry exits do not persist forever waiting for
+a future unrelated entry.
 
 Primary official reference:
 
@@ -34,16 +34,18 @@ The current repo baseline is:
 - `strategy.exit` supports the fixture-backed single-trigger, bracket,
   trailing, explicit-quantity reservation, omitted-quantity replacement, and
   supported quantity-percent subsets.
-- Supported `strategy.exit` calls currently require an open matching long
-  position at placement time; a matching active entry that has not filled yet is
-  not part of the supported boundary.
+- `docs/STRATEGY_INTERNAL_STAGE2_PENDING_ENTRY_AUDIT.md` closed market-entry
+  next-bar-open fills plus same-calculation absolute exit attachment for active
+  pending entries.
+- The remaining local gap was fixture-backed evidence for the same absolute
+  attachment behavior through a supported non-market active entry.
 - Runtime output remains `schemaVersion: 3` and exposes no pending-entry,
   pending-exit, reservation-ledger, or exit-reason records.
 
 ## Goal
 
-Support the first active-entry exit attachment subset without changing the
-public strategy output schema.
+Close the active-entry exit attachment support claim without changing the public
+strategy output schema.
 
 The positive subset is:
 
@@ -69,6 +71,8 @@ The positive subset is:
 
 ## Slice A0: Boundary And Fixture Audit
 
+Closed on 2026-06-04.
+
 Confirm the current behavior and lock the exact supported/unsupported boundary.
 
 Acceptance:
@@ -86,8 +90,11 @@ Stop condition:
 
 ## Slice A1: Matching Active Long Entry Attachment
 
-Allow a supported `strategy.exit` call to attach to a matching active long
-entry that was placed before the exit call and has not filled yet.
+Closed on 2026-06-04.
+
+Confirmed and fixture-backed a supported `strategy.exit` call attaching to a
+matching active long limit entry that was placed before the exit call and had
+not filled yet.
 
 Contract:
 
@@ -102,14 +109,20 @@ Contract:
   exits for that entry id are cleared;
 - public JSON shape remains unchanged.
 
+Implemented:
+
+- added `tests/fixtures/runtime/strategy_exit_active_entry_attachment.pine`;
+- added CLI, Python, and WASM public-output parity coverage;
+- updated `tests/fixtures/conformance.tsv` and closeout docs.
+
 Tests:
 
-- runtime fixture with long limit or stop entry plus same-calculation
+- runtime fixture with long limit entry plus same-calculation
   `strategy.exit(..., from_entry=...)` that closes after the entry fills;
 - unmatched `from_entry` fixture showing no future persistent exit;
 - conformance row updates for `strategy.entry`, `strategy.exit`, and broad
   `strategy.*` unsupported boundary;
-- CLI snapshot plus Python and WASM plot parity for the positive fixture.
+- CLI run output plus Python and WASM plot parity for the positive fixture.
 
 Stop condition:
 
@@ -118,8 +131,9 @@ Stop condition:
 
 ## Slice A2: Replacement And Quantity Interaction
 
-Extend the A1 attachment path to the already-supported replacement and explicit
-quantity reservation cases for one matching active entry.
+Deferred. Extend the A1 attachment evidence to the already-supported
+replacement and explicit quantity reservation cases for one matching active
+entry only if a future slice needs that narrower proof.
 
 Contract:
 
@@ -144,6 +158,8 @@ Stop condition:
 
 ## Slice A3: Closeout
 
+Closed on 2026-06-04.
+
 Close the phase after the smallest positive subset is implemented and verified.
 
 Acceptance:
@@ -161,3 +177,24 @@ Stop condition:
 
 - stop instead of widening scope if exact Pine parity requires TradingView
   export data, realtime behavior, pyramiding, or a public schema redesign.
+
+Validation:
+
+```text
+cargo run -q -p pine-cli -- run tests/fixtures/runtime/strategy_exit_active_entry_attachment.pine --bars tests/fixtures/runtime/bars.csv
+cargo test -q -p pine-cli runtime_outputs_match_golden_snapshots
+cargo test -q -p pine-cli matrix_output_matches_golden_snapshot
+cargo test -q -p pine-wasm strategy
+python3 -m pytest python/tests/test_bindings.py -q -k active_entry_attachment
+cargo test -q -p pine-runtime --test incremental runtime_fixtures_match_incremental_append_execution
+python3 scripts/check_structure.py
+scripts/verify.sh
+```
+
+Result:
+
+- all targeted commands passed;
+- `scripts/verify.sh` passed, including formatting, workspace clippy,
+  workspace tests, structure guardrails, wasm32 check, Python wheel
+  build/install, and Python tests;
+- Python binding coverage increased to 69 tests.

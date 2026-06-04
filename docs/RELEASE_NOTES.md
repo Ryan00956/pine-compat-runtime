@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Closed the Strategy Internal active-entry exit attachment evidence slice.
+  A same-calculation absolute `strategy.exit` can target a matching active
+  pending long entry id and later fill through the existing public
+  order/trade/position/equity schema after the entry fills. The new fixture
+  covers a supported long limit entry plus attached stop exit across CLI,
+  Python, and WASM while keeping unmatched future binding and entry-relative
+  pending-entry exits unsupported.
 - Implemented Strategy Internal Margin Slice M5. Explicit active `margin_long`
   now supports the first long-only forced-liquidation subset: historical checks
   use `bar.low`, apply TradingView's documented available-funds and

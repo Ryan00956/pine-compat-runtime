@@ -107,6 +107,13 @@ attachment or same-calculation entry/exit attachment. The unsupported boundary
 should remain: unmatched missing-entry exits are no-op or diagnostic behavior,
 not persistent future reservations.
 
+Current repo status: the supported absolute active-entry subset is fixture
+backed. A same-calculation `strategy.exit` using absolute `stop`, `limit`, or
+`trail_price` may target a matching active pending entry id. Entry-relative
+`profit`, `loss`, and `trail_points` attachment to pending entries remains
+unsupported until deferred price resolution from the actual entry fill price is
+designed.
+
 ## Internal Gap Inventory
 
 ### 1. Strategy Declaration Properties
@@ -144,16 +151,19 @@ requires a larger open-trade model.
 
 ### 2. Broker Execution Timing And Fill Model
 
-Current state: historical execution is one pass per bar. Entries and closes fill
-at the current bar close in the current subset. Pending exits fill on later bars
-using simple OHLC trigger checks and fixed prices.
+Current state: historical execution is one pass per bar. Supported market
+entries fill at the next historical bar open. Supported long limit, stop, and
+stop-limit entries are represented as internal pending entries and fill before
+script statements on eligible later bars. Supported closes fill at the current
+bar close. Pending exits fill after script statements using simple OHLC trigger
+checks and fixed prices.
 
 Missing internal behavior:
 
-- default next-tick order fill timing;
-- active entry orders that exist before they fill;
-- same-calculation `strategy.entry` plus `strategy.exit` attachment before the
-  entry fill;
+- exact next-tick parity beyond the current historical bar-open/bar-OHLC
+  subset;
+- entry-relative active-entry exit attachment for `profit`, `loss`, and
+  `trail_points`;
 - order processing on close;
 - recalculation after order fills;
 - realtime strategy rollback and repeated tick execution;
@@ -164,22 +174,21 @@ Missing internal behavior:
 
 Gap size: foundation.
 
-Best first slice: introduce an internal pending-entry state without changing
-public output, then fixture the Pine-compatible case where an exit attaches to a
-same-calculation active entry order. Keep arbitrary future unmatched exits out of
-scope.
+Best first slice: already closed for the current absolute active-entry subset.
+Do not widen further without a separate design for entry-relative deferred price
+resolution, realtime behavior, or multi-entry ledgers.
 
 ### 3. Entry Orders
 
-Current state: `strategy.entry` supports long market entries only, with explicit
-positive quantity or configured fixed default quantity. Repeated entries while
-long are ignored under the current no-pyramiding rule.
+Current state: `strategy.entry` supports long market, limit, stop, and
+stop-limit entries, with explicit positive quantity, configured fixed default
+quantity, or supported percent-of-equity default quantity. Repeated entries
+while long are ignored under the current no-pyramiding rule.
 
 Missing internal behavior:
 
 - short entries;
 - automatic reversal when an opposite entry is placed;
-- limit, stop, and stop-limit entry orders;
 - pyramiding with multiple open trades in the same direction;
 - entry comments and alert-message metadata;
 - richer default quantity modes;
@@ -187,18 +196,19 @@ Missing internal behavior:
 
 Gap size: large.
 
-Best first slice: not short/reversal first. Add the active pending-entry model
-from gap 2, because stop/limit entries, next-tick fills, and exit attachment all
-depend on it.
+Best first slice: not short/reversal first. The active pending-entry model and
+supported stop/limit entry forms are already in place, so future entry-order
+work should target one narrow metadata/default-sizing/risk interaction or move
+to a separately designed multi-entry model.
 
 ### 4. Market Close Commands
 
 Current state: `strategy.close(id)` closes the full matching long position at
-the current bar close and cancels matching pending exits.
+the current bar close and cancels matching pending exits. `strategy.close_all()`
+closes the current long position without requiring an entry id.
 
 Missing internal behavior:
 
-- `strategy.close_all()`;
 - partial `strategy.close(..., qty=...)` and `qty_percent`;
 - `immediately`;
 - `comment`, `alert_message`, and alert suppression options;
@@ -243,7 +253,8 @@ Missing internal behavior:
 - Pine-compatible behavior where `qty` wins when both `qty` and `qty_percent`
   are supplied;
 - exact semantics for overlapping price and tick alternatives in one exit call;
-- exit attachment to active entry orders before those entries fill;
+- entry-relative exit attachment to active entry orders before those entries
+  fill;
 - exits across multiple open trades and pyramiding;
 - custom OCA names and OCA behavior;
 - exit comments and alert-message metadata;
@@ -252,10 +263,10 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best first slice: active-entry exit attachment after the pending-entry foundation
-is in place. The current `qty + qty_percent` rejection is intentionally narrower
-than Pine and should be changed only with semantic and runtime fixtures proving
-that `qty` wins.
+Best first slice: active-entry absolute attachment is now closed for the current
+supported subset. The current `qty + qty_percent` rejection is intentionally
+narrower than Pine and should be changed only with semantic and runtime
+fixtures proving that `qty` wins.
 
 ### 7. OCA Groups And Reservation Semantics
 

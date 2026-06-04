@@ -762,6 +762,45 @@ fn runs_strategy_exit_omitted_replaces_reservations_from_csv_to_public_strategy_
 }
 
 #[test]
+fn runs_strategy_exit_active_entry_attachment_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_active_entry_attachment.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit active-entry attachment fixture should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XL\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":2.5}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":2,\"exitTime\":2,\"entryPrice\":2,\"exitPrice\":2.5,\"qty\":2,\"profit\":1}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":1,\"size\":0,\"avgPrice\":null}]"
+    ));
+    assert!(output.contains("\"values\":[0,2,0,0]"));
+    assert!(output.contains("\"values\":[0,0,1,1]"));
+    assert!(output.contains("\"strategy\":{\"orders\":"));
+    assert!(output.contains("\"equity\":["));
+    assert!(output.contains("\"diagnostics\":[]}"));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("reservation"));
+    assert!(!output.contains("reservedQuantity"));
+    assert!(!output.contains("reserved_quantity"));
+    assert!(!output.contains("remainingQty"));
+    assert!(!output.contains("qtyPercent"));
+    assert!(!output.contains("qty_percent"));
+    assert!(!output.contains("exitReason"));
+}
+
+#[test]
 fn runs_strategy_exit_bracket_reservation_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(

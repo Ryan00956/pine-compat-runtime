@@ -331,6 +331,13 @@ Closeout:
   CLI contract tests, Python bindings, WASM bindings, and incremental execution
   now agree on next-historical-bar-open market entry fills and same-calculation
   absolute exit attachment to pending entries.
-- Next stage candidate: Stage 3 small independent strategy utilities,
-  starting with either `strategy.close_all()` or win/loss/even trade count
-  variables as a narrow slice.
+- 2026-06-04 follow-up: `docs/STRATEGY_INTERNAL_ACTIVE_ENTRY_EXIT_ATTACHMENT_PLAN.md`
+  closed an additional evidence slice for a supported long limit active entry
+  with attached absolute stop exit. The follow-up added CLI, Python, WASM, and
+  conformance coverage without changing the public output schema or widening
+  unmatched future binding.
+- Historical next-stage note: Stage 3 small independent strategy utilities were
+  the next candidate at Stage 2 close. Later strategy stages have since added
+  `strategy.close_all()` and win/loss/even trade count variables, so use current
+  conformance and gap-audit status instead of this historical note when choosing
+  new work.
