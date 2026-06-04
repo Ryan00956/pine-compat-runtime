@@ -1,7 +1,7 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
 Status: initial design gate and behavior-preserving internal skeleton closed
-on 2026-06-04 through Slices 0-15. Do not widen runtime broker compatibility
+on 2026-06-04 through Slices 0-16. Do not widen runtime broker compatibility
 until a later slice adds fixture-backed behavior, conformance metadata, host
 snapshots, and release verification.
 
@@ -865,6 +865,39 @@ Stop condition:
 
 - stop before changing position snapshots from current net-position output to
   per-entry or per-trade output without a public schema plan.
+
+### Slice 16: Open Long Legacy State Recorder
+
+Status: closed on 2026-06-04 as a behavior-preserving internal open-position
+state routing slice. This slice does not add multiple runtime entries, widen
+conformance, or change public output.
+
+Goal:
+
+- route the current supported long entry fill legacy state setup through one
+  helper that consumes the same `OpenTrade` metadata recorded in the ledger.
+
+Implemented:
+
+- added `BrokerState::record_open_long_legacy_state` for the current
+  one-net-long legacy fields;
+- changed `entry_long` to build one `OpenTrade`, use it to update legacy open
+  state, and then record it in `TradeLedger`;
+- kept cash, commission, entry metadata, runup/drawdown baselines, order
+  events, and position snapshots unchanged.
+
+Acceptance:
+
+- current public entry, position, equity, and trade behavior remains
+  unchanged;
+- current CLI golden snapshots remain unchanged;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop before deriving public position, cash, or trade metrics only from the
+  ledger without a separate fixture-backed migration slice.
 
 ## Verification Plan
 

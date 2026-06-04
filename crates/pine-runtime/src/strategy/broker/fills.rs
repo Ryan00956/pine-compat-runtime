@@ -1,4 +1,8 @@
-use super::{BrokerState, ClosedTradeMetrics, exits::PendingExit, ledger::TradeAllocation};
+use super::{
+    BrokerState, ClosedTradeMetrics,
+    exits::PendingExit,
+    ledger::{OpenTrade, TradeAllocation},
+};
 use crate::{RuntimeDiagnostic, StrategyOrderEvent, StrategyTrade};
 
 fn normalize_zero(value: f64) -> f64 {
@@ -64,6 +68,22 @@ struct ClosedTradeFill {
 }
 
 impl BrokerState {
+    pub(super) fn record_open_long_legacy_state(&mut self, trade: &OpenTrade) {
+        self.position_size = trade.quantity;
+        self.max_contracts_held_long = self.max_contracts_held_long.max(trade.quantity);
+        self.avg_price = trade.entry_price;
+        self.open_entry_commission = trade.entry_commission;
+        self.cash -= trade.quantity * trade.entry_price + trade.entry_commission;
+        self.entry_id = Some(trade.id.clone());
+        self.entry_bar_index = Some(trade.entry_bar_index);
+        self.entry_time = Some(trade.entry_time);
+        self.open_trade_max_high = trade.max_high;
+        self.open_trade_min_low = trade.min_low;
+        self.open_trade_equity_on_entry = trade.equity_on_entry;
+        self.open_trade_min_equity_before_entry = trade.min_equity_before_entry;
+        self.open_trade_max_equity_before_entry = trade.max_equity_before_entry;
+    }
+
     fn clear_open_long_legacy_state(&mut self) {
         self.position_size = 0.0;
         self.avg_price = 0.0;

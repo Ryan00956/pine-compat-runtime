@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 8 Slice 16 open long legacy state recorder.
+  Current supported long entry fills now use one `OpenTrade` metadata object to
+  update both the legacy one-position fields and internal ledger while
+  preserving public output and conformance.
 - Closed Strategy Internal Stage 8 Slice 15 entry position snapshot routing.
   Current supported long entry fills now write public net-position snapshots
   through the shared internal snapshot recorder while preserving output and

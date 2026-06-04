@@ -247,33 +247,22 @@ impl BrokerState {
         let equity_on_entry = self.cash;
         let min_equity_before_entry = self.min_equity_before_open_trade;
         let max_equity_before_entry = self.max_equity_before_open_trade;
-        self.position_size = qty;
-        self.max_contracts_held_long = self.max_contracts_held_long.max(qty);
-        self.avg_price = fill_price;
-        self.open_entry_commission = self.entry_commission_for_fill(qty, fill_price);
-        self.cash -= qty * fill_price + self.open_entry_commission;
-        self.entry_id = Some(id.clone());
-        self.entry_bar_index = Some(bar_index);
-        self.entry_time = Some(time);
-        self.open_trade_max_high = Some(fill_price);
-        self.open_trade_min_low = Some(fill_price);
-        self.open_trade_equity_on_entry = Some(equity_on_entry);
-        self.open_trade_min_equity_before_entry = Some(min_equity_before_entry);
-        self.open_trade_max_equity_before_entry = Some(max_equity_before_entry);
-        self.trade_ledger.open_long(OpenTrade {
+        let open_trade = OpenTrade {
             id: id.clone(),
             direction: TradeDirection::Long,
             quantity: qty,
             entry_price: fill_price,
             entry_bar_index: bar_index,
             entry_time: time,
-            entry_commission: self.open_entry_commission,
+            entry_commission: self.entry_commission_for_fill(qty, fill_price),
             max_high: Some(fill_price),
             min_low: Some(fill_price),
             equity_on_entry: Some(equity_on_entry),
             min_equity_before_entry: Some(min_equity_before_entry),
             max_equity_before_entry: Some(max_equity_before_entry),
-        });
+        };
+        self.record_open_long_legacy_state(&open_trade);
+        self.trade_ledger.open_long(open_trade);
         self.record_order_event(id, bar_index, time, "strategy.long", qty, fill_price);
         self.record_position_snapshot(bar_index);
         true
