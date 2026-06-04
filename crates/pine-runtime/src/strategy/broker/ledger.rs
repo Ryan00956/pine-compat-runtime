@@ -55,27 +55,6 @@ impl TradeLedger {
         self.rebuild_net_position();
     }
 
-    pub(super) fn reduce_open_trade(&mut self, quantity: f64, entry_commission: f64) {
-        if !quantity.is_finite() || quantity <= 0.0 {
-            return;
-        }
-        if quantity >= self.net_position.signed_size {
-            self.clear_open_trade();
-            return;
-        }
-
-        let allocation = TradeAllocation {
-            trade_index: 0,
-            entry_id: self
-                .open_trades
-                .first()
-                .map_or_else(String::new, |trade| trade.id.clone()),
-            quantity,
-            entry_commission,
-        };
-        self.apply_allocations(&[allocation]);
-    }
-
     pub(super) fn clear_open_trade(&mut self) {
         self.open_trades.clear();
         self.net_position = NetPosition::default();

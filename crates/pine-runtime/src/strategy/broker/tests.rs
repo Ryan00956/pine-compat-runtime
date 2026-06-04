@@ -788,6 +788,14 @@ fn margin_call_partially_liquidates_long_position() {
     assert_eq!(broker.open_trade_capital_held(3.0), Some(36.0));
     assert_eq!(broker.open_trade_count(), 1);
     assert_eq!(broker.closed_trade_count(), 1);
+    assert_eq!(
+        broker
+            .trade_ledger
+            .open_trade()
+            .expect("open trade after partial margin call")
+            .quantity,
+        broker.position_size
+    );
     assert!(broker.diagnostics.is_empty());
 }
 
@@ -807,6 +815,7 @@ fn margin_call_clamps_to_full_long_position() {
     assert_eq!(broker.avg_price, 0.0);
     assert_eq!(broker.open_trade_count(), 0);
     assert_eq!(broker.closed_trade_count(), 1);
+    assert!(broker.trade_ledger.open_trade().is_none());
 }
 
 #[test]

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 8 Slice 7 single-position exit allocation
+  routing. The current long margin-call, `strategy.close`, and supported
+  pending `strategy.exit` fill paths now synchronize `TradeLedger` through
+  FIFO allocation helpers while preserving existing public output,
+  conformance, Python, and WASM behavior.
 - Added Strategy Internal Stage 8 Slice 6 internal FIFO allocation helpers.
   `TradeLedger` can now plan omitted-entry and entry-id FIFO allocation slices
   and apply them to internal open trades while rebuilding net position, without

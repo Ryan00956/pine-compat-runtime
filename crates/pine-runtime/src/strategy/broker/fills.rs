@@ -1,4 +1,4 @@
-use super::{BrokerState, ClosedTradeMetrics, exits::PendingExit};
+use super::{BrokerState, ClosedTradeMetrics, exits::PendingExit, ledger::TradeAllocation};
 use crate::{RuntimeDiagnostic, StrategyOrderEvent, StrategyPositionSnapshot, StrategyTrade};
 
 fn normalize_zero(value: f64) -> f64 {
@@ -11,6 +11,19 @@ fn closed_trade_profit_percent(entry_price: f64, qty: f64, profit: f64) -> f64 {
         return 0.0;
     }
     normalize_zero(profit / denominator * 100.0)
+}
+
+fn allocated_entry_commission(allocations: &[TradeAllocation]) -> Option<f64> {
+    if allocations.is_empty() {
+        None
+    } else {
+        Some(
+            allocations
+                .iter()
+                .map(|allocation| allocation.entry_commission)
+                .sum(),
+        )
+    }
 }
 
 impl BrokerState {
@@ -47,7 +60,9 @@ impl BrokerState {
         let entry_price = self.avg_price;
         let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
         let entry_time = self.entry_time.unwrap_or(time);
-        let entry_commission = self.entry_commission_for_closed_quantity(qty);
+        let allocations = self.trade_ledger.allocate_exit_fifo(None, qty);
+        let entry_commission = allocated_entry_commission(&allocations)
+            .unwrap_or_else(|| self.entry_commission_for_closed_quantity(qty));
         let exit_commission = self.exit_commission_for_fill(qty, current_price);
         let commission = entry_commission + exit_commission;
         let profit = (current_price - entry_price) * qty - commission;
@@ -95,7 +110,10 @@ impl BrokerState {
             self.open_trade_equity_on_entry = None;
             self.open_trade_min_equity_before_entry = None;
             self.open_trade_max_equity_before_entry = None;
-            self.trade_ledger.clear_open_trade();
+            self.trade_ledger.apply_allocations(&allocations);
+            if allocations.is_empty() {
+                self.trade_ledger.clear_open_trade();
+            }
             self.position.push(StrategyPositionSnapshot {
                 bar_index,
                 size: 0.0,
@@ -106,7 +124,7 @@ impl BrokerState {
 
         self.position_size -= qty;
         self.open_entry_commission -= entry_commission;
-        self.trade_ledger.reduce_open_trade(qty, entry_commission);
+        self.trade_ledger.apply_allocations(&allocations);
         self.position.push(StrategyPositionSnapshot {
             bar_index,
             size: self.position_size,
@@ -144,7 +162,9 @@ impl BrokerState {
 
         let qty = self.position_size;
         let entry_price = self.avg_price;
-        let entry_commission = self.entry_commission_for_closed_quantity(qty);
+        let allocations = self.trade_ledger.allocate_exit_fifo(Some(&id), qty);
+        let entry_commission = allocated_entry_commission(&allocations)
+            .unwrap_or_else(|| self.entry_commission_for_closed_quantity(qty));
         let exit_commission = self.exit_commission_for_fill(qty, price);
         let commission = entry_commission + exit_commission;
         let profit = (price - entry_price) * qty - commission;
@@ -184,7 +204,10 @@ impl BrokerState {
         self.open_trade_equity_on_entry = None;
         self.open_trade_min_equity_before_entry = None;
         self.open_trade_max_equity_before_entry = None;
-        self.trade_ledger.clear_open_trade();
+        self.trade_ledger.apply_allocations(&allocations);
+        if allocations.is_empty() {
+            self.trade_ledger.clear_open_trade();
+        }
         self.position.push(StrategyPositionSnapshot {
             bar_index,
             size: 0.0,
@@ -216,7 +239,11 @@ impl BrokerState {
             return;
         }
         let entry_price = self.avg_price;
-        let entry_commission = self.entry_commission_for_closed_quantity(qty);
+        let allocations = self
+            .trade_ledger
+            .allocate_exit_fifo(Some(&pending_exit.from_entry), qty);
+        let entry_commission = allocated_entry_commission(&allocations)
+            .unwrap_or_else(|| self.entry_commission_for_closed_quantity(qty));
         let exit_commission = self.exit_commission_for_fill(qty, exit_price);
         let commission = entry_commission + exit_commission;
         let profit = (exit_price - entry_price) * qty - commission;
@@ -267,7 +294,10 @@ impl BrokerState {
             self.open_trade_equity_on_entry = None;
             self.open_trade_min_equity_before_entry = None;
             self.open_trade_max_equity_before_entry = None;
-            self.trade_ledger.clear_open_trade();
+            self.trade_ledger.apply_allocations(&allocations);
+            if allocations.is_empty() {
+                self.trade_ledger.clear_open_trade();
+            }
             self.position.push(StrategyPositionSnapshot {
                 bar_index,
                 size: 0.0,
@@ -278,7 +308,7 @@ impl BrokerState {
 
         self.position_size -= qty;
         self.open_entry_commission -= entry_commission;
-        self.trade_ledger.reduce_open_trade(qty, entry_commission);
+        self.trade_ledger.apply_allocations(&allocations);
         self.position.push(StrategyPositionSnapshot {
             bar_index,
             size: self.position_size,

@@ -1,7 +1,7 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
 Status: initial design gate and behavior-preserving internal skeleton closed
-on 2026-06-04 through Slices 0-6. Do not widen runtime broker compatibility
+on 2026-06-04 through Slices 0-7. Do not widen runtime broker compatibility
 until a later slice adds fixture-backed behavior, conformance metadata, host
 snapshots, and release verification.
 
@@ -568,6 +568,44 @@ Stop condition:
 - stop before wiring these helpers into runtime behavior if a later feature
   needs public allocation metadata, bracket-leg identity, OCA identity, or
   liquidation reason fields.
+
+### Slice 7: Single-Position Exit Allocation Routing
+
+Status: closed on 2026-06-04 as a behavior-preserving internal routing slice.
+This slice routes the current one-open-long exit paths through ledger
+allocation helpers without accepting multiple runtime entries, widening
+conformance, or changing public output.
+
+Goal:
+
+- prove the internal allocation helpers can serve current broker exit paths
+  before they are used for any multi-entry behavior.
+
+Implemented:
+
+- routed long margin-call liquidation through `TradeLedger::allocate_exit_fifo`
+  and `TradeLedger::apply_allocations`;
+- routed `strategy.close` for the current long entry through explicit-entry
+  FIFO allocation;
+- routed supported pending `strategy.exit` fills through explicit-entry FIFO
+  allocation;
+- kept legacy single-position fields as the public behavior source while
+  synchronizing the ledger through allocation application;
+- strengthened broker tests to assert ledger state after partial and full
+  margin liquidation.
+
+Acceptance:
+
+- current single-position close, exit, and long margin-call behavior remains
+  unchanged;
+- current CLI golden snapshots remain unchanged;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop before allowing multiple runtime open trades if any existing close,
+  exit, margin, or trade-field fixture changes serialized output.
 
 ## Verification Plan
 
