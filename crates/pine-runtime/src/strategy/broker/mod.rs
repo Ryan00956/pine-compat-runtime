@@ -11,7 +11,7 @@ use entries::PendingEntryKind;
 use exits::{PendingExit, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate};
 pub(crate) use exits::{TrailPointsExitSpec, TrailPriceExitSpec};
 #[cfg(test)]
-use ledger::NetPosition;
+use ledger::{NetPosition, TradeAllocation};
 use ledger::{OpenTrade, TradeDirection, TradeLedger};
 use order_book::OrderBook;
 

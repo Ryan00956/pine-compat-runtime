@@ -112,6 +112,23 @@ fn assert_active_trailing_stop_by_id(broker: &BrokerState, id: &str, expected_st
     );
 }
 
+fn ledger_open_trade(id: &str, quantity: f64, entry_price: f64, commission: f64) -> OpenTrade {
+    OpenTrade {
+        id: id.to_owned(),
+        direction: TradeDirection::Long,
+        quantity,
+        entry_price,
+        entry_bar_index: 0,
+        entry_time: 0,
+        entry_commission: commission,
+        max_high: Some(entry_price),
+        min_low: Some(entry_price),
+        equity_on_entry: Some(100_000.0),
+        min_equity_before_entry: Some(100_000.0),
+        max_equity_before_entry: Some(100_000.0),
+    }
+}
+
 #[test]
 fn trade_ledger_mirrors_current_single_long_entry() {
     let mut broker = BrokerState::new_with_cash_per_contract_commission(100_000.0, 1.5);
@@ -167,6 +184,80 @@ fn trade_ledger_tracks_partial_and_final_long_reductions() {
     assert!(broker.trade_ledger.open_trades().is_empty());
     assert_eq!(broker.trade_ledger.net_position(), NetPosition::default());
     assert_eq!(broker.position_size, 0.0);
+}
+
+#[test]
+fn trade_ledger_allocates_omitted_entry_by_global_fifo() {
+    let mut ledger = TradeLedger::default();
+    ledger.append_open_trade_for_test(ledger_open_trade("A", 1.0, 100.0, 2.0));
+    ledger.append_open_trade_for_test(ledger_open_trade("B", 2.0, 110.0, 6.0));
+
+    assert_eq!(
+        ledger.allocate_exit_fifo(None, 2.25),
+        vec![
+            TradeAllocation {
+                trade_index: 0,
+                entry_id: "A".to_owned(),
+                quantity: 1.0,
+                entry_commission: 2.0,
+            },
+            TradeAllocation {
+                trade_index: 1,
+                entry_id: "B".to_owned(),
+                quantity: 1.25,
+                entry_commission: 3.75,
+            },
+        ]
+    );
+}
+
+#[test]
+fn trade_ledger_allocates_matching_entry_by_fifo() {
+    let mut ledger = TradeLedger::default();
+    ledger.append_open_trade_for_test(ledger_open_trade("A", 1.0, 100.0, 2.0));
+    ledger.append_open_trade_for_test(ledger_open_trade("B", 2.0, 110.0, 6.0));
+    ledger.append_open_trade_for_test(ledger_open_trade("A", 3.0, 120.0, 12.0));
+
+    assert_eq!(
+        ledger.allocate_exit_fifo(Some("A"), 2.5),
+        vec![
+            TradeAllocation {
+                trade_index: 0,
+                entry_id: "A".to_owned(),
+                quantity: 1.0,
+                entry_commission: 2.0,
+            },
+            TradeAllocation {
+                trade_index: 2,
+                entry_id: "A".to_owned(),
+                quantity: 1.5,
+                entry_commission: 6.0,
+            },
+        ]
+    );
+}
+
+#[test]
+fn trade_ledger_applies_allocations_and_rebuilds_net_position() {
+    let mut ledger = TradeLedger::default();
+    ledger.append_open_trade_for_test(ledger_open_trade("A", 1.0, 100.0, 2.0));
+    ledger.append_open_trade_for_test(ledger_open_trade("B", 2.0, 110.0, 6.0));
+    ledger.append_open_trade_for_test(ledger_open_trade("C", 3.0, 120.0, 12.0));
+
+    let allocations = ledger.allocate_exit_fifo(None, 3.0);
+    ledger.apply_allocations(&allocations);
+
+    assert_eq!(
+        ledger.open_trades(),
+        &[ledger_open_trade("C", 3.0, 120.0, 12.0)]
+    );
+    assert_eq!(
+        ledger.net_position(),
+        NetPosition {
+            signed_size: 3.0,
+            avg_price: 120.0,
+        }
+    );
 }
 
 #[test]

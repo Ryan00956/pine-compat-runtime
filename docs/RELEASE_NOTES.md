@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 8 Slice 6 internal FIFO allocation helpers.
+  `TradeLedger` can now plan omitted-entry and entry-id FIFO allocation slices
+  and apply them to internal open trades while rebuilding net position, without
+  wiring multiple open trades into runtime behavior or changing conformance,
+  public strategy output, Python, or WASM behavior.
 - Closed the Strategy Internal Stage 8 Slice 5 first widening candidate by
   choosing an internal-only multiple-open-trade skeleton. `TradeLedger` now
   stores open trades as an internal list and rebuilds net position from that

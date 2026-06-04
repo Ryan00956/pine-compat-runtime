@@ -1,7 +1,7 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
 Status: initial design gate and behavior-preserving internal skeleton closed
-on 2026-06-04 through Slices 0-5. Do not widen runtime broker compatibility
+on 2026-06-04 through Slices 0-6. Do not widen runtime broker compatibility
 until a later slice adds fixture-backed behavior, conformance metadata, host
 snapshots, and release verification.
 
@@ -532,6 +532,42 @@ Avoid as first widening candidates:
 - full pyramiding;
 - generic `strategy.order()`;
 - custom OCA.
+
+### Slice 6: Internal FIFO Allocation Helpers
+
+Status: closed on 2026-06-04 as an internal-only allocation helper slice.
+This slice does not connect multiple open trades to runtime entry behavior,
+does not accept `pyramiding`, and does not change conformance or public output.
+
+Goal:
+
+- make the internal `TradeLedger` capable of planning deterministic FIFO exit
+  allocations before any runtime compatibility widening.
+
+Implemented:
+
+- added `TradeAllocation` as an internal allocation slice carrying trade index,
+  entry id, allocated quantity, and allocated entry commission;
+- added global FIFO allocation for omitted `from_entry`;
+- added entry-id FIFO allocation for explicit `from_entry`;
+- added allocation application that removes fully consumed open trades, reduces
+  partially consumed open trades, and rebuilds net position from remaining open
+  trades;
+- added ledger unit tests for omitted-entry FIFO allocation, matching-entry
+  FIFO allocation, and net-position rebuild after applying allocations.
+
+Acceptance:
+
+- allocation helpers stay internal to the broker ledger;
+- current runtime behavior remains one supported open long trade;
+- public CLI, Python, and WASM strategy output remains unchanged;
+- conformance remains conservative.
+
+Stop condition:
+
+- stop before wiring these helpers into runtime behavior if a later feature
+  needs public allocation metadata, bracket-leg identity, OCA identity, or
+  liquidation reason fields.
 
 ## Verification Plan
 

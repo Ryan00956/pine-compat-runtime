@@ -34,6 +34,14 @@ impl Default for NetPosition {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub(super) struct TradeAllocation {
+    pub(super) trade_index: usize,
+    pub(super) entry_id: String,
+    pub(super) quantity: f64,
+    pub(super) entry_commission: f64,
+}
+
 #[derive(Debug, Clone, Default, PartialEq)]
 pub(super) struct TradeLedger {
     open_trades: Vec<OpenTrade>,
@@ -51,17 +59,21 @@ impl TradeLedger {
         if !quantity.is_finite() || quantity <= 0.0 {
             return;
         }
-        let Some(open_trade) = self.open_trades.first_mut() else {
-            return;
-        };
-        if quantity >= open_trade.quantity {
+        if quantity >= self.net_position.signed_size {
             self.clear_open_trade();
             return;
         }
 
-        open_trade.quantity -= quantity;
-        open_trade.entry_commission -= entry_commission;
-        self.rebuild_net_position();
+        let allocation = TradeAllocation {
+            trade_index: 0,
+            entry_id: self
+                .open_trades
+                .first()
+                .map_or_else(String::new, |trade| trade.id.clone()),
+            quantity,
+            entry_commission,
+        };
+        self.apply_allocations(&[allocation]);
     }
 
     pub(super) fn clear_open_trade(&mut self) {
@@ -83,6 +95,65 @@ impl TradeLedger {
         if low.is_finite() {
             open_trade.min_low = Some(open_trade.min_low.map_or(low, |current| current.min(low)));
         }
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn allocate_exit_fifo(
+        &self,
+        from_entry: Option<&str>,
+        requested_quantity: f64,
+    ) -> Vec<TradeAllocation> {
+        if !requested_quantity.is_finite() || requested_quantity <= 0.0 {
+            return Vec::new();
+        }
+
+        let mut remaining = requested_quantity;
+        let mut allocations = Vec::new();
+        for (trade_index, trade) in self.open_trades.iter().enumerate() {
+            if from_entry.is_some_and(|entry_id| trade.id != entry_id) {
+                continue;
+            }
+            if remaining <= 0.0 {
+                break;
+            }
+
+            let quantity = remaining.min(trade.quantity);
+            if quantity <= 0.0 {
+                continue;
+            }
+            let entry_commission = trade.entry_commission * (quantity / trade.quantity);
+            allocations.push(TradeAllocation {
+                trade_index,
+                entry_id: trade.id.clone(),
+                quantity,
+                entry_commission,
+            });
+            remaining -= quantity;
+        }
+        allocations
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn apply_allocations(&mut self, allocations: &[TradeAllocation]) {
+        for allocation in allocations.iter().rev() {
+            let Some(open_trade) = self.open_trades.get_mut(allocation.trade_index) else {
+                continue;
+            };
+            if open_trade.id != allocation.entry_id
+                || !allocation.quantity.is_finite()
+                || allocation.quantity <= 0.0
+            {
+                continue;
+            }
+
+            if allocation.quantity >= open_trade.quantity {
+                self.open_trades.remove(allocation.trade_index);
+            } else {
+                open_trade.quantity -= allocation.quantity;
+                open_trade.entry_commission -= allocation.entry_commission;
+            }
+        }
+        self.rebuild_net_position();
     }
 
     fn rebuild_net_position(&mut self) {
@@ -111,6 +182,12 @@ impl TradeLedger {
     #[cfg(test)]
     pub(super) fn open_trades(&self) -> &[OpenTrade] {
         &self.open_trades
+    }
+
+    #[cfg(test)]
+    pub(super) fn append_open_trade_for_test(&mut self, trade: OpenTrade) {
+        self.open_trades.push(trade);
+        self.rebuild_net_position();
     }
 
     #[cfg(test)]
