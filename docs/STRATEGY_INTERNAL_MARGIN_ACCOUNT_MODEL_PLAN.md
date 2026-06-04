@@ -1,6 +1,6 @@
 # Strategy Internal Margin Account Model Plan
 
-Status: design gate. No runtime support is claimed by this document.
+Status: closed for the long-only margin account subset through Slice M5.
 
 This plan defines the margin/account-model direction after Strategy Internal
 Stage 7 Slice 35. It exists because the remaining `capital_held` and margin
