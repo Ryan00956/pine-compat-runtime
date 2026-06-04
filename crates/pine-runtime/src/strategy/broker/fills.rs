@@ -78,7 +78,7 @@ impl BrokerState {
         self.open_trade_max_equity_before_entry = None;
     }
 
-    fn record_position_snapshot(&mut self, bar_index: usize) {
+    pub(super) fn record_position_snapshot(&mut self, bar_index: usize) {
         self.position.push(crate::StrategyPositionSnapshot {
             bar_index,
             size: self.position_size,

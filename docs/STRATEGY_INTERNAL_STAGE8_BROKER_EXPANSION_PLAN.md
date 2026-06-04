@@ -1,7 +1,7 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
 Status: initial design gate and behavior-preserving internal skeleton closed
-on 2026-06-04 through Slices 0-14. Do not widen runtime broker compatibility
+on 2026-06-04 through Slices 0-15. Do not widen runtime broker compatibility
 until a later slice adds fixture-backed behavior, conformance metadata, host
 snapshots, and release verification.
 
@@ -834,6 +834,37 @@ Stop condition:
 
 - stop before changing which entry variants emit public order events without a
   public output and fixture plan.
+
+### Slice 15: Entry Position Snapshot Routing
+
+Status: closed on 2026-06-04 as a behavior-preserving internal position
+snapshot routing slice. This slice does not add multiple runtime entries,
+widen conformance, or change public output.
+
+Goal:
+
+- route the current supported long entry fill position snapshot through the
+  same internal recorder used by exit, close, and margin-call fills.
+
+Implemented:
+
+- made `BrokerState::record_position_snapshot` available within broker
+  modules;
+- routed current `strategy.entry` long fill position snapshots through that
+  helper after `position_size` and `avg_price` are updated;
+- kept public net-position snapshot semantics unchanged.
+
+Acceptance:
+
+- current public entry position snapshots remain unchanged;
+- current CLI golden snapshots remain unchanged;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop before changing position snapshots from current net-position output to
+  per-entry or per-trade output without a public schema plan.
 
 ## Verification Plan
 

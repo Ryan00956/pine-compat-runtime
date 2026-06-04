@@ -275,11 +275,7 @@ impl BrokerState {
             max_equity_before_entry: Some(max_equity_before_entry),
         });
         self.record_order_event(id, bar_index, time, "strategy.long", qty, fill_price);
-        self.position.push(StrategyPositionSnapshot {
-            bar_index,
-            size: qty,
-            avg_price: Some(fill_price),
-        });
+        self.record_position_snapshot(bar_index);
         true
     }
 

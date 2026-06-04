@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 8 Slice 15 entry position snapshot routing.
+  Current supported long entry fills now write public net-position snapshots
+  through the shared internal snapshot recorder while preserving output and
+  conformance.
 - Closed Strategy Internal Stage 8 Slice 14 entry order event routing. Current
   supported long entry fills now use the shared internal order-event recorder
   while preserving public order output, conformance, Python, and WASM behavior.
