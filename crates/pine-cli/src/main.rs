@@ -686,22 +686,14 @@ mod tests {
                 "runtime_strategy_cancel_all_entry_exit.json",
                 "tests/fixtures/runtime/strategy_cancel_all_entry_exit.pine",
             ),
+            ("runtime_strategy_exit_stop.json", "tests/fixtures/runtime/strategy_exit_stop.pine"),
+            ("runtime_strategy_exit_limit.json", "tests/fixtures/runtime/strategy_exit_limit.pine"),
+            ("runtime_strategy_exit_profit.json", "tests/fixtures/runtime/strategy_exit_profit.pine"),
             (
-                "runtime_strategy_exit_stop.json",
-                "tests/fixtures/runtime/strategy_exit_stop.pine",
+                "runtime_strategy_exit_active_entry_profit_attachment.json",
+                "tests/fixtures/runtime/strategy_exit_active_entry_profit_attachment.pine",
             ),
-            (
-                "runtime_strategy_exit_limit.json",
-                "tests/fixtures/runtime/strategy_exit_limit.pine",
-            ),
-            (
-                "runtime_strategy_exit_profit.json",
-                "tests/fixtures/runtime/strategy_exit_profit.pine",
-            ),
-            (
-                "runtime_strategy_exit_loss.json",
-                "tests/fixtures/runtime/strategy_exit_loss.pine",
-            ),
+            ("runtime_strategy_exit_loss.json", "tests/fixtures/runtime/strategy_exit_loss.pine"),
             (
                 "runtime_strategy_exit_interactions.json",
                 "tests/fixtures/runtime/strategy_exit_interactions.pine",

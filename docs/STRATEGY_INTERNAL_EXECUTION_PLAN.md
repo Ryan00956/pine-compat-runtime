@@ -297,12 +297,25 @@ Acceptance:
 
 ## Stage 9: Entry-Relative Active-Entry Exits
 
-Status: Slice 0 design gate opened and closed on 2026-06-04. See
+Status: Slices 0-3 closed on 2026-06-04. See
 `docs/STRATEGY_INTERNAL_STAGE9_ENTRY_RELATIVE_EXIT_PLAN.md`.
 
 Goal: close the remaining same-calculation active-entry `strategy.exit`
 attachment gap for entry-relative `profit`, `loss`, and `trail_points`
 triggers.
+
+Current supported Stage 9 subset:
+
+- same-calculation `strategy.exit(..., profit=...)` can target a matching active
+  pending long entry id and resolves its limit from the eventual entry fill
+  price.
+
+Remaining Stage 9 subset:
+
+- same-calculation active-entry `loss`;
+- same-calculation active-entry `trail_points + trail_offset`;
+- stage closeout audit after host parity and conformance are synchronized for
+  the full Stage 9 subset.
 
 Scope:
 

@@ -1,8 +1,10 @@
 # Strategy Internal Stage 9 Entry-Relative Exit Plan
 
-Status: Slices 0-2 closed on 2026-06-04. Do not widen runtime
-`strategy.exit` compatibility until a later slice adds fixture-backed behavior,
-conformance metadata, host snapshots, and release verification.
+Status: Slices 0-3 closed on 2026-06-04. Same-calculation
+`strategy.exit(..., profit=...)` can now attach to a matching active pending
+long entry. Do not widen `loss` or `trail_points` active-entry compatibility
+until later slices add fixture-backed behavior, conformance metadata, host
+snapshots, and release verification.
 
 Stage 9 targets the remaining same-calculation active-entry attachment gap for
 entry-relative `strategy.exit` triggers:
@@ -42,8 +44,9 @@ The current repo baseline is:
   the active one-net-long position.
 - Same-calculation active-entry attachment is already supported for absolute
   `stop`, `limit`, and `trail_price` against a matching active pending entry.
-- Same-calculation active-entry attachment using entry-relative `profit`,
-  `loss`, or `trail_points` remains unsupported and is documented in
+- Same-calculation active-entry attachment using entry-relative `profit` is
+  supported for a matching active pending long entry; entry-relative `loss` and
+  `trail_points` remain unsupported and are documented in
   `tests/fixtures/conformance.tsv`.
 - Missing-entry exits that do not target an active pending entry or current
   open position must remain unsupported/no-op according to the current
@@ -209,10 +212,26 @@ Original implementation notes:
 
 ### Slice 3: `profit` Active-Entry Attachment
 
+Status: Closed on 2026-06-04.
+
 Goal:
 
 - support same-calculation `strategy.exit(..., profit=...)` for the current
   active pending long entry subset.
+
+Closed evidence:
+
+- added deferred `profit` routing from `strategy.exit` to the broker when
+  `from_entry` matches an active pending long entry;
+- resolved the pending take-profit limit from the actual long entry fill price;
+- preserved existing `qty` and `qty_percent` validation and reservation
+  semantics against the pending entry quantity before price resolution;
+- kept active-entry `loss`, `trail_points`, and `stop + profit` bracket
+  attachment rejected until later slices;
+- added broker tests for deferred storage, fill-time resolution, fixed quantity,
+  percent quantity, and the remaining unsupported boundary;
+- added `tests/fixtures/runtime/strategy_exit_active_entry_profit_attachment.pine`
+  plus CLI golden, Python, WASM, conformance, matrix, and release-note evidence.
 
 Implementation notes:
 

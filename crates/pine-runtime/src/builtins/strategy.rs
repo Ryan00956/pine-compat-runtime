@@ -370,18 +370,21 @@ impl<'a> HistoricalRuntime<'a> {
             (None, Some(qty_percent)) => StrategyExitQuantityArg::Percent(qty_percent),
             (None, None) => StrategyExitQuantityArg::Full,
         };
-        if (profit_expr.is_some() || loss_expr.is_some() || trail_points_expr.is_some())
+        let has_downside = stop_expr.is_some() || loss_expr.is_some();
+        let has_upside = limit_expr.is_some() || profit_expr.is_some();
+        let has_fixed_exit = has_downside || has_upside;
+        let has_trailing_activation = trail_price_expr.is_some() || trail_points_expr.is_some();
+        let has_trailing = has_trailing_activation || trail_offset_expr.is_some();
+        let has_unsupported_entry_relative_active_entry_exit = loss_expr.is_some()
+            || trail_points_expr.is_some()
+            || (profit_expr.is_some() && has_downside);
+        if has_unsupported_entry_relative_active_entry_exit
             && self
                 .strategy_broker
                 .reject_entry_relative_exit_for_pending_entry(&from_entry)
         {
             return Ok(PineValue::Void);
         }
-        let has_downside = stop_expr.is_some() || loss_expr.is_some();
-        let has_upside = limit_expr.is_some() || profit_expr.is_some();
-        let has_fixed_exit = has_downside || has_upside;
-        let has_trailing_activation = trail_price_expr.is_some() || trail_points_expr.is_some();
-        let has_trailing = has_trailing_activation || trail_offset_expr.is_some();
 
         if has_trailing {
             let has_single_trailing_activation =

@@ -408,6 +408,23 @@ impl PendingExitBook {
         self.deferred_relative_exits.push(pending_exit);
     }
 
+    pub(super) fn take_deferred_relative_for_entry(
+        &mut self,
+        entry_id: &str,
+    ) -> Vec<DeferredRelativeExit> {
+        let mut matching = Vec::new();
+        let mut retained = Vec::new();
+        for pending_exit in self.deferred_relative_exits.drain(..) {
+            if pending_exit.from_entry == entry_id {
+                matching.push(pending_exit);
+            } else {
+                retained.push(pending_exit);
+            }
+        }
+        self.deferred_relative_exits = retained;
+        matching
+    }
+
     pub(super) fn remove_identities(&mut self, identities: &[(String, String)]) {
         self.exits.retain(|pending_exit| {
             !identities.iter().any(|(id, from_entry)| {
@@ -635,6 +652,12 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
+        if self.position_size <= 0.0 && self.has_pending_entry(&from_entry) {
+            self.place_deferred_relative_profit_exit(
+                id, from_entry, ticks, mintick, quantity, bar_index,
+            );
+            return;
+        }
         if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
             return;
         }
@@ -648,6 +671,87 @@ impl BrokerState {
             quantity,
             bar_index,
         );
+    }
+
+    fn place_deferred_relative_profit_exit(
+        &mut self,
+        id: String,
+        from_entry: String,
+        ticks: f64,
+        mintick: f64,
+        quantity: ExitQuantityRequest,
+        bar_index: usize,
+    ) {
+        let Some(pending_entry_quantity) = self.order_book.entries().quantity_for_id(&from_entry)
+        else {
+            return;
+        };
+        if self.exit_tick_price_offset(ticks, mintick).is_none() {
+            return;
+        }
+        if self
+            .resolve_exit_quantity_request_for_available(
+                quantity,
+                pending_entry_quantity,
+                pending_entry_quantity,
+            )
+            .is_none()
+        {
+            return;
+        }
+
+        self.order_book
+            .exits_mut()
+            .replace_or_append_deferred_relative(DeferredRelativeExit {
+                id,
+                from_entry,
+                trigger: DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick },
+                quantity,
+                last_update_bar_index: bar_index,
+            });
+    }
+
+    pub(crate) fn resolve_deferred_relative_exits_for_entry(&mut self, entry_id: &str) {
+        let deferred_exits = self
+            .order_book
+            .exits_mut()
+            .take_deferred_relative_for_entry(entry_id);
+        for deferred_exit in deferred_exits {
+            let DeferredRelativeExit {
+                id,
+                from_entry,
+                trigger,
+                quantity,
+                last_update_bar_index,
+            } = deferred_exit;
+            match trigger {
+                DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick } => {
+                    let Some(limit_price) = self.exit_profit_price_from_ticks(ticks, mintick)
+                    else {
+                        continue;
+                    };
+                    self.place_exit(
+                        id,
+                        from_entry,
+                        PendingExitTrigger::Limit(limit_price),
+                        quantity,
+                        last_update_bar_index,
+                    );
+                }
+                DeferredRelativeExitTrigger::LossTicks { .. }
+                | DeferredRelativeExitTrigger::TrailPoints { .. } => {
+                    self.order_book
+                        .exits_mut()
+                        .replace_or_append_deferred_relative(DeferredRelativeExit {
+                            id,
+                            from_entry,
+                            trigger,
+                            quantity,
+                            last_update_bar_index,
+                        });
+                }
+            }
+        }
     }
 
     pub(crate) fn place_exit_loss_ticks(

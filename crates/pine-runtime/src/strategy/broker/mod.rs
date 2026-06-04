@@ -391,7 +391,9 @@ impl BrokerState {
             fill_price,
             pending_entry.quantity,
         );
-        if !filled {
+        if filled {
+            self.resolve_deferred_relative_exits_for_entry(&entry_id);
+        } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
         self.order_book.entries_mut().clear_all();
@@ -426,7 +428,9 @@ impl BrokerState {
             price,
             pending_entry.quantity,
         );
-        if !filled {
+        if filled {
+            self.resolve_deferred_relative_exits_for_entry(&entry_id);
+        } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
         self.order_book.entries_mut().clear_all();
@@ -461,7 +465,9 @@ impl BrokerState {
             price,
             pending_entry.quantity,
         );
-        if !filled {
+        if filled {
+            self.resolve_deferred_relative_exits_for_entry(&entry_id);
+        } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
         self.order_book.entries_mut().clear_all();
@@ -504,7 +510,9 @@ impl BrokerState {
             limit_price,
             pending_entry.quantity,
         );
-        if !filled {
+        if filled {
+            self.resolve_deferred_relative_exits_for_entry(&entry_id);
+        } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
         self.order_book.entries_mut().clear_all();
