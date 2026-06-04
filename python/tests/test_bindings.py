@@ -1656,6 +1656,70 @@ def test_run_script_returns_strategy_exit_active_entry_profit_attachment_contrac
     assert "exitReason" not in strategy_json
 
 
+def test_run_script_returns_strategy_exit_active_entry_loss_attachment_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_exit_active_entry_loss_attachment.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
+    assert result["schemaVersion"] == 3
+    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 2.0,
+            "price": 3.0,
+        },
+        {
+            "id": "XL",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.exit",
+            "qty": 2.0,
+            "price": 2.0,
+        },
+    ]
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 1,
+            "exitBarIndex": 1,
+            "entryTime": 2,
+            "exitTime": 2,
+            "entryPrice": 3.0,
+            "exitPrice": 2.0,
+            "qty": 2.0,
+            "profit": -2.0,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 2.0, "avgPrice": 3.0},
+        {"barIndex": 1, "size": 0.0, "avgPrice": None},
+    ]
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0.0, 2.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 1.0],
+    ]
+    assert result["diagnostics"] == []
+    assert result["strategy"]["diagnostics"] == []
+    strategy_json = json.dumps(result["strategy"])
+    assert "pending" not in strategy_json
+    assert "reservation" not in strategy_json
+    assert "reservedQuantity" not in strategy_json
+    assert "reserved_quantity" not in strategy_json
+    assert "remainingQty" not in strategy_json
+    assert "qtyPercent" not in strategy_json
+    assert "qty_percent" not in strategy_json
+    assert "exitReason" not in strategy_json
+
+
 def test_run_script_returns_strategy_exit_bracket_reservation_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_exit_reservation_bracket_host_parity.pine"

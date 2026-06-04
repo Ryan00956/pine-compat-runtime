@@ -297,7 +297,7 @@ Acceptance:
 
 ## Stage 9: Entry-Relative Active-Entry Exits
 
-Status: Slices 0-3 closed on 2026-06-04. See
+Status: Slices 0-4 closed on 2026-06-04. See
 `docs/STRATEGY_INTERNAL_STAGE9_ENTRY_RELATIVE_EXIT_PLAN.md`.
 
 Goal: close the remaining same-calculation active-entry `strategy.exit`
@@ -309,11 +309,14 @@ Current supported Stage 9 subset:
 - same-calculation `strategy.exit(..., profit=...)` can target a matching active
   pending long entry id and resolves its limit from the eventual entry fill
   price.
+- same-calculation `strategy.exit(..., loss=...)` can target a matching active
+  pending long entry id and resolves its stop from the eventual entry fill
+  price.
 
 Remaining Stage 9 subset:
 
-- same-calculation active-entry `loss`;
 - same-calculation active-entry `trail_points + trail_offset`;
+- same-calculation relative-leg active-entry bracket forms;
 - stage closeout audit after host parity and conformance are synchronized for
   the full Stage 9 subset.
 

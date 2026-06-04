@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 9 Slice 4 `loss` active-entry attachment.
+  Same-calculation `strategy.exit(..., loss=...)` now attaches to a matching
+  active pending long entry, resolves the stop price from the actual entry fill
+  price, and has CLI, Python, WASM, conformance, and matrix evidence while
+  `trail_points` and relative-leg active-entry brackets remain unsupported.
 - Closed Strategy Internal Stage 9 Slice 3 `profit` active-entry attachment.
   Same-calculation `strategy.exit(..., profit=...)` now attaches to a matching
   active pending long entry, resolves the take-profit limit from the actual

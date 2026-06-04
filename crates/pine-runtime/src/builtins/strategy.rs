@@ -375,9 +375,8 @@ impl<'a> HistoricalRuntime<'a> {
         let has_fixed_exit = has_downside || has_upside;
         let has_trailing_activation = trail_price_expr.is_some() || trail_points_expr.is_some();
         let has_trailing = has_trailing_activation || trail_offset_expr.is_some();
-        let has_unsupported_entry_relative_active_entry_exit = loss_expr.is_some()
-            || trail_points_expr.is_some()
-            || (profit_expr.is_some() && has_downside);
+        let has_unsupported_entry_relative_active_entry_exit = trail_points_expr.is_some()
+            || ((profit_expr.is_some() || loss_expr.is_some()) && has_downside && has_upside);
         if has_unsupported_entry_relative_active_entry_exit
             && self
                 .strategy_broker

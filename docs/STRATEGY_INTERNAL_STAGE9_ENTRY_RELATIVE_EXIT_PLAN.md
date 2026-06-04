@@ -1,10 +1,10 @@
 # Strategy Internal Stage 9 Entry-Relative Exit Plan
 
-Status: Slices 0-3 closed on 2026-06-04. Same-calculation
-`strategy.exit(..., profit=...)` can now attach to a matching active pending
-long entry. Do not widen `loss` or `trail_points` active-entry compatibility
-until later slices add fixture-backed behavior, conformance metadata, host
-snapshots, and release verification.
+Status: Slices 0-4 closed on 2026-06-04. Same-calculation
+`strategy.exit(..., profit=...)` and `strategy.exit(..., loss=...)` can now
+attach to a matching active pending long entry. Do not widen `trail_points`
+active-entry compatibility until a later slice adds fixture-backed behavior,
+conformance metadata, host snapshots, and release verification.
 
 Stage 9 targets the remaining same-calculation active-entry attachment gap for
 entry-relative `strategy.exit` triggers:
@@ -44,9 +44,9 @@ The current repo baseline is:
   the active one-net-long position.
 - Same-calculation active-entry attachment is already supported for absolute
   `stop`, `limit`, and `trail_price` against a matching active pending entry.
-- Same-calculation active-entry attachment using entry-relative `profit` is
-  supported for a matching active pending long entry; entry-relative `loss` and
-  `trail_points` remain unsupported and are documented in
+- Same-calculation active-entry attachment using entry-relative `profit` and
+  `loss` is supported for a matching active pending long entry; entry-relative
+  `trail_points` remains unsupported and is documented in
   `tests/fixtures/conformance.tsv`.
 - Missing-entry exits that do not target an active pending entry or current
   open position must remain unsupported/no-op according to the current
@@ -242,15 +242,33 @@ Implementation notes:
 
 ### Slice 4: `loss` Active-Entry Attachment
 
+Status: Closed on 2026-06-04 for the single-trigger `loss` active-entry
+attachment subset.
+
 Goal:
 
 - support same-calculation `strategy.exit(..., loss=...)` for the current
   active pending long entry subset.
 
+Closed evidence:
+
+- added deferred `loss` routing from `strategy.exit` to the broker when
+  `from_entry` matches an active pending long entry;
+- resolved the pending stop price from the actual long entry fill price;
+- preserved existing `qty` and `qty_percent` validation and reservation
+  semantics against the pending entry quantity before price resolution;
+- kept active-entry `trail_points` and relative-leg bracket attachment
+  unsupported until later slices;
+- added broker tests for deferred storage, fill-time resolution, fixed quantity,
+  percent quantity, and the remaining unsupported `trail_points` boundary;
+- added `tests/fixtures/runtime/strategy_exit_active_entry_loss_attachment.pine`
+  plus CLI golden, Python, WASM, conformance, matrix, and release-note evidence.
+
 Implementation notes:
 
 - resolve the stop price from the actual entry fill price;
-- include stop-only and `loss + profit` bracket evidence;
+- keep `loss + profit`, `loss + limit`, and `stop + profit` active-entry bracket
+  evidence for a later bracket-specific slice;
 - keep same-side unsupported combinations unchanged.
 
 ### Slice 5: `trail_points` Active-Entry Attachment
