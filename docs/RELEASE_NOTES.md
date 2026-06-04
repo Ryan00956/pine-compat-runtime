@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 8 Slice 14 entry order event routing. Current
+  supported long entry fills now use the shared internal order-event recorder
+  while preserving public order output, conformance, Python, and WASM behavior.
 - Closed Strategy Internal Stage 8 Slice 13 order event recorder. Long
   margin-call and supported pending `strategy.exit` fills now write existing
   public order events through one internal helper, while `strategy.close`,

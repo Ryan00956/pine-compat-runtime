@@ -86,7 +86,7 @@ impl BrokerState {
         });
     }
 
-    fn record_order_event(
+    pub(super) fn record_order_event(
         &mut self,
         id: String,
         bar_index: usize,

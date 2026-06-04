@@ -1,7 +1,7 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
 Status: initial design gate and behavior-preserving internal skeleton closed
-on 2026-06-04 through Slices 0-13. Do not widen runtime broker compatibility
+on 2026-06-04 through Slices 0-14. Do not widen runtime broker compatibility
 until a later slice adds fixture-backed behavior, conformance metadata, host
 snapshots, and release verification.
 
@@ -803,6 +803,37 @@ Stop condition:
 
 - stop before changing which strategy operations emit public order events
   without a public output and fixture plan.
+
+### Slice 14: Entry Order Event Routing
+
+Status: closed on 2026-06-04 as a behavior-preserving internal order-event
+routing slice. This slice does not add multiple runtime entries, widen
+conformance, or change public output.
+
+Goal:
+
+- route the current supported long entry fill public order event through the
+  same internal order-event recorder used by exit-like fills.
+
+Implemented:
+
+- made `BrokerState::record_order_event` available within broker modules;
+- routed current `strategy.entry` long fill order-event writes through that
+  helper;
+- kept `strategy.close` no-order-event behavior unchanged;
+- kept public CLI, Python, and WASM output unchanged.
+
+Acceptance:
+
+- current public entry order events remain unchanged;
+- current CLI golden snapshots remain unchanged;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop before changing which entry variants emit public order events without a
+  public output and fixture plan.
 
 ## Verification Plan
 
