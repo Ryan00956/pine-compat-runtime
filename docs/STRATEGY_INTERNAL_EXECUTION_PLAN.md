@@ -265,11 +265,9 @@ Acceptance:
 
 ## Stage 8: Full Broker Expansion
 
-Status: design gate recommended next. See
-`docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_PLAN.md`. Do not implement
-runtime broker expansion until the internal ledger model, order allocation
-rules, same-bar precedence, account interactions, and public-output boundary
-are documented.
+Status: closed on 2026-06-04 as a behavior-preserving internal broker
+expansion skeleton. See
+`docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_AUDIT.md`.
 
 Goal: move from the current one-net-long model toward Pine's broader broker
 semantics.
@@ -296,6 +294,30 @@ Acceptance:
 - Same-bar precedence and order allocation are fixture-backed.
 - Public output and host bindings are updated only through an explicit schema
   and release plan.
+
+## Stage 9: Entry-Relative Active-Entry Exits
+
+Status: Slice 0 design gate opened and closed on 2026-06-04. See
+`docs/STRATEGY_INTERNAL_STAGE9_ENTRY_RELATIVE_EXIT_PLAN.md`.
+
+Goal: close the remaining same-calculation active-entry `strategy.exit`
+attachment gap for entry-relative `profit`, `loss`, and `trail_points`
+triggers.
+
+Scope:
+
+- Current long-only active pending-entry subset.
+- Deferred relative trigger resolution from the eventual entry fill price.
+- Existing public `StrategyResult` schema.
+- Fixture-backed CLI, Python, and WASM parity before compatibility claims
+  widen.
+
+Out of scope:
+
+- Arbitrary future binding for unmatched missing-entry exits.
+- Pyramiding, shorts, reversals, and generic `strategy.order()`.
+- Public pending-order schema expansion.
+- Tick-level or bar-magnifier behavior.
 
 ## Shared Completion Gates
 

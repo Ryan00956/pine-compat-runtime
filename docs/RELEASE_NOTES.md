@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added Strategy Internal Stage 9 Slice 0 entry-relative active-entry exit
+  design gate. The plan targets fixture-backed `strategy.exit` attachment for
+  `profit`, `loss`, and `trail_points` against matching active pending entries
+  while keeping broader missing-entry, pyramiding, short, reversal, and
+  `strategy.order()` behavior unsupported.
 - Closed Strategy Internal Stage 8 with a broker expansion audit. The audit
   records the completed behavior-preserving internal order, ledger, allocation,
   and fill-routing skeleton and leaves broader Pine strategy compatibility
