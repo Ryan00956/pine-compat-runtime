@@ -750,16 +750,32 @@ impl BrokerState {
                         last_update_bar_index,
                     );
                 }
-                DeferredRelativeExitTrigger::TrailPoints { .. } => {
-                    self.order_book
-                        .exits_mut()
-                        .replace_or_append_deferred_relative(DeferredRelativeExit {
-                            id,
-                            from_entry,
-                            trigger,
-                            quantity,
-                            last_update_bar_index,
-                        });
+                DeferredRelativeExitTrigger::TrailPoints {
+                    activation_ticks,
+                    offset_ticks,
+                    mintick,
+                } => {
+                    let Some(activation_price_offset) =
+                        self.exit_tick_price_offset(activation_ticks, mintick)
+                    else {
+                        continue;
+                    };
+                    let Some(offset_price_distance) =
+                        self.exit_tick_price_offset(offset_ticks, mintick)
+                    else {
+                        continue;
+                    };
+                    self.place_exit_trailing(
+                        id,
+                        from_entry,
+                        PendingTrailingActivation::Points {
+                            ticks: activation_ticks,
+                            price: self.avg_price + activation_price_offset,
+                        },
+                        offset_price_distance,
+                        quantity,
+                        last_update_bar_index,
+                    );
                 }
             }
         }
@@ -1109,6 +1125,12 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
+        if self.position_size <= 0.0 && self.has_pending_entry(&from_entry) {
+            self.place_deferred_relative_trail_points_exit(
+                id, from_entry, spec, quantity, bar_index,
+            );
+            return;
+        }
         if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
             return;
         }
@@ -1133,6 +1155,56 @@ impl BrokerState {
             quantity,
             bar_index,
         );
+    }
+
+    fn place_deferred_relative_trail_points_exit(
+        &mut self,
+        id: String,
+        from_entry: String,
+        spec: TrailPointsExitSpec,
+        quantity: ExitQuantityRequest,
+        bar_index: usize,
+    ) {
+        let Some(pending_entry_quantity) = self.order_book.entries().quantity_for_id(&from_entry)
+        else {
+            return;
+        };
+        if self
+            .exit_tick_price_offset(spec.activation_ticks, spec.mintick)
+            .is_none()
+        {
+            return;
+        }
+        if self
+            .exit_tick_price_offset(spec.offset_ticks, spec.mintick)
+            .is_none()
+        {
+            return;
+        }
+        if self
+            .resolve_exit_quantity_request_for_available(
+                quantity,
+                pending_entry_quantity,
+                pending_entry_quantity,
+            )
+            .is_none()
+        {
+            return;
+        }
+
+        self.order_book
+            .exits_mut()
+            .replace_or_append_deferred_relative(DeferredRelativeExit {
+                id,
+                from_entry,
+                trigger: DeferredRelativeExitTrigger::TrailPoints {
+                    activation_ticks: spec.activation_ticks,
+                    offset_ticks: spec.offset_ticks,
+                    mintick: spec.mintick,
+                },
+                quantity,
+                last_update_bar_index: bar_index,
+            });
     }
 
     fn place_exit_trailing(

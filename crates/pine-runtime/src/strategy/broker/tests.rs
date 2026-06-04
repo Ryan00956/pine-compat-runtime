@@ -1304,7 +1304,7 @@ fn pending_market_entry_stores_entry_relative_loss_attachment() {
 }
 
 #[test]
-fn pending_market_entry_rejects_entry_relative_trail_points_attachment() {
+fn pending_market_entry_stores_entry_relative_trail_points_attachment() {
     let mut broker = BrokerState::new(100_000.0);
 
     broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
@@ -1312,11 +1312,26 @@ fn pending_market_entry_rejects_entry_relative_trail_points_attachment() {
 
     assert_eq!(pending_entry_count(&broker), 1);
     assert_eq!(pending_exit_count(&broker), 0);
-    assert_eq!(broker.diagnostics.len(), 1);
-    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert_eq!(deferred_relative_exit_count(&broker), 1);
+    let deferred_exit = broker
+        .order_book
+        .exits()
+        .find_deferred_relative_by_identity("XT", "L")
+        .unwrap();
+    assert_eq!(
+        deferred_exit.trigger,
+        DeferredRelativeExitTrigger::TrailPoints {
+            activation_ticks: 10.0,
+            offset_ticks: 5.0,
+            mintick: 0.01,
+        }
+    );
+    assert_eq!(deferred_exit.quantity, ExitQuantityRequest::Full);
+    assert_eq!(deferred_exit.last_update_bar_index, 0);
+    assert!(broker.diagnostics.is_empty());
 }
 
-fn assert_pending_entry_rejects_unimplemented_entry_relative_exit_attachments(
+fn assert_pending_entry_stores_trail_points_active_entry_attachment(
     place_entry: impl Fn(&mut BrokerState),
 ) {
     let mut trail_broker = BrokerState::new(100_000.0);
@@ -1324,23 +1339,22 @@ fn assert_pending_entry_rejects_unimplemented_entry_relative_exit_attachments(
     trail_broker.place_exit_trail_points("XT".to_owned(), "L".to_owned(), 10.0, 5.0, 0.01, 0);
     assert_eq!(pending_entry_count(&trail_broker), 1);
     assert_eq!(pending_exit_count(&trail_broker), 0);
-    assert_eq!(deferred_relative_exit_count(&trail_broker), 0);
-    assert_eq!(trail_broker.diagnostics.len(), 1);
-    assert_eq!(trail_broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert_eq!(deferred_relative_exit_count(&trail_broker), 1);
+    assert!(trail_broker.diagnostics.is_empty());
 }
 
 #[test]
-fn active_pending_entries_reject_unimplemented_entry_relative_exit_attachments() {
-    assert_pending_entry_rejects_unimplemented_entry_relative_exit_attachments(|broker| {
+fn active_pending_entries_store_trail_points_active_entry_attachments() {
+    assert_pending_entry_stores_trail_points_active_entry_attachment(|broker| {
         broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
     });
-    assert_pending_entry_rejects_unimplemented_entry_relative_exit_attachments(|broker| {
+    assert_pending_entry_stores_trail_points_active_entry_attachment(|broker| {
         broker.place_pending_limit_long_entry("L".to_owned(), 2.0, 95.0, 0);
     });
-    assert_pending_entry_rejects_unimplemented_entry_relative_exit_attachments(|broker| {
+    assert_pending_entry_stores_trail_points_active_entry_attachment(|broker| {
         broker.place_pending_stop_long_entry("L".to_owned(), 2.0, 105.0, 0);
     });
-    assert_pending_entry_rejects_unimplemented_entry_relative_exit_attachments(|broker| {
+    assert_pending_entry_stores_trail_points_active_entry_attachment(|broker| {
         broker.place_pending_stop_limit_long_entry("L".to_owned(), 2.0, 105.0, 95.0, 0);
     });
 }
@@ -1420,6 +1434,60 @@ fn pending_market_entry_resolves_loss_attachment_after_fill() {
 }
 
 #[test]
+fn pending_market_entry_resolves_trail_points_attachment_after_fill() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    broker.place_exit_trail_points("XT".to_owned(), "L".to_owned(), 10.0, 4.0, 0.5, 0);
+
+    broker.fill_pending_market_long_entries(1, 20, 100.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(deferred_relative_exit_count(&broker), 0);
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XT".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: trailing_points_trigger(10.0, 105.0, 2.0),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
+            multiple_reservation: false,
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+
+    broker.evaluate_pending_exits(1, 20, 106.0, 103.0);
+
+    assert_eq!(
+        broker.pending_exit().unwrap().trigger,
+        PendingExitTrigger::Trailing(PendingTrailingExit {
+            spec: PendingTrailingSpec {
+                activation: PendingTrailingActivation::Points {
+                    ticks: 10.0,
+                    price: 105.0,
+                },
+                offset_price_distance: 2.0,
+            },
+            state: PendingTrailingState::Active { stop_price: 104.0 },
+        })
+    );
+    assert!(broker.trades.is_empty());
+
+    broker.evaluate_pending_exits(2, 30, 106.0, 104.0);
+
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[1].id, "XT");
+    assert_eq!(broker.orders[1].direction, "strategy.exit");
+    assert_eq!(broker.orders[1].qty, 2.0);
+    assert_eq!(broker.orders[1].price, 104.0);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].exit_price, 104.0);
+    assert_eq!(broker.trades[0].profit, 8.0);
+}
+
+#[test]
 fn pending_limit_entry_resolves_profit_attachment_fixed_quantity_after_fill() {
     let mut broker = BrokerState::new(100_000.0);
 
@@ -1470,6 +1538,41 @@ fn pending_limit_entry_resolves_loss_attachment_fixed_quantity_after_fill() {
 }
 
 #[test]
+fn pending_limit_entry_resolves_trail_points_attachment_fixed_quantity_after_fill() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_limit_long_entry("L".to_owned(), 2.0, 95.0, 0);
+    broker.place_exit_trail_points_qty(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPointsExitSpec {
+            activation_ticks: 10.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        0.75,
+        0,
+    );
+
+    broker.fill_pending_limit_long_entries(1, 20, 95.0);
+
+    assert_eq!(deferred_relative_exit_count(&broker), 0);
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XT".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: trailing_points_trigger(10.0, 100.0, 2.0),
+            quantity: PendingExitQuantity::Fixed(0.75),
+            reserved_quantity: 0.75,
+            multiple_reservation: true,
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn pending_stop_entry_resolves_profit_attachment_percent_quantity_after_fill() {
     let mut broker = BrokerState::new(100_000.0);
 
@@ -1510,6 +1613,41 @@ fn pending_stop_entry_resolves_loss_attachment_percent_quantity_after_fill() {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
             trigger: PendingExitTrigger::Stop(95.0),
+            quantity: PendingExitQuantity::Fixed(1.0),
+            reserved_quantity: 1.0,
+            multiple_reservation: true,
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_stop_entry_resolves_trail_points_attachment_percent_quantity_after_fill() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_stop_long_entry("L".to_owned(), 2.0, 100.0, 0);
+    broker.place_exit_trail_points_qty_percent(
+        "XT".to_owned(),
+        "L".to_owned(),
+        TrailPointsExitSpec {
+            activation_ticks: 10.0,
+            offset_ticks: 4.0,
+            mintick: 0.5,
+        },
+        50.0,
+        0,
+    );
+
+    broker.fill_pending_stop_long_entries(1, 20, 100.0);
+
+    assert_eq!(deferred_relative_exit_count(&broker), 0);
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XT".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: trailing_points_trigger(10.0, 105.0, 2.0),
             quantity: PendingExitQuantity::Fixed(1.0),
             reserved_quantity: 1.0,
             multiple_reservation: true,

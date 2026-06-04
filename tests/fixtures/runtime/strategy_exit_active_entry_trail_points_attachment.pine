@@ -1,0 +1,9 @@
+//@version=5
+strategy("Active entry trail points attachment", overlay=true)
+
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2, limit=2)
+    strategy.exit("XT", "L", trail_points=50, trail_offset=50)
+
+plot(strategy.position_size)
+plot(strategy.closedtrades)

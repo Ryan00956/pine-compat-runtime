@@ -80,6 +80,7 @@ fn runtime_fixtures_match_incremental_append_execution() {
                 &strategy_exit_bracket_replacement_bars
             }
             Some("strategy_exit_bracket_both_hit.pine") => &strategy_exit_bracket_both_hit_bars,
+            Some("strategy_exit_active_entry_trail_points_attachment.pine") => &trailing_bars,
             Some("strategy_exit_omitted_trailing_replacement.pine") => &trailing_bars,
             Some("strategy_exit_qty_trailing_partial.pine") => &trailing_bars,
             Some("strategy_exit_qty_percent_trailing_partial.pine") => &trailing_bars,

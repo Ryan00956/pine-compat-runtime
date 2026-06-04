@@ -375,7 +375,12 @@ impl<'a> HistoricalRuntime<'a> {
         let has_fixed_exit = has_downside || has_upside;
         let has_trailing_activation = trail_price_expr.is_some() || trail_points_expr.is_some();
         let has_trailing = has_trailing_activation || trail_offset_expr.is_some();
-        let has_unsupported_entry_relative_active_entry_exit = trail_points_expr.is_some()
+        let has_single_trailing_activation =
+            trail_price_expr.is_some() != trail_points_expr.is_some();
+        let is_trailing_only =
+            !has_fixed_exit && has_single_trailing_activation && trail_offset_expr.is_some();
+        let has_unsupported_entry_relative_active_entry_exit = (trail_points_expr.is_some()
+            && !is_trailing_only)
             || ((profit_expr.is_some() || loss_expr.is_some()) && has_downside && has_upside);
         if has_unsupported_entry_relative_active_entry_exit
             && self
@@ -386,10 +391,6 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         if has_trailing {
-            let has_single_trailing_activation =
-                trail_price_expr.is_some() != trail_points_expr.is_some();
-            let is_trailing_only =
-                !has_fixed_exit && has_single_trailing_activation && trail_offset_expr.is_some();
             if !is_trailing_only {
                 return Ok(PineValue::Void);
             }
