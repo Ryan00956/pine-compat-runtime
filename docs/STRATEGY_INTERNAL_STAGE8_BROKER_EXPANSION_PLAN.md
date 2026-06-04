@@ -1,0 +1,454 @@
+# Strategy Internal Stage 8 Broker Expansion Plan
+
+Status: design gate. Do not implement runtime broker expansion until Slice 0
+closes and the first behavior-preserving refactor slice has an explicit test
+plan.
+
+Stage 8 is the transition from the current one-net-long strategy broker to an
+internal model that can eventually support multiple entries, pyramiding,
+shorts, reversals, generic orders, and OCA behavior. This document is a design
+gate only. It does not claim new compatibility, does not widen
+`tests/fixtures/conformance.tsv`, and does not change public CLI, Python, or
+WASM strategy output.
+
+## Starting Point
+
+The current strategy runtime is intentionally narrow and fixture-backed:
+
+- `BrokerState` is the public internal facade under
+  `crates/pine-runtime/src/strategy/broker/`.
+- The broker stores one net long position through fields such as
+  `position_size`, `avg_price`, `entry_id`, `entry_bar_index`, `entry_time`,
+  and one open-entry commission balance.
+- Pending long entries are internal-only in `PendingEntryBook`.
+- Pending exits and explicit exit reservations are internal-only in
+  `PendingExitBook`.
+- Public runtime output is still the existing `schemaVersion: 3` shape with
+  `orders`, `trades`, `position`, `equity`, and `diagnostics`.
+- Stage 7 closed the current long-only trade field, reporting, cost,
+  percent-of-equity default sizing, active `margin_long`, long-entry
+  affordability, and long-only forced-liquidation subset.
+- The active-entry absolute `strategy.exit` attachment evidence slice is
+  closed, but entry-relative pending-entry exits using `profit`, `loss`, or
+  `trail_points` remain unsupported.
+
+## Goal
+
+Design a broker model that can represent future Pine-compatible behavior
+without losing the current fixture-backed one-net-long subset.
+
+Stage 8 should create a path toward:
+
+- separate open trades with entry ids;
+- net position derived from open trades;
+- same-direction pyramiding;
+- short positions;
+- automatic reversals;
+- generic `strategy.order()`;
+- entry-specific exit allocation;
+- OCA reduce/cancel/none behavior across supported order families.
+
+The first runtime slices must preserve existing behavior and output exactly.
+Compatibility widening should come only after the internal model and tests are
+stable.
+
+## Non-Goals For The Design Gate
+
+- No runtime behavior changes.
+- No conformance status changes.
+- No public strategy JSON, Python dictionary, or WASM JSON schema expansion.
+- No short exposure, reversals, pyramiding, `strategy.order()`, or custom OCA
+  implementation in the design-gate slice.
+- No public pending-order, reservation-ledger, open-trade-ledger,
+  liquidation-price, exit-reason, bracket-leg, or trailing-state fields.
+- No realtime strategy tick path, bar magnifier, lower-timeframe intrabar
+  reconstruction, or recalculation-on-fill behavior.
+- No broker UI, Strategy Tester UI, external broker connectivity, or remote
+  market-data behavior.
+
+## Compatibility Rules
+
+- `tests/fixtures/conformance.tsv` remains the support authority.
+- Existing strategy fixtures must keep their current public serialized outputs
+  unless a later slice explicitly updates a golden snapshot with an audit note.
+- Unsupported strategy forms stay rejected or no-op according to current
+  documented behavior.
+- Any accepted semantic widening must land atomically with runtime behavior and
+  fixture evidence. Sema-only widening is not allowed for broker behavior.
+- Public output changes require a separate schema plan that covers CLI,
+  Python, WASM, snapshots, release notes, and migration notes.
+- Existing `scripts/verify.sh` remains the release gate for a behavior slice.
+
+## Public Output Boundary
+
+Default Stage 8 policy: keep the public strategy result shape unchanged.
+
+The public result continues to expose only:
+
+```text
+StrategyResult
+  orders
+  trades
+  position
+  equity
+  diagnostics
+```
+
+Internal pending orders, reservations, OCA groups, open-trade ledgers, and
+allocation state should not leak into output. A later schema plan may choose to
+expose more data, but that is out of scope for the first Stage 8 slices.
+
+## Intended Internal Model
+
+Stage 8 should move broker state toward explicit ledgers while preserving
+`BrokerState` as the facade used by runtime built-ins.
+
+Suggested internal shape:
+
+```text
+BrokerState
+  settings/account model
+  order_book: OrderBook
+  trade_ledger: TradeLedger
+  public_events: StrategyPublicEvents
+  diagnostics
+
+OrderBook
+  pending_orders: Vec<PendingOrder>
+  next_sequence: u64
+
+TradeLedger
+  open_trades: Vec<OpenTrade>
+  closed_trades: Vec<ClosedTrade>
+  net_position: NetPosition
+
+NetPosition
+  signed_size
+  avg_price
+  market_value helpers
+
+OpenTrade
+  trade_id
+  entry_id
+  direction
+  qty
+  entry_price
+  entry_bar_index
+  entry_time
+  entry_commission
+  max_high
+  min_low
+  equity baselines
+
+PendingOrder
+  order_id
+  source_function
+  entry_id / from_entry
+  direction
+  order_kind
+  quantity
+  trigger
+  oca_policy
+  created_sequence
+  created_bar_index
+```
+
+The exact Rust names can differ, but the responsibilities should not stay
+spread across one-position fields once Stage 8 refactoring starts.
+
+## Direction And Quantity Semantics
+
+Use signed quantities internally only where that makes net-position arithmetic
+clear. Public order and trade quantities should remain positive absolute
+quantities unless a later public schema plan changes the output contract.
+
+Recommended internal direction model:
+
+```text
+TradeDirection = Long | Short
+OrderIntent = Entry | Exit | Close | GenericOrder | Liquidation
+QuantityRequest = Full | Fixed(f64) | Percent(f64) | DefaultEntry
+ResolvedQuantity = absolute positive quantity plus allocation metadata
+```
+
+The current no-short subset maps to positive long quantities only. Short
+support should not be added until the ledger can record direction, allocation,
+costs, margin, and netting consistently.
+
+## Order Book Semantics To Preserve
+
+The current historical behavior must remain the baseline:
+
+- supported market entries fill at the next historical bar open;
+- supported long limit, stop, and stop-limit entries are pending and cannot
+  fill on their creation bar;
+- `strategy.close` and `strategy.close_all` close the current supported long
+  position at the current bar close;
+- supported exits are pending and cannot fill on their creation bar;
+- trailing exits activate on a later eligible bar and do not fill on the
+  activation bar;
+- same-bar bracket touches choose the downside leg in the current supported
+  subset;
+- explicit fixed-quantity and `qty_percent` exit reservations use the current
+  reservation ledger semantics;
+- omitted-quantity exits keep full-position one-effective-pending replacement
+  behavior;
+- active-entry absolute exit attachment can target a matching active pending
+  entry id;
+- unmatched missing-entry exits do not persist as arbitrary future bindings.
+
+## Execution Order Design
+
+Before runtime expansion, Stage 8 must document one canonical historical bar
+order. The default should preserve current behavior:
+
+1. At the start of a historical bar, evaluate eligible pending entries created
+   on earlier bars.
+2. Apply entry fills, affordability checks, attached-exit cleanup for rejected
+   entries, and account updates.
+3. Run script statements for the current bar.
+4. During script execution, enqueue new pending entries/exits/cancellations and
+   process immediate close operations according to the current supported
+   contract.
+5. After script execution, evaluate eligible pending exits created on earlier
+   bars.
+6. Apply margin-call checks only where the already-supported long-only margin
+   subset defines them.
+7. Emit position and equity snapshots.
+
+Stage 8 must explicitly decide where generic orders, reversals, OCA reductions,
+and future recalculation-on-fill behavior fit before those features are
+implemented.
+
+## Same-Bar Precedence Design
+
+Stage 8 must define a stable ordering key before widening broker behavior.
+
+Recommended ordering inputs:
+
+- bar phase: pending-entry fill, script-created immediate action,
+  post-script pending-exit fill, margin liquidation;
+- order creation sequence within the broker;
+- order family: entry, exit, close, generic order, liquidation;
+- trigger side: downside versus upside;
+- OCA policy;
+- entry allocation target.
+
+The current supported subset already has partial precedence rules. Do not add
+multiple entries, shorts, or generic orders until the precedence table says how
+same-bar conflicts resolve.
+
+## OCA And Reservation Direction
+
+The current reservation model is exit-specific. Stage 8 should not bolt custom
+OCA behavior onto `PendingExitBook` directly.
+
+Recommended direction:
+
+- keep existing exit reservations unchanged until an order-book abstraction can
+  own reservations;
+- model OCA policy as order metadata, not as ad hoc fields on exit triggers;
+- define `reduce`, `cancel`, and `none` behavior over generic pending orders
+  only after the book can represent entries, exits, and generic orders
+  uniformly;
+- preserve the current public output shape while OCA remains internal.
+
+## Account And Margin Direction
+
+The Stage 7 long-only margin subset must continue to work during refactors:
+
+- active `margin_long` capital held;
+- long-entry affordability checks;
+- long-only forced liquidation using `bar.low`;
+- supported commission allocation;
+- supported slippage and limit verification;
+- profit, equity, run-up, and drawdown state variables.
+
+Do not add `margin_short`, currency conversion, symbol precision rounding, or
+`strategy.margin_liquidation_price` until the ledger can represent short
+market value, short margin requirements, and per-trade liquidation allocation.
+
+## Slice Sequence
+
+### Slice 0: Design Gate Closeout
+
+Document the Stage 8 broker model and update status docs. No code behavior
+changes.
+
+Acceptance:
+
+- this document exists;
+- `docs/STRATEGY_INTERNAL_EXECUTION_PLAN.md` points Stage 8 to this design
+  gate;
+- `docs/NEXT_INTERNAL_CAPABILITY_PLAN.md` continues to recommend Stage 8 design
+  before runtime expansion;
+- release notes record the docs-only design gate;
+- no conformance support is widened;
+- `git diff --check` and `cargo test -p pine-cli conformance --quiet` pass.
+
+Stop condition:
+
+- stop if current docs or conformance still imply active-entry attachment,
+  margin, or `qty + qty_percent` gaps that are already closed.
+
+### Slice 1: Boundary Lock
+
+Add or refresh negative fixtures only if the current unsupported broker boundary
+is not explicit enough.
+
+Candidate boundaries:
+
+- short entries remain unsupported;
+- pyramiding remains unsupported;
+- generic `strategy.order()` remains unsupported;
+- custom OCA names and policies remain unsupported;
+- public pending-order and open-trade ledgers remain unsupported;
+- entry-relative active-entry exit attachment remains unsupported.
+
+Acceptance:
+
+- accepted behavior does not widen;
+- matrix and conformance wording stay conservative;
+- existing strategy runtime snapshots remain unchanged.
+
+Stop condition:
+
+- stop if a fixture reveals the analyzer accepts a broker feature that runtime
+  does not implement.
+
+### Slice 2: Behavior-Preserving Ledger Skeleton
+
+Introduce internal ledger types while preserving all public behavior.
+
+Suggested work:
+
+- add small internal structs for open trade, closed trade metrics, and net
+  position;
+- route the current single long position through the ledger;
+- keep `BrokerState` public methods and output collection unchanged;
+- keep current `StrategyTrade` and `StrategyOrderEvent` output unchanged.
+
+Acceptance:
+
+- all current strategy runtime tests pass;
+- current CLI golden snapshots remain unchanged;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop if the refactor changes any serialized strategy output without a
+  deliberate schema decision.
+
+### Slice 3: Order Book Skeleton
+
+Unify pending entry and pending exit ownership behind an internal order-book
+facade while preserving current behavior.
+
+Suggested work:
+
+- keep existing `PendingEntryBook` and `PendingExitBook` behavior initially;
+- introduce a thin `OrderBook` facade that delegates to them;
+- add broker unit tests for current cancellation, entry fill, and exit
+  reservation behavior through the facade;
+- do not add generic orders or OCA.
+
+Acceptance:
+
+- current entry/exit/cancel behavior is unchanged;
+- same snapshots and conformance rows remain valid;
+- internal names make future `strategy.order()` support possible without
+  claiming it.
+
+Stop condition:
+
+- stop if the facade duplicates reservation state in a way that can diverge
+  from `PendingExitBook`.
+
+### Slice 4: Allocation Design For Multiple Open Trades
+
+Write a focused design note or extend this plan before implementing multiple
+open trades.
+
+Must decide:
+
+- how `from_entry` selects open trades;
+- how omitted `from_entry` allocates exits;
+- FIFO versus entry-specific close ordering;
+- how partial exits allocate commission, run-up, drawdown, and margin;
+- how public `orders` and `trades` remain stable or change.
+
+Acceptance:
+
+- no code required unless the design is split into a later refactor;
+- public-output decision is explicit;
+- Stage 8 behavior slices after this point have concrete fixtures.
+
+Stop condition:
+
+- stop if Pine parity requires public information the current output schema
+  cannot represent.
+
+### Slice 5: First Compatibility Widening Candidate
+
+Choose only one after Slices 2 through 4 are stable.
+
+Preferred first candidates:
+
+- `pyramiding=1` as an accepted no-op alias only if it adds real compatibility
+  value and does not imply multiple entries;
+- entry-relative active-entry exit attachment for `profit`, `loss`, or
+  `trail_points` if deferred price resolution can be proven without
+  multi-entry ledgers;
+- an internal-only multiple-open-trade skeleton that still preserves the
+  current no-pyramiding external behavior.
+
+Avoid as first widening candidates:
+
+- short entries;
+- automatic reversal;
+- full pyramiding;
+- generic `strategy.order()`;
+- custom OCA.
+
+## Verification Plan
+
+Docs-only design gate:
+
+```text
+git diff --check
+cargo test -p pine-cli conformance --quiet
+python3 scripts/check_structure.py
+```
+
+Behavior-preserving internal refactor:
+
+```text
+cargo fmt
+cargo test -p pine-runtime strategy --quiet
+cargo test -p pine-runtime --test incremental
+cargo test -p pine-sema strategy --quiet
+cargo test -p pine-cli runtime_outputs_match_golden_snapshots --quiet
+cargo test -p pine-cli matrix_output_matches_golden_snapshot --quiet
+cargo test -p pine-wasm strategy --quiet
+python3 -m pytest python/tests -q
+python3 scripts/check_structure.py
+scripts/verify.sh
+```
+
+Any public output or host behavior change must additionally update and verify
+CLI, Python, WASM, conformance, snapshots, docs, and release notes in the same
+slice.
+
+## Closeout Criteria
+
+Stage 8 design is closed only when:
+
+- the intended internal broker model is documented;
+- public-output policy is explicit;
+- same-bar ordering and order allocation questions are listed with defaults or
+  stop conditions;
+- the first implementation slice is behavior-preserving;
+- unsupported Stage 8 broker features remain unsupported in conformance and
+  docs;
+- verification commands pass for the slice type.

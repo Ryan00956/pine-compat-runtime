@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_PLAN.md` as the
+  design gate for future broker expansion. The plan keeps runtime behavior,
+  conformance, and public CLI/Python/WASM strategy output unchanged while
+  documenting the intended ledger, order-book, same-bar precedence, OCA, and
+  slice sequence before any short, reversal, pyramiding, or generic-order work.
 - Closed the current Strategy Internal Stage 7 planning boundary in docs. The
   Stage 7 audit and execution plan now mark the fixture-backed long-only
   trade-record, cost, reporting, default-sizing, and active-margin account

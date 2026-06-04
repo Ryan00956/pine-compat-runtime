@@ -60,6 +60,7 @@ able to integrate it through adapters.
 - [Next Language Expansion Playbook](docs/NEXT_LANGUAGE_EXPANSION_PLAYBOOK.md)
 - [Next Internal Capability Plan](docs/NEXT_INTERNAL_CAPABILITY_PLAN.md)
 - [Strategy Internal Gap Audit](docs/STRATEGY_INTERNAL_GAP_AUDIT.md)
+- [Strategy Internal Stage 8 Broker Expansion Plan](docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_PLAN.md)
 - [Task Breakdown](docs/TASK_BREAKDOWN.md)
 - [Implementation Plan](docs/IMPLEMENTATION_PLAN.md)
 - [Compatibility, Legal, and Branding Boundaries](docs/COMPATIBILITY_AND_LEGAL.md)

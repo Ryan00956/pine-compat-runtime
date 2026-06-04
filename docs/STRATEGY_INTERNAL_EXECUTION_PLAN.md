@@ -265,9 +265,11 @@ Acceptance:
 
 ## Stage 8: Full Broker Expansion
 
-Status: design gate recommended next. Do not implement runtime broker expansion
-until the internal ledger model, order allocation rules, same-bar precedence,
-account interactions, and public-output boundary are documented.
+Status: design gate recommended next. See
+`docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_PLAN.md`. Do not implement
+runtime broker expansion until the internal ledger model, order allocation
+rules, same-bar precedence, account interactions, and public-output boundary
+are documented.
 
 Goal: move from the current one-net-long model toward Pine's broader broker
 semantics.
