@@ -1,5 +1,5 @@
 use super::{BrokerState, ClosedTradeMetrics, exits::PendingExit, ledger::TradeAllocation};
-use crate::{RuntimeDiagnostic, StrategyOrderEvent, StrategyPositionSnapshot, StrategyTrade};
+use crate::{RuntimeDiagnostic, StrategyOrderEvent, StrategyTrade};
 
 fn normalize_zero(value: f64) -> f64 {
     if value == 0.0 { 0.0 } else { value }
@@ -76,6 +76,14 @@ impl BrokerState {
         self.open_trade_equity_on_entry = None;
         self.open_trade_min_equity_before_entry = None;
         self.open_trade_max_equity_before_entry = None;
+    }
+
+    fn record_position_snapshot(&mut self, bar_index: usize) {
+        self.position.push(crate::StrategyPositionSnapshot {
+            bar_index,
+            size: self.position_size,
+            avg_price: (self.position_size > 0.0).then_some(self.avg_price),
+        });
     }
 
     fn record_closed_trade_fill(&mut self, fill: ClosedTradeFill) {
@@ -175,22 +183,14 @@ impl BrokerState {
             if allocations.is_empty() {
                 self.trade_ledger.clear_open_trade();
             }
-            self.position.push(StrategyPositionSnapshot {
-                bar_index,
-                size: 0.0,
-                avg_price: None,
-            });
+            self.record_position_snapshot(bar_index);
             return;
         }
 
         self.position_size -= qty;
         self.open_entry_commission -= entry_fill.entry_commission;
         self.trade_ledger.apply_allocations(&allocations);
-        self.position.push(StrategyPositionSnapshot {
-            bar_index,
-            size: self.position_size,
-            avg_price: Some(self.avg_price),
-        });
+        self.record_position_snapshot(bar_index);
     }
 
     pub(crate) fn close_all_long(&mut self, bar_index: usize, time: i64, price: f64) {
@@ -254,11 +254,7 @@ impl BrokerState {
         if allocations.is_empty() {
             self.trade_ledger.clear_open_trade();
         }
-        self.position.push(StrategyPositionSnapshot {
-            bar_index,
-            size: 0.0,
-            avg_price: None,
-        });
+        self.record_position_snapshot(bar_index);
     }
 
     pub(super) fn fill_pending_exit(
@@ -329,21 +325,13 @@ impl BrokerState {
             if allocations.is_empty() {
                 self.trade_ledger.clear_open_trade();
             }
-            self.position.push(StrategyPositionSnapshot {
-                bar_index,
-                size: 0.0,
-                avg_price: None,
-            });
+            self.record_position_snapshot(bar_index);
             return;
         }
 
         self.position_size -= qty;
         self.open_entry_commission -= entry_fill.entry_commission;
         self.trade_ledger.apply_allocations(&allocations);
-        self.position.push(StrategyPositionSnapshot {
-            bar_index,
-            size: self.position_size,
-            avg_price: Some(self.avg_price),
-        });
+        self.record_position_snapshot(bar_index);
     }
 }

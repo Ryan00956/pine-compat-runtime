@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 8 Slice 12 position snapshot recorder. Full
+  and partial long margin liquidation, `strategy.close`, and supported pending
+  `strategy.exit` fills now write existing public net-position snapshots
+  through one internal helper while preserving public output and conformance.
 - Closed Strategy Internal Stage 8 Slice 11 flat long legacy state cleanup.
   Full long margin liquidation, `strategy.close`, and full supported pending
   `strategy.exit` cleanup now share one internal legacy-state reset helper,

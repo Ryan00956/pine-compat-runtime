@@ -1,7 +1,7 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
 Status: initial design gate and behavior-preserving internal skeleton closed
-on 2026-06-04 through Slices 0-11. Do not widen runtime broker compatibility
+on 2026-06-04 through Slices 0-12. Do not widen runtime broker compatibility
 until a later slice adds fixture-backed behavior, conformance metadata, host
 snapshots, and release verification.
 
@@ -737,6 +737,39 @@ Stop condition:
 
 - stop before changing flat-state cleanup ordering if any public position,
   equity, trade, or diagnostic fixture changes.
+
+### Slice 12: Position Snapshot Recorder
+
+Status: closed on 2026-06-04 as a behavior-preserving internal snapshot
+cleanup slice. This slice does not add multiple runtime entries, widen
+conformance, or change public output.
+
+Goal:
+
+- centralize public position snapshot creation after supported close, exit, and
+  margin-call fills while the broker still exposes the existing net-position
+  public shape.
+
+Implemented:
+
+- added `BrokerState::record_position_snapshot` in the broker fill path;
+- routed full and partial long margin liquidation, `strategy.close`, and
+  supported pending `strategy.exit` position snapshot writes through that
+  helper;
+- kept flat snapshots as `{ size: 0.0, avg_price: None }` and non-flat
+  snapshots as the current legacy net long size and average price.
+
+Acceptance:
+
+- current public position snapshots remain unchanged;
+- current CLI golden snapshots remain unchanged;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop before changing position snapshot semantics from net position to
+  per-trade output without a public schema plan.
 
 ## Verification Plan
 
