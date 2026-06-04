@@ -1,6 +1,6 @@
 # Strategy Internal Stage 9 Entry-Relative Exit Plan
 
-Status: Slice 0 design gate closed on 2026-06-04. Do not widen runtime
+Status: Slices 0-1 closed on 2026-06-04. Do not widen runtime
 `strategy.exit` compatibility until a later slice adds fixture-backed behavior,
 conformance metadata, host snapshots, and release verification.
 
@@ -120,13 +120,40 @@ Acceptance:
 
 ### Slice 1: Current Boundary Lock
 
+Status: closed on 2026-06-04 as a broker boundary-lock slice. This slice does
+not add runtime support, widen conformance, or change public output.
+
 Goal:
 
 - add or refresh focused fixtures that prove `profit`, `loss`, and
   `trail_points` active-entry attachment remain unsupported before behavior is
   widened.
 
-Implementation notes:
+Implemented:
+
+- added broker coverage proving `profit`, `loss`, and
+  `trail_points + trail_offset` active-entry attachment is still rejected for
+  current long market, limit, stop, and stop-limit pending entries;
+- kept the pending entry intact after each rejected attachment attempt;
+- kept pending exits empty and diagnostics on the existing
+  `E_STRATEGY_EXIT_ENTRY` boundary;
+- made no analyzer, runtime fixture, conformance, matrix, or public schema
+  changes.
+
+Acceptance:
+
+- current unsupported boundary is explicit for all current pending entry
+  families;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop before accepting `profit`, `loss`, or `trail_points` active-entry
+  attachment without deferred trigger storage and fixture-backed runtime
+  evidence.
+
+Original implementation notes:
 
 - prefer runtime or broker tests that target same-calculation pending-entry
   attachment directly;

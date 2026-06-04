@@ -1149,6 +1149,50 @@ fn pending_market_entry_rejects_entry_relative_trail_points_attachment() {
     assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
 }
 
+fn assert_pending_entry_rejects_entry_relative_exit_attachments(
+    place_entry: impl Fn(&mut BrokerState),
+) {
+    let mut profit_broker = BrokerState::new(100_000.0);
+    place_entry(&mut profit_broker);
+    profit_broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 0.01, 0);
+    assert_eq!(pending_entry_count(&profit_broker), 1);
+    assert_eq!(pending_exit_count(&profit_broker), 0);
+    assert_eq!(profit_broker.diagnostics.len(), 1);
+    assert_eq!(profit_broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+
+    let mut loss_broker = BrokerState::new(100_000.0);
+    place_entry(&mut loss_broker);
+    loss_broker.place_exit_loss_ticks("XL".to_owned(), "L".to_owned(), 10.0, 0.01, 0);
+    assert_eq!(pending_entry_count(&loss_broker), 1);
+    assert_eq!(pending_exit_count(&loss_broker), 0);
+    assert_eq!(loss_broker.diagnostics.len(), 1);
+    assert_eq!(loss_broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+
+    let mut trail_broker = BrokerState::new(100_000.0);
+    place_entry(&mut trail_broker);
+    trail_broker.place_exit_trail_points("XT".to_owned(), "L".to_owned(), 10.0, 5.0, 0.01, 0);
+    assert_eq!(pending_entry_count(&trail_broker), 1);
+    assert_eq!(pending_exit_count(&trail_broker), 0);
+    assert_eq!(trail_broker.diagnostics.len(), 1);
+    assert_eq!(trail_broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+}
+
+#[test]
+fn active_pending_entries_reject_entry_relative_exit_attachments() {
+    assert_pending_entry_rejects_entry_relative_exit_attachments(|broker| {
+        broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    });
+    assert_pending_entry_rejects_entry_relative_exit_attachments(|broker| {
+        broker.place_pending_limit_long_entry("L".to_owned(), 2.0, 95.0, 0);
+    });
+    assert_pending_entry_rejects_entry_relative_exit_attachments(|broker| {
+        broker.place_pending_stop_long_entry("L".to_owned(), 2.0, 105.0, 0);
+    });
+    assert_pending_entry_rejects_entry_relative_exit_attachments(|broker| {
+        broker.place_pending_stop_limit_long_entry("L".to_owned(), 2.0, 105.0, 95.0, 0);
+    });
+}
+
 #[test]
 fn trade_counts_track_long_entry_and_no_pyramiding_noop() {
     let mut broker = BrokerState::new(100_000.0);

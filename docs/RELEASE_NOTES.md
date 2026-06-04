@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 9 Slice 1 current boundary lock. Broker tests
+  now prove `profit`, `loss`, and `trail_points + trail_offset` active-entry
+  attachment remains rejected for current market, limit, stop, and stop-limit
+  pending entries, without widening conformance or public output.
 - Added Strategy Internal Stage 9 Slice 0 entry-relative active-entry exit
   design gate. The plan targets fixture-backed `strategy.exit` attachment for
   `profit`, `loss`, and `trail_points` against matching active pending entries
