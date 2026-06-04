@@ -113,13 +113,15 @@ fn assert_active_trailing_stop_by_id(broker: &BrokerState, id: &str, expected_st
 }
 
 fn ledger_open_trade(id: &str, quantity: f64, entry_price: f64, commission: f64) -> OpenTrade {
+    let entry_bar_index = entry_price as usize;
+    let entry_time = (entry_price as i64) * 10;
     OpenTrade {
         id: id.to_owned(),
         direction: TradeDirection::Long,
         quantity,
         entry_price,
-        entry_bar_index: 0,
-        entry_time: 0,
+        entry_bar_index,
+        entry_time,
         entry_commission: commission,
         max_high: Some(entry_price),
         min_low: Some(entry_price),
@@ -198,12 +200,18 @@ fn trade_ledger_allocates_omitted_entry_by_global_fifo() {
             TradeAllocation {
                 trade_index: 0,
                 entry_id: "A".to_owned(),
+                entry_price: 100.0,
+                entry_bar_index: 100,
+                entry_time: 1000,
                 quantity: 1.0,
                 entry_commission: 2.0,
             },
             TradeAllocation {
                 trade_index: 1,
                 entry_id: "B".to_owned(),
+                entry_price: 110.0,
+                entry_bar_index: 110,
+                entry_time: 1100,
                 quantity: 1.25,
                 entry_commission: 3.75,
             },
@@ -224,12 +232,18 @@ fn trade_ledger_allocates_matching_entry_by_fifo() {
             TradeAllocation {
                 trade_index: 0,
                 entry_id: "A".to_owned(),
+                entry_price: 100.0,
+                entry_bar_index: 100,
+                entry_time: 1000,
                 quantity: 1.0,
                 entry_commission: 2.0,
             },
             TradeAllocation {
                 trade_index: 2,
                 entry_id: "A".to_owned(),
+                entry_price: 120.0,
+                entry_bar_index: 120,
+                entry_time: 1200,
                 quantity: 1.5,
                 entry_commission: 6.0,
             },

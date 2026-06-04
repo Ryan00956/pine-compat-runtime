@@ -1,7 +1,7 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
 Status: initial design gate and behavior-preserving internal skeleton closed
-on 2026-06-04 through Slices 0-7. Do not widen runtime broker compatibility
+on 2026-06-04 through Slices 0-8. Do not widen runtime broker compatibility
 until a later slice adds fixture-backed behavior, conformance metadata, host
 snapshots, and release verification.
 
@@ -606,6 +606,37 @@ Stop condition:
 
 - stop before allowing multiple runtime open trades if any existing close,
   exit, margin, or trade-field fixture changes serialized output.
+
+### Slice 8: Allocation Entry Metadata
+
+Status: closed on 2026-06-04 as a behavior-preserving internal allocation
+metadata slice. This slice does not add multiple runtime entries, does not
+widen conformance, and does not change public output.
+
+Goal:
+
+- make allocation slices carry enough entry metadata to later emit closed
+  trades from per-trade allocations instead of single-position legacy fields.
+
+Implemented:
+
+- extended `TradeAllocation` with entry price, entry bar index, and entry time;
+- populated allocation metadata directly from `OpenTrade`;
+- routed current margin-call, `strategy.close`, and pending `strategy.exit`
+  trade emission through allocation metadata with legacy fallback;
+- updated ledger allocation tests to assert metadata preservation.
+
+Acceptance:
+
+- current single-position public trade fields remain unchanged;
+- current CLI golden snapshots remain unchanged;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop before emitting multiple public trades from one order fill unless the
+  schema and fixture plan explicitly accepts that public-output shape.
 
 ## Verification Plan
 

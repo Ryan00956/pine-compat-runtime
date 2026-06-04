@@ -26,6 +26,20 @@ fn allocated_entry_commission(allocations: &[TradeAllocation]) -> Option<f64> {
     }
 }
 
+fn allocated_entry_price(allocations: &[TradeAllocation]) -> Option<f64> {
+    allocations.first().map(|allocation| allocation.entry_price)
+}
+
+fn allocated_entry_bar_index(allocations: &[TradeAllocation]) -> Option<usize> {
+    allocations
+        .first()
+        .map(|allocation| allocation.entry_bar_index)
+}
+
+fn allocated_entry_time(allocations: &[TradeAllocation]) -> Option<i64> {
+    allocations.first().map(|allocation| allocation.entry_time)
+}
+
 impl BrokerState {
     pub(crate) fn evaluate_margin_call_long(
         &mut self,
@@ -57,10 +71,12 @@ impl BrokerState {
             .clone()
             .unwrap_or_else(|| "Margin Call".to_owned());
         let exit_id = "Margin Call".to_owned();
-        let entry_price = self.avg_price;
-        let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
-        let entry_time = self.entry_time.unwrap_or(time);
         let allocations = self.trade_ledger.allocate_exit_fifo(None, qty);
+        let entry_price = allocated_entry_price(&allocations).unwrap_or(self.avg_price);
+        let entry_bar_index = allocated_entry_bar_index(&allocations)
+            .unwrap_or_else(|| self.entry_bar_index.unwrap_or(bar_index));
+        let entry_time =
+            allocated_entry_time(&allocations).unwrap_or_else(|| self.entry_time.unwrap_or(time));
         let entry_commission = allocated_entry_commission(&allocations)
             .unwrap_or_else(|| self.entry_commission_for_closed_quantity(qty));
         let exit_commission = self.exit_commission_for_fill(qty, current_price);
@@ -161,15 +177,17 @@ impl BrokerState {
         }
 
         let qty = self.position_size;
-        let entry_price = self.avg_price;
         let allocations = self.trade_ledger.allocate_exit_fifo(Some(&id), qty);
+        let entry_price = allocated_entry_price(&allocations).unwrap_or(self.avg_price);
         let entry_commission = allocated_entry_commission(&allocations)
             .unwrap_or_else(|| self.entry_commission_for_closed_quantity(qty));
         let exit_commission = self.exit_commission_for_fill(qty, price);
         let commission = entry_commission + exit_commission;
         let profit = (price - entry_price) * qty - commission;
-        let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
-        let entry_time = self.entry_time.unwrap_or(time);
+        let entry_bar_index = allocated_entry_bar_index(&allocations)
+            .unwrap_or_else(|| self.entry_bar_index.unwrap_or(bar_index));
+        let entry_time =
+            allocated_entry_time(&allocations).unwrap_or_else(|| self.entry_time.unwrap_or(time));
         self.cancel_exit_for_entry(&id);
         self.trades.push(StrategyTrade {
             exit_id: id.clone(),
@@ -238,17 +256,19 @@ impl BrokerState {
             });
             return;
         }
-        let entry_price = self.avg_price;
         let allocations = self
             .trade_ledger
             .allocate_exit_fifo(Some(&pending_exit.from_entry), qty);
+        let entry_price = allocated_entry_price(&allocations).unwrap_or(self.avg_price);
         let entry_commission = allocated_entry_commission(&allocations)
             .unwrap_or_else(|| self.entry_commission_for_closed_quantity(qty));
         let exit_commission = self.exit_commission_for_fill(qty, exit_price);
         let commission = entry_commission + exit_commission;
         let profit = (exit_price - entry_price) * qty - commission;
-        let entry_bar_index = self.entry_bar_index.unwrap_or(bar_index);
-        let entry_time = self.entry_time.unwrap_or(time);
+        let entry_bar_index = allocated_entry_bar_index(&allocations)
+            .unwrap_or_else(|| self.entry_bar_index.unwrap_or(bar_index));
+        let entry_time =
+            allocated_entry_time(&allocations).unwrap_or_else(|| self.entry_time.unwrap_or(time));
         let exit_id = pending_exit.id;
         let entry_id = pending_exit.from_entry;
 

@@ -38,6 +38,9 @@ impl Default for NetPosition {
 pub(super) struct TradeAllocation {
     pub(super) trade_index: usize,
     pub(super) entry_id: String,
+    pub(super) entry_price: f64,
+    pub(super) entry_bar_index: usize,
+    pub(super) entry_time: i64,
     pub(super) quantity: f64,
     pub(super) entry_commission: f64,
 }
@@ -104,6 +107,9 @@ impl TradeLedger {
             allocations.push(TradeAllocation {
                 trade_index,
                 entry_id: trade.id.clone(),
+                entry_price: trade.entry_price,
+                entry_bar_index: trade.entry_bar_index,
+                entry_time: trade.entry_time,
                 quantity,
                 entry_commission,
             });
