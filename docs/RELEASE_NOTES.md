@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 8 Slice 13 order event recorder. Long
+  margin-call and supported pending `strategy.exit` fills now write existing
+  public order events through one internal helper, while `strategy.close`,
+  public output, and conformance remain unchanged.
 - Closed Strategy Internal Stage 8 Slice 12 position snapshot recorder. Full
   and partial long margin liquidation, `strategy.close`, and supported pending
   `strategy.exit` fills now write existing public net-position snapshots

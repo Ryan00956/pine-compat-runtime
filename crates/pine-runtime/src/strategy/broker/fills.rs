@@ -86,6 +86,25 @@ impl BrokerState {
         });
     }
 
+    fn record_order_event(
+        &mut self,
+        id: String,
+        bar_index: usize,
+        time: i64,
+        direction: &str,
+        qty: f64,
+        price: f64,
+    ) {
+        self.orders.push(StrategyOrderEvent {
+            id,
+            bar_index,
+            time,
+            direction: direction.to_owned(),
+            qty,
+            price,
+        });
+    }
+
     fn record_closed_trade_fill(&mut self, fill: ClosedTradeFill) {
         self.trades.push(StrategyTrade {
             id: fill.entry_id,
@@ -154,14 +173,14 @@ impl BrokerState {
         let profit = (current_price - entry_fill.entry_price) * qty - commission;
 
         self.order_book.exits_mut().clear_for_entry(&entry_id);
-        self.orders.push(StrategyOrderEvent {
-            id: exit_id.clone(),
+        self.record_order_event(
+            exit_id.clone(),
             bar_index,
             time,
-            direction: "strategy.short".to_owned(),
+            "strategy.short",
             qty,
-            price: current_price,
-        });
+            current_price,
+        );
         self.record_closed_trade_fill(ClosedTradeFill {
             entry_id,
             exit_id,
@@ -296,14 +315,14 @@ impl BrokerState {
         let exit_id = pending_exit.id;
         let entry_id = pending_exit.from_entry;
 
-        self.orders.push(StrategyOrderEvent {
-            id: exit_id.clone(),
+        self.record_order_event(
+            exit_id.clone(),
             bar_index,
             time,
-            direction: "strategy.exit".to_owned(),
+            "strategy.exit",
             qty,
-            price: exit_price,
-        });
+            exit_price,
+        );
         self.record_closed_trade_fill(ClosedTradeFill {
             entry_id,
             exit_id,
