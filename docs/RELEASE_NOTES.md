@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 8 Slice 11 flat long legacy state cleanup.
+  Full long margin liquidation, `strategy.close`, and full supported pending
+  `strategy.exit` cleanup now share one internal legacy-state reset helper,
+  while ledger allocation application, position snapshots, public trades,
+  closed-trade metrics, and conformance remain unchanged.
 - Closed Strategy Internal Stage 8 Slice 10 closed trade fill recorder. The
   current long margin-call, `strategy.close`, and supported pending
   `strategy.exit` paths now record existing `StrategyTrade` and

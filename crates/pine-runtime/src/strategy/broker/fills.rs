@@ -64,6 +64,20 @@ struct ClosedTradeFill {
 }
 
 impl BrokerState {
+    fn clear_open_long_legacy_state(&mut self) {
+        self.position_size = 0.0;
+        self.avg_price = 0.0;
+        self.entry_id = None;
+        self.entry_bar_index = None;
+        self.entry_time = None;
+        self.open_entry_commission = 0.0;
+        self.open_trade_max_high = None;
+        self.open_trade_min_low = None;
+        self.open_trade_equity_on_entry = None;
+        self.open_trade_min_equity_before_entry = None;
+        self.open_trade_max_equity_before_entry = None;
+    }
+
     fn record_closed_trade_fill(&mut self, fill: ClosedTradeFill) {
         self.trades.push(StrategyTrade {
             id: fill.entry_id,
@@ -156,17 +170,7 @@ impl BrokerState {
         if qty >= self.position_size {
             self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
             self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
-            self.position_size = 0.0;
-            self.avg_price = 0.0;
-            self.entry_id = None;
-            self.entry_bar_index = None;
-            self.entry_time = None;
-            self.open_entry_commission = 0.0;
-            self.open_trade_max_high = None;
-            self.open_trade_min_low = None;
-            self.open_trade_equity_on_entry = None;
-            self.open_trade_min_equity_before_entry = None;
-            self.open_trade_max_equity_before_entry = None;
+            self.clear_open_long_legacy_state();
             self.trade_ledger.apply_allocations(&allocations);
             if allocations.is_empty() {
                 self.trade_ledger.clear_open_trade();
@@ -245,17 +249,7 @@ impl BrokerState {
         self.cash += qty * price - exit_commission;
         self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
         self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
-        self.position_size = 0.0;
-        self.avg_price = 0.0;
-        self.entry_id = None;
-        self.entry_bar_index = None;
-        self.entry_time = None;
-        self.open_entry_commission = 0.0;
-        self.open_trade_max_high = None;
-        self.open_trade_min_low = None;
-        self.open_trade_equity_on_entry = None;
-        self.open_trade_min_equity_before_entry = None;
-        self.open_trade_max_equity_before_entry = None;
+        self.clear_open_long_legacy_state();
         self.trade_ledger.apply_allocations(&allocations);
         if allocations.is_empty() {
             self.trade_ledger.clear_open_trade();
@@ -330,17 +324,7 @@ impl BrokerState {
         if qty >= self.position_size {
             self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
             self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
-            self.position_size = 0.0;
-            self.avg_price = 0.0;
-            self.entry_id = None;
-            self.entry_bar_index = None;
-            self.entry_time = None;
-            self.open_entry_commission = 0.0;
-            self.open_trade_max_high = None;
-            self.open_trade_min_low = None;
-            self.open_trade_equity_on_entry = None;
-            self.open_trade_min_equity_before_entry = None;
-            self.open_trade_max_equity_before_entry = None;
+            self.clear_open_long_legacy_state();
             self.trade_ledger.apply_allocations(&allocations);
             if allocations.is_empty() {
                 self.trade_ledger.clear_open_trade();

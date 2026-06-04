@@ -1,7 +1,7 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
 Status: initial design gate and behavior-preserving internal skeleton closed
-on 2026-06-04 through Slices 0-10. Do not widen runtime broker compatibility
+on 2026-06-04 through Slices 0-11. Do not widen runtime broker compatibility
 until a later slice adds fixture-backed behavior, conformance metadata, host
 snapshots, and release verification.
 
@@ -705,6 +705,38 @@ Stop condition:
 
 - stop before recording multiple public trades for one order fill unless a
   later schema and fixture plan explicitly requires that output shape.
+
+### Slice 11: Flat Long Legacy State Cleanup
+
+Status: closed on 2026-06-04 as a behavior-preserving internal cleanup slice.
+This slice does not add multiple runtime entries, widen conformance, or change
+public output.
+
+Goal:
+
+- keep current one-position legacy state cleanup centralized while allocation
+  and trade-recording logic moves toward ledger-backed internals.
+
+Implemented:
+
+- added `BrokerState::clear_open_long_legacy_state` in the broker fill path;
+- routed full long margin liquidation, `strategy.close`, and full supported
+  pending `strategy.exit` cleanup through that helper;
+- kept ledger allocation application, position snapshots, public trades, and
+  closed-trade metrics unchanged.
+
+Acceptance:
+
+- current full close, full exit, and full long margin-call behavior remains
+  unchanged;
+- current CLI golden snapshots remain unchanged;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop before changing flat-state cleanup ordering if any public position,
+  equity, trade, or diagnostic fixture changes.
 
 ## Verification Plan
 
