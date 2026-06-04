@@ -3,17 +3,17 @@ mod entries;
 mod exits;
 mod fills;
 mod ledger;
+mod order_book;
 
 use pine_ir::{DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCommission, StrategyMarginSetting};
 
-use entries::{PendingEntryBook, PendingEntryKind};
-use exits::{
-    PendingExit, PendingExitBook, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
-};
+use entries::PendingEntryKind;
+use exits::{PendingExit, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate};
 pub(crate) use exits::{TrailPointsExitSpec, TrailPriceExitSpec};
 #[cfg(test)]
 use ledger::NetPosition;
 use ledger::{OpenTrade, TradeDirection, TradeLedger};
+use order_book::OrderBook;
 
 use crate::{
     RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent, StrategyPositionSnapshot,
@@ -53,8 +53,7 @@ pub struct BrokerState {
     position: Vec<StrategyPositionSnapshot>,
     equity: Vec<StrategyEquitySnapshot>,
     diagnostics: Vec<RuntimeDiagnostic>,
-    pending_entries: PendingEntryBook,
-    pending_exits: PendingExitBook,
+    order_book: OrderBook,
     trade_ledger: TradeLedger,
 }
 
@@ -161,8 +160,7 @@ impl BrokerState {
             position: Vec::new(),
             equity: Vec::new(),
             diagnostics: Vec::new(),
-            pending_entries: PendingEntryBook::new(),
-            pending_exits: PendingExitBook::new(),
+            order_book: OrderBook::new(),
             trade_ledger: TradeLedger::default(),
         }
     }
@@ -293,17 +291,15 @@ impl BrokerState {
     }
 
     pub(crate) fn cancel_exit_for_entry(&mut self, entry_id: &str) {
-        self.pending_exits.clear_for_entry(entry_id);
+        self.order_book.exits_mut().clear_for_entry(entry_id);
     }
 
     pub(crate) fn cancel_pending_order(&mut self, id: &str) {
-        self.pending_entries.cancel_id(id);
-        self.pending_exits.cancel_id(id);
+        self.order_book.cancel_id(id);
     }
 
     pub(crate) fn cancel_all_pending_orders(&mut self) {
-        self.pending_entries.clear_all();
-        self.pending_exits.clear_all();
+        self.order_book.clear_all();
     }
 
     #[allow(dead_code)]
@@ -316,8 +312,12 @@ impl BrokerState {
         if self.position_size > 0.0 {
             return;
         }
-        self.pending_entries
-            .place_market_long(id, qty, created_bar_index, &mut self.diagnostics);
+        self.order_book.entries_mut().place_market_long(
+            id,
+            qty,
+            created_bar_index,
+            &mut self.diagnostics,
+        );
     }
 
     #[allow(dead_code)]
@@ -331,7 +331,7 @@ impl BrokerState {
         if self.position_size > 0.0 {
             return;
         }
-        self.pending_entries.place_limit_long(
+        self.order_book.entries_mut().place_limit_long(
             id,
             qty,
             limit,
@@ -351,7 +351,7 @@ impl BrokerState {
         if self.position_size > 0.0 {
             return;
         }
-        self.pending_entries.place_stop_long(
+        self.order_book.entries_mut().place_stop_long(
             id,
             qty,
             stop,
@@ -372,7 +372,7 @@ impl BrokerState {
         if self.position_size > 0.0 {
             return;
         }
-        self.pending_entries.place_stop_limit_long(
+        self.order_book.entries_mut().place_stop_limit_long(
             id,
             qty,
             stop,
@@ -384,7 +384,7 @@ impl BrokerState {
 
     #[allow(dead_code)]
     fn pending_entry_count(&self) -> usize {
-        self.pending_entries.count()
+        self.order_book.entries().count()
     }
 
     pub(crate) fn fill_pending_market_long_entries(
@@ -394,11 +394,12 @@ impl BrokerState {
         fill_price: f64,
     ) {
         if self.position_size > 0.0 {
-            self.pending_entries.clear_all();
+            self.order_book.entries_mut().clear_all();
             return;
         }
         let Some(pending_entry) = self
-            .pending_entries
+            .order_book
+            .entries_mut()
             .take_first_eligible_market_long(bar_index)
         else {
             return;
@@ -413,9 +414,9 @@ impl BrokerState {
             pending_entry.quantity,
         );
         if !filled {
-            self.pending_exits.clear_for_entry(&entry_id);
+            self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
-        self.pending_entries.clear_all();
+        self.order_book.entries_mut().clear_all();
     }
 
     pub(crate) fn fill_pending_limit_long_entries(
@@ -425,14 +426,14 @@ impl BrokerState {
         low: f64,
     ) {
         if self.position_size > 0.0 {
-            self.pending_entries.clear_all();
+            self.order_book.entries_mut().clear_all();
             return;
         }
-        let Some(pending_entry) = self.pending_entries.take_first_eligible_limit_long(
-            bar_index,
-            low,
-            self.limit_verification_price_offset,
-        ) else {
+        let Some(pending_entry) = self
+            .order_book
+            .entries_mut()
+            .take_first_eligible_limit_long(bar_index, low, self.limit_verification_price_offset)
+        else {
             return;
         };
 
@@ -448,9 +449,9 @@ impl BrokerState {
             pending_entry.quantity,
         );
         if !filled {
-            self.pending_exits.clear_for_entry(&entry_id);
+            self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
-        self.pending_entries.clear_all();
+        self.order_book.entries_mut().clear_all();
     }
 
     pub(crate) fn fill_pending_stop_long_entries(
@@ -460,11 +461,12 @@ impl BrokerState {
         high: f64,
     ) {
         if self.position_size > 0.0 {
-            self.pending_entries.clear_all();
+            self.order_book.entries_mut().clear_all();
             return;
         }
         let Some(pending_entry) = self
-            .pending_entries
+            .order_book
+            .entries_mut()
             .take_first_eligible_stop_long(bar_index, high)
         else {
             return;
@@ -482,9 +484,9 @@ impl BrokerState {
             pending_entry.quantity,
         );
         if !filled {
-            self.pending_exits.clear_for_entry(&entry_id);
+            self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
-        self.pending_entries.clear_all();
+        self.order_book.entries_mut().clear_all();
     }
 
     pub(crate) fn fill_pending_stop_limit_long_entries(
@@ -495,16 +497,21 @@ impl BrokerState {
         low: f64,
     ) {
         if self.position_size > 0.0 {
-            self.pending_entries.clear_all();
+            self.order_book.entries_mut().clear_all();
             return;
         }
-        self.pending_entries
+        self.order_book
+            .entries_mut()
             .activate_stop_limit_long_entries(bar_index, high);
-        let Some(pending_entry) = self.pending_entries.take_first_eligible_stop_limit_long(
-            bar_index,
-            low,
-            self.limit_verification_price_offset,
-        ) else {
+        let Some(pending_entry) = self
+            .order_book
+            .entries_mut()
+            .take_first_eligible_stop_limit_long(
+                bar_index,
+                low,
+                self.limit_verification_price_offset,
+            )
+        else {
             return;
         };
 
@@ -520,20 +527,26 @@ impl BrokerState {
             pending_entry.quantity,
         );
         if !filled {
-            self.pending_exits.clear_for_entry(&entry_id);
+            self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
-        self.pending_entries.clear_all();
+        self.order_book.entries_mut().clear_all();
     }
 
     fn has_pending_entry(&self, id: &str) -> bool {
-        self.pending_entries.quantity_for_id(id).is_some()
+        self.order_book.entries().quantity_for_id(id).is_some()
     }
 
     pub(crate) fn reject_entry_relative_exit_for_pending_entry(
         &mut self,
         from_entry: &str,
     ) -> bool {
-        if self.position_size > 0.0 || self.pending_entries.quantity_for_id(from_entry).is_none() {
+        if self.position_size > 0.0
+            || self
+                .order_book
+                .entries()
+                .quantity_for_id(from_entry)
+                .is_none()
+        {
             return false;
         }
 
@@ -545,27 +558,27 @@ impl BrokerState {
     }
 
     fn pending_exit(&self) -> Option<&PendingExit> {
-        self.pending_exits.current()
+        self.order_book.exits().current()
     }
 
     #[allow(dead_code)]
     fn pending_exit_mut(&mut self) -> Option<&mut PendingExit> {
-        self.pending_exits.current_mut()
+        self.order_book.exits_mut().current_mut()
     }
 
     #[allow(dead_code)]
     fn pending_exit_count(&self) -> usize {
-        self.pending_exits.count()
+        self.order_book.exits().count()
     }
 
     #[allow(dead_code)]
     fn pending_exit_by_identity(&self, id: &str, from_entry: &str) -> Option<&PendingExit> {
-        self.pending_exits.find_by_identity(id, from_entry)
+        self.order_book.exits().find_by_identity(id, from_entry)
     }
 
     #[allow(dead_code)]
     fn pending_exits_in_placement_order(&self) -> impl Iterator<Item = &PendingExit> {
-        self.pending_exits.iter()
+        self.order_book.exits().iter()
     }
 
     pub(crate) fn evaluate_pending_exits(
@@ -592,7 +605,9 @@ impl BrokerState {
             if self.position_size <= 0.0 && self.has_pending_entry(&pending_exit.from_entry) {
                 return;
             }
-            self.pending_exits.clear_for_entry(&pending_exit.from_entry);
+            self.order_book
+                .exits_mut()
+                .clear_for_entry(&pending_exit.from_entry);
             return;
         }
         let triggered_price = match &mut pending_exit.trigger {
@@ -613,7 +628,7 @@ impl BrokerState {
                 PendingTrailingUpdate::NoChange => return,
                 PendingTrailingUpdate::Persist(updated_trailing) => {
                     pending_exit.trigger = PendingExitTrigger::Trailing(updated_trailing);
-                    self.pending_exits.replace_all(pending_exit);
+                    self.order_book.exits_mut().replace_all(pending_exit);
                     return;
                 }
                 PendingTrailingUpdate::Candidate(touch) => Some(touch.exit_price),
@@ -624,9 +639,9 @@ impl BrokerState {
             let from_entry = pending_exit.from_entry.clone();
             self.fill_pending_exit(pending_exit, bar_index, time, exit_price);
             if self.position_size <= 0.0 {
-                self.pending_exits.clear_all();
+                self.order_book.exits_mut().clear_all();
             } else {
-                self.pending_exits.clear_for_entry(&from_entry);
+                self.order_book.exits_mut().clear_for_entry(&from_entry);
             }
         }
     }
@@ -638,7 +653,7 @@ impl BrokerState {
         high: f64,
         low: f64,
     ) {
-        let pending_exits: Vec<PendingExit> = self.pending_exits.iter().cloned().collect();
+        let pending_exits: Vec<PendingExit> = self.order_book.exits().iter().cloned().collect();
         let Some(first_pending_exit) = pending_exits.first() else {
             return;
         };
@@ -657,13 +672,16 @@ impl BrokerState {
                             .iter()
                             .any(|entry_id| entry_id == &pending_exit.from_entry)
                         {
-                            self.pending_exits.clear_for_entry(&pending_exit.from_entry);
+                            self.order_book
+                                .exits_mut()
+                                .clear_for_entry(&pending_exit.from_entry);
                         }
                     }
                     return;
                 }
             }
-            self.pending_exits
+            self.order_book
+                .exits_mut()
                 .clear_for_entry(&first_pending_exit.from_entry);
             return;
         }
@@ -675,7 +693,9 @@ impl BrokerState {
                 continue;
             }
             if self.entry_id.as_deref() != Some(pending_exit.from_entry.as_str()) {
-                self.pending_exits.clear_for_entry(&pending_exit.from_entry);
+                self.order_book
+                    .exits_mut()
+                    .clear_for_entry(&pending_exit.from_entry);
                 continue;
             }
 
@@ -718,7 +738,9 @@ impl BrokerState {
             PendingExitSide::Limit
         } else {
             for updated_pending_exit in state_updates {
-                self.pending_exits.replace_or_append(updated_pending_exit);
+                self.order_book
+                    .exits_mut()
+                    .replace_or_append(updated_pending_exit);
             }
             return;
         };
@@ -732,7 +754,9 @@ impl BrokerState {
                 break;
             }
             if self.entry_id.as_deref() != Some(pending_exit.from_entry.as_str()) {
-                self.pending_exits.clear_for_entry(&pending_exit.from_entry);
+                self.order_book
+                    .exits_mut()
+                    .clear_for_entry(&pending_exit.from_entry);
                 continue;
             }
             filled_identities.push((pending_exit.id.clone(), pending_exit.from_entry.clone()));
@@ -740,12 +764,16 @@ impl BrokerState {
         }
 
         if self.position_size <= 0.0 {
-            self.pending_exits.clear_all();
+            self.order_book.exits_mut().clear_all();
         } else {
             for updated_pending_exit in state_updates {
-                self.pending_exits.replace_or_append(updated_pending_exit);
+                self.order_book
+                    .exits_mut()
+                    .replace_or_append(updated_pending_exit);
             }
-            self.pending_exits.remove_identities(&filled_identities);
+            self.order_book
+                .exits_mut()
+                .remove_identities(&filled_identities);
         }
     }
 

@@ -991,7 +991,7 @@ impl BrokerState {
         {
             self.position_size
         } else if let Some(pending_entry_quantity) =
-            self.pending_entries.quantity_for_id(&from_entry)
+            self.order_book.entries().quantity_for_id(&from_entry)
         {
             pending_entry_quantity
         } else {
@@ -1021,10 +1021,11 @@ impl BrokerState {
             multiple_reservation_family.map(|_| (id.as_str(), from_entry.as_str()));
         let other_exits_are_supported_reservations = multiple_reservation_family.is_some()
             && self
-                .pending_exits
+                .order_book
+                .exits()
                 .other_exits_are_supported_reservations(&from_entry, released_identity);
         let available_quantity = if other_exits_are_supported_reservations {
-            self.pending_exits.available_unreserved_quantity(
+            self.order_book.exits_mut().available_unreserved_quantity(
                 target_position_size,
                 &from_entry,
                 released_identity,
@@ -1042,7 +1043,8 @@ impl BrokerState {
         };
 
         if self
-            .pending_exits
+            .order_book
+            .exits()
             .find_by_identity(&id, &from_entry)
             .is_some_and(|pending_exit| {
                 pending_exit.id == id
@@ -1065,9 +1067,9 @@ impl BrokerState {
             last_update_bar_index: bar_index,
         };
         if multiple_reservation_family.is_some() && other_exits_are_supported_reservations {
-            self.pending_exits.replace_or_append(pending_exit);
+            self.order_book.exits_mut().replace_or_append(pending_exit);
         } else {
-            self.pending_exits.replace_all(pending_exit);
+            self.order_book.exits_mut().replace_all(pending_exit);
         }
     }
 

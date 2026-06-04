@@ -40,7 +40,8 @@ fn margin_broker(initial_capital: f64, margin_long: f64) -> BrokerState {
 
 fn pending_entry_ids(broker: &BrokerState) -> Vec<&str> {
     broker
-        .pending_entries
+        .order_book
+        .entries()
         .iter()
         .map(|pending_entry| pending_entry.id.as_str())
         .collect()
@@ -163,6 +164,59 @@ fn trade_ledger_tracks_partial_and_final_long_reductions() {
     assert!(broker.trade_ledger.open_trade().is_none());
     assert_eq!(broker.trade_ledger.net_position(), NetPosition::default());
     assert_eq!(broker.position_size, 0.0);
+}
+
+#[test]
+fn order_book_facade_cancels_matching_entry_and_exit_ids() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_limit_long_entry("L".to_owned(), 1.0, 95.0, 0);
+    broker.place_exit_stop("L".to_owned(), "L".to_owned(), 90.0, 0);
+
+    assert_eq!(broker.order_book.entries().count(), 1);
+    assert_eq!(broker.order_book.exits().count(), 1);
+
+    broker.cancel_pending_order("L");
+
+    assert_eq!(broker.order_book.entries().count(), 0);
+    assert_eq!(broker.order_book.exits().count(), 0);
+}
+
+#[test]
+fn order_book_facade_preserves_pending_entry_fill_behavior() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_limit_long_entry("L".to_owned(), 2.0, 95.0, 0);
+    assert_eq!(broker.order_book.entries().count(), 1);
+
+    broker.fill_pending_limit_long_entries(1, 20, 95.0);
+
+    assert_eq!(broker.order_book.entries().count(), 0);
+    assert_eq!(broker.position_size(), 2.0);
+    assert_eq!(broker.orders.len(), 1);
+}
+
+#[test]
+fn order_book_facade_preserves_exit_reservations() {
+    let mut broker = broker_with_long_entry();
+
+    broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 95.0, 1.25, 0);
+
+    assert_eq!(broker.order_book.exits().count(), 1);
+    assert_eq!(
+        broker
+            .order_book
+            .exits()
+            .total_reserved_for_entry("L", None),
+        1.25
+    );
+    assert_eq!(
+        broker
+            .order_book
+            .exits()
+            .available_unreserved_quantity(broker.position_size, "L", None),
+        0.75
+    );
 }
 
 #[test]
@@ -420,7 +474,7 @@ fn pending_market_entry_records_internal_order_without_public_fill() {
     assert_eq!(pending_entry_count(&broker), 1);
     assert_eq!(pending_entry_ids(&broker), vec!["L"]);
     assert_eq!(
-        broker.pending_entries.current().cloned(),
+        broker.order_book.entries().current().cloned(),
         Some(PendingEntry {
             id: "L".to_owned(),
             direction: PendingEntryDirection::Long,
@@ -446,7 +500,7 @@ fn pending_market_entry_replaces_same_id_without_public_fill() {
 
     assert_eq!(pending_entry_count(&broker), 1);
     assert_eq!(
-        broker.pending_entries.current().cloned(),
+        broker.order_book.entries().current().cloned(),
         Some(PendingEntry {
             id: "L".to_owned(),
             direction: PendingEntryDirection::Long,
@@ -687,7 +741,7 @@ fn pending_market_entry_fill_uses_first_eligible_entry_and_clears_rest() {
     assert_eq!(broker.orders[0].id, "L1");
     assert_eq!(broker.orders[0].qty, 1.0);
     assert_eq!(broker.position_size, 1.0);
-    assert!(broker.pending_entries.find_by_id("L2").is_none());
+    assert!(broker.order_book.entries().find_by_id("L2").is_none());
     assert!(broker.diagnostics.is_empty());
 }
 
@@ -827,7 +881,11 @@ fn pending_stop_limit_entry_activates_without_filling_on_activation_bar() {
     assert!(broker.orders.is_empty());
     assert_eq!(broker.position_size, 0.0);
     assert_eq!(
-        broker.pending_entries.current().map(|entry| entry.kind),
+        broker
+            .order_book
+            .entries()
+            .current()
+            .map(|entry| entry.kind),
         Some(PendingEntryKind::StopLimit {
             stop_price: 105.0,
             limit_price: 100.0,
@@ -1151,17 +1209,21 @@ fn reservation_helpers_track_reserved_and_available_quantity() {
     broker.place_exit_stop_qty("XL".to_owned(), "L".to_owned(), 95.0, 1.25, 0);
 
     assert_eq!(
-        broker.pending_exits.total_reserved_for_entry("L", None),
+        broker
+            .order_book
+            .exits()
+            .total_reserved_for_entry("L", None),
         1.25
     );
     assert_eq!(
         broker
-            .pending_exits
+            .order_book
+            .exits()
             .available_unreserved_quantity(broker.position_size, "L", None),
         0.75
     );
     assert_eq!(
-        broker.pending_exits.available_unreserved_quantity(
+        broker.order_book.exits().available_unreserved_quantity(
             broker.position_size,
             "L",
             Some(("XL", "L"))
@@ -1295,7 +1357,10 @@ fn replacing_one_fixed_exit_releases_only_that_reservation() {
     let preserved = broker.pending_exit_by_identity("XS2", "L").unwrap();
     assert_eq!(preserved.reserved_quantity, 0.75);
     assert_eq!(
-        broker.pending_exits.total_reserved_for_entry("L", None),
+        broker
+            .order_book
+            .exits()
+            .total_reserved_for_entry("L", None),
         2.0
     );
 }
@@ -1311,7 +1376,10 @@ fn new_fixed_exit_clamps_to_remaining_unreserved_quantity() {
     assert_eq!(clamped.quantity, PendingExitQuantity::Fixed(1.0));
     assert_eq!(clamped.reserved_quantity, 0.5);
     assert_eq!(
-        broker.pending_exits.total_reserved_for_entry("L", None),
+        broker
+            .order_book
+            .exits()
+            .total_reserved_for_entry("L", None),
         2.0
     );
 }
@@ -1400,7 +1468,10 @@ fn percent_replacement_releases_old_reservation_first() {
     let preserved = broker.pending_exit_by_identity("XP2", "L").unwrap();
     assert_eq!(preserved.reserved_quantity, 0.5);
     assert_eq!(
-        broker.pending_exits.total_reserved_for_entry("L", None),
+        broker
+            .order_book
+            .exits()
+            .total_reserved_for_entry("L", None),
         2.0
     );
 }
@@ -1415,7 +1486,10 @@ fn over_100_percent_exit_reserves_remaining_unreserved_quantity() {
     assert_eq!(percent.quantity, PendingExitQuantity::Fixed(3.0));
     assert_eq!(percent.reserved_quantity, 1.25);
     assert_eq!(
-        broker.pending_exits.total_reserved_for_entry("L", None),
+        broker
+            .order_book
+            .exits()
+            .total_reserved_for_entry("L", None),
         2.0
     );
     assert!(broker.diagnostics.is_empty());
@@ -1589,7 +1663,10 @@ fn explicit_reservation_after_omitted_quantity_replaces_full_then_appends_suppor
     assert_eq!(pending_exit_count(&broker), 3);
     assert_eq!(pending_exit_ids(&broker), vec!["XS", "XB", "XT"]);
     assert_eq!(
-        broker.pending_exits.total_reserved_for_entry("L", None),
+        broker
+            .order_book
+            .exits()
+            .total_reserved_for_entry("L", None),
         1.5
     );
     assert!(broker.diagnostics.is_empty());
@@ -3443,7 +3520,10 @@ fn fixed_qty_bracket_shares_reservation_pool_with_single_trigger() {
     assert!(broker.pending_exit_by_identity("XS", "L").is_some());
     assert!(broker.pending_exit_by_identity("XB", "L").is_some());
     assert_eq!(
-        broker.pending_exits.total_reserved_for_entry("L", None),
+        broker
+            .order_book
+            .exits()
+            .total_reserved_for_entry("L", None),
         2.0
     );
     assert!(broker.diagnostics.is_empty());
@@ -3786,7 +3866,10 @@ fn percent_and_fixed_brackets_share_reservation_pool() {
         1.25
     );
     assert_eq!(
-        broker.pending_exits.total_reserved_for_entry("L", None),
+        broker
+            .order_book
+            .exits()
+            .total_reserved_for_entry("L", None),
         2.0
     );
     assert!(broker.diagnostics.is_empty());
@@ -3827,7 +3910,10 @@ fn over_100_percent_bracket_reserves_remaining_unreserved_quantity() {
     assert_eq!(percent.quantity, PendingExitQuantity::Fixed(3.0));
     assert_eq!(percent.reserved_quantity, 1.25);
     assert_eq!(
-        broker.pending_exits.total_reserved_for_entry("L", None),
+        broker
+            .order_book
+            .exits()
+            .total_reserved_for_entry("L", None),
         2.0
     );
     assert!(broker.diagnostics.is_empty());

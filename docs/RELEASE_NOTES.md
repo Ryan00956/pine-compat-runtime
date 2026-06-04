@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added the Strategy Internal Stage 8 Slice 3 order-book skeleton. `BrokerState`
+  now owns pending entries and exits through an internal `OrderBook` facade
+  that delegates to the existing `PendingEntryBook` and `PendingExitBook`,
+  preserving cancellation, entry fill, exit reservation, conformance, and
+  public output behavior without adding generic orders or OCA support.
 - Added the Strategy Internal Stage 8 Slice 2 broker ledger skeleton. The
   runtime now mirrors the existing single long open trade and net position into
   internal `TradeLedger` state across entry, open-trade extremes, partial

@@ -373,8 +373,21 @@ Stop condition:
 
 ### Slice 3: Order Book Skeleton
 
+Status: closed on 2026-06-04 for an internal order-book facade that delegates
+to existing entry and exit books.
+
 Unify pending entry and pending exit ownership behind an internal order-book
 facade while preserving current behavior.
+
+Implemented:
+
+- added an internal broker `order_book` module with `OrderBook`;
+- moved `BrokerState` pending-order ownership to `OrderBook` while keeping
+  `PendingEntryBook` and `PendingExitBook` as the behavior sources;
+- routed cancellation, entry fill lookup, exit lookup, and reservation queries
+  through the facade;
+- added broker unit tests for facade-backed cancellation, pending entry fill,
+  and exit reservation behavior.
 
 Suggested work:
 

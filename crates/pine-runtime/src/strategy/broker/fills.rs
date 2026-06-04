@@ -52,7 +52,7 @@ impl BrokerState {
         let commission = entry_commission + exit_commission;
         let profit = (current_price - entry_price) * qty - commission;
 
-        self.pending_exits.clear_for_entry(&entry_id);
+        self.order_book.exits_mut().clear_for_entry(&entry_id);
         self.orders.push(StrategyOrderEvent {
             id: exit_id.clone(),
             bar_index,
