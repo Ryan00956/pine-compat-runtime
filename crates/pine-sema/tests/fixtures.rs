@@ -360,6 +360,14 @@ fn reports_unsupported_strategy_declaration_properties_fixture() {
 }
 
 #[test]
+fn reports_unsupported_strategy_pyramiding_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_pyramiding.pine",
+        "E_CALL_ARG_NAME",
+    );
+}
+
+#[test]
 fn reports_unsupported_strategy_order_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_orders.pine",
@@ -441,6 +449,10 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
         (
             "tests/fixtures/sema/unsupported_strategy_exit_missing_entry.pine",
             "E_CALL_ARITY",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_exit_oca_name.pine",
+            "E_CALL_ARG_NAME",
         ),
         (
             "tests/fixtures/sema/unsupported_strategy_exit_function_side_effect.pine",

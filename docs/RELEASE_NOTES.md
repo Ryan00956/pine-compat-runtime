@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 8 Slice 1 boundary lock for the first semantic
+  guardrail subset. Added dedicated negative fixtures for unsupported
+  `pyramiding=2` and `strategy.exit(..., oca_name=...)` while keeping runtime
+  behavior, conformance status, and public output unchanged.
 - Added `docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_PLAN.md` as the
   design gate for future broker expansion. The plan keeps runtime behavior,
   conformance, and public CLI/Python/WASM strategy output unchanged while

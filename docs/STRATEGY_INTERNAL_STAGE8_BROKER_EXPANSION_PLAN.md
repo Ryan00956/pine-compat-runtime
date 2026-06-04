@@ -293,6 +293,8 @@ Stop condition:
 
 ### Slice 1: Boundary Lock
 
+Closed on 2026-06-04 for the first semantic boundary-lock subset.
+
 Add or refresh negative fixtures only if the current unsupported broker boundary
 is not explicit enough.
 
@@ -304,6 +306,20 @@ Candidate boundaries:
 - custom OCA names and policies remain unsupported;
 - public pending-order and open-trade ledgers remain unsupported;
 - entry-relative active-entry exit attachment remains unsupported.
+
+Implemented:
+
+- added `tests/fixtures/sema/unsupported_strategy_pyramiding.pine` to lock
+  `strategy(..., pyramiding=2)` as unsupported until the broker can represent
+  multiple open trades;
+- added `tests/fixtures/sema/unsupported_strategy_exit_oca_name.pine` to lock
+  custom exit OCA names as unsupported until OCA policy is modeled by the
+  broader order book;
+- kept short-entry and generic-order boundaries on the existing dedicated
+  fixtures;
+- kept entry-relative active-entry exit attachment as a documented runtime
+  boundary, not a semantic fixture, because the analyzer cannot know whether a
+  matching active pending entry will exist at runtime.
 
 Acceptance:
 
