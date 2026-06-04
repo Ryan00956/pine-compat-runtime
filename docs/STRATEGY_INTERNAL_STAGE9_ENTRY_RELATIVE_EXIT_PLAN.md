@@ -1,6 +1,6 @@
 # Strategy Internal Stage 9 Entry-Relative Exit Plan
 
-Status: Slices 0-1 closed on 2026-06-04. Do not widen runtime
+Status: Slices 0-2 closed on 2026-06-04. Do not widen runtime
 `strategy.exit` compatibility until a later slice adds fixture-backed behavior,
 conformance metadata, host snapshots, and release verification.
 
@@ -163,12 +163,44 @@ Original implementation notes:
 
 ### Slice 2: Deferred Relative Trigger Skeleton
 
+Status: closed on 2026-06-04 as an internal storage skeleton. This slice does
+not route analyzer or runtime `strategy.exit` calls into deferred triggers,
+does not fill new exits, does not widen conformance, and does not change public
+output.
+
 Goal:
 
 - add internal deferred trigger data for active pending-entry exits without
   filling new exits yet.
 
-Implementation notes:
+Implemented:
+
+- added `DeferredRelativeExitTrigger` for `profit`, `loss`, and
+  `trail_points + trail_offset` entry-relative trigger intent;
+- added `DeferredRelativeExit` to store id, `from_entry`, deferred trigger,
+  unresolved quantity request, and update bar;
+- added internal `PendingExitBook` storage for deferred relative exits separate
+  from the existing resolved pending-exit list;
+- made order-book clear/cancel paths clear deferred relative exits as well;
+- added broker tests for storing all deferred trigger shapes, replacing a
+  matching identity, preserving distinct `from_entry` identities, clearing by
+  entry, canceling by id, and clearing all.
+
+Acceptance:
+
+- existing `pending_exit_count()` and fill evaluation still ignore deferred
+  relative exits;
+- current `profit`, `loss`, and `trail_points` active-entry attachment remains
+  unsupported through existing runtime paths;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop before resolving or filling deferred relative exits from entry fills
+  without runtime fixtures and host parity evidence.
+
+Original implementation notes:
 
 - store relative trigger intent in broker/order-book structures;
 - keep absolute `stop`, `limit`, and `trail_price` behavior unchanged;

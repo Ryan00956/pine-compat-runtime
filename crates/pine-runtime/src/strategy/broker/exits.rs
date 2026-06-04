@@ -9,13 +9,31 @@ pub(super) enum PendingExitTrigger {
     Trailing(PendingTrailingExit),
 }
 
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq)]
+pub(super) enum DeferredRelativeExitTrigger {
+    ProfitTicks {
+        ticks: f64,
+        mintick: f64,
+    },
+    LossTicks {
+        ticks: f64,
+        mintick: f64,
+    },
+    TrailPoints {
+        activation_ticks: f64,
+        offset_ticks: f64,
+        mintick: f64,
+    },
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(super) enum PendingExitQuantity {
     Full,
     Fixed(f64),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(super) enum ExitQuantityRequest {
     Full,
     Fixed(f64),
@@ -242,9 +260,20 @@ pub(super) struct PendingExit {
     pub(super) last_update_bar_index: usize,
 }
 
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq)]
+pub(super) struct DeferredRelativeExit {
+    pub(super) id: String,
+    pub(super) from_entry: String,
+    pub(super) trigger: DeferredRelativeExitTrigger,
+    pub(super) quantity: ExitQuantityRequest,
+    pub(super) last_update_bar_index: usize,
+}
+
 #[derive(Debug, Clone, Default, PartialEq)]
 pub(super) struct PendingExitBook {
     exits: Vec<PendingExit>,
+    deferred_relative_exits: Vec<DeferredRelativeExit>,
 }
 
 impl PendingExitBook {
@@ -272,8 +301,24 @@ impl PendingExitBook {
     }
 
     #[allow(dead_code)]
+    pub(super) fn deferred_relative_count(&self) -> usize {
+        self.deferred_relative_exits.len()
+    }
+
+    #[allow(dead_code)]
     pub(super) fn find_by_identity(&self, id: &str, from_entry: &str) -> Option<&PendingExit> {
         self.exits
+            .iter()
+            .find(|pending_exit| pending_exit.id == id && pending_exit.from_entry == from_entry)
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn find_deferred_relative_by_identity(
+        &self,
+        id: &str,
+        from_entry: &str,
+    ) -> Option<&DeferredRelativeExit> {
+        self.deferred_relative_exits
             .iter()
             .find(|pending_exit| pending_exit.id == id && pending_exit.from_entry == from_entry)
     }
@@ -349,6 +394,20 @@ impl PendingExitBook {
         self.exits.push(pending_exit);
     }
 
+    #[allow(dead_code)]
+    pub(super) fn replace_or_append_deferred_relative(
+        &mut self,
+        pending_exit: DeferredRelativeExit,
+    ) {
+        if let Some(existing) = self.deferred_relative_exits.iter_mut().find(|existing| {
+            existing.id == pending_exit.id && existing.from_entry == pending_exit.from_entry
+        }) {
+            *existing = pending_exit;
+            return;
+        }
+        self.deferred_relative_exits.push(pending_exit);
+    }
+
     pub(super) fn remove_identities(&mut self, identities: &[(String, String)]) {
         self.exits.retain(|pending_exit| {
             !identities.iter().any(|(id, from_entry)| {
@@ -359,14 +418,19 @@ impl PendingExitBook {
 
     pub(super) fn cancel_id(&mut self, id: &str) {
         self.exits.retain(|pending_exit| pending_exit.id != id);
+        self.deferred_relative_exits
+            .retain(|pending_exit| pending_exit.id != id);
     }
 
     pub(super) fn clear_all(&mut self) {
         self.exits.clear();
+        self.deferred_relative_exits.clear();
     }
 
     pub(super) fn clear_for_entry(&mut self, entry_id: &str) {
         self.exits
+            .retain(|pending_exit| pending_exit.from_entry != entry_id);
+        self.deferred_relative_exits
             .retain(|pending_exit| pending_exit.from_entry != entry_id);
     }
 }

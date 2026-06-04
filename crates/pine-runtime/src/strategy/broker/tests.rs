@@ -1,8 +1,9 @@
 use super::entries::{PendingEntry, PendingEntryDirection, PendingEntryKind};
 use super::exits::{
-    ExitQuantityRequest, PendingExitQuantity, PendingExitReservationFamily, PendingExitTouch,
-    PendingTrailingActivation, PendingTrailingExit, PendingTrailingSpec, PendingTrailingState,
-    PendingTrailingUpdate, TrailPointsExitSpec, TrailPriceExitSpec,
+    DeferredRelativeExit, DeferredRelativeExitTrigger, ExitQuantityRequest, PendingExitBook,
+    PendingExitQuantity, PendingExitReservationFamily, PendingExitTouch, PendingTrailingActivation,
+    PendingTrailingExit, PendingTrailingSpec, PendingTrailingState, PendingTrailingUpdate,
+    TrailPointsExitSpec, TrailPriceExitSpec,
 };
 use super::*;
 
@@ -404,6 +405,140 @@ fn cancel_all_pending_orders_clears_pending_entries_and_exits() {
     assert_eq!(exit_broker.orders.len(), 1);
     assert!(exit_broker.trades.is_empty());
     assert_eq!(exit_broker.position_size(), 2.0);
+}
+
+#[test]
+fn pending_exit_book_stores_deferred_relative_exit_attachments() {
+    let mut book = PendingExitBook::new();
+
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XP".to_owned(),
+        from_entry: "L".to_owned(),
+        trigger: DeferredRelativeExitTrigger::ProfitTicks {
+            ticks: 10.0,
+            mintick: 0.5,
+        },
+        quantity: ExitQuantityRequest::Full,
+        last_update_bar_index: 1,
+    });
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XL".to_owned(),
+        from_entry: "L".to_owned(),
+        trigger: DeferredRelativeExitTrigger::LossTicks {
+            ticks: 5.0,
+            mintick: 0.5,
+        },
+        quantity: ExitQuantityRequest::Fixed(0.75),
+        last_update_bar_index: 2,
+    });
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XT".to_owned(),
+        from_entry: "L".to_owned(),
+        trigger: DeferredRelativeExitTrigger::TrailPoints {
+            activation_ticks: 8.0,
+            offset_ticks: 3.0,
+            mintick: 0.5,
+        },
+        quantity: ExitQuantityRequest::Percent(50.0),
+        last_update_bar_index: 3,
+    });
+
+    assert_eq!(book.count(), 0);
+    assert_eq!(book.deferred_relative_count(), 3);
+    assert_eq!(
+        book.find_deferred_relative_by_identity("XP", "L")
+            .unwrap()
+            .trigger,
+        DeferredRelativeExitTrigger::ProfitTicks {
+            ticks: 10.0,
+            mintick: 0.5,
+        }
+    );
+    assert_eq!(
+        book.find_deferred_relative_by_identity("XL", "L")
+            .unwrap()
+            .quantity,
+        ExitQuantityRequest::Fixed(0.75)
+    );
+    assert_eq!(
+        book.find_deferred_relative_by_identity("XT", "L")
+            .unwrap()
+            .last_update_bar_index,
+        3
+    );
+}
+
+#[test]
+fn pending_exit_book_replaces_and_clears_deferred_relative_exit_attachments() {
+    let mut book = PendingExitBook::new();
+
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XP".to_owned(),
+        from_entry: "L".to_owned(),
+        trigger: DeferredRelativeExitTrigger::ProfitTicks {
+            ticks: 10.0,
+            mintick: 0.5,
+        },
+        quantity: ExitQuantityRequest::Full,
+        last_update_bar_index: 1,
+    });
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XP".to_owned(),
+        from_entry: "L".to_owned(),
+        trigger: DeferredRelativeExitTrigger::ProfitTicks {
+            ticks: 12.0,
+            mintick: 0.5,
+        },
+        quantity: ExitQuantityRequest::Fixed(1.0),
+        last_update_bar_index: 2,
+    });
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XP".to_owned(),
+        from_entry: "OTHER".to_owned(),
+        trigger: DeferredRelativeExitTrigger::LossTicks {
+            ticks: 4.0,
+            mintick: 0.5,
+        },
+        quantity: ExitQuantityRequest::Full,
+        last_update_bar_index: 3,
+    });
+
+    assert_eq!(book.deferred_relative_count(), 2);
+    let replaced = book.find_deferred_relative_by_identity("XP", "L").unwrap();
+    assert_eq!(
+        replaced.trigger,
+        DeferredRelativeExitTrigger::ProfitTicks {
+            ticks: 12.0,
+            mintick: 0.5,
+        }
+    );
+    assert_eq!(replaced.quantity, ExitQuantityRequest::Fixed(1.0));
+    assert_eq!(replaced.last_update_bar_index, 2);
+
+    book.clear_for_entry("L");
+    assert_eq!(book.deferred_relative_count(), 1);
+    assert!(book.find_deferred_relative_by_identity("XP", "L").is_none());
+    assert!(
+        book.find_deferred_relative_by_identity("XP", "OTHER")
+            .is_some()
+    );
+
+    book.cancel_id("XP");
+    assert_eq!(book.deferred_relative_count(), 0);
+
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XT".to_owned(),
+        from_entry: "L".to_owned(),
+        trigger: DeferredRelativeExitTrigger::TrailPoints {
+            activation_ticks: 8.0,
+            offset_ticks: 3.0,
+            mintick: 0.5,
+        },
+        quantity: ExitQuantityRequest::Percent(50.0),
+        last_update_bar_index: 4,
+    });
+    book.clear_all();
+    assert_eq!(book.deferred_relative_count(), 0);
 }
 
 #[test]

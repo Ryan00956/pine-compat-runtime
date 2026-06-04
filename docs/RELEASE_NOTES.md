@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 9 Slice 2 deferred relative trigger skeleton.
+  The broker can now store, replace, and clear internal `profit`, `loss`, and
+  `trail_points + trail_offset` active-entry exit intent without routing
+  runtime calls into that storage or widening public behavior.
 - Closed Strategy Internal Stage 9 Slice 1 current boundary lock. Broker tests
   now prove `profit`, `loss`, and `trail_points + trail_offset` active-entry
   attachment remains rejected for current market, limit, stop, and stop-limit
