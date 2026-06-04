@@ -411,8 +411,64 @@ Stop condition:
 
 ### Slice 4: Allocation Design For Multiple Open Trades
 
+Status: closed on 2026-06-04 as a design-only allocation gate. No runtime
+behavior or public output shape changes are included in this slice.
+
 Write a focused design note or extend this plan before implementing multiple
 open trades.
+
+Design decisions:
+
+- `from_entry` selection: an exit with a non-empty `from_entry` may allocate
+  only against currently open trades whose entry id exactly matches
+  `from_entry`. If no active trade matches, the current unsupported behavior
+  remains until a later fixture-backed widening explicitly accepts deferred or
+  future binding.
+- Omitted `from_entry`: when a later slice accepts omitted `from_entry`, it
+  should allocate across all open trades in FIFO entry order. This keeps
+  allocation deterministic and matches the current single-position mental
+  model. LIFO or best-price allocation is out of scope unless a Pine parity
+  fixture proves otherwise.
+- Entry-specific ordering: for exits tied to one entry id, allocation is FIFO
+  among open trades with that id. This handles future same-id pyramiding while
+  preserving entry-specific behavior.
+- `strategy.close(id)`: close requests should use the same entry-id FIFO
+  allocation as `from_entry=id`; close-all requests should use global FIFO.
+- Partial exits: each closed slice consumes quantity from one open trade,
+  prorates that open trade's remaining entry commission by closed quantity,
+  keeps exit commission on the exit slice, and records run-up/drawdown from
+  the consumed open trade state at the time of close.
+- Average price: `NetPosition.avg_price` should be derived from remaining open
+  trades weighted by signed quantity after every allocation. The legacy
+  single-long average price remains unchanged while only one open trade is
+  possible.
+- Margin and cash: margin requirements and forced liquidation should consume
+  long open trades in global FIFO order unless a later Pine parity audit proves
+  a different liquidation order. Forced liquidation must emit the same public
+  order/trade schema as normal exits for each closed allocation slice.
+- Public trades: the existing `StrategyTrade` schema can represent a closed
+  allocation slice with `id`, `exit_id`, quantity, prices, times, and profit.
+  If a later feature needs bracket-leg identity, OCA group, allocation reason,
+  trailing state, or liquidation reason in public output, that feature must
+  stop and produce a separate schema plan before widening support.
+- Public orders and position: `StrategyOrderEvent` remains one public fill
+  event per supported order fill, and `StrategyPositionSnapshot` remains the
+  net position after allocation. Internal allocation details stay in
+  `TradeLedger` and `OrderBook`.
+
+Concrete fixture gates for later behavior slices:
+
+- two same-id long entries with `pyramiding=2`, one fixed-quantity exit, FIFO
+  allocation, and unchanged public result shape unless a schema plan says
+  otherwise;
+- two different long entry ids, `strategy.exit(..., from_entry="A")`, proving
+  only entry `A` is reduced;
+- omitted `from_entry` fixed-quantity exit across two open trades, proving
+  global FIFO allocation;
+- partial exit with commission enabled, proving entry commission proration and
+  realized profit;
+- forced liquidation with multiple long open trades, proving deterministic FIFO
+  allocation and stable public events.
 
 Must decide:
 

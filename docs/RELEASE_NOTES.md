@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed the Strategy Internal Stage 8 Slice 4 multiple-open-trade allocation
+  design gate. The plan now fixes future `from_entry`, omitted-`from_entry`,
+  FIFO close ordering, partial-exit commission/run-up/drawdown allocation,
+  margin-liquidation allocation, public-output boundaries, and concrete fixture
+  gates before any pyramiding or multi-entry runtime widening.
 - Added the Strategy Internal Stage 8 Slice 3 order-book skeleton. `BrokerState`
   now owns pending entries and exits through an internal `OrderBook` facade
   that delegates to the existing `PendingEntryBook` and `PendingExitBook`,
