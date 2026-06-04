@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 8 with a broker expansion audit. The audit
+  records the completed behavior-preserving internal order, ledger, allocation,
+  and fill-routing skeleton and leaves broader Pine strategy compatibility
+  widening to a new staged direction.
 - Closed Strategy Internal Stage 8 Slice 16 open long legacy state recorder.
   Current supported long entry fills now use one `OpenTrade` metadata object to
   update both the legacy one-position fields and internal ledger while

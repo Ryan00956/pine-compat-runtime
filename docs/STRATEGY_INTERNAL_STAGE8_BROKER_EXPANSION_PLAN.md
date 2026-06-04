@@ -1,7 +1,9 @@
 # Strategy Internal Stage 8 Broker Expansion Plan
 
 Status: initial design gate and behavior-preserving internal skeleton closed
-on 2026-06-04 through Slices 0-16. Do not widen runtime broker compatibility
+on 2026-06-04 through Slices 0-17, with closeout audit in
+`docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_AUDIT.md`. Do not widen
+runtime broker compatibility
 until a later slice adds fixture-backed behavior, conformance metadata, host
 snapshots, and release verification.
 
@@ -898,6 +900,36 @@ Stop condition:
 
 - stop before deriving public position, cash, or trade metrics only from the
   ledger without a separate fixture-backed migration slice.
+
+### Slice 17: Closeout Audit
+
+Status: closed on 2026-06-04 as the Stage 8 closeout audit. This slice does
+not add runtime behavior, widen conformance, or change public output.
+
+Goal:
+
+- verify that the behavior-preserving internal broker expansion skeleton is
+  closed enough to stop Stage 8 before compatibility widening.
+
+Implemented:
+
+- added `docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_AUDIT.md`;
+- documented completed internal surfaces, repo evidence, verification commands,
+  unsupported boundaries, and next-direction options;
+- kept public strategy compatibility claims tied to conformance and matrix
+  output instead of Stage 8 roadmap wording.
+
+Acceptance:
+
+- Stage 8 has an explicit closeout record;
+- unsupported strategy broker behavior remains unsupported in docs;
+- no conformance row changes;
+- no public schema changes.
+
+Stop condition:
+
+- stop Stage 8 here; open a new staged direction for `StrategyPublicEvents`,
+  ledger-derived public state, or fixture-backed Pine compatibility widening.
 
 ## Verification Plan
 
