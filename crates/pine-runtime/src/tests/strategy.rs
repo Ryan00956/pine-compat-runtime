@@ -281,64 +281,6 @@ plot(strategy.closedtrades)
 }
 
 #[test]
-fn remaining_active_entry_loss_profit_bracket_stays_unsupported_after_loss_limit_slice() {
-    let exit_call = r#"strategy.exit("XB", "L", loss=50, profit=50)"#;
-    let source = SourceFile::new(
-        "strategy.pine",
-        format!(
-            r#"strategy("active entry relative bracket boundary")
-if bar_index == 0
-    strategy.entry("L", strategy.long, qty=2, limit=2)
-    {exit_call}
-plot(strategy.position_size)
-plot(strategy.closedtrades)
-"#
-        ),
-    );
-    let analysis = analyze_source(&source);
-    assert!(
-        analysis.diagnostics.is_empty(),
-        "{:?}",
-        analysis.diagnostics
-    );
-
-    let result = run_historical(
-        &analysis.hir.expect("HIR"),
-        &[bar_ohlc(5.0, 5.0, 5.0, 5.0), bar_ohlc(2.0, 3.5, 1.5, 2.0)],
-    )
-    .expect("runtime result");
-    let strategy = result.strategy.expect("strategy output");
-
-    assert_eq!(strategy.orders.len(), 1, "{exit_call}");
-    assert_eq!(strategy.orders[0].id, "L", "{exit_call}");
-    assert_eq!(strategy.orders[0].direction, "strategy.long", "{exit_call}");
-    assert_eq!(strategy.orders[0].bar_index, 1, "{exit_call}");
-    assert_eq!(strategy.orders[0].qty, 2.0, "{exit_call}");
-    assert_eq!(strategy.orders[0].price, 2.0, "{exit_call}");
-    assert!(strategy.trades.is_empty(), "{exit_call}");
-    assert_eq!(strategy.position.len(), 1, "{exit_call}");
-    assert_eq!(strategy.position[0].bar_index, 1, "{exit_call}");
-    assert_eq!(strategy.position[0].size, 2.0, "{exit_call}");
-    assert_eq!(strategy.position[0].avg_price, Some(2.0), "{exit_call}");
-    assert_eq!(
-        result.plots[0].values,
-        vec![PineValue::Float(0.0), PineValue::Float(2.0),],
-        "{exit_call}"
-    );
-    assert_eq!(
-        result.plots[1].values,
-        vec![PineValue::Int(0), PineValue::Int(0),],
-        "{exit_call}"
-    );
-    assert_eq!(strategy.diagnostics.len(), 1, "{exit_call}");
-    assert_eq!(strategy.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
-    assert_eq!(
-        strategy.diagnostics[0].message,
-        "`strategy.exit` from_entry must match the current long entry"
-    );
-}
-
-#[test]
 fn strategy_cancel_cancels_pending_entry_before_fill() {
     let source = SourceFile::new(
         "strategy.pine",

@@ -2,5 +2,6 @@ mod broker;
 
 pub use broker::BrokerState;
 pub(crate) use broker::{
-    LossLimitBracketSpec, StopProfitBracketSpec, TrailPointsExitSpec, TrailPriceExitSpec,
+    LossLimitBracketSpec, LossProfitBracketSpec, StopProfitBracketSpec, TrailPointsExitSpec,
+    TrailPriceExitSpec,
 };

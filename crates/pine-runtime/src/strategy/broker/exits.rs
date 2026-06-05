@@ -1,4 +1,4 @@
-use super::BrokerState;
+use super::{BrokerState, active_entry_brackets::DeferredLossProfitBracketSpec};
 use crate::RuntimeDiagnostic;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -820,6 +820,31 @@ impl BrokerState {
                         PendingExitTrigger::Bracket {
                             downside: self.avg_price - downside_offset,
                             upside,
+                        },
+                        quantity,
+                        last_update_bar_index,
+                    );
+                }
+                DeferredRelativeExitTrigger::Bracket {
+                    downside:
+                        DeferredBracketLeg::RelativeLoss {
+                            ticks: loss_ticks,
+                            mintick: loss_mintick,
+                        },
+                    upside:
+                        DeferredBracketLeg::RelativeProfit {
+                            ticks: profit_ticks,
+                            mintick: profit_mintick,
+                        },
+                } => {
+                    self.place_resolved_loss_profit_bracket(
+                        id,
+                        from_entry,
+                        DeferredLossProfitBracketSpec {
+                            loss_ticks,
+                            loss_mintick,
+                            profit_ticks,
+                            profit_mintick,
                         },
                         quantity,
                         last_update_bar_index,

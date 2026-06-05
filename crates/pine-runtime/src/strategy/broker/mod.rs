@@ -8,7 +8,9 @@ mod order_book;
 
 use pine_ir::{DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCommission, StrategyMarginSetting};
 
-pub(crate) use active_entry_brackets::{LossLimitBracketSpec, StopProfitBracketSpec};
+pub(crate) use active_entry_brackets::{
+    LossLimitBracketSpec, LossProfitBracketSpec, StopProfitBracketSpec,
+};
 use entries::PendingEntryKind;
 use exits::{PendingExit, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate};
 pub(crate) use exits::{TrailPointsExitSpec, TrailPriceExitSpec};

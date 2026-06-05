@@ -260,7 +260,7 @@ Closed evidence:
 - added runtime fixture `strategy_exit_active_entry_loss_limit_bracket.pine`
   plus CLI golden, Python, WASM, incremental, conformance, matrix, docs, and
   release-note coverage;
-- `loss + profit` remains explicitly guarded for a later slice.
+- `loss + profit` remained explicitly guarded for a later slice.
 
 Acceptance:
 
@@ -272,10 +272,26 @@ Acceptance:
 
 ### Slice 5: `loss + profit` Active-Entry Bracket
 
+Status: Closed on 2026-06-05. This slice completes the planned Stage 10
+active-entry relative bracket behavior forms.
+
 Goal:
 
 - support the fully deferred relative bracket where both legs resolve from the
   eventual entry fill price.
+
+Closed evidence:
+
+- added broker placement and fill-time resolution for
+  `strategy.exit(..., loss=..., profit=...)` targeting the matching active
+  pending long entry;
+- both loss and profit ticks resolve from the actual entry fill price before
+  placing the existing `PendingExitTrigger::Bracket { downside, upside }`;
+- invalid one-leg resolution rejects the whole deferred bracket path instead of
+  downgrading to a single-trigger exit;
+- added runtime fixture `strategy_exit_active_entry_loss_profit_bracket.pine`
+  plus CLI golden, Python, WASM, incremental, conformance, matrix, docs, and
+  release-note coverage.
 
 Acceptance:
 
