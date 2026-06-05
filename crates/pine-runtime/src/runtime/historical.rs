@@ -172,7 +172,7 @@ impl<'a> HistoricalRuntime<'a> {
             boxes: Vec::new(),
             tables: Vec::new(),
             alerts: Vec::new(),
-            strategy_broker: BrokerState::new_with_account_settings(
+            strategy_broker: BrokerState::new_with_account_settings_and_pyramiding(
                 program.strategy_settings.initial_capital,
                 program.strategy_settings.commission,
                 program.strategy_settings.slippage_ticks
@@ -181,6 +181,7 @@ impl<'a> HistoricalRuntime<'a> {
                     * pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01),
                 program.strategy_settings.margin_long,
                 program.strategy_settings.margin_short,
+                program.strategy_settings.pyramiding_limit,
             ),
             next_label_id: 1,
             next_line_id: 1,

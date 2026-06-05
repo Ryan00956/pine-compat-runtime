@@ -177,6 +177,7 @@ impl Analyzer {
                     "backtest_fill_limits_assumption",
                     "margin_long",
                     "margin_short",
+                    "pyramiding",
                 ]
                 .get(index)
                 .copied()
@@ -343,6 +344,24 @@ impl Analyzer {
                     } else {
                         self.strategy_settings.margin_short = setting;
                     }
+                }
+                "pyramiding" => {
+                    let Some(value) = const_numeric_value(&arg.value) else {
+                        continue;
+                    };
+                    if !value.is_finite()
+                        || value <= 0.0
+                        || value.fract() != 0.0
+                        || value > usize::MAX as f64
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `pyramiding` must be a positive integer",
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    self.strategy_settings.pyramiding_limit = value as usize;
                 }
                 _ => {}
             }

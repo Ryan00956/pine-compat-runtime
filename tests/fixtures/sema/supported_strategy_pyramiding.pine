@@ -1,0 +1,3 @@
+//@version=5
+strategy("Supported strategy pyramiding", pyramiding=2)
+plot(close)

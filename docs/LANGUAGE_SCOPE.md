@@ -76,9 +76,11 @@ Phase 1 executable subset:
 - `strategy(...)` as a Phase G declaration subset with strategy-mode runtime
   output, positive const numeric `initial_capital`, and Phase L fixed default
   quantity settings through `default_qty_type=strategy.fixed` plus positive
-  const numeric `default_qty_value`
+  const numeric `default_qty_value`, plus positive integer const `pyramiding`
+  for the accepted same-direction long market-entry subset
 - `strategy.entry(id, strategy.long, qty=...)` in strategy-mode scripts only,
-  filled at the current bar close for one net long position without pyramiding
+  filled through the supported historical broker model for long market entries
+  up to the configured `pyramiding` limit
 - `strategy.entry(id, strategy.long)` in strategy-mode scripts only when the
   declaration configures the supported fixed default quantity subset; explicit
   `qty` continues to override the declaration default

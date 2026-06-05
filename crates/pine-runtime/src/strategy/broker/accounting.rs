@@ -21,6 +21,10 @@ impl BrokerState {
     }
 
     pub(crate) fn update_open_trade_extremes(&mut self, high: f64, low: f64) {
+        if self.open_trade_count() <= 0 {
+            return;
+        }
+        self.trade_ledger.update_extremes(high, low);
         if self.open_trade_count() != 1 {
             return;
         }
@@ -36,7 +40,6 @@ impl BrokerState {
                     .map_or(low, |current| current.min(low)),
             );
         }
-        self.trade_ledger.update_extremes(high, low);
         self.update_open_trade_max_runup();
         self.update_open_trade_max_drawdown();
     }

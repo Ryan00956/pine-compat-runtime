@@ -162,3 +162,13 @@ Stage 13 Slice 9 changed `strategy.opentrades.*` field helpers to read the
 requested open-trade index from `TradeLedger::open_at()`. Accepted scripts still
 produce only index `0`, but internal tests now cover indexes `0` and `1` before
 public multi-entry behavior is accepted.
+
+## Slice 10 Follow-Up
+
+Stage 13 Slice 10 accepts the first public `strategy(..., pyramiding=N)` subset
+for positive integer const values and same-direction long market entries.
+`StrategySettings::pyramiding_limit` now initializes `BrokerState`, open long
+entries append to `TradeLedger` while the limit allows them, and aggregate
+`position_size`, `avg_price`, and `max_contracts_held_long` synchronize from
+the ledger. Price-based same-tick entry exceptions, shorts, reversals, and
+broader multi-entry exit/reporting semantics remain outside this slice.

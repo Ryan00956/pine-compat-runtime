@@ -1,0 +1,21 @@
+//@version=5
+strategy("Pyramiding", pyramiding=2)
+
+if bar_index == 0
+    strategy.entry("L1", strategy.long, qty=1)
+if bar_index == 1
+    strategy.entry("L2", strategy.long, qty=3)
+if bar_index == 2
+    strategy.entry("L3", strategy.long, qty=5)
+
+plot(strategy.opentrades)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+plot(strategy.max_contracts_held_long)
+plot(strategy.opentrades.entry_price(0))
+plot(strategy.opentrades.entry_id(0) == "L1" ? 1 : 0)
+plot(strategy.opentrades.size(0))
+plot(strategy.opentrades.entry_price(1))
+plot(strategy.opentrades.entry_id(1) == "L2" ? 1 : 0)
+plot(strategy.opentrades.size(1))
+plot(strategy.opentrades.entry_price(2))

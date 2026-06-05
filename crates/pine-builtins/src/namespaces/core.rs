@@ -93,6 +93,11 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "pyramiding",
+        accepts: Accepts::ConstNumeric,
+        optional: true,
+    },
 ];
 
 const INPUT_PARAMS: &[BuiltinParam] = &[

@@ -69,18 +69,18 @@ impl TradeLedger {
     }
 
     pub(super) fn update_extremes(&mut self, high: f64, low: f64) {
-        let Some(open_trade) = self.open_trades.first_mut() else {
-            return;
-        };
-        if high.is_finite() {
-            open_trade.max_high = Some(
-                open_trade
-                    .max_high
-                    .map_or(high, |current| current.max(high)),
-            );
-        }
-        if low.is_finite() {
-            open_trade.min_low = Some(open_trade.min_low.map_or(low, |current| current.min(low)));
+        for open_trade in &mut self.open_trades {
+            if high.is_finite() {
+                open_trade.max_high = Some(
+                    open_trade
+                        .max_high
+                        .map_or(high, |current| current.max(high)),
+                );
+            }
+            if low.is_finite() {
+                open_trade.min_low =
+                    Some(open_trade.min_low.map_or(low, |current| current.min(low)));
+            }
         }
     }
 

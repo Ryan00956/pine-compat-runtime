@@ -133,10 +133,31 @@ impl BrokerState {
         margin_long: StrategyMarginSetting,
         margin_short: StrategyMarginSetting,
     ) -> Self {
+        Self::new_with_account_settings_and_pyramiding(
+            initial_capital,
+            commission,
+            slippage_price_offset,
+            limit_verification_price_offset,
+            margin_long,
+            margin_short,
+            1,
+        )
+    }
+
+    #[must_use]
+    pub fn new_with_account_settings_and_pyramiding(
+        initial_capital: f64,
+        commission: Option<StrategyCommission>,
+        slippage_price_offset: f64,
+        limit_verification_price_offset: f64,
+        margin_long: StrategyMarginSetting,
+        margin_short: StrategyMarginSetting,
+        pyramiding_limit: usize,
+    ) -> Self {
         Self {
             initial_capital,
             commission,
-            pyramiding_limit: 1,
+            pyramiding_limit,
             margin_long,
             margin_short,
             open_entry_commission: 0.0,
@@ -275,7 +296,11 @@ impl BrokerState {
 
     fn record_open_long_trade(&mut self, open_trade: OpenTrade) {
         self.record_open_long_legacy_state(&open_trade);
-        self.trade_ledger.open_long(open_trade);
+        if self.pyramiding_limit <= 1 {
+            self.trade_ledger.open_long(open_trade);
+        } else {
+            self.trade_ledger.append_long(open_trade);
+        }
         self.sync_aggregate_position_from_ledger();
     }
 
@@ -283,6 +308,7 @@ impl BrokerState {
         let net_position = self.trade_ledger.net_position();
         self.position_size = net_position.signed_size;
         self.avg_price = net_position.avg_price;
+        self.max_contracts_held_long = self.max_contracts_held_long.max(self.position_size);
     }
 
     fn apply_trade_allocations_and_sync_position(&mut self, allocations: &[TradeAllocation]) {

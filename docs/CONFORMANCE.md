@@ -69,7 +69,8 @@ until a JSON mode is added.
 Phase G marks `strategy` as partial. The executable subset accepts
 `strategy(title, shorttitle, overlay, max_bars_back, initial_capital,
 default_qty_type, default_qty_value, commission_type, commission_value,
-slippage, backtest_fill_limits_assumption, margin_long, margin_short)` where
+slippage, backtest_fill_limits_assumption, margin_long, margin_short,
+pyramiding)` where
 `initial_capital` must be a positive const numeric value when provided. Phase L
 accepts `default_qty_type=strategy.fixed` with positive const numeric
 `default_qty_value`; Strategy Internal Stage 12 accepts
@@ -86,7 +87,12 @@ active `margin_long` is configured. They also enable the first long-only forced
 liquidation subset using `bar.low`, the documented available-funds algorithm,
 and whole-unit truncation. They do not enable short margin behavior,
 margin-specific public schema expansion, symbol precision rounding, or
-`strategy.margin_liquidation_price`. Stage 7 Slice 17 accepts
+`strategy.margin_liquidation_price`. Stage 13 Slice 10 accepts positive integer
+const `pyramiding` values for same-direction long `strategy.entry()` market
+entries, with the default staying at `1`; short entries, reversals,
+`strategy.order()`, same-tick price-based entry exceptions, and broader
+multi-entry exit/reporting semantics remain outside the supported subset unless
+fixture-backed. Stage 7 Slice 17 accepts
 `commission_type=strategy.commission.cash_per_contract`, and Stage 7 Slice 18
 accepts `commission_type=strategy.commission.cash_per_order`, both with finite
 non-negative const numeric `commission_value`. Stage 7 Slice 21 accepts
@@ -189,13 +195,15 @@ Stage 3 adds `strategy.wintrades`, `strategy.losstrades`, and
 `strategy.eventrades` as read-only series int counts of closed trades with
 positive, negative, and zero realized profit.
 `strategy.opentrades` is a read-only series int count of open trades in the
-current long-only no-pyramiding broker, so it is `1` while the supported long
-position is open and `0` when flat. Supported market `strategy.entry` calls fill
-on the next historical bar open and update both counts before script statements
-on that fill bar. Supported `strategy.close` and `strategy.close_all` calls
-update both counts immediately for later statements on the same bar. Pending
-`strategy.exit` fills are still evaluated after script statements on the bar, so
-script reads see the count changes on the next bar. Stage 7 Slice 0 adds
+current long-only broker. It is `0` when flat, `1` for the default
+no-pyramiding behavior, and can rise to the accepted positive `pyramiding`
+limit for fixture-backed same-direction long market entries. Supported market
+`strategy.entry` calls fill on the next historical bar open and update both
+counts before script statements on that fill bar. Supported `strategy.close`
+and `strategy.close_all` calls update both counts immediately for later
+statements on the same bar. Pending `strategy.exit` fills are still evaluated
+after script statements on the bar, so script reads see the count changes on
+the next bar. Stage 7 Slice 0 adds
 `strategy.closedtrades.entry_price(trade_num)`,
 `strategy.closedtrades.exit_price(trade_num)`,
 `strategy.closedtrades.entry_bar_index(trade_num)`, and

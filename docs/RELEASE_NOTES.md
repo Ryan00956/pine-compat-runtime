@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 10 long market pyramiding entry
+  foundation. `strategy(..., pyramiding=N)` now accepts positive integer const
+  values for same-direction long market entries, appends open trades up to the
+  configured limit, and keeps default `pyramiding=1` behavior unchanged.
 - Closed Strategy Internal Stage 13 Slice 9 open-trade field ledger reads.
   `strategy.opentrades.*` field helpers now read the requested open-trade index
   from `TradeLedger`, with an internal two-entry test, while accepted scripts

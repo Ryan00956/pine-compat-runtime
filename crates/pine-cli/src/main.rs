@@ -1083,6 +1083,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_opentrades_fields.pine",
             ),
             (
+                "runtime_strategy_pyramiding.json",
+                "tests/fixtures/runtime/strategy_pyramiding.pine",
+            ),
+            (
                 "runtime_strategy_margin_capital_held_long.json", "tests/fixtures/runtime/strategy_margin_capital_held_long.pine",
             ),
             ("runtime_strategy_margin_entry_affordability.json", "tests/fixtures/runtime/strategy_margin_entry_affordability_long.pine"),

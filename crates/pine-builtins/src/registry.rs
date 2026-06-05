@@ -108,6 +108,8 @@ mod tests {
         assert_eq!(signature.params[11].accepts, crate::Accepts::ConstNumeric);
         assert_eq!(signature.params[12].name, "margin_short");
         assert_eq!(signature.params[12].accepts, crate::Accepts::ConstNumeric);
+        assert_eq!(signature.params[13].name, "pyramiding");
+        assert_eq!(signature.params[13].accepts, crate::Accepts::ConstNumeric);
         assert!(!signature.variadic);
     }
 

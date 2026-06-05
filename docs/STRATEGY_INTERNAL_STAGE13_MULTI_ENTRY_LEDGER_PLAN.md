@@ -348,7 +348,13 @@ Closed evidence:
   ledger indexes `0` and `1`, with out-of-range and negative indexes returning
   `None`.
 
-### Slice 10: Long Market Pyramiding
+### Slice 10: Long Market Pyramiding Entry Foundation
+
+Status: closed on 2026-06-05. This slice accepts the first public
+`strategy(..., pyramiding=N)` subset for positive integer const values and
+same-direction long market entries. It does not yet claim price-based same-tick
+entry exceptions, shorts, reversals, `strategy.order()`, or broader multi-entry
+exit/reporting semantics.
 
 Goal:
 
@@ -362,18 +368,33 @@ Target subset:
 - no short/reversal/price-based entry exception behavior;
 - aggregate public strategy JSON only.
 
-Acceptance:
+Closed evidence:
 
-- runtime fixtures cover multiple long entries, average price, position size,
-  equity/profit variables, `strategy.opentrades`, `strategy.close_all()`, and a
-  FIFO `strategy.close()` case;
-- Python and WASM parity tests cover the public JSON contract;
+- `StrategySettings::pyramiding_limit` defaults to `1`, sema accepts positive
+  integer const `pyramiding`, and runtime initializes `BrokerState` with that
+  limit.
+- `record_open_long_trade()` appends open trades when the configured limit is
+  above `1`, and keeps the default no-pyramiding path unchanged.
+- Aggregate `position_size`, `avg_price`, and `max_contracts_held_long` sync
+  from the ledger after accepted long market entries.
+- `strategy_pyramiding.pine` covers two long market entries, the third entry
+  rejected by the limit, aggregate position state, `strategy.opentrades`, and
+  index `0`/`1` open-trade field reads.
 - conformance, matrix, docs, release notes, and `scripts/verify.sh` are
   synchronized.
 
+Future slices:
+
+- multi-entry `strategy.close()`, `strategy.close_all()`, and `strategy.exit`
+  fixture expansion;
+- price-based same-tick pyramiding-limit exceptions;
+- host parity coverage for broader public JSON contracts.
+
 ## Compatibility Contract
 
-Until a later behavior slice closes, the supported strategy subset remains the
-one recorded in `tests/fixtures/conformance.tsv`. Stage 13 Slice 0 is only a
-design gate and must not be used to claim `pyramiding`, multi-entry ledgers,
-short entries, reversals, `strategy.order()`, or `close_entries_rule` support.
+The supported strategy subset remains the one recorded in
+`tests/fixtures/conformance.tsv`. Stage 13 Slice 10 claims only the
+fixture-backed positive integer const `pyramiding` subset for same-direction
+long market entries. It must not be used to claim price-based same-tick entry
+exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`, or
+broader multi-entry exit/reporting support.

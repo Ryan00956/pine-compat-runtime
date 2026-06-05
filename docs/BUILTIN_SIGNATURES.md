@@ -255,7 +255,7 @@ ohlc4 = (open + high + low + close) / 4
 ```text
 indicator(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric)
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric)
   -> void
@@ -343,6 +343,11 @@ affordability checks at the actual fill price. It also supports the first
 long-only forced-liquidation subset using `bar.low` and whole-unit truncation.
 Short margin behavior, symbol precision rounding, and margin liquidation price
 remain unsupported.
+`strategy(..., pyramiding=N)` accepts positive integer const values and limits
+same-direction long `strategy.entry()` market entries to that many open trades
+for the current position. The default remains `1`. Short entries, reversals,
+`strategy.order()`, same-tick price-based entry exceptions, and broader
+multi-entry exit/reporting semantics remain unsupported unless fixture-backed.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by
