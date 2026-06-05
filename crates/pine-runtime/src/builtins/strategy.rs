@@ -1,7 +1,9 @@
 use pine_ir::{CallSiteId, HirCallArg};
 
 use crate::builtins::args::call_arg_expr;
-use crate::strategy::{StopProfitBracketSpec, TrailPointsExitSpec, TrailPriceExitSpec};
+use crate::strategy::{
+    LossLimitBracketSpec, StopProfitBracketSpec, TrailPointsExitSpec, TrailPriceExitSpec,
+};
 use crate::*;
 
 #[derive(Clone, Copy)]
@@ -383,12 +385,17 @@ impl<'a> HistoricalRuntime<'a> {
             && profit_expr.is_some()
             && loss_expr.is_none()
             && limit_expr.is_none();
+        let is_loss_limit_bracket = loss_expr.is_some()
+            && limit_expr.is_some()
+            && stop_expr.is_none()
+            && profit_expr.is_none();
         let has_unsupported_entry_relative_active_entry_exit = (trail_points_expr.is_some()
             && !is_trailing_only)
             || ((profit_expr.is_some() || loss_expr.is_some())
                 && has_downside
                 && has_upside
-                && !is_stop_profit_bracket);
+                && !is_stop_profit_bracket
+                && !is_loss_limit_bracket);
         if has_unsupported_entry_relative_active_entry_exit
             && self
                 .strategy_broker
@@ -474,6 +481,30 @@ impl<'a> HistoricalRuntime<'a> {
                     StopProfitBracketSpec {
                         stop_price,
                         profit_ticks,
+                        mintick,
+                    },
+                    quantity,
+                    self.bars,
+                );
+                return Ok(PineValue::Void);
+            }
+            if is_loss_limit_bracket {
+                let loss_ticks = self
+                    .eval_expr(loss_expr.expect("checked loss presence"))?
+                    .as_f64()
+                    .unwrap_or(f64::NAN);
+                let limit_price = self
+                    .eval_expr(limit_expr.expect("checked limit presence"))?
+                    .as_f64()
+                    .unwrap_or(f64::NAN);
+                let mintick =
+                    pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+                self.place_exit_loss_limit_bracket_quantity(
+                    id,
+                    from_entry,
+                    LossLimitBracketSpec {
+                        loss_ticks,
+                        limit_price,
                         mintick,
                     },
                     quantity,
@@ -736,6 +767,33 @@ impl<'a> HistoricalRuntime<'a> {
             StrategyExitQuantityArg::Percent(qty_percent) => self
                 .strategy_broker
                 .place_exit_bracket_stop_profit_ticks_qty_percent(
+                    id,
+                    from_entry,
+                    spec,
+                    qty_percent,
+                    bar_index,
+                ),
+        }
+    }
+
+    fn place_exit_loss_limit_bracket_quantity(
+        &mut self,
+        id: String,
+        from_entry: String,
+        spec: LossLimitBracketSpec,
+        quantity: StrategyExitQuantityArg,
+        bar_index: usize,
+    ) {
+        match quantity {
+            StrategyExitQuantityArg::Full => self
+                .strategy_broker
+                .place_exit_bracket_loss_limit_ticks(id, from_entry, spec, bar_index),
+            StrategyExitQuantityArg::Fixed(qty) => self
+                .strategy_broker
+                .place_exit_bracket_loss_limit_ticks_qty(id, from_entry, spec, qty, bar_index),
+            StrategyExitQuantityArg::Percent(qty_percent) => self
+                .strategy_broker
+                .place_exit_bracket_loss_limit_ticks_qty_percent(
                     id,
                     from_entry,
                     spec,

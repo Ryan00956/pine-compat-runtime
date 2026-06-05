@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 10 Slice 4 `loss + limit` active-entry
+  bracket attachment. Same-calculation exits targeting a matching active
+  pending long entry can now defer the loss leg until the actual entry fill
+  price is known, then place the existing bracket trigger with unchanged public
+  strategy JSON shape across CLI, Python, and WASM.
 - Closed Strategy Internal Stage 10 Slice 3 `stop + profit` active-entry
   bracket attachment. Same-calculation exits targeting a matching active
   pending long entry can now defer the profit leg until the actual entry fill

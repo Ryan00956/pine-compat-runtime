@@ -225,8 +225,9 @@ Closed evidence:
   plus CLI golden, Python, WASM, incremental, conformance, matrix, docs, and
   release-note coverage;
 - existing mixed-pair fixture now demonstrates supported active-entry
-  `stop + profit` while `loss + limit` remains unsupported;
-- `loss + limit` and `loss + profit` active-entry bracket forms remain
+  `stop + profit` while `loss + limit` still remained unsupported at Slice 3
+  close;
+- `loss + limit` and `loss + profit` active-entry bracket forms remained
   explicitly guarded for later slices.
 
 Acceptance:
@@ -237,13 +238,29 @@ Acceptance:
   places the existing bracket trigger;
 - CLI golden, Python, WASM, incremental, conformance, matrix, docs, and release
   notes cover one representative fixture;
-- `loss + limit` and `loss + profit` remain unsupported until later slices.
+- at Slice 3 close, `loss + limit` and `loss + profit` remained unsupported
+  until later slices.
 
 ### Slice 4: `loss + limit` Active-Entry Bracket
+
+Status: Closed on 2026-06-05. This slice widens the active-entry bracket subset
+only for deferred entry-relative downside plus absolute upside.
 
 Goal:
 
 - support deferred entry-relative downside plus absolute upside.
+
+Closed evidence:
+
+- added broker placement and fill-time resolution for
+  `strategy.exit(..., loss=..., limit=...)` targeting the matching active
+  pending long entry;
+- loss ticks resolve from the actual entry fill price before placing the
+  existing `PendingExitTrigger::Bracket { downside, upside }`;
+- added runtime fixture `strategy_exit_active_entry_loss_limit_bracket.pine`
+  plus CLI golden, Python, WASM, incremental, conformance, matrix, docs, and
+  release-note coverage;
+- `loss + profit` remains explicitly guarded for a later slice.
 
 Acceptance:
 

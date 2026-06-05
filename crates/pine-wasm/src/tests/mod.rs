@@ -957,6 +957,45 @@ fn runs_strategy_exit_active_entry_stop_profit_bracket_from_csv_to_public_strate
 }
 
 #[test]
+fn runs_strategy_exit_active_entry_loss_limit_bracket_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_active_entry_loss_limit_bracket.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
+    )
+    .expect("strategy exit active-entry loss-limit bracket fixture should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XB\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":3.5}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":2,\"exitTime\":3,\"entryPrice\":2,\"exitPrice\":3.5,\"qty\":2,\"profit\":3}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"
+    ));
+    assert!(output.contains("\"values\":[0,2,2,0]"));
+    assert!(output.contains("\"values\":[0,0,0,1]"));
+    assert!(output.contains("\"strategy\":{\"orders\":"));
+    assert!(output.contains("\"equity\":["));
+    assert!(output.contains("\"diagnostics\":[]}"));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("reservation"));
+    assert!(!output.contains("reservedQuantity"));
+    assert!(!output.contains("reserved_quantity"));
+    assert!(!output.contains("remainingQty"));
+    assert!(!output.contains("qtyPercent"));
+    assert!(!output.contains("qty_percent"));
+    assert!(!output.contains("exitReason"));
+}
+
+#[test]
 fn runs_strategy_exit_bracket_reservation_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(

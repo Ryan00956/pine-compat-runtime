@@ -807,6 +807,24 @@ impl BrokerState {
                         last_update_bar_index,
                     );
                 }
+                DeferredRelativeExitTrigger::Bracket {
+                    downside: DeferredBracketLeg::RelativeLoss { ticks, mintick },
+                    upside: DeferredBracketLeg::Absolute(upside),
+                } => {
+                    let Some(downside_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+                        continue;
+                    };
+                    self.place_exit(
+                        id,
+                        from_entry,
+                        PendingExitTrigger::Bracket {
+                            downside: self.avg_price - downside_offset,
+                            upside,
+                        },
+                        quantity,
+                        last_update_bar_index,
+                    );
+                }
                 DeferredRelativeExitTrigger::Bracket { .. } => continue,
             }
         }
