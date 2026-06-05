@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 5 aggregate position sync helper.
+  Long entry fills now sync aggregate `position_size` and `avg_price` from
+  `TradeLedger::net_position()` after the ledger update, preserving current
+  one-open-trade behavior and public output.
 - Closed Strategy Internal Stage 13 Slice 4 `TradeLedger` append helper.
   `open_long()` still preserves the current one-open-trade runtime behavior, and
   the new internal append path is covered by a weighted net-position unit test

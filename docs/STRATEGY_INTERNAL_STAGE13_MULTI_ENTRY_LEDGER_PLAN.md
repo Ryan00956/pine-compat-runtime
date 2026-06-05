@@ -240,7 +240,28 @@ Closed evidence:
 - `trade_ledger_append_long_rebuilds_weighted_net_position` covers the internal
   append invariant before any public `pyramiding` route uses it.
 
-### Slice 5: Long Market Pyramiding
+### Slice 5: Aggregate Position Sync Helper
+
+Status: closed on 2026-06-05. This slice added a private aggregate sync helper
+and routed the current one-open-long entry handoff through it. Runtime behavior,
+conformance, fixtures, snapshots, matrix output, and public JSON are unchanged.
+
+Goal:
+
+- prepare aggregate `position_size` and `avg_price` ownership for later
+  multi-entry work by syncing them from `TradeLedger::net_position()`.
+
+Closed evidence:
+
+- `BrokerState::record_open_long_trade()` now calls
+  `sync_aggregate_position_from_ledger()` after updating `TradeLedger`.
+- The helper currently updates only aggregate position size and average price;
+  entry id, open-trade namespace mirrors, runup/drawdown state, and public
+  output remain under the current one-open-trade legacy contract.
+- Existing entry, pending-entry, ledger mirror, and full release gates continue
+  to pass with unchanged behavior.
+
+### Slice 6: Long Market Pyramiding
 
 Goal:
 

@@ -274,6 +274,13 @@ impl BrokerState {
     fn record_open_long_trade(&mut self, open_trade: OpenTrade) {
         self.record_open_long_legacy_state(&open_trade);
         self.trade_ledger.open_long(open_trade);
+        self.sync_aggregate_position_from_ledger();
+    }
+
+    fn sync_aggregate_position_from_ledger(&mut self) {
+        let net_position = self.trade_ledger.net_position();
+        self.position_size = net_position.signed_size;
+        self.avg_price = net_position.avg_price;
     }
 
     pub(crate) fn cancel_exit_for_entry(&mut self, entry_id: &str) {

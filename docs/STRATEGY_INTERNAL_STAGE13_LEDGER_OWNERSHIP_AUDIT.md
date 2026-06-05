@@ -124,3 +124,12 @@ Stage 13 Slice 4 added `TradeLedger::append_long()` as an internal append helper
 and test-backed weighted-net-position invariant. Runtime `open_long()` still
 clears existing open trades before appending, so accepted scripts keep the same
 one-net-long behavior.
+
+## Slice 5 Follow-Up
+
+Stage 13 Slice 5 added
+`BrokerState::sync_aggregate_position_from_ledger()` and routes the current
+long-entry fill handoff through it after `TradeLedger` updates. The helper only
+syncs aggregate `position_size` and `avg_price`; entry-id-specific mirrors,
+open-trade namespace reads, runup/drawdown state, and public output stay on the
+current one-open-trade path.

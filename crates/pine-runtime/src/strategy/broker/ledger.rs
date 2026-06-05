@@ -179,7 +179,6 @@ impl TradeLedger {
         self.append_long(trade);
     }
 
-    #[cfg(test)]
     pub(super) fn net_position(&self) -> NetPosition {
         self.net_position
     }
