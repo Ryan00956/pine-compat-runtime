@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Opened Strategy Internal Stage 10 as an active-entry relative bracket design
+  gate. The plan covers future fixture-backed support for `stop + profit`,
+  `loss + limit`, and `loss + profit` against matching active pending long
+  entries while keeping runtime behavior, conformance claims, and public output
+  unchanged for this design slice.
 - Closed Strategy Internal Stage 9 with an entry-relative active-entry exit
   audit. The closeout records the supported single-trigger `profit`, `loss`,
   and `trail_points + trail_offset` pending-entry subset, keeps the public

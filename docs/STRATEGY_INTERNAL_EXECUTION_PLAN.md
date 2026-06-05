@@ -345,6 +345,42 @@ Out of scope:
 - Public pending-order schema expansion.
 - Tick-level or bar-magnifier behavior.
 
+## Stage 10: Active-Entry Relative Brackets
+
+Status: design gate opened on 2026-06-05. See
+`docs/STRATEGY_INTERNAL_STAGE10_ACTIVE_ENTRY_BRACKET_PLAN.md`.
+
+Goal: design and then fixture-back same-calculation active-entry
+`strategy.exit` bracket attachment when one or both bracket legs are
+entry-relative.
+
+Target first subset:
+
+- `strategy.exit(..., stop=..., profit=...)` against a matching active pending
+  long entry;
+- `strategy.exit(..., loss=..., limit=...)` against a matching active pending
+  long entry;
+- `strategy.exit(..., loss=..., profit=...)` against a matching active pending
+  long entry.
+
+Scope:
+
+- Current long-only active pending-entry subset.
+- One downside leg plus one upside leg only.
+- Deferred relative leg resolution from the eventual entry fill price.
+- Existing bracket precedence, reservation, quantity, and public output
+  contracts after resolution.
+- Fixture-backed CLI, Python, and WASM parity before compatibility claims
+  widen.
+
+Out of scope:
+
+- Same-side pairs, 3+ triggers, or trailing-plus-bracket forms.
+- Missing-entry future binding and `strategy.exit()` persistence for unmatched
+  future entries.
+- Pyramiding, shorts, reversals, generic `strategy.order()`, public
+  pending-order output, and schema expansion.
+
 ## Shared Completion Gates
 
 Every stage or slice must close with:
