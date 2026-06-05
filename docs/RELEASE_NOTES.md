@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 7 default pyramiding gate helper.
+  `BrokerState` now stores an internal `pyramiding_limit` defaulting to `1`, and
+  current long-entry placement/fill paths route through `can_open_long_entry()`
+  while preserving no-pyramiding behavior and public output.
 - Closed Strategy Internal Stage 13 Slice 6 allocation sync helper. Existing
   long `strategy.close`, supported `strategy.exit`, and long margin-call
   reduction paths now sync aggregate `position_size` and `avg_price` from

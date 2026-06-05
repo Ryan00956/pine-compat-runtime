@@ -182,4 +182,8 @@ impl TradeLedger {
     pub(super) fn net_position(&self) -> NetPosition {
         self.net_position
     }
+
+    pub(super) fn open_count(&self) -> usize {
+        self.open_trades.len()
+    }
 }

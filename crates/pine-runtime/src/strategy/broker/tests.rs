@@ -240,6 +240,18 @@ fn trade_ledger_append_long_rebuilds_weighted_net_position() {
 }
 
 #[test]
+fn default_pyramiding_limit_allows_only_one_long_entry() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    assert!(broker.can_open_long_entry());
+    assert!(broker.entry_long("L".to_owned(), 1, 10, 100.0, 1.0));
+    assert!(!broker.can_open_long_entry());
+    assert!(!broker.entry_long("L2".to_owned(), 2, 20, 101.0, 1.0));
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.trade_ledger.open_count(), 1);
+}
+
+#[test]
 fn trade_ledger_allocates_matching_entry_by_fifo() {
     let mut ledger = TradeLedger::default();
     ledger.append_open_trade_for_test(ledger_open_trade("A", 1.0, 100.0, 2.0));

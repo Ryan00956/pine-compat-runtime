@@ -283,7 +283,27 @@ Closed evidence:
 - Existing partial close, partial exit, margin, strategy entry, and full release
   gates continue to pass with unchanged public output.
 
-### Slice 7: Long Market Pyramiding
+### Slice 7: Default Pyramiding Gate Helper
+
+Status: closed on 2026-06-05. This slice added an internal default
+`pyramiding_limit` of `1` and routed current long-entry admission checks through
+`can_open_long_entry()`. Runtime behavior, conformance, fixtures, snapshots,
+matrix output, and public JSON are unchanged.
+
+Goal:
+
+- isolate the current no-pyramiding long-entry gate behind one helper before
+  accepting any public `pyramiding` setting.
+
+Closed evidence:
+
+- `BrokerState` now stores `pyramiding_limit: 1` by default.
+- Market, limit, stop, and stop-limit long-entry placement/fill paths use
+  `can_open_long_entry()` instead of direct aggregate-position checks.
+- `default_pyramiding_limit_allows_only_one_long_entry` proves the internal
+  default still rejects a second long entry and leaves a single open trade.
+
+### Slice 8: Long Market Pyramiding
 
 Goal:
 

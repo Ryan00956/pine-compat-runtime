@@ -28,6 +28,7 @@ use crate::{
 pub struct BrokerState {
     initial_capital: f64,
     commission: Option<StrategyCommission>,
+    pyramiding_limit: usize,
     margin_long: StrategyMarginSetting,
     margin_short: StrategyMarginSetting,
     open_entry_commission: f64,
@@ -135,6 +136,7 @@ impl BrokerState {
         Self {
             initial_capital,
             commission,
+            pyramiding_limit: 1,
             margin_long,
             margin_short,
             open_entry_commission: 0.0,
@@ -228,7 +230,7 @@ impl BrokerState {
             });
             return false;
         }
-        if self.position_size > 0.0 {
+        if !self.can_open_long_entry() {
             return false;
         }
 
@@ -288,6 +290,10 @@ impl BrokerState {
         self.sync_aggregate_position_from_ledger();
     }
 
+    fn can_open_long_entry(&self) -> bool {
+        self.trade_ledger.open_count() < self.pyramiding_limit
+    }
+
     pub(crate) fn cancel_exit_for_entry(&mut self, entry_id: &str) {
         self.order_book.exits_mut().clear_for_entry(entry_id);
     }
@@ -307,7 +313,7 @@ impl BrokerState {
         qty: f64,
         created_bar_index: usize,
     ) {
-        if self.position_size > 0.0 {
+        if !self.can_open_long_entry() {
             return;
         }
         self.order_book.entries_mut().place_market_long(
@@ -326,7 +332,7 @@ impl BrokerState {
         limit: f64,
         created_bar_index: usize,
     ) {
-        if self.position_size > 0.0 {
+        if !self.can_open_long_entry() {
             return;
         }
         self.order_book.entries_mut().place_limit_long(
@@ -346,7 +352,7 @@ impl BrokerState {
         stop: f64,
         created_bar_index: usize,
     ) {
-        if self.position_size > 0.0 {
+        if !self.can_open_long_entry() {
             return;
         }
         self.order_book.entries_mut().place_stop_long(
@@ -367,7 +373,7 @@ impl BrokerState {
         limit: f64,
         created_bar_index: usize,
     ) {
-        if self.position_size > 0.0 {
+        if !self.can_open_long_entry() {
             return;
         }
         self.order_book.entries_mut().place_stop_limit_long(
@@ -391,7 +397,7 @@ impl BrokerState {
         time: i64,
         fill_price: f64,
     ) {
-        if self.position_size > 0.0 {
+        if !self.can_open_long_entry() {
             self.order_book.entries_mut().clear_all();
             return;
         }
@@ -425,7 +431,7 @@ impl BrokerState {
         time: i64,
         low: f64,
     ) {
-        if self.position_size > 0.0 {
+        if !self.can_open_long_entry() {
             self.order_book.entries_mut().clear_all();
             return;
         }
@@ -462,7 +468,7 @@ impl BrokerState {
         time: i64,
         high: f64,
     ) {
-        if self.position_size > 0.0 {
+        if !self.can_open_long_entry() {
             self.order_book.entries_mut().clear_all();
             return;
         }
@@ -500,7 +506,7 @@ impl BrokerState {
         high: f64,
         low: f64,
     ) {
-        if self.position_size > 0.0 {
+        if !self.can_open_long_entry() {
             self.order_book.entries_mut().clear_all();
             return;
         }

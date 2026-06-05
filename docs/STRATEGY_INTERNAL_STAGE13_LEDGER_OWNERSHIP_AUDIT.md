@@ -141,3 +141,10 @@ Stage 13 Slice 6 added
 long close, supported exit, and long margin-call reduction paths. It keeps
 aggregate `position_size` and `avg_price` derived from `TradeLedger` after
 allocation updates while preserving legacy entry-id and open-trade mirrors.
+
+## Slice 7 Follow-Up
+
+Stage 13 Slice 7 added the internal `pyramiding_limit` field with a default of
+`1` and routes current long-entry admission through `can_open_long_entry()`.
+This is still the current no-pyramiding behavior; no public `strategy()`
+`pyramiding` declaration is accepted yet.
