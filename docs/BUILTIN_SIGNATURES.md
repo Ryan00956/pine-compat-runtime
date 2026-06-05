@@ -349,7 +349,8 @@ for the current position. The default remains `1`. Short entries, reversals,
 `strategy.order()`, same-tick price-based entry exceptions, and broader
 multi-entry exit/reporting semantics remain unsupported unless fixture-backed.
 `strategy.close(id)` can close a requested pyramided long entry id; multi-entry
-`strategy.close_all()` and `strategy.exit` remain outside the current claim.
+`strategy.close_all()` can flatten all accepted open long entries. Multi-entry
+`strategy.exit` remains outside the current claim.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by

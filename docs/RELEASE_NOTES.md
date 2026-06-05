@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 12 multi-entry `strategy.close_all()`.
+  Close-all now allocates across all open long ledger entries, records one
+  closed trade per matched entry, and flattens aggregate position state.
 - Closed Strategy Internal Stage 13 Slice 11 multi-entry `strategy.close(id)`
   matching. Close calls now match and clamp against the requested ledger entry
   id, so one pyramided long entry can close while another remains open.

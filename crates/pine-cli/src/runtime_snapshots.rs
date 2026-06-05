@@ -610,6 +610,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_pyramiding_close.pine",
     ),
     (
+        "runtime_strategy_pyramiding_close_all.json",
+        "tests/fixtures/runtime/strategy_pyramiding_close_all.pine",
+    ),
+    (
         "runtime_strategy_margin_capital_held_long.json",
         "tests/fixtures/runtime/strategy_margin_capital_held_long.pine",
     ),

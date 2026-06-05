@@ -180,4 +180,13 @@ singleton `entry_id` mirror to `TradeLedger::open_quantity_for_entry()`.
 Supported close quantities now clamp to the requested entry id's open ledger
 quantity, so closing one pyramided long entry can leave another entry open with
 aggregate `position_size` and `avg_price` resynced from the ledger.
-`strategy.close_all()` and multi-entry `strategy.exit` remain future slices.
+Multi-entry `strategy.close_all()` and `strategy.exit` remain future slices at
+this point in the sequence.
+
+## Slice 12 Follow-Up
+
+Stage 13 Slice 12 changes `strategy.close_all()` to allocate the full aggregate
+long position through the open-trade ledger. Multi-entry close-all now records
+one closed trade per matched ledger entry and clears all pending exits before
+resyncing aggregate position state to flat. Multi-entry `strategy.exit` remains
+a future slice.

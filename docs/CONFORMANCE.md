@@ -93,9 +93,10 @@ entries, with the default staying at `1`; short entries, reversals,
 `strategy.order()`, same-tick price-based entry exceptions, and broader
 multi-entry exit/reporting semantics remain outside the supported subset unless
 fixture-backed. Stage 13 Slice 11 adds fixture-backed `strategy.close(id)`
-matching for a requested pyramided long entry id; multi-entry
-`strategy.close_all()` and `strategy.exit` remain outside this claim. Stage 7
-Slice 17 accepts
+matching for a requested pyramided long entry id. Stage 13 Slice 12 adds
+fixture-backed `strategy.close_all()` flattening across all open long ledger
+entries; multi-entry `strategy.exit` remains outside this claim. Stage 7 Slice
+17 accepts
 `commission_type=strategy.commission.cash_per_contract`, and Stage 7 Slice 18
 accepts `commission_type=strategy.commission.cash_per_order`, both with finite
 non-negative const numeric `commission_value`. Stage 7 Slice 21 accepts

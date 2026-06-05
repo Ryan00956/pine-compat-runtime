@@ -233,10 +233,62 @@ impl BrokerState {
     }
 
     pub(crate) fn close_all_long(&mut self, bar_index: usize, time: i64, price: f64) {
-        let Some(id) = self.entry_id.clone() else {
+        if self.position_size <= 0.0 {
             return;
-        };
-        self.close_long(id, bar_index, time, price);
+        }
+        if !price.is_finite() {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.close_all` fill price must be finite".to_owned(),
+            });
+            return;
+        }
+
+        let price = self.long_exit_fill_price(price);
+        if !price.is_finite() {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_PRICE".to_owned(),
+                message: "`strategy.close_all` slipped fill price must be finite".to_owned(),
+            });
+            return;
+        }
+
+        let qty = self.position_size;
+        let allocations = self.trade_ledger.allocate_exit_fifo(None, qty);
+        if allocations.is_empty() {
+            return;
+        }
+
+        let exit_commission = self.exit_commission_for_fill(qty, price);
+        for allocation in &allocations {
+            let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
+            let commission = allocation.entry_commission + allocated_exit_commission;
+            let profit = (price - allocation.entry_price) * allocation.quantity - commission;
+            self.record_closed_trade_fill(ClosedTradeFill {
+                entry_id: allocation.entry_id.clone(),
+                exit_id: allocation.entry_id.clone(),
+                entry_fill: AllocatedEntryFill {
+                    entry_price: allocation.entry_price,
+                    entry_bar_index: allocation.entry_bar_index,
+                    entry_time: allocation.entry_time,
+                    entry_commission: allocation.entry_commission,
+                },
+                exit_bar_index: bar_index,
+                exit_time: time,
+                exit_price: price,
+                qty: allocation.quantity,
+                profit,
+                commission,
+            });
+        }
+
+        self.cash += qty * price - exit_commission;
+        self.order_book.exits_mut().clear_all();
+        self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
+        self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
+        self.clear_open_long_legacy_state();
+        self.apply_trade_allocations_and_sync_position(&allocations);
+        self.record_position_snapshot(bar_index);
     }
 
     pub(crate) fn close_long(&mut self, id: String, bar_index: usize, time: i64, price: f64) {

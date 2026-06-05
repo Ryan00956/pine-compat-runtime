@@ -405,9 +405,30 @@ Closed evidence:
 - `strategy_pyramiding_close.pine` covers closing `L1` while `L2` remains open,
   then closing `L2` to flatten the position.
 
+### Slice 12: Multi-Entry `strategy.close_all()`
+
+Status: closed on 2026-06-05. This slice lets `strategy.close_all()` flatten
+all open long trades in the accepted pyramiding subset. It does not yet claim
+`strategy.exit`, price-based entry exceptions, shorts, or reversals.
+
+Goal:
+
+- make `strategy.close_all()` allocate across every open long ledger entry and
+  record closed trades for each matched entry.
+
+Closed evidence:
+
+- `close_all_long()` now allocates the full aggregate position through
+  `TradeLedger::allocate_exit_fifo(None, position_size)`.
+- Each allocation records a closed trade using that entry's id, entry price,
+  entry bar/time, quantity, and proportional commission share.
+- `strategy_pyramiding_close_all.pine` covers two pyramided long entries closed
+  by one `strategy.close_all()` call, leaving `strategy.opentrades` and
+  `strategy.position_size` at `0`.
+
 Future slices:
 
-- multi-entry `strategy.close_all()` and `strategy.exit` fixture expansion;
+- multi-entry `strategy.exit` fixture expansion;
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
 
@@ -417,6 +438,7 @@ The supported strategy subset remains the one recorded in
 `tests/fixtures/conformance.tsv`. Stage 13 Slice 10 claims only the
 fixture-backed positive integer const `pyramiding` subset for same-direction
 long market entries plus Slice 11's fixture-backed `strategy.close(id)` matching
+behavior and Slice 12's fixture-backed `strategy.close_all()` flattening
 behavior. It must not be used to claim price-based same-tick entry exceptions,
-shorts, reversals, `strategy.order()`, `close_entries_rule`, `strategy.close_all()`,
-or broader multi-entry `strategy.exit`/reporting support.
+shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader
+multi-entry `strategy.exit`/reporting support.
