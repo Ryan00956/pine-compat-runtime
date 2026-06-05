@@ -148,3 +148,10 @@ Stage 13 Slice 7 added the internal `pyramiding_limit` field with a default of
 `1` and routes current long-entry admission through `can_open_long_entry()`.
 This is still the current no-pyramiding behavior; no public `strategy()`
 `pyramiding` declaration is accepted yet.
+
+## Slice 8 Follow-Up
+
+Stage 13 Slice 8 changed `BrokerState::open_trade_count()` to read
+`TradeLedger::open_count()` instead of singleton mirrors. Accepted scripts still
+produce only `0` or `1` open trades, but the internal count path is ready for
+future multi-entry behavior.

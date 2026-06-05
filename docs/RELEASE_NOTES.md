@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 8 open-trade count ledger read.
+  `BrokerState::open_trade_count()` now reads `TradeLedger::open_count()` and is
+  test-backed for an internal two-entry ledger state, while accepted scripts and
+  public output remain unchanged.
 - Closed Strategy Internal Stage 13 Slice 7 default pyramiding gate helper.
   `BrokerState` now stores an internal `pyramiding_limit` defaulting to `1`, and
   current long-entry placement/fill paths route through `can_open_long_entry()`

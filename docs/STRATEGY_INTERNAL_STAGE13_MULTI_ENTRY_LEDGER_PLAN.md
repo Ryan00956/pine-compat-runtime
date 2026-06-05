@@ -303,7 +303,28 @@ Closed evidence:
 - `default_pyramiding_limit_allows_only_one_long_entry` proves the internal
   default still rejects a second long entry and leaves a single open trade.
 
-### Slice 8: Long Market Pyramiding
+### Slice 8: Open-Trade Count Ledger Read
+
+Status: closed on 2026-06-05. This slice changed the internal
+`open_trade_count()` source from singleton mirrors to `TradeLedger::open_count()`
+and added an internal multi-ledger count test. Runtime behavior, conformance,
+fixtures, snapshots, matrix output, and public JSON are unchanged.
+
+Goal:
+
+- make the strategy open-trade count read path ledger-backed before accepting
+  public multi-entry behavior.
+
+Closed evidence:
+
+- `BrokerState::open_trade_count()` now returns the ledger open count with
+  overflow clamped to `i64::MAX`.
+- Existing no-pyramiding runtime behavior still keeps the ledger count at `0` or
+  `1`.
+- `open_trade_count_reads_trade_ledger_count` proves the internal count path can
+  observe two ledger entries before any accepted script can create them.
+
+### Slice 9: Long Market Pyramiding
 
 Goal:
 

@@ -1960,6 +1960,19 @@ fn trade_counts_track_long_entry_and_no_pyramiding_noop() {
 }
 
 #[test]
+fn open_trade_count_reads_trade_ledger_count() {
+    let mut broker = BrokerState::new(100_000.0);
+    broker
+        .trade_ledger
+        .append_long(ledger_open_trade("A", 1.0, 100.0, 2.0));
+    broker
+        .trade_ledger
+        .append_long(ledger_open_trade("B", 1.0, 110.0, 2.0));
+
+    assert_eq!(broker.open_trade_count(), 2);
+}
+
+#[test]
 fn trade_counts_track_matching_close() {
     let mut broker = broker_with_long_entry();
 

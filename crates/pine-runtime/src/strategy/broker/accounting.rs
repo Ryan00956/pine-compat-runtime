@@ -322,11 +322,7 @@ impl BrokerState {
 
     #[must_use]
     pub fn open_trade_count(&self) -> i64 {
-        if self.position_size > 0.0 && self.entry_id.is_some() {
-            1
-        } else {
-            0
-        }
+        i64::try_from(self.trade_ledger.open_count()).unwrap_or(i64::MAX)
     }
 
     #[must_use]
