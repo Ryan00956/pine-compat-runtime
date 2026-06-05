@@ -206,10 +206,28 @@ Acceptance:
 
 ### Slice 3: `stop + profit` Active-Entry Bracket
 
+Status: Closed on 2026-06-05. This slice widens the active-entry bracket subset
+only for absolute downside plus deferred entry-relative upside.
+
 Goal:
 
 - support the smallest mixed bracket: absolute downside plus deferred
   entry-relative upside.
+
+Closed evidence:
+
+- added broker placement and fill-time resolution for
+  `strategy.exit(..., stop=..., profit=...)` targeting the matching active
+  pending long entry;
+- profit ticks resolve from the actual entry fill price before placing the
+  existing `PendingExitTrigger::Bracket { downside, upside }`;
+- added runtime fixture `strategy_exit_active_entry_stop_profit_bracket.pine`
+  plus CLI golden, Python, WASM, incremental, conformance, matrix, docs, and
+  release-note coverage;
+- existing mixed-pair fixture now demonstrates supported active-entry
+  `stop + profit` while `loss + limit` remains unsupported;
+- `loss + limit` and `loss + profit` active-entry bracket forms remain
+  explicitly guarded for later slices.
 
 Acceptance:
 

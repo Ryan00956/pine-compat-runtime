@@ -1440,6 +1440,57 @@ fn pending_market_entry_stores_entry_relative_trail_points_attachment() {
     assert!(broker.diagnostics.is_empty());
 }
 
+#[test]
+fn pending_market_entry_resolves_stop_profit_bracket_attachment_after_fill() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
+    broker.place_exit_bracket_stop_profit_ticks(
+        "XB".to_owned(),
+        "L".to_owned(),
+        StopProfitBracketSpec {
+            stop_price: 95.0,
+            profit_ticks: 10.0,
+            mintick: 0.5,
+        },
+        0,
+    );
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(deferred_relative_exit_count(&broker), 1);
+    broker.fill_pending_market_long_entries(1, 20, 100.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(deferred_relative_exit_count(&broker), 0);
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XB".to_owned(),
+            from_entry: "L".to_owned(),
+            trigger: PendingExitTrigger::Bracket {
+                downside: 95.0,
+                upside: 105.0,
+            },
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
+            multiple_reservation: false,
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+
+    broker.evaluate_pending_exits(1, 20, 105.0, 99.0);
+
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[1].id, "XB");
+    assert_eq!(broker.orders[1].direction, "strategy.exit");
+    assert_eq!(broker.orders[1].qty, 2.0);
+    assert_eq!(broker.orders[1].price, 105.0);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].exit_price, 105.0);
+    assert_eq!(broker.trades[0].profit, 10.0);
+}
+
 fn assert_pending_entry_stores_trail_points_active_entry_attachment(
     place_entry: impl Fn(&mut BrokerState),
 ) {

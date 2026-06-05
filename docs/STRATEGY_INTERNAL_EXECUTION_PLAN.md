@@ -347,7 +347,7 @@ Out of scope:
 
 ## Stage 10: Active-Entry Relative Brackets
 
-Status: Slices 0-2 closed on 2026-06-05. See
+Status: Slices 0-3 closed on 2026-06-05. See
 `docs/STRATEGY_INTERNAL_STAGE10_ACTIVE_ENTRY_BRACKET_PLAN.md`.
 
 Goal: design and then fixture-back same-calculation active-entry

@@ -789,9 +789,25 @@ impl BrokerState {
                         last_update_bar_index,
                     );
                 }
-                DeferredRelativeExitTrigger::Bracket { .. } => {
-                    continue;
+                DeferredRelativeExitTrigger::Bracket {
+                    downside: DeferredBracketLeg::Absolute(downside),
+                    upside: DeferredBracketLeg::RelativeProfit { ticks, mintick },
+                } => {
+                    let Some(upside_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+                        continue;
+                    };
+                    self.place_exit(
+                        id,
+                        from_entry,
+                        PendingExitTrigger::Bracket {
+                            downside,
+                            upside: self.avg_price + upside_offset,
+                        },
+                        quantity,
+                        last_update_bar_index,
+                    );
                 }
+                DeferredRelativeExitTrigger::Bracket { .. } => continue,
             }
         }
     }
@@ -1256,7 +1272,7 @@ impl BrokerState {
             .map(|price_offset| self.avg_price - price_offset)
     }
 
-    fn exit_tick_price_offset(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
+    pub(super) fn exit_tick_price_offset(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
         if !ticks.is_finite() || ticks <= 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_TICKS".to_owned(),
@@ -1274,7 +1290,7 @@ impl BrokerState {
         Some(ticks * mintick)
     }
 
-    fn place_exit(
+    pub(super) fn place_exit(
         &mut self,
         id: String,
         from_entry: String,

@@ -1,4 +1,5 @@
 mod accounting;
+mod active_entry_brackets;
 mod entries;
 mod exits;
 mod fills;
@@ -7,6 +8,7 @@ mod order_book;
 
 use pine_ir::{DEFAULT_STRATEGY_INITIAL_CAPITAL, StrategyCommission, StrategyMarginSetting};
 
+pub(crate) use active_entry_brackets::StopProfitBracketSpec;
 use entries::PendingEntryKind;
 use exits::{PendingExit, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate};
 pub(crate) use exits::{TrailPointsExitSpec, TrailPriceExitSpec};

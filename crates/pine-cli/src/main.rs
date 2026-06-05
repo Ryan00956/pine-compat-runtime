@@ -689,14 +689,8 @@ mod tests {
             ("runtime_strategy_exit_stop.json", "tests/fixtures/runtime/strategy_exit_stop.pine"),
             ("runtime_strategy_exit_limit.json", "tests/fixtures/runtime/strategy_exit_limit.pine"),
             ("runtime_strategy_exit_profit.json", "tests/fixtures/runtime/strategy_exit_profit.pine"),
-            (
-                "runtime_strategy_exit_active_entry_profit_attachment.json",
-                "tests/fixtures/runtime/strategy_exit_active_entry_profit_attachment.pine",
-            ),
-            (
-                "runtime_strategy_exit_active_entry_loss_attachment.json",
-                "tests/fixtures/runtime/strategy_exit_active_entry_loss_attachment.pine",
-            ),
+            ("runtime_strategy_exit_active_entry_profit_attachment.json", "tests/fixtures/runtime/strategy_exit_active_entry_profit_attachment.pine"),
+            ("runtime_strategy_exit_active_entry_loss_attachment.json", "tests/fixtures/runtime/strategy_exit_active_entry_loss_attachment.pine"),
             ("runtime_strategy_exit_loss.json", "tests/fixtures/runtime/strategy_exit_loss.pine"),
             (
                 "runtime_strategy_exit_interactions.json",
@@ -760,10 +754,8 @@ mod tests {
             ),
             ("runtime_strategy_exit_trail_price_fill.json", "tests/fixtures/runtime/strategy_exit_trail_price_fill.pine"),
             ("runtime_strategy_exit_trail_points_fill.json", "tests/fixtures/runtime/strategy_exit_trail_points_fill.pine"),
-            (
-                "runtime_strategy_exit_active_entry_trail_points_attachment.json",
-                "tests/fixtures/runtime/strategy_exit_active_entry_trail_points_attachment.pine",
-            ),
+            ("runtime_strategy_exit_active_entry_trail_points_attachment.json", "tests/fixtures/runtime/strategy_exit_active_entry_trail_points_attachment.pine"),
+            ("runtime_strategy_exit_active_entry_stop_profit_bracket.json", "tests/fixtures/runtime/strategy_exit_active_entry_stop_profit_bracket.pine"),
             (
                 "runtime_strategy_exit_trailing_activation_bar.json",
                 "tests/fixtures/runtime/strategy_exit_trailing_activation_bar.pine",
@@ -1381,6 +1373,7 @@ mod tests {
             "tests/fixtures/runtime/strategy_exit_trail_price_fill.pine"
             | "tests/fixtures/runtime/strategy_exit_trail_points_fill.pine"
             | "tests/fixtures/runtime/strategy_exit_active_entry_trail_points_attachment.pine"
+            | "tests/fixtures/runtime/strategy_exit_active_entry_stop_profit_bracket.pine"
             | "tests/fixtures/runtime/strategy_exit_trailing_activation_bar.pine"
             | "tests/fixtures/runtime/strategy_exit_trailing_ratchet.pine"
             | "tests/fixtures/runtime/strategy_exit_trailing_repeated.pine"

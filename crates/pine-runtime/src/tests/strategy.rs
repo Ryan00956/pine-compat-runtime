@@ -281,9 +281,8 @@ plot(strategy.closedtrades)
 }
 
 #[test]
-fn active_entry_relative_brackets_remain_unsupported_before_stage10_behavior() {
+fn remaining_active_entry_relative_brackets_stay_unsupported_after_stop_profit_slice() {
     for exit_call in [
-        r#"strategy.exit("XB", "L", stop=1.5, profit=50)"#,
         r#"strategy.exit("XB", "L", loss=50, limit=3.5)"#,
         r#"strategy.exit("XB", "L", loss=50, profit=50)"#,
     ] {

@@ -2,14 +2,19 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 10 Slice 3 `stop + profit` active-entry
+  bracket attachment. Same-calculation exits targeting a matching active
+  pending long entry can now defer the profit leg until the actual entry fill
+  price is known, then place the existing bracket trigger with unchanged public
+  strategy JSON shape across CLI, Python, and WASM.
 - Closed Strategy Internal Stage 10 Slice 2 deferred bracket storage. The
   broker can now store, replace, take, cancel, and clear internal active-entry
   relative bracket intent without routing runtime `strategy.exit` calls into
   that storage or widening public behavior.
 - Closed Strategy Internal Stage 10 Slice 1 boundary lock. Runtime tests now
-  prove active-entry relative bracket forms `stop + profit`, `loss + limit`,
-  and `loss + profit` still fill only the matching pending entry and create no
-  public exit orders or trades before deferred bracket storage is implemented.
+  captured the pre-routing boundary where active-entry relative bracket forms
+  filled only the matching pending entry and created no public exit orders or
+  trades before deferred bracket storage was implemented.
 - Opened Strategy Internal Stage 10 as an active-entry relative bracket design
   gate. The plan covers future fixture-backed support for `stop + profit`,
   `loss + limit`, and `loss + profit` against matching active pending long

@@ -1,7 +1,7 @@
 use pine_ir::{CallSiteId, HirCallArg};
 
 use crate::builtins::args::call_arg_expr;
-use crate::strategy::{TrailPointsExitSpec, TrailPriceExitSpec};
+use crate::strategy::{StopProfitBracketSpec, TrailPointsExitSpec, TrailPriceExitSpec};
 use crate::*;
 
 #[derive(Clone, Copy)]
@@ -379,9 +379,16 @@ impl<'a> HistoricalRuntime<'a> {
             trail_price_expr.is_some() != trail_points_expr.is_some();
         let is_trailing_only =
             !has_fixed_exit && has_single_trailing_activation && trail_offset_expr.is_some();
+        let is_stop_profit_bracket = stop_expr.is_some()
+            && profit_expr.is_some()
+            && loss_expr.is_none()
+            && limit_expr.is_none();
         let has_unsupported_entry_relative_active_entry_exit = (trail_points_expr.is_some()
             && !is_trailing_only)
-            || ((profit_expr.is_some() || loss_expr.is_some()) && has_downside && has_upside);
+            || ((profit_expr.is_some() || loss_expr.is_some())
+                && has_downside
+                && has_upside
+                && !is_stop_profit_bracket);
         if has_unsupported_entry_relative_active_entry_exit
             && self
                 .strategy_broker
@@ -450,6 +457,31 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         if has_downside && has_upside {
+            if is_stop_profit_bracket {
+                let stop_price = self
+                    .eval_expr(stop_expr.expect("checked stop presence"))?
+                    .as_f64()
+                    .unwrap_or(f64::NAN);
+                let profit_ticks = self
+                    .eval_expr(profit_expr.expect("checked profit presence"))?
+                    .as_f64()
+                    .unwrap_or(f64::NAN);
+                let mintick =
+                    pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+                self.place_exit_stop_profit_bracket_quantity(
+                    id,
+                    from_entry,
+                    StopProfitBracketSpec {
+                        stop_price,
+                        profit_ticks,
+                        mintick,
+                    },
+                    quantity,
+                    self.bars,
+                );
+                return Ok(PineValue::Void);
+            }
+
             let downside_price = if let Some(stop_expr) = stop_expr {
                 let stop_price = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
                 if !stop_price.is_finite() {
@@ -683,6 +715,33 @@ impl<'a> HistoricalRuntime<'a> {
                     bar_index,
                 )
             }
+        }
+    }
+
+    fn place_exit_stop_profit_bracket_quantity(
+        &mut self,
+        id: String,
+        from_entry: String,
+        spec: StopProfitBracketSpec,
+        quantity: StrategyExitQuantityArg,
+        bar_index: usize,
+    ) {
+        match quantity {
+            StrategyExitQuantityArg::Full => self
+                .strategy_broker
+                .place_exit_bracket_stop_profit_ticks(id, from_entry, spec, bar_index),
+            StrategyExitQuantityArg::Fixed(qty) => self
+                .strategy_broker
+                .place_exit_bracket_stop_profit_ticks_qty(id, from_entry, spec, qty, bar_index),
+            StrategyExitQuantityArg::Percent(qty_percent) => self
+                .strategy_broker
+                .place_exit_bracket_stop_profit_ticks_qty_percent(
+                    id,
+                    from_entry,
+                    spec,
+                    qty_percent,
+                    bar_index,
+                ),
         }
     }
 
