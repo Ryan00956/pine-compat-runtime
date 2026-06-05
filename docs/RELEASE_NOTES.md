@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 10 with an active-entry relative bracket
+  audit. The closeout records the fixture-backed `stop + profit`,
+  `loss + limit`, and `loss + profit` pending-entry bracket subset, confirms
+  unchanged public strategy JSON shape across CLI, Python, and WASM, and keeps
+  same-side pairs, 3+ triggers, trailing-plus-bracket forms, missing-entry
+  future binding, broader broker families, and public schema expansion
+  unsupported.
 - Closed Strategy Internal Stage 10 Slice 5 `loss + profit` active-entry
   bracket attachment. Same-calculation exits targeting a matching active
   pending long entry can now defer both bracket legs until the actual entry

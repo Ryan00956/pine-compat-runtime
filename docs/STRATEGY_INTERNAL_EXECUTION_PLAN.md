@@ -347,8 +347,9 @@ Out of scope:
 
 ## Stage 10: Active-Entry Relative Brackets
 
-Status: Slices 0-5 closed on 2026-06-05. See
-`docs/STRATEGY_INTERNAL_STAGE10_ACTIVE_ENTRY_BRACKET_PLAN.md`.
+Status: closed on 2026-06-05. See
+`docs/STRATEGY_INTERNAL_STAGE10_ACTIVE_ENTRY_BRACKET_PLAN.md` and
+`docs/STRATEGY_INTERNAL_STAGE10_ACTIVE_ENTRY_BRACKET_AUDIT.md`.
 
 Goal: design and then fixture-back same-calculation active-entry
 `strategy.exit` bracket attachment when one or both bracket legs are

@@ -1,8 +1,7 @@
 # Strategy Internal Stage 10 Active-Entry Bracket Plan
 
-Status: design gate opened on 2026-06-05. This stage must not widen runtime
-behavior, conformance claims, public JSON, Python dictionaries, or WASM output
-until a later behavior slice adds fixture-backed support.
+Status: closed on 2026-06-05. See
+`docs/STRATEGY_INTERNAL_STAGE10_ACTIVE_ENTRY_BRACKET_AUDIT.md`.
 
 Stage 10 targets the next official Pine strategy gap after the Stage 9
 single-trigger active-entry closeout: same-calculation `strategy.exit` bracket
@@ -304,10 +303,24 @@ Acceptance:
 
 ### Slice 6: Closeout Audit
 
+Status: Closed on 2026-06-05. This slice did not widen runtime behavior or
+public output; it synchronized the Stage 10 closeout audit and stage status.
+
 Goal:
 
 - close Stage 10 with synchronized docs, conformance, matrix, host parity, and
   audit evidence.
+
+Closed evidence:
+
+- added `docs/STRATEGY_INTERNAL_STAGE10_ACTIVE_ENTRY_BRACKET_AUDIT.md`;
+- confirmed the completed `stop + profit`, `loss + limit`, and `loss + profit`
+  active-entry relative bracket subset;
+- recorded still-unsupported same-side pairs, 3+ triggers,
+  trailing-plus-bracket forms, missing-entry future binding, broader broker
+  families, and public schema expansion;
+- left runtime behavior, fixtures, snapshots, conformance, matrix, Python, and
+  WASM output unchanged from Slice 5.
 
 Acceptance:
 
