@@ -446,6 +446,37 @@ Out of scope:
 - Short exposure, reversals, multi-entry ledgers, OCA behavior, public
   order-event output, and schema expansion.
 
+## Stage 13: Multi-Entry Ledger And Pyramiding Design
+
+Status: design gate opened on 2026-06-05. See
+`docs/STRATEGY_INTERNAL_STAGE13_MULTI_ENTRY_LEDGER_PLAN.md`.
+
+Goal: design the next broker-model foundation before accepting `pyramiding`,
+multi-entry ledgers, short/reversal behavior, `close_entries_rule`, or generic
+`strategy.order()` support.
+
+Target first subset:
+
+- no runtime widening in the design slice;
+- official strategy-entry, pyramiding, close-all, FIFO, and generic-order
+  dependencies recorded;
+- a long-only, aggregate-output first behavior target that preserves the current
+  public `StrategyResult` schema.
+
+Scope:
+
+- Current long-only broker and internal `TradeLedger`.
+- Current supported entry/close/exit/cancel behavior.
+- Existing semantic rejection path for unsupported broker-model features.
+- Existing public strategy JSON.
+
+Out of scope:
+
+- Runtime acceptance of `pyramiding` or `close_entries_rule` in this slice.
+- Short exposure, reversals, `strategy.order()`, OCA across order families,
+  public pending-order/open-trade ledgers, realtime recalculation, and strategy
+  order-fill alert delivery.
+
 ## Shared Completion Gates
 
 Every stage or slice must close with:

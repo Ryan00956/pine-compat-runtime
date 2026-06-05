@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Opened Strategy Internal Stage 13 as a multi-entry ledger and pyramiding design
+  gate. The plan records official strategy-entry, pyramiding, close-all, FIFO,
+  and generic-order dependencies, documents the current one-net-long broker and
+  internal `TradeLedger` baseline, and keeps runtime behavior, conformance,
+  matrix output, and public JSON unchanged.
 - Closed Strategy Internal Stage 12 with a declaration-property audit. The
   closeout records the fixture-backed unsupported declaration-property boundary,
   the supported `strategy.cash` default quantity subset, unchanged public
