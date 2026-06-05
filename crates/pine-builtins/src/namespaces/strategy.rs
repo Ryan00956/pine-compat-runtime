@@ -30,11 +30,18 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
-const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
-    name: "id",
-    accepts: Accepts::SimpleString,
-    optional: false,
-}];
+const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "qty",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
+];
 
 const STRATEGY_CLOSE_ALL_PARAMS: &[BuiltinParam] = &[];
 

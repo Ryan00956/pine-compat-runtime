@@ -400,6 +400,8 @@ impl Analyzer {
 
         if name == "strategy.entry" {
             self.validate_strategy_entry_args(args);
+        } else if name == "strategy.close" {
+            self.validate_strategy_close_args(args);
         } else if name == "strategy.exit" {
             self.validate_strategy_exit_args(args);
         }
@@ -497,6 +499,31 @@ impl Analyzer {
                     }
                 }
                 _ => {}
+            }
+        }
+    }
+
+    pub(crate) fn validate_strategy_close_args(&mut self, args: &[CallArg]) {
+        for (index, arg) in args.iter().enumerate() {
+            let Some(name) = arg.name.as_deref().or_else(|| ["id"].get(index).copied()) else {
+                if arg.name.is_none() {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_NAME",
+                        "`strategy.close` partial quantity arguments must be named arguments",
+                        arg.span,
+                    ));
+                }
+                continue;
+            };
+            if name == "qty"
+                && let Some(qty) = const_numeric_value(&arg.value)
+                && (!qty.is_finite() || qty <= 0.0)
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`strategy.close` argument `qty` must be finite and positive",
+                    arg.span,
+                ));
             }
         }
     }

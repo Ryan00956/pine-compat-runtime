@@ -2826,6 +2826,52 @@ fn close_long_cancels_matching_pending_exit() {
 }
 
 #[test]
+fn close_long_fixed_quantity_reduces_position_and_keeps_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+    broker.close_long_qty("L".to_owned(), 1, 20, 110.0, 0.75);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].qty, 0.75);
+    assert_eq!(broker.trades[0].profit, 7.5);
+    assert_eq!(broker.position_size, 1.25);
+    assert_eq!(broker.avg_price, 100.0);
+    assert_eq!(broker.trade_ledger.net_position().signed_size, 1.25);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn close_long_fixed_quantity_clamps_full_and_cancels_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+    broker.close_long_qty("L".to_owned(), 1, 20, 110.0, 5.0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].qty, 2.0);
+    assert_eq!(broker.position_size, 0.0);
+    assert_eq!(broker.trade_ledger.net_position(), NetPosition::default());
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn close_long_invalid_fixed_quantity_preserves_position_and_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
+
+    broker.close_long_qty("L".to_owned(), 1, 20, 110.0, f64::NAN);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert!(broker.trades.is_empty());
+    assert_eq!(broker.position_size, 2.0);
+    assert_eq!(broker.diagnostics.len(), 1);
+    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_CLOSE_QTY");
+}
+
+#[test]
 fn mismatched_entry_id_records_diagnostic_without_pending_state() {
     let mut broker = broker_with_long_entry();
 

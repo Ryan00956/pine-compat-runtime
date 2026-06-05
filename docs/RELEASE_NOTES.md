@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 11 Slice 2 fixed-`qty` partial
+  `strategy.close`. `strategy.close(id, qty=...)` now supports finite positive
+  fixed quantities for the current one-net-long broker, clamps oversize closes
+  to the matching position, keeps remaining position state open, preserves the
+  existing public strategy JSON shape without close order events, and cancels
+  matching pending exits only on full flatten.
 - Closed Strategy Internal Stage 11 Slice 1 boundary lock. Semantic fixtures
   now prove `strategy.close` partial quantity forms and close metadata options
   remain outside the supported subset before fixed-quantity runtime support is

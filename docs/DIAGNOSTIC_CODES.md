@@ -125,6 +125,7 @@ improved over time, but codes should remain stable once published.
   available simulated equity.
 - `E_STRATEGY_PRICE`: strategy order fill price is not finite.
 - `E_STRATEGY_QTY`: strategy order quantity is not finite and positive.
+- `E_STRATEGY_CLOSE_QTY`: `strategy.close` quantity is not finite and positive.
 - `E_STRATEGY_EXIT_ENTRY`: `strategy.exit` could not find or use the referenced
   entry.
 - `E_STRATEGY_EXIT_MINTICK`: `strategy.exit` tick conversion requires a finite

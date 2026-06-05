@@ -1,8 +1,8 @@
 # Strategy Internal Stage 11 Partial Close Plan
 
-Status: design gate opened on 2026-06-05. This slice must not widen runtime
-behavior, conformance claims, public JSON, Python dictionaries, or WASM output
-until a later behavior slice adds fixture-backed support.
+Status: Slice 2 fixed-`qty` partial close closed on 2026-06-05.
+`qty_percent`, close metadata, partial `strategy.close_all()`, multi-entry
+allocation, and public strategy JSON expansion remain unsupported.
 
 Stage 11 targets the next narrow Pine strategy gap after the Stage 10
 active-entry bracket closeout: `strategy.close()` partial market closes for
@@ -69,7 +69,8 @@ Stage 11 must not add:
   delivery;
 - partial closes across multiple entries, pyramiding, shorts, or reversals;
 - custom close ordering or `close_entries_rule`;
-- public pending-order output or strategy schema expansion.
+- public close-order events, public pending-order output, or strategy schema
+  expansion.
 
 ## Design Requirement
 
@@ -141,9 +142,9 @@ Closed evidence:
 
 - added semantic fixture
   `tests/fixtures/sema/unsupported_strategy_close_partial_quantity.pine`;
-- added a fixture test proving `qty`, `qty_percent`, `comment`,
-  `alert_message`, `disable_alert`, and `immediately` are still rejected by the
-  current `strategy.close` signature;
+- added a fixture test proving positional quantity-like arguments, `qty`,
+  `qty_percent`, `comment`, `alert_message`, `disable_alert`, and
+  `immediately` were rejected by the Slice 1 `strategy.close` signature;
 - no runtime fixtures, snapshots, conformance rows, matrix support claims,
   Python tests, or WASM tests changed.
 
@@ -158,17 +159,40 @@ Acceptance:
 
 ### Slice 2: Fixed `qty` Partial Close
 
+Status: Closed on 2026-06-05. This slice widens only the fixed-`qty`
+`strategy.close(id, qty=...)` subset for the current one-net-long broker.
+The public strategy JSON shape remains unchanged: close fills appear as closed
+trades and position/equity changes, not as separate close order events.
+
 Goal:
 
 - support `strategy.close(id, qty=...)` for the current one-net-long broker.
+
+Closed evidence:
+
+- added `strategy.close` builtin signature support for named `qty` while
+  keeping positional quantity-like calls, `qty_percent`, close metadata, and
+  `immediately` outside the supported subset;
+- split the broker close path so fixed quantities close
+  `min(qty, current_position_size)`, preserve the remaining long position and
+  average price, and cancel matching pending exits only when the close fully
+  flattens the entry;
+- added runtime fixtures
+  `tests/fixtures/runtime/strategy_close_qty_partial.pine` and
+  `tests/fixtures/runtime/strategy_close_qty_full_clamp.pine`;
+- added semantic fixture
+  `tests/fixtures/sema/supported_strategy_close_qty.pine` and updated
+  `tests/fixtures/sema/unsupported_strategy_close_partial_quantity.pine`;
+- added CLI golden snapshots, Python binding coverage, WASM CSV-to-JSON
+  coverage, broker tests, conformance row updates, and matrix updates.
 
 Acceptance:
 
 - fixed quantities are finite and positive;
 - over-sized fixed quantities clamp to the current matching position size;
-- partial close emits one market close order and one closed trade for the
-  closed quantity, leaves the remaining long position open at the same average
-  price, and preserves public strategy JSON shape;
+- partial close records one closed trade for the closed quantity, leaves the
+  remaining long position open at the same average price, and preserves public
+  strategy JSON shape without adding a close order event;
 - full-clamp fixed close keeps existing full-close pending-exit cancellation;
 - semantic, broker, runtime, incremental, CLI, Python, WASM, conformance,
   matrix, docs, and release-note coverage close in the same slice.

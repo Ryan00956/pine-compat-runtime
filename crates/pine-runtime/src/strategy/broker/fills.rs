@@ -240,7 +240,38 @@ impl BrokerState {
     }
 
     pub(crate) fn close_long(&mut self, id: String, bar_index: usize, time: i64, price: f64) {
+        self.close_long_quantity(id, bar_index, time, price, None);
+    }
+
+    pub(crate) fn close_long_qty(
+        &mut self,
+        id: String,
+        bar_index: usize,
+        time: i64,
+        price: f64,
+        qty: f64,
+    ) {
+        self.close_long_quantity(id, bar_index, time, price, Some(qty));
+    }
+
+    fn close_long_quantity(
+        &mut self,
+        id: String,
+        bar_index: usize,
+        time: i64,
+        price: f64,
+        requested_qty: Option<f64>,
+    ) {
         if self.position_size <= 0.0 || self.entry_id.as_deref() != Some(id.as_str()) {
+            return;
+        }
+        if let Some(requested_qty) = requested_qty
+            && (!requested_qty.is_finite() || requested_qty <= 0.0)
+        {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_CLOSE_QTY".to_owned(),
+                message: "`strategy.close` quantity must be finite and positive".to_owned(),
+            });
             return;
         }
         if !price.is_finite() {
@@ -260,7 +291,7 @@ impl BrokerState {
             return;
         }
 
-        let qty = self.position_size;
+        let qty = requested_qty.map_or(self.position_size, |qty| qty.min(self.position_size));
         let allocations = self.trade_ledger.allocate_exit_fifo(Some(&id), qty);
         let entry_fill = AllocatedEntryFill::from_allocations(
             &allocations,
@@ -272,10 +303,9 @@ impl BrokerState {
         let exit_commission = self.exit_commission_for_fill(qty, price);
         let commission = entry_fill.entry_commission + exit_commission;
         let profit = (price - entry_fill.entry_price) * qty - commission;
-        self.cancel_exit_for_entry(&id);
         self.record_closed_trade_fill(ClosedTradeFill {
             entry_id: id.clone(),
-            exit_id: id,
+            exit_id: id.clone(),
             entry_fill,
             exit_bar_index: bar_index,
             exit_time: time,
@@ -286,13 +316,22 @@ impl BrokerState {
         });
 
         self.cash += qty * price - exit_commission;
-        self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
-        self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
-        self.clear_open_long_legacy_state();
-        self.trade_ledger.apply_allocations(&allocations);
-        if allocations.is_empty() {
-            self.trade_ledger.clear_open_trade();
+        if qty >= self.position_size {
+            self.cancel_exit_for_entry(&id);
+            self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
+            self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
+            self.clear_open_long_legacy_state();
+            self.trade_ledger.apply_allocations(&allocations);
+            if allocations.is_empty() {
+                self.trade_ledger.clear_open_trade();
+            }
+            self.record_position_snapshot(bar_index);
+            return;
         }
+
+        self.position_size -= qty;
+        self.open_entry_commission -= entry_fill.entry_commission;
+        self.trade_ledger.apply_allocations(&allocations);
         self.record_position_snapshot(bar_index);
     }
 

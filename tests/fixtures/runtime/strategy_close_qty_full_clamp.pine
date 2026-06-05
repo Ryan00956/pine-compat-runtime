@@ -1,0 +1,8 @@
+//@version=5
+strategy("Close qty full clamp")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index == 2
+    strategy.close("L", qty=5)
+plot(strategy.position_size)
+plot(strategy.netprofit)

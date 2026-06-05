@@ -675,6 +675,14 @@ mod tests {
                 "tests/fixtures/runtime/strategy_close.pine",
             ),
             (
+                "runtime_strategy_close_qty_partial.json",
+                "tests/fixtures/runtime/strategy_close_qty_partial.pine",
+            ),
+            (
+                "runtime_strategy_close_qty_full_clamp.json",
+                "tests/fixtures/runtime/strategy_close_qty_full_clamp.pine",
+            ),
+            (
                 "runtime_strategy_close_all.json",
                 "tests/fixtures/runtime/strategy_close_all.pine",
             ),
