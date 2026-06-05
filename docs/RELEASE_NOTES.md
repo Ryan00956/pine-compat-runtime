@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Opened Strategy Internal Stage 11 as a partial `strategy.close` design gate.
+  The plan targets fixture-backed support for fixed `qty`, `qty_percent`, and
+  `qty` over `qty_percent` precedence in the current one-net-long broker while
+  keeping runtime behavior, conformance claims, and public output unchanged for
+  this design slice.
 - Closed Strategy Internal Stage 10 with an active-entry relative bracket
   audit. The closeout records the fixture-backed `stop + profit`,
   `loss + limit`, and `loss + profit` pending-entry bracket subset, confirms

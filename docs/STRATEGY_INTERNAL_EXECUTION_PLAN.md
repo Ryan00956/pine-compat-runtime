@@ -382,6 +382,38 @@ Out of scope:
 - Pyramiding, shorts, reversals, generic `strategy.order()`, public
   pending-order output, and schema expansion.
 
+## Stage 11: Partial `strategy.close`
+
+Status: design gate opened on 2026-06-05. See
+`docs/STRATEGY_INTERNAL_STAGE11_PARTIAL_CLOSE_PLAN.md`.
+
+Goal: add fixture-backed partial market close support for the current
+one-net-long `strategy.close()` subset.
+
+Target first subset:
+
+- `strategy.close(id, qty=...)`;
+- `strategy.close(id, qty_percent=...)`;
+- `strategy.close(id, qty=..., qty_percent=...)` where `qty` wins.
+
+Scope:
+
+- Current long-only one-net-position broker.
+- Market close at current bar close using existing close fill and slippage
+  behavior.
+- Quantity resolution and clamping against the matching current open quantity.
+- Existing public `StrategyResult` schema.
+- Fixture-backed CLI, Python, and WASM parity before compatibility claims
+  widen.
+
+Out of scope:
+
+- Partial `strategy.close_all()`.
+- `immediately`, comments, alert messages, alert suppression, and
+  order-fill alert delivery.
+- Multiple entries, pyramiding, shorts, reversals, custom close ordering,
+  public pending-order output, and schema expansion.
+
 ## Shared Completion Gates
 
 Every stage or slice must close with:
