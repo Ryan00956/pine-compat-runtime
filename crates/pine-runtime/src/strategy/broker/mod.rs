@@ -575,6 +575,14 @@ impl BrokerState {
         self.order_book.entries().quantity_for_id(id).is_some()
     }
 
+    fn open_position_size_for_entry(&self, id: &str) -> f64 {
+        self.trade_ledger.open_quantity_for_entry(id)
+    }
+
+    fn has_open_position_for_entry(&self, id: &str) -> bool {
+        self.open_position_size_for_entry(id) > 0.0
+    }
+
     pub(crate) fn reject_entry_relative_exit_for_pending_entry(
         &mut self,
         from_entry: &str,
@@ -638,8 +646,7 @@ impl BrokerState {
         if pending_exit.last_update_bar_index >= bar_index {
             return;
         }
-        if self.position_size <= 0.0
-            || self.entry_id.as_deref() != Some(pending_exit.from_entry.as_str())
+        if self.position_size <= 0.0 || !self.has_open_position_for_entry(&pending_exit.from_entry)
         {
             if self.position_size <= 0.0 && self.has_pending_entry(&pending_exit.from_entry) {
                 return;
@@ -693,12 +700,10 @@ impl BrokerState {
         low: f64,
     ) {
         let pending_exits: Vec<PendingExit> = self.order_book.exits().iter().cloned().collect();
-        let Some(first_pending_exit) = pending_exits.first() else {
+        if pending_exits.is_empty() {
             return;
-        };
-        if self.position_size <= 0.0
-            || self.entry_id.as_deref() != Some(first_pending_exit.from_entry.as_str())
-        {
+        }
+        if self.position_size <= 0.0 {
             if self.position_size <= 0.0 {
                 let attached_pending_entry_ids: Vec<String> = pending_exits
                     .iter()
@@ -719,9 +724,6 @@ impl BrokerState {
                     return;
                 }
             }
-            self.order_book
-                .exits_mut()
-                .clear_for_entry(&first_pending_exit.from_entry);
             return;
         }
 
@@ -731,7 +733,7 @@ impl BrokerState {
             if pending_exit.last_update_bar_index >= bar_index {
                 continue;
             }
-            if self.entry_id.as_deref() != Some(pending_exit.from_entry.as_str()) {
+            if !self.has_open_position_for_entry(&pending_exit.from_entry) {
                 self.order_book
                     .exits_mut()
                     .clear_for_entry(&pending_exit.from_entry);
@@ -792,7 +794,7 @@ impl BrokerState {
             if self.position_size <= 0.0 {
                 break;
             }
-            if self.entry_id.as_deref() != Some(pending_exit.from_entry.as_str()) {
+            if !self.has_open_position_for_entry(&pending_exit.from_entry) {
                 self.order_book
                     .exits_mut()
                     .clear_for_entry(&pending_exit.from_entry);

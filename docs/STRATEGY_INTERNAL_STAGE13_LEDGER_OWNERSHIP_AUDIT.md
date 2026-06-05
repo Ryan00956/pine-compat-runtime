@@ -199,3 +199,12 @@ Stage 13 Slice 13 is a no-behavior-change split of pending exit state from
 one data module so the next multi-entry `strategy.exit` slice can change
 matching/reservation behavior without pushing `exits.rs` back against the
 structure guardrail.
+
+## Slice 14 Follow-Up
+
+Stage 13 Slice 14 changes absolute `strategy.exit` matching from the legacy
+singleton `entry_id` mirror to `TradeLedger::open_quantity_for_entry()`.
+Supported absolute stop/limit exits can now target an open pyramided long entry
+by `from_entry` and fill through ledger allocation while other open entries
+remain live. Relative profit/loss tick conversion and broader bracket/trailing
+multi-entry semantics remain future slices.

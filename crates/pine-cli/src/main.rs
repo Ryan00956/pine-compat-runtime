@@ -888,6 +888,9 @@ mod tests {
             "tests/fixtures/runtime/strategy_margin_call_long.pine" => {
                 include_str!("../../../tests/fixtures/runtime/strategy_margin_call_long_bars.csv")
             }
+            "tests/fixtures/runtime/strategy_pyramiding_exit_from_entry.pine" => include_str!(
+                "../../../tests/fixtures/runtime/strategy_pyramiding_exit_from_entry_bars.csv"
+            ),
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }
     }

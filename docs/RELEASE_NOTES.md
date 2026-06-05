@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 14 absolute `strategy.exit` matching
+  for pyramided entries. Supported absolute stop/limit exits can now target an
+  open long ledger entry by `from_entry`, closing that entry while other
+  pyramided entries remain open.
 - Closed Strategy Internal Stage 13 Slice 12 multi-entry `strategy.close_all()`.
   Close-all now allocates across all open long ledger entries, records one
   closed trade per matched entry, and flattens aggregate position state.

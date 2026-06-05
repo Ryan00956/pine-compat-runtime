@@ -349,8 +349,10 @@ for the current position. The default remains `1`. Short entries, reversals,
 `strategy.order()`, same-tick price-based entry exceptions, and broader
 multi-entry exit/reporting semantics remain unsupported unless fixture-backed.
 `strategy.close(id)` can close a requested pyramided long entry id; multi-entry
-`strategy.close_all()` can flatten all accepted open long entries. Multi-entry
-`strategy.exit` remains outside the current claim.
+`strategy.close_all()` can flatten all accepted open long entries. Fixture-backed
+absolute stop/limit `strategy.exit` calls can target a requested open pyramided
+long entry id; broader multi-entry `strategy.exit` semantics remain outside the
+current claim.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by
@@ -425,7 +427,8 @@ single-trigger, one-downside/one-upside bracket, and trailing trigger shapes.
 When both are present, fixed `qty` determines the reserved or filled quantity
 and `qty_percent` is ignored. Explicit fixed `qty` or `qty_percent` exits on
 those supported shapes can keep multiple reserved pending exits for different
-`id + from_entry` identities on the current matching long entry or the active
+`id + from_entry` identities on the current matching long entry, a matching
+open pyramided long entry for fixture-backed absolute stop/limit exits, or the active
 pending entry for same-calculation absolute `stop`, `limit`, and `trail_price`
 attachment. Same-calculation `profit`, `loss`, and `trail_points` attachment to
 a pending entry remains unsupported. Richer strategy order options remain

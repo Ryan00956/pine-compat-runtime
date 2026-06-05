@@ -901,10 +901,9 @@ impl BrokerState {
             });
             return;
         }
-        let target_position_size = if self.position_size > 0.0
-            && self.entry_id.as_deref() == Some(from_entry.as_str())
-        {
-            self.position_size
+        let open_entry_position_size = self.open_position_size_for_entry(&from_entry);
+        let target_position_size = if self.position_size > 0.0 && open_entry_position_size > 0.0 {
+            open_entry_position_size
         } else if let Some(pending_entry_quantity) =
             self.order_book.entries().quantity_for_id(&from_entry)
         {

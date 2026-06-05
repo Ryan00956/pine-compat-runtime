@@ -446,9 +446,32 @@ Closed evidence:
 - Broker tests and the structure guardrail pass without changing conformance
   fixtures or snapshots.
 
+### Slice 14: Multi-Entry Absolute `strategy.exit(from_entry)` Matching
+
+Status: closed on 2026-06-05. This slice lets supported absolute
+`strategy.exit` forms match an open pyramided long entry by `from_entry`, even
+when that entry is not the legacy aggregate `entry_id`. It does not claim
+entry-specific profit/loss tick price conversion, trailing price conversion,
+brackets, shorts, reversals, or `close_entries_rule`.
+
+Goal:
+
+- route supported absolute stop/limit `strategy.exit` placement and pending fill
+  eligibility through the open-trade ledger entry quantity instead of the legacy
+  current-entry mirror.
+
+Closed evidence:
+
+- `place_exit()` now resolves the target quantity from
+  `TradeLedger::open_quantity_for_entry(from_entry)` for open positions.
+- Pending exit evaluation keeps exits whose `from_entry` still has open ledger
+  quantity and clears only entries no longer open.
+- `strategy_pyramiding_exit_from_entry.pine` covers two pyramided long entries
+  where an absolute limit exit targets and closes `L1` while `L2` remains open.
+
 Future slices:
 
-- multi-entry `strategy.exit` fixture expansion;
+- entry-specific relative `strategy.exit` tick conversion;
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
 
@@ -458,7 +481,9 @@ The supported strategy subset remains the one recorded in
 `tests/fixtures/conformance.tsv`. Stage 13 Slice 10 claims only the
 fixture-backed positive integer const `pyramiding` subset for same-direction
 long market entries plus Slice 11's fixture-backed `strategy.close(id)` matching
-behavior and Slice 12's fixture-backed `strategy.close_all()` flattening
-behavior. It must not be used to claim price-based same-tick entry exceptions,
-shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader
-multi-entry `strategy.exit`/reporting support.
+behavior, Slice 12's fixture-backed `strategy.close_all()` flattening behavior,
+and Slice 14's fixture-backed absolute `strategy.exit` matching by open
+pyramided entry id. It must not be used to claim entry-specific relative exit
+tick conversion, price-based same-tick entry exceptions, shorts, reversals,
+`strategy.order()`, `close_entries_rule`, or broader multi-entry
+`strategy.exit`/reporting support.
