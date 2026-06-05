@@ -133,3 +133,11 @@ long-entry fill handoff through it after `TradeLedger` updates. The helper only
 syncs aggregate `position_size` and `avg_price`; entry-id-specific mirrors,
 open-trade namespace reads, runup/drawdown state, and public output stay on the
 current one-open-trade path.
+
+## Slice 6 Follow-Up
+
+Stage 13 Slice 6 added
+`BrokerState::apply_trade_allocations_and_sync_position()` for the existing
+long close, supported exit, and long margin-call reduction paths. It keeps
+aggregate `position_size` and `avg_price` derived from `TradeLedger` after
+allocation updates while preserving legacy entry-id and open-trade mirrors.

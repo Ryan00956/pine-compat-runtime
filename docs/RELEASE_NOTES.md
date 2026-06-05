@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 6 allocation sync helper. Existing
+  long `strategy.close`, supported `strategy.exit`, and long margin-call
+  reduction paths now sync aggregate `position_size` and `avg_price` from
+  `TradeLedger` after allocation updates, with unchanged public behavior.
 - Closed Strategy Internal Stage 13 Slice 5 aggregate position sync helper.
   Long entry fills now sync aggregate `position_size` and `avg_price` from
   `TradeLedger::net_position()` after the ledger update, preserving current

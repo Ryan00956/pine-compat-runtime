@@ -218,17 +218,17 @@ impl BrokerState {
             self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
             self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
             self.clear_open_long_legacy_state();
-            self.trade_ledger.apply_allocations(&allocations);
+            self.apply_trade_allocations_and_sync_position(&allocations);
             if allocations.is_empty() {
                 self.trade_ledger.clear_open_trade();
+                self.sync_aggregate_position_from_ledger();
             }
             self.record_position_snapshot(bar_index);
             return;
         }
 
-        self.position_size -= qty;
         self.open_entry_commission -= entry_fill.entry_commission;
-        self.trade_ledger.apply_allocations(&allocations);
+        self.apply_trade_allocations_and_sync_position(&allocations);
         self.record_position_snapshot(bar_index);
     }
 
@@ -351,17 +351,17 @@ impl BrokerState {
             self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
             self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
             self.clear_open_long_legacy_state();
-            self.trade_ledger.apply_allocations(&allocations);
+            self.apply_trade_allocations_and_sync_position(&allocations);
             if allocations.is_empty() {
                 self.trade_ledger.clear_open_trade();
+                self.sync_aggregate_position_from_ledger();
             }
             self.record_position_snapshot(bar_index);
             return;
         }
 
-        self.position_size -= qty;
         self.open_entry_commission -= entry_fill.entry_commission;
-        self.trade_ledger.apply_allocations(&allocations);
+        self.apply_trade_allocations_and_sync_position(&allocations);
         self.record_position_snapshot(bar_index);
     }
 
@@ -429,17 +429,17 @@ impl BrokerState {
             self.min_equity_before_open_trade = self.min_equity_before_open_trade.min(self.cash);
             self.max_equity_before_open_trade = self.max_equity_before_open_trade.max(self.cash);
             self.clear_open_long_legacy_state();
-            self.trade_ledger.apply_allocations(&allocations);
+            self.apply_trade_allocations_and_sync_position(&allocations);
             if allocations.is_empty() {
                 self.trade_ledger.clear_open_trade();
+                self.sync_aggregate_position_from_ledger();
             }
             self.record_position_snapshot(bar_index);
             return;
         }
 
-        self.position_size -= qty;
         self.open_entry_commission -= entry_fill.entry_commission;
-        self.trade_ledger.apply_allocations(&allocations);
+        self.apply_trade_allocations_and_sync_position(&allocations);
         self.record_position_snapshot(bar_index);
     }
 }

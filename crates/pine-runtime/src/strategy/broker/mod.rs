@@ -15,8 +15,8 @@ use entries::PendingEntryKind;
 use exits::{PendingExit, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate};
 pub(crate) use exits::{TrailPointsExitSpec, TrailPriceExitSpec};
 #[cfg(test)]
-use ledger::{NetPosition, TradeAllocation};
-use ledger::{OpenTrade, TradeDirection, TradeLedger};
+use ledger::NetPosition;
+use ledger::{OpenTrade, TradeAllocation, TradeDirection, TradeLedger};
 use order_book::OrderBook;
 
 use crate::{
@@ -281,6 +281,11 @@ impl BrokerState {
         let net_position = self.trade_ledger.net_position();
         self.position_size = net_position.signed_size;
         self.avg_price = net_position.avg_price;
+    }
+
+    fn apply_trade_allocations_and_sync_position(&mut self, allocations: &[TradeAllocation]) {
+        self.trade_ledger.apply_allocations(allocations);
+        self.sync_aggregate_position_from_ledger();
     }
 
     pub(crate) fn cancel_exit_for_entry(&mut self, entry_id: &str) {

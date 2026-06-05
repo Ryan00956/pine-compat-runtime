@@ -261,7 +261,29 @@ Closed evidence:
 - Existing entry, pending-entry, ledger mirror, and full release gates continue
   to pass with unchanged behavior.
 
-### Slice 6: Long Market Pyramiding
+### Slice 6: Allocation Sync Helper
+
+Status: closed on 2026-06-05. This slice routed existing long close, exit, and
+margin-call allocation updates through a private aggregate sync helper. Runtime
+behavior, conformance, fixtures, snapshots, matrix output, and public JSON are
+unchanged.
+
+Goal:
+
+- keep aggregate `position_size` and `avg_price` derived from `TradeLedger`
+  after existing allocation updates.
+
+Closed evidence:
+
+- Long `strategy.close`, supported `strategy.exit` fills, and long margin-call
+  reductions now call `apply_trade_allocations_and_sync_position()` after
+  recording the same closed-trade and cash effects.
+- Full-close fallback for empty allocation lists still clears the ledger and
+  syncs aggregate position to flat.
+- Existing partial close, partial exit, margin, strategy entry, and full release
+  gates continue to pass with unchanged public output.
+
+### Slice 7: Long Market Pyramiding
 
 Goal:
 
