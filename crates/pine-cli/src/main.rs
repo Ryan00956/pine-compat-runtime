@@ -683,6 +683,10 @@ mod tests {
                 "tests/fixtures/runtime/strategy_close_qty_full_clamp.pine",
             ),
             (
+                "runtime_strategy_close_qty_percent_precedence.json",
+                "tests/fixtures/runtime/strategy_close_qty_percent_precedence.pine",
+            ),
+            (
                 "runtime_strategy_close_all.json",
                 "tests/fixtures/runtime/strategy_close_all.pine",
             ),
@@ -1054,14 +1058,8 @@ mod tests {
             ("runtime_strategy_commission_cash_per_contract.json", "tests/fixtures/runtime/strategy_commission_cash_per_contract.pine"),
             ("runtime_strategy_commission_cash_per_order.json", "tests/fixtures/runtime/strategy_commission_cash_per_order.pine"),
             ("runtime_strategy_commission_percent.json", "tests/fixtures/runtime/strategy_commission_percent.pine"),
-            (
-                "runtime_strategy_slippage.json",
-                "tests/fixtures/runtime/strategy_slippage.pine",
-            ),
-            (
-                "runtime_strategy_exit_slippage.json",
-                "tests/fixtures/runtime/strategy_exit_slippage.pine",
-            ),
+            ("runtime_strategy_slippage.json", "tests/fixtures/runtime/strategy_slippage.pine"),
+            ("runtime_strategy_exit_slippage.json", "tests/fixtures/runtime/strategy_exit_slippage.pine"),
             (
                 "runtime_strategy_limit_verification_exit.json",
                 "tests/fixtures/runtime/strategy_limit_verification_exit.pine",

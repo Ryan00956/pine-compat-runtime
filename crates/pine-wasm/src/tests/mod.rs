@@ -447,6 +447,28 @@ fn runs_strategy_close_qty_partial_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_close_qty_percent_precedence_from_csv_to_trade_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_close_qty_percent_precedence.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close qty_percent precedence fixture should run");
+
+    assert!(output.contains("\"values\":[0,4,3,2]"));
+    assert!(output.contains("\"values\":[0,0,1,3]"));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":2,\"exitTime\":3,\"entryPrice\":2,\"exitPrice\":3,\"qty\":1,\"profit\":1},{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":2,\"exitPrice\":4,\"qty\":1,\"profit\":2}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":1,\"size\":4,\"avgPrice\":2},{\"barIndex\":2,\"size\":3,\"avgPrice\":2},{\"barIndex\":3,\"size\":2,\"avgPrice\":2}]"
+    ));
+    assert!(!output.contains("qty_percent"));
+    assert!(!output.contains("pending"));
+}
+
+#[test]
 fn runs_strategy_close_all_from_csv_to_trade_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nif bar_index == 0\n    strategy.close_all()\n    strategy.entry(\"L\", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close_all()\nif bar_index == 3\n    strategy.close_all()\nplot(strategy.position_size)\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\n",

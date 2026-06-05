@@ -247,19 +247,31 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String(value) => value,
             _ => return Ok(PineValue::Void),
         };
-        let qty = if let Some(qty_expr) = args
+        let qty_expr = args
             .iter()
             .find(|arg| arg.name.as_deref() == Some("qty"))
-            .map(|arg| &arg.value)
-        {
-            Some(self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN))
-        } else {
-            None
-        };
+            .map(|arg| &arg.value);
+        let qty_percent_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("qty_percent"))
+            .map(|arg| &arg.value);
 
-        if let Some(qty) = qty {
+        if let Some(qty_expr) = qty_expr {
+            let qty = self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker
                 .close_long_qty(id, self.bars, bar.time, bar.close, qty);
+        } else if let Some(qty_percent_expr) = qty_percent_expr {
+            let qty_percent = self
+                .eval_expr(qty_percent_expr)?
+                .as_f64()
+                .unwrap_or(f64::NAN);
+            self.strategy_broker.close_long_qty_percent(
+                id,
+                self.bars,
+                bar.time,
+                bar.close,
+                qty_percent,
+            );
         } else {
             self.strategy_broker
                 .close_long(id, self.bars, bar.time, bar.close);

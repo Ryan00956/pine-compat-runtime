@@ -259,7 +259,8 @@ strategy(title: const string, shorttitle?: const string, overlay?: const bool, m
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric)
   -> void
-strategy.close(id: simple string) -> void
+strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric)
+  -> void
 strategy.close_all() -> void
 strategy.cancel(id: simple string) -> void
 strategy.cancel_all() -> void
@@ -389,8 +390,17 @@ bar where `high >= stop`, activate an internal limit order without filling on
 that activation bar, then fill at the limit price on a later historical bar
 where `low <= limit`, or below the configured verified limit threshold. These
 entry forms do not expose public pending-order records while pending.
-`strategy.close_all()` closes the current supported long position at the current
-bar close and is a no-op while flat.
+`strategy.close` supports full close, fixed `qty` partial close, and
+`qty_percent` partial close for the current matching long entry id at the current
+bar close. Fixed `qty` and `qty_percent` must be finite and positive;
+`qty_percent` resolves against the current matching position size, and fixed
+`qty` wins when both quantity forms are provided. Oversized quantities clamp to
+the current matching position size, remaining long position state stays open at
+the same average price, and matching pending exits are cancelled only when the
+close fully flattens the entry. Close comments, alert messages, alert
+suppression, `immediately`, partial `strategy.close_all()`, and multi-entry close
+allocation remain unsupported. `strategy.close_all()` closes the current
+supported long position at the current bar close and is a no-op while flat.
 `strategy.cancel(id)` cancels matching internal pending entry ids and matching
 internal pending exit ids in the current supported order subset. Unknown,
 already-filled, and already-cancelled ids are no-op. Cancellation emits no

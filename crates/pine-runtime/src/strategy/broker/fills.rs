@@ -254,6 +254,36 @@ impl BrokerState {
         self.close_long_quantity(id, bar_index, time, price, Some(qty));
     }
 
+    pub(crate) fn close_long_qty_percent(
+        &mut self,
+        id: String,
+        bar_index: usize,
+        time: i64,
+        price: f64,
+        qty_percent: f64,
+    ) {
+        if self.position_size <= 0.0 || self.entry_id.as_deref() != Some(id.as_str()) {
+            return;
+        }
+        if !qty_percent.is_finite() || qty_percent <= 0.0 {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_CLOSE_QTY_PERCENT".to_owned(),
+                message: "`strategy.close` percent quantity must be finite and positive".to_owned(),
+            });
+            return;
+        }
+
+        let qty = self.position_size * qty_percent / 100.0;
+        if !qty.is_finite() || qty <= 0.0 {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_CLOSE_QTY_PERCENT".to_owned(),
+                message: "`strategy.close` percent quantity must be finite and positive".to_owned(),
+            });
+            return;
+        }
+        self.close_long_quantity(id, bar_index, time, price, Some(qty));
+    }
+
     fn close_long_quantity(
         &mut self,
         id: String,

@@ -41,6 +41,11 @@ const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SeriesOrSimpleNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "qty_percent",
+        accepts: Accepts::SeriesOrSimpleNumeric,
+        optional: true,
+    },
 ];
 
 const STRATEGY_CLOSE_ALL_PARAMS: &[BuiltinParam] = &[];

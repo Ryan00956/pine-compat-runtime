@@ -660,13 +660,18 @@ fn reports_unsupported_strategy_close_partial_quantity_fixture() {
         path.display(),
         analysis.diagnostics
     );
-    for name in [
-        "qty_percent",
-        "comment",
-        "alert_message",
-        "disable_alert",
-        "immediately",
-    ] {
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_CALL_ARG_VALUE"
+                && diagnostic
+                    .message
+                    .contains("argument `qty_percent` must be finite and positive")
+        }),
+        "{} diagnostics should reject non-positive strategy.close qty_percent: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    for name in ["comment", "alert_message", "disable_alert", "immediately"] {
         assert!(
             analysis.diagnostics.iter().any(|diagnostic| {
                 diagnostic.code == "E_CALL_ARG_NAME" && diagnostic.message.contains(name)
@@ -700,6 +705,39 @@ fn accepts_supported_strategy_close_qty_fixture() {
             .supported
             .iter()
             .any(|supported| supported.feature == "strategy.close")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_strategy_close_qty_percent_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_close_qty_percent.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics should be empty: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_supported_strategy_close_qty_precedence_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_close_qty_precedence.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics should be empty: {:?}",
+        path.display(),
+        analysis.diagnostics
     );
     assert!(analysis.hir.is_some());
 }

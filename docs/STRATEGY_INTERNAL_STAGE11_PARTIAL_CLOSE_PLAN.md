@@ -199,10 +199,30 @@ Acceptance:
 
 ### Slice 3: `qty_percent` Partial Close
 
+Status: Closed on 2026-06-05. This slice widens only `qty_percent` and
+`qty`-over-`qty_percent` precedence for the current one-net-long
+`strategy.close` subset. Close metadata, `immediately`, partial
+`strategy.close_all()`, and public strategy JSON expansion remain unsupported.
+
 Goal:
 
 - support `strategy.close(id, qty_percent=...)` and
   `strategy.close(id, qty=..., qty_percent=...)` with `qty` precedence.
+
+Closed evidence:
+
+- added `strategy.close` builtin signature support for named `qty_percent`;
+- added semantic validation requiring finite positive const `qty_percent` values
+  while keeping positional quantity-like calls and close metadata rejected;
+- added broker/runtime support that resolves `qty_percent` against the current
+  matching position size, clamps over-100 percentages through the shared close
+  quantity path, and preserves state unchanged for invalid percentages;
+- added runtime fixture
+  `tests/fixtures/runtime/strategy_close_qty_percent_precedence.pine` covering
+  percent partial close and `qty` precedence in the same public JSON contract;
+- added semantic fixtures for `qty_percent` and `qty` precedence plus broker,
+  CLI snapshot, Python, WASM, conformance, matrix, docs, and release-note
+  coverage.
 
 Acceptance:
 

@@ -129,6 +129,10 @@ mod tests {
     fn registers_strategy_close_signature() {
         let signature = get_phase_1_builtin("strategy.close").expect("strategy.close signature");
         assert_eq!(signature.params[0].name, "id");
+        assert_eq!(signature.params[1].name, "qty");
+        assert!(signature.params[1].optional);
+        assert_eq!(signature.params[2].name, "qty_percent");
+        assert!(signature.params[2].optional);
         assert!(!signature.variadic);
     }
 

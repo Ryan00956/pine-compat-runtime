@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 11 Slice 3 `qty_percent` partial
+  `strategy.close`. `strategy.close(id, qty_percent=...)` now resolves finite
+  positive percentages against the current matching long position, clamps
+  over-100 percentages to the current position size, keeps invalid percentages
+  from mutating broker state, and preserves `qty` precedence when both quantity
+  forms are supplied.
 - Closed Strategy Internal Stage 11 Slice 2 fixed-`qty` partial
   `strategy.close`. `strategy.close(id, qty=...)` now supports finite positive
   fixed quantities for the current one-net-long broker, clamps oversize closes

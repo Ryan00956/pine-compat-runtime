@@ -515,15 +515,30 @@ impl Analyzer {
                 }
                 continue;
             };
-            if name == "qty"
-                && let Some(qty) = const_numeric_value(&arg.value)
-                && (!qty.is_finite() || qty <= 0.0)
-            {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_CALL_ARG_VALUE",
-                    "`strategy.close` argument `qty` must be finite and positive",
-                    arg.span,
-                ));
+            match name {
+                "qty" => {
+                    if let Some(qty) = const_numeric_value(&arg.value)
+                        && (!qty.is_finite() || qty <= 0.0)
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.close` argument `qty` must be finite and positive",
+                            arg.span,
+                        ));
+                    }
+                }
+                "qty_percent" => {
+                    if let Some(qty_percent) = const_numeric_value(&arg.value)
+                        && (!qty_percent.is_finite() || qty_percent <= 0.0)
+                    {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy.close` argument `qty_percent` must be finite and positive",
+                            arg.span,
+                        ));
+                    }
+                }
+                _ => {}
             }
         }
     }

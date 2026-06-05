@@ -826,6 +826,51 @@ def test_run_script_returns_strategy_close_qty_partial_contract():
     assert "pending" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_close_qty_percent_precedence_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_close_qty_percent_precedence.pine"
+    ).read_text()
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0.0, 4.0, 3.0, 2.0],
+        [0.0, 0.0, 1.0, 3.0],
+        [0.0, 0.0, 1.0, 2.0],
+        [0.0, 1.0, 1.0, 1.0],
+    ]
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 1,
+            "exitBarIndex": 2,
+            "entryTime": 2,
+            "exitTime": 3,
+            "entryPrice": 2.0,
+            "exitPrice": 3.0,
+            "qty": 1.0,
+            "profit": 1.0,
+        },
+        {
+            "id": "L",
+            "entryBarIndex": 1,
+            "exitBarIndex": 3,
+            "entryTime": 2,
+            "exitTime": 4,
+            "entryPrice": 2.0,
+            "exitPrice": 4.0,
+            "qty": 1.0,
+            "profit": 2.0,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 4.0, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 3.0, "avgPrice": 2.0},
+        {"barIndex": 3, "size": 2.0, "avgPrice": 2.0},
+    ]
+    assert "qty_percent" not in result["strategy"]
+    assert "pending" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_close_all_trade_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_close_all.pine").read_text()
     result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))

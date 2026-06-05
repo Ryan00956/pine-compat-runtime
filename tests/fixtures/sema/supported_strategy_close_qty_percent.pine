@@ -1,0 +1,4 @@
+//@version=5
+strategy("Supported strategy.close qty_percent")
+strategy.entry("L", strategy.long, qty=2)
+strategy.close("L", qty_percent=50)
