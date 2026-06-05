@@ -120,9 +120,15 @@ designed.
 
 ### 1. Strategy Declaration Properties
 
-Current state: only a small declaration subset is modeled. `initial_capital` is
-accepted when positive and const. Fixed default quantity is the only supported
-quantity mode.
+Current state: the declaration parser and runtime now support a meaningful but
+still narrow property subset: positive const `initial_capital`, fixed and
+percent-of-equity default quantities, the supported cash-per-contract,
+cash-per-order, and percent commission modes, fixed-tick slippage, fixed-tick
+limit verification through `backtest_fill_limits_assumption`, and finite
+non-negative `margin_long`/`margin_short` declaration parsing. Active
+`margin_long` also drives the current long-only capital-held, affordability, and
+forced-liquidation subset. This remains declaration-property compatibility for a
+single long-only broker, not a full broker-settings model.
 
 Missing internal behavior:
 
@@ -130,14 +136,13 @@ Missing internal behavior:
 - `calc_on_order_fills`
 - `calc_on_every_tick`
 - `process_orders_on_close`
-- `backtest_fill_limits_assumption`
 - `default_qty_type=strategy.cash`
 - `currency`
 - commission modes beyond `strategy.commission.cash_per_contract`,
   `strategy.commission.cash_per_order`, and `strategy.commission.percent`
 - fill models beyond fixed-tick slippage and fixed-tick limit verification on
   supported long fills
-- `margin_long` and `margin_short`
+- runtime behavior for `margin_short`
 - `close_entries_rule`
 - `risk_free_rate`
 - `use_bar_magnifier`
@@ -146,10 +151,11 @@ Missing internal behavior:
 
 Gap size: large.
 
-Best first slice: add a declaration-property audit fixture that keeps each
-unsupported property explicitly rejected, then choose one low-blast-radius
-property. `pyramiding=1` as an accepted no-op alias is low value; real pyramiding
-requires a larger open-trade model.
+Best first slice: Stage 12 is a declaration-property design gate. Do not accept
+another property until the boundary fixture, supported conformance wording, and
+runtime implications are reviewed together. `pyramiding=0/1` as a no-op alias is
+low value; real pyramiding, order-on-close, calc-on-fill, short margin, and
+close-order settings require larger broker-model designs.
 
 ### 2. Broker Execution Timing And Fill Model
 
@@ -222,8 +228,10 @@ Missing internal behavior:
 
 Gap size: medium to large.
 
-Best first slice: `strategy.close_all()` for the current one-net-long model.
-This is internally small and should preserve the current public output shape.
+Best first slice: full `strategy.close_all()` and partial `strategy.close()` are
+already closed for the current one-net-long model. Do not continue market-close
+work until close metadata, `immediately`, partial `strategy.close_all()`, and
+multi-entry close ordering have a separate design.
 
 ### 5. Generic Orders And Cancellation
 
@@ -255,8 +263,6 @@ reservations, and omitted-quantity replacement behavior.
 Missing internal behavior:
 
 - optional `from_entry` that exits all matching open entries when omitted;
-- Pine-compatible behavior where `qty` wins when both `qty` and `qty_percent`
-  are supplied;
 - exact semantics for overlapping price and tick alternatives in one exit call;
 - entry-relative exit attachment to active entry orders before those entries
   fill;

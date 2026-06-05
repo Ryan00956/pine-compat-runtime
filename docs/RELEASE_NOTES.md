@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Opened Strategy Internal Stage 12 as a declaration-property design gate. The
+  gap audit now reflects the current supported `strategy()` declaration subset,
+  removes already-closed `strategy.close_all()` and `strategy.exit` `qty`
+  precedence work from next-step recommendations, and keeps runtime behavior,
+  conformance claims, and public output unchanged for this design slice.
 - Closed Strategy Internal Stage 11 with a partial `strategy.close` audit. The
   closeout records the fixture-backed full close, fixed-`qty` partial close,
   `qty_percent` partial close, and `qty` precedence subset, confirms unchanged

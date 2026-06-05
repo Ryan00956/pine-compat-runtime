@@ -414,6 +414,39 @@ Out of scope:
 - Multiple entries, pyramiding, shorts, reversals, custom close ordering,
   public pending-order output, and schema expansion.
 
+## Stage 12: Strategy Declaration Property Boundary
+
+Status: design gate opened on 2026-06-05. See
+`docs/STRATEGY_INTERNAL_STAGE12_DECLARATION_PROPERTIES_PLAN.md`.
+
+Goal: refresh the post-Stage-11 strategy gap boundary before accepting another
+`strategy()` declaration property.
+
+Target first subset:
+
+- no runtime widening in the design slice;
+- explicit supported/unsupported declaration-property inventory;
+- a candidate-slice order that avoids no-op keyword acceptance and broker-model
+  shortcuts.
+
+Scope:
+
+- Current `strategy()` declaration subset recorded in
+  `tests/fixtures/conformance.tsv`.
+- Current long-only one-net-position broker.
+- Existing semantic rejection path for unsupported declaration properties.
+- Existing public `StrategyResult` schema.
+
+Out of scope:
+
+- `pyramiding`, `process_orders_on_close`, `calc_on_order_fills`,
+  `calc_on_every_tick`, `default_qty_type=strategy.cash`, `currency`,
+  `close_entries_rule`, `risk_free_rate`, `use_bar_magnifier`,
+  `fill_orders_on_standard_ohlc`, strategy alert/order-fill settings, and
+  runtime `margin_short` behavior.
+- Short exposure, reversals, multi-entry ledgers, OCA behavior, public
+  order-event output, and schema expansion.
+
 ## Shared Completion Gates
 
 Every stage or slice must close with:
