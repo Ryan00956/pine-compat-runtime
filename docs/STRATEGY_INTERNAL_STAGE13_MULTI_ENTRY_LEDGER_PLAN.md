@@ -167,6 +167,11 @@ Closed evidence:
 
 ### Slice 2: Ledger Ownership Audit
 
+Status: closed on 2026-06-05. See
+`docs/STRATEGY_INTERNAL_STAGE13_LEDGER_OWNERSHIP_AUDIT.md`. This slice did not
+change runtime behavior, conformance, fixtures, snapshots, matrix output, or
+public JSON.
+
 Goal:
 
 - document and, if needed, test the internal split between `TradeLedger` and
@@ -183,6 +188,17 @@ Acceptance:
 
 - internal ledger invariants are covered by unit tests or audit notes;
 - no accepted script produces different output.
+
+Closed evidence:
+
+- The ownership audit records current `TradeLedger` responsibilities, legacy
+  singleton `BrokerState` mirrors, aggregate accounting owners, and the existing
+  unit-test evidence for single-open-trade mirroring, reductions, and FIFO
+  allocation helpers.
+- The next migration order is locked before any positive `pyramiding` behavior:
+  centralize ledger mutation helpers, keep aggregate public mirrors stable,
+  convert open-trade namespace reads later, and preserve the current public
+  `StrategyResult` schema.
 
 ### Slice 3: Long Market Pyramiding
 

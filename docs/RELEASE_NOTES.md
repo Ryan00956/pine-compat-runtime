@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 2 with a ledger ownership audit. The
+  audit records current `TradeLedger` responsibilities, legacy singleton
+  `BrokerState` mirrors, aggregate accounting owners, existing unit-test
+  evidence, and the migration order needed before any positive `pyramiding` or
+  multi-entry behavior.
 - Closed Strategy Internal Stage 13 Slice 1 boundary lock. Sema fixture tests
   now assert unsupported `pyramiding` and short-entry diagnostics by message,
   while the repeated-entry runtime test verifies the current no-pyramiding
