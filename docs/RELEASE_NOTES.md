@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 16 same-entry-id `strategy.exit`
+  allocation fan-out. A supported exit matching multiple open trades with the
+  same entry id now records one public exit order and one closed trade per
+  matched ledger allocation.
 - Closed Strategy Internal Stage 13 Slice 15 relative `strategy.exit` tick price
   basis for pyramided entries. Supported single-trigger `profit`/`loss` exits now
   convert from the matched open entry price instead of aggregate average price.

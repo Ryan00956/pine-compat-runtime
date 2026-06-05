@@ -896,6 +896,9 @@ mod tests {
                     "../../../tests/fixtures/runtime/strategy_pyramiding_exit_profit_from_entry_bars.csv"
                 )
             }
+            "tests/fixtures/runtime/strategy_pyramiding_exit_same_id.pine" => include_str!(
+                "../../../tests/fixtures/runtime/strategy_pyramiding_exit_same_id_bars.csv"
+            ),
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }
     }

@@ -447,38 +447,77 @@ impl BrokerState {
         let allocations = self
             .trade_ledger
             .allocate_exit_fifo(Some(&pending_exit.from_entry), qty);
-        let entry_fill = AllocatedEntryFill::from_allocations(
-            &allocations,
-            self.avg_price,
-            self.entry_bar_index.unwrap_or(bar_index),
-            self.entry_time.unwrap_or(time),
-            self.entry_commission_for_closed_quantity(qty),
-        );
         let exit_commission = self.exit_commission_for_fill(qty, exit_price);
-        let commission = entry_fill.entry_commission + exit_commission;
-        let profit = (exit_price - entry_fill.entry_price) * qty - commission;
         let exit_id = pending_exit.id;
-        let entry_id = pending_exit.from_entry;
+        let closed_entry_commission = if allocations.is_empty() {
+            let entry_fill = AllocatedEntryFill::from_allocations(
+                &allocations,
+                self.avg_price,
+                self.entry_bar_index.unwrap_or(bar_index),
+                self.entry_time.unwrap_or(time),
+                self.entry_commission_for_closed_quantity(qty),
+            );
+            let commission = entry_fill.entry_commission + exit_commission;
+            let profit = (exit_price - entry_fill.entry_price) * qty - commission;
+            let entry_commission = entry_fill.entry_commission;
 
-        self.record_order_event(
-            exit_id.clone(),
-            bar_index,
-            time,
-            "strategy.exit",
-            qty,
-            exit_price,
-        );
-        self.record_closed_trade_fill(ClosedTradeFill {
-            entry_id,
-            exit_id,
-            entry_fill,
-            exit_bar_index: bar_index,
-            exit_time: time,
-            exit_price,
-            qty,
-            profit,
-            commission,
-        });
+            self.record_order_event(
+                exit_id.clone(),
+                bar_index,
+                time,
+                "strategy.exit",
+                qty,
+                exit_price,
+            );
+            self.record_closed_trade_fill(ClosedTradeFill {
+                entry_id: pending_exit.from_entry,
+                exit_id: exit_id.clone(),
+                entry_fill,
+                exit_bar_index: bar_index,
+                exit_time: time,
+                exit_price,
+                qty,
+                profit,
+                commission,
+            });
+            entry_commission
+        } else {
+            let mut closed_entry_commission = 0.0;
+            for allocation in &allocations {
+                let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
+                let entry_fill = AllocatedEntryFill {
+                    entry_price: allocation.entry_price,
+                    entry_bar_index: allocation.entry_bar_index,
+                    entry_time: allocation.entry_time,
+                    entry_commission: allocation.entry_commission,
+                };
+                let commission = allocation.entry_commission + allocated_exit_commission;
+                let profit =
+                    (exit_price - allocation.entry_price) * allocation.quantity - commission;
+
+                self.record_order_event(
+                    exit_id.clone(),
+                    bar_index,
+                    time,
+                    "strategy.exit",
+                    allocation.quantity,
+                    exit_price,
+                );
+                self.record_closed_trade_fill(ClosedTradeFill {
+                    entry_id: allocation.entry_id.clone(),
+                    exit_id: exit_id.clone(),
+                    entry_fill,
+                    exit_bar_index: bar_index,
+                    exit_time: time,
+                    exit_price,
+                    qty: allocation.quantity,
+                    profit,
+                    commission,
+                });
+                closed_entry_commission += allocation.entry_commission;
+            }
+            closed_entry_commission
+        };
 
         self.cash += qty * exit_price - exit_commission;
         if qty >= self.position_size {
@@ -494,7 +533,7 @@ impl BrokerState {
             return;
         }
 
-        self.open_entry_commission -= entry_fill.entry_commission;
+        self.open_entry_commission -= closed_entry_commission;
         self.apply_trade_allocations_and_sync_position(&allocations);
         self.record_position_snapshot(bar_index);
     }

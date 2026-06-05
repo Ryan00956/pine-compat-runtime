@@ -217,3 +217,12 @@ open entry price by id, then uses it for supported single-trigger
 conversion. This moves the accepted unique-entry pyramiding subset away from the
 aggregate `avg_price` basis without yet implementing same-ID fan-out or
 entry-specific bracket/trailing relative legs.
+
+## Slice 16 Follow-Up
+
+Stage 13 Slice 16 changes `fill_pending_exit()` to preserve ledger allocations
+when one pending exit closes multiple open trades with the same entry id. Public
+orders and closed trades now fan out per allocation, so each matched open trade
+keeps its own entry price, entry bar/time, quantity, and proportional commission
+instead of being collapsed into one aggregate trade. Omitted-`from_entry`
+persistent all-entry exit behavior remains a future slice.

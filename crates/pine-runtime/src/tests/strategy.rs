@@ -1087,6 +1087,98 @@ plot(strategy.closedtrades)
 }
 
 #[test]
+fn strategy_exit_pyramiding_same_entry_id_closes_each_matching_trade() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit", pyramiding=2)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=3)
+if bar_index == 2
+    strategy.exit("XL", "L", limit=5)
+plot(strategy.opentrades)
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(4.0), bar(6.0), bar(8.0)],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 4);
+    assert_eq!(strategy.orders[0].id, "L");
+    assert_eq!(strategy.orders[1].id, "L");
+    assert_eq!(strategy.orders[2].id, "XL");
+    assert_eq!(strategy.orders[2].direction, "strategy.exit");
+    assert_eq!(strategy.orders[2].bar_index, 3);
+    assert_eq!(strategy.orders[2].qty, 1.0);
+    assert_eq!(strategy.orders[2].price, 5.0);
+    assert_eq!(strategy.orders[3].id, "XL");
+    assert_eq!(strategy.orders[3].direction, "strategy.exit");
+    assert_eq!(strategy.orders[3].bar_index, 3);
+    assert_eq!(strategy.orders[3].qty, 3.0);
+    assert_eq!(strategy.orders[3].price, 5.0);
+    assert_eq!(strategy.trades.len(), 2);
+    assert_eq!(strategy.trades[0].id, "L");
+    assert_eq!(strategy.trades[0].exit_id, "XL");
+    assert_eq!(strategy.trades[0].entry_price, 2.0);
+    assert_eq!(strategy.trades[0].exit_price, 5.0);
+    assert_eq!(strategy.trades[0].qty, 1.0);
+    assert_eq!(strategy.trades[0].profit, 3.0);
+    assert_eq!(strategy.trades[1].id, "L");
+    assert_eq!(strategy.trades[1].exit_id, "XL");
+    assert_eq!(strategy.trades[1].entry_price, 4.0);
+    assert_eq!(strategy.trades[1].exit_price, 5.0);
+    assert_eq!(strategy.trades[1].qty, 3.0);
+    assert_eq!(strategy.trades[1].profit, 3.0);
+    assert_eq!(strategy.position.len(), 3);
+    assert_eq!(strategy.position[2].size, 0.0);
+    assert_eq!(strategy.position[2].avg_price, None);
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(2),
+            PineValue::Int(2),
+            PineValue::Int(0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(1.0),
+            PineValue::Float(4.0),
+            PineValue::Float(4.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(2),
+        ]
+    );
+}
+
+#[test]
 fn strategy_exit_pyramiding_profit_ticks_use_matching_entry_price() {
     let source = SourceFile::new(
         "strategy.pine",
