@@ -117,3 +117,10 @@ Stage 13 Slice 3 added `BrokerState::record_open_long_trade()` as the first
 private helper for the current long-entry fill ownership handoff. It keeps the
 same one-open-trade behavior by updating legacy singleton mirrors and
 `TradeLedger` together, and it does not append multiple open trades.
+
+## Slice 4 Follow-Up
+
+Stage 13 Slice 4 added `TradeLedger::append_long()` as an internal append helper
+and test-backed weighted-net-position invariant. Runtime `open_long()` still
+clears existing open trades before appending, so accepted scripts keep the same
+one-net-long behavior.

@@ -54,6 +54,11 @@ pub(super) struct TradeLedger {
 impl TradeLedger {
     pub(super) fn open_long(&mut self, trade: OpenTrade) {
         self.open_trades.clear();
+        self.append_long(trade);
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn append_long(&mut self, trade: OpenTrade) {
         self.open_trades.push(trade);
         self.rebuild_net_position();
     }
@@ -171,8 +176,7 @@ impl TradeLedger {
 
     #[cfg(test)]
     pub(super) fn append_open_trade_for_test(&mut self, trade: OpenTrade) {
-        self.open_trades.push(trade);
-        self.rebuild_net_position();
+        self.append_long(trade);
     }
 
     #[cfg(test)]

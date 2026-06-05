@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 4 `TradeLedger` append helper.
+  `open_long()` still preserves the current one-open-trade runtime behavior, and
+  the new internal append path is covered by a weighted net-position unit test
+  without widening conformance, matrix output, or public JSON.
 - Closed Strategy Internal Stage 13 Slice 3 entry fill ownership helper.
   `BrokerState::entry_long()` now routes the existing one-open-long fill
   handoff through a private helper that updates legacy singleton mirrors and

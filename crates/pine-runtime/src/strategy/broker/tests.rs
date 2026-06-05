@@ -225,6 +225,21 @@ fn trade_ledger_allocates_omitted_entry_by_global_fifo() {
 }
 
 #[test]
+fn trade_ledger_append_long_rebuilds_weighted_net_position() {
+    let mut ledger = TradeLedger::default();
+    ledger.append_long(ledger_open_trade("A", 1.0, 100.0, 2.0));
+    ledger.append_long(ledger_open_trade("B", 3.0, 110.0, 6.0));
+
+    assert_eq!(
+        ledger.net_position(),
+        NetPosition {
+            signed_size: 4.0,
+            avg_price: 107.5,
+        }
+    );
+}
+
+#[test]
 fn trade_ledger_allocates_matching_entry_by_fifo() {
     let mut ledger = TradeLedger::default();
     ledger.append_open_trade_for_test(ledger_open_trade("A", 1.0, 100.0, 2.0));

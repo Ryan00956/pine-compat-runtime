@@ -220,7 +220,27 @@ Closed evidence:
 - Existing single-entry, pending-entry, ledger mirror, and full release gates
   continue to pass with unchanged behavior.
 
-### Slice 4: Long Market Pyramiding
+### Slice 4: TradeLedger Append Helper
+
+Status: closed on 2026-06-05. This slice added an internal ledger append helper
+and unit test only. Runtime behavior, conformance, fixtures, snapshots, matrix
+output, and public JSON are unchanged.
+
+Goal:
+
+- prepare the ledger for later multi-entry work without routing accepted scripts
+  into multi-open-trade behavior.
+
+Closed evidence:
+
+- `TradeLedger::open_long()` still clears existing open trades, preserving the
+  current one-net-long runtime behavior.
+- `TradeLedger::append_long()` appends an open long trade and rebuilds the
+  weighted aggregate `NetPosition`.
+- `trade_ledger_append_long_rebuilds_weighted_net_position` covers the internal
+  append invariant before any public `pyramiding` route uses it.
+
+### Slice 5: Long Market Pyramiding
 
 Goal:
 
