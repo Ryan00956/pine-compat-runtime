@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 9 open-trade field ledger reads.
+  `strategy.opentrades.*` field helpers now read the requested open-trade index
+  from `TradeLedger`, with an internal two-entry test, while accepted scripts
+  and public output remain unchanged.
 - Closed Strategy Internal Stage 13 Slice 8 open-trade count ledger read.
   `BrokerState::open_trade_count()` now reads `TradeLedger::open_count()` and is
   test-backed for an internal two-entry ledger state, while accepted scripts and

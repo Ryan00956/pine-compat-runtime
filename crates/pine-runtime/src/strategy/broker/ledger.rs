@@ -174,6 +174,10 @@ impl TradeLedger {
         &self.open_trades
     }
 
+    pub(super) fn open_at(&self, index: usize) -> Option<&OpenTrade> {
+        self.open_trades.get(index)
+    }
+
     #[cfg(test)]
     pub(super) fn append_open_trade_for_test(&mut self, trade: OpenTrade) {
         self.append_long(trade);

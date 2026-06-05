@@ -1973,6 +1973,41 @@ fn open_trade_count_reads_trade_ledger_count() {
 }
 
 #[test]
+fn open_trade_fields_read_trade_ledger_entries() {
+    let mut broker = BrokerState::new(100_000.0);
+    let mut first = ledger_open_trade("A", 1.0, 100.0, 2.0);
+    first.max_high = Some(112.0);
+    first.min_low = Some(95.0);
+    broker.trade_ledger.append_long(first);
+    broker
+        .trade_ledger
+        .append_long(ledger_open_trade("B", 3.0, 110.0, 6.0));
+
+    assert_eq!(broker.open_trade_entry_price(0), Some(100.0));
+    assert_eq!(broker.open_trade_entry_id(0), Some("A"));
+    assert_eq!(broker.open_trade_entry_bar_index(0), Some(100));
+    assert_eq!(broker.open_trade_entry_time(0), Some(1000));
+    assert_eq!(broker.open_trade_size(0), Some(1.0));
+    assert_eq!(broker.open_trade_profit(0, 112.0), Some(12.0));
+    assert_eq!(broker.open_trade_commission(0), Some(2.0));
+    assert_eq!(broker.open_trade_max_runup(0), Some(12.0));
+    assert_eq!(broker.open_trade_max_drawdown(0), Some(5.0));
+
+    assert_eq!(broker.open_trade_entry_price(1), Some(110.0));
+    assert_eq!(broker.open_trade_entry_id(1), Some("B"));
+    assert_eq!(broker.open_trade_entry_bar_index(1), Some(110));
+    assert_eq!(broker.open_trade_entry_time(1), Some(1100));
+    assert_eq!(broker.open_trade_size(1), Some(3.0));
+    assert_eq!(broker.open_trade_profit(1, 112.0), Some(6.0));
+    assert_eq!(broker.open_trade_commission(1), Some(6.0));
+    assert_eq!(broker.open_trade_max_runup(1), Some(0.0));
+    assert_eq!(broker.open_trade_max_drawdown(1), Some(0.0));
+
+    assert_eq!(broker.open_trade_entry_price(2), None);
+    assert_eq!(broker.open_trade_entry_price(-1), None);
+}
+
+#[test]
 fn trade_counts_track_matching_close() {
     let mut broker = broker_with_long_entry();
 

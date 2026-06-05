@@ -1,4 +1,5 @@
 use super::BrokerState;
+use super::ledger::OpenTrade;
 use crate::{PineValue, StrategyEquitySnapshot, StrategyTrade};
 
 fn normalize_zero(value: f64) -> f64 {
@@ -325,91 +326,67 @@ impl BrokerState {
         i64::try_from(self.trade_ledger.open_count()).unwrap_or(i64::MAX)
     }
 
+    fn open_trade_at(&self, trade_num: i64) -> Option<&OpenTrade> {
+        let index = usize::try_from(trade_num).ok()?;
+        self.trade_ledger.open_at(index)
+    }
+
     #[must_use]
     pub(crate) fn open_trade_entry_price(&self, trade_num: i64) -> Option<f64> {
-        if trade_num == 0 && self.open_trade_count() == 1 {
-            Some(self.avg_price)
-        } else {
-            None
-        }
+        self.open_trade_at(trade_num).map(|trade| trade.entry_price)
     }
 
     #[must_use]
     pub(crate) fn open_trade_entry_id(&self, trade_num: i64) -> Option<&str> {
-        if trade_num == 0 && self.open_trade_count() == 1 {
-            self.entry_id.as_deref()
-        } else {
-            None
-        }
+        self.open_trade_at(trade_num).map(|trade| trade.id.as_str())
     }
 
     #[must_use]
     pub(crate) fn open_trade_entry_bar_index(&self, trade_num: i64) -> Option<usize> {
-        if trade_num == 0 && self.open_trade_count() == 1 {
-            self.entry_bar_index
-        } else {
-            None
-        }
+        self.open_trade_at(trade_num)
+            .map(|trade| trade.entry_bar_index)
     }
 
     #[must_use]
     pub(crate) fn open_trade_entry_time(&self, trade_num: i64) -> Option<i64> {
-        if trade_num == 0 && self.open_trade_count() == 1 {
-            self.entry_time
-        } else {
-            None
-        }
+        self.open_trade_at(trade_num).map(|trade| trade.entry_time)
     }
 
     #[must_use]
     pub(crate) fn open_trade_size(&self, trade_num: i64) -> Option<f64> {
-        if trade_num == 0 && self.open_trade_count() == 1 {
-            Some(self.position_size)
-        } else {
-            None
-        }
+        self.open_trade_at(trade_num).map(|trade| trade.quantity)
     }
 
     #[must_use]
     pub(crate) fn open_trade_profit(&self, trade_num: i64, close: f64) -> Option<f64> {
-        if trade_num == 0 && self.open_trade_count() == 1 {
-            Some(self.open_profit(close))
-        } else {
-            None
-        }
+        self.open_trade_at(trade_num)
+            .map(|trade| normalize_zero((close - trade.entry_price) * trade.quantity))
     }
 
     #[must_use]
     pub(crate) fn open_trade_commission(&self, trade_num: i64) -> Option<f64> {
-        if trade_num == 0 && self.open_trade_count() == 1 {
-            Some(normalize_zero(self.open_entry_commission))
-        } else {
-            None
-        }
+        self.open_trade_at(trade_num)
+            .map(|trade| normalize_zero(trade.entry_commission))
     }
 
     #[must_use]
     pub(crate) fn open_trade_max_runup(&self, trade_num: i64) -> Option<f64> {
-        if trade_num == 0 && self.open_trade_count() == 1 {
-            let max_high = self.open_trade_max_high?;
+        self.open_trade_at(trade_num).and_then(|trade| {
+            let max_high = trade.max_high?;
             Some(normalize_zero(
-                (max_high - self.avg_price).max(0.0) * self.position_size,
+                (max_high - trade.entry_price).max(0.0) * trade.quantity,
             ))
-        } else {
-            None
-        }
+        })
     }
 
     #[must_use]
     pub(crate) fn open_trade_max_drawdown(&self, trade_num: i64) -> Option<f64> {
-        if trade_num == 0 && self.open_trade_count() == 1 {
-            let min_low = self.open_trade_min_low?;
+        self.open_trade_at(trade_num).and_then(|trade| {
+            let min_low = trade.min_low?;
             Some(normalize_zero(
-                (self.avg_price - min_low).max(0.0) * self.position_size,
+                (trade.entry_price - min_low).max(0.0) * trade.quantity,
             ))
-        } else {
-            None
-        }
+        })
     }
 
     #[must_use]

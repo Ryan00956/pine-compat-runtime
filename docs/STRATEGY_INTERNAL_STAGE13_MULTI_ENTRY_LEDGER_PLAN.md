@@ -324,7 +324,31 @@ Closed evidence:
 - `open_trade_count_reads_trade_ledger_count` proves the internal count path can
   observe two ledger entries before any accepted script can create them.
 
-### Slice 9: Long Market Pyramiding
+### Slice 9: Open-Trade Field Ledger Reads
+
+Status: closed on 2026-06-05. This slice changed the internal
+`strategy.opentrades.*` field read helpers from singleton mirrors to
+ledger-indexed reads and added an internal two-entry field test. Runtime
+behavior, conformance, fixtures, snapshots, matrix output, and public JSON are
+unchanged.
+
+Goal:
+
+- make open-trade field reads index the ledger directly before accepting public
+  multi-entry behavior.
+
+Closed evidence:
+
+- `TradeLedger::open_at()` exposes a bounded internal accessor for open trade
+  field reads.
+- `BrokerState::open_trade_entry_price()`, `entry_id()`, `entry_bar_index()`,
+  `entry_time()`, `size()`, `profit()`, `commission()`, `max_runup()`, and
+  `max_drawdown()` now read from the requested ledger entry index.
+- `open_trade_fields_read_trade_ledger_entries` proves fields can be read from
+  ledger indexes `0` and `1`, with out-of-range and negative indexes returning
+  `None`.
+
+### Slice 10: Long Market Pyramiding
 
 Goal:
 

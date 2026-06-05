@@ -155,3 +155,10 @@ Stage 13 Slice 8 changed `BrokerState::open_trade_count()` to read
 `TradeLedger::open_count()` instead of singleton mirrors. Accepted scripts still
 produce only `0` or `1` open trades, but the internal count path is ready for
 future multi-entry behavior.
+
+## Slice 9 Follow-Up
+
+Stage 13 Slice 9 changed `strategy.opentrades.*` field helpers to read the
+requested open-trade index from `TradeLedger::open_at()`. Accepted scripts still
+produce only index `0`, but internal tests now cover indexes `0` and `1` before
+public multi-entry behavior is accepted.
