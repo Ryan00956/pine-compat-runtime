@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 11 Slice 1 boundary lock. Semantic fixtures
+  now prove `strategy.close` partial quantity forms and close metadata options
+  remain outside the supported subset before fixed-quantity runtime support is
+  introduced.
 - Opened Strategy Internal Stage 11 as a partial `strategy.close` design gate.
   The plan targets fixture-backed support for fixed `qty`, `qty_percent`, and
   `qty` over `qty_percent` precedence in the current one-net-long broker while

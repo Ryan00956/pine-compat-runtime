@@ -129,10 +129,23 @@ Acceptance:
 
 ### Slice 1: Boundary Lock
 
+Status: Closed on 2026-06-05. This slice added semantic boundary coverage only
+and did not widen runtime behavior, conformance, matrix, or public output.
+
 Goal:
 
 - add semantic and/or runtime boundary tests proving `strategy.close` partial
   quantity forms remain unsupported before behavior routing changes.
+
+Closed evidence:
+
+- added semantic fixture
+  `tests/fixtures/sema/unsupported_strategy_close_partial_quantity.pine`;
+- added a fixture test proving `qty`, `qty_percent`, `comment`,
+  `alert_message`, `disable_alert`, and `immediately` are still rejected by the
+  current `strategy.close` signature;
+- no runtime fixtures, snapshots, conformance rows, matrix support claims,
+  Python tests, or WASM tests changed.
 
 Acceptance:
 

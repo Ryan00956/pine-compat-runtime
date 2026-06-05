@@ -1,0 +1,10 @@
+//@version=5
+strategy("Unsupported strategy.close partial quantity")
+strategy.entry("L", strategy.long, qty=2)
+strategy.close("L", qty=1)
+strategy.close("L", qty_percent=50)
+strategy.close("L", qty=1, qty_percent=50)
+strategy.close("L", comment="partial")
+strategy.close("L", alert_message="partial")
+strategy.close("L", disable_alert=true)
+strategy.close("L", immediately=true)

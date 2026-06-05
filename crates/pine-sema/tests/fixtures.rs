@@ -631,6 +631,35 @@ fn accepts_supported_strategy_close_fixture() {
 }
 
 #[test]
+fn reports_unsupported_strategy_close_partial_quantity_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/unsupported_strategy_close_partial_quantity.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    for name in [
+        "qty",
+        "qty_percent",
+        "comment",
+        "alert_message",
+        "disable_alert",
+        "immediately",
+    ] {
+        assert!(
+            analysis.diagnostics.iter().any(|diagnostic| {
+                diagnostic.code == "E_CALL_ARG_NAME" && diagnostic.message.contains(name)
+            }),
+            "{} diagnostics should reject strategy.close argument `{}`: {:?}",
+            path.display(),
+            name,
+            analysis.diagnostics
+        );
+    }
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_supported_strategy_close_all_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_strategy_close_all.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
