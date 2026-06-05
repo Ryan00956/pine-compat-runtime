@@ -146,10 +146,24 @@ Acceptance:
 
 ### Slice 1: Boundary Lock
 
+Status: Closed on 2026-06-05. This slice added runtime boundary tests only and
+did not widen behavior, conformance, matrix, or public output.
+
 Goal:
 
 - add broker and/or runtime tests proving active-entry relative bracket forms
   remain unsupported before behavior routing changes.
+
+Closed evidence:
+
+- `crates/pine-runtime/src/tests/strategy.rs` now proves `stop + profit`,
+  `loss + limit`, and `loss + profit` active-entry bracket calls still allow
+  the matching pending entry to fill but do not create public exit orders or
+  trades;
+- the current runtime boundary remains an `E_STRATEGY_EXIT_ENTRY` diagnostic
+  for those active-entry relative bracket forms;
+- no runtime fixtures, golden snapshots, conformance rows, matrix support
+  claims, Python tests, or WASM tests changed.
 
 Acceptance:
 

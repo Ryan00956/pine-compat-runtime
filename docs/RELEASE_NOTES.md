@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 10 Slice 1 boundary lock. Runtime tests now
+  prove active-entry relative bracket forms `stop + profit`, `loss + limit`,
+  and `loss + profit` still fill only the matching pending entry and create no
+  public exit orders or trades before deferred bracket storage is implemented.
 - Opened Strategy Internal Stage 10 as an active-entry relative bracket design
   gate. The plan covers future fixture-backed support for `stop + profit`,
   `loss + limit`, and `loss + profit` against matching active pending long
