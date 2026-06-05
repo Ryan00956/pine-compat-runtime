@@ -416,8 +416,8 @@ Out of scope:
 
 ## Stage 12: Strategy Declaration Property Boundary
 
-Status: design gate opened on 2026-06-05. See
-`docs/STRATEGY_INTERNAL_STAGE12_DECLARATION_PROPERTIES_PLAN.md`.
+Status: closed on 2026-06-05. See
+`docs/STRATEGY_INTERNAL_STAGE12_DECLARATION_PROPERTIES_AUDIT.md`.
 
 Goal: refresh the post-Stage-11 strategy gap boundary before accepting another
 `strategy()` declaration property.

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 12 with a declaration-property audit. The
+  closeout records the fixture-backed unsupported declaration-property boundary,
+  the supported `strategy.cash` default quantity subset, unchanged public
+  strategy JSON shape across CLI/Python/WASM, and the remaining broker-model
+  dependencies for timing, recalculation, currency/precision, shorts, pyramiding,
+  OCA, and public order-event behavior.
 - Closed Strategy Internal Stage 12 Slice 3 `strategy.cash` default quantity
   support. `strategy(default_qty_type=strategy.cash, default_qty_value=N)` now
   resolves omitted supported `strategy.entry` quantities once at placement time

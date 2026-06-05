@@ -1,7 +1,7 @@
 # Strategy Internal Stage 12 Declaration Properties Plan
 
-Status: design gate opened on 2026-06-05. Runtime behavior, conformance claims,
-and public output are unchanged in this slice.
+Status: closed on 2026-06-05. See
+`docs/STRATEGY_INTERNAL_STAGE12_DECLARATION_PROPERTIES_AUDIT.md`.
 
 ## Background
 
@@ -11,7 +11,8 @@ property boundary. The live conformance matrix already documents a non-trivial
 `strategy()` subset:
 
 - positive const `initial_capital`;
-- `strategy.fixed` and `strategy.percent_of_equity` default quantities;
+- `strategy.fixed`, `strategy.cash`, and `strategy.percent_of_equity` default
+  quantities;
 - `strategy.commission.cash_per_contract`,
   `strategy.commission.cash_per_order`, and `strategy.commission.percent`;
 - non-negative fixed-tick `slippage`;
@@ -142,7 +143,7 @@ Closed evidence:
 
 ## Compatibility Contract
 
-Until a later slice closes, the supported strategy declaration subset remains the
-one recorded in `tests/fixtures/conformance.tsv`. Unsupported declaration
-properties must fail before runtime execution, and public strategy JSON must not
-grow declaration-setting fields.
+The supported strategy declaration subset is the one recorded in
+`tests/fixtures/conformance.tsv`. Unsupported declaration properties must fail
+before runtime execution, and public strategy JSON must not grow
+declaration-setting fields.
