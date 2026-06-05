@@ -1,5 +1,5 @@
 use super::entries::{PendingEntry, PendingEntryDirection, PendingEntryKind};
-use super::exits::{
+use super::pending_exits::{
     DeferredBracketLeg, DeferredRelativeExit, DeferredRelativeExitTrigger, ExitQuantityRequest,
     PendingExitBook, PendingExitQuantity, PendingExitReservationFamily, PendingExitTouch,
     PendingTrailingActivation, PendingTrailingExit, PendingTrailingSpec, PendingTrailingState,

@@ -1,5 +1,5 @@
 use super::entries::PendingEntryBook;
-use super::exits::PendingExitBook;
+use super::pending_exits::PendingExitBook;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct OrderBook {

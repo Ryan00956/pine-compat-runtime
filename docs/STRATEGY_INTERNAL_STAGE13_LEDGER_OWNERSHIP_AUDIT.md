@@ -190,3 +190,12 @@ long position through the open-trade ledger. Multi-entry close-all now records
 one closed trade per matched ledger entry and clears all pending exits before
 resyncing aggregate position state to flat. Multi-entry `strategy.exit` remains
 a future slice.
+
+## Slice 13 Follow-Up
+
+Stage 13 Slice 13 is a no-behavior-change split of pending exit state from
+`exits.rs` into `pending_exits.rs`. The split keeps `PendingExitBook`,
+`PendingExit`, deferred relative exits, trailing state, and quantity helpers in
+one data module so the next multi-entry `strategy.exit` slice can change
+matching/reservation behavior without pushing `exits.rs` back against the
+structure guardrail.

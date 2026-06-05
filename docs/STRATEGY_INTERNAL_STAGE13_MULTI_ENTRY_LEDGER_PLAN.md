@@ -426,6 +426,26 @@ Closed evidence:
   by one `strategy.close_all()` call, leaving `strategy.opentrades` and
   `strategy.position_size` at `0`.
 
+### Slice 13: Pending Exit Module Split
+
+Status: closed on 2026-06-05. This is a no-behavior-change structure slice
+before widening multi-entry `strategy.exit`. It keeps the next compatibility
+slice small by moving pending exit data structures out of the placement logic.
+
+Goal:
+
+- split pending exit types and the pending exit book out of `exits.rs` while
+  preserving every existing broker behavior and public fixture claim.
+
+Closed evidence:
+
+- `pending_exits.rs` now owns `PendingExit`, `PendingExitBook`, trailing exit
+  state, deferred relative exit state, and quantity helper types.
+- `exits.rs` now keeps the broker placement/resolution logic and drops from the
+  structure guardrail edge to roughly 1040 lines.
+- Broker tests and the structure guardrail pass without changing conformance
+  fixtures or snapshots.
+
 Future slices:
 
 - multi-entry `strategy.exit` fixture expansion;
