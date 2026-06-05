@@ -1,8 +1,8 @@
 # Strategy Internal Stage 11 Partial Close Plan
 
-Status: Slice 2 fixed-`qty` partial close closed on 2026-06-05.
-`qty_percent`, close metadata, partial `strategy.close_all()`, multi-entry
-allocation, and public strategy JSON expansion remain unsupported.
+Status: closed on 2026-06-05 for the documented one-net-long
+`strategy.close` partial quantity subset. See
+`docs/STRATEGY_INTERNAL_STAGE11_PARTIAL_CLOSE_AUDIT.md`.
 
 Stage 11 targets the next narrow Pine strategy gap after the Stage 10
 active-entry bracket closeout: `strategy.close()` partial market closes for
@@ -234,6 +234,10 @@ Acceptance:
   matrix, docs, and release-note coverage close in the same slice.
 
 ### Slice 4: Closeout Audit
+
+Status: Closed on 2026-06-05. This slice synchronized Stage 11 docs,
+conformance, matrix, host parity, and audit evidence without widening runtime
+behavior.
 
 Goal:
 

@@ -109,13 +109,21 @@ and pending exits. It is a no-op when no supported pending order exists and
 records no public order, trade, or pending-order output.
 
 `strategy.close(id)` closes the full matching long position at the current bar
-close. Configured slippage worsens the supported long close fill price after
-trigger selection. It records a closed trade with entry/exit bar indexes,
+close. `strategy.close(id, qty=...)` and
+`strategy.close(id, qty_percent=...)` can close part of the matching long
+position; fixed `qty` wins when both quantity forms are present. Fixed and
+percent quantities must be finite and positive, oversized quantities clamp to
+the current matching position size, and invalid quantities leave position,
+pending exit, and trade state unchanged while emitting a strategy diagnostic.
+Configured slippage worsens the supported long close fill price after trigger
+selection. A close records a closed trade with entry/exit bar indexes,
 entry/exit times, entry/exit prices, quantity, and net realized profit after
-supported commission when configured, then appends a flat position
-snapshot with `size = 0` and `avgPrice = null`.
-If no position is open, the id does not match the open entry, or the position
-has already been closed, the close call is a no-op.
+supported commission when configured. Partial closes append a remaining
+position snapshot at the same average price and keep matching pending exits;
+full closes append a flat position snapshot with `size = 0` and
+`avgPrice = null` and cancel matching pending exits. If no position is open, the
+id does not match the open entry, or the position has already been closed, the
+close call is a no-op.
 
 After each historical bar, strategy mode appends an equity snapshot with
 `barIndex`, `cash`, `marketValue`, `equity`, and `netProfit`. Open long

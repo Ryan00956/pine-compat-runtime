@@ -82,8 +82,10 @@ Phase 1 executable subset:
 - `strategy.entry(id, strategy.long)` in strategy-mode scripts only when the
   declaration configures the supported fixed default quantity subset; explicit
   `qty` continues to override the declaration default
-- `strategy.close(id)` in strategy-mode scripts only, closing the full matching
-  long position at the current bar close and recording a closed trade
+- `strategy.close(id)`, `strategy.close(id, qty=...)`, and
+  `strategy.close(id, qty_percent=...)` in strategy-mode scripts only, closing
+  all or part of the matching long position at the current bar close and
+  recording closed trades; fixed `qty` wins over `qty_percent`
 - strategy equity snapshots with per-bar `cash`, `marketValue`, `equity`, and
   `netProfit` for the supported long-only subset
 - `strategy.position_size` and `strategy.position_avg_price` in strategy-mode
@@ -277,12 +279,13 @@ Request data:
 The analyzer should reject these with clear diagnostics:
 
 - strategy order functions and reporting helpers outside the narrow
-  `strategy.entry(id, strategy.long, qty=...)`, `strategy.close(id)`, and
-  stop/limit/profit/loss, one-downside/one-upside bracket, and trailing
-  `strategy.exit` subsets, including `strategy.order`, short entries,
-  same-side or 3+ trigger exits, invalid trailing combinations, partial closes,
-  pyramiding, broker settings beyond positive const numeric `initial_capital`
-  and fixed default quantity, percent-of-equity/cash/contracts sizing,
+  `strategy.entry(id, strategy.long, qty=...)`, supported full/fixed-qty/
+  qty-percent `strategy.close` subset, and stop/limit/profit/loss,
+  one-downside/one-upside bracket, and trailing `strategy.exit` subsets,
+  including `strategy.order`, short entries, same-side or 3+ trigger exits,
+  invalid trailing combinations, partial `strategy.close_all()`, pyramiding,
+  broker settings beyond positive const numeric `initial_capital` and fixed
+  default quantity, percent-of-equity/cash/contracts sizing,
   `strategy.*` variables beyond the supported position/profit/equity/count
   state subset, mutable strategy state, and requested-context strategy state
 - `request.*` variants outside the narrow same-context and same-or-higher-timeframe

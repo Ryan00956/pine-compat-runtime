@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 11 with a partial `strategy.close` audit. The
+  closeout records the fixture-backed full close, fixed-`qty` partial close,
+  `qty_percent` partial close, and `qty` precedence subset, confirms unchanged
+  public strategy JSON shape across CLI, Python, and WASM, and keeps close
+  metadata, `immediately`, partial `strategy.close_all()`, multi-entry
+  allocation, and public order-event output unsupported.
 - Closed Strategy Internal Stage 11 Slice 3 `qty_percent` partial
   `strategy.close`. `strategy.close(id, qty_percent=...)` now resolves finite
   positive percentages against the current matching long position, clamps

@@ -45,7 +45,9 @@ Implemented and fixture-backed:
   verification.
 - `strategy.entry(id, strategy.long, qty=...)` and default fixed quantity when
   configured.
-- `strategy.close(id)` as a full close of the matching long position.
+- `strategy.close(id)` as a full close of the matching long position, plus
+  fixed-`qty` and `qty_percent` partial closes where `qty` wins when both
+  quantity forms are supplied.
 - Public strategy output with `orders`, `trades`, `position`, `equity`, and
   `diagnostics`.
 - Read-only state/count variables:
@@ -204,14 +206,17 @@ to a separately designed multi-entry model.
 ### 4. Market Close Commands
 
 Current state: `strategy.close(id)` closes the full matching long position at
-the current bar close and cancels matching pending exits. `strategy.close_all()`
-closes the current long position without requiring an entry id.
+the current bar close and cancels matching pending exits. `strategy.close(id,
+qty=...)` and `strategy.close(id, qty_percent=...)` can partially close the
+matching current long position while keeping matching pending exits alive; `qty`
+wins when both quantity forms are supplied. `strategy.close_all()` closes the
+current long position without requiring an entry id.
 
 Missing internal behavior:
 
-- partial `strategy.close(..., qty=...)` and `qty_percent`;
 - `immediately`;
 - `comment`, `alert_message`, and alert suppression options;
+- partial `strategy.close_all()`;
 - close behavior across multiple entries and pyramiding;
 - close-entry ordering such as FIFO versus entry-specific close rules.
 

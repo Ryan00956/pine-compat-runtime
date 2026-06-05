@@ -384,8 +384,8 @@ Out of scope:
 
 ## Stage 11: Partial `strategy.close`
 
-Status: design gate opened on 2026-06-05. See
-`docs/STRATEGY_INTERNAL_STAGE11_PARTIAL_CLOSE_PLAN.md`.
+Status: closed on 2026-06-05. See
+`docs/STRATEGY_INTERNAL_STAGE11_PARTIAL_CLOSE_AUDIT.md`.
 
 Goal: add fixture-backed partial market close support for the current
 one-net-long `strategy.close()` subset.

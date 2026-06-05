@@ -66,7 +66,11 @@ price before script statements on a later historical bar when `low <= limit`.
 Same-calculation absolute `strategy.exit` attachment may target the active
 pending market, limit, stop, or stop-limit entry id.
 `strategy.close(id)` closes the full matching long position at the current bar
-close.
+close. `strategy.close(id, qty=...)` and
+`strategy.close(id, qty_percent=...)` can close part of the matching current
+long position; both quantity forms must be finite and positive, fixed `qty` wins
+when both forms are supplied, and oversized quantities clamp to the current
+matching position size.
 `strategy.close_all()` closes the current supported long position at the current
 bar close without requiring an entry id; while flat or already closed it is a
 no-op. It cancels pending exits for the closed entry and keeps the existing
