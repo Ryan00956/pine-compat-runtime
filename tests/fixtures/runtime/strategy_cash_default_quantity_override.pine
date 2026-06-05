@@ -1,0 +1,5 @@
+//@version=5
+strategy("Strategy cash default quantity override", default_qty_type=strategy.cash, default_qty_value=100)
+if bar_index == 1
+    strategy.entry("E", strategy.long, qty=5)
+plot(strategy.position_size)

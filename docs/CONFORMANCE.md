@@ -72,10 +72,14 @@ default_qty_type, default_qty_value, commission_type, commission_value,
 slippage, backtest_fill_limits_assumption, margin_long, margin_short)` where
 `initial_capital` must be a positive const numeric value when provided. Phase L
 accepts `default_qty_type=strategy.fixed` with positive const numeric
-`default_qty_value`; Stage 7 Slice 31 accepts
-`default_qty_type=strategy.percent_of_equity` with positive const numeric
-`default_qty_value`, resolving omitted entry `qty` at placement time from the
-current supported equity and current close. Margin parameters currently support
+`default_qty_value`; Strategy Internal Stage 12 accepts
+`default_qty_type=strategy.cash` with positive const numeric
+`default_qty_value`, resolving omitted entry `qty` at placement time as cash
+divided by current close under the current no-currency-conversion boundary;
+Stage 7 Slice 31 accepts `default_qty_type=strategy.percent_of_equity` with
+positive const numeric `default_qty_value`, resolving omitted entry `qty` at
+placement time from the current supported equity and current close. Margin
+parameters currently support
 declaration/IR storage, long-only `strategy.opentrades.capital_held`, and
 long-entry affordability checks for the supported entry subset when explicit
 active `margin_long` is configured. They also enable the first long-only forced
@@ -92,8 +96,9 @@ fill. Stage 7 Slice 19 accepts finite non-negative integer const `slippage`
 ticks using the fixed `syminfo.mintick` subset. Stage 7 Slice 20 accepts finite
 non-negative integer const
 `backtest_fill_limits_assumption` ticks for supported limit-order
-verification. Cash sizing, contracts, commission modes outside the three listed
-above, richer fill models, and currency conversion remain unsupported. Strategy
+verification. Contracts, commission modes outside the three listed above, richer
+fill models, currency conversion, symbol precision rounding, and lot-step
+constraints remain unsupported. Strategy
 mode output includes `orders`, `trades`, `position`, `equity`, and
 `diagnostics`. Equity snapshots are emitted once per historical bar with
 `barIndex`, `cash`, `marketValue`, `equity`, and `netProfit`, using current
@@ -101,8 +106,8 @@ bar-close mark-to-market accounting for the long-only order subset and applying
 supported commission debits and slippage-adjusted fill prices when configured.
 Supported fixed-tick limit verification can delay supported long limit entry and
 limit/profit exit fills while preserving the original limit fill price.
-Margin, percent
-sizing, currency conversion, pyramiding, short orders,
+Currency conversion, symbol precision rounding, lot-step constraints, pyramiding,
+short orders,
 `strategy.exit` same-side/3+ trigger/invalid trailing variants, reservation
 behavior outside the explicit fixed-`qty` or `qty_percent`
 single-trigger/bracket/trailing subset, omitted-quantity multiple
@@ -643,8 +648,8 @@ ta.rsi               supported    fixture-derived executable subset
 request.security     partial      same-context identity and same-or-higher-timeframe provider scalar-expression subset only
 alertcondition       partial      bool-compatible condition plus const-string title/message runtime events
 alert                partial      const-string message runtime events when execution reaches the call
-strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital, fixed and percent-of-equity default_qty subsets, supported cash-per-contract, cash-per-order, and percent commission modes, finite non-negative integer slippage ticks, and finite non-negative integer limit-verification ticks only
-strategy.entry       partial      long market entry filled at next historical bar open plus long limit entry filled at limit price on a later historical bar when low <= limit or below the configured verified limit threshold, long stop entry filled at stop price on a later historical bar when high >= stop, and long stop-limit entry activated on a later historical bar when high >= stop then filled at limit price on a subsequent historical bar when low <= limit or below the configured verified limit threshold; configured slippage worsens long entry fill prices after trigger selection; explicit positive qty, fixed default qty, or percent-of-equity default qty resolved at placement time from current supported equity and close; explicit active margin_long rejects fills whose required margin exceeds simulated equity at the actual fill price; one net long position; no pyramiding; no public pending-order output
+strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital, fixed, cash, and percent-of-equity default_qty subsets, supported cash-per-contract, cash-per-order, and percent commission modes, finite non-negative integer slippage ticks, and finite non-negative integer limit-verification ticks only
+strategy.entry       partial      long market entry filled at next historical bar open plus long limit entry filled at limit price on a later historical bar when low <= limit or below the configured verified limit threshold, long stop entry filled at stop price on a later historical bar when high >= stop, and long stop-limit entry activated on a later historical bar when high >= stop then filled at limit price on a subsequent historical bar when low <= limit or below the configured verified limit threshold; configured slippage worsens long entry fill prices after trigger selection; explicit positive qty, fixed default qty, cash default qty resolved as cash/current close, or percent-of-equity default qty resolved at placement time from current supported equity and close; explicit active margin_long rejects fills whose required margin exceeds simulated equity at the actual fill price; one net long position; no pyramiding; no public pending-order output
 strategy.close       partial      full long-position close, fixed-qty partial close, or qty_percent partial close of the matching current long entry id at current bar close; fixed qty and qty_percent must be finite and positive; qty_percent resolves against the current matching position size; qty wins when both quantity forms are supplied; oversized quantities clamp to the current matching position size, keep remaining long position state open at the same average price, preserve the public strategy JSON shape without close order events, and cancel matching pending exits only when the close fully flattens the entry; configured slippage worsens the long close fill price; close metadata, partial strategy.close_all, and multi-entry close allocation remain unsupported
 strategy.close_all   partial      full close of the current supported long position at current bar close; flat or already-closed calls are no-op; closed trade output uses the current entry id
 strategy.cancel      partial      cancels matching internal pending entry ids and pending exit ids in the supported order subset; filled, unknown, and already-cancelled ids are no-op; no public pending-order output or cancellation records

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 12 Slice 3 `strategy.cash` default quantity
+  support. `strategy(default_qty_type=strategy.cash, default_qty_value=N)` now
+  resolves omitted supported `strategy.entry` quantities once at placement time
+  as `N / close`, covers market, limit, and explicit-`qty` override fixtures
+  across CLI/Python/WASM, and keeps currency conversion, precision rounding,
+  lot-step constraints, `currency`, shorts, and pyramiding unsupported.
 - Closed Strategy Internal Stage 12 Slice 2 property selection review. The next
   runtime target is `default_qty_type=strategy.cash`, scoped to cash divided by
   current close for omitted supported entry quantities, with explicit `qty`

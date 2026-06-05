@@ -183,6 +183,31 @@ fn accepts_supported_strategy_percent_of_equity_default_quantity_fixture() {
 }
 
 #[test]
+fn accepts_supported_strategy_cash_default_quantity_fixture() {
+    let path =
+        workspace_fixture("tests/fixtures/sema/supported_strategy_cash_default_quantity.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("strategy declaration should lower");
+    assert_eq!(
+        hir.strategy_settings.default_qty,
+        Some(pine_ir::StrategyDefaultQuantity::Cash(100.0))
+    );
+    assert_eq!(
+        hir.strategy_settings.default_entry_qty(1000.0, 10.0),
+        Some(10.0)
+    );
+}
+
+#[test]
 fn accepts_supported_strategy_commission_cash_per_contract_fixture() {
     let path = workspace_fixture(
         "tests/fixtures/sema/supported_strategy_commission_cash_per_contract.pine",

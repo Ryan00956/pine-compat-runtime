@@ -33,8 +33,8 @@ broker effect, conformance wording, and public output contract are clear.
 
 - No runtime widening in this design slice.
 - No acceptance of `pyramiding`, `calc_on_order_fills`,
-  `calc_on_every_tick`, `process_orders_on_close`, `default_qty_type=strategy.cash`,
-  `currency`, `close_entries_rule`, `risk_free_rate`, `use_bar_magnifier`,
+  `calc_on_every_tick`, `process_orders_on_close`, `currency`,
+  `close_entries_rule`, `risk_free_rate`, `use_bar_magnifier`,
   `fill_orders_on_standard_ohlc`, or strategy alert/order-fill settings.
 - No short exposure, reversal, multi-entry ledger, OCA, or public order-event
   schema expansion.
@@ -113,7 +113,9 @@ Rationale:
 - It can be fixture-backed across sema, runtime, CLI golden, Python, and WASM
   using the current long-only entry subset and unchanged public JSON shape.
 
-### Slice 3+: Runtime Implementation
+### Slice 3: Runtime Implementation
+
+Status: closed on 2026-06-05.
 
 Implement only `default_qty_type=strategy.cash`.
 
@@ -126,6 +128,17 @@ Close criteria:
   form, plus explicit `qty` precedence.
 - Conformance, matrix snapshot, execution semantics, builtin signatures, release
   notes, CLI/Python/WASM parity, and `scripts/verify.sh` all pass.
+
+Closed evidence:
+
+- `strategy.cash` is registered as a string constant and accepted by the
+  `strategy()` declaration analyzer.
+- `StrategyDefaultQuantity::Cash` resolves omitted supported entry quantities as
+  cash divided by current close, preserving explicit `qty` precedence.
+- Runtime fixtures cover cash default market entries, cash default limit entries,
+  and explicit-`qty` override behavior with unchanged public strategy JSON shape.
+- CLI golden snapshots, Python binding tests, WASM CSV-to-JSON tests, the
+  conformance matrix, and compatibility docs are synchronized.
 
 ## Compatibility Contract
 

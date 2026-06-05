@@ -440,10 +440,9 @@ Scope:
 Out of scope:
 
 - `pyramiding`, `process_orders_on_close`, `calc_on_order_fills`,
-  `calc_on_every_tick`, `default_qty_type=strategy.cash`, `currency`,
-  `close_entries_rule`, `risk_free_rate`, `use_bar_magnifier`,
-  `fill_orders_on_standard_ohlc`, strategy alert/order-fill settings, and
-  runtime `margin_short` behavior.
+  `calc_on_every_tick`, `currency`, `close_entries_rule`, `risk_free_rate`,
+  `use_bar_magnifier`, `fill_orders_on_standard_ohlc`, strategy
+  alert/order-fill settings, and runtime `margin_short` behavior.
 - Short exposure, reversals, multi-entry ledgers, OCA behavior, public
   order-event output, and schema expansion.
 

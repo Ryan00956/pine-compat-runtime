@@ -121,7 +121,7 @@ designed.
 ### 1. Strategy Declaration Properties
 
 Current state: the declaration parser and runtime now support a meaningful but
-still narrow property subset: positive const `initial_capital`, fixed and
+still narrow property subset: positive const `initial_capital`, fixed, cash, and
 percent-of-equity default quantities, the supported cash-per-contract,
 cash-per-order, and percent commission modes, fixed-tick slippage, fixed-tick
 limit verification through `backtest_fill_limits_assumption`, and finite
@@ -136,7 +136,6 @@ Missing internal behavior:
 - `calc_on_order_fills`
 - `calc_on_every_tick`
 - `process_orders_on_close`
-- `default_qty_type=strategy.cash`
 - `currency`
 - commission modes beyond `strategy.commission.cash_per_contract`,
   `strategy.commission.cash_per_order`, and `strategy.commission.percent`
@@ -190,7 +189,7 @@ resolution, realtime behavior, or multi-entry ledgers.
 
 Current state: `strategy.entry` supports long market, limit, stop, and
 stop-limit entries, with explicit positive quantity, configured fixed default
-quantity, or supported percent-of-equity default quantity. Repeated entries
+quantity, supported cash default quantity, or supported percent-of-equity default quantity. Repeated entries
 while long are ignored under the current no-pyramiding rule.
 
 Missing internal behavior:
@@ -321,14 +320,13 @@ settled. This is the largest broker-model gap.
 
 ### 9. Position Sizing And Account Model
 
-Current state: explicit positive quantities, fixed default quantities, and a
-percent-of-equity default quantity subset are supported. Cash, market value,
-equity, and net profit are calculated for the current long-only model with the
-supported cost modes.
+Current state: explicit positive quantities, fixed default quantities, cash
+default quantities, and a percent-of-equity default quantity subset are
+supported. Cash, market value, equity, and net profit are calculated for the
+current long-only model with the supported cost modes.
 
 Missing internal behavior:
 
-- cash-based default quantity;
 - contract/share minimum and rounding behavior;
 - currency selection and conversion;
 - margin requirements beyond supported explicit-`margin_long` long-entry

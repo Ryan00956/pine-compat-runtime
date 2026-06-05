@@ -658,18 +658,12 @@ mod tests {
                 "runtime_strategy_entry_stop_limit.json",
                 "tests/fixtures/runtime/strategy_entry_stop_limit.pine",
             ),
-            (
-                "runtime_strategy_default_quantity.json",
-                "tests/fixtures/runtime/strategy_default_quantity.pine",
-            ),
-            (
-                "runtime_strategy_percent_of_equity_default_quantity.json",
-                "tests/fixtures/runtime/strategy_percent_of_equity_default_quantity.pine",
-            ),
-            (
-                "runtime_strategy_default_quantity_override.json",
-                "tests/fixtures/runtime/strategy_default_quantity_override.pine",
-            ),
+            ("runtime_strategy_default_quantity.json", "tests/fixtures/runtime/strategy_default_quantity.pine"),
+            ("runtime_strategy_percent_of_equity_default_quantity.json", "tests/fixtures/runtime/strategy_percent_of_equity_default_quantity.pine"),
+            ("runtime_strategy_cash_default_quantity.json", "tests/fixtures/runtime/strategy_cash_default_quantity.pine"),
+            ("runtime_strategy_cash_default_quantity_limit.json", "tests/fixtures/runtime/strategy_cash_default_quantity_limit.pine"),
+            ("runtime_strategy_cash_default_quantity_override.json", "tests/fixtures/runtime/strategy_cash_default_quantity_override.pine"),
+            ("runtime_strategy_default_quantity_override.json", "tests/fixtures/runtime/strategy_default_quantity_override.pine"),
             (
                 "runtime_strategy_close.json",
                 "tests/fixtures/runtime/strategy_close.pine",

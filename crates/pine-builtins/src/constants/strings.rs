@@ -94,6 +94,7 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     same_string_constant("order.ascending"),
     same_string_constant("order.descending"),
     same_string_constant("strategy.fixed"),
+    same_string_constant("strategy.cash"),
     same_string_constant("strategy.percent_of_equity"),
     same_string_constant("strategy.long"),
     same_string_constant("strategy.commission.cash_per_contract"),

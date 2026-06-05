@@ -211,6 +211,12 @@ impl Analyzer {
                                     as fn(f64) -> pine_ir::StrategyDefaultQuantity,
                             );
                         }
+                        "strategy.cash" => {
+                            default_qty_constructor = Some(
+                                pine_ir::StrategyDefaultQuantity::Cash
+                                    as fn(f64) -> pine_ir::StrategyDefaultQuantity,
+                            );
+                        }
                         STRATEGY_PERCENT_OF_EQUITY_DEFAULT_QTY_TYPE => {
                             default_qty_constructor = Some(
                                 pine_ir::StrategyDefaultQuantity::PercentOfEquity
@@ -220,7 +226,7 @@ impl Analyzer {
                         _ => {
                             self.diagnostics.push(Diagnostic::error(
                                 "E_CALL_ARG_VALUE",
-                                "`strategy` argument `default_qty_type` only supports strategy.fixed or strategy.percent_of_equity",
+                                "`strategy` argument `default_qty_type` only supports strategy.fixed, strategy.cash, or strategy.percent_of_equity",
                                 arg.span,
                             ));
                             continue;

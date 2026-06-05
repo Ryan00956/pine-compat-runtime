@@ -46,11 +46,12 @@ finite non-negative integer const ticks using the fixed `syminfo.mintick`
 subset. Stage 7 Slice 20 adds `backtest_fill_limits_assumption=N` with finite
 non-negative integer const ticks for supported limit-order verification.
 `strategy.entry(id, strategy.long, qty=...)` is a strategy-mode side effect;
-`qty` may be omitted when a supported fixed or percent-of-equity default
-quantity subset is configured,
-and explicit `qty` overrides the declaration default. The supported market-long
-entry creates an internal pending entry, emits no public order while pending, and
-fills at the next historical bar open before script statements on that fill bar.
+`qty` may be omitted when a supported fixed, cash, or percent-of-equity default
+quantity subset is configured. Cash default quantities resolve as cash divided
+by current close under the current no-currency-conversion boundary, and explicit
+`qty` overrides the declaration default. The supported market-long entry creates
+an internal pending entry, emits no public order while pending, and fills at the
+next historical bar open before script statements on that fill bar.
 `strategy.entry(..., limit=price)` creates an internal pending long limit entry,
 emits no public order while pending, never fills on its creation bar, and fills
 at the limit price before script statements on a later historical bar when
