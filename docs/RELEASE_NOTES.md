@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 3 entry fill ownership helper.
+  `BrokerState::entry_long()` now routes the existing one-open-long fill
+  handoff through a private helper that updates legacy singleton mirrors and
+  `TradeLedger` together, with no runtime behavior, conformance, matrix, or
+  public JSON change.
 - Closed Strategy Internal Stage 13 Slice 2 with a ledger ownership audit. The
   audit records current `TradeLedger` responsibilities, legacy singleton
   `BrokerState` mirrors, aggregate accounting owners, existing unit-test

@@ -200,7 +200,27 @@ Closed evidence:
   convert open-trade namespace reads later, and preserve the current public
   `StrategyResult` schema.
 
-### Slice 3: Long Market Pyramiding
+### Slice 3: Entry Fill Ownership Helper
+
+Status: closed on 2026-06-05. This slice introduced a private helper for the
+current long-entry fill ownership handoff and did not change runtime behavior,
+conformance, fixtures, snapshots, matrix output, or public JSON.
+
+Goal:
+
+- route the existing one-open-long entry fill through one helper that updates
+  both legacy singleton mirrors and `TradeLedger`.
+
+Closed evidence:
+
+- `BrokerState::entry_long()` now calls `record_open_long_trade()` after
+  constructing the supported `OpenTrade`.
+- `record_open_long_trade()` owns the current handoff to
+  `record_open_long_legacy_state()` and `trade_ledger.open_long()`.
+- Existing single-entry, pending-entry, ledger mirror, and full release gates
+  continue to pass with unchanged behavior.
+
+### Slice 4: Long Market Pyramiding
 
 Goal:
 

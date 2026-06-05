@@ -110,3 +110,10 @@ Slice 2 does not support:
 
 The supported strategy subset remains the one recorded in
 `tests/fixtures/conformance.tsv`.
+
+## Slice 3 Follow-Up
+
+Stage 13 Slice 3 added `BrokerState::record_open_long_trade()` as the first
+private helper for the current long-entry fill ownership handoff. It keeps the
+same one-open-trade behavior by updating legacy singleton mirrors and
+`TradeLedger` together, and it does not append multiple open trades.

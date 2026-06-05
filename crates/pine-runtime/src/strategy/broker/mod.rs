@@ -265,11 +265,15 @@ impl BrokerState {
             min_equity_before_entry: Some(min_equity_before_entry),
             max_equity_before_entry: Some(max_equity_before_entry),
         };
-        self.record_open_long_legacy_state(&open_trade);
-        self.trade_ledger.open_long(open_trade);
+        self.record_open_long_trade(open_trade);
         self.record_order_event(id, bar_index, time, "strategy.long", qty, fill_price);
         self.record_position_snapshot(bar_index);
         true
+    }
+
+    fn record_open_long_trade(&mut self, open_trade: OpenTrade) {
+        self.record_open_long_legacy_state(&open_trade);
+        self.trade_ledger.open_long(open_trade);
     }
 
     pub(crate) fn cancel_exit_for_entry(&mut self, entry_id: &str) {
