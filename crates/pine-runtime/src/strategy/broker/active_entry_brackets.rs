@@ -111,8 +111,11 @@ impl BrokerState {
         if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
             return;
         }
-        let Some(upside) = self.exit_profit_price_from_ticks(spec.profit_ticks, spec.mintick)
-        else {
+        let Some(upside) = self.exit_profit_price_from_ticks_for_entry(
+            &from_entry,
+            spec.profit_ticks,
+            spec.mintick,
+        ) else {
             return;
         };
         self.place_exit(
@@ -243,7 +246,9 @@ impl BrokerState {
         if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
             return;
         }
-        let Some(downside) = self.exit_loss_price_from_ticks(spec.loss_ticks, spec.mintick) else {
+        let Some(downside) =
+            self.exit_loss_price_from_ticks_for_entry(&from_entry, spec.loss_ticks, spec.mintick)
+        else {
             return;
         };
         self.place_exit(
@@ -367,11 +372,16 @@ impl BrokerState {
         if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
             return;
         }
-        let Some(downside) = self.exit_loss_price_from_ticks(spec.loss_ticks, spec.mintick) else {
+        let Some(downside) =
+            self.exit_loss_price_from_ticks_for_entry(&from_entry, spec.loss_ticks, spec.mintick)
+        else {
             return;
         };
-        let Some(upside) = self.exit_profit_price_from_ticks(spec.profit_ticks, spec.mintick)
-        else {
+        let Some(upside) = self.exit_profit_price_from_ticks_for_entry(
+            &from_entry,
+            spec.profit_ticks,
+            spec.mintick,
+        ) else {
             return;
         };
         self.place_exit(
@@ -439,22 +449,24 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
-        let Some(downside_offset) = self.exit_tick_price_offset(spec.loss_ticks, spec.loss_mintick)
-        else {
+        let Some(downside) = self.exit_loss_price_from_ticks_for_entry(
+            &from_entry,
+            spec.loss_ticks,
+            spec.loss_mintick,
+        ) else {
             return;
         };
-        let Some(upside_offset) =
-            self.exit_tick_price_offset(spec.profit_ticks, spec.profit_mintick)
-        else {
+        let Some(upside) = self.exit_profit_price_from_ticks_for_entry(
+            &from_entry,
+            spec.profit_ticks,
+            spec.profit_mintick,
+        ) else {
             return;
         };
         self.place_exit(
             id,
             from_entry,
-            PendingExitTrigger::Bracket {
-                downside: self.avg_price - downside_offset,
-                upside: self.avg_price + upside_offset,
-            },
+            PendingExitTrigger::Bracket { downside, upside },
             quantity,
             bar_index,
         );

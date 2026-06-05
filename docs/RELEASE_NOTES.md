@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 17 bracket `strategy.exit` tick price
+  basis for pyramided entries. Supported bracket `profit`/`loss` relative legs now
+  convert from the matched open entry price instead of aggregate average price.
 - Closed Strategy Internal Stage 13 Slice 16 same-entry-id `strategy.exit`
   allocation fan-out. A supported exit matching multiple open trades with the
   same entry id now records one public exit order and one closed trade per

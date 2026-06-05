@@ -226,3 +226,12 @@ orders and closed trades now fan out per allocation, so each matched open trade
 keeps its own entry price, entry bar/time, quantity, and proportional commission
 instead of being collapsed into one aggregate trade. Omitted-`from_entry`
 persistent all-entry exit behavior remains a future slice.
+
+## Slice 17 Follow-Up
+
+Stage 13 Slice 17 extends the entry-specific price basis from single-trigger
+`profit`/`loss` exits to supported bracket relative legs. Active and deferred
+`stop+profit`, `loss+limit`, and `loss+profit` bracket placement now computes
+relative legs from the matched ledger entry price before routing through the
+existing pending-exit and allocation logic. Trailing `trail_points` and
+omitted-`from_entry` persistent all-entry exits remain future slices.

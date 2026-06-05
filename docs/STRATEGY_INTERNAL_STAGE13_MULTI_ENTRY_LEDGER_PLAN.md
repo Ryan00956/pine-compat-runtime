@@ -516,9 +516,33 @@ Closed evidence:
   fills with the same id and one absolute `strategy.exit` that closes both as
   two `strategy.exit` order events and two closed trades.
 
+### Slice 17: Multi-Entry Relative Bracket Price Basis
+
+Status: closed on 2026-06-05. This slice makes supported bracket `profit` and
+`loss` relative legs use the requested open entry's entry price when `from_entry`
+matches a pyramided long entry. It does not claim trailing `trail_points`,
+omitted-`from_entry` persistent all-entry exits, shorts, reversals, or
+`close_entries_rule`.
+
+Goal:
+
+- calculate supported bracket relative `profit`/`loss` leg prices from the
+  matched ledger entry price instead of the aggregate position average.
+
+Closed evidence:
+
+- Active `stop+profit`, `loss+limit`, and `loss+profit` bracket placement now
+  uses the same entry-specific price conversion helpers as single-trigger
+  `profit`/`loss` exits.
+- Deferred relative bracket resolution uses the matched entry price after the
+  pending entry fills.
+- `strategy_pyramiding_exit_bracket_from_entry.pine` covers a `profit+loss`
+  bracket that closes `L1` at `L1`'s entry-price-derived target while `L2`
+  remains open.
+
 Future slices:
 
-- entry-specific bracket/trailing relative `strategy.exit` conversion;
+- entry-specific trailing `trail_points` conversion;
 - omitted-`from_entry` persistent all-entry exit behavior;
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
@@ -533,8 +557,9 @@ behavior, Slice 12's fixture-backed `strategy.close_all()` flattening behavior,
 and Slice 14's fixture-backed absolute `strategy.exit` matching by open
 pyramided entry id plus Slice 15's fixture-backed single-trigger `profit`/`loss`
 tick conversion for a matched open pyramided entry id and Slice 16's
-fixture-backed same-entry-id exit allocation fan-out. It must not be used to
-claim omitted-`from_entry` persistent all-entry exits, entry-specific
-bracket/trailing relative exit conversion, price-based same-tick entry
-exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`, or
-broader multi-entry `strategy.exit`/reporting support.
+fixture-backed same-entry-id exit allocation fan-out plus Slice 17's
+fixture-backed bracket `profit`/`loss` relative leg conversion. It must not be
+used to claim omitted-`from_entry` persistent all-entry exits, entry-specific
+trailing `trail_points` conversion, price-based same-tick entry exceptions,
+shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader
+multi-entry `strategy.exit`/reporting support.

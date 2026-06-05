@@ -344,16 +344,15 @@ impl BrokerState {
                     downside: DeferredBracketLeg::Absolute(downside),
                     upside: DeferredBracketLeg::RelativeProfit { ticks, mintick },
                 } => {
-                    let Some(upside_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+                    let Some(upside) =
+                        self.exit_profit_price_from_ticks_for_entry(&from_entry, ticks, mintick)
+                    else {
                         continue;
                     };
                     self.place_exit(
                         id,
                         from_entry,
-                        PendingExitTrigger::Bracket {
-                            downside,
-                            upside: self.avg_price + upside_offset,
-                        },
+                        PendingExitTrigger::Bracket { downside, upside },
                         quantity,
                         last_update_bar_index,
                     );
@@ -362,16 +361,15 @@ impl BrokerState {
                     downside: DeferredBracketLeg::RelativeLoss { ticks, mintick },
                     upside: DeferredBracketLeg::Absolute(upside),
                 } => {
-                    let Some(downside_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+                    let Some(downside) =
+                        self.exit_loss_price_from_ticks_for_entry(&from_entry, ticks, mintick)
+                    else {
                         continue;
                     };
                     self.place_exit(
                         id,
                         from_entry,
-                        PendingExitTrigger::Bracket {
-                            downside: self.avg_price - downside_offset,
-                            upside,
-                        },
+                        PendingExitTrigger::Bracket { downside, upside },
                         quantity,
                         last_update_bar_index,
                     );
