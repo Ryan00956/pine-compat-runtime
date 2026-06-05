@@ -43,6 +43,8 @@ broker effect, conformance wording, and public output contract are clear.
 
 ### Slice 1: Boundary Lock
 
+Status: closed on 2026-06-05.
+
 Refresh or add semantic fixtures proving the unsupported declaration properties
 remain rejected with stable diagnostics. This should cover the properties above
 without duplicating already-supported declaration forms.
@@ -50,10 +52,20 @@ without duplicating already-supported declaration forms.
 Close criteria:
 
 - Unsupported property fixture coverage is explicit.
-- `tests/fixtures/conformance.tsv` keeps the supported declaration subset
-  narrow.
+- `tests/fixtures/conformance.tsv` keeps the supported declaration subset narrow
+  and registers the declaration-property rejection fixtures under the unsupported
+  `strategy.*` row.
 - CLI conformance and matrix snapshots remain unchanged except for intentional
   fixture registration.
+
+Closed evidence:
+
+- `tests/fixtures/sema/unsupported_strategy_declaration_properties.pine` now
+  covers only unsupported declaration properties, leaving supported slippage,
+  limit-verification, commission, and margin declarations to their dedicated
+  fixtures.
+- `crates/pine-sema/tests/fixtures.rs` checks that each target unsupported
+  property name appears in declaration diagnostics.
 
 ### Slice 2: Property Selection Review
 

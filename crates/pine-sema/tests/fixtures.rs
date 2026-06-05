@@ -357,6 +357,19 @@ fn reports_unsupported_strategy_declaration_properties_fixture() {
         "tests/fixtures/sema/unsupported_strategy_declaration_properties.pine",
         "E_CALL_ARG_NAME",
     );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_declaration_properties.pine",
+        &[
+            "calc_on_order_fills",
+            "calc_on_every_tick",
+            "process_orders_on_close",
+            "currency",
+            "close_entries_rule",
+            "risk_free_rate",
+            "use_bar_magnifier",
+            "fill_orders_on_standard_ohlc",
+        ],
+    );
 }
 
 #[test]

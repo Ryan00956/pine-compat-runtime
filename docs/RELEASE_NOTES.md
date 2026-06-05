@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 12 Slice 1 declaration-property boundary lock.
+  The unsupported declaration-property fixture now covers only truly unsupported
+  `strategy()` properties, sema tests assert each target property diagnostic by
+  name, and the unsupported conformance row registers the declaration-property
+  rejection fixtures without widening runtime behavior or public output.
 - Opened Strategy Internal Stage 12 as a declaration-property design gate. The
   gap audit now reflects the current supported `strategy()` declaration subset,
   removes already-closed `strategy.close_all()` and `strategy.exit` `qty`
