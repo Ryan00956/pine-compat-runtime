@@ -351,8 +351,9 @@ multi-entry exit/reporting semantics remain unsupported unless fixture-backed.
 `strategy.close(id)` can close a requested pyramided long entry id; multi-entry
 `strategy.close_all()` can flatten all accepted open long entries. Fixture-backed
 absolute stop/limit `strategy.exit` calls can target a requested open pyramided
-long entry id; broader multi-entry `strategy.exit` semantics remain outside the
-current claim.
+long entry id, and supported single-trigger `profit`/`loss` exits convert from
+that matched entry price; broader multi-entry `strategy.exit` semantics remain
+outside the current claim.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by

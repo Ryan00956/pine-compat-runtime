@@ -469,9 +469,32 @@ Closed evidence:
 - `strategy_pyramiding_exit_from_entry.pine` covers two pyramided long entries
   where an absolute limit exit targets and closes `L1` while `L2` remains open.
 
+### Slice 15: Multi-Entry Relative `strategy.exit` Tick Price Basis
+
+Status: closed on 2026-06-05. This slice makes supported single-trigger
+`profit`/`loss` tick exits use the requested open entry's entry price when
+`from_entry` matches a pyramided long entry. It does not claim same-ID multi-entry
+fan-out, bracket relative legs, trailing `trail_points`, shorts, reversals, or
+`close_entries_rule`.
+
+Goal:
+
+- calculate supported `profit`/`loss` single-trigger exit prices from the matched
+  ledger entry price instead of the aggregate position average.
+
+Closed evidence:
+
+- `TradeLedger::first_open_entry_price_for_entry()` exposes the matched open
+  entry price for broker-only exit price conversion.
+- `place_exit_profit_ticks_quantity()` and `place_exit_loss_ticks_quantity()` now
+  use entry-specific price conversion before routing through the existing
+  `place_exit()` ledger quantity gate.
+- `strategy_pyramiding_exit_profit_from_entry.pine` covers a profit-tick exit
+  that closes `L1` at `L1`'s entry-price-derived target while `L2` remains open.
+
 Future slices:
 
-- entry-specific relative `strategy.exit` tick conversion;
+- entry-specific bracket/trailing relative `strategy.exit` conversion;
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
 
@@ -483,7 +506,9 @@ fixture-backed positive integer const `pyramiding` subset for same-direction
 long market entries plus Slice 11's fixture-backed `strategy.close(id)` matching
 behavior, Slice 12's fixture-backed `strategy.close_all()` flattening behavior,
 and Slice 14's fixture-backed absolute `strategy.exit` matching by open
-pyramided entry id. It must not be used to claim entry-specific relative exit
-tick conversion, price-based same-tick entry exceptions, shorts, reversals,
+pyramided entry id plus Slice 15's fixture-backed single-trigger `profit`/`loss`
+tick conversion for a matched open pyramided entry id. It must not be used to
+claim same-ID multi-entry exit fan-out, entry-specific bracket/trailing relative
+exit conversion, price-based same-tick entry exceptions, shorts, reversals,
 `strategy.order()`, `close_entries_rule`, or broader multi-entry
 `strategy.exit`/reporting support.

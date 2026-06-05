@@ -579,6 +579,10 @@ impl BrokerState {
         self.trade_ledger.open_quantity_for_entry(id)
     }
 
+    fn first_open_entry_price_for_entry(&self, id: &str) -> Option<f64> {
+        self.trade_ledger.first_open_entry_price_for_entry(id)
+    }
+
     fn has_open_position_for_entry(&self, id: &str) -> bool {
         self.open_position_size_for_entry(id) > 0.0
     }

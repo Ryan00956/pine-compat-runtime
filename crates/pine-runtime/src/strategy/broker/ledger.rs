@@ -198,4 +198,11 @@ impl TradeLedger {
             .map(|trade| trade.quantity)
             .sum()
     }
+
+    pub(super) fn first_open_entry_price_for_entry(&self, entry_id: &str) -> Option<f64> {
+        self.open_trades
+            .iter()
+            .find(|trade| trade.id == entry_id)
+            .map(|trade| trade.entry_price)
+    }
 }

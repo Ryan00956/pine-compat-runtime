@@ -208,3 +208,12 @@ Supported absolute stop/limit exits can now target an open pyramided long entry
 by `from_entry` and fill through ledger allocation while other open entries
 remain live. Relative profit/loss tick conversion and broader bracket/trailing
 multi-entry semantics remain future slices.
+
+## Slice 15 Follow-Up
+
+Stage 13 Slice 15 adds a broker-only ledger helper for reading the first matched
+open entry price by id, then uses it for supported single-trigger
+`strategy.exit(..., profit=...)` and `strategy.exit(..., loss=...)` price
+conversion. This moves the accepted unique-entry pyramiding subset away from the
+aggregate `avg_price` basis without yet implementing same-ID fan-out or
+entry-specific bracket/trailing relative legs.

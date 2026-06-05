@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 15 relative `strategy.exit` tick price
+  basis for pyramided entries. Supported single-trigger `profit`/`loss` exits now
+  convert from the matched open entry price instead of aggregate average price.
 - Closed Strategy Internal Stage 13 Slice 14 absolute `strategy.exit` matching
   for pyramided entries. Supported absolute stop/limit exits can now target an
   open long ledger entry by `from_entry`, closing that entry while other

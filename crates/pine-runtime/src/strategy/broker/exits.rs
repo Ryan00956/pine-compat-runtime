@@ -219,7 +219,9 @@ impl BrokerState {
         if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
             return;
         }
-        let Some(limit_price) = self.exit_profit_price_from_ticks(ticks, mintick) else {
+        let Some(limit_price) =
+            self.exit_profit_price_from_ticks_for_entry(&from_entry, ticks, mintick)
+        else {
             return;
         };
         self.place_exit(
@@ -284,7 +286,8 @@ impl BrokerState {
             } = deferred_exit;
             match trigger {
                 DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick } => {
-                    let Some(limit_price) = self.exit_profit_price_from_ticks(ticks, mintick)
+                    let Some(limit_price) =
+                        self.exit_profit_price_from_ticks_for_entry(&from_entry, ticks, mintick)
                     else {
                         continue;
                     };
@@ -297,7 +300,9 @@ impl BrokerState {
                     );
                 }
                 DeferredRelativeExitTrigger::LossTicks { ticks, mintick } => {
-                    let Some(stop_price) = self.exit_loss_price_from_ticks(ticks, mintick) else {
+                    let Some(stop_price) =
+                        self.exit_loss_price_from_ticks_for_entry(&from_entry, ticks, mintick)
+                    else {
                         continue;
                     };
                     self.place_exit(
@@ -475,7 +480,9 @@ impl BrokerState {
         if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
             return;
         }
-        let Some(stop_price) = self.exit_loss_price_from_ticks(ticks, mintick) else {
+        let Some(stop_price) =
+            self.exit_loss_price_from_ticks_for_entry(&from_entry, ticks, mintick)
+        else {
             return;
         };
         self.place_exit(
@@ -859,6 +866,32 @@ impl BrokerState {
     pub(crate) fn exit_loss_price_from_ticks(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
         self.exit_tick_price_offset(ticks, mintick)
             .map(|price_offset| self.avg_price - price_offset)
+    }
+
+    pub(crate) fn exit_profit_price_from_ticks_for_entry(
+        &mut self,
+        from_entry: &str,
+        ticks: f64,
+        mintick: f64,
+    ) -> Option<f64> {
+        let base_price = self
+            .first_open_entry_price_for_entry(from_entry)
+            .unwrap_or(self.avg_price);
+        self.exit_tick_price_offset(ticks, mintick)
+            .map(|price_offset| base_price + price_offset)
+    }
+
+    pub(crate) fn exit_loss_price_from_ticks_for_entry(
+        &mut self,
+        from_entry: &str,
+        ticks: f64,
+        mintick: f64,
+    ) -> Option<f64> {
+        let base_price = self
+            .first_open_entry_price_for_entry(from_entry)
+            .unwrap_or(self.avg_price);
+        self.exit_tick_price_offset(ticks, mintick)
+            .map(|price_offset| base_price - price_offset)
     }
 
     pub(super) fn exit_tick_price_offset(&mut self, ticks: f64, mintick: f64) -> Option<f64> {
