@@ -172,3 +172,12 @@ entries append to `TradeLedger` while the limit allows them, and aggregate
 `position_size`, `avg_price`, and `max_contracts_held_long` synchronize from
 the ledger. Price-based same-tick entry exceptions, shorts, reversals, and
 broader multi-entry exit/reporting semantics remain outside this slice.
+
+## Slice 11 Follow-Up
+
+Stage 13 Slice 11 changes `strategy.close(id)` matching from the legacy
+singleton `entry_id` mirror to `TradeLedger::open_quantity_for_entry()`.
+Supported close quantities now clamp to the requested entry id's open ledger
+quantity, so closing one pyramided long entry can leave another entry open with
+aggregate `position_size` and `avg_price` resynced from the ledger.
+`strategy.close_all()` and multi-entry `strategy.exit` remain future slices.

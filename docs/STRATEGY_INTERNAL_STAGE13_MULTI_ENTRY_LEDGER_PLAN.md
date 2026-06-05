@@ -383,10 +383,31 @@ Closed evidence:
 - conformance, matrix, docs, release notes, and `scripts/verify.sh` are
   synchronized.
 
+### Slice 11: Multi-Entry `strategy.close(id)` Matching
+
+Status: closed on 2026-06-05. This slice lets `strategy.close(id)` close the
+matching open long trade in the accepted multi-entry pyramiding subset. It does
+not yet claim `strategy.close_all()`, `strategy.exit`, price-based entry
+exceptions, shorts, or reversals.
+
+Goal:
+
+- make `strategy.close(id)` use ledger entry matching instead of the legacy
+  singleton `entry_id` gate.
+
+Closed evidence:
+
+- `TradeLedger::open_quantity_for_entry()` reports the currently open quantity
+  for a requested entry id.
+- `strategy.close(id)`, `strategy.close(id, qty=...)`, and
+  `strategy.close(id, qty_percent=...)` now gate and clamp against the matching
+  ledger entry quantity.
+- `strategy_pyramiding_close.pine` covers closing `L1` while `L2` remains open,
+  then closing `L2` to flatten the position.
+
 Future slices:
 
-- multi-entry `strategy.close()`, `strategy.close_all()`, and `strategy.exit`
-  fixture expansion;
+- multi-entry `strategy.close_all()` and `strategy.exit` fixture expansion;
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
 
@@ -395,6 +416,7 @@ Future slices:
 The supported strategy subset remains the one recorded in
 `tests/fixtures/conformance.tsv`. Stage 13 Slice 10 claims only the
 fixture-backed positive integer const `pyramiding` subset for same-direction
-long market entries. It must not be used to claim price-based same-tick entry
-exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`, or
-broader multi-entry exit/reporting support.
+long market entries plus Slice 11's fixture-backed `strategy.close(id)` matching
+behavior. It must not be used to claim price-based same-tick entry exceptions,
+shorts, reversals, `strategy.order()`, `close_entries_rule`, `strategy.close_all()`,
+or broader multi-entry `strategy.exit`/reporting support.

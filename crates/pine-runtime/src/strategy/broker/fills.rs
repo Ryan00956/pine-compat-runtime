@@ -262,7 +262,8 @@ impl BrokerState {
         price: f64,
         qty_percent: f64,
     ) {
-        if self.position_size <= 0.0 || self.entry_id.as_deref() != Some(id.as_str()) {
+        let matching_position_size = self.trade_ledger.open_quantity_for_entry(&id);
+        if self.position_size <= 0.0 || matching_position_size <= 0.0 {
             return;
         }
         if !qty_percent.is_finite() || qty_percent <= 0.0 {
@@ -273,7 +274,7 @@ impl BrokerState {
             return;
         }
 
-        let qty = self.position_size * qty_percent / 100.0;
+        let qty = matching_position_size * qty_percent / 100.0;
         if !qty.is_finite() || qty <= 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_CLOSE_QTY_PERCENT".to_owned(),
@@ -292,7 +293,8 @@ impl BrokerState {
         price: f64,
         requested_qty: Option<f64>,
     ) {
-        if self.position_size <= 0.0 || self.entry_id.as_deref() != Some(id.as_str()) {
+        let matching_position_size = self.trade_ledger.open_quantity_for_entry(&id);
+        if self.position_size <= 0.0 || matching_position_size <= 0.0 {
             return;
         }
         if let Some(requested_qty) = requested_qty
@@ -321,7 +323,9 @@ impl BrokerState {
             return;
         }
 
-        let qty = requested_qty.map_or(self.position_size, |qty| qty.min(self.position_size));
+        let qty = requested_qty.map_or(matching_position_size, |qty| {
+            qty.min(matching_position_size)
+        });
         let allocations = self.trade_ledger.allocate_exit_fifo(Some(&id), qty);
         let entry_fill = AllocatedEntryFill::from_allocations(
             &allocations,

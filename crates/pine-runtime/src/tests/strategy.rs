@@ -816,6 +816,112 @@ plot(strategy.opentrades.size(1))
 }
 
 #[test]
+fn strategy_close_pyramiding_entry_id_closes_matching_open_trade() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("close", pyramiding=2)
+if bar_index == 0
+    strategy.entry("L1", strategy.long, qty=1)
+if bar_index == 1
+    strategy.entry("L2", strategy.long, qty=3)
+if bar_index == 2
+    strategy.close("L1")
+if bar_index == 3
+    strategy.close("L2")
+plot(strategy.opentrades)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+plot(strategy.closedtrades)
+plot(strategy.opentrades.entry_id(0) == "L2" ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(4.0), bar(8.0)],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.trades.len(), 2);
+    assert_eq!(strategy.trades[0].id, "L1");
+    assert_eq!(strategy.trades[0].exit_id, "L1");
+    assert_eq!(strategy.trades[0].entry_bar_index, 1);
+    assert_eq!(strategy.trades[0].exit_bar_index, 2);
+    assert_eq!(strategy.trades[0].entry_price, 2.0);
+    assert_eq!(strategy.trades[0].exit_price, 4.0);
+    assert_eq!(strategy.trades[0].qty, 1.0);
+    assert_eq!(strategy.trades[0].profit, 2.0);
+    assert_eq!(strategy.trades[1].id, "L2");
+    assert_eq!(strategy.trades[1].exit_id, "L2");
+    assert_eq!(strategy.trades[1].entry_bar_index, 2);
+    assert_eq!(strategy.trades[1].exit_bar_index, 3);
+    assert_eq!(strategy.trades[1].entry_price, 4.0);
+    assert_eq!(strategy.trades[1].exit_price, 8.0);
+    assert_eq!(strategy.trades[1].qty, 3.0);
+    assert_eq!(strategy.trades[1].profit, 12.0);
+    assert_eq!(strategy.position.len(), 4);
+    assert_eq!(strategy.position[1].size, 4.0);
+    assert_eq!(strategy.position[1].avg_price, Some(3.5));
+    assert_eq!(strategy.position[2].size, 3.0);
+    assert_eq!(strategy.position[2].avg_price, Some(4.0));
+    assert_eq!(strategy.position[3].size, 0.0);
+    assert_eq!(strategy.position[3].avg_price, None);
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(1.0),
+            PineValue::Float(3.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(2.0),
+            PineValue::Float(4.0),
+            PineValue::Na,
+        ]
+    );
+    assert_eq!(
+        result.plots[3].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(2),
+        ]
+    );
+    assert_eq!(
+        result.plots[4].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(0),
+        ]
+    );
+}
+
+#[test]
 fn strategy_entry_uses_fixed_default_qty_when_qty_is_absent() {
     let source = SourceFile::new(
         "strategy.pine",

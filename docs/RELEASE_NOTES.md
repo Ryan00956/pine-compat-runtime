@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 11 multi-entry `strategy.close(id)`
+  matching. Close calls now match and clamp against the requested ledger entry
+  id, so one pyramided long entry can close while another remains open.
 - Closed Strategy Internal Stage 13 Slice 10 long market pyramiding entry
   foundation. `strategy(..., pyramiding=N)` now accepts positive integer const
   values for same-direction long market entries, appends open trades up to the

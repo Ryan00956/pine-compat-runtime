@@ -190,4 +190,12 @@ impl TradeLedger {
     pub(super) fn open_count(&self) -> usize {
         self.open_trades.len()
     }
+
+    pub(super) fn open_quantity_for_entry(&self, entry_id: &str) -> f64 {
+        self.open_trades
+            .iter()
+            .filter(|trade| trade.id == entry_id)
+            .map(|trade| trade.quantity)
+            .sum()
+    }
 }
