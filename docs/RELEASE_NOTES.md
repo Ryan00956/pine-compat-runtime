@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 12 Slice 2 property selection review. The next
+  runtime target is `default_qty_type=strategy.cash`, scoped to cash divided by
+  current close for omitted supported entry quantities, with explicit `qty`
+  precedence preserved and currency conversion, precision rounding, `currency`,
+  `strategy.order`, shorts, and pyramiding still out of scope.
 - Closed Strategy Internal Stage 12 Slice 1 declaration-property boundary lock.
   The unsupported declaration-property fixture now covers only truly unsupported
   `strategy()` properties, sema tests assert each target property diagnostic by

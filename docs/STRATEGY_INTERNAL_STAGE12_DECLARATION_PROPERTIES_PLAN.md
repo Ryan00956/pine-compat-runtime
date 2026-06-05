@@ -69,6 +69,9 @@ Closed evidence:
 
 ### Slice 2: Property Selection Review
 
+Status: closed on 2026-06-05. Selected
+`default_qty_type=strategy.cash` for the first runtime implementation slice.
+
 Pick exactly one declaration property only if it has a defensible current-broker
 semantics. The first runtime slice should prefer a property that changes real
 behavior and can be fixture-backed without opening multi-entry, realtime, or
@@ -82,16 +85,47 @@ Current assessment:
   design.
 - `calc_on_order_fills` and `calc_on_every_tick` require recalculation/realtime
   execution semantics.
-- `default_qty_type=strategy.cash` is a plausible future narrow slice, but it
-  needs cash-to-quantity rounding and symbol precision rules.
+- `default_qty_type=strategy.cash` is narrow enough to implement next if the
+  first slice records the current no-currency-conversion and no-precision-rounding
+  boundary explicitly.
 - `margin_short` runtime behavior should wait for short exposure.
 - `close_entries_rule` should wait for multi-entry ledgers.
 
+Decision:
+
+- Implement `default_qty_type=strategy.cash` next.
+- Resolve omitted supported `strategy.entry` quantities once at placement time
+  as `default_qty_value / close`, using the current chart/account currency
+  identity assumption.
+- Preserve explicit `qty` precedence over declaration defaults.
+- Keep runtime behavior unsupported when the current close is non-finite or
+  non-positive by routing through the existing invalid-quantity diagnostic path.
+- Keep currency conversion, symbol precision rounding, lot-step constraints,
+  `currency`, `strategy.order`, short entries, and multi-entry/pyramiding out of
+  scope.
+
+Rationale:
+
+- The existing fixed and percent-of-equity default quantity plumbing already
+  resolves omitted entry quantities at placement time.
+- Cash sizing changes real behavior without requiring order-on-close,
+  recalculation, realtime ticks, short exposure, or multi-entry ledgers.
+- It can be fixture-backed across sema, runtime, CLI golden, Python, and WASM
+  using the current long-only entry subset and unchanged public JSON shape.
+
 ### Slice 3+: Runtime Implementation
 
-Implement only the selected property. Each property must have semantic fixtures,
-runtime fixtures where behavior changes, matrix snapshots, docs, release notes,
-and `scripts/verify.sh`.
+Implement only `default_qty_type=strategy.cash`.
+
+Close criteria:
+
+- `strategy.cash` is registered as a supported strategy default quantity type.
+- Positive const `default_qty_value` supplies a cash amount for omitted supported
+  `strategy.entry` quantities.
+- Runtime fixtures prove cash sizing for market entries and one pending-entry
+  form, plus explicit `qty` precedence.
+- Conformance, matrix snapshot, execution semantics, builtin signatures, release
+  notes, CLI/Python/WASM parity, and `scripts/verify.sh` all pass.
 
 ## Compatibility Contract
 
