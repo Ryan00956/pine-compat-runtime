@@ -130,6 +130,10 @@ Acceptance:
 
 ### Slice 1: Boundary Lock
 
+Status: closed on 2026-06-05. This slice added test assertions only and did not
+change runtime behavior, conformance, fixtures, snapshots, matrix output, or
+public JSON.
+
 Goal:
 
 - add or refresh tests proving the current repo still rejects or no-ops the
@@ -147,6 +151,19 @@ Acceptance:
 - unsupported boundaries are fixture-backed before any positive behavior route
   changes;
 - no public output or matrix support claim widens.
+
+Closed evidence:
+
+- `crates/pine-sema/tests/fixtures.rs` now asserts that unsupported
+  `pyramiding` and short-entry diagnostics name the relevant unsupported
+  boundary.
+- `unsupported_strategy_declaration_properties.pine` still covers
+  `close_entries_rule`, and `unsupported_strategy_orders.pine` still covers
+  `strategy.order()`.
+- `crates/pine-runtime/src/tests/strategy.rs` now verifies repeated long entries
+  without accepted pyramiding still emit only the first entry order, keep a
+  one-unit position at the first fill price, produce no closed trades, and emit
+  no runtime diagnostics.
 
 ### Slice 2: Ledger Ownership Audit
 

@@ -403,6 +403,10 @@ fn reports_unsupported_strategy_pyramiding_fixture() {
         "tests/fixtures/sema/unsupported_strategy_pyramiding.pine",
         "E_CALL_ARG_NAME",
     );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_pyramiding.pine",
+        &["pyramiding"],
+    );
 }
 
 #[test]
@@ -633,6 +637,10 @@ fn reports_strategy_entry_short_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_strategy_entry_short.pine",
         "E_CALL_ARG_VALUE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_entry_short.pine",
+        &["strategy.long"],
     );
 }
 

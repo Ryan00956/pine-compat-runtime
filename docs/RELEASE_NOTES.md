@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 1 boundary lock. Sema fixture tests
+  now assert unsupported `pyramiding` and short-entry diagnostics by message,
+  while the repeated-entry runtime test verifies the current no-pyramiding
+  one-position behavior without widening conformance, matrix output, or public
+  JSON.
 - Opened Strategy Internal Stage 13 as a multi-entry ledger and pyramiding design
   gate. The plan records official strategy-entry, pyramiding, close-all, FIFO,
   and generic-order dependencies, documents the current one-net-long broker and

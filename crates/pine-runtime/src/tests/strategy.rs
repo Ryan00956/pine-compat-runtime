@@ -691,7 +691,14 @@ strategy.entry("L2", strategy.long, qty=1)
 
     assert_eq!(strategy.orders.len(), 1);
     assert_eq!(strategy.orders[0].id, "L1");
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.orders[0].price, 2.0);
     assert_eq!(strategy.position.len(), 1);
+    assert_eq!(strategy.position[0].bar_index, 1);
+    assert_eq!(strategy.position[0].size, 1.0);
+    assert_eq!(strategy.position[0].avg_price, Some(2.0));
+    assert!(strategy.trades.is_empty());
+    assert!(strategy.diagnostics.is_empty());
 }
 
 #[test]
