@@ -25,6 +25,18 @@ pub(super) enum DeferredRelativeExitTrigger {
         offset_ticks: f64,
         mintick: f64,
     },
+    Bracket {
+        downside: DeferredBracketLeg,
+        upside: DeferredBracketLeg,
+    },
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq)]
+pub(super) enum DeferredBracketLeg {
+    Absolute(f64),
+    RelativeProfit { ticks: f64, mintick: f64 },
+    RelativeLoss { ticks: f64, mintick: f64 },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -776,6 +788,9 @@ impl BrokerState {
                         quantity,
                         last_update_bar_index,
                     );
+                }
+                DeferredRelativeExitTrigger::Bracket { .. } => {
+                    continue;
                 }
             }
         }

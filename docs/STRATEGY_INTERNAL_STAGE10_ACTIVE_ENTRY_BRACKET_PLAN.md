@@ -175,10 +175,25 @@ Acceptance:
 
 ### Slice 2: Deferred Bracket Storage
 
+Status: Closed on 2026-06-05 as an internal storage skeleton. This slice does
+not route runtime `strategy.exit` calls into deferred bracket storage and does
+not resolve deferred brackets after entry fills.
+
 Goal:
 
 - extend the internal deferred relative exit representation so it can store a
   one-downside/one-upside bracket intent without routing runtime calls into it.
+
+Closed evidence:
+
+- added internal `DeferredBracketLeg` plus
+  `DeferredRelativeExitTrigger::Bracket { downside, upside }`;
+- kept `resolve_deferred_relative_exits_for_entry` explicit about not resolving
+  bracket intent yet;
+- added broker order-book tests for bracket deferred-intent replacement,
+  lookup, take-by-entry, cancel-by-id, clear-by-entry, and clear-all behavior;
+- no runtime dispatch, fixtures, snapshots, conformance rows, matrix support
+  claims, Python tests, or WASM tests changed.
 
 Acceptance:
 

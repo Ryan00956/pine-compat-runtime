@@ -1,9 +1,9 @@
 use super::entries::{PendingEntry, PendingEntryDirection, PendingEntryKind};
 use super::exits::{
-    DeferredRelativeExit, DeferredRelativeExitTrigger, ExitQuantityRequest, PendingExitBook,
-    PendingExitQuantity, PendingExitReservationFamily, PendingExitTouch, PendingTrailingActivation,
-    PendingTrailingExit, PendingTrailingSpec, PendingTrailingState, PendingTrailingUpdate,
-    TrailPointsExitSpec, TrailPriceExitSpec,
+    DeferredBracketLeg, DeferredRelativeExit, DeferredRelativeExitTrigger, ExitQuantityRequest,
+    PendingExitBook, PendingExitQuantity, PendingExitReservationFamily, PendingExitTouch,
+    PendingTrailingActivation, PendingTrailingExit, PendingTrailingSpec, PendingTrailingState,
+    PendingTrailingUpdate, TrailPointsExitSpec, TrailPriceExitSpec,
 };
 use super::*;
 
@@ -539,6 +539,115 @@ fn pending_exit_book_replaces_and_clears_deferred_relative_exit_attachments() {
             mintick: 0.5,
         },
         quantity: ExitQuantityRequest::Percent(50.0),
+        last_update_bar_index: 4,
+    });
+    book.clear_all();
+    assert_eq!(book.deferred_relative_count(), 0);
+}
+
+#[test]
+fn pending_exit_book_stores_and_takes_deferred_relative_bracket_attachments() {
+    let mut book = PendingExitBook::new();
+
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XB".to_owned(),
+        from_entry: "L".to_owned(),
+        trigger: DeferredRelativeExitTrigger::Bracket {
+            downside: DeferredBracketLeg::Absolute(95.0),
+            upside: DeferredBracketLeg::RelativeProfit {
+                ticks: 10.0,
+                mintick: 0.5,
+            },
+        },
+        quantity: ExitQuantityRequest::Fixed(1.0),
+        last_update_bar_index: 1,
+    });
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XB".to_owned(),
+        from_entry: "L".to_owned(),
+        trigger: DeferredRelativeExitTrigger::Bracket {
+            downside: DeferredBracketLeg::RelativeLoss {
+                ticks: 8.0,
+                mintick: 0.25,
+            },
+            upside: DeferredBracketLeg::Absolute(112.0),
+        },
+        quantity: ExitQuantityRequest::Percent(50.0),
+        last_update_bar_index: 2,
+    });
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XB".to_owned(),
+        from_entry: "OTHER".to_owned(),
+        trigger: DeferredRelativeExitTrigger::Bracket {
+            downside: DeferredBracketLeg::RelativeLoss {
+                ticks: 4.0,
+                mintick: 0.5,
+            },
+            upside: DeferredBracketLeg::RelativeProfit {
+                ticks: 6.0,
+                mintick: 0.5,
+            },
+        },
+        quantity: ExitQuantityRequest::Full,
+        last_update_bar_index: 3,
+    });
+
+    assert_eq!(book.deferred_relative_count(), 2);
+    let replaced = book.find_deferred_relative_by_identity("XB", "L").unwrap();
+    assert_eq!(
+        replaced.trigger,
+        DeferredRelativeExitTrigger::Bracket {
+            downside: DeferredBracketLeg::RelativeLoss {
+                ticks: 8.0,
+                mintick: 0.25,
+            },
+            upside: DeferredBracketLeg::Absolute(112.0),
+        }
+    );
+    assert_eq!(replaced.quantity, ExitQuantityRequest::Percent(50.0));
+    assert_eq!(replaced.last_update_bar_index, 2);
+
+    let taken = book.take_deferred_relative_for_entry("L");
+    assert_eq!(taken.len(), 1);
+    assert_eq!(taken[0].id, "XB");
+    assert_eq!(taken[0].from_entry, "L");
+    assert_eq!(book.deferred_relative_count(), 1);
+    assert!(book.find_deferred_relative_by_identity("XB", "L").is_none());
+    assert!(
+        book.find_deferred_relative_by_identity("XB", "OTHER")
+            .is_some()
+    );
+
+    book.cancel_id("XB");
+    assert_eq!(book.deferred_relative_count(), 0);
+
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XB2".to_owned(),
+        from_entry: "L".to_owned(),
+        trigger: DeferredRelativeExitTrigger::Bracket {
+            downside: DeferredBracketLeg::Absolute(94.0),
+            upside: DeferredBracketLeg::RelativeProfit {
+                ticks: 12.0,
+                mintick: 0.5,
+            },
+        },
+        quantity: ExitQuantityRequest::Full,
+        last_update_bar_index: 4,
+    });
+    book.clear_for_entry("L");
+    assert_eq!(book.deferred_relative_count(), 0);
+
+    book.replace_or_append_deferred_relative(DeferredRelativeExit {
+        id: "XB2".to_owned(),
+        from_entry: "L".to_owned(),
+        trigger: DeferredRelativeExitTrigger::Bracket {
+            downside: DeferredBracketLeg::Absolute(94.0),
+            upside: DeferredBracketLeg::RelativeProfit {
+                ticks: 12.0,
+                mintick: 0.5,
+            },
+        },
+        quantity: ExitQuantityRequest::Full,
         last_update_bar_index: 4,
     });
     book.clear_all();

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 10 Slice 2 deferred bracket storage. The
+  broker can now store, replace, take, cancel, and clear internal active-entry
+  relative bracket intent without routing runtime `strategy.exit` calls into
+  that storage or widening public behavior.
 - Closed Strategy Internal Stage 10 Slice 1 boundary lock. Runtime tests now
   prove active-entry relative bracket forms `stop + profit`, `loss + limit`,
   and `loss + profit` still fill only the matching pending entry and create no
