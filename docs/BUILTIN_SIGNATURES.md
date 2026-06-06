@@ -360,9 +360,9 @@ absolute stop/limit exits can close all currently open pyramided long entries
 and persist for later open long entries until the position closes. Broader
 omitted-`from_entry` profit/loss-tick exits can close currently open pyramided
 long entries with unique entry ids using each entry's own entry-price-derived
-target. Omitted-`from_entry` `loss+profit` brackets can close currently open
-pyramided long entries with unique entry ids using each entry's own
-entry-price-derived stop and target. Other omitted-`from_entry` bracket forms,
+target. Omitted-`from_entry` `loss+profit` and `stop+profit` brackets can close
+currently open pyramided long entries with unique entry ids using each entry's
+own entry-price-derived relative legs. Other omitted-`from_entry` bracket forms,
 trailing, relative future-entry persistence, and duplicate same-id relative
 targets remain outside the current claim. Broader multi-entry `strategy.exit`
 semantics remain outside the current claim.

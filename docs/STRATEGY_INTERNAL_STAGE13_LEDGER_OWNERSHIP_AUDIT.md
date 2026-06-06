@@ -298,3 +298,13 @@ id, with both stop and target prices converted from that entry's own entry
 price. The duplicate same-entry-id case still preserves the no-op boundary, and
 other omitted-`from_entry` bracket shapes, trailing exits, and relative
 future-entry persistence remain future work.
+
+## Slice 24 Follow-Up
+
+Stage 13 Slice 24 adds the omitted-`from_entry` `stop+profit` bracket shape to
+the current-open-entry expansion. The broker expands a full omitted
+`stop+profit` call into one pending bracket exit per currently open unique entry
+id, preserving the absolute stop price and converting the profit target from
+each entry's own entry price. Duplicate same-entry-id entries, `loss+limit`,
+`stop+limit`, trailing exits, and relative future-entry persistence remain
+future work.
