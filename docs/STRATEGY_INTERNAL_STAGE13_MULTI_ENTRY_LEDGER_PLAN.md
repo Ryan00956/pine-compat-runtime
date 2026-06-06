@@ -1869,6 +1869,39 @@ Future slices:
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
 
+### Slice 74: Same-Id Omitted Trail-Points Future Runtime
+
+Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
+subset for omitted-`from_entry` `strategy.exit` with
+`trail_points+trail_offset`: when a full-position all-entry trailing template
+is placed while one same-entry-id long trade is open, the persistent template
+now also attaches to a later long trade with the same entry id using that later
+trade's broker-owned open-trade key and entry price for activation. It does not
+claim shorts, reversals, price-based same-tick entry exceptions, or host parity
+additions.
+
+Goal:
+
+- resolve deferred all-entry `trail_points` exits for same-entry-id later
+  trades by targeting the newly opened trade key and deriving activation from
+  that trade's own entry price.
+
+Closed evidence:
+
+- `strategy_exit_omitted_from_entry_trail_points_persists_for_later_same_entry_id`
+  proves the persistent omitted trailing exit closes both same-id trades after
+  per-trade activation.
+- `tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_persistent_same_id.pine`
+  records the conformance fixture for the narrowed public claim.
+- `resolve_all_entry_deferred_relative_exit_for_entry` now shares the same
+  last-open-trade key lookup used by profit/loss and relative bracket deferred
+  paths, and no longer depends on the old unique-entry-id guard.
+
+Future slices:
+
+- price-based same-tick pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
 ### Slice 73: Same-Id Omitted Trail-Price Future Fixture
 
 Status: closed on 2026-06-06. This slice adds explicit fixture-backed coverage
@@ -2464,8 +2497,8 @@ same-id omitted `stop+profit` bracket future-entry persistence. Slice 71 adds
 matching same-id omitted `loss+limit` bracket future-entry persistence. Slice
 72 adds explicit same-id omitted `stop+limit` bracket future-entry coverage
 without runtime changes. Slice 73 adds explicit same-id omitted
-`trail_price+trail_offset` future-entry coverage without runtime changes. These
-slices must not be used to claim future-entry same-id
-`trail_points+trail_offset` persistence, price-based same-tick entry
-exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`, or
-broader multi-entry `strategy.exit`/reporting support.
+`trail_price+trail_offset` future-entry coverage without runtime changes. Slice
+74 adds matching same-id omitted `trail_points+trail_offset` future-entry
+runtime support. These slices must not be used to claim price-based same-tick
+entry exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`,
+or broader multi-entry `strategy.exit`/reporting support.

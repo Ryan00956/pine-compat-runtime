@@ -71,18 +71,17 @@ impl BrokerState {
                 if quantity != ExitQuantityRequest::Full {
                     return;
                 }
-                let Some((target_trade_key, _)) =
-                    self.unique_open_trade_key_and_quantity_for_entry(entry_id)
+                let Some((target_trade_key, entry_price)) =
+                    self.last_open_trade_key_and_price_for_entry(entry_id)
                 else {
                     return;
                 };
-                let Some(activation_price) = self.exit_trail_points_activation_price_for_entry(
-                    entry_id,
-                    activation_ticks,
-                    mintick,
-                ) else {
+                let Some(activation_offset) =
+                    self.exit_tick_price_offset(activation_ticks, mintick)
+                else {
                     return;
                 };
+                let activation_price = entry_price + activation_offset;
                 let Some(offset_price_distance) =
                     self.exit_tick_price_offset(offset_ticks, mintick)
                 else {
