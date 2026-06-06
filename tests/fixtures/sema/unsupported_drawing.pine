@@ -2,6 +2,6 @@
 indicator("Unsupported drawing")
 label.set_textalign(na, "text.align_center")
 line.get_price(na, bar_index)
-box.set_text_size(na, size.small)
+box.set_text_halign(na, text.align_center)
 table.clear(na)
 polyline.new(na)

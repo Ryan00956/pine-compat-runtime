@@ -5723,6 +5723,7 @@ def test_run_script_returns_box_outputs():
                     "extend": "extend.none",
                     "text": "",
                     "textColor": None,
+                    "textSize": "size.normal",
                 },
                 {
                     "barIndex": 1,
@@ -5738,6 +5739,7 @@ def test_run_script_returns_box_outputs():
                     "extend": "extend.none",
                     "text": "",
                     "textColor": None,
+                    "textSize": "size.normal",
                 },
             ],
         }

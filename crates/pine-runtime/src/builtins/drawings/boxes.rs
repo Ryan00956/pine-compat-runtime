@@ -37,6 +37,7 @@ impl<'a> HistoricalRuntime<'a> {
                 extend: PineValue::String("extend.none".to_owned()),
                 text: PineValue::String(String::new()),
                 text_color: PineValue::Na,
+                text_size: PineValue::String("size.normal".to_owned()),
             }],
         });
         Ok(PineValue::Box(id))
@@ -186,6 +187,17 @@ impl<'a> HistoricalRuntime<'a> {
         let text_color = self.eval_required_box_arg(args, 1, "text_color")?;
         self.mutate_box(id, |snapshot| {
             snapshot.text_color = text_color;
+        })
+    }
+
+    pub(super) fn eval_box_set_text_size(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let text_size = self.eval_required_box_arg(args, 1, "text_size")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.text_size = text_size;
         })
     }
 

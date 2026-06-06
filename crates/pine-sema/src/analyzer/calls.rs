@@ -187,6 +187,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.set_extend"
             | "box.set_text"
             | "box.set_text_color"
+            | "box.set_text_size"
             | "box.delete"
             | "box.copy"
             | "table.new"

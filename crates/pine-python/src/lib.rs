@@ -662,6 +662,7 @@ fn box_snapshots_to_py(
             item.set_item("extend", value_to_py(py, &snapshot.extend)?)?;
             item.set_item("text", value_to_py(py, &snapshot.text)?)?;
             item.set_item("textColor", value_to_py(py, &snapshot.text_color)?)?;
+            item.set_item("textSize", value_to_py(py, &snapshot.text_size)?)?;
         }
         output.append(item)?;
     }

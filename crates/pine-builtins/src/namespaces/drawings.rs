@@ -502,6 +502,19 @@ const BOX_SET_TEXT_COLOR_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const BOX_SET_TEXT_SIZE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::BoxCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "text_size",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
 const BOX_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "id",
     accepts: Accepts::BoxCompatible,
@@ -877,6 +890,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "box.set_text_color",
         phase: BuiltinPhase::Phase1Core,
         params: BOX_SET_TEXT_COLOR_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_text_size",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_TEXT_SIZE_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
