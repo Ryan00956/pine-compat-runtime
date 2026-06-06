@@ -1,0 +1,13 @@
+//@version=5
+indicator("Box copy")
+var original = box.new(bar_index, high, bar_index + 1, low)
+var copy = box.copy(original)
+if bar_index == 1
+    box.set_bgcolor(original, color.green)
+    box.set_lefttop(copy, bar_index, high)
+    box.set_rightbottom(copy, bar_index + 2, low)
+if bar_index == 2
+    box.delete(copy)
+    box.copy(copy)
+box.copy(na)
+plot(close)

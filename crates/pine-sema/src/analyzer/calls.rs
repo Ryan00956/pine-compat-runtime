@@ -185,6 +185,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.set_border_width"
             | "box.set_border_style"
             | "box.delete"
+            | "box.copy"
             | "table.new"
             | "table.cell"
             | "strategy.entry"

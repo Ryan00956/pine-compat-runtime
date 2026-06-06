@@ -55,6 +55,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "barcolor",
     "bgcolor",
     "bool",
+    "box.copy",
     "box.delete",
     "box.new",
     "box.set_bgcolor",

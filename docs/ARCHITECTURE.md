@@ -412,7 +412,8 @@ normalized Pine values. The label lifecycle covers `label.new`, selected
 `line.set_*` mutators, `line.copy` cloning, and `line.delete`. Box snapshots
 cover `left`, `top`,
 `right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, and `borderStyle`
-for `box.new`, selected `box.set_*` mutators, and `box.delete`. Table entries
+for `box.new`, selected `box.set_*` mutators, `box.copy` cloning, and
+`box.delete`. Table entries
 carry `position`, `columns`, `rows`, and sparse cell snapshots. Each table cell
 snapshot stores `column`, `row`, `text`, `bgColor`, and `textColor`, avoiding
 host-specific table layout assumptions. Delete calls append an `exists: false`

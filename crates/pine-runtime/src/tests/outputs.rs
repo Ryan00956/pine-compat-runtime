@@ -429,6 +429,32 @@ plot(close)
 }
 
 #[test]
+fn box_copy_deleted_id_is_noop_at_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("box copy deleted limit")
+deleted = box.new(0, close, 0, open)
+box.delete(deleted)
+for i = 0 to 498
+    box.new(i, close, i, open)
+box.copy(deleted)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(result.boxes.len(), 500);
+    assert!(!result.boxes[0].snapshots.last().unwrap().exists);
+}
+
+#[test]
 fn profiles_box_storage() {
     let source = SourceFile::new(
         "test.pine",

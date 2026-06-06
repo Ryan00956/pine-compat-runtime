@@ -181,6 +181,45 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    pub(super) fn eval_box_copy(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let Some(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(box_output) = self.boxes.iter().find(|box_output| box_output.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid box id `{id}`"),
+            });
+        };
+        let Some(latest) = box_output.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("box `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Na);
+        }
+        if self.boxes.len() >= MAX_BOXES {
+            return Err(RuntimeError {
+                message: format!("box count cannot exceed {MAX_BOXES}"),
+            });
+        }
+        let copied_id = self.next_box_id;
+        self.next_box_id = self
+            .next_box_id
+            .checked_add(1)
+            .ok_or_else(|| RuntimeError {
+                message: "box id limit exceeded".to_owned(),
+            })?;
+        let mut copied = latest;
+        copied.bar_index = self.bars;
+        self.boxes.push(BoxOutput {
+            id: copied_id,
+            snapshots: vec![copied],
+        });
+        Ok(PineValue::Box(copied_id))
+    }
+
     fn eval_box_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
