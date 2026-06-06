@@ -607,6 +607,8 @@ fn tables_json(tables: &[TableOutput]) -> String {
                 output.push_str(&value_json(&cell.height));
                 output.push_str(",\"textSize\":");
                 output.push_str(&value_json(&cell.text_size));
+                output.push_str(",\"textHalign\":");
+                output.push_str(&value_json(&cell.text_halign));
                 output.push('}');
             }
             output.push_str("]}");

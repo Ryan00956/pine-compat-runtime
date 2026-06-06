@@ -73,6 +73,7 @@ impl<'a> HistoricalRuntime<'a> {
             width: PineValue::Na,
             height: PineValue::Na,
             text_size: PineValue::Na,
+            text_halign: PineValue::Na,
         };
         self.mutate_table_cell(id, column, row, true, |cell| *cell = next_cell)?;
         Ok(PineValue::Void)
@@ -180,6 +181,23 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    pub(super) fn eval_table_cell_set_text_halign(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let column = self.eval_required_table_int_arg(args, 1, "column")?;
+        let row = self.eval_required_table_int_arg(args, 2, "row")?;
+        let text_halign = self.eval_required_table_arg(args, 3, "text_halign")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        self.mutate_table_cell(id, column, row, false, |cell| {
+            cell.text_halign = text_halign;
+        })?;
+        Ok(PineValue::Void)
+    }
+
     fn eval_table_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
@@ -282,6 +300,7 @@ impl<'a> HistoricalRuntime<'a> {
                     width: PineValue::Na,
                     height: PineValue::Na,
                     text_size: PineValue::Na,
+                    text_halign: PineValue::Na,
                 };
                 mutate(&mut cell);
                 next.cells.push(cell);

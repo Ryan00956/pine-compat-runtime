@@ -421,12 +421,13 @@ existing snapshot values.
 Table entries
 carry `position`, `columns`, `rows`, and sparse cell snapshots. Each table cell
 snapshot stores `column`, `row`, `text`, `bgColor`, `textColor`, `width`,
-`height`, and `textSize`, avoiding
+`height`, `textSize`, and `textHalign`, avoiding
 host-specific table layout assumptions; `table.cell_set_text`,
 `table.cell_set_bgcolor`, `table.cell_set_text_color`, and
 `table.cell_set_width`/`table.cell_set_height`/`table.cell_set_text_size`
-mutate only the stored text/background/text color/width/height/text size for
-cells already populated by `table.cell`.
+`table.cell_set_text_halign` mutate only the stored text/background/text
+color/width/height/text size/text alignment for cells already populated by
+`table.cell`.
 Delete calls append an `exists: false`
 snapshot for families with deletion; deleting `na` or an already deleted
 drawing object is a no-op; ids are not reused. The historical runtime caps

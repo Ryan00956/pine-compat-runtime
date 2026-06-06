@@ -5758,7 +5758,7 @@ def test_run_script_returns_box_outputs():
 
 def test_run_script_returns_table_outputs():
     result = pine_compat.run_script(
-        'indicator("tables")\nif bar_index == 1\n    table_id = table.new(position.top_right, 2, 2)\n    table.cell(table_id, 0, 0, "A", bgcolor=color.green, text_color=color.white)\n    table.cell_set_text(table_id, 0, 0, "B")\n    table.cell_set_bgcolor(table_id, 0, 0, color.red)\n    table.cell_set_text_color(table_id, 0, 0, color.blue)\n    table.cell_set_width(table_id, 0, 0, 25)\n    table.cell_set_height(table_id, 0, 0, 40)\n    table.cell_set_text_size(table_id, 0, 0, size.small)\nplot(close)\n',
+        'indicator("tables")\nif bar_index == 1\n    table_id = table.new(position.top_right, 2, 2)\n    table.cell(table_id, 0, 0, "A", bgcolor=color.green, text_color=color.white)\n    table.cell_set_text(table_id, 0, 0, "B")\n    table.cell_set_bgcolor(table_id, 0, 0, color.red)\n    table.cell_set_text_color(table_id, 0, 0, color.blue)\n    table.cell_set_width(table_id, 0, 0, 25)\n    table.cell_set_height(table_id, 0, 0, 40)\n    table.cell_set_text_size(table_id, 0, 0, size.small)\n    table.cell_set_text_halign(table_id, 0, 0, text.align_left)\nplot(close)\n',
         BARS,
     )
 
@@ -5785,6 +5785,7 @@ def test_run_script_returns_table_outputs():
                             "width": None,
                             "height": None,
                             "textSize": None,
+                            "textHalign": None,
                         }
                     ],
                 },
@@ -5800,6 +5801,7 @@ def test_run_script_returns_table_outputs():
                             "width": None,
                             "height": None,
                             "textSize": None,
+                            "textHalign": None,
                         }
                     ],
                 },
@@ -5815,6 +5817,7 @@ def test_run_script_returns_table_outputs():
                             "width": None,
                             "height": None,
                             "textSize": None,
+                            "textHalign": None,
                         }
                     ],
                 },
@@ -5830,6 +5833,7 @@ def test_run_script_returns_table_outputs():
                             "width": None,
                             "height": None,
                             "textSize": None,
+                            "textHalign": None,
                         }
                     ],
                 },
@@ -5845,6 +5849,7 @@ def test_run_script_returns_table_outputs():
                             "width": 25,
                             "height": None,
                             "textSize": None,
+                            "textHalign": None,
                         }
                     ],
                 },
@@ -5860,6 +5865,7 @@ def test_run_script_returns_table_outputs():
                             "width": 25,
                             "height": 40,
                             "textSize": None,
+                            "textHalign": None,
                         }
                     ],
                 },
@@ -5875,6 +5881,23 @@ def test_run_script_returns_table_outputs():
                             "width": 25,
                             "height": 40,
                             "textSize": "size.small",
+                            "textHalign": None,
+                        }
+                    ],
+                },
+                {
+                    "barIndex": 1,
+                    "cells": [
+                        {
+                            "column": 0,
+                            "row": 0,
+                            "text": "B",
+                            "bgColor": 0xFF0000,
+                            "textColor": 0x0000FF,
+                            "width": 25,
+                            "height": 40,
+                            "textSize": "size.small",
+                            "textHalign": "text.align_left",
                         }
                     ],
                 },
