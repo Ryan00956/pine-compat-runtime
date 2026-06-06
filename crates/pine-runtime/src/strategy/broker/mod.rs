@@ -631,6 +631,19 @@ impl BrokerState {
         result
     }
 
+    fn last_open_trade_key_and_price_for_entry(&self, id: &str) -> Option<(u64, f64)> {
+        let mut result = None;
+        for index in 0..self.trade_ledger.open_count() {
+            let Some(open_trade) = self.trade_ledger.open_at(index) else {
+                continue;
+            };
+            if open_trade.id == id {
+                result = Some((open_trade.key, open_trade.entry_price));
+            }
+        }
+        result
+    }
+
     fn first_open_entry_price_for_entry(&self, id: &str) -> Option<f64> {
         self.trade_ledger.first_open_entry_price_for_entry(id)
     }

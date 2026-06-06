@@ -16,11 +16,6 @@ impl BrokerState {
         entry_id: &str,
         bar_index: usize,
     ) {
-        let Some((target_trade_key, _)) =
-            self.unique_open_trade_key_and_quantity_for_entry(entry_id)
-        else {
-            return;
-        };
         let DeferredRelativeExit {
             id,
             trigger,
@@ -32,16 +27,19 @@ impl BrokerState {
                 if quantity != ExitQuantityRequest::Full {
                     return;
                 }
-                let Some(limit_price) =
-                    self.exit_profit_price_from_ticks_for_entry(entry_id, ticks, mintick)
+                let Some((target_trade_key, entry_price)) =
+                    self.last_open_trade_key_and_price_for_entry(entry_id)
                 else {
+                    return;
+                };
+                let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
                     return;
                 };
                 self.place_all_entry_resolved_profit_exit(
                     id,
                     entry_id.to_owned(),
                     target_trade_key,
-                    limit_price,
+                    entry_price + price_offset,
                     bar_index,
                 );
             }
@@ -49,6 +47,11 @@ impl BrokerState {
                 if quantity != ExitQuantityRequest::Full {
                     return;
                 }
+                let Some((target_trade_key, _)) =
+                    self.unique_open_trade_key_and_quantity_for_entry(entry_id)
+                else {
+                    return;
+                };
                 let Some(stop_price) =
                     self.exit_loss_price_from_ticks_for_entry(entry_id, ticks, mintick)
                 else {
@@ -70,6 +73,11 @@ impl BrokerState {
                 if quantity != ExitQuantityRequest::Full {
                     return;
                 }
+                let Some((target_trade_key, _)) =
+                    self.unique_open_trade_key_and_quantity_for_entry(entry_id)
+                else {
+                    return;
+                };
                 let Some(activation_price) = self.exit_trail_points_activation_price_for_entry(
                     entry_id,
                     activation_ticks,
@@ -103,6 +111,11 @@ impl BrokerState {
                 if quantity != ExitQuantityRequest::Full {
                     return;
                 }
+                let Some((target_trade_key, _)) =
+                    self.unique_open_trade_key_and_quantity_for_entry(entry_id)
+                else {
+                    return;
+                };
                 let Some(upside) =
                     self.exit_profit_price_from_ticks_for_entry(entry_id, ticks, mintick)
                 else {
@@ -124,6 +137,11 @@ impl BrokerState {
                 if quantity != ExitQuantityRequest::Full {
                     return;
                 }
+                let Some((target_trade_key, _)) =
+                    self.unique_open_trade_key_and_quantity_for_entry(entry_id)
+                else {
+                    return;
+                };
                 let Some(downside) =
                     self.exit_loss_price_from_ticks_for_entry(entry_id, ticks, mintick)
                 else {
@@ -153,6 +171,11 @@ impl BrokerState {
                 if quantity != ExitQuantityRequest::Full {
                     return;
                 }
+                let Some((target_trade_key, _)) =
+                    self.unique_open_trade_key_and_quantity_for_entry(entry_id)
+                else {
+                    return;
+                };
                 self.place_all_entry_resolved_loss_profit_bracket(
                     id,
                     entry_id.to_owned(),
