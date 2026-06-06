@@ -29,6 +29,8 @@ const LABEL_SIZES: &[&str] = &[
     "size.huge",
 ];
 
+const LABEL_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
+
 const LABEL_YLOCS: &[&str] = &["yloc.price", "yloc.abovebar", "yloc.belowbar"];
 
 const LINE_STYLES: &[&str] = &[
@@ -531,6 +533,9 @@ impl Analyzer {
             }
             "label.set_size" => {
                 self.validate_label_string_arg(signature, args, 1, "size", LABEL_SIZES);
+            }
+            "label.set_xloc" => {
+                self.validate_label_string_arg(signature, args, 2, "xloc", LABEL_XLOCS);
             }
             "label.set_yloc" => {
                 self.validate_label_string_arg(signature, args, 1, "yloc", LABEL_YLOCS);

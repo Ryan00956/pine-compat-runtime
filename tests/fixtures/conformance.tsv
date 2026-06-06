@@ -73,6 +73,7 @@ hline	supported	horizontal line output plus common style/display metadata parame
 fill	supported	plot/hline fill output plus common display/fillgaps metadata parameters	tests/fixtures/runtime/io.pine
 label.new	partial	bar-index x, numeric y, string text, xloc.bar_index, yloc.price, color, selected label styles, textcolor, size, and tooltip creation snapshots with a 500-label runtime limit; realtime rollback covered; later label options unsupported	tests/fixtures/runtime/label_new.pine;tests/fixtures/runtime/label_options.pine;tests/fixtures/runtime/label_control_flow.pine
 label.set_x	partial	label id x mutation snapshots only; deleted or na labels are no-op; later label methods unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_xloc	partial	label id x-location snapshot mutation for xloc.bar_index/bar_time with x value update; deleted or na labels are no-op; visual layout remains host-specific	tests/fixtures/runtime/label_xloc.pine
 label.set_y	partial	label id y mutation snapshots only; deleted or na labels are no-op; later label methods unsupported	tests/fixtures/runtime/label_mutation.pine
 label.set_xy	partial	label id x/y mutation snapshots only; deleted or na labels are no-op; later label methods unsupported	tests/fixtures/runtime/label_mutation.pine
 label.set_yloc	partial	label id y-location snapshot mutation for yloc.price/abovebar/belowbar; deleted or na labels are no-op; visual layout remains host-specific	tests/fixtures/runtime/label_yloc.pine

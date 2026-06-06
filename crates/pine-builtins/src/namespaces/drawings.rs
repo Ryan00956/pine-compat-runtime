@@ -68,6 +68,24 @@ const LABEL_SET_X_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const LABEL_SET_XLOC_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LabelCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "x",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "xloc",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
 const LABEL_SET_Y_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -502,6 +520,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "label.set_x",
         phase: BuiltinPhase::Phase1Core,
         params: LABEL_SET_X_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "label.set_xloc",
+        phase: BuiltinPhase::Phase1Core,
+        params: LABEL_SET_XLOC_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

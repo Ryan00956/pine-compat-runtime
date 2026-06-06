@@ -1,0 +1,10 @@
+//@version=5
+indicator("Label xloc")
+var label_id = label.new(bar_index, high, "start")
+if bar_index == 1
+    label.set_xloc(label_id, time, xloc.bar_time)
+if bar_index == 2
+    label.set_xloc(label_id, bar_index, xloc.bar_index)
+if bar_index == 3
+    label.set_xloc(na, bar_index, xloc.bar_index)
+plot(close)

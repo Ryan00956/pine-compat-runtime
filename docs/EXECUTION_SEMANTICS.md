@@ -615,9 +615,9 @@ user-defined functions is rejected as a function side-effect boundary.
 
 Supported drawing-object calls currently cover the initial `label.*`, `line.*`,
 `box.*`, and `table.*` lifecycles. Labels use deterministic ids, sparse
-lifecycle snapshots, selected y-location snapshot mutation, non-reused ids, and
-a 500-object runtime limit. Lines use the same lifecycle rules with bar-index x
-coordinates, price y coordinates,
+lifecycle snapshots, selected x-location and y-location snapshot mutation,
+non-reused ids, and a 500-object runtime limit. Lines use the same lifecycle
+rules with bar-index x coordinates, price y coordinates,
 selected color/width/style and extend fields. Boxes use the same lifecycle
 rules with bar-index left/right coordinates, price top/bottom coordinates, and
 selected background/border fields. Tables use deterministic ids, fixed positive
@@ -626,8 +626,10 @@ dimensions, and sparse cell snapshots for text/background/text-color writes.
 already deleted drawing object are no-ops where deletion exists; invalid
 non-`na` ids are runtime errors. Labels, lines, and boxes each have a
 500-object runtime limit; tables have a 50-object limit and 1000-cell
-per-table limit. `label.set_yloc` stores the selected y-location constant in the
-host-neutral snapshot and leaves any above/below-bar visual layout to the host.
+per-table limit. `label.set_xloc` stores `xloc.bar_index` or `xloc.bar_time`
+with the new x-coordinate in the host-neutral snapshot. `label.set_yloc` stores
+the selected y-location constant. Above/below-bar and time/index visual layout
+remain host responsibilities.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from

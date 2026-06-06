@@ -54,6 +54,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/label_getters.pine",
     ),
     (
+        "runtime_label_xloc.json",
+        "tests/fixtures/runtime/label_xloc.pine",
+    ),
+    (
         "runtime_label_yloc.json",
         "tests/fixtures/runtime/label_yloc.pine",
     ),

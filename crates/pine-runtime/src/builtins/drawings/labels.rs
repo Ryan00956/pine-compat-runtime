@@ -78,6 +78,19 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_label_set_xloc(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let x = self.eval_required_label_arg(args, 1, "x")?;
+        let xloc = self.eval_required_label_arg(args, 2, "xloc")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.x = x;
+            snapshot.xloc = xloc;
+        })
+    }
+
     pub(super) fn eval_label_set_y(
         &mut self,
         args: &[HirCallArg],

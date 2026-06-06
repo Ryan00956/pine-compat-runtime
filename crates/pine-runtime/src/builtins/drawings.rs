@@ -17,6 +17,7 @@ impl<'a> HistoricalRuntime<'a> {
         Some(match callee {
             "label.new" => self.eval_label_new(args),
             "label.set_x" => self.eval_label_set_x(args),
+            "label.set_xloc" => self.eval_label_set_xloc(args),
             "label.set_y" => self.eval_label_set_y(args),
             "label.set_xy" => self.eval_label_set_xy(args),
             "label.set_yloc" => self.eval_label_set_yloc(args),
