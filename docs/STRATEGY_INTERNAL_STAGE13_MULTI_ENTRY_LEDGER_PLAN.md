@@ -1523,8 +1523,37 @@ Closed evidence:
 
 Future slices:
 
-- Python public JSON parity coverage for the same omitted `stop+profit` bracket
-  persistent fixture;
+- duplicate same-id omitted-`from_entry` relative targets;
+- price-based same-tick pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
+### Slice 48: Omitted Stop+Profit Bracket Persistence Python Host Parity
+
+Status: closed on 2026-06-06. This slice adds Python binding public JSON
+coverage for Slice 32's omitted-`from_entry` `stop+profit` bracket future-entry
+persistence fixture. It does not expand runtime semantics or public schema
+shape.
+
+Goal:
+
+- prove that the Python `run_script` host path exposes the same public orders,
+  trades, position snapshots, plots, diagnostics, and hidden-internal-field
+  boundary for the omitted `stop+profit` bracket persistent multi-entry fixture
+  already covered by CLI/runtime snapshots and WASM.
+
+Closed evidence:
+
+- `test_run_script_returns_omitted_stop_profit_bracket_persistent_fixture_contract`
+  runs
+  `strategy_pyramiding_exit_omitted_stop_profit_bracket_persistent_from_entries.pine`
+  with its dedicated bars CSV through the Python binding.
+- The test asserts the public schema version, the profit-side `XB` exit for the
+  second entry before the stop-side `XB` exit for the first entry, two closed
+  trades, aggregate position snapshots, plot values, strategy diagnostics, and
+  absence of internal pending/reservation/target/stop fields.
+
+Future slices:
+
 - duplicate same-id omitted-`from_entry` relative targets;
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
@@ -1581,6 +1610,7 @@ Slice 45 adds WASM public JSON parity coverage for Slice 31's omitted
 `loss+profit` bracket persistent fixture, and Slice 46 adds matching Python
 public JSON parity coverage for that fixture. Slice 47 adds WASM public JSON
 parity coverage for Slice 32's omitted `stop+profit` bracket persistent
+fixture, and Slice 48 adds matching Python public JSON parity coverage for that
 fixture. It must not be used to claim duplicate same-id omitted-`from_entry`
 relative targets, price-based same-tick entry exceptions, shorts, reversals,
 `strategy.order()`, `close_entries_rule`, or broader multi-entry
