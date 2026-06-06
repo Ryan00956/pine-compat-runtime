@@ -1,6 +1,6 @@
 //@version=5
 indicator("Unsupported drawing")
-label.copy(na)
+label.set_textalign(na, "text.align_center")
 line.get_price(na, bar_index)
 box.get_top(na)
 table.clear(na)

@@ -481,7 +481,7 @@ fn rejects_unsupported_label_new_modes() {
 #[test]
 fn accepts_label_mutation_methods() {
     let analysis = analyze(
-        "id = label.new(bar_index, high, \"High\")\nlabel.set_x(id, bar_index)\nlabel.set_xloc(id, time, xloc.bar_time)\nlabel.set_y(id, low)\nlabel.set_xy(id, bar_index, close)\nlabel.set_yloc(id, yloc.abovebar)\nlabel.set_text(id, \"Close\")\nlabel.set_color(id, color.green)\nlabel.set_textcolor(id, color.white)\nlabel.set_style(id, label.style_label_up)\nlabel.set_size(id, size.small)\nlabel.set_tooltip(id, \"Tip\")\nlabel.set_text(na, \"noop\")\nlabel.delete(na)\nlabel.delete(id)\nplot(close)\n",
+        "id = label.new(bar_index, high, \"High\")\ncopy = label.copy(id)\nlabel.set_x(id, bar_index)\nlabel.set_xloc(id, time, xloc.bar_time)\nlabel.set_y(id, low)\nlabel.set_xy(id, bar_index, close)\nlabel.set_yloc(id, yloc.abovebar)\nlabel.set_text(id, \"Close\")\nlabel.set_color(id, color.green)\nlabel.set_textcolor(id, color.white)\nlabel.set_style(id, label.style_label_up)\nlabel.set_size(id, size.small)\nlabel.set_tooltip(id, \"Tip\")\nlabel.set_text(na, \"noop\")\nlabel.delete(na)\nlabel.delete(id)\nplot(label.get_x(copy))\nplot(close)\n",
     );
 
     assert!(
@@ -494,7 +494,7 @@ fn accepts_label_mutation_methods() {
             .compatibility
             .supported
             .iter()
-            .any(|feature| feature.feature == "label.set_text")
+            .any(|feature| feature.feature == "label.copy")
     );
     assert!(analysis.hir.is_some());
 }
@@ -557,7 +557,7 @@ fn accepts_label_getter_methods() {
 #[test]
 fn rejects_label_side_effects_inside_functions() {
     let analysis = analyze(
-        "change(price) =>\n    id = label.new(bar_index, price, \"High\")\n    label.delete(id)\n    price\nplot(change(close))\n",
+        "change(price) =>\n    id = label.new(bar_index, price, \"High\")\n    copy = label.copy(id)\n    label.set_xloc(copy, time, xloc.bar_time)\n    label.set_yloc(copy, yloc.abovebar)\n    label.delete(id)\n    price\nplot(change(close))\n",
     );
 
     assert!(
@@ -574,14 +574,14 @@ fn rejects_label_side_effects_inside_functions() {
 
 #[test]
 fn rejects_unimplemented_label_methods() {
-    let analysis = analyze("label.copy(na)\nplot(close)\n");
+    let analysis = analyze("label.set_textalign(na, \"text.align_center\")\nplot(close)\n");
 
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "label.copy"),
+            .any(|feature| feature.feature == "label.set_textalign"),
         "{:?}",
         analysis.compatibility.unsupported
     );

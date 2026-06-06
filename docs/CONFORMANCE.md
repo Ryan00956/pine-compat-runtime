@@ -613,9 +613,10 @@ The Phase E drawing-object scaffold adds `labels`, `lines`, `boxes`, and
 `tables` as top-level runtime keys in `schemaVersion: 2`. The executable label
 subset covers `label.new`, selected `label.set_*` mutators including
 fixture-backed x-location snapshot mutation for `label.set_xloc` and
-y-location snapshot mutation for `label.set_yloc`, `label.delete`, and the
-fixture-backed `label.get_x`, `label.get_y`, and `label.get_text` getters over
-the latest existing label snapshot, with a 500-label runtime limit. The
+y-location snapshot mutation for `label.set_yloc`, `label.delete`,
+fixture-backed cloning with `label.copy`, and the fixture-backed `label.get_x`,
+`label.get_y`, and `label.get_text` getters over the latest existing label
+snapshot, with a 500-label runtime limit. The
 executable line subset covers `line.new`, selected
 endpoint/color/width/style/extend mutators, and `line.delete` with sparse
 snapshots and a 500-line runtime limit. The executable box subset covers
@@ -629,10 +630,12 @@ drawing object is a no-op where deletion exists; supported label getters return
 are stable and not reused. `label.set_xloc` records `xloc.bar_index` or
 `xloc.bar_time` plus the new `x` value in label snapshots; `label.set_yloc`
 records `yloc.price`, `yloc.abovebar`, or `yloc.belowbar`; neither models
-host-specific visual layout. Supported drawing creation, mutation, getter, and
-cell writes are covered under realtime rollback where state changes, and drawing
-side effects inside user-defined functions are rejected under the existing
-side-effect policy. Keep unsupported coordinate modes and advanced object
+host-specific visual layout. `label.copy` clones the latest existing label
+snapshot into a new deterministic id, returns `na` for `na` or deleted labels,
+and shares the label runtime limit. Supported drawing creation, mutation,
+cloning, getter, and cell writes are covered under realtime rollback where state
+changes, and drawing side effects inside user-defined functions are rejected
+under the existing side-effect policy. Keep unsupported coordinate modes and advanced object
 methods out of the supported matrix until they have fixtures and public-output
 coverage. `polyline.*` remains explicitly unsupported because it needs a
 fixture-backed point-object and point-array design; see

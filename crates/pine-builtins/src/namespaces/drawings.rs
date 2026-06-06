@@ -214,6 +214,12 @@ const LABEL_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const LABEL_COPY_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::LabelCompatible,
+    optional: false,
+}];
+
 const LABEL_GET_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "id",
     accepts: Accepts::LabelCompatible,
@@ -598,6 +604,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: LABEL_DELETE_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "label.copy",
+        phase: BuiltinPhase::Phase1Core,
+        params: LABEL_COPY_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_LABEL),
         variadic: false,
     },
     BuiltinSignature {

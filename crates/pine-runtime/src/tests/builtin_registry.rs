@@ -97,6 +97,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "input.time",
     "input.timeframe",
     "int",
+    "label.copy",
     "label.delete",
     "label.get_text",
     "label.get_x",

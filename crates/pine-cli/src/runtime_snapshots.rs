@@ -50,6 +50,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/label_delete.pine",
     ),
     (
+        "runtime_label_copy.json",
+        "tests/fixtures/runtime/label_copy.pine",
+    ),
+    (
         "runtime_label_getters.json",
         "tests/fixtures/runtime/label_getters.pine",
     ),

@@ -220,6 +220,48 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    pub(super) fn eval_label_copy(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_get_id_arg(args, "label.copy")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        if self.labels.len() >= MAX_LABELS {
+            return Err(RuntimeError {
+                message: format!("label count cannot exceed {MAX_LABELS}"),
+            });
+        }
+        let Some(label) = self.labels.iter().find(|label| label.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid label id `{id}`"),
+            });
+        };
+        let Some(latest) = label.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("label `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Na);
+        }
+        let copied_id = self.next_label_id;
+        self.next_label_id = self
+            .next_label_id
+            .checked_add(1)
+            .ok_or_else(|| RuntimeError {
+                message: "label id limit exceeded".to_owned(),
+            })?;
+        let mut copied = latest;
+        copied.bar_index = self.bars;
+        self.labels.push(LabelOutput {
+            id: copied_id,
+            snapshots: vec![copied],
+        });
+        Ok(PineValue::Label(copied_id))
+    }
+
     pub(super) fn eval_label_get_x(
         &mut self,
         args: &[HirCallArg],
