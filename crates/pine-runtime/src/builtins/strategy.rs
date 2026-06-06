@@ -429,8 +429,7 @@ impl<'a> HistoricalRuntime<'a> {
             && profit_expr.is_none()
             && loss_expr.is_none()
             && !has_trailing;
-        let is_omitted_relative_single = profit_expr.is_some()
-            && loss_expr.is_none()
+        let is_omitted_relative_single = (profit_expr.is_some() != loss_expr.is_some())
             && stop_expr.is_none()
             && limit_expr.is_none()
             && !has_trailing
@@ -682,6 +681,11 @@ impl<'a> HistoricalRuntime<'a> {
         } else if let Some(loss_expr) = loss_expr {
             let loss_ticks = self.eval_expr(loss_expr)?.as_f64().unwrap_or(f64::NAN);
             let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+            if from_entry.is_empty() {
+                self.strategy_broker
+                    .place_all_entry_exit_loss_ticks(id, loss_ticks, mintick, self.bars);
+                return Ok(PineValue::Void);
+            }
             self.place_exit_loss_ticks_quantity(
                 id, from_entry, loss_ticks, mintick, quantity, self.bars,
             );

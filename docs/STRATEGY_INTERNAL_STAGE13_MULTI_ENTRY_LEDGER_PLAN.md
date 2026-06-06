@@ -667,6 +667,40 @@ Future slices:
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
 
+### Slice 22: Omitted `from_entry` Current All-Entry Loss Tick Exit
+
+Status: closed on 2026-06-06. This slice adds the symmetric omitted-
+`from_entry` loss-tick all-entry subset for currently open pyramided long
+entries whose entry ids are unique. It covers full-quantity `loss` exits and
+does not claim duplicate same-id per-trade relative targets, future-entry
+persistence for relative exits, brackets, trailing exits, shorts, reversals,
+`close_entries_rule`, or public pending-order schema.
+
+Goal:
+
+- generate entry-specific pending stop exits for an omitted-`from_entry`
+  `strategy.exit(..., loss=ticks)` call instead of using the aggregate average
+  entry price or silently ignoring the call.
+
+Closed evidence:
+
+- Broker placement for omitted-`from_entry` loss ticks now reads current open
+  ledger entries, rejects the unsupported duplicate-entry-id case by preserving
+  the old no-op boundary, and replaces the pending exit book with one
+  full-quantity stop exit per unique entry id.
+- `strategy_pyramiding_exit_omitted_loss_from_entries.pine` covers two open long
+  entries with different ids and one omitted-`from_entry` loss exit that closes
+  `L1` at `L1`'s entry-price-derived stop and `L2` at `L2`'s later
+  entry-price-derived stop.
+
+Future slices:
+
+- omitted-`from_entry` all-entry bracket and trailing behavior;
+- omitted-`from_entry` relative future-entry persistence;
+- duplicate same-id omitted-`from_entry` relative targets;
+- price-based same-tick pyramiding-limit exceptions;
+- host parity coverage for broader public JSON contracts.
+
 ## Compatibility Contract
 
 The supported strategy subset remains the one recorded in
@@ -683,9 +717,11 @@ fixture-backed trailing `trail_points` activation conversion plus Slice 19's
 fixture-backed omitted-`from_entry` current open-entry absolute stop/limit
 all-entry exit plus Slice 20's fixture-backed persistent future-entry expansion
 for that same absolute stop/limit subset plus Slice 21's fixture-backed
-omitted-`from_entry` current unique-entry-id profit-tick all-entry exit. It must
-not be used to claim omitted-`from_entry` loss/bracket/trailing all-entry exits,
-omitted-`from_entry` relative future-entry persistence, duplicate same-id
+omitted-`from_entry` current unique-entry-id profit-tick all-entry exit plus
+Slice 22's fixture-backed omitted-`from_entry` current unique-entry-id loss-tick
+all-entry exit. It must not be used to claim omitted-`from_entry`
+bracket/trailing all-entry exits, omitted-`from_entry` relative future-entry
+persistence, duplicate same-id
 omitted-`from_entry` relative targets, price-based same-tick entry exceptions,
 shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader
 multi-entry `strategy.exit`/reporting support.

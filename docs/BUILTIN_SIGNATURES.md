@@ -358,11 +358,12 @@ multiple open trades with the same entry id emits one exit order and one closed
 trade per matched ledger allocation. Fixture-backed omitted-`from_entry`
 absolute stop/limit exits can close all currently open pyramided long entries
 and persist for later open long entries until the position closes. Broader
-omitted-`from_entry` profit-tick exits can close currently open pyramided long
-entries with unique entry ids using each entry's own entry-price-derived target.
-Omitted-`from_entry` loss, bracket, trailing, relative future-entry persistence,
-and duplicate same-id relative targets remain outside the current claim. Broader
-multi-entry `strategy.exit` semantics remain outside the current claim.
+omitted-`from_entry` profit/loss-tick exits can close currently open pyramided
+long entries with unique entry ids using each entry's own entry-price-derived
+target. Omitted-`from_entry` bracket, trailing, relative future-entry
+persistence, and duplicate same-id relative targets remain outside the current
+claim. Broader multi-entry `strategy.exit` semantics remain outside the current
+claim.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by

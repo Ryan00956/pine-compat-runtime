@@ -501,6 +501,45 @@ impl BrokerState {
         );
     }
 
+    pub(crate) fn place_all_entry_exit_loss_ticks(
+        &mut self,
+        id: String,
+        ticks: f64,
+        mintick: f64,
+        bar_index: usize,
+    ) {
+        let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
+            return;
+        };
+        let mut seen_entry_ids: Vec<String> = Vec::new();
+        let mut pending_exits = Vec::new();
+        for index in 0..self.trade_ledger.open_count() {
+            let Some(open_trade) = self.trade_ledger.open_at(index) else {
+                continue;
+            };
+            if seen_entry_ids
+                .iter()
+                .any(|entry_id| entry_id == &open_trade.id)
+            {
+                return;
+            }
+            seen_entry_ids.push(open_trade.id.clone());
+            pending_exits.push(PendingExit {
+                id: id.clone(),
+                from_entry: open_trade.id.clone(),
+                trigger: PendingExitTrigger::Stop(open_trade.entry_price - price_offset),
+                quantity: PendingExitQuantity::Full,
+                reserved_quantity: open_trade.quantity,
+                multiple_reservation: false,
+                last_update_bar_index: bar_index,
+            });
+        }
+        if pending_exits.is_empty() {
+            return;
+        }
+        self.order_book.exits_mut().replace_all_many(pending_exits);
+    }
+
     fn place_exit_loss_ticks_quantity(
         &mut self,
         id: String,

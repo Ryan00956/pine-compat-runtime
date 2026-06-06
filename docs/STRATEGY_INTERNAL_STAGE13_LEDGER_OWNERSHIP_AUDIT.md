@@ -277,4 +277,14 @@ path for current open entries. The broker now expands a full omitted
 id, with each limit price converted from that entry's own entry price. The
 pending exit fill path remains the existing from-entry allocation path. Duplicate
 same-id per-trade relative targets, relative future-entry persistence, `loss`,
+bracket, and trailing all-entry forms remained future slices.
+
+## Slice 22 Follow-Up
+
+Stage 13 Slice 22 mirrors Slice 21 for omitted-`from_entry` loss ticks. The
+broker expands a full omitted `loss=ticks` call into one pending stop exit per
+currently open unique entry id, with each stop price converted from that entry's
+own entry price. The duplicate same-entry-id case still preserves the no-op
+boundary because correct support requires per-trade targeting beyond the current
+`id + from_entry` pending-exit identity. Relative future-entry persistence,
 bracket, and trailing all-entry forms remain future slices.
