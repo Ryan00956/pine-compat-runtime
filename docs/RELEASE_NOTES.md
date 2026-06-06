@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 26 omitted-`from_entry`
+  `strategy.exit` `stop+limit` bracket all-entry support for current open
+  entries. A full omitted-`from_entry` stop+limit bracket now uses the existing
+  all-entry FIFO allocation path to close currently open pyramided long entries.
 - Closed Strategy Internal Stage 13 Slice 25 omitted-`from_entry`
   `strategy.exit` `loss+limit` bracket all-entry support for current unique
   entry ids. A full omitted-`from_entry` loss+limit bracket now creates

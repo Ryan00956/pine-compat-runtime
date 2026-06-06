@@ -805,6 +805,37 @@ Future slices:
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
 
+### Slice 26: Omitted `from_entry` Current All-Entry Stop+Limit Bracket
+
+Status: closed on 2026-06-06. This slice closes the current-open-entry omitted-
+`from_entry` bracket family by adding the full-quantity `stop+limit` absolute
+bracket subset. It does not claim trailing exits, relative future-entry
+persistence, duplicate same-id per-trade relative targets, shorts, reversals,
+`close_entries_rule`, or public pending-order schema.
+
+Goal:
+
+- allow omitted-`from_entry` `strategy.exit(..., stop=price, limit=price)` calls
+  to use the existing all-entry FIFO allocation path instead of being blocked by
+  the omitted-`from_entry` guard.
+
+Closed evidence:
+
+- The builtin omitted-`from_entry` guard now admits full `stop+limit` brackets,
+  which then place one all-entry pending bracket and allocate fills through
+  ledger FIFO.
+- `strategy_pyramiding_exit_omitted_stop_limit_bracket_from_entries.pine` covers
+  two open long entries with different ids and one omitted-`from_entry`
+  stop+limit bracket that closes both entries through the shared absolute limit.
+
+Future slices:
+
+- omitted-`from_entry` all-entry trailing behavior;
+- omitted-`from_entry` relative future-entry persistence;
+- duplicate same-id omitted-`from_entry` relative targets;
+- price-based same-tick pyramiding-limit exceptions;
+- host parity coverage for broader public JSON contracts.
+
 ## Compatibility Contract
 
 The supported strategy subset remains the one recorded in
@@ -827,8 +858,9 @@ all-entry exit plus Slice 23's fixture-backed omitted-`from_entry` current
 unique-entry-id `loss+profit` bracket all-entry exit plus Slice 24's
 fixture-backed omitted-`from_entry` current unique-entry-id `stop+profit`
 bracket all-entry exit plus Slice 25's fixture-backed omitted-`from_entry`
-current unique-entry-id `loss+limit` bracket all-entry exit. It must not be used
-to claim omitted-`from_entry` `stop+limit` or trailing all-entry exits,
+current unique-entry-id `loss+limit` bracket all-entry exit plus Slice 26's
+fixture-backed omitted-`from_entry` current all-entry `stop+limit` bracket exit.
+It must not be used to claim omitted-`from_entry` trailing all-entry exits,
 omitted-`from_entry` relative future-entry persistence, duplicate same-id
 omitted-`from_entry` relative targets, price-based same-tick entry exceptions,
 shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader

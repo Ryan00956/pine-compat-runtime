@@ -429,6 +429,12 @@ impl<'a> HistoricalRuntime<'a> {
             && profit_expr.is_none()
             && loss_expr.is_none()
             && !has_trailing;
+        let is_omitted_absolute_bracket = stop_expr.is_some()
+            && limit_expr.is_some()
+            && profit_expr.is_none()
+            && loss_expr.is_none()
+            && !has_trailing
+            && matches!(quantity, StrategyExitQuantityArg::Full);
         let is_omitted_relative_single = (profit_expr.is_some() != loss_expr.is_some())
             && stop_expr.is_none()
             && limit_expr.is_none()
@@ -445,6 +451,7 @@ impl<'a> HistoricalRuntime<'a> {
             && matches!(quantity, StrategyExitQuantityArg::Full);
         if from_entry.is_empty()
             && !(is_omitted_absolute_single
+                || is_omitted_absolute_bracket
                 || is_omitted_relative_single
                 || is_omitted_loss_profit_bracket
                 || is_omitted_stop_profit_bracket

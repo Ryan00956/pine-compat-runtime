@@ -317,3 +317,14 @@ the current-open-entry expansion. The broker expands a full omitted
 id, converting the loss stop from each entry's own entry price and preserving
 the absolute limit price. Duplicate same-entry-id entries, `stop+limit`,
 trailing exits, and relative future-entry persistence remain future work.
+
+## Slice 26 Follow-Up
+
+Stage 13 Slice 26 closes the current-open-entry omitted-`from_entry` bracket
+family with the absolute `stop+limit` shape. Unlike the mixed relative bracket
+slices, this path does not require per-entry price conversion: the builtin gate
+now allows full omitted `stop+limit` brackets to reach the existing all-entry
+pending-exit path, which allocates fills through FIFO ledger allocation and
+emits one public exit order per closed ledger allocation. Trailing exits,
+relative future-entry persistence, and duplicate same-entry-id relative targets
+remain future work.
