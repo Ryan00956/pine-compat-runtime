@@ -210,6 +210,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "table.cell_set_bgcolor"
             | "table.cell_set_text_color"
             | "table.cell_set_width"
+            | "table.cell_set_height"
             | "strategy.entry"
             | "strategy.close"
             | "strategy.close_all"

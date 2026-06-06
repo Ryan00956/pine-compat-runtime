@@ -813,7 +813,7 @@ fn rejects_box_side_effects_inside_functions() {
 #[test]
 fn accepts_minimal_table_new_and_cell() {
     let analysis = analyze(
-        "id = table.new(position.top_right, 2, 2)\ntable.cell(id, 0, 0, \"A\")\ntable.cell(id, column=1, row=0, text=\"B\", bgcolor=color.green, text_color=color.white)\ntable.cell_set_text(id, 1, 0, \"B2\")\ntable.cell_set_bgcolor(id, 1, 0, color.red)\ntable.cell_set_text_color(id, 1, 0, color.blue)\ntable.cell_set_width(id, 1, 0, 25)\ntable.cell_set_text(na, 0, 1, \"noop\")\ntable.cell_set_bgcolor(na, 0, 1, color.red)\ntable.cell_set_text_color(na, 0, 1, color.blue)\ntable.cell_set_width(na, 0, 1, 25)\ntable.cell(na, 0, 1, \"noop\")\nplot(close)\n",
+        "id = table.new(position.top_right, 2, 2)\ntable.cell(id, 0, 0, \"A\")\ntable.cell(id, column=1, row=0, text=\"B\", bgcolor=color.green, text_color=color.white)\ntable.cell_set_text(id, 1, 0, \"B2\")\ntable.cell_set_bgcolor(id, 1, 0, color.red)\ntable.cell_set_text_color(id, 1, 0, color.blue)\ntable.cell_set_width(id, 1, 0, 25)\ntable.cell_set_height(id, 1, 0, 40)\ntable.cell_set_text(na, 0, 1, \"noop\")\ntable.cell_set_bgcolor(na, 0, 1, color.red)\ntable.cell_set_text_color(na, 0, 1, color.blue)\ntable.cell_set_width(na, 0, 1, 25)\ntable.cell_set_height(na, 0, 1, 40)\ntable.cell(na, 0, 1, \"noop\")\nplot(close)\n",
     );
 
     assert!(
@@ -855,6 +855,13 @@ fn accepts_minimal_table_new_and_cell() {
             .supported
             .iter()
             .any(|feature| feature.feature == "table.cell_set_width")
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "table.cell_set_height")
     );
     assert!(analysis.hir.is_some());
 }

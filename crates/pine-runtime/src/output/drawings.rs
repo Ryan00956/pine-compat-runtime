@@ -95,4 +95,5 @@ pub struct TableCellSnapshot {
     pub bg_color: PineValue,
     pub text_color: PineValue,
     pub width: PineValue,
+    pub height: PineValue,
 }

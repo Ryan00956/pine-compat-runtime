@@ -71,6 +71,7 @@ impl<'a> HistoricalRuntime<'a> {
             bg_color,
             text_color,
             width: PineValue::Na,
+            height: PineValue::Na,
         };
         self.mutate_table_cell(id, column, row, true, |cell| *cell = next_cell)?;
         Ok(PineValue::Void)
@@ -140,6 +141,23 @@ impl<'a> HistoricalRuntime<'a> {
         };
         self.mutate_table_cell(id, column, row, false, |cell| {
             cell.width = width;
+        })?;
+        Ok(PineValue::Void)
+    }
+
+    pub(super) fn eval_table_cell_set_height(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let column = self.eval_required_table_int_arg(args, 1, "column")?;
+        let row = self.eval_required_table_int_arg(args, 2, "row")?;
+        let height = self.eval_required_table_arg(args, 3, "height")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        self.mutate_table_cell(id, column, row, false, |cell| {
+            cell.height = height;
         })?;
         Ok(PineValue::Void)
     }
@@ -244,6 +262,7 @@ impl<'a> HistoricalRuntime<'a> {
                     bg_color: PineValue::Na,
                     text_color: PineValue::Na,
                     width: PineValue::Na,
+                    height: PineValue::Na,
                 };
                 mutate(&mut cell);
                 next.cells.push(cell);
