@@ -562,6 +562,7 @@ if bar_index == 2
     table.cell_set_height(id, 1, 0, 40)
     table.cell_set_text_size(id, 1, 0, size.small)
     table.cell_set_text_halign(id, 1, 0, text.align_left)
+    table.cell_set_text_valign(id, 1, 0, text.align_top)
 table.cell(na, 0, 1, "noop")
 table.cell_set_text(na, 0, 1, "noop")
 table.cell_set_bgcolor(na, 0, 1, color.red)
@@ -570,6 +571,7 @@ table.cell_set_width(na, 0, 1, 25)
 table.cell_set_height(na, 0, 1, 40)
 table.cell_set_text_size(na, 0, 1, size.small)
 table.cell_set_text_halign(na, 0, 1, text.align_left)
+table.cell_set_text_valign(na, 0, 1, text.align_top)
 plot(close)
 "#,
     );
@@ -591,7 +593,7 @@ plot(close)
     );
     assert_eq!(table.columns, 2);
     assert_eq!(table.rows, 2);
-    assert_eq!(table.snapshots.len(), 11);
+    assert_eq!(table.snapshots.len(), 12);
     assert!(table.snapshots[0].cells.is_empty());
     assert_eq!(table.snapshots[1].cells[0].column, 0);
     assert_eq!(table.snapshots[1].cells[0].row, 0);
@@ -634,6 +636,10 @@ plot(close)
     assert_eq!(
         table.snapshots[10].cells[1].text_halign,
         PineValue::String("text.align_left".to_owned())
+    );
+    assert_eq!(
+        table.snapshots[11].cells[1].text_valign,
+        PineValue::String("text.align_top".to_owned())
     );
 }
 

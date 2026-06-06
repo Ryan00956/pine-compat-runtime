@@ -644,7 +644,6 @@ fn boxes_to_py(py: Python<'_>, boxes: &[pine_runtime::BoxOutput]) -> PyResult<Py
     }
     Ok(output.into_any().unbind())
 }
-
 fn box_snapshots_to_py(
     py: Python<'_>,
     snapshots: &[pine_runtime::BoxSnapshot],
@@ -721,6 +720,7 @@ fn table_cells_to_py(
         item.set_item("height", value_to_py(py, &cell.height)?)?;
         item.set_item("textSize", value_to_py(py, &cell.text_size)?)?;
         item.set_item("textHalign", value_to_py(py, &cell.text_halign)?)?;
+        item.set_item("textValign", value_to_py(py, &cell.text_valign)?)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())

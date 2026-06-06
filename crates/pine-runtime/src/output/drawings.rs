@@ -98,4 +98,5 @@ pub struct TableCellSnapshot {
     pub height: PineValue,
     pub text_size: PineValue,
     pub text_halign: PineValue,
+    pub text_valign: PineValue,
 }

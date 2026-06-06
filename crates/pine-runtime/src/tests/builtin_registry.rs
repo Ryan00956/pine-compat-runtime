@@ -299,6 +299,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "table.cell_set_text_color",
     "table.cell_set_text_halign",
     "table.cell_set_text_size",
+    "table.cell_set_text_valign",
     "table.cell_set_width",
     "table.new",
     "timeframe.change",

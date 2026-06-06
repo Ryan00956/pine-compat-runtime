@@ -638,7 +638,8 @@ color mutations plus `table.cell_set_text_color` text-color mutations plus
 `table.cell_set_width` width mutations plus `table.cell_set_height` height
 mutations plus `table.cell_set_text_size` text-size mutations for previously
 populated cells plus `table.cell_set_text_halign` horizontal text-alignment
-mutations for previously populated cells with
+mutations plus `table.cell_set_text_valign` vertical text-alignment mutations
+for previously populated cells with
 deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
 per-table limit. Deleting `na`,
 mutating `na`, or mutating an already deleted
@@ -677,7 +678,9 @@ host-specific; `table.cell_set_text_size` updates only the target cell text-size
 snapshot after `table.cell` has populated that cell, while text rendering
 remains host-specific; `table.cell_set_text_halign` updates only the target
 cell horizontal text-alignment snapshot after `table.cell` has populated that
-cell, while text layout remains host-specific; other table cell
+cell; `table.cell_set_text_valign` updates only the target cell vertical
+text-alignment snapshot after `table.cell` has populated that cell, while text
+layout remains host-specific; other table cell
 style/layout setters remain unsupported.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state
 changes, and drawing side effects inside user-defined functions are rejected

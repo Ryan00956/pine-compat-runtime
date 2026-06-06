@@ -81,6 +81,7 @@ impl<'a> HistoricalRuntime<'a> {
             "table.cell_set_height" => self.eval_table_cell_set_height(args),
             "table.cell_set_text_size" => self.eval_table_cell_set_text_size(args),
             "table.cell_set_text_halign" => self.eval_table_cell_set_text_halign(args),
+            "table.cell_set_text_valign" => self.eval_table_cell_set_text_valign(args),
             _ => return None,
         })
     }

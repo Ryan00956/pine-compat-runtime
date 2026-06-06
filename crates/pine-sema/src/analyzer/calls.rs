@@ -213,6 +213,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "table.cell_set_height"
             | "table.cell_set_text_size"
             | "table.cell_set_text_halign"
+            | "table.cell_set_text_valign"
             | "strategy.entry"
             | "strategy.close"
             | "strategy.close_all"
@@ -617,6 +618,9 @@ impl Analyzer {
             }
             "table.cell_set_text_halign" => {
                 self.validate_label_string_arg(signature, args, 3, "text_halign", TEXT_HALIGNS);
+            }
+            "table.cell_set_text_valign" => {
+                self.validate_label_string_arg(signature, args, 3, "text_valign", TEXT_VALIGNS);
             }
             _ => {}
         }
