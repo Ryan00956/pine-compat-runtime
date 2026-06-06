@@ -1413,6 +1413,38 @@ fn pending_market_entry_stores_entry_relative_profit_attachment() {
 }
 
 #[test]
+fn omitted_profit_template_clears_when_replaced_by_absolute_all_entry_exit() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    );
+
+    broker.entry_long("L1".to_owned(), 1, 10, 100.0, 1.0);
+    broker.place_all_entry_exit_profit_ticks("XP".to_owned(), 10.0, 0.01, 1);
+
+    assert_eq!(deferred_relative_exit_count(&broker), 1);
+
+    broker.place_exit_limit("XL".to_owned(), String::new(), 110.0, 2);
+
+    assert_eq!(deferred_relative_exit_count(&broker), 0);
+
+    broker.place_pending_market_long_entry("L2".to_owned(), 3.0, 3);
+    broker.fill_pending_market_long_entries(4, 40, 105.0);
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    let pending_exit = broker.pending_exit().unwrap();
+    assert_eq!(pending_exit.id, "XL");
+    assert!(pending_exit.from_entry.is_empty());
+    assert_eq!(pending_exit.reserved_quantity, 4.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn pending_market_entry_stores_entry_relative_loss_attachment() {
     let mut broker = BrokerState::new(100_000.0);
 

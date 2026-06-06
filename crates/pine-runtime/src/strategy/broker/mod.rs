@@ -468,7 +468,7 @@ impl BrokerState {
             pending_entry.quantity,
         );
         if filled {
-            self.resolve_deferred_relative_exits_for_entry(&entry_id);
+            self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
             self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
         } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
@@ -506,7 +506,7 @@ impl BrokerState {
             pending_entry.quantity,
         );
         if filled {
-            self.resolve_deferred_relative_exits_for_entry(&entry_id);
+            self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
             self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
         } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
@@ -544,7 +544,7 @@ impl BrokerState {
             pending_entry.quantity,
         );
         if filled {
-            self.resolve_deferred_relative_exits_for_entry(&entry_id);
+            self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
             self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
         } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
@@ -590,7 +590,7 @@ impl BrokerState {
             pending_entry.quantity,
         );
         if filled {
-            self.resolve_deferred_relative_exits_for_entry(&entry_id);
+            self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
             self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
         } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
@@ -607,6 +607,19 @@ impl BrokerState {
             return self.position_size;
         }
         self.trade_ledger.open_quantity_for_entry(id)
+    }
+
+    fn open_trade_count_for_entry(&self, id: &str) -> usize {
+        let mut count = 0;
+        for index in 0..self.trade_ledger.open_count() {
+            let Some(open_trade) = self.trade_ledger.open_at(index) else {
+                continue;
+            };
+            if open_trade.id == id {
+                count += 1;
+            }
+        }
+        count
     }
 
     fn first_open_entry_price_for_entry(&self, id: &str) -> Option<f64> {

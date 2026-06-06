@@ -234,6 +234,15 @@ impl BrokerState {
                 last_update_bar_index: bar_index,
             });
         }
+        self.order_book
+            .exits_mut()
+            .replace_all_entry_deferred_relative(DeferredRelativeExit {
+                id,
+                from_entry: String::new(),
+                trigger: DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick },
+                quantity: ExitQuantityRequest::Full,
+                last_update_bar_index: bar_index,
+            });
         if pending_exits.is_empty() {
             return;
         }
@@ -310,7 +319,11 @@ impl BrokerState {
             });
     }
 
-    pub(crate) fn resolve_deferred_relative_exits_for_entry(&mut self, entry_id: &str) {
+    pub(crate) fn resolve_deferred_relative_exits_for_entry(
+        &mut self,
+        entry_id: &str,
+        bar_index: usize,
+    ) {
         let deferred_exits = self
             .order_book
             .exits_mut()
@@ -443,6 +456,77 @@ impl BrokerState {
                 DeferredRelativeExitTrigger::Bracket { .. } => continue,
             }
         }
+
+        let all_entry_deferred_exits = self.order_book.exits().all_entry_deferred_relative_exits();
+        for deferred_exit in all_entry_deferred_exits {
+            self.resolve_all_entry_deferred_relative_exit_for_entry(
+                deferred_exit,
+                entry_id,
+                bar_index,
+            );
+        }
+    }
+
+    fn resolve_all_entry_deferred_relative_exit_for_entry(
+        &mut self,
+        deferred_exit: DeferredRelativeExit,
+        entry_id: &str,
+        bar_index: usize,
+    ) {
+        if self.open_trade_count_for_entry(entry_id) != 1 {
+            return;
+        }
+        let DeferredRelativeExit {
+            id,
+            trigger,
+            quantity,
+            ..
+        } = deferred_exit;
+        if let DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick } = trigger {
+            if quantity != ExitQuantityRequest::Full {
+                return;
+            }
+            let Some(limit_price) =
+                self.exit_profit_price_from_ticks_for_entry(entry_id, ticks, mintick)
+            else {
+                return;
+            };
+            self.place_all_entry_resolved_profit_exit(
+                id,
+                entry_id.to_owned(),
+                limit_price,
+                bar_index,
+            );
+        }
+    }
+
+    fn place_all_entry_resolved_profit_exit(
+        &mut self,
+        id: String,
+        from_entry: String,
+        limit_price: f64,
+        bar_index: usize,
+    ) {
+        if !limit_price.is_finite() {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_EXIT_PRICE".to_owned(),
+                message: "`strategy.exit` price must be finite".to_owned(),
+            });
+            return;
+        }
+        let reserved_quantity = self.open_position_size_for_entry(&from_entry);
+        if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
+            return;
+        }
+        self.order_book.exits_mut().replace_or_append(PendingExit {
+            id,
+            from_entry,
+            trigger: PendingExitTrigger::Limit(limit_price),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity,
+            multiple_reservation: false,
+            last_update_bar_index: bar_index,
+        });
     }
 
     pub(crate) fn place_exit_loss_ticks(
@@ -537,6 +621,9 @@ impl BrokerState {
         if pending_exits.is_empty() {
             return;
         }
+        self.order_book
+            .exits_mut()
+            .clear_all_entry_deferred_relative();
         self.order_book.exits_mut().replace_all_many(pending_exits);
     }
 
@@ -838,6 +925,9 @@ impl BrokerState {
         if pending_exits.is_empty() {
             return;
         }
+        self.order_book
+            .exits_mut()
+            .clear_all_entry_deferred_relative();
         self.order_book.exits_mut().replace_all_many(pending_exits);
     }
 
@@ -1162,6 +1252,13 @@ impl BrokerState {
         if multiple_reservation_family.is_some() && other_exits_are_supported_reservations {
             self.order_book.exits_mut().replace_or_append(pending_exit);
         } else {
+            if pending_exit.from_entry.is_empty()
+                && pending_exit.quantity == PendingExitQuantity::Full
+            {
+                self.order_book
+                    .exits_mut()
+                    .clear_all_entry_deferred_relative();
+            }
             self.order_book.exits_mut().replace_all(pending_exit);
         }
     }

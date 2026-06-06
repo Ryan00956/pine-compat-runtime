@@ -133,6 +133,9 @@ impl BrokerState {
         if pending_exits.is_empty() {
             return;
         }
+        self.order_book
+            .exits_mut()
+            .clear_all_entry_deferred_relative();
         self.order_book.exits_mut().replace_all_many(pending_exits);
     }
 
@@ -316,6 +319,9 @@ impl BrokerState {
         if pending_exits.is_empty() {
             return;
         }
+        self.order_book
+            .exits_mut()
+            .clear_all_entry_deferred_relative();
         self.order_book.exits_mut().replace_all_many(pending_exits);
     }
 
@@ -494,6 +500,9 @@ impl BrokerState {
         if pending_exits.is_empty() {
             return;
         }
+        self.order_book
+            .exits_mut()
+            .clear_all_entry_deferred_relative();
         self.order_book.exits_mut().replace_all_many(pending_exits);
     }
 

@@ -332,6 +332,14 @@ impl PendingExitBook {
             .find(|pending_exit| pending_exit.id == id && pending_exit.from_entry == from_entry)
     }
 
+    pub(super) fn all_entry_deferred_relative_exits(&self) -> Vec<DeferredRelativeExit> {
+        self.deferred_relative_exits
+            .iter()
+            .filter(|pending_exit| pending_exit.from_entry.is_empty())
+            .cloned()
+            .collect()
+    }
+
     pub(super) fn other_exits_are_supported_reservations(
         &self,
         from_entry: &str,
@@ -419,6 +427,20 @@ impl PendingExitBook {
             return;
         }
         self.deferred_relative_exits.push(pending_exit);
+    }
+
+    pub(super) fn replace_all_entry_deferred_relative(
+        &mut self,
+        pending_exit: DeferredRelativeExit,
+    ) {
+        self.deferred_relative_exits
+            .retain(|existing| !existing.from_entry.is_empty());
+        self.deferred_relative_exits.push(pending_exit);
+    }
+
+    pub(super) fn clear_all_entry_deferred_relative(&mut self) {
+        self.deferred_relative_exits
+            .retain(|pending_exit| !pending_exit.from_entry.is_empty());
     }
 
     pub(super) fn take_deferred_relative_for_entry(
