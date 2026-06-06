@@ -585,30 +585,32 @@ impl BrokerState {
             self.order_book.entries_mut().clear_all();
             return;
         }
-        let Some(pending_entry) = self
+        let pending_entries = self
             .order_book
             .entries_mut()
-            .take_first_eligible_stop_long(bar_index, high)
-        else {
+            .take_all_eligible_stop_long(bar_index, high);
+        if pending_entries.is_empty() {
             return;
-        };
+        }
 
-        let PendingEntryKind::Stop { price } = pending_entry.kind else {
-            return;
-        };
-        let entry_id = pending_entry.id;
-        let filled = self.entry_long(
-            entry_id.clone(),
-            bar_index,
-            time,
-            price,
-            pending_entry.quantity,
-        );
-        if filled {
-            self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
-            self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
-        } else {
-            self.order_book.exits_mut().clear_for_entry(&entry_id);
+        for pending_entry in pending_entries {
+            let PendingEntryKind::Stop { price } = pending_entry.kind else {
+                continue;
+            };
+            let entry_id = pending_entry.id;
+            let filled = self.entry_long_from_price_based_same_tick_exception(
+                entry_id.clone(),
+                bar_index,
+                time,
+                price,
+                pending_entry.quantity,
+            );
+            if filled {
+                self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
+                self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
+            } else {
+                self.order_book.exits_mut().clear_for_entry(&entry_id);
+            }
         }
         self.order_book.entries_mut().clear_all();
     }
