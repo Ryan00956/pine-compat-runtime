@@ -1403,8 +1403,35 @@ Closed evidence:
 
 Future slices:
 
-- Python public JSON parity coverage for the same omitted loss persistent
-  fixture;
+- duplicate same-id omitted-`from_entry` relative targets;
+- price-based same-tick pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
+### Slice 44: Omitted Loss Persistence Python Host Parity
+
+Status: closed on 2026-06-06. This slice adds Python binding public JSON
+coverage for Slice 30's omitted-`from_entry` loss-tick future-entry persistence
+fixture. It does not expand runtime semantics or public schema shape.
+
+Goal:
+
+- prove that the Python `run_script` host path exposes the same public orders,
+  trades, position snapshots, plots, diagnostics, and hidden-internal-field
+  boundary for the omitted loss persistent multi-entry fixture already covered
+  by CLI/runtime snapshots and WASM.
+
+Closed evidence:
+
+- `test_run_script_returns_omitted_loss_persistent_fixture_contract` runs
+  `strategy_pyramiding_exit_omitted_loss_persistent_from_entries.pine` with its
+  dedicated bars CSV through the Python binding.
+- The test asserts the public schema version, two `XL` exit events using each
+  entry's own loss target, two closed trades, aggregate position snapshots, plot
+  values, strategy diagnostics, and absence of internal pending/reservation/stop
+  fields.
+
+Future slices:
+
 - duplicate same-id omitted-`from_entry` relative targets;
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
@@ -1456,7 +1483,8 @@ public JSON parity coverage for that fixture. Slice 41 adds WASM public JSON
 parity coverage for Slice 29's omitted profit persistent fixture, and Slice 42
 adds matching Python public JSON parity coverage for that fixture. Slice 43 adds
 WASM public JSON parity coverage for Slice 30's omitted loss persistent fixture.
-It must not be used to claim duplicate same-id omitted-`from_entry` relative
+Slice 44 adds matching Python public JSON parity coverage for that fixture. It
+must not be used to claim duplicate same-id omitted-`from_entry` relative
 targets, price-based same-tick entry exceptions, shorts, reversals,
 `strategy.order()`, `close_entries_rule`, or broader multi-entry
 `strategy.exit`/reporting support.
