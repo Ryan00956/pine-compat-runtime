@@ -621,11 +621,11 @@ executable line subset covers `line.new`, selected
 endpoint/color/width/style/extend mutators, `line.delete`, and fixture-backed
 cloning with `line.copy` over the latest existing line snapshot, with sparse
 snapshots and a 500-line runtime limit. The executable box subset covers
-`box.new`, selected geometry/background/border mutators, `box.delete`, and
-fixture-backed cloning with `box.copy` over the latest existing box snapshot,
-plus fixture-backed `box.get_left`, `box.get_right`, `box.get_top`, and
-`box.get_bottom` over the latest existing box snapshot, with sparse snapshots
-and a 500-box runtime limit.
+`box.new`, selected geometry/background/border/extend mutators, `box.delete`,
+and fixture-backed cloning with `box.copy` over the latest existing box
+snapshot, plus fixture-backed `box.get_left`, `box.get_right`, `box.get_top`,
+and `box.get_bottom` over the latest existing box snapshot, with sparse
+snapshots and a 500-box runtime limit.
 The executable table subset covers
 `table.new` plus `table.cell` text/background/text-color cell writes with
 deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
@@ -641,7 +641,8 @@ and shares the label runtime limit. `line.copy` clones the latest existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
 and shares the line runtime limit. `box.copy` clones the latest existing box
 snapshot into a new deterministic id, returns `na` for `na` or deleted boxes,
-and shares the box runtime limit. `box.get_left`, `box.get_right`,
+and shares the box runtime limit. `box.set_extend` records the selected
+horizontal extend constant in box snapshots. `box.get_left`, `box.get_right`,
 `box.get_top`, and `box.get_bottom` read the latest existing box snapshot and
 return `na` for `na` or deleted boxes; other box methods remain unsupported.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state

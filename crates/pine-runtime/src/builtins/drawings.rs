@@ -56,6 +56,7 @@ impl<'a> HistoricalRuntime<'a> {
             "box.set_border_color" => self.eval_box_set_border_color(args),
             "box.set_border_width" => self.eval_box_set_border_width(args),
             "box.set_border_style" => self.eval_box_set_border_style(args),
+            "box.set_extend" => self.eval_box_set_extend(args),
             "box.delete" => self.eval_box_delete(args),
             "box.copy" => self.eval_box_copy(args),
             "box.get_top" => self.eval_box_get_top(args),

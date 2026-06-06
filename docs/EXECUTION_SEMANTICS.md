@@ -637,9 +637,11 @@ and shares the label object limit. `line.copy` clones the latest existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
 and shares the line object limit. `box.copy` clones the latest existing box
 snapshot into a new deterministic id, returns `na` for `na` or deleted boxes,
-and shares the box object limit. `box.get_left`, `box.get_right`,
-`box.get_top`, and `box.get_bottom` read the corresponding value from the latest
-existing box snapshot and return `na` for `na` or deleted boxes.
+and shares the box object limit. `box.set_extend` records the selected
+horizontal extend constant in the host-neutral snapshot; visual extension
+remains a host responsibility. `box.get_left`, `box.get_right`, `box.get_top`,
+and `box.get_bottom` read the corresponding value from the latest existing box
+snapshot and return `na` for `na` or deleted boxes.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from

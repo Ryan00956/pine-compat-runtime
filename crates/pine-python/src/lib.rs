@@ -659,6 +659,7 @@ fn box_snapshots_to_py(
             item.set_item("borderColor", value_to_py(py, &snapshot.border_color)?)?;
             item.set_item("borderWidth", value_to_py(py, &snapshot.border_width)?)?;
             item.set_item("borderStyle", value_to_py(py, &snapshot.border_style)?)?;
+            item.set_item("extend", value_to_py(py, &snapshot.extend)?)?;
         }
         output.append(item)?;
     }

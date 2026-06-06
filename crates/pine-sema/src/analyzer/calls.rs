@@ -184,6 +184,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.set_border_color"
             | "box.set_border_width"
             | "box.set_border_style"
+            | "box.set_extend"
             | "box.delete"
             | "box.copy"
             | "table.new"
@@ -549,6 +550,9 @@ impl Analyzer {
                 self.validate_label_string_arg(signature, args, 1, "style", LINE_STYLES);
             }
             "line.set_extend" => {
+                self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
+            }
+            "box.set_extend" => {
                 self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
             }
             "box.set_border_style" => {

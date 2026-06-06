@@ -67,6 +67,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "box.set_border_style",
     "box.set_border_width",
     "box.set_bottom",
+    "box.set_extend",
     "box.set_left",
     "box.set_lefttop",
     "box.set_right",

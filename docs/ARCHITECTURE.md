@@ -411,8 +411,8 @@ normalized Pine values. The label lifecycle covers `label.new`, selected
 `x2`, `y2`, `color`, `width`, `style`, and `extend` for `line.new`, selected
 `line.set_*` mutators, `line.copy` cloning, and `line.delete`. Box snapshots
 cover `left`, `top`,
-`right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, and `borderStyle`
-for `box.new`, selected `box.set_*` mutators, `box.copy` cloning, and
+`right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, `borderStyle`, and
+`extend` for `box.new`, selected `box.set_*` mutators, `box.copy` cloning, and
 `box.delete`; `box.get_left`, `box.get_right`, `box.get_top`, and
 `box.get_bottom` read latest existing snapshot values.
 Table entries
