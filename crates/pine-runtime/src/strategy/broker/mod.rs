@@ -332,7 +332,9 @@ impl BrokerState {
             && !pending_exit.multiple_reservation
             && matches!(
                 pending_exit.trigger,
-                PendingExitTrigger::Stop(_) | PendingExitTrigger::Limit(_)
+                PendingExitTrigger::Stop(_)
+                    | PendingExitTrigger::Limit(_)
+                    | PendingExitTrigger::Bracket { .. }
             )
         {
             pending_exit.reserved_quantity = position_size;
