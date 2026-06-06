@@ -113,6 +113,32 @@ fn runs_strategy_script_from_csv_to_empty_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_exit_missing_entry_from_csv_to_strategy_diagnostic_json() {
+    let output = run_script_csv(
+        "strategy(\"exit\")\nif bar_index == 0\n    strategy.exit(\"XL\", \"L\", stop=low)\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+    )
+    .expect("strategy exit diagnostic script should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(parsed["strategy"]["orders"], serde_json::json!([]));
+    assert_eq!(parsed["strategy"]["trades"], serde_json::json!([]));
+    assert_eq!(parsed["strategy"]["position"], serde_json::json!([]));
+    assert_eq!(
+        parsed["strategy"]["diagnostics"],
+        serde_json::json!([
+            {
+                "code": "E_STRATEGY_EXIT_ENTRY",
+                "message": "`strategy.exit` from_entry must match the current long entry"
+            }
+        ])
+    );
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("reserved"));
+}
+
+#[test]
 fn runs_strategy_entry_from_csv_to_strategy_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(close)\n",

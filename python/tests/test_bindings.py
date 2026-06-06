@@ -5425,6 +5425,25 @@ def test_run_script_returns_strategy_runtime_diagnostics():
     ]
 
 
+def test_run_script_returns_strategy_exit_missing_entry_diagnostics():
+    result = pine_compat.run_script(
+        'strategy("exit")\nif bar_index == 0\n    strategy.exit("XL", "L", stop=low)\n',
+        BARS,
+    )
+
+    assert result["diagnostics"] == []
+    assert result["strategy"]["orders"] == []
+    assert result["strategy"]["trades"] == []
+    assert result["strategy"]["position"] == []
+    assert result["strategy"]["equity"] == FLAT_EQUITY
+    assert result["strategy"]["diagnostics"] == [
+        {
+            "code": "E_STRATEGY_EXIT_ENTRY",
+            "message": "`strategy.exit` from_entry must match the current long entry",
+        }
+    ]
+
+
 def test_analyze_script_accepts_library_sources_without_import_use():
     report = pine_compat.analyze_script(
         'indicator("root")\nplot(close)\n',
