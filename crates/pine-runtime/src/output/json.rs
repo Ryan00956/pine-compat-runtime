@@ -541,6 +541,8 @@ fn boxes_json(boxes: &[BoxOutput]) -> String {
                 output.push_str(&value_json(&snapshot.border_style));
                 output.push_str(",\"extend\":");
                 output.push_str(&value_json(&snapshot.extend));
+                output.push_str(",\"text\":");
+                output.push_str(&value_json(&snapshot.text));
             }
             output.push('}');
         }

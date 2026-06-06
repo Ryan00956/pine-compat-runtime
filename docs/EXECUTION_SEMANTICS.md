@@ -639,8 +639,10 @@ and shares the line object limit. `box.copy` clones the latest existing box
 snapshot into a new deterministic id, returns `na` for `na` or deleted boxes,
 and shares the box object limit. `box.set_extend` records the selected
 horizontal extend constant in the host-neutral snapshot; visual extension
-remains a host responsibility. `box.get_left`, `box.get_right`, `box.get_top`,
-and `box.get_bottom` read the corresponding value from the latest existing box
+remains a host responsibility. `box.set_text` records the box text string in the
+host-neutral snapshot; text rendering, styling, and layout remain host
+responsibilities. `box.get_left`, `box.get_right`, `box.get_top`, and
+`box.get_bottom` read the corresponding value from the latest existing box
 snapshot and return `na` for `na` or deleted boxes.
 
 Drawing side effects are allowed in top-level control flow, including supported

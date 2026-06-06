@@ -621,7 +621,7 @@ executable line subset covers `line.new`, selected
 endpoint/color/width/style/extend mutators, `line.delete`, and fixture-backed
 cloning with `line.copy` over the latest existing line snapshot, with sparse
 snapshots and a 500-line runtime limit. The executable box subset covers
-`box.new`, selected geometry/background/border/extend mutators, `box.delete`,
+`box.new`, selected geometry/background/border/extend/text mutators, `box.delete`,
 and fixture-backed cloning with `box.copy` over the latest existing box
 snapshot, plus fixture-backed `box.get_left`, `box.get_right`, `box.get_top`,
 and `box.get_bottom` over the latest existing box snapshot, with sparse
@@ -642,9 +642,11 @@ snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
 and shares the line runtime limit. `box.copy` clones the latest existing box
 snapshot into a new deterministic id, returns `na` for `na` or deleted boxes,
 and shares the box runtime limit. `box.set_extend` records the selected
-horizontal extend constant in box snapshots. `box.get_left`, `box.get_right`,
-`box.get_top`, and `box.get_bottom` read the latest existing box snapshot and
-return `na` for `na` or deleted boxes; other box methods remain unsupported.
+horizontal extend constant in box snapshots. `box.set_text` records text in box
+snapshots; text style and layout methods remain unsupported. `box.get_left`,
+`box.get_right`, `box.get_top`, and `box.get_bottom` read the latest existing
+box snapshot and return `na` for `na` or deleted boxes; other box methods remain
+unsupported.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state
 changes, and drawing side effects inside user-defined functions are rejected
 under the existing side-effect policy. Keep unsupported coordinate modes and advanced object

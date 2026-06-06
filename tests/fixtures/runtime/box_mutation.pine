@@ -12,4 +12,5 @@ for i = 0 to 0
         box.set_border_width(box_id, 2)
         box.set_border_style(box_id, line.style_dashed)
         box.set_extend(box_id, extend.right)
+        box.set_text(box_id, "box text")
 plot(close)

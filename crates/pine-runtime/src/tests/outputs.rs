@@ -317,6 +317,8 @@ plot(close)
             snapshot.border_style,
             PineValue::String("line.style_solid".to_owned())
         );
+        assert_eq!(snapshot.extend, PineValue::String("extend.none".to_owned()));
+        assert_eq!(snapshot.text, PineValue::String(String::new()));
     }
 }
 
@@ -337,6 +339,7 @@ box.set_border_color(id, color.white)
 box.set_border_width(id, 2)
 box.set_border_style(id, line.style_dashed)
 box.set_extend(id, extend.right)
+box.set_text(id, "box text")
 plot(close)
 "#,
     );
@@ -351,7 +354,7 @@ plot(close)
 
     assert_eq!(result.boxes.len(), 1);
     let box_output = &result.boxes[0];
-    assert_eq!(box_output.snapshots.len(), 12);
+    assert_eq!(box_output.snapshots.len(), 13);
     assert_eq!(box_output.snapshots[1].left, PineValue::Int(1));
     assert_eq!(box_output.snapshots[2].top, PineValue::Float(2.0));
     assert_eq!(box_output.snapshots[3].left, PineValue::Int(0));
@@ -373,6 +376,10 @@ plot(close)
     assert_eq!(
         box_output.snapshots[11].extend,
         PineValue::String("extend.right".to_owned())
+    );
+    assert_eq!(
+        box_output.snapshots[12].text,
+        PineValue::String("box text".to_owned())
     );
 }
 

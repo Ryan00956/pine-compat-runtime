@@ -5721,6 +5721,7 @@ def test_run_script_returns_box_outputs():
                     "borderWidth": 1,
                     "borderStyle": "line.style_solid",
                     "extend": "extend.none",
+                    "text": "",
                 },
                 {
                     "barIndex": 1,
@@ -5734,6 +5735,7 @@ def test_run_script_returns_box_outputs():
                     "borderWidth": 1,
                     "borderStyle": "line.style_solid",
                     "extend": "extend.none",
+                    "text": "",
                 },
             ],
         }

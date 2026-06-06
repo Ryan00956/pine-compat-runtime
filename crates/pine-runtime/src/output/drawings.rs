@@ -61,6 +61,7 @@ pub struct BoxSnapshot {
     pub border_width: PineValue,
     pub border_style: PineValue,
     pub extend: PineValue,
+    pub text: PineValue,
 }
 
 #[derive(Debug, Clone, PartialEq)]
