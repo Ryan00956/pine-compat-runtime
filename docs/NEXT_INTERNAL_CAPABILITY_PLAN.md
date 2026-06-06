@@ -1,6 +1,7 @@
 # Next Internal Capability Plan
 
-Status: planning document.
+Status: planning document, refreshed after Strategy Internal Stage 13 on
+2026-06-06.
 
 This document groups the next interpreter-internal work into seven large task
 directions. It does not claim new compatibility. A task becomes supported only
@@ -23,33 +24,42 @@ conformance metadata, snapshots, docs, and release verification are complete.
 Goal: make the existing basic long-only strategy subset more useful without
 turning it into a full broker simulator.
 
+Current Stage 13 baseline: the runtime now has a fixture-backed long-only
+multi-entry ledger subset for configured `pyramiding`, same-tick long
+price-based entry exceptions, selected `strategy.close`/`strategy.close_all`
+allocation, and a broad supported `strategy.exit` subset across explicit
+`from_entry`, omitted-`from_entry`, current same-entry-id, and same-entry-id
+future-entry persistence cases. Public strategy JSON still intentionally hides
+pending orders, reservation ledgers, exit reasons, OCA state, trailing state,
+and trade-key internals.
+
 Good next slices:
 
-- Stage 8 follow-up behavior slice: choose one fixture-backed widening from
-  `docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_PLAN.md` only after the
-  internal ledger/order-book skeleton remains stable under release
-  verification.
 - Clearer no-position and wrong-entry diagnostics for supported exit shapes.
 - More fixture-backed strategy state variables or count helpers.
 - Narrow order/trade accounting improvements that keep the current public output
   shape.
+- Narrow strategy order metadata work, such as internal `comment` or
+  `alert_message` storage, only after a script-visible versus public-output
+  contract is explicit.
 
 Keep out of scope until separately designed:
 
-- Short exposure, reversals, pyramiding, and multiple simultaneous entries.
-- `strategy.order`, custom OCA behavior, unsupported margin/account behavior,
-  and rich order types.
+- Short exposure, reversals, and `strategy.order`.
+- Pyramiding behavior beyond the current fixture-backed long-only multi-entry
+  ledger subset, including short/reversal netting and richer close-entry rules.
+- Custom OCA behavior, unsupported margin/account behavior, and rich order
+  types.
 - Arbitrary future binding for unmatched `from_entry` ids.
 - Public pending-order, reservation, remaining-quantity, or exit-reason records.
 - Realtime strategy handoff and intrabar path reconstruction.
 
-Recommended first slice: select one Stage 8 follow-up from the concrete
-fixture gates in `docs/STRATEGY_INTERNAL_STAGE8_BROKER_EXPANSION_PLAN.md`,
-preferably the smallest behavior-preserving allocation skeleton or a narrowly
-fixture-backed active-entry exit extension. Do not add pyramiding, short
-exposure, generic `strategy.order()`, custom OCA, public pending-order fields,
-or any conformance widening without runtime behavior and host-parity evidence
-in the same slice.
+Recommended first slice: do not reopen broad broker foundations immediately
+after Stage 13. Prefer either a narrow diagnostics/accounting slice that keeps
+the public schema unchanged, or move to a small built-in coverage slice from a
+real fixture gap. Do not add short exposure, reversals, generic
+`strategy.order()`, custom OCA, public pending-order fields, or any conformance
+widening without runtime behavior and host-parity evidence in the same slice.
 
 ## Direction 2: Built-In Coverage
 
@@ -189,7 +199,8 @@ be deterministic from bar-by-bar execution and tested without external services.
 
 ## Recommended Order
 
-1. Strategy maintenance: Stage 8 broker-expansion design gate.
+1. Strategy maintenance: narrow post-Stage-13 diagnostics/accounting or metadata
+   slice, only if it has a clear contract.
 2. Built-in coverage selected from real fixture gaps.
 3. Arrays and collections for already-supported scalar element types.
 4. User-defined type and method maintenance.

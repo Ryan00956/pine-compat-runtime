@@ -1,6 +1,7 @@
 # Strategy Internal Gap Audit
 
-Status: planning audit.
+Status: planning audit, refreshed after Strategy Internal Stage 13 on
+2026-06-06.
 
 This audit compares the current fixture-backed strategy subset with the
 internal strategy behavior exposed by TradingView Pine Script strategy
@@ -34,8 +35,9 @@ TradingView Pine documentation reviewed on 2026-06-02:
 
 ## Current Internal Baseline
 
-The current runtime can execute a narrow historical, long-only, one-net-position
-strategy model.
+The current runtime can execute a historical, long-only strategy model with a
+fixture-backed multi-entry ledger subset. It is still intentionally not a full
+Pine broker emulator.
 
 Implemented and fixture-backed:
 
@@ -43,11 +45,14 @@ Implemented and fixture-backed:
   `initial_capital`, fixed default quantity, cash-per-contract,
   cash-per-order, and percent commission, fixed-tick slippage, and fixed-tick limit
   verification.
-- `strategy.entry(id, strategy.long, qty=...)` and default fixed quantity when
-  configured.
-- `strategy.close(id)` as a full close of the matching long position, plus
+- `strategy.entry(id, strategy.long, qty=...)` and supported configured default
+  quantities, including the Stage 13 fixture-backed long-only `pyramiding`
+  subset and same-tick long price-based entry exceptions.
+- `strategy.close(id)` as a full close of matching long entries, plus
   fixed-`qty` and `qty_percent` partial closes where `qty` wins when both
   quantity forms are supplied.
+- `strategy.close_all()` flattening all open long ledger entries in the current
+  supported long-only multi-entry subset.
 - Public strategy output with `orders`, `trades`, `position`, `equity`, and
   `diagnostics`.
 - Read-only state/count variables:
@@ -77,11 +82,14 @@ Implemented and fixture-backed:
   - explicit fixed-`qty` or `qty_percent` multiple reservations across
     single-trigger, bracket, and trailing exits;
   - omitted-quantity replacement and explicit-reservation clearing boundaries.
+  - fixture-backed multi-entry long exits by explicit `from_entry`, omitted
+    `from_entry`, current same-entry-id fan-out, and same-entry-id future-entry
+    persistence for the supported trigger families.
 
 Current public output remains intentionally smaller than Pine's full strategy
 tester model. It does not expose pending orders, reservation ledgers, exit
-reasons, bracket legs, trailing state, commission, runup/drawdown, or individual
-trade namespace records.
+reasons, bracket legs, trailing state, OCA state, alert metadata, or internal
+trade keys.
 
 ## Gap Scale
 
@@ -132,7 +140,7 @@ single long-only broker, not a full broker-settings model.
 
 Missing internal behavior:
 
-- `pyramiding`
+- `pyramiding` behavior beyond the current fixture-backed long-only subset
 - `calc_on_order_fills`
 - `calc_on_every_tick`
 - `process_orders_on_close`
@@ -150,11 +158,11 @@ Missing internal behavior:
 
 Gap size: large.
 
-Best first slice: Stage 12 is a declaration-property design gate. Do not accept
-another property until the boundary fixture, supported conformance wording, and
-runtime implications are reviewed together. `pyramiding=0/1` as a no-op alias is
-low value; real pyramiding, order-on-close, calc-on-fill, short margin, and
-close-order settings require larger broker-model designs.
+Best first slice: Stage 12 and Stage 13 closed the current declaration/property
+and long-only pyramiding subset. Do not accept another property until the
+boundary fixture, supported conformance wording, and runtime implications are
+reviewed together. Order-on-close, calc-on-fill, short margin, and close-order
+settings require larger broker-model designs.
 
 ### 2. Broker Execution Timing And Fill Model
 
@@ -181,56 +189,61 @@ Missing internal behavior:
 
 Gap size: foundation.
 
-Best first slice: already closed for the current absolute active-entry subset.
-Do not widen further without a separate design for entry-relative deferred price
-resolution, realtime behavior, or multi-entry ledgers.
+Best first slice: already closed for the current absolute active-entry subset
+and the Stage 13 long-only multi-entry ledger subset. Do not widen further
+without a separate design for entry-relative deferred price resolution,
+realtime behavior, short exposure, or reversal.
 
 ### 3. Entry Orders
 
 Current state: `strategy.entry` supports long market, limit, stop, and
 stop-limit entries, with explicit positive quantity, configured fixed default
-quantity, supported cash default quantity, or supported percent-of-equity default quantity. Repeated entries
-while long are ignored under the current no-pyramiding rule.
+quantity, supported cash default quantity, or supported percent-of-equity
+default quantity. Stage 13 adds a fixture-backed long-only `pyramiding` subset
+with multiple open long ledger entries and selected same-tick price-based entry
+exceptions.
 
 Missing internal behavior:
 
 - short entries;
 - automatic reversal when an opposite entry is placed;
-- pyramiding with multiple open trades in the same direction;
+- pyramiding behavior beyond the current fixture-backed long-only multi-entry
+  subset;
 - entry comments and alert-message metadata;
 - richer default quantity modes;
 - interaction with `strategy.risk.allow_entry_in`.
 
 Gap size: large.
 
-Best first slice: not short/reversal first. The active pending-entry model and
-supported stop/limit entry forms are already in place, so future entry-order
-work should target one narrow metadata/default-sizing/risk interaction or move
-to a separately designed multi-entry model.
+Best first slice: not short/reversal first. The active pending-entry model,
+supported stop/limit entry forms, and Stage 13 long-only multi-entry ledger are
+already in place, so future entry-order work should target one narrow
+metadata/default-sizing/risk interaction or wait for a short/reversal design.
 
 ### 4. Market Close Commands
 
-Current state: `strategy.close(id)` closes the full matching long position at
-the current bar close and cancels matching pending exits. `strategy.close(id,
+Current state: `strategy.close(id)` closes matching long ledger entries at the
+current bar close and cancels matching pending exits. `strategy.close(id,
 qty=...)` and `strategy.close(id, qty_percent=...)` can partially close the
 matching current long position while keeping matching pending exits alive; `qty`
-wins when both quantity forms are supplied. `strategy.close_all()` closes the
-current long position without requiring an entry id.
+wins when both quantity forms are supplied. `strategy.close_all()` closes all
+open long ledger entries without requiring an entry id.
 
 Missing internal behavior:
 
 - `immediately`;
 - `comment`, `alert_message`, and alert suppression options;
 - partial `strategy.close_all()`;
-- close behavior across multiple entries and pyramiding;
+- close behavior beyond the current fixture-backed long-only multi-entry
+  allocation subset;
 - close-entry ordering such as FIFO versus entry-specific close rules.
 
 Gap size: medium to large.
 
-Best first slice: full `strategy.close_all()` and partial `strategy.close()` are
-already closed for the current one-net-long model. Do not continue market-close
-work until close metadata, `immediately`, partial `strategy.close_all()`, and
-multi-entry close ordering have a separate design.
+Best first slice: full `strategy.close_all()`, partial `strategy.close()`, and
+the current Stage 13 long-only allocation subset are already closed. Do not
+continue market-close work until close metadata, `immediately`, partial
+`strategy.close_all()`, and richer close-entry ordering have a separate design.
 
 ### 5. Generic Orders And Cancellation
 
@@ -257,15 +270,18 @@ book, and `strategy.order` needs short/reversal/netting semantics.
 Current state: this is the most developed part of the strategy runtime. The
 current subset supports stop/limit/profit/loss, the first bracket subset,
 trailing stops, partial quantities, percent quantities, explicit multiple
-reservations, and omitted-quantity replacement behavior.
+reservations, omitted-quantity replacement behavior, explicit `from_entry`
+matching across supported long ledger entries, omitted-`from_entry` all-entry
+behavior, current same-entry-id fan-out, and selected same-entry-id future-entry
+persistence.
 
 Missing internal behavior:
 
-- optional `from_entry` that exits all matching open entries when omitted;
 - exact semantics for overlapping price and tick alternatives in one exit call;
 - entry-relative exit attachment to active entry orders before those entries
-  fill;
-- exits across multiple open trades and pyramiding;
+  fill beyond the already-supported fixture-backed subset;
+- exits across multiple open trades beyond the current Stage 13 long-only
+  supported trigger families;
 - custom OCA names and OCA behavior;
 - exit comments and alert-message metadata;
 - no-op behavior for invalid `from_entry` ids where Pine does not create exit
@@ -273,12 +289,13 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best first slice: active-entry absolute attachment is now closed for the current
-supported subset. The `qty + qty_percent` precedence gap is also closed for the
-supported `strategy.exit` trigger shapes: `qty` determines the reserved or
-filled quantity. Remaining exit work should avoid syntax-tail expansion and
-instead wait for a broader broker-model design when it depends on multi-entry
-ledgers, short exposure, or OCA allocation.
+Best first slice: active-entry attachment and the Stage 13 multi-entry long
+subset are now closed for the current supported trigger families. The
+`qty + qty_percent` precedence gap is also closed for the supported
+`strategy.exit` trigger shapes: `qty` determines the reserved or filled
+quantity. Remaining exit work should avoid syntax-tail expansion and instead
+wait for a broader broker-model design when it depends on short exposure,
+reversal, OCA allocation, public pending-order fields, or alert metadata.
 
 ### 7. OCA Groups And Reservation Semantics
 
@@ -300,23 +317,23 @@ reservation model is a useful base, but it is exit-specific.
 
 ### 8. Multiple Entries, Pyramiding, Shorts, And Reversals
 
-Current state: there is one net long position, no short exposure, no reversal,
-and no pyramiding.
+Current state: Stage 13 adds a fixture-backed long-only multi-entry ledger for
+the supported `pyramiding` subset. There is still no short exposure and no
+reversal.
 
 Missing internal behavior:
 
-- multiple open trades with separate entry ids;
-- same-direction pyramiding;
+- multi-entry behavior beyond the current fixture-backed long-only subset;
 - short positions;
 - automatic reversal from long to short or short to long;
-- entry-id-specific exits across multiple trades;
 - FIFO and configured close ordering;
 - net position versus individual trade accounting.
 
 Gap size: foundation and large.
 
-Best first slice: defer until pending-entry timing and trade-ledger design are
-settled. This is the largest broker-model gap.
+Best first slice: defer short/reversal work. The long-only multi-entry ledger is
+settled for the current fixture-backed subset, but short exposure and reversal
+still require a broader netting and close-order design.
 
 ### 9. Position Sizing And Account Model
 
@@ -507,22 +524,17 @@ orders but keep external delivery out of scope.
 
 ## Recommended Internal Roadmap
 
-1. Pending-entry timing foundation:
-   - add active entry orders;
-   - preserve current public output unless an entry actually fills;
-   - fixture default next-bar or next-tick timing policy;
-   - fixture same-calculation entry/exit attachment.
-2. `strategy.close_all()` for the current one-net-long model.
-3. Win/loss/even trade count variables for the current closed-trade list.
-4. Pine-compatible `qty + qty_percent` handling for `strategy.exit`, where `qty`
-   wins, if semantic and runtime fixtures confirm the intended behavior.
-5. Entry limit/stop/stop-limit orders after pending-entry timing is stable.
-6. `strategy.cancel()` and `strategy.cancel_all()` after a general pending-order
-   book exists.
-7. Individual trade namespace functions for a small closed-trade subset.
-8. Additional commission/fill-model/account-model slices.
-9. Pyramiding, shorts, reversals, and multi-entry trade ledgers.
-10. Generic `strategy.order()` and full OCA behavior.
+1. Keep the Stage 13 long-only multi-entry ledger subset stable with fixture and
+   host-parity coverage.
+2. Prefer narrow diagnostics, accounting, metadata, or built-in coverage slices
+   that preserve the current public runtime schema.
+3. Use `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` before widening
+   margin/account behavior.
+4. Design strategy order-fill alert metadata separately before accepting
+   `alert_message`, `comment`, or `disable_alert` on strategy order commands.
+5. Defer short exposure, reversals, generic `strategy.order()`, custom OCA
+   behavior, public pending-order records, and richer close-entry ordering until
+   a new broker-model design explicitly covers their state transitions.
 
 ## Completion Gates For Any Slice
 
