@@ -271,6 +271,41 @@ fn trade_ledger_assigns_stable_open_trade_keys() {
 }
 
 #[test]
+fn trade_ledger_allocates_specific_open_trade_key() {
+    let mut ledger = TradeLedger::default();
+    ledger.append_long(ledger_open_trade("A", 1.0, 100.0, 2.0));
+    ledger.append_long(ledger_open_trade("A", 2.0, 110.0, 4.0));
+
+    let allocations = ledger.allocate_exit_for_key(1, 1.5);
+    assert_eq!(
+        allocations,
+        vec![TradeAllocation {
+            trade_index: 1,
+            trade_key: 1,
+            entry_id: "A".to_owned(),
+            entry_price: 110.0,
+            entry_bar_index: 110,
+            entry_time: 1100,
+            quantity: 1.5,
+            entry_commission: 3.0,
+        }]
+    );
+
+    ledger.apply_allocations(&allocations);
+
+    assert_eq!(ledger.open_quantity_for_key(0), 1.0);
+    assert_eq!(ledger.open_quantity_for_key(1), 0.5);
+    assert_eq!(ledger.open_quantity_for_entry("A"), 1.5);
+    assert_eq!(
+        ledger.net_position(),
+        NetPosition {
+            signed_size: 1.5,
+            avg_price: 103.33333333333333,
+        }
+    );
+}
+
+#[test]
 fn default_pyramiding_limit_allows_only_one_long_entry() {
     let mut broker = BrokerState::new(100_000.0);
 

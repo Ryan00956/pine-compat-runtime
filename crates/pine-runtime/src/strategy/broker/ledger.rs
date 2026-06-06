@@ -130,6 +130,43 @@ impl TradeLedger {
     }
 
     #[allow(dead_code)]
+    pub(super) fn allocate_exit_for_key(
+        &self,
+        trade_key: u64,
+        requested_quantity: f64,
+    ) -> Vec<TradeAllocation> {
+        if !requested_quantity.is_finite() || requested_quantity <= 0.0 {
+            return Vec::new();
+        }
+
+        let Some((trade_index, trade)) = self
+            .open_trades
+            .iter()
+            .enumerate()
+            .find(|(_, trade)| trade.key == trade_key)
+        else {
+            return Vec::new();
+        };
+
+        let quantity = requested_quantity.min(trade.quantity);
+        if quantity <= 0.0 {
+            return Vec::new();
+        }
+
+        let entry_commission = trade.entry_commission * (quantity / trade.quantity);
+        vec![TradeAllocation {
+            trade_index,
+            trade_key: trade.key,
+            entry_id: trade.id.clone(),
+            entry_price: trade.entry_price,
+            entry_bar_index: trade.entry_bar_index,
+            entry_time: trade.entry_time,
+            quantity,
+            entry_commission,
+        }]
+    }
+
+    #[allow(dead_code)]
     pub(super) fn apply_allocations(&mut self, allocations: &[TradeAllocation]) {
         for allocation in allocations.iter().rev() {
             let Some(open_trade) = self.open_trades.get_mut(allocation.trade_index) else {

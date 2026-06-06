@@ -1767,6 +1767,38 @@ Closed evidence:
 
 Future slices:
 
+- connect pending exits to per-open-trade keys;
+- resolve omitted-`from_entry` relative targets against per-open-trade keys;
+- duplicate same-id omitted-`from_entry` relative targets;
+- price-based same-tick pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
+### Slice 56: Internal Key-Scoped Exit Allocation
+
+Status: closed on 2026-06-06. This slice adds ledger allocation by internal
+open-trade key so future pending exits can close a specific open trade even when
+multiple trades share the same user-visible entry id. It does not change runtime
+behavior, public JSON, conformance claims, or the current duplicate same-id
+unsupported boundary.
+
+Goal:
+
+- make the ledger capable of allocating an exit fill against exactly one
+  broker-owned open-trade key instead of only FIFO matching by optional entry id.
+
+Closed evidence:
+
+- `TradeLedger::allocate_exit_for_key` returns at most one allocation for the
+  requested key, clamps to that open trade's remaining quantity, and carries the
+  same entry metadata used by existing FIFO allocations.
+- `trade_ledger_allocates_specific_open_trade_key` proves that two same-id open
+  trades can be addressed separately, that applying the key-scoped allocation
+  reduces only the selected trade, and that aggregate position accounting stays
+  consistent.
+
+Future slices:
+
+- connect pending exits to per-open-trade keys;
 - resolve omitted-`from_entry` relative targets against per-open-trade keys;
 - duplicate same-id omitted-`from_entry` relative targets;
 - price-based same-tick pyramiding-limit exceptions;
@@ -1833,7 +1865,8 @@ Slice 52 adds matching Python public JSON parity coverage for that fixture.
 Slice 53 adds WASM public JSON parity coverage for Slice 19's omitted current
 all-entry absolute exit fixture, and Slice 54 adds matching Python public JSON
 parity coverage for that fixture. Slice 55 adds only internal open-trade keys
-for future per-open-trade exit identity work. It must not be used to claim
-duplicate same-id omitted-`from_entry` relative targets, price-based same-tick
-entry exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`,
-or broader multi-entry `strategy.exit`/reporting support.
+for future per-open-trade exit identity work. Slice 56 adds only internal
+key-scoped ledger exit allocation. It must not be used to claim duplicate
+same-id omitted-`from_entry` relative targets, price-based same-tick entry
+exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`, or
+broader multi-entry `strategy.exit`/reporting support.
