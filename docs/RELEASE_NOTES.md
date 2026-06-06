@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 21 omitted-`from_entry`
+  `strategy.exit` profit-tick all-entry support for current unique entry ids. A
+  full omitted-`from_entry` profit exit now creates entry-specific limit exits
+  for currently open pyramided long entries with distinct ids.
 - Closed Strategy Internal Stage 13 Slice 20 omitted-`from_entry`
   `strategy.exit` persistent future-entry support for the current absolute
   stop/limit subset. A full omitted-`from_entry` stop/limit exit now expands to

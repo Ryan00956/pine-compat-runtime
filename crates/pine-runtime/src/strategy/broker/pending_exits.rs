@@ -393,6 +393,10 @@ impl PendingExitBook {
         self.exits.push(pending_exit);
     }
 
+    pub(super) fn replace_all_many(&mut self, pending_exits: Vec<PendingExit>) {
+        self.exits = pending_exits;
+    }
+
     pub(super) fn replace_or_append(&mut self, pending_exit: PendingExit) {
         if let Some(existing) = self.exits.iter_mut().find(|existing| {
             existing.id == pending_exit.id && existing.from_entry == pending_exit.from_entry

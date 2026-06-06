@@ -268,3 +268,13 @@ The existing pending-exit fill path then allocates through
 ledger entries close when the persisted absolute exit triggers. Omitted-
 `from_entry` relative, bracket, and trailing all-entry exits remain future
 slices.
+
+## Slice 21 Follow-Up
+
+Stage 13 Slice 21 adds the first omitted-`from_entry` relative all-entry exit
+path for current open entries. The broker now expands a full omitted
+`profit=ticks` call into one pending limit exit per currently open unique entry
+id, with each limit price converted from that entry's own entry price. The
+pending exit fill path remains the existing from-entry allocation path. Duplicate
+same-id per-trade relative targets, relative future-entry persistence, `loss`,
+bracket, and trailing all-entry forms remain future slices.
