@@ -2106,7 +2106,36 @@ Closed evidence:
 
 Future slices:
 
-- matching Python public JSON parity coverage for the same fixtures;
+- broader host parity coverage for future public JSON contracts.
+
+### Slice 83: `strategy.exit(from_entry)` Python Host Parity
+
+Status: closed on 2026-06-06. This slice adds Python binding public JSON
+coverage for the multi-entry exit fixtures from Slices 14-16: absolute
+`strategy.exit(from_entry)` matching, relative profit tick price basis, and
+same-id allocation fan-out. It does not change runtime behavior, widen the WASM
+claim, or claim brackets, trailing exits, omitted-`from_entry` behavior, shorts,
+reversals, `close_entries_rule`, or broader strategy reporting semantics.
+
+Goal:
+
+- prove that the Python `run_script` host path exposes the same public orders,
+  trades, position snapshots, plots, and empty diagnostics for the fixture-backed
+  absolute, relative profit, and same-id multi-entry exit contracts already
+  covered by CLI/runtime snapshots and WASM.
+
+Closed evidence:
+
+- `test_run_script_returns_strategy_pyramiding_exit_from_entry_contract` covers
+  `strategy_pyramiding_exit_from_entry.pine` through the Python binding.
+- `test_run_script_returns_strategy_pyramiding_exit_profit_from_entry_contract`
+  covers `strategy_pyramiding_exit_profit_from_entry.pine` through the Python
+  binding.
+- `test_run_script_returns_strategy_pyramiding_exit_same_id_contract` covers
+  `strategy_pyramiding_exit_same_id.pine` through the Python binding.
+
+Future slices:
+
 - broader host parity coverage for future public JSON contracts.
 
 ### Slice 74: Same-Id Omitted Trail-Points Future Runtime
@@ -2750,5 +2779,6 @@ the base multi-entry ledger fixtures. Slice 81 adds matching Python public JSON
 parity coverage for those fixtures. Slice 82 adds WASM public JSON parity
 coverage for the absolute `strategy.exit(from_entry)`, relative profit
 `strategy.exit(from_entry)`, and same-id fan-out fixtures from Slices 14-16.
+Slice 83 adds matching Python public JSON parity coverage for those fixtures.
 These slices must not be used to claim shorts, reversals, `strategy.order()`,
 `close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.
