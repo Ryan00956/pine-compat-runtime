@@ -179,6 +179,7 @@ impl BrokerState {
         self.order_book.exits_mut().replace_or_append(PendingExit {
             id,
             from_entry,
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(limit_price),
             quantity: PendingExitQuantity::Full,
             reserved_quantity,
@@ -208,6 +209,7 @@ impl BrokerState {
         self.order_book.exits_mut().replace_or_append(PendingExit {
             id,
             from_entry,
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(stop_price),
             quantity: PendingExitQuantity::Full,
             reserved_quantity,
@@ -239,6 +241,7 @@ impl BrokerState {
         self.order_book.exits_mut().replace_or_append(PendingExit {
             id,
             from_entry,
+            target_trade_key: None,
             trigger: PendingExitTrigger::Trailing(PendingTrailingExit {
                 spec: PendingTrailingSpec {
                     activation: PendingTrailingActivation::Points {
@@ -302,6 +305,7 @@ impl BrokerState {
         self.order_book.exits_mut().replace_or_append(PendingExit {
             id,
             from_entry,
+            target_trade_key: None,
             trigger: PendingExitTrigger::Bracket { downside, upside },
             quantity: PendingExitQuantity::Full,
             reserved_quantity,

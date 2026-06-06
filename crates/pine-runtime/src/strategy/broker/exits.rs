@@ -227,6 +227,7 @@ impl BrokerState {
             pending_exits.push(PendingExit {
                 id: id.clone(),
                 from_entry: open_trade.id.clone(),
+                target_trade_key: None,
                 trigger: PendingExitTrigger::Limit(open_trade.entry_price + price_offset),
                 quantity: PendingExitQuantity::Full,
                 reserved_quantity: open_trade.quantity,
@@ -549,6 +550,7 @@ impl BrokerState {
             pending_exits.push(PendingExit {
                 id: id.clone(),
                 from_entry: open_trade.id.clone(),
+                target_trade_key: None,
                 trigger: PendingExitTrigger::Stop(open_trade.entry_price - price_offset),
                 quantity: PendingExitQuantity::Full,
                 reserved_quantity: open_trade.quantity,
@@ -850,6 +852,7 @@ impl BrokerState {
             pending_exits.push(PendingExit {
                 id: id.clone(),
                 from_entry: open_trade.id.clone(),
+                target_trade_key: None,
                 trigger: PendingExitTrigger::Trailing(PendingTrailingExit {
                     spec: PendingTrailingSpec {
                         activation: PendingTrailingActivation::Points {
@@ -1197,6 +1200,7 @@ impl BrokerState {
         let pending_exit = PendingExit {
             id,
             from_entry,
+            target_trade_key: None,
             trigger,
             quantity,
             reserved_quantity,

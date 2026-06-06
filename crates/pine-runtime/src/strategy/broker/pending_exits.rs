@@ -262,6 +262,7 @@ impl ExitQuantityRequest {
 pub(super) struct PendingExit {
     pub(super) id: String,
     pub(super) from_entry: String,
+    pub(super) target_trade_key: Option<u64>,
     pub(super) trigger: PendingExitTrigger,
     pub(super) quantity: PendingExitQuantity,
     pub(super) reserved_quantity: f64,
@@ -319,6 +320,20 @@ impl PendingExitBook {
         self.exits
             .iter()
             .find(|pending_exit| pending_exit.id == id && pending_exit.from_entry == from_entry)
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn find_by_identity_and_key(
+        &self,
+        id: &str,
+        from_entry: &str,
+        target_trade_key: Option<u64>,
+    ) -> Option<&PendingExit> {
+        self.exits.iter().find(|pending_exit| {
+            pending_exit.id == id
+                && pending_exit.from_entry == from_entry
+                && pending_exit.target_trade_key == target_trade_key
+        })
     }
 
     #[allow(dead_code)]
@@ -407,7 +422,9 @@ impl PendingExitBook {
 
     pub(super) fn replace_or_append(&mut self, pending_exit: PendingExit) {
         if let Some(existing) = self.exits.iter_mut().find(|existing| {
-            existing.id == pending_exit.id && existing.from_entry == pending_exit.from_entry
+            existing.id == pending_exit.id
+                && existing.from_entry == pending_exit.from_entry
+                && existing.target_trade_key == pending_exit.target_trade_key
         }) {
             *existing = pending_exit;
             return;

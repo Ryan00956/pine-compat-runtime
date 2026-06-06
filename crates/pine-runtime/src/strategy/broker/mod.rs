@@ -679,6 +679,18 @@ impl BrokerState {
     }
 
     #[allow(dead_code)]
+    fn pending_exit_by_identity_and_key(
+        &self,
+        id: &str,
+        from_entry: &str,
+        target_trade_key: Option<u64>,
+    ) -> Option<&PendingExit> {
+        self.order_book
+            .exits()
+            .find_by_identity_and_key(id, from_entry, target_trade_key)
+    }
+
+    #[allow(dead_code)]
     fn pending_exits_in_placement_order(&self) -> impl Iterator<Item = &PendingExit> {
         self.order_book.exits().iter()
     }

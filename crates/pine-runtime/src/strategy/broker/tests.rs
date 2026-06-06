@@ -306,6 +306,60 @@ fn trade_ledger_allocates_specific_open_trade_key() {
 }
 
 #[test]
+fn keyed_pending_exit_closes_only_target_same_id_trade() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    );
+    assert!(broker.entry_long("A".to_owned(), 0, 10, 100.0, 1.0));
+    assert!(broker.entry_long("A".to_owned(), 1, 20, 110.0, 2.0));
+    assert_eq!(
+        broker.trade_ledger.open_at(0).map(|trade| trade.key),
+        Some(0)
+    );
+    assert_eq!(
+        broker.trade_ledger.open_at(1).map(|trade| trade.key),
+        Some(1)
+    );
+
+    broker
+        .order_book
+        .exits_mut()
+        .replace_or_append(PendingExit {
+            id: "X".to_owned(),
+            from_entry: "A".to_owned(),
+            target_trade_key: Some(1),
+            trigger: PendingExitTrigger::Limit(111.0),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
+            multiple_reservation: false,
+            last_update_bar_index: 1,
+        });
+
+    broker.evaluate_pending_exits(2, 30, 111.0, 100.0);
+
+    assert_eq!(broker.orders.len(), 3);
+    assert_eq!(broker.orders[2].id, "X");
+    assert_eq!(broker.orders[2].qty, 2.0);
+    assert_eq!(broker.orders[2].price, 111.0);
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(broker.trades[0].id, "A");
+    assert_eq!(broker.trades[0].exit_id, "X");
+    assert_eq!(broker.trades[0].qty, 2.0);
+    assert_eq!(broker.trades[0].entry_price, 110.0);
+    assert_eq!(broker.position_size, 1.0);
+    assert_eq!(broker.avg_price, 100.0);
+    assert!(broker.trade_ledger.open_by_key(0).is_some());
+    assert!(broker.trade_ledger.open_by_key(1).is_none());
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn default_pyramiding_limit_allows_only_one_long_entry() {
     let mut broker = BrokerState::new(100_000.0);
 
@@ -1392,6 +1446,7 @@ fn pending_market_entry_allows_attached_stop_exit_without_public_fill() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -1633,6 +1688,7 @@ fn pending_market_entry_resolves_stop_profit_bracket_attachment_after_fill() {
         Some(PendingExit {
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Bracket {
                 downside: 95.0,
                 upside: 105.0,
@@ -1684,6 +1740,7 @@ fn pending_market_entry_resolves_loss_limit_bracket_attachment_after_fill() {
         Some(PendingExit {
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Bracket {
                 downside: 95.0,
                 upside: 108.0,
@@ -1735,6 +1792,7 @@ fn pending_market_entry_resolves_loss_profit_bracket_attachment_after_fill() {
         Some(PendingExit {
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Bracket {
                 downside: 95.0,
                 upside: 106.0,
@@ -1803,6 +1861,7 @@ fn pending_market_entry_resolves_profit_attachment_after_fill() {
         Some(PendingExit {
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(105.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -1840,6 +1899,7 @@ fn pending_market_entry_resolves_loss_attachment_after_fill() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -1877,6 +1937,7 @@ fn pending_market_entry_resolves_trail_points_attachment_after_fill() {
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: trailing_points_trigger(10.0, 105.0, 2.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -1930,6 +1991,7 @@ fn pending_limit_entry_resolves_profit_attachment_fixed_quantity_after_fill() {
         Some(PendingExit {
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(100.0),
             quantity: PendingExitQuantity::Fixed(0.75),
             reserved_quantity: 0.75,
@@ -1955,6 +2017,7 @@ fn pending_limit_entry_resolves_loss_attachment_fixed_quantity_after_fill() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Fixed(0.75),
             reserved_quantity: 0.75,
@@ -1990,6 +2053,7 @@ fn pending_limit_entry_resolves_trail_points_attachment_fixed_quantity_after_fil
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: trailing_points_trigger(10.0, 100.0, 2.0),
             quantity: PendingExitQuantity::Fixed(0.75),
             reserved_quantity: 0.75,
@@ -2015,6 +2079,7 @@ fn pending_stop_entry_resolves_profit_attachment_percent_quantity_after_fill() {
         Some(PendingExit {
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(105.0),
             quantity: PendingExitQuantity::Fixed(1.0),
             reserved_quantity: 1.0,
@@ -2040,6 +2105,7 @@ fn pending_stop_entry_resolves_loss_attachment_percent_quantity_after_fill() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Fixed(1.0),
             reserved_quantity: 1.0,
@@ -2075,6 +2141,7 @@ fn pending_stop_entry_resolves_trail_points_attachment_percent_quantity_after_fi
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: trailing_points_trigger(10.0, 105.0, 2.0),
             quantity: PendingExitQuantity::Fixed(1.0),
             reserved_quantity: 1.0,
@@ -2244,6 +2311,7 @@ fn place_exit_while_long_records_pending_stop() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -2270,6 +2338,7 @@ fn place_exit_replaces_existing_pending_stop() {
         Some(PendingExit {
             id: "XL2".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(90.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -2294,6 +2363,7 @@ fn omitted_quantity_single_trigger_with_new_identity_replaces_instead_of_appendi
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -2724,6 +2794,7 @@ fn omitted_quantity_exit_replaces_explicit_reservation_pool() {
         Some(PendingExit {
             id: "XFULL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(111.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -2957,6 +3028,7 @@ fn changed_repeated_quantity_replaces_pending_exit() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Fixed(0.5),
             reserved_quantity: 0.5,
@@ -3155,6 +3227,7 @@ fn repeated_entry_noop_leaves_pending_exit_untouched() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -3344,6 +3417,7 @@ fn profit_ticks_create_limit_from_average_entry_price() {
         Some(PendingExit {
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(105.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -3364,6 +3438,7 @@ fn loss_ticks_create_stop_from_average_entry_price() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(97.5),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -3385,6 +3460,7 @@ fn place_exit_bracket_records_pending_bracket() {
         Some(PendingExit {
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Bracket {
                 downside: 95.0,
                 upside: 110.0,
@@ -3415,6 +3491,7 @@ fn bracket_tick_helpers_resolve_prices_from_average_entry_price() {
         Some(PendingExit {
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Bracket {
                 downside: 97.5,
                 upside: 105.0,
@@ -3439,6 +3516,7 @@ fn place_exit_trail_price_records_pending_trailing_exit() {
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: trailing_price_trigger(105.0, 2.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -3460,6 +3538,7 @@ fn place_exit_trail_points_records_entry_relative_activation() {
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: trailing_points_trigger(10.0, 105.0, 2.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -3493,6 +3572,7 @@ fn invalid_trailing_activation_price_records_diagnostic_without_changing_pending
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -3516,6 +3596,7 @@ fn invalid_trailing_offset_ticks_record_diagnostic_without_changing_pending_exit
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -3553,6 +3634,7 @@ fn unchanged_repeated_trailing_preserves_active_state() {
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Trailing(PendingTrailingExit {
                 spec: PendingTrailingSpec {
                     activation: PendingTrailingActivation::Price(105.0),
@@ -3579,6 +3661,7 @@ fn changed_repeated_trailing_replaces_spec_and_delays_eligibility() {
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: trailing_price_trigger(106.0, 2.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -3603,6 +3686,7 @@ fn omitted_quantity_trailing_with_new_identity_replaces_and_resets_eligibility()
         Some(PendingExit {
             id: "XT2".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: trailing_price_trigger(106.0, 3.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -4263,6 +4347,7 @@ fn invalid_bracket_downside_price_records_diagnostic_without_changing_pending_ex
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -4286,6 +4371,7 @@ fn invalid_bracket_upside_price_records_diagnostic_without_changing_pending_exit
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -4310,6 +4396,7 @@ fn invalid_bracket_ticks_record_diagnostic_without_changing_pending_exit() {
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -4334,6 +4421,7 @@ fn invalid_bracket_mintick_records_diagnostic_without_changing_pending_exit() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -4368,6 +4456,7 @@ fn bracket_with_mismatched_entry_records_diagnostic_without_changing_pending_exi
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -4399,6 +4488,7 @@ fn changed_repeated_bracket_replaces_price_and_delays_eligibility() {
         Some(PendingExit {
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Bracket {
                 downside: 94.0,
                 upside: 110.0,
@@ -4426,6 +4516,7 @@ fn omitted_quantity_bracket_with_new_identity_replaces_instead_of_appending() {
         Some(PendingExit {
             id: "XB2".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Bracket {
                 downside: 94.0,
                 upside: 111.0,
@@ -4451,6 +4542,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
         Some(PendingExit {
             id: "XB".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Bracket {
                 downside: 95.0,
                 upside: 110.0,
@@ -4469,6 +4561,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(111.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -4687,6 +4780,7 @@ fn invalid_fixed_qty_bracket_replacement_preserves_existing_pending_bracket() {
         Some(PendingExit {
             id: "XB1".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Bracket {
                 downside: 95.0,
                 upside: 110.0,
@@ -5146,6 +5240,7 @@ fn invalid_percent_bracket_replacement_preserves_existing_pending_bracket() {
         Some(PendingExit {
             id: "XB1".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Bracket {
                 downside: 95.0,
                 upside: 110.0,
@@ -5172,6 +5267,7 @@ fn pending_trailing_is_not_eligible_on_creation_bar() {
         Some(PendingExit {
             id: "XT".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: trailing_price_trigger(105.0, 2.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -5258,6 +5354,7 @@ fn invalid_profit_ticks_record_diagnostic_without_changing_pending_exit() {
         Some(PendingExit {
             id: "XS".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -5281,6 +5378,7 @@ fn invalid_exit_mintick_records_diagnostic_without_changing_pending_exit() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -5346,6 +5444,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
         Some(PendingExit {
             id: "XP".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Limit(110.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,
@@ -5361,6 +5460,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
         Some(PendingExit {
             id: "XL".to_owned(),
             from_entry: "L".to_owned(),
+            target_trade_key: None,
             trigger: PendingExitTrigger::Stop(95.0),
             quantity: PendingExitQuantity::Full,
             reserved_quantity: 2.0,

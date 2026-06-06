@@ -444,12 +444,17 @@ impl BrokerState {
             });
             return;
         }
-        let from_entry_filter = if pending_exit.from_entry.is_empty() {
-            None
+        let allocations = if let Some(target_trade_key) = pending_exit.target_trade_key {
+            self.trade_ledger
+                .allocate_exit_for_key(target_trade_key, qty)
         } else {
-            Some(pending_exit.from_entry.as_str())
+            let from_entry_filter = if pending_exit.from_entry.is_empty() {
+                None
+            } else {
+                Some(pending_exit.from_entry.as_str())
+            };
+            self.trade_ledger.allocate_exit_fifo(from_entry_filter, qty)
         };
-        let allocations = self.trade_ledger.allocate_exit_fifo(from_entry_filter, qty);
         let exit_commission = self.exit_commission_for_fill(qty, exit_price);
         let exit_id = pending_exit.id;
         let closed_entry_commission = if allocations.is_empty() {
