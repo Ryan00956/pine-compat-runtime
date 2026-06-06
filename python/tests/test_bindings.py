@@ -3372,6 +3372,199 @@ def test_run_script_returns_omitted_stop_profit_bracket_same_id_fixture_contract
     assert "closedTrades" not in strategy_json
 
 
+def test_run_script_returns_omitted_loss_limit_bracket_same_id_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_limit_bracket_same_id.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_limit_bracket_same_id_bars.csv"
+        ),
+    )
+
+    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
+    assert result["schemaVersion"] == 3
+    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 8.0,
+        },
+        {
+            "id": "L",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.long",
+            "qty": 3.0,
+            "price": 6.0,
+        },
+        {
+            "id": "XB",
+            "barIndex": 3,
+            "time": 4,
+            "direction": "strategy.exit",
+            "qty": 1.0,
+            "price": 6.0,
+        },
+        {
+            "id": "XB",
+            "barIndex": 4,
+            "time": 5,
+            "direction": "strategy.exit",
+            "qty": 3.0,
+            "price": 9.0,
+        },
+    ]
+    assert [order["direction"] for order in result["strategy"]["orders"]].count(
+        "strategy.exit"
+    ) == 2
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 1,
+            "exitBarIndex": 3,
+            "entryTime": 2,
+            "exitTime": 4,
+            "entryPrice": 8.0,
+            "exitPrice": 6.0,
+            "qty": 1.0,
+            "profit": -2.0,
+        },
+        {
+            "id": "L",
+            "entryBarIndex": 2,
+            "exitBarIndex": 4,
+            "entryTime": 3,
+            "exitTime": 5,
+            "entryPrice": 6.0,
+            "exitPrice": 9.0,
+            "qty": 3.0,
+            "profit": 9.0,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 1.0, "avgPrice": 8.0},
+        {"barIndex": 2, "size": 4.0, "avgPrice": 6.5},
+        {"barIndex": 3, "size": 3.0, "avgPrice": 6.0},
+        {"barIndex": 4, "size": 0.0, "avgPrice": None},
+    ]
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0.0, 1.0, 2.0, 2.0, 1.0, 0.0],
+        [0.0, 1.0, 4.0, 4.0, 3.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 1.0, 2.0],
+    ]
+    assert result["diagnostics"] == []
+    assert result["strategy"]["diagnostics"] == []
+    strategy_json = json.dumps(result["strategy"])
+    assert "pending" not in strategy_json
+    assert "reservation" not in strategy_json
+    assert "targetTradeKey" not in strategy_json
+    assert "target_trade_key" not in strategy_json
+    assert "closedTrades" not in strategy_json
+
+
+def test_run_script_returns_omitted_stop_limit_bracket_same_id_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_limit_bracket_same_id.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_limit_bracket_same_id_bars.csv"
+        ),
+    )
+
+    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
+    assert result["schemaVersion"] == 3
+    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 8.0,
+        },
+        {
+            "id": "L",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.long",
+            "qty": 3.0,
+            "price": 6.0,
+        },
+        {
+            "id": "XB",
+            "barIndex": 3,
+            "time": 4,
+            "direction": "strategy.exit",
+            "qty": 1.0,
+            "price": 9.0,
+        },
+        {
+            "id": "XB",
+            "barIndex": 3,
+            "time": 4,
+            "direction": "strategy.exit",
+            "qty": 3.0,
+            "price": 9.0,
+        },
+    ]
+    assert [order["direction"] for order in result["strategy"]["orders"]].count(
+        "strategy.exit"
+    ) == 2
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 1,
+            "exitBarIndex": 3,
+            "entryTime": 2,
+            "exitTime": 4,
+            "entryPrice": 8.0,
+            "exitPrice": 9.0,
+            "qty": 1.0,
+            "profit": 1.0,
+        },
+        {
+            "id": "L",
+            "entryBarIndex": 2,
+            "exitBarIndex": 3,
+            "entryTime": 3,
+            "exitTime": 4,
+            "entryPrice": 6.0,
+            "exitPrice": 9.0,
+            "qty": 3.0,
+            "profit": 9.0,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 1.0, "avgPrice": 8.0},
+        {"barIndex": 2, "size": 4.0, "avgPrice": 6.5},
+        {"barIndex": 3, "size": 0.0, "avgPrice": None},
+    ]
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0.0, 1.0, 2.0, 2.0, 0.0],
+        [0.0, 1.0, 4.0, 4.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 2.0],
+    ]
+    assert result["diagnostics"] == []
+    assert result["strategy"]["diagnostics"] == []
+    strategy_json = json.dumps(result["strategy"])
+    assert "pending" not in strategy_json
+    assert "reservation" not in strategy_json
+    assert "targetTradeKey" not in strategy_json
+    assert "target_trade_key" not in strategy_json
+    assert "closedTrades" not in strategy_json
+
+
 def test_run_script_returns_omitted_profit_persistent_fixture_contract():
     source = (
         ROOT
