@@ -2138,6 +2138,36 @@ Future slices:
 
 - broader host parity coverage for future public JSON contracts.
 
+### Slice 84: Bracket and Trailing `strategy.exit(from_entry)` WASM Host Parity
+
+Status: closed on 2026-06-06. This slice adds WASM public JSON coverage for the
+multi-entry bracket and trailing `strategy.exit(from_entry)` fixtures from
+Slices 17-18. It does not change runtime behavior, widen the Python binding
+claim, or claim omitted-`from_entry` behavior, shorts, reversals,
+`close_entries_rule`, public trailing-state fields, or broader strategy
+reporting semantics.
+
+Goal:
+
+- prove that the WASM `run_script_csv` host path exposes the same public orders,
+  trades, position snapshots, plots, and empty diagnostics for the fixture-backed
+  bracket and trailing multi-entry exit contracts already covered by CLI/runtime
+  snapshots.
+
+Closed evidence:
+
+- `runs_strategy_pyramiding_exit_bracket_from_entry_from_csv_to_public_strategy_json`
+  covers `strategy_pyramiding_exit_bracket_from_entry.pine` through the WASM CSV
+  host path.
+- `runs_strategy_pyramiding_exit_trail_points_from_entry_from_csv_to_public_strategy_json`
+  covers `strategy_pyramiding_exit_trail_points_from_entry.pine` through the
+  WASM CSV host path.
+
+Future slices:
+
+- matching Python public JSON parity coverage for the same fixtures;
+- broader host parity coverage for future public JSON contracts.
+
 ### Slice 74: Same-Id Omitted Trail-Points Future Runtime
 
 Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
@@ -2780,5 +2810,7 @@ parity coverage for those fixtures. Slice 82 adds WASM public JSON parity
 coverage for the absolute `strategy.exit(from_entry)`, relative profit
 `strategy.exit(from_entry)`, and same-id fan-out fixtures from Slices 14-16.
 Slice 83 adds matching Python public JSON parity coverage for those fixtures.
+Slice 84 adds WASM public JSON parity coverage for the bracket and trailing
+`strategy.exit(from_entry)` fixtures from Slices 17-18.
 These slices must not be used to claim shorts, reversals, `strategy.order()`,
 `close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.
