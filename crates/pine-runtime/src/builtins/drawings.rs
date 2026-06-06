@@ -59,6 +59,7 @@ impl<'a> HistoricalRuntime<'a> {
             "box.delete" => self.eval_box_delete(args),
             "box.copy" => self.eval_box_copy(args),
             "box.get_top" => self.eval_box_get_top(args),
+            "box.get_bottom" => self.eval_box_get_bottom(args),
             "table.new" => self.eval_table_new(args),
             "table.cell" => self.eval_table_cell(args),
             _ => return None,

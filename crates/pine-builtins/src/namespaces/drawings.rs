@@ -842,6 +842,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "box.get_bottom",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_GET_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "table.new",
         phase: BuiltinPhase::Phase1Core,
         params: TABLE_NEW_PARAMS,

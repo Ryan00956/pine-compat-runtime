@@ -57,6 +57,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "bool",
     "box.copy",
     "box.delete",
+    "box.get_bottom",
     "box.get_top",
     "box.new",
     "box.set_bgcolor",
