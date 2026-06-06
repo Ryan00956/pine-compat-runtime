@@ -992,6 +992,12 @@ mod tests {
                     "../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_price_from_entries_bars.csv"
                 )
             }
+            "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_price_persistent_from_entries.pine" =>
+            {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_price_persistent_from_entries_bars.csv"
+                )
+            }
             "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_from_entries.pine" =>
             {
                 include_str!(

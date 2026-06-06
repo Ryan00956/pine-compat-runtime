@@ -335,6 +335,7 @@ impl BrokerState {
                 PendingExitTrigger::Stop(_)
                     | PendingExitTrigger::Limit(_)
                     | PendingExitTrigger::Bracket { .. }
+                    | PendingExitTrigger::Trailing(_)
             )
         {
             pending_exit.reserved_quantity = position_size;
