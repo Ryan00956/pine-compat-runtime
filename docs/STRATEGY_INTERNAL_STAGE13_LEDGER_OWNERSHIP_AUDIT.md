@@ -256,3 +256,15 @@ currently open matching long ledger entries while preserving one public exit
 order and one closed trade per ledger allocation. Persistent future-entry
 behavior and omitted-`from_entry` relative/bracket/trailing forms remain future
 slices.
+
+## Slice 20 Follow-Up
+
+Stage 13 Slice 20 keeps the Slice 19 omitted-`from_entry` absolute stop/limit
+exit active for later entries. After a later long entry fills, broker entry-fill
+paths expand the existing all-entry full stop/limit pending exit to the new
+aggregate `position_size` and update its placement bar to the entry fill bar.
+The existing pending-exit fill path then allocates through
+`TradeLedger::allocate_exit_fifo(None, qty)`, so both earlier and later open
+ledger entries close when the persisted absolute exit triggers. Omitted-
+`from_entry` relative, bracket, and trailing all-entry exits remain future
+slices.

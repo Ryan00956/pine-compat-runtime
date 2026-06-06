@@ -911,6 +911,11 @@ mod tests {
                     "../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_current_bars.csv"
                 )
             }
+            "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_persistent.pine" => {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_persistent_bars.csv"
+                )
+            }
             "tests/fixtures/runtime/strategy_pyramiding_exit_same_id.pine" => include_str!(
                 "../../../tests/fixtures/runtime/strategy_pyramiding_exit_same_id_bars.csv"
             ),

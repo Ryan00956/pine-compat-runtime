@@ -356,9 +356,11 @@ convert from that matched entry price. Supported trailing `trail_points` exits
 also convert activation from that matched entry price. A supported exit matching
 multiple open trades with the same entry id emits one exit order and one closed
 trade per matched ledger allocation. Fixture-backed omitted-`from_entry`
-absolute stop/limit exits can close all currently open pyramided long entries;
-official persistent future-entry behavior remains outside the current claim.
-Broader multi-entry `strategy.exit` semantics remain outside the current claim.
+absolute stop/limit exits can close all currently open pyramided long entries
+and persist for later open long entries until the position closes. Broader
+omitted-`from_entry` relative, bracket, and trailing all-entry exits remain
+outside the current claim. Broader multi-entry `strategy.exit` semantics remain
+outside the current claim.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that
 divide the corresponding realized amount by `initial_capital` and multiply by

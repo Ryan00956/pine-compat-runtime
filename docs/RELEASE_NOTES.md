@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 20 omitted-`from_entry`
+  `strategy.exit` persistent future-entry support for the current absolute
+  stop/limit subset. A full omitted-`from_entry` stop/limit exit now expands to
+  later pyramided long entries until the position closes.
 - Closed Strategy Internal Stage 13 Slice 19 omitted-`from_entry`
   `strategy.exit` current all-entry absolute exit support. Supported stop-only
   and limit-only exits without `from_entry` now close all currently open

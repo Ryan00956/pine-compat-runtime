@@ -600,7 +600,35 @@ Closed evidence:
 
 Future slices:
 
-- omitted-`from_entry` persistent future-entry exit behavior;
+- omitted-`from_entry` all-entry relative tick, bracket, and trailing behavior;
+- price-based same-tick pyramiding-limit exceptions;
+- host parity coverage for broader public JSON contracts.
+
+### Slice 20: Omitted `from_entry` Persistent Future-Entry Absolute Exit
+
+Status: closed on 2026-06-06. This slice extends the supported omitted-
+`from_entry` absolute stop/limit all-entry exit so it also covers later long
+entries opened before the position closes. It does not claim all-entry relative
+tick conversion, trailing, brackets, shorts, reversals, `close_entries_rule`, or
+public pending-order schema.
+
+Goal:
+
+- keep a supported omitted-`from_entry` full absolute stop/limit exit active for
+  later pyramided long entries by expanding its reserved quantity after each
+  later entry fill.
+
+Closed evidence:
+
+- Broker entry-fill paths expand an existing omitted-`from_entry` full
+  stop/limit pending exit to the new aggregate position size and mark it updated
+  on the entry fill bar.
+- `strategy_pyramiding_exit_omitted_from_entry_persistent.pine` covers an exit
+  call placed before the second entry opens; the later `L2` fill is covered by
+  the persisted exit and closes alongside `L1`.
+
+Future slices:
+
 - omitted-`from_entry` all-entry relative tick, bracket, and trailing behavior;
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
@@ -619,8 +647,8 @@ fixture-backed same-entry-id exit allocation fan-out plus Slice 17's
 fixture-backed bracket `profit`/`loss` relative leg conversion plus Slice 18's
 fixture-backed trailing `trail_points` activation conversion plus Slice 19's
 fixture-backed omitted-`from_entry` current open-entry absolute stop/limit
-all-entry exit. It must not be used to claim omitted-`from_entry` persistent
-future-entry exits, omitted-`from_entry` relative tick/bracket/trailing
-all-entry exits, price-based same-tick entry exceptions, shorts, reversals,
-`strategy.order()`, `close_entries_rule`, or broader multi-entry
-`strategy.exit`/reporting support.
+all-entry exit plus Slice 20's fixture-backed persistent future-entry expansion
+for that same absolute stop/limit subset. It must not be used to claim
+omitted-`from_entry` relative tick/bracket/trailing all-entry exits,
+price-based same-tick entry exceptions, shorts, reversals, `strategy.order()`,
+`close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.

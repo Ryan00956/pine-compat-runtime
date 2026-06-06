@@ -17,7 +17,9 @@ use entries::PendingEntryKind;
 use ledger::NetPosition;
 use ledger::{OpenTrade, TradeAllocation, TradeDirection, TradeLedger};
 use order_book::OrderBook;
-use pending_exits::{PendingExit, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate};
+use pending_exits::{
+    PendingExit, PendingExitQuantity, PendingExitSide, PendingExitTrigger, PendingTrailingUpdate,
+};
 pub(crate) use pending_exits::{TrailPointsExitSpec, TrailPriceExitSpec};
 
 use crate::{
@@ -317,6 +319,27 @@ impl BrokerState {
         self.sync_aggregate_position_from_ledger();
     }
 
+    fn expand_persistent_all_entry_exit_for_new_entry(&mut self, bar_index: usize) {
+        let position_size = self.position_size;
+        if !position_size.is_finite() || position_size <= 0.0 {
+            return;
+        }
+        let Some(pending_exit) = self.order_book.exits_mut().current_mut() else {
+            return;
+        };
+        if pending_exit.from_entry.is_empty()
+            && pending_exit.quantity == PendingExitQuantity::Full
+            && !pending_exit.multiple_reservation
+            && matches!(
+                pending_exit.trigger,
+                PendingExitTrigger::Stop(_) | PendingExitTrigger::Limit(_)
+            )
+        {
+            pending_exit.reserved_quantity = position_size;
+            pending_exit.last_update_bar_index = bar_index;
+        }
+    }
+
     fn can_open_long_entry(&self) -> bool {
         self.trade_ledger.open_count() < self.pyramiding_limit
     }
@@ -446,6 +469,7 @@ impl BrokerState {
         );
         if filled {
             self.resolve_deferred_relative_exits_for_entry(&entry_id);
+            self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
         } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
@@ -483,6 +507,7 @@ impl BrokerState {
         );
         if filled {
             self.resolve_deferred_relative_exits_for_entry(&entry_id);
+            self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
         } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
@@ -520,6 +545,7 @@ impl BrokerState {
         );
         if filled {
             self.resolve_deferred_relative_exits_for_entry(&entry_id);
+            self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
         } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
@@ -565,6 +591,7 @@ impl BrokerState {
         );
         if filled {
             self.resolve_deferred_relative_exits_for_entry(&entry_id);
+            self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
         } else {
             self.order_book.exits_mut().clear_for_entry(&entry_id);
         }
