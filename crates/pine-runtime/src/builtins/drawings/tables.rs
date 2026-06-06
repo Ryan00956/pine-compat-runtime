@@ -71,7 +71,7 @@ impl<'a> HistoricalRuntime<'a> {
             bg_color,
             text_color,
         };
-        self.mutate_table_cell(id, column, row, |cell| *cell = next_cell)?;
+        self.mutate_table_cell(id, column, row, true, |cell| *cell = next_cell)?;
         Ok(PineValue::Void)
     }
 
@@ -86,7 +86,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        self.mutate_table_cell(id, column, row, |cell| {
+        self.mutate_table_cell(id, column, row, false, |cell| {
             cell.text = text;
         })?;
         Ok(PineValue::Void)
@@ -156,6 +156,7 @@ impl<'a> HistoricalRuntime<'a> {
         id: u32,
         column: i64,
         row: i64,
+        create_missing: bool,
         mutate: F,
     ) -> Result<(), RuntimeError>
     where
@@ -183,7 +184,7 @@ impl<'a> HistoricalRuntime<'a> {
             .find(|cell| cell.column == column && cell.row == row)
         {
             Some(cell) => mutate(cell),
-            None => {
+            None if create_missing => {
                 let mut cell = TableCellSnapshot {
                     column,
                     row,
@@ -193,6 +194,11 @@ impl<'a> HistoricalRuntime<'a> {
                 };
                 mutate(&mut cell);
                 next.cells.push(cell);
+            }
+            None => {
+                return Err(RuntimeError {
+                    message: format!("table cell `{column},{row}` has not been populated"),
+                });
             }
         }
         next.cells.sort_by_key(|cell| (cell.row, cell.column));

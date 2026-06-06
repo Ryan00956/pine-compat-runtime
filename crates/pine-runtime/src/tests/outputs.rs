@@ -556,7 +556,6 @@ if bar_index == 2
     table.cell(id, column=1, row=0, text="B", bgcolor=color.green, text_color=color.white)
     table.cell(id, 0, 0, "C")
     table.cell_set_text(id, 1, 0, "B2")
-    table.cell_set_text(id, 0, 1, "D")
 table.cell(na, 0, 1, "noop")
 table.cell_set_text(na, 0, 1, "noop")
 plot(close)
@@ -580,7 +579,7 @@ plot(close)
     );
     assert_eq!(table.columns, 2);
     assert_eq!(table.rows, 2);
-    assert_eq!(table.snapshots.len(), 6);
+    assert_eq!(table.snapshots.len(), 5);
     assert!(table.snapshots[0].cells.is_empty());
     assert_eq!(table.snapshots[1].cells[0].column, 0);
     assert_eq!(table.snapshots[1].cells[0].row, 0);
@@ -606,13 +605,6 @@ plot(close)
         table.snapshots[4].cells[1].text,
         PineValue::String("B2".to_owned())
     );
-    assert_eq!(table.snapshots[5].cells.len(), 3);
-    assert_eq!(table.snapshots[5].cells[2].column, 0);
-    assert_eq!(table.snapshots[5].cells[2].row, 1);
-    assert_eq!(
-        table.snapshots[5].cells[2].text,
-        PineValue::String("D".to_owned())
-    );
 }
 
 #[test]
@@ -625,6 +617,11 @@ plot(close)
         r#"indicator("bad table cells")
 id = table.new(position.top_right, 2, 2)
 table.cell(id, 2, 0, "bad")
+plot(close)
+"#,
+        r#"indicator("missing table cell")
+id = table.new(position.top_right, 2, 2)
+table.cell_set_text(id, 0, 0, "bad")
 plot(close)
 "#,
     ] {
