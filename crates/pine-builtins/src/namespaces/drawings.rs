@@ -99,6 +99,19 @@ const LABEL_SET_XY_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const LABEL_SET_YLOC_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LabelCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "yloc",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
 const LABEL_SET_TEXT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -503,6 +516,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "label.set_xy",
         phase: BuiltinPhase::Phase1Core,
         params: LABEL_SET_XY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "label.set_yloc",
+        phase: BuiltinPhase::Phase1Core,
+        params: LABEL_SET_YLOC_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

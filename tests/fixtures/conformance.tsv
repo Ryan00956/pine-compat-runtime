@@ -75,6 +75,7 @@ label.new	partial	bar-index x, numeric y, string text, xloc.bar_index, yloc.pric
 label.set_x	partial	label id x mutation snapshots only; deleted or na labels are no-op; later label methods unsupported	tests/fixtures/runtime/label_mutation.pine
 label.set_y	partial	label id y mutation snapshots only; deleted or na labels are no-op; later label methods unsupported	tests/fixtures/runtime/label_mutation.pine
 label.set_xy	partial	label id x/y mutation snapshots only; deleted or na labels are no-op; later label methods unsupported	tests/fixtures/runtime/label_mutation.pine
+label.set_yloc	partial	label id y-location snapshot mutation for yloc.price/abovebar/belowbar; deleted or na labels are no-op; visual layout remains host-specific	tests/fixtures/runtime/label_yloc.pine
 label.set_text	partial	label id text mutation snapshots only; deleted or na labels are no-op; later label methods unsupported	tests/fixtures/runtime/label_mutation.pine;tests/fixtures/runtime/label_delete.pine
 label.set_color	partial	label id color mutation snapshots only; deleted or na labels are no-op; later label methods unsupported	tests/fixtures/runtime/label_mutation.pine;tests/fixtures/runtime/label_control_flow.pine
 label.set_textcolor	partial	label id text color mutation snapshots only; deleted or na labels are no-op; later label methods unsupported	tests/fixtures/runtime/label_mutation.pine

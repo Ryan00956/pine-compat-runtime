@@ -406,7 +406,8 @@ contract reserves `labels`, `lines`, `boxes`, and `tables`, whose entries have
 an object `id` and a `snapshots` array. Label snapshots use `barIndex`,
 `exists`, and, while `exists` is true, the mutable label fields represented by
 normalized Pine values. The label lifecycle covers `label.new`, selected
-`label.set_*` mutators, and `label.delete`. Line snapshots cover `x1`, `y1`,
+`label.set_*` mutators including y-location snapshot mutation, and
+`label.delete`. Line snapshots cover `x1`, `y1`,
 `x2`, `y2`, `color`, `width`, `style`, and `extend` for `line.new`, selected
 `line.set_*` mutators, and `line.delete`. Box snapshots cover `left`, `top`,
 `right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, and `borderStyle`

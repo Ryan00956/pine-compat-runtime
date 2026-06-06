@@ -102,6 +102,17 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_label_set_yloc(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let yloc = self.eval_required_label_arg(args, 1, "yloc")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.yloc = yloc;
+        })
+    }
+
     pub(super) fn eval_label_set_text(
         &mut self,
         args: &[HirCallArg],

@@ -29,6 +29,8 @@ const LABEL_SIZES: &[&str] = &[
     "size.huge",
 ];
 
+const LABEL_YLOCS: &[&str] = &["yloc.price", "yloc.abovebar", "yloc.belowbar"];
+
 const LINE_STYLES: &[&str] = &[
     "line.style_solid",
     "line.style_dotted",
@@ -529,6 +531,9 @@ impl Analyzer {
             }
             "label.set_size" => {
                 self.validate_label_string_arg(signature, args, 1, "size", LABEL_SIZES);
+            }
+            "label.set_yloc" => {
+                self.validate_label_string_arg(signature, args, 1, "yloc", LABEL_YLOCS);
             }
             "line.set_style" => {
                 self.validate_label_string_arg(signature, args, 1, "style", LINE_STYLES);

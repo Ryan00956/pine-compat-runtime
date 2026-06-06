@@ -481,7 +481,7 @@ fn rejects_unsupported_label_new_modes() {
 #[test]
 fn accepts_label_mutation_methods() {
     let analysis = analyze(
-        "id = label.new(bar_index, high, \"High\")\nlabel.set_x(id, bar_index)\nlabel.set_y(id, low)\nlabel.set_xy(id, bar_index, close)\nlabel.set_text(id, \"Close\")\nlabel.set_color(id, color.green)\nlabel.set_textcolor(id, color.white)\nlabel.set_style(id, label.style_label_up)\nlabel.set_size(id, size.small)\nlabel.set_tooltip(id, \"Tip\")\nlabel.set_text(na, \"noop\")\nlabel.delete(na)\nlabel.delete(id)\nplot(close)\n",
+        "id = label.new(bar_index, high, \"High\")\nlabel.set_x(id, bar_index)\nlabel.set_y(id, low)\nlabel.set_xy(id, bar_index, close)\nlabel.set_yloc(id, yloc.abovebar)\nlabel.set_text(id, \"Close\")\nlabel.set_color(id, color.green)\nlabel.set_textcolor(id, color.white)\nlabel.set_style(id, label.style_label_up)\nlabel.set_size(id, size.small)\nlabel.set_tooltip(id, \"Tip\")\nlabel.set_text(na, \"noop\")\nlabel.delete(na)\nlabel.delete(id)\nplot(close)\n",
     );
 
     assert!(
@@ -497,6 +497,23 @@ fn accepts_label_mutation_methods() {
             .any(|feature| feature.feature == "label.set_text")
     );
     assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_unsupported_label_set_yloc_values() {
+    let analysis = analyze(
+        "id = label.new(bar_index, high, \"High\")\nlabel.set_yloc(id, \"yloc.middle\")\nplot(close)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.message.contains("yloc.abovebar")),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
 }
 
 #[test]
