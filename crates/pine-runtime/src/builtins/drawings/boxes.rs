@@ -220,6 +220,13 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Box(copied_id))
     }
 
+    pub(super) fn eval_box_get_top(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_box_get(args, "box.get_top", |snapshot| snapshot.top.clone())
+    }
+
     fn eval_box_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
@@ -277,5 +284,50 @@ impl<'a> HistoricalRuntime<'a> {
             box_output.snapshots.push(next);
         }
         Ok(PineValue::Void)
+    }
+
+    fn eval_box_get(
+        &mut self,
+        args: &[HirCallArg],
+        function_name: &str,
+        get_value: impl FnOnce(&BoxSnapshot) -> PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_get_id_arg(args, function_name)?;
+        let Some(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(box_output) = self.boxes.iter().find(|box_output| box_output.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid box id `{id}`"),
+            });
+        };
+        let Some(latest) = box_output.snapshots.last() else {
+            return Err(RuntimeError {
+                message: format!("box `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Na);
+        }
+        Ok(get_value(latest))
+    }
+
+    fn eval_box_get_id_arg(
+        &mut self,
+        args: &[HirCallArg],
+        function_name: &str,
+    ) -> Result<Option<u32>, RuntimeError> {
+        let Some(id_arg) = call_arg_expr(args, 0, "id") else {
+            return Err(RuntimeError {
+                message: format!("{function_name} missing id argument"),
+            });
+        };
+        match self.eval_expr(id_arg)? {
+            PineValue::Box(id) => Ok(Some(id)),
+            PineValue::Na => Ok(None),
+            value => Err(RuntimeError {
+                message: format!("{function_name} expected box id, got {value:?}"),
+            }),
+        }
     }
 }

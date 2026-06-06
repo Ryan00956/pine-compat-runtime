@@ -475,6 +475,12 @@ const BOX_COPY_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const BOX_GET_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::BoxCompatible,
+    optional: false,
+}];
+
 const TABLE_NEW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "position",
@@ -826,6 +832,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: BOX_COPY_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_BOX),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.get_top",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_GET_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {

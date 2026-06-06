@@ -1,0 +1,14 @@
+//@version=5
+indicator("Box getters")
+var id = box.new(bar_index, high, bar_index + 1, low)
+if bar_index == 1
+    box.set_top(id, high + 10)
+top_value = box.get_top(id)
+missing_top = nz(box.get_top(na), -1)
+if bar_index == 2
+    box.delete(id)
+deleted_top = bar_index >= 2 ? nz(box.get_top(id), -1) : -1
+plot(top_value)
+plot(missing_top)
+plot(deleted_top)
+plot(close)

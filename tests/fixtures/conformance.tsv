@@ -114,6 +114,7 @@ box.set_border_width	partial	box id border width mutation snapshots only; delete
 box.set_border_style	partial	box id selected border style mutation snapshots only; deleted or na boxes are no-op; later box methods unsupported	tests/fixtures/runtime/box_mutation.pine;tests/fixtures/runtime/box_control_flow.pine
 box.delete	partial	box id deletion snapshots only; deleting deleted or na boxes is no-op; ids are not reused and boxes have a 500-object runtime limit; later box methods unsupported	tests/fixtures/runtime/box_delete.pine
 box.copy	partial	box id clone over the latest existing box snapshot into a new deterministic id; na or deleted boxes return na; copied boxes share the 500-object runtime limit	tests/fixtures/runtime/box_copy.pine
+box.get_top	partial	box id top getter over the latest existing box snapshot; na or deleted boxes return na; later box getters remain unsupported	tests/fixtures/runtime/box_getters.pine
 table.new	partial	position constants plus positive column and row dimensions with a 50-table runtime limit and 1000-cell per-table limit; realtime rollback covered; layout and styling variants unsupported	tests/fixtures/runtime/table_new.pine;tests/fixtures/runtime/table_control_flow.pine
 table.cell	partial	table id cell text snapshots with optional bgcolor and text_color; deleted or na table ids are no-op; later table methods unsupported	tests/fixtures/runtime/table_cell.pine;tests/fixtures/runtime/table_control_flow.pine
 color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
@@ -405,7 +406,7 @@ alertcondition	partial	bool-compatible condition with const-string title/message
 alert	partial	const-string message only; emits one runtime event whenever execution reaches the call, including branch and loop bodies, and follows forming realtime rollback policy	tests/fixtures/runtime/alert.pine;tests/fixtures/realtime/alert_rollback.pine;tests/fixtures/realtime/alert_policy.pine
 alert frequency	unsupported	imperative alert frequency modes remain unsupported until deterministic frequency semantics are designed	tests/fixtures/sema/unsupported_alert.pine
 alert placeholders	unsupported	TradingView-style alert placeholder interpolation is not implemented in Phase H	tests/fixtures/sema/unsupported_alert_placeholder.pine
-unsupported label/line/box/table methods	unsupported	label, line, box, and table methods beyond the supported lifecycle subsets are not implemented	tests/fixtures/sema/unsupported_drawing.pine
+unsupported label/line/box/table methods	unsupported	label, line, box, and table methods beyond the supported lifecycle/getter subsets are not implemented	tests/fixtures/sema/unsupported_drawing.pine
 polyline.*	unsupported	polyline construction depends on chart.point values and point arrays, which are not part of the current executable type or array model	tests/fixtures/sema/unsupported_drawing.pine
 series history offsets	partial	series int offsets are evaluated at runtime with full-history retention up to the runtime cap	tests/fixtures/runtime/series_history_offset.pine
 non-int history offsets	unsupported	dynamic offsets must evaluate from an integer expression	tests/fixtures/sema/unsupported_dynamic_history.pine
