@@ -2304,6 +2304,108 @@ plot(strategy.closedtrades)
 }
 
 #[test]
+fn strategy_exit_omitted_from_entry_stop_profit_bracket_persists_for_later_entry_price() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit", pyramiding=2)
+if bar_index == 0
+    strategy.entry("L1", strategy.long, qty=1)
+if bar_index == 1
+    strategy.exit("XB", stop=5, profit=300)
+if bar_index == 2
+    strategy.entry("L2", strategy.long, qty=3)
+plot(strategy.opentrades)
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar(10.0),
+            bar(8.0),
+            bar(6.0),
+            bar(6.0),
+            bar(9.0),
+            bar(5.0),
+            bar(9.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 4);
+    assert_eq!(strategy.orders[2].id, "XB");
+    assert_eq!(strategy.orders[2].direction, "strategy.exit");
+    assert_eq!(strategy.orders[2].bar_index, 4);
+    assert_eq!(strategy.orders[2].qty, 3.0);
+    assert_eq!(strategy.orders[2].price, 9.0);
+    assert_eq!(strategy.orders[3].id, "XB");
+    assert_eq!(strategy.orders[3].direction, "strategy.exit");
+    assert_eq!(strategy.orders[3].bar_index, 5);
+    assert_eq!(strategy.orders[3].qty, 1.0);
+    assert_eq!(strategy.orders[3].price, 5.0);
+    assert_eq!(strategy.trades.len(), 2);
+    assert_eq!(strategy.trades[0].id, "L2");
+    assert_eq!(strategy.trades[0].exit_id, "XB");
+    assert_eq!(strategy.trades[0].entry_price, 6.0);
+    assert_eq!(strategy.trades[0].exit_price, 9.0);
+    assert_eq!(strategy.trades[0].qty, 3.0);
+    assert_eq!(strategy.trades[0].profit, 9.0);
+    assert_eq!(strategy.trades[1].id, "L1");
+    assert_eq!(strategy.trades[1].exit_id, "XB");
+    assert_eq!(strategy.trades[1].entry_price, 8.0);
+    assert_eq!(strategy.trades[1].exit_price, 5.0);
+    assert_eq!(strategy.trades[1].qty, 1.0);
+    assert_eq!(strategy.trades[1].profit, -3.0);
+    assert_eq!(strategy.position.last().unwrap().size, 0.0);
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(2),
+            PineValue::Int(2),
+            PineValue::Int(1),
+            PineValue::Int(0),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(4.0),
+            PineValue::Float(4.0),
+            PineValue::Float(1.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(2),
+        ]
+    );
+}
+
+#[test]
 fn strategy_exit_omitted_from_entry_loss_limit_bracket_uses_each_open_entry_price() {
     let source = SourceFile::new(
         "strategy.pine",

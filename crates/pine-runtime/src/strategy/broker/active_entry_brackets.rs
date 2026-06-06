@@ -131,11 +131,38 @@ impl BrokerState {
             });
         }
         if pending_exits.is_empty() {
+            self.order_book
+                .exits_mut()
+                .replace_all_entry_deferred_relative(DeferredRelativeExit {
+                    id,
+                    from_entry: String::new(),
+                    trigger: DeferredRelativeExitTrigger::Bracket {
+                        downside: DeferredBracketLeg::Absolute(spec.stop_price),
+                        upside: DeferredBracketLeg::RelativeProfit {
+                            ticks: spec.profit_ticks,
+                            mintick: spec.mintick,
+                        },
+                    },
+                    quantity: ExitQuantityRequest::Full,
+                    last_update_bar_index: bar_index,
+                });
             return;
         }
         self.order_book
             .exits_mut()
-            .clear_all_entry_deferred_relative();
+            .replace_all_entry_deferred_relative(DeferredRelativeExit {
+                id,
+                from_entry: String::new(),
+                trigger: DeferredRelativeExitTrigger::Bracket {
+                    downside: DeferredBracketLeg::Absolute(spec.stop_price),
+                    upside: DeferredBracketLeg::RelativeProfit {
+                        ticks: spec.profit_ticks,
+                        mintick: spec.mintick,
+                    },
+                },
+                quantity: ExitQuantityRequest::Full,
+                last_update_bar_index: bar_index,
+            });
         self.order_book.exits_mut().replace_all_many(pending_exits);
     }
 
