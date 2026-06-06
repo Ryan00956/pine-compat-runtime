@@ -106,7 +106,9 @@ for the bracket and trailing `strategy.exit(from_entry)` fixtures from Slices
 coverage for those fixtures. Stage 13 Slice 86 adds WASM public JSON
 host-parity coverage for the current same-id omitted `profit`/`loss`
 `strategy.exit` fixtures from Slices 59-60. Stage 13 Slice 87 adds matching
-Python binding public JSON host-parity coverage for those fixtures.
+Python binding public JSON host-parity coverage for those fixtures. Stage 13
+Slice 88 adds WASM public JSON host-parity coverage for the current same-id
+omitted `loss+profit` and `stop+profit` bracket fixtures from Slices 61-62.
 Stage 13 Slice 75 adds fixture-backed same-tick limit-entry
 pyramiding-limit exceptions. Stage 13 Slice 76 adds matching stop-entry
 exceptions. Stage 13 Slice 77 adds matching stop-limit-entry exceptions while
