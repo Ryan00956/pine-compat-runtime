@@ -630,10 +630,11 @@ non-`na` ids are runtime errors. Labels, lines, and boxes each have a
 500-object runtime limit; tables have a 50-object limit and 1000-cell
 per-table limit. `label.set_xloc` stores `xloc.bar_index` or `xloc.bar_time`
 with the new x-coordinate in the host-neutral snapshot. `label.set_yloc` stores
-the selected y-location constant. Above/below-bar and time/index visual layout
-remain host responsibilities. `label.copy` clones the latest existing label
-snapshot into a new deterministic id, returns `na` for `na` or deleted labels,
-and shares the label object limit. `line.copy` clones the latest existing line
+the selected y-location constant. `label.set_textalign` stores the selected
+horizontal text alignment constant. Above/below-bar, time/index, and text
+layout remain host responsibilities. `label.copy` clones the latest existing
+label snapshot into a new deterministic id, returns `na` for `na` or deleted
+labels, and shares the label object limit. `line.copy` clones the latest existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
 and shares the line object limit. `box.copy` clones the latest existing box
 snapshot into a new deterministic id, returns `na` for `na` or deleted boxes,

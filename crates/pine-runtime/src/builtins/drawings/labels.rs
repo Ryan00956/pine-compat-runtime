@@ -62,6 +62,7 @@ impl<'a> HistoricalRuntime<'a> {
                 text_color,
                 size,
                 tooltip,
+                text_align: PineValue::String("text.align_center".to_owned()),
             }],
         });
         Ok(PineValue::Label(id))
@@ -189,6 +190,17 @@ impl<'a> HistoricalRuntime<'a> {
         let tooltip = self.eval_required_label_arg(args, 1, "tooltip")?;
         self.mutate_label(id, |snapshot| {
             snapshot.tooltip = tooltip;
+        })
+    }
+
+    pub(super) fn eval_label_set_textalign(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let text_align = self.eval_required_label_arg(args, 1, "textalign")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.text_align = text_align;
         })
     }
 

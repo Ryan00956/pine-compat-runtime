@@ -208,6 +208,19 @@ const LABEL_SET_TOOLTIP_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const LABEL_SET_TEXTALIGN_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LabelCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "textalign",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
 const LABEL_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "id",
     accepts: Accepts::LabelCompatible,
@@ -718,6 +731,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "label.set_tooltip",
         phase: BuiltinPhase::Phase1Core,
         params: LABEL_SET_TOOLTIP_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "label.set_textalign",
+        phase: BuiltinPhase::Phase1Core,
+        params: LABEL_SET_TEXTALIGN_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

@@ -166,6 +166,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "label.set_style"
             | "label.set_size"
             | "label.set_tooltip"
+            | "label.set_textalign"
             | "label.delete"
             | "label.copy"
             | "line.new"
@@ -554,6 +555,9 @@ impl Analyzer {
             }
             "label.set_size" => {
                 self.validate_label_string_arg(signature, args, 1, "size", LABEL_SIZES);
+            }
+            "label.set_textalign" => {
+                self.validate_label_string_arg(signature, args, 1, "textalign", TEXT_HALIGNS);
             }
             "label.set_xloc" => {
                 self.validate_label_string_arg(signature, args, 2, "xloc", LABEL_XLOCS);

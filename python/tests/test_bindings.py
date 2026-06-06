@@ -5666,6 +5666,7 @@ def test_run_script_returns_label_outputs():
                     "textColor": None,
                     "size": "size.normal",
                     "tooltip": "",
+                    "textAlign": "text.align_center",
                 }
             ],
         }

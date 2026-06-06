@@ -589,6 +589,7 @@ fn label_snapshots_to_py(
             item.set_item("textColor", value_to_py(py, &snapshot.text_color)?)?;
             item.set_item("size", value_to_py(py, &snapshot.size)?)?;
             item.set_item("tooltip", value_to_py(py, &snapshot.tooltip)?)?;
+            item.set_item("textAlign", value_to_py(py, &snapshot.text_align)?)?;
         }
         output.append(item)?;
     }

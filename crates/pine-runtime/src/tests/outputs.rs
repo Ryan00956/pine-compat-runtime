@@ -705,6 +705,7 @@ label.set_textcolor(id, color.white)
 label.set_style(id, label.style_label_up)
 label.set_size(id, size.small)
 label.set_tooltip(id, "Tip")
+label.set_textalign(id, text.align_left)
 plot(close)
 "#,
     );
@@ -719,7 +720,7 @@ plot(close)
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
     let label = &result.labels[0];
 
-    assert_eq!(label.snapshots.len(), 9);
+    assert_eq!(label.snapshots.len(), 10);
     assert_eq!(label.snapshots[0].x, PineValue::Int(0));
     assert_eq!(label.snapshots[1].x, PineValue::Int(1));
     assert_eq!(label.snapshots[2].y, PineValue::Float(2.0));
@@ -740,6 +741,10 @@ plot(close)
     assert_eq!(
         label.snapshots[8].tooltip,
         PineValue::String("Tip".to_owned())
+    );
+    assert_eq!(
+        label.snapshots[9].text_align,
+        PineValue::String("text.align_left".to_owned())
     );
 }
 
