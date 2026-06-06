@@ -169,8 +169,8 @@ impl BrokerState {
                 if quantity != ExitQuantityRequest::Full {
                     return;
                 }
-                let Some((target_trade_key, _)) =
-                    self.unique_open_trade_key_and_quantity_for_entry(entry_id)
+                let Some((target_trade_key, entry_price)) =
+                    self.last_open_trade_key_and_price_for_entry(entry_id)
                 else {
                     return;
                 };
@@ -178,6 +178,7 @@ impl BrokerState {
                     id,
                     entry_id.to_owned(),
                     target_trade_key,
+                    entry_price,
                     DeferredLossProfitBracketSpec {
                         loss_ticks,
                         loss_mintick,
@@ -292,29 +293,25 @@ impl BrokerState {
         id: String,
         from_entry: String,
         target_trade_key: u64,
+        entry_price: f64,
         spec: DeferredLossProfitBracketSpec,
         bar_index: usize,
     ) {
-        let Some(downside) = self.exit_loss_price_from_ticks_for_entry(
-            &from_entry,
-            spec.loss_ticks,
-            spec.loss_mintick,
-        ) else {
+        let Some(loss_offset) = self.exit_tick_price_offset(spec.loss_ticks, spec.loss_mintick)
+        else {
             return;
         };
-        let Some(upside) = self.exit_profit_price_from_ticks_for_entry(
-            &from_entry,
-            spec.profit_ticks,
-            spec.profit_mintick,
-        ) else {
+        let Some(profit_offset) =
+            self.exit_tick_price_offset(spec.profit_ticks, spec.profit_mintick)
+        else {
             return;
         };
         self.place_all_entry_resolved_bracket(
             id,
             from_entry,
             target_trade_key,
-            downside,
-            upside,
+            entry_price - loss_offset,
+            entry_price + profit_offset,
             bar_index,
         );
     }
