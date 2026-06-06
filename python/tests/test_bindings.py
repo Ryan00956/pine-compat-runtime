@@ -270,6 +270,166 @@ def test_run_script_returns_strategy_entry_stop_limit_contract():
     assert "limit" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_pyramiding_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_pyramiding.pine").read_text()
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+
+    assert [plot["values"] for plot in result["plots"][:3]] == [
+        [0, 1, 2, 2],
+        [0.0, 1.0, 4.0, 4.0],
+        [None, 2.0, 2.75, 2.75],
+    ]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L1",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 2.0,
+        },
+        {
+            "id": "L2",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.long",
+            "qty": 3.0,
+            "price": 3.0,
+        },
+    ]
+    assert result["strategy"]["trades"] == []
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 1.0, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 4.0, "avgPrice": 2.75},
+    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+
+
+def test_run_script_returns_strategy_pyramiding_close_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_pyramiding_close.pine").read_text()
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+
+    assert [plot["values"] for plot in result["plots"][:4]] == [
+        [0, 1, 1, 0],
+        [0.0, 1.0, 3.0, 0.0],
+        [None, 2.0, 3.0, None],
+        [0, 0, 1, 2],
+    ]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L1",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 2.0,
+        },
+        {
+            "id": "L2",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.long",
+            "qty": 3.0,
+            "price": 3.0,
+        },
+    ]
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L1",
+            "entryBarIndex": 1,
+            "exitBarIndex": 2,
+            "entryTime": 2,
+            "exitTime": 3,
+            "entryPrice": 2.0,
+            "exitPrice": 3.0,
+            "qty": 1.0,
+            "profit": 1.0,
+        },
+        {
+            "id": "L2",
+            "entryBarIndex": 2,
+            "exitBarIndex": 3,
+            "entryTime": 3,
+            "exitTime": 4,
+            "entryPrice": 3.0,
+            "exitPrice": 4.0,
+            "qty": 3.0,
+            "profit": 3.0,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 1.0, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 4.0, "avgPrice": 2.75},
+        {"barIndex": 2, "size": 3.0, "avgPrice": 3.0},
+        {"barIndex": 3, "size": 0.0, "avgPrice": None},
+    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+    assert "closedTrades" not in result["strategy"]
+
+
+def test_run_script_returns_strategy_pyramiding_close_all_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_pyramiding_close_all.pine").read_text()
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0, 1, 0, 0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0, 0, 2, 2],
+    ]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L1",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 2.0,
+        },
+        {
+            "id": "L2",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.long",
+            "qty": 3.0,
+            "price": 3.0,
+        },
+    ]
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L1",
+            "entryBarIndex": 1,
+            "exitBarIndex": 2,
+            "entryTime": 2,
+            "exitTime": 3,
+            "entryPrice": 2.0,
+            "exitPrice": 3.0,
+            "qty": 1.0,
+            "profit": 1.0,
+        },
+        {
+            "id": "L2",
+            "entryBarIndex": 2,
+            "exitBarIndex": 2,
+            "entryTime": 3,
+            "exitTime": 3,
+            "entryPrice": 3.0,
+            "exitPrice": 3.0,
+            "qty": 3.0,
+            "profit": 0.0,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 1.0, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 4.0, "avgPrice": 2.75},
+        {"barIndex": 2, "size": 0.0, "avgPrice": None},
+    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+    assert "closedTrades" not in result["strategy"]
+
+
 def test_run_script_returns_same_tick_limit_entries_contract():
     source = (
         ROOT

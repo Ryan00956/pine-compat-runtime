@@ -2046,8 +2046,35 @@ Closed evidence:
 
 Future slices:
 
-- matching Python public JSON parity coverage for the base multi-entry ledger
-  fixtures;
+- broader host parity coverage for future public JSON contracts.
+
+### Slice 81: Base Pyramiding Python Host Parity
+
+Status: closed on 2026-06-06. This slice adds Python binding public JSON
+coverage for the base multi-entry ledger fixtures from Slices 10-12: long market
+pyramiding, `strategy.close(id)` matching, and `strategy.close_all()` flattening.
+It does not change runtime behavior, widen the WASM claim, or claim shorts,
+reversals, `strategy.order()`, price-based entry behavior beyond the existing
+fixture-backed subset, or broader strategy reporting semantics.
+
+Goal:
+
+- prove that the Python `run_script` host path exposes the same public orders,
+  trades, position snapshots, plots, and empty diagnostics for the base
+  pyramiding, close, and close_all fixtures already covered by CLI/runtime
+  snapshots and WASM.
+
+Closed evidence:
+
+- `test_run_script_returns_strategy_pyramiding_contract` covers
+  `strategy_pyramiding.pine` through the Python binding.
+- `test_run_script_returns_strategy_pyramiding_close_contract` covers
+  `strategy_pyramiding_close.pine` through the Python binding.
+- `test_run_script_returns_strategy_pyramiding_close_all_contract` covers
+  `strategy_pyramiding_close_all.pine` through the Python binding.
+
+Future slices:
+
 - broader host parity coverage for future public JSON contracts.
 
 ### Slice 74: Same-Id Omitted Trail-Points Future Runtime
@@ -2687,6 +2714,7 @@ pyramiding-limit exceptions while preserving activation-bar delay. Slice 78 adds
 WASM public JSON parity coverage for the same-tick long limit, stop, and
 stop-limit entry fixtures. Slice 79 adds matching Python public JSON parity
 coverage for those fixtures. Slice 80 adds WASM public JSON parity coverage for
-the base multi-entry ledger fixtures. These slices must not be used to claim
+the base multi-entry ledger fixtures. Slice 81 adds matching Python public JSON
+parity coverage for those fixtures. These slices must not be used to claim
 shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader
 multi-entry `strategy.exit`/reporting support.
