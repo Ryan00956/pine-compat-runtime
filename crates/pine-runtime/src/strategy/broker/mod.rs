@@ -66,6 +66,12 @@ pub struct BrokerState {
     trade_ledger: TradeLedger,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum EntryPyramidingMode {
+    EnforceLimit,
+    SameTickPriceException,
+}
+
 impl Default for BrokerState {
     fn default() -> Self {
         Self::new(DEFAULT_STRATEGY_INITIAL_CAPITAL)
@@ -241,6 +247,43 @@ impl BrokerState {
         price: f64,
         qty: f64,
     ) -> bool {
+        self.entry_long_internal(
+            id,
+            bar_index,
+            time,
+            price,
+            qty,
+            EntryPyramidingMode::EnforceLimit,
+        )
+    }
+
+    fn entry_long_from_price_based_same_tick_exception(
+        &mut self,
+        id: String,
+        bar_index: usize,
+        time: i64,
+        price: f64,
+        qty: f64,
+    ) -> bool {
+        self.entry_long_internal(
+            id,
+            bar_index,
+            time,
+            price,
+            qty,
+            EntryPyramidingMode::SameTickPriceException,
+        )
+    }
+
+    fn entry_long_internal(
+        &mut self,
+        id: String,
+        bar_index: usize,
+        time: i64,
+        price: f64,
+        qty: f64,
+        pyramiding_mode: EntryPyramidingMode,
+    ) -> bool {
         if !qty.is_finite() || qty <= 0.0 {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_QTY".to_owned(),
@@ -255,7 +298,7 @@ impl BrokerState {
             });
             return false;
         }
-        if !self.can_open_long_entry() {
+        if pyramiding_mode == EntryPyramidingMode::EnforceLimit && !self.can_open_long_entry() {
             return false;
         }
 
@@ -293,7 +336,11 @@ impl BrokerState {
             min_equity_before_entry: Some(min_equity_before_entry),
             max_equity_before_entry: Some(max_equity_before_entry),
         };
-        self.record_open_long_trade(open_trade);
+        if pyramiding_mode == EntryPyramidingMode::SameTickPriceException {
+            self.record_open_long_trade_exceeding_pyramiding(open_trade);
+        } else {
+            self.record_open_long_trade(open_trade);
+        }
         self.record_order_event(id, bar_index, time, "strategy.long", qty, fill_price);
         self.record_position_snapshot(bar_index);
         true
@@ -306,6 +353,12 @@ impl BrokerState {
         } else {
             self.trade_ledger.append_long(open_trade);
         }
+        self.sync_aggregate_position_from_ledger();
+    }
+
+    fn record_open_long_trade_exceeding_pyramiding(&mut self, open_trade: OpenTrade) {
+        self.record_open_long_legacy_state(&open_trade);
+        self.trade_ledger.append_long(open_trade);
         self.sync_aggregate_position_from_ledger();
     }
 
@@ -491,30 +544,33 @@ impl BrokerState {
             self.order_book.entries_mut().clear_all();
             return;
         }
-        let Some(pending_entry) = self
-            .order_book
-            .entries_mut()
-            .take_first_eligible_limit_long(bar_index, low, self.limit_verification_price_offset)
-        else {
-            return;
-        };
-
-        let PendingEntryKind::Limit { price } = pending_entry.kind else {
-            return;
-        };
-        let entry_id = pending_entry.id;
-        let filled = self.entry_long(
-            entry_id.clone(),
+        let pending_entries = self.order_book.entries_mut().take_all_eligible_limit_long(
             bar_index,
-            time,
-            price,
-            pending_entry.quantity,
+            low,
+            self.limit_verification_price_offset,
         );
-        if filled {
-            self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
-            self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
-        } else {
-            self.order_book.exits_mut().clear_for_entry(&entry_id);
+        if pending_entries.is_empty() {
+            return;
+        }
+
+        for pending_entry in pending_entries {
+            let PendingEntryKind::Limit { price } = pending_entry.kind else {
+                continue;
+            };
+            let entry_id = pending_entry.id;
+            let filled = self.entry_long_from_price_based_same_tick_exception(
+                entry_id.clone(),
+                bar_index,
+                time,
+                price,
+                pending_entry.quantity,
+            );
+            if filled {
+                self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
+                self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
+            } else {
+                self.order_book.exits_mut().clear_for_entry(&entry_id);
+            }
         }
         self.order_book.entries_mut().clear_all();
     }

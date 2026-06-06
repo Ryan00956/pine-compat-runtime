@@ -1869,6 +1869,37 @@ Future slices:
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
 
+### Slice 75: Same-Tick Limit Entry Pyramiding Exception
+
+Status: closed on 2026-06-06. This slice adds the first fixture-backed
+price-based same-tick pyramiding-limit exception: multiple long limit entries
+that are all eligible during the same historical fill pass can fill even when
+the configured pyramiding limit is `1`. It does not claim same-tick stop or
+stop-limit entry exceptions, shorts, reversals, `strategy.order()`, realtime
+tick recalculation, or host parity additions.
+
+Goal:
+
+- let a single limit-entry fill pass collect all eligible long limit entries,
+  then append each resulting open trade even when the batch exceeds the normal
+  pyramiding limit.
+
+Closed evidence:
+
+- `pending_limit_entries_triggered_together_can_exceed_pyramiding_limit`
+  proves the broker fills two same-pass limit entries with `pyramiding=1`.
+- `strategy_entry_limit_orders_triggered_together_can_exceed_pyramiding_limit`
+  proves the public runtime emits two long orders and exposes two open trades
+  from the same historical bar.
+- `tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_limit_entries.pine`
+  records the conformance fixture for the narrowed public claim.
+
+Future slices:
+
+- same-tick stop-entry pyramiding-limit exceptions;
+- same-tick stop-limit-entry pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
 ### Slice 74: Same-Id Omitted Trail-Points Future Runtime
 
 Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
@@ -2499,6 +2530,8 @@ matching same-id omitted `loss+limit` bracket future-entry persistence. Slice
 without runtime changes. Slice 73 adds explicit same-id omitted
 `trail_price+trail_offset` future-entry coverage without runtime changes. Slice
 74 adds matching same-id omitted `trail_points+trail_offset` future-entry
-runtime support. These slices must not be used to claim price-based same-tick
-entry exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`,
-or broader multi-entry `strategy.exit`/reporting support.
+runtime support. Slice 75 adds fixture-backed same-tick limit-entry
+pyramiding-limit exceptions only. These slices must not be used to claim
+same-tick stop or stop-limit entry exceptions, shorts, reversals,
+`strategy.order()`, `close_entries_rule`, or broader multi-entry
+`strategy.exit`/reporting support.

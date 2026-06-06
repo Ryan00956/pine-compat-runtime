@@ -816,6 +816,65 @@ plot(strategy.opentrades.size(1))
 }
 
 #[test]
+fn strategy_entry_limit_orders_triggered_together_can_exceed_pyramiding_limit() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("entry")
+if bar_index == 0
+    strategy.entry("L1", strategy.long, qty=1, limit=9)
+    strategy.entry("L2", strategy.long, qty=3, limit=9)
+plot(strategy.opentrades)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(10.0), bar(9.0), bar(9.0)],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[0].id, "L1");
+    assert_eq!(strategy.orders[0].direction, "strategy.long");
+    assert_eq!(strategy.orders[0].bar_index, 1);
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.orders[0].price, 9.0);
+    assert_eq!(strategy.orders[1].id, "L2");
+    assert_eq!(strategy.orders[1].direction, "strategy.long");
+    assert_eq!(strategy.orders[1].bar_index, 1);
+    assert_eq!(strategy.orders[1].qty, 3.0);
+    assert_eq!(strategy.orders[1].price, 9.0);
+    assert_eq!(strategy.position.last().unwrap().size, 4.0);
+    assert_eq!(strategy.position.last().unwrap().avg_price, Some(9.0));
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![PineValue::Int(0), PineValue::Int(2), PineValue::Int(2)]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(4.0),
+            PineValue::Float(4.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![PineValue::Na, PineValue::Float(9.0), PineValue::Float(9.0),]
+    );
+}
+
+#[test]
 fn strategy_close_pyramiding_entry_id_closes_matching_open_trade() {
     let source = SourceFile::new(
         "strategy.pine",

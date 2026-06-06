@@ -1,0 +1,10 @@
+//@version=5
+strategy("Pyramiding limit same tick limit entries")
+
+if bar_index == 0
+    strategy.entry("L1", strategy.long, qty=1, limit=9)
+    strategy.entry("L2", strategy.long, qty=3, limit=9)
+
+plot(strategy.opentrades)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)

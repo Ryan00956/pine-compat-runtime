@@ -99,6 +99,28 @@ impl PendingEntryBook {
         Some(self.entries.remove(position))
     }
 
+    pub(super) fn take_all_eligible_limit_long(
+        &mut self,
+        bar_index: usize,
+        low: f64,
+        verification_offset: f64,
+    ) -> Vec<PendingEntry> {
+        let mut eligible = Vec::new();
+        let mut index = 0;
+        while index < self.entries.len() {
+            let pending_entry = &self.entries[index];
+            let is_eligible = pending_entry.direction == PendingEntryDirection::Long
+                && matches!(pending_entry.kind, PendingEntryKind::Limit { price } if low <= price - verification_offset)
+                && pending_entry.created_bar_index < bar_index;
+            if is_eligible {
+                eligible.push(self.entries.remove(index));
+            } else {
+                index += 1;
+            }
+        }
+        eligible
+    }
+
     #[allow(dead_code)]
     pub(super) fn take_first_eligible_stop_long(
         &mut self,
