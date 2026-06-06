@@ -1958,6 +1958,38 @@ Future slices:
 
 - broader host parity coverage for future public JSON contracts.
 
+### Slice 78: Same-Tick Price-Based Entry WASM Host Parity
+
+Status: closed on 2026-06-06. This slice adds WASM public JSON coverage for the
+fixture-backed same-tick long price-based entry exceptions from Slices 75-77. It
+does not change runtime behavior, widen the Python binding claim, or claim
+shorts, reversals, `strategy.order()`, realtime tick recalculation, or broader
+strategy reporting semantics.
+
+Goal:
+
+- prove that the WASM `run_script_csv` host path exposes the same public orders,
+  position snapshots, plots, and empty diagnostics for the same-tick long limit,
+  stop, and stop-limit entry fixtures already covered by CLI/runtime snapshots.
+
+Closed evidence:
+
+- `runs_strategy_same_tick_limit_entries_from_csv_to_public_strategy_json`
+  covers `strategy_pyramiding_limit_same_tick_limit_entries.pine` through the
+  WASM CSV host path.
+- `runs_strategy_same_tick_stop_entries_from_csv_to_public_strategy_json` covers
+  `strategy_pyramiding_limit_same_tick_stop_entries.pine` through the WASM CSV
+  host path.
+- `runs_strategy_same_tick_stop_limit_entries_from_csv_to_public_strategy_json`
+  covers `strategy_pyramiding_limit_same_tick_stop_limit_entries.pine` through
+  the WASM CSV host path.
+
+Future slices:
+
+- matching Python public JSON parity coverage for the same-tick long
+  price-based entry fixtures;
+- broader host parity coverage for future public JSON contracts.
+
 ### Slice 74: Same-Id Omitted Trail-Points Future Runtime
 
 Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
@@ -2591,6 +2623,8 @@ without runtime changes. Slice 73 adds explicit same-id omitted
 runtime support. Slice 75 adds fixture-backed same-tick limit-entry
 pyramiding-limit exceptions. Slice 76 adds matching same-tick stop-entry
 pyramiding-limit exceptions. Slice 77 adds matching same-tick stop-limit-entry
-pyramiding-limit exceptions while preserving activation-bar delay. These slices
-must not be used to claim shorts, reversals, `strategy.order()`,
-`close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.
+pyramiding-limit exceptions while preserving activation-bar delay. Slice 78 adds
+WASM public JSON parity coverage for the same-tick long limit, stop, and
+stop-limit entry fixtures. These slices must not be used to claim shorts,
+reversals, `strategy.order()`, `close_entries_rule`, or broader multi-entry
+`strategy.exit`/reporting support.
