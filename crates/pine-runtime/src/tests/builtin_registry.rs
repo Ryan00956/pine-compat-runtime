@@ -114,6 +114,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "label.set_xy",
     "label.set_y",
     "label.set_yloc",
+    "line.copy",
     "line.delete",
     "line.new",
     "line.set_color",

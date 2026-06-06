@@ -172,6 +172,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "line.set_style"
             | "line.set_extend"
             | "line.delete"
+            | "line.copy"
             | "box.new"
             | "box.set_left"
             | "box.set_top"

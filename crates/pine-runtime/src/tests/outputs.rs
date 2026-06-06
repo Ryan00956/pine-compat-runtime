@@ -226,6 +226,32 @@ plot(close)
 }
 
 #[test]
+fn line_copy_deleted_id_is_noop_at_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("line copy deleted limit")
+deleted = line.new(0, close, 0, close)
+line.delete(deleted)
+for i = 0 to 498
+    line.new(i, close, i, open)
+line.copy(deleted)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(result.lines.len(), 500);
+    assert!(!result.lines[0].snapshots.last().unwrap().exists);
+}
+
+#[test]
 fn profiles_line_storage() {
     let source = SourceFile::new(
         "test.pine",

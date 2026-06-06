@@ -351,6 +351,12 @@ const LINE_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const LINE_COPY_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::LineCompatible,
+    optional: false,
+}];
+
 const BOX_NEW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "left",
@@ -716,6 +722,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: LINE_DELETE_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.copy",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_COPY_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_LINE),
         variadic: false,
     },
     BuiltinSignature {

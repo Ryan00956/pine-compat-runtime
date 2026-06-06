@@ -1,0 +1,13 @@
+//@version=5
+indicator("Line copy")
+var original = line.new(bar_index - 1, low, bar_index, high)
+var copy = line.copy(original)
+if bar_index == 1
+    line.set_color(original, color.green)
+    line.set_xy1(copy, bar_index, low)
+    line.set_xy2(copy, bar_index + 1, high)
+if bar_index == 2
+    line.delete(copy)
+    line.copy(copy)
+line.copy(na)
+plot(close)

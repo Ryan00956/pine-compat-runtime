@@ -618,7 +618,8 @@ Supported drawing-object calls currently cover the initial `label.*`, `line.*`,
 lifecycle snapshots, selected x-location and y-location snapshot mutation,
 snapshot cloning, non-reused ids, and a 500-object runtime limit. Lines use the
 same lifecycle rules with bar-index x coordinates, price y coordinates,
-selected color/width/style and extend fields. Boxes use the same lifecycle
+selected color/width/style and extend fields, snapshot cloning, non-reused ids,
+and a 500-object runtime limit. Boxes use the same lifecycle
 rules with bar-index left/right coordinates, price top/bottom coordinates, and
 selected background/border fields. Tables use deterministic ids, fixed positive
 dimensions, and sparse cell snapshots for text/background/text-color writes.
@@ -631,7 +632,9 @@ with the new x-coordinate in the host-neutral snapshot. `label.set_yloc` stores
 the selected y-location constant. Above/below-bar and time/index visual layout
 remain host responsibilities. `label.copy` clones the latest existing label
 snapshot into a new deterministic id, returns `na` for `na` or deleted labels,
-and shares the label object limit.
+and shares the label object limit. `line.copy` clones the latest existing line
+snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
+and shares the line object limit.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from

@@ -618,7 +618,8 @@ fixture-backed cloning with `label.copy`, and the fixture-backed `label.get_x`,
 `label.get_y`, and `label.get_text` getters over the latest existing label
 snapshot, with a 500-label runtime limit. The
 executable line subset covers `line.new`, selected
-endpoint/color/width/style/extend mutators, and `line.delete` with sparse
+endpoint/color/width/style/extend mutators, `line.delete`, and fixture-backed
+cloning with `line.copy` over the latest existing line snapshot, with sparse
 snapshots and a 500-line runtime limit. The executable box subset covers
 `box.new`, selected geometry/background/border mutators, and `box.delete` with
 sparse snapshots and a 500-box runtime limit. The executable table subset covers
@@ -632,7 +633,9 @@ are stable and not reused. `label.set_xloc` records `xloc.bar_index` or
 records `yloc.price`, `yloc.abovebar`, or `yloc.belowbar`; neither models
 host-specific visual layout. `label.copy` clones the latest existing label
 snapshot into a new deterministic id, returns `na` for `na` or deleted labels,
-and shares the label runtime limit. Supported drawing creation, mutation,
+and shares the label runtime limit. `line.copy` clones the latest existing line
+snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
+and shares the line runtime limit. Supported drawing creation, mutation,
 cloning, getter, and cell writes are covered under realtime rollback where state
 changes, and drawing side effects inside user-defined functions are rejected
 under the existing side-effect policy. Keep unsupported coordinate modes and advanced object

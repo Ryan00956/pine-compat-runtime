@@ -181,6 +181,48 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    pub(super) fn eval_line_copy(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_line_id_arg(args)?;
+        let Some(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(line) = self.lines.iter().find(|line| line.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid line id `{id}`"),
+            });
+        };
+        let Some(latest) = line.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("line `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Na);
+        }
+        if self.lines.len() >= MAX_LINES {
+            return Err(RuntimeError {
+                message: format!("line count cannot exceed {MAX_LINES}"),
+            });
+        }
+        let copied_id = self.next_line_id;
+        self.next_line_id = self
+            .next_line_id
+            .checked_add(1)
+            .ok_or_else(|| RuntimeError {
+                message: "line id limit exceeded".to_owned(),
+            })?;
+        let mut copied = latest;
+        copied.bar_index = self.bars;
+        self.lines.push(LineOutput {
+            id: copied_id,
+            snapshots: vec![copied],
+        });
+        Ok(PineValue::Line(copied_id))
+    }
+
     fn eval_line_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {

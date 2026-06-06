@@ -591,7 +591,7 @@ fn rejects_unimplemented_label_methods() {
 #[test]
 fn accepts_minimal_line_new() {
     let analysis = analyze(
-        "id = line.new(bar_index - 1, low, bar_index, high)\nother = line.new(x1=0, y1=open, x2=bar_index, y2=close)\nline.set_x1(id, bar_index)\nline.set_y1(id, low)\nline.set_xy1(id, bar_index, open)\nline.set_x2(id, bar_index)\nline.set_y2(id, high)\nline.set_xy2(id, bar_index, close)\nline.set_color(id, color.green)\nline.set_width(id, 2)\nline.set_style(id, line.style_dashed)\nline.set_extend(id, extend.right)\nline.delete(na)\nline.delete(id)\nplot(close)\n",
+        "id = line.new(bar_index - 1, low, bar_index, high)\nother = line.new(x1=0, y1=open, x2=bar_index, y2=close)\ncopy = line.copy(id)\nline.set_x1(id, bar_index)\nline.set_y1(id, low)\nline.set_xy1(id, bar_index, open)\nline.set_x2(id, bar_index)\nline.set_y2(id, high)\nline.set_xy2(id, bar_index, close)\nline.set_color(id, color.green)\nline.set_width(id, 2)\nline.set_style(id, line.style_dashed)\nline.set_extend(id, extend.right)\nline.delete(na)\nline.delete(id)\nplot(close)\n",
     );
 
     assert!(
@@ -606,6 +606,13 @@ fn accepts_minimal_line_new() {
             .iter()
             .any(|feature| feature.feature == "line.new")
     );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "line.copy")
+    );
     assert!(analysis.hir.is_some());
 }
 
@@ -619,6 +626,24 @@ fn rejects_unimplemented_line_methods() {
             .unsupported
             .iter()
             .any(|feature| feature.feature == "line.get_price"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_line_side_effects_inside_functions() {
+    let analysis = analyze(
+        "change(price) =>\n    id = line.new(bar_index - 1, price, bar_index, price)\n    copy = line.copy(id)\n    line.set_xy1(copy, bar_index, low)\n    line.delete(id)\n    price\nplot(change(close))\n",
+    );
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "function_side_effect"),
         "{:?}",
         analysis.compatibility.unsupported
     );

@@ -44,6 +44,7 @@ impl<'a> HistoricalRuntime<'a> {
             "line.set_style" => self.eval_line_set_style(args),
             "line.set_extend" => self.eval_line_set_extend(args),
             "line.delete" => self.eval_line_delete(args),
+            "line.copy" => self.eval_line_copy(args),
             "box.new" => self.eval_box_new(args),
             "box.set_left" => self.eval_box_set_left(args),
             "box.set_top" => self.eval_box_set_top(args),
