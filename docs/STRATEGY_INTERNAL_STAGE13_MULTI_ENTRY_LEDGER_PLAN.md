@@ -2433,6 +2433,37 @@ Future slices:
 
 - broader host parity coverage for future public JSON contracts.
 
+### Slice 94: Same-Id Omitted Profit/Loss Future WASM Host Parity
+
+Status: closed on 2026-06-06. This slice adds WASM public JSON coverage for the
+same-entry-id omitted-`from_entry` `profit` and `loss` future-entry persistence
+fixtures from Slices 67-68. It does not change runtime behavior, widen the
+Python binding claim, or claim same-id omitted bracket/trailing future-entry
+persistence, shorts, reversals, `close_entries_rule`, or broader strategy
+reporting semantics.
+
+Goal:
+
+- prove that the WASM `run_script_csv` host path exposes the same public orders,
+  trades, position snapshots, plots, and empty diagnostics for the fixture-backed
+  same-id omitted `profit` and `loss` future-entry persistence contracts already
+  covered by runtime/broker tests.
+
+Closed evidence:
+
+- `runs_strategy_omitted_profit_persistent_same_id_fixture_from_csv_to_public_strategy_json`
+  covers `strategy_pyramiding_exit_omitted_profit_persistent_same_id.pine`
+  through the WASM CSV host path.
+- `runs_strategy_omitted_loss_persistent_same_id_fixture_from_csv_to_public_strategy_json`
+  covers `strategy_pyramiding_exit_omitted_loss_persistent_same_id.pine` through
+  the WASM CSV host path.
+
+Future slices:
+
+- matching Python public JSON parity coverage for the same fixtures;
+- same-id omitted bracket/trailing future-entry host parity coverage;
+- broader host parity coverage for future public JSON contracts.
+
 ### Slice 74: Same-Id Omitted Trail-Points Future Runtime
 
 Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
@@ -3091,5 +3122,7 @@ Slice 92 adds WASM public JSON parity coverage for the current same-id omitted
 `trail_points+trail_offset` and `trail_price+trail_offset` trailing fixtures
 from Slices 65-66.
 Slice 93 adds matching Python public JSON parity coverage for those fixtures.
+Slice 94 adds WASM public JSON parity coverage for the same-id omitted
+`profit`/`loss` future-entry persistence fixtures from Slices 67-68.
 These slices must not be used to claim shorts, reversals, `strategy.order()`,
 `close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.
