@@ -2019,6 +2019,37 @@ Future slices:
 
 - broader host parity coverage for future public JSON contracts.
 
+### Slice 80: Base Pyramiding WASM Host Parity
+
+Status: closed on 2026-06-06. This slice adds WASM public JSON coverage for the
+base multi-entry ledger fixtures from Slices 10-12: long market pyramiding,
+`strategy.close(id)` matching, and `strategy.close_all()` flattening. It does
+not change runtime behavior, widen the Python binding claim, or claim shorts,
+reversals, `strategy.order()`, price-based entry behavior beyond the existing
+fixture-backed subset, or broader strategy reporting semantics.
+
+Goal:
+
+- prove that the WASM `run_script_csv` host path exposes the same public orders,
+  trades, position snapshots, plots, and empty diagnostics for the base
+  pyramiding, close, and close_all fixtures already covered by CLI/runtime
+  snapshots.
+
+Closed evidence:
+
+- `runs_strategy_pyramiding_from_csv_to_public_strategy_json` covers
+  `strategy_pyramiding.pine` through the WASM CSV host path.
+- `runs_strategy_pyramiding_close_from_csv_to_public_strategy_json` covers
+  `strategy_pyramiding_close.pine` through the WASM CSV host path.
+- `runs_strategy_pyramiding_close_all_from_csv_to_public_strategy_json` covers
+  `strategy_pyramiding_close_all.pine` through the WASM CSV host path.
+
+Future slices:
+
+- matching Python public JSON parity coverage for the base multi-entry ledger
+  fixtures;
+- broader host parity coverage for future public JSON contracts.
+
 ### Slice 74: Same-Id Omitted Trail-Points Future Runtime
 
 Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
@@ -2655,6 +2686,7 @@ pyramiding-limit exceptions. Slice 77 adds matching same-tick stop-limit-entry
 pyramiding-limit exceptions while preserving activation-bar delay. Slice 78 adds
 WASM public JSON parity coverage for the same-tick long limit, stop, and
 stop-limit entry fixtures. Slice 79 adds matching Python public JSON parity
-coverage for those fixtures. These slices must not be used to claim shorts,
-reversals, `strategy.order()`, `close_entries_rule`, or broader multi-entry
-`strategy.exit`/reporting support.
+coverage for those fixtures. Slice 80 adds WASM public JSON parity coverage for
+the base multi-entry ledger fixtures. These slices must not be used to claim
+shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader
+multi-entry `strategy.exit`/reporting support.
