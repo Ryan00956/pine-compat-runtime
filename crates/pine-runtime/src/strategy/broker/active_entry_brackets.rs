@@ -120,7 +120,7 @@ impl BrokerState {
             pending_exits.push(PendingExit {
                 id: id.clone(),
                 from_entry: open_trade.id.clone(),
-                target_trade_key: None,
+                target_trade_key: Some(open_trade.key),
                 trigger: PendingExitTrigger::Bracket {
                     downside: spec.stop_price,
                     upside: open_trade.entry_price + profit_offset,
@@ -334,7 +334,7 @@ impl BrokerState {
             pending_exits.push(PendingExit {
                 id: id.clone(),
                 from_entry: open_trade.id.clone(),
-                target_trade_key: None,
+                target_trade_key: Some(open_trade.key),
                 trigger: PendingExitTrigger::Bracket {
                     downside: open_trade.entry_price - loss_offset,
                     upside: spec.limit_price,
@@ -543,7 +543,7 @@ impl BrokerState {
             pending_exits.push(PendingExit {
                 id: id.clone(),
                 from_entry: open_trade.id.clone(),
-                target_trade_key: None,
+                target_trade_key: Some(open_trade.key),
                 trigger: PendingExitTrigger::Bracket {
                     downside: open_trade.entry_price - loss_offset,
                     upside: open_trade.entry_price + profit_offset,

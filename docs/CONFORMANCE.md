@@ -174,6 +174,8 @@ Stage 13 Slice 56 adds internal key-scoped ledger exit allocation for future
 per-open-trade exit identity work without widening the runtime subset.
 Stage 13 Slice 57 adds internal pending-exit trade-key scoping for future
 per-open-trade exit identity work without widening the runtime subset.
+Stage 13 Slice 58 adds internal key binding for existing unique-entry-id
+omitted relative exit expansion without widening the runtime subset.
 Stage 7 Slice 17 accepts
 `commission_type=strategy.commission.cash_per_contract`, and Stage 7 Slice 18
 accepts `commission_type=strategy.commission.cash_per_order`, both with finite

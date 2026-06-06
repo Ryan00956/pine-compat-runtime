@@ -1831,7 +1831,39 @@ Closed evidence:
 
 Future slices:
 
-- resolve omitted-`from_entry` relative targets against per-open-trade keys;
+- duplicate same-id omitted-`from_entry` relative targets;
+- price-based same-tick pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
+### Slice 58: Keyed Omitted Relative Expansion
+
+Status: closed on 2026-06-06. This slice binds the already-supported
+unique-entry-id omitted-`from_entry` relative exit expansion to broker-owned
+open-trade keys. It preserves the current duplicate same-id guardrail and does
+not widen public JSON, conformance claims, or fixture-backed runtime support.
+
+Goal:
+
+- ensure internally generated pending exits from omitted-`from_entry` relative
+  profit/loss/trailing/bracket templates carry the specific open-trade key they
+  were priced and reserved against.
+
+Closed evidence:
+
+- Current open-trade all-entry relative expansions now set
+  `PendingExit::target_trade_key` from each open trade while retaining the
+  existing duplicate same-id early return.
+- Deferred all-entry relative template resolution now resolves only a unique
+  open trade for the entry id and stores that trade key on the generated
+  pending exit.
+- `omitted_current_relative_exits_record_open_trade_key_scope` proves current
+  unique-entry-id all-entry relative exits carry the expected open-trade keys.
+- `omitted_future_relative_exit_resolves_with_open_trade_key_scope` proves a
+  flat-time deferred all-entry relative template resolves to a keyed pending
+  exit after the later entry fills.
+
+Future slices:
+
 - duplicate same-id omitted-`from_entry` relative targets;
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
@@ -1899,7 +1931,8 @@ all-entry absolute exit fixture, and Slice 54 adds matching Python public JSON
 parity coverage for that fixture. Slice 55 adds only internal open-trade keys
 for future per-open-trade exit identity work. Slice 56 adds only internal
 key-scoped ledger exit allocation. Slice 57 adds only internal pending-exit
-trade-key scoping. These internal slices must not be used to claim duplicate
-same-id omitted-`from_entry` relative targets, price-based same-tick entry
-exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`, or
-broader multi-entry `strategy.exit`/reporting support.
+trade-key scoping. Slice 58 adds only internal key binding for the existing
+unique-entry-id omitted relative expansion. These internal slices must not be
+used to claim duplicate same-id omitted-`from_entry` relative targets,
+price-based same-tick entry exceptions, shorts, reversals, `strategy.order()`,
+`close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.

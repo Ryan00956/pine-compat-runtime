@@ -1607,6 +1607,61 @@ fn omitted_loss_template_replaces_profit_template_for_later_entry() {
 }
 
 #[test]
+fn omitted_current_relative_exits_record_open_trade_key_scope() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    );
+    assert!(broker.entry_long("L1".to_owned(), 1, 10, 100.0, 1.0));
+    assert!(broker.entry_long("L2".to_owned(), 2, 20, 110.0, 2.0));
+
+    broker.place_all_entry_exit_profit_ticks("XP".to_owned(), 10.0, 0.01, 3);
+
+    let first = broker
+        .pending_exit_by_identity_and_key("XP", "L1", Some(0))
+        .unwrap();
+    assert_eq!(first.trigger, PendingExitTrigger::Limit(100.1));
+    assert_eq!(first.reserved_quantity, 1.0);
+    let second = broker
+        .pending_exit_by_identity_and_key("XP", "L2", Some(1))
+        .unwrap();
+    assert_eq!(second.trigger, PendingExitTrigger::Limit(110.1));
+    assert_eq!(second.reserved_quantity, 2.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn omitted_future_relative_exit_resolves_with_open_trade_key_scope() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    );
+
+    broker.place_all_entry_exit_profit_ticks("XP".to_owned(), 10.0, 0.01, 0);
+    assert_eq!(deferred_relative_exit_count(&broker), 1);
+
+    broker.place_pending_market_long_entry("L".to_owned(), 2.0, 1);
+    broker.fill_pending_market_long_entries(2, 20, 100.0);
+
+    let pending_exit = broker
+        .pending_exit_by_identity_and_key("XP", "L", Some(0))
+        .unwrap();
+    assert_eq!(pending_exit.trigger, PendingExitTrigger::Limit(100.1));
+    assert_eq!(pending_exit.reserved_quantity, 2.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn pending_market_entry_stores_entry_relative_loss_attachment() {
     let mut broker = BrokerState::new(100_000.0);
 

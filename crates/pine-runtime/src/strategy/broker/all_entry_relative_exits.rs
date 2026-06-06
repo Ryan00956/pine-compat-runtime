@@ -16,9 +16,11 @@ impl BrokerState {
         entry_id: &str,
         bar_index: usize,
     ) {
-        if self.open_trade_count_for_entry(entry_id) != 1 {
+        let Some((target_trade_key, _)) =
+            self.unique_open_trade_key_and_quantity_for_entry(entry_id)
+        else {
             return;
-        }
+        };
         let DeferredRelativeExit {
             id,
             trigger,
@@ -38,6 +40,7 @@ impl BrokerState {
                 self.place_all_entry_resolved_profit_exit(
                     id,
                     entry_id.to_owned(),
+                    target_trade_key,
                     limit_price,
                     bar_index,
                 );
@@ -54,6 +57,7 @@ impl BrokerState {
                 self.place_all_entry_resolved_loss_exit(
                     id,
                     entry_id.to_owned(),
+                    target_trade_key,
                     stop_price,
                     bar_index,
                 );
@@ -81,9 +85,14 @@ impl BrokerState {
                 self.place_all_entry_resolved_trail_points_exit(
                     id,
                     entry_id.to_owned(),
-                    activation_ticks,
-                    activation_price,
-                    offset_price_distance,
+                    target_trade_key,
+                    PendingTrailingSpec {
+                        activation: PendingTrailingActivation::Points {
+                            ticks: activation_ticks,
+                            price: activation_price,
+                        },
+                        offset_price_distance,
+                    },
                     bar_index,
                 );
             }
@@ -102,6 +111,7 @@ impl BrokerState {
                 self.place_all_entry_resolved_bracket(
                     id,
                     entry_id.to_owned(),
+                    target_trade_key,
                     downside,
                     upside,
                     bar_index,
@@ -122,6 +132,7 @@ impl BrokerState {
                 self.place_all_entry_resolved_bracket(
                     id,
                     entry_id.to_owned(),
+                    target_trade_key,
                     downside,
                     upside,
                     bar_index,
@@ -145,6 +156,7 @@ impl BrokerState {
                 self.place_all_entry_resolved_loss_profit_bracket(
                     id,
                     entry_id.to_owned(),
+                    target_trade_key,
                     DeferredLossProfitBracketSpec {
                         loss_ticks,
                         loss_mintick,
@@ -162,6 +174,7 @@ impl BrokerState {
         &mut self,
         id: String,
         from_entry: String,
+        target_trade_key: u64,
         limit_price: f64,
         bar_index: usize,
     ) {
@@ -172,14 +185,14 @@ impl BrokerState {
             });
             return;
         }
-        let reserved_quantity = self.open_position_size_for_entry(&from_entry);
+        let reserved_quantity = self.trade_ledger.open_quantity_for_key(target_trade_key);
         if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
             return;
         }
         self.order_book.exits_mut().replace_or_append(PendingExit {
             id,
             from_entry,
-            target_trade_key: None,
+            target_trade_key: Some(target_trade_key),
             trigger: PendingExitTrigger::Limit(limit_price),
             quantity: PendingExitQuantity::Full,
             reserved_quantity,
@@ -192,6 +205,7 @@ impl BrokerState {
         &mut self,
         id: String,
         from_entry: String,
+        target_trade_key: u64,
         stop_price: f64,
         bar_index: usize,
     ) {
@@ -202,14 +216,14 @@ impl BrokerState {
             });
             return;
         }
-        let reserved_quantity = self.open_position_size_for_entry(&from_entry);
+        let reserved_quantity = self.trade_ledger.open_quantity_for_key(target_trade_key);
         if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
             return;
         }
         self.order_book.exits_mut().replace_or_append(PendingExit {
             id,
             from_entry,
-            target_trade_key: None,
+            target_trade_key: Some(target_trade_key),
             trigger: PendingExitTrigger::Stop(stop_price),
             quantity: PendingExitQuantity::Full,
             reserved_quantity,
@@ -222,34 +236,27 @@ impl BrokerState {
         &mut self,
         id: String,
         from_entry: String,
-        activation_ticks: f64,
-        activation_price: f64,
-        offset_price_distance: f64,
+        target_trade_key: u64,
+        spec: PendingTrailingSpec,
         bar_index: usize,
     ) {
-        if !activation_price.is_finite() || !offset_price_distance.is_finite() {
+        if !spec.activation.price().is_finite() || !spec.offset_price_distance.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_EXIT_PRICE".to_owned(),
                 message: "`strategy.exit` price must be finite".to_owned(),
             });
             return;
         }
-        let reserved_quantity = self.open_position_size_for_entry(&from_entry);
+        let reserved_quantity = self.trade_ledger.open_quantity_for_key(target_trade_key);
         if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
             return;
         }
         self.order_book.exits_mut().replace_or_append(PendingExit {
             id,
             from_entry,
-            target_trade_key: None,
+            target_trade_key: Some(target_trade_key),
             trigger: PendingExitTrigger::Trailing(PendingTrailingExit {
-                spec: PendingTrailingSpec {
-                    activation: PendingTrailingActivation::Points {
-                        ticks: activation_ticks,
-                        price: activation_price,
-                    },
-                    offset_price_distance,
-                },
+                spec,
                 state: PendingTrailingState::Inactive,
             }),
             quantity: PendingExitQuantity::Full,
@@ -263,6 +270,7 @@ impl BrokerState {
         &mut self,
         id: String,
         from_entry: String,
+        target_trade_key: u64,
         spec: DeferredLossProfitBracketSpec,
         bar_index: usize,
     ) {
@@ -280,13 +288,21 @@ impl BrokerState {
         ) else {
             return;
         };
-        self.place_all_entry_resolved_bracket(id, from_entry, downside, upside, bar_index);
+        self.place_all_entry_resolved_bracket(
+            id,
+            from_entry,
+            target_trade_key,
+            downside,
+            upside,
+            bar_index,
+        );
     }
 
     fn place_all_entry_resolved_bracket(
         &mut self,
         id: String,
         from_entry: String,
+        target_trade_key: u64,
         downside: f64,
         upside: f64,
         bar_index: usize,
@@ -298,14 +314,14 @@ impl BrokerState {
             });
             return;
         }
-        let reserved_quantity = self.open_position_size_for_entry(&from_entry);
+        let reserved_quantity = self.trade_ledger.open_quantity_for_key(target_trade_key);
         if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
             return;
         }
         self.order_book.exits_mut().replace_or_append(PendingExit {
             id,
             from_entry,
-            target_trade_key: None,
+            target_trade_key: Some(target_trade_key),
             trigger: PendingExitTrigger::Bracket { downside, upside },
             quantity: PendingExitQuantity::Full,
             reserved_quantity,
