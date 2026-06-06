@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 27 omitted-`from_entry`
+  `strategy.exit` `trail_price+trail_offset` trailing all-entry support for
+  current open entries. A full omitted-`from_entry` trail-price trailing exit now
+  uses the existing all-entry FIFO allocation path to close currently open
+  pyramided long entries after trailing activation and stop touch.
 - Closed Strategy Internal Stage 13 Slice 26 omitted-`from_entry`
   `strategy.exit` `stop+limit` bracket all-entry support for current open
   entries. A full omitted-`from_entry` stop+limit bracket now uses the existing

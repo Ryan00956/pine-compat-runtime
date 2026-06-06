@@ -328,3 +328,13 @@ pending-exit path, which allocates fills through FIFO ledger allocation and
 emits one public exit order per closed ledger allocation. Trailing exits,
 relative future-entry persistence, and duplicate same-entry-id relative targets
 remain future work.
+
+## Slice 27 Follow-Up
+
+Stage 13 Slice 27 adds the omitted-`from_entry` full `trail_price+trail_offset`
+trailing shape for currently open pyramided long entries. The builtin gate now
+allows that absolute-activation trailing form to reach the existing all-entry
+pending-exit path, so trailing activation and later stop fills reuse broker-owned
+trailing state plus FIFO ledger allocation. Omitted-`from_entry` `trail_points`
+trailing, relative future-entry persistence, duplicate same-entry-id relative
+targets, and public pending-order schema remain future work.

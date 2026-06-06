@@ -449,13 +449,18 @@ impl<'a> HistoricalRuntime<'a> {
         let is_omitted_loss_limit_bracket = is_loss_limit_bracket
             && !has_trailing
             && matches!(quantity, StrategyExitQuantityArg::Full);
+        let is_omitted_trail_price = is_trailing_only
+            && trail_price_expr.is_some()
+            && trail_points_expr.is_none()
+            && matches!(quantity, StrategyExitQuantityArg::Full);
         if from_entry.is_empty()
             && !(is_omitted_absolute_single
                 || is_omitted_absolute_bracket
                 || is_omitted_relative_single
                 || is_omitted_loss_profit_bracket
                 || is_omitted_stop_profit_bracket
-                || is_omitted_loss_limit_bracket)
+                || is_omitted_loss_limit_bracket
+                || is_omitted_trail_price)
         {
             return Ok(PineValue::Void);
         }
