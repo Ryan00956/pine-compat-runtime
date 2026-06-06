@@ -63,6 +63,7 @@ impl<'a> HistoricalRuntime<'a> {
                 size,
                 tooltip,
                 text_align: PineValue::String("text.align_center".to_owned()),
+                text_font_family: PineValue::String("font.family_default".to_owned()),
             }],
         });
         Ok(PineValue::Label(id))
@@ -201,6 +202,17 @@ impl<'a> HistoricalRuntime<'a> {
         let text_align = self.eval_required_label_arg(args, 1, "textalign")?;
         self.mutate_label(id, |snapshot| {
             snapshot.text_align = text_align;
+        })
+    }
+
+    pub(super) fn eval_label_set_text_font_family(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let text_font_family = self.eval_required_label_arg(args, 1, "text_font_family")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.text_font_family = text_font_family;
         })
     }
 

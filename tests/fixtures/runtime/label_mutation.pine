@@ -11,4 +11,5 @@ for i = 0 to 0
     if bar_index == 3
         label.set_tooltip(label_id, "loop")
         label.set_textalign(label_id, text.align_left)
+        label.set_text_font_family(label_id, font.family_monospace)
 plot(close)

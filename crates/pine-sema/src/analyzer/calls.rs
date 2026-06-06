@@ -167,6 +167,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "label.set_size"
             | "label.set_tooltip"
             | "label.set_textalign"
+            | "label.set_text_font_family"
             | "label.delete"
             | "label.copy"
             | "line.new"
@@ -558,6 +559,15 @@ impl Analyzer {
             }
             "label.set_textalign" => {
                 self.validate_label_string_arg(signature, args, 1, "textalign", TEXT_HALIGNS);
+            }
+            "label.set_text_font_family" => {
+                self.validate_label_string_arg(
+                    signature,
+                    args,
+                    1,
+                    "text_font_family",
+                    TEXT_FONT_FAMILIES,
+                );
             }
             "label.set_xloc" => {
                 self.validate_label_string_arg(signature, args, 2, "xloc", LABEL_XLOCS);

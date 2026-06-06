@@ -5667,6 +5667,7 @@ def test_run_script_returns_label_outputs():
                     "size": "size.normal",
                     "tooltip": "",
                     "textAlign": "text.align_center",
+                    "textFontFamily": "font.family_default",
                 }
             ],
         }

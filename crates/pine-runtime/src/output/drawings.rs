@@ -21,6 +21,7 @@ pub struct LabelSnapshot {
     pub size: PineValue,
     pub tooltip: PineValue,
     pub text_align: PineValue,
+    pub text_font_family: PineValue,
 }
 
 #[derive(Debug, Clone, PartialEq)]

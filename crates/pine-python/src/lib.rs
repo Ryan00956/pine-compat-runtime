@@ -13,7 +13,6 @@ use pyo3::types::{PyAny, PyDict, PyList, PyModule, PySequence};
 mod diagnostics;
 #[cfg(test)]
 mod tests;
-
 use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
 
 #[pyclass(name = "Program", skip_from_py_object)]
@@ -590,6 +589,10 @@ fn label_snapshots_to_py(
             item.set_item("size", value_to_py(py, &snapshot.size)?)?;
             item.set_item("tooltip", value_to_py(py, &snapshot.tooltip)?)?;
             item.set_item("textAlign", value_to_py(py, &snapshot.text_align)?)?;
+            item.set_item(
+                "textFontFamily",
+                value_to_py(py, &snapshot.text_font_family)?,
+            )?;
         }
         output.append(item)?;
     }
