@@ -40,6 +40,7 @@ impl<'a> HistoricalRuntime<'a> {
                 text_size: PineValue::String("size.normal".to_owned()),
                 text_halign: PineValue::String("text.align_center".to_owned()),
                 text_valign: PineValue::String("text.align_center".to_owned()),
+                text_wrap: PineValue::String("text.wrap_none".to_owned()),
             }],
         });
         Ok(PineValue::Box(id))
@@ -222,6 +223,17 @@ impl<'a> HistoricalRuntime<'a> {
         let text_valign = self.eval_required_box_arg(args, 1, "text_valign")?;
         self.mutate_box(id, |snapshot| {
             snapshot.text_valign = text_valign;
+        })
+    }
+
+    pub(super) fn eval_box_set_text_wrap(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let text_wrap = self.eval_required_box_arg(args, 1, "text_wrap")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.text_wrap = text_wrap;
         })
     }
 

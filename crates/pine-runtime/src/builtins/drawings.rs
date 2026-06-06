@@ -62,6 +62,7 @@ impl<'a> HistoricalRuntime<'a> {
             "box.set_text_size" => self.eval_box_set_text_size(args),
             "box.set_text_halign" => self.eval_box_set_text_halign(args),
             "box.set_text_valign" => self.eval_box_set_text_valign(args),
+            "box.set_text_wrap" => self.eval_box_set_text_wrap(args),
             "box.delete" => self.eval_box_delete(args),
             "box.copy" => self.eval_box_copy(args),
             "box.get_top" => self.eval_box_get_top(args),

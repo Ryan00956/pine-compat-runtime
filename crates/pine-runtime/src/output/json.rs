@@ -551,6 +551,8 @@ fn boxes_json(boxes: &[BoxOutput]) -> String {
                 output.push_str(&value_json(&snapshot.text_halign));
                 output.push_str(",\"textValign\":");
                 output.push_str(&value_json(&snapshot.text_valign));
+                output.push_str(",\"textWrap\":");
+                output.push_str(&value_json(&snapshot.text_wrap));
             }
             output.push('}');
         }

@@ -118,6 +118,7 @@ box.set_text_color	partial	box id text color mutation snapshots only; deleted or
 box.set_text_size	partial	box id text size mutation snapshots only; deleted or na boxes are no-op; later box text alignment/wrap/font methods unsupported	tests/fixtures/runtime/box_mutation.pine
 box.set_text_halign	partial	box id text horizontal alignment mutation snapshots only; deleted or na boxes are no-op; later box text vertical alignment/wrap/font methods unsupported	tests/fixtures/runtime/box_mutation.pine
 box.set_text_valign	partial	box id text vertical alignment mutation snapshots only; deleted or na boxes are no-op; later box text wrap/font methods unsupported	tests/fixtures/runtime/box_mutation.pine
+box.set_text_wrap	partial	box id text wrap mutation snapshots only; deleted or na boxes are no-op; text layout remains host responsibility and later box font methods unsupported	tests/fixtures/runtime/box_mutation.pine
 box.delete	partial	box id deletion snapshots only; deleting deleted or na boxes is no-op; ids are not reused and boxes have a 500-object runtime limit; later box methods unsupported	tests/fixtures/runtime/box_delete.pine
 box.copy	partial	box id clone over the latest existing box snapshot into a new deterministic id; na or deleted boxes return na; copied boxes share the 500-object runtime limit	tests/fixtures/runtime/box_copy.pine
 box.get_top	partial	box id top getter over the latest existing box snapshot; na or deleted boxes return na; other box methods remain unsupported	tests/fixtures/runtime/box_getters.pine

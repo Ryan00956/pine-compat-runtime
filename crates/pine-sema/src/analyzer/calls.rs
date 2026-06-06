@@ -48,6 +48,8 @@ const TEXT_HALIGNS: &[&str] = &["text.align_left", "text.align_center", "text.al
 
 const TEXT_VALIGNS: &[&str] = &["text.align_top", "text.align_center", "text.align_bottom"];
 
+const TEXT_WRAPS: &[&str] = &["text.wrap_none", "text.wrap_auto"];
+
 const TABLE_POSITIONS: &[&str] = &[
     "position.top_left",
     "position.top_center",
@@ -194,6 +196,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.set_text_size"
             | "box.set_text_halign"
             | "box.set_text_valign"
+            | "box.set_text_wrap"
             | "box.delete"
             | "box.copy"
             | "table.new"
@@ -572,6 +575,9 @@ impl Analyzer {
             }
             "box.set_text_valign" => {
                 self.validate_label_string_arg(signature, args, 1, "text_valign", TEXT_VALIGNS);
+            }
+            "box.set_text_wrap" => {
+                self.validate_label_string_arg(signature, args, 1, "text_wrap", TEXT_WRAPS);
             }
             "table.new" => {
                 self.validate_label_string_arg(signature, args, 0, "position", TABLE_POSITIONS);

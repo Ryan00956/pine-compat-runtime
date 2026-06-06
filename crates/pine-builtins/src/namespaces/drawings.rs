@@ -541,6 +541,19 @@ const BOX_SET_TEXT_VALIGN_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const BOX_SET_TEXT_WRAP_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::BoxCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "text_wrap",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
 const BOX_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "id",
     accepts: Accepts::BoxCompatible,
@@ -937,6 +950,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "box.set_text_valign",
         phase: BuiltinPhase::Phase1Core,
         params: BOX_SET_TEXT_VALIGN_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_text_wrap",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_TEXT_WRAP_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
