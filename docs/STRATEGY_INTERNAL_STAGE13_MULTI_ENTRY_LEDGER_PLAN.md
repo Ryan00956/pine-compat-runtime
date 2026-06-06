@@ -1864,7 +1864,7 @@ Closed evidence:
 
 Future slices:
 
-- duplicate same-id omitted-`from_entry` loss/bracket/trailing targets;
+- duplicate same-id omitted-`from_entry` bracket/trailing targets;
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
 
@@ -1874,7 +1874,7 @@ Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
 subset for current open trades only: omitted-`from_entry` `strategy.exit` with a
 single `profit` trigger now handles multiple open long trades that share the
 same entry id, using each open trade's own entry price and internal trade key.
-It does not claim same-id omitted `loss`, bracket, trailing, future-entry
+It does not claim same-id omitted bracket, trailing, future-entry
 persistence, shorts, reversals, or host parity additions.
 
 Goal:
@@ -1896,7 +1896,38 @@ Closed evidence:
 
 Future slices:
 
-- duplicate same-id omitted-`from_entry` loss/bracket/trailing targets;
+- duplicate same-id omitted-`from_entry` bracket/trailing targets;
+- duplicate same-id omitted-`from_entry` future-entry persistence;
+- price-based same-tick pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
+### Slice 60: Current Same-Id Omitted Loss Exit
+
+Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
+subset for current open trades only: omitted-`from_entry` `strategy.exit` with a
+single `loss` trigger now handles multiple open long trades that share the same
+entry id, using each open trade's own entry price and internal trade key. It
+does not claim same-id omitted bracket, trailing, future-entry persistence,
+shorts, reversals, or host parity additions.
+
+Goal:
+
+- remove the current-open duplicate entry-id guard for omitted loss-tick exits
+  now that pending exits can preserve per-open-trade identity by key.
+
+Closed evidence:
+
+- `place_all_entry_exit_loss_ticks` now creates one keyed pending exit per open
+  trade, including same-id open trades.
+- `strategy_exit_omitted_from_entry_loss_handles_same_entry_id` proves two
+  same-id pyramided long trades close at different loss prices derived from
+  their own entry prices.
+- `tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_same_id.pine`
+  records the conformance fixture for the narrowed public claim.
+
+Future slices:
+
+- duplicate same-id omitted-`from_entry` bracket/trailing targets;
 - duplicate same-id omitted-`from_entry` future-entry persistence;
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
@@ -1966,8 +1997,9 @@ for future per-open-trade exit identity work. Slice 56 adds only internal
 key-scoped ledger exit allocation. Slice 57 adds only internal pending-exit
 trade-key scoping. Slice 58 adds only internal key binding for the existing
 unique-entry-id omitted relative expansion. Slice 59 adds fixture-backed current
-same-id omitted profit-tick exits only. These slices must not be used to claim
-duplicate same-id omitted-`from_entry` loss/bracket/trailing targets,
-future-entry same-id persistence, price-based same-tick entry exceptions,
-shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader
-multi-entry `strategy.exit`/reporting support.
+same-id omitted profit-tick exits only. Slice 60 adds fixture-backed current
+same-id omitted loss-tick exits only. These slices must not be used to claim
+duplicate same-id omitted-`from_entry` bracket/trailing targets, future-entry
+same-id persistence, price-based same-tick entry exceptions, shorts, reversals,
+`strategy.order()`, `close_entries_rule`, or broader multi-entry
+`strategy.exit`/reporting support.
