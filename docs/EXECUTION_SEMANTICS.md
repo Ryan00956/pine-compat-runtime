@@ -623,10 +623,10 @@ and a 500-object runtime limit. Boxes use the same lifecycle
 rules with bar-index left/right coordinates, price top/bottom coordinates,
 selected background/border fields, snapshot cloning, non-reused ids, and a
 500-object runtime limit. Tables use deterministic ids, fixed positive
-dimensions, and sparse cell snapshots for text/background/text-color/width/height writes
+dimensions, and sparse cell snapshots for text/background/text-color/width/height/text-size writes
 and `table.cell_set_text`/`table.cell_set_bgcolor`/
-`table.cell_set_text_color`/`table.cell_set_width`/`table.cell_set_height`
-mutations of previously populated cells.
+`table.cell_set_text_color`/`table.cell_set_width`/`table.cell_set_height`/
+`table.cell_set_text_size` mutations of previously populated cells.
 `*.delete(na)`, mutation of `na`, mutation after deletion, and deleting an
 already deleted drawing object are no-ops where deletion exists; invalid
 non-`na` ids are runtime errors. Labels, lines, and boxes each have a
@@ -668,6 +668,9 @@ actual table layout remains a host responsibility.
 `table.cell_set_height` updates the target previously populated cell height in
 the host-neutral snapshot while preserving the cell's other supported fields;
 actual table layout remains a host responsibility.
+`table.cell_set_text_size` updates the target previously populated cell text
+size in the host-neutral snapshot while preserving the cell's other supported
+fields; actual text rendering remains a host responsibility.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from

@@ -720,11 +720,11 @@ fn table_cells_to_py(
         item.set_item("textColor", value_to_py(py, &cell.text_color)?)?;
         item.set_item("width", value_to_py(py, &cell.width)?)?;
         item.set_item("height", value_to_py(py, &cell.height)?)?;
+        item.set_item("textSize", value_to_py(py, &cell.text_size)?)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())
 }
-
 fn alerts_to_py(py: Python<'_>, alerts: &[pine_runtime::AlertEvent]) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for alert in alerts {

@@ -777,6 +777,29 @@ const TABLE_CELL_SET_HEIGHT_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TABLE_CELL_SET_TEXT_SIZE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::TableCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "column",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "row",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "text_size",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "label.new",
@@ -1223,6 +1246,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "table.cell_set_height",
         phase: BuiltinPhase::Phase1Core,
         params: TABLE_CELL_SET_HEIGHT_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "table.cell_set_text_size",
+        phase: BuiltinPhase::Phase1Core,
+        params: TABLE_CELL_SET_TEXT_SIZE_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

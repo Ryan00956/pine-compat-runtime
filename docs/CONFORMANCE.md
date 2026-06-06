@@ -631,11 +631,13 @@ snapshot, plus fixture-backed `box.get_left`, `box.get_right`, `box.get_top`,
 and `box.get_bottom` over the latest existing box snapshot, with sparse
 snapshots and a 500-box runtime limit.
 The executable table subset covers
-`table.new` plus `table.cell` text/background/text-color/width/height cell writes and
+`table.new` plus `table.cell` text/background/text-color/width/height/text-size
+cell writes and
 `table.cell_set_text` text mutations plus `table.cell_set_bgcolor` background
 color mutations plus `table.cell_set_text_color` text-color mutations plus
 `table.cell_set_width` width mutations plus `table.cell_set_height` height
-mutations for previously populated cells with
+mutations plus `table.cell_set_text_size` text-size mutations for previously
+populated cells with
 deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
 per-table limit. Deleting `na`,
 mutating `na`, or mutating an already deleted
@@ -670,7 +672,9 @@ snapshot after `table.cell` has populated that cell; `table.cell_set_width`
 updates only the target cell width snapshot after `table.cell` has populated
 that cell; `table.cell_set_height` updates only the target cell height snapshot
 after `table.cell` has populated that cell, while visual layout remains
-host-specific; other table cell
+host-specific; `table.cell_set_text_size` updates only the target cell text-size
+snapshot after `table.cell` has populated that cell, while text rendering
+remains host-specific; other table cell
 style/layout setters remain unsupported.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state
 changes, and drawing side effects inside user-defined functions are rejected
