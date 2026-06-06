@@ -109,14 +109,12 @@ impl BrokerState {
                 if quantity != ExitQuantityRequest::Full {
                     return;
                 }
-                let Some((target_trade_key, _)) =
-                    self.unique_open_trade_key_and_quantity_for_entry(entry_id)
+                let Some((target_trade_key, entry_price)) =
+                    self.last_open_trade_key_and_price_for_entry(entry_id)
                 else {
                     return;
                 };
-                let Some(upside) =
-                    self.exit_profit_price_from_ticks_for_entry(entry_id, ticks, mintick)
-                else {
+                let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
                     return;
                 };
                 self.place_all_entry_resolved_bracket(
@@ -124,7 +122,7 @@ impl BrokerState {
                     entry_id.to_owned(),
                     target_trade_key,
                     downside,
-                    upside,
+                    entry_price + price_offset,
                     bar_index,
                 );
             }
