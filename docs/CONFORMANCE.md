@@ -127,6 +127,8 @@ Stage 13 Slice 35 adds fixture-backed omitted-`from_entry`
 `trail_price+trail_offset` future-entry persistence.
 Stage 13 Slice 36 adds fixture-backed omitted-`from_entry`
 `trail_points+trail_offset` future-entry persistence for unique entry ids.
+Stage 13 Slice 37 adds WASM public JSON host-parity coverage for the Slice 36
+omitted trail-points persistence fixture without widening the runtime subset.
 Stage 7 Slice 17 accepts
 `commission_type=strategy.commission.cash_per_contract`, and Stage 7 Slice 18
 accepts `commission_type=strategy.commission.cash_per_order`, both with finite
