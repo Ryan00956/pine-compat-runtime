@@ -114,9 +114,10 @@ box.set_border_width	partial	box id border width mutation snapshots only; delete
 box.set_border_style	partial	box id selected border style mutation snapshots only; deleted or na boxes are no-op; later box methods unsupported	tests/fixtures/runtime/box_mutation.pine;tests/fixtures/runtime/box_control_flow.pine
 box.delete	partial	box id deletion snapshots only; deleting deleted or na boxes is no-op; ids are not reused and boxes have a 500-object runtime limit; later box methods unsupported	tests/fixtures/runtime/box_delete.pine
 box.copy	partial	box id clone over the latest existing box snapshot into a new deterministic id; na or deleted boxes return na; copied boxes share the 500-object runtime limit	tests/fixtures/runtime/box_copy.pine
-box.get_top	partial	box id top getter over the latest existing box snapshot; na or deleted boxes return na; later box getters remain unsupported	tests/fixtures/runtime/box_getters.pine
-box.get_bottom	partial	box id bottom getter over the latest existing box snapshot; na or deleted boxes return na; later box getters remain unsupported	tests/fixtures/runtime/box_getters.pine
-box.get_left	partial	box id left getter over the latest existing box snapshot; na or deleted boxes return na; later box getters remain unsupported	tests/fixtures/runtime/box_getters.pine
+box.get_top	partial	box id top getter over the latest existing box snapshot; na or deleted boxes return na; other box methods remain unsupported	tests/fixtures/runtime/box_getters.pine
+box.get_bottom	partial	box id bottom getter over the latest existing box snapshot; na or deleted boxes return na; other box methods remain unsupported	tests/fixtures/runtime/box_getters.pine
+box.get_left	partial	box id left getter over the latest existing box snapshot; na or deleted boxes return na; other box methods remain unsupported	tests/fixtures/runtime/box_getters.pine
+box.get_right	partial	box id right getter over the latest existing box snapshot; na or deleted boxes return na; other box methods remain unsupported	tests/fixtures/runtime/box_getters.pine
 table.new	partial	position constants plus positive column and row dimensions with a 50-table runtime limit and 1000-cell per-table limit; realtime rollback covered; layout and styling variants unsupported	tests/fixtures/runtime/table_new.pine;tests/fixtures/runtime/table_control_flow.pine
 table.cell	partial	table id cell text snapshots with optional bgcolor and text_color; deleted or na table ids are no-op; later table methods unsupported	tests/fixtures/runtime/table_cell.pine;tests/fixtures/runtime/table_control_flow.pine
 color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine

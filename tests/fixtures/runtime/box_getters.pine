@@ -3,26 +3,33 @@ indicator("Box getters")
 var id = box.new(bar_index, high, bar_index + 1, low)
 if bar_index == 1
     box.set_left(id, bar_index - 10)
+    box.set_right(id, bar_index + 10)
     box.set_top(id, high + 10)
     box.set_bottom(id, low - 10)
 left_value = box.get_left(id)
+right_value = box.get_right(id)
 top_value = box.get_top(id)
 bottom_value = box.get_bottom(id)
 missing_left = nz(box.get_left(na), -1)
+missing_right = nz(box.get_right(na), -1)
 missing_top = nz(box.get_top(na), -1)
 missing_bottom = nz(box.get_bottom(na), -1)
 if bar_index == 2
     box.delete(id)
 deleted_left = bar_index >= 2 ? nz(box.get_left(id), -1) : -1
+deleted_right = bar_index >= 2 ? nz(box.get_right(id), -1) : -1
 deleted_top = bar_index >= 2 ? nz(box.get_top(id), -1) : -1
 deleted_bottom = bar_index >= 2 ? nz(box.get_bottom(id), -1) : -1
 plot(left_value)
+plot(right_value)
 plot(top_value)
 plot(bottom_value)
 plot(missing_left)
+plot(missing_right)
 plot(missing_top)
 plot(missing_bottom)
 plot(deleted_left)
+plot(deleted_right)
 plot(deleted_top)
 plot(deleted_bottom)
 plot(close)

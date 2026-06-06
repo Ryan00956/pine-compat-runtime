@@ -61,6 +61,7 @@ impl<'a> HistoricalRuntime<'a> {
             "box.get_top" => self.eval_box_get_top(args),
             "box.get_bottom" => self.eval_box_get_bottom(args),
             "box.get_left" => self.eval_box_get_left(args),
+            "box.get_right" => self.eval_box_get_right(args),
             "table.new" => self.eval_table_new(args),
             "table.cell" => self.eval_table_cell(args),
             _ => return None,
