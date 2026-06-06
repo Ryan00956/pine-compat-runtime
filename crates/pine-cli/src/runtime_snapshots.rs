@@ -674,6 +674,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_limit_bracket_from_entries.pine",
     ),
     (
+        "runtime_strategy_pyramiding_exit_omitted_loss_limit_bracket_persistent_from_entries.json",
+        "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_limit_bracket_persistent_from_entries.pine",
+    ),
+    (
         "runtime_strategy_pyramiding_exit_omitted_stop_limit_bracket_from_entries.json",
         "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_limit_bracket_from_entries.pine",
     ),

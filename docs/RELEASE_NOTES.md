@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 33 omitted-`from_entry`
+  `strategy.exit` loss+limit bracket future-entry persistence for unique entry
+  ids. A full omitted-`from_entry` loss+limit bracket now persists for later
+  pyramided long entries with each later entry's own loss stop and the shared
+  absolute limit.
 - Closed Strategy Internal Stage 13 Slice 32 omitted-`from_entry`
   `strategy.exit` stop+profit bracket future-entry persistence for unique entry
   ids. A full omitted-`from_entry` stop+profit bracket now persists for later

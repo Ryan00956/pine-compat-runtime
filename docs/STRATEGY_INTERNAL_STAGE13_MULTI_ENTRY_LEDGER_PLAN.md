@@ -1045,8 +1045,46 @@ Closed evidence:
 
 Future slices:
 
-- omitted-`from_entry` `loss+limit`, `stop+limit`, and trailing relative
-  future-entry persistence;
+- omitted-`from_entry` `stop+limit` and trailing relative future-entry
+  persistence;
+- duplicate same-id omitted-`from_entry` relative targets;
+- price-based same-tick pyramiding-limit exceptions;
+- host parity coverage for broader public JSON contracts.
+
+### Slice 33: Omitted `from_entry` Loss+Limit Bracket Future-Entry Persistence
+
+Status: closed on 2026-06-06. This slice extends the full-quantity omitted-
+`from_entry` `loss+limit` bracket all-entry subset so it also covers later
+pyramided long entries with unique entry ids until the position closes. It does
+not claim `stop+limit`, trailing relative future-entry persistence, duplicate
+same-id per-trade relative targets, shorts, reversals, `close_entries_rule`, or
+public pending-order schema.
+
+Goal:
+
+- keep a supported omitted-`from_entry`
+  `strategy.exit(..., loss=ticks, limit=price)` call active for later long
+  entries with each later entry's own entry-price-derived loss stop and the
+  shared absolute limit.
+
+Closed evidence:
+
+- Broker placement for omitted-`from_entry` loss+limit brackets now stores an
+  internal all-entry deferred relative bracket template alongside the current
+  open-entry pending brackets, replacing any prior omitted all-entry relative
+  template.
+- Pending entry fill paths resolve that template for the newly filled entry id
+  only when the id is unique among currently open trades, preserving the
+  unsupported duplicate same-id relative-target boundary.
+- `strategy_pyramiding_exit_omitted_loss_limit_bracket_persistent_from_entries.pine`
+  covers an exit call placed after `L1` opens and before `L2` opens; `L1`
+  closes through its own entry-price-derived loss leg and the later `L2` closes
+  through the shared absolute limit.
+
+Future slices:
+
+- omitted-`from_entry` `stop+limit` and trailing relative future-entry
+  persistence;
 - duplicate same-id omitted-`from_entry` relative targets;
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
@@ -1083,9 +1121,10 @@ future-entry persistence plus Slice 30's fixture-backed omitted-`from_entry`
 unique-entry-id loss-tick future-entry persistence plus Slice 31's
 fixture-backed omitted-`from_entry` unique-entry-id `loss+profit` bracket
 future-entry persistence plus Slice 32's fixture-backed omitted-`from_entry`
-unique-entry-id `stop+profit` bracket future-entry persistence. It must not be
-used to claim omitted-`from_entry` `loss+limit`, `stop+limit`, or trailing
-relative future-entry persistence, duplicate same-id omitted-`from_entry`
-relative targets, price-based same-tick entry exceptions, shorts, reversals,
-`strategy.order()`, `close_entries_rule`, or broader multi-entry
-`strategy.exit`/reporting support.
+unique-entry-id `stop+profit` bracket future-entry persistence plus Slice 33's
+fixture-backed omitted-`from_entry` unique-entry-id `loss+limit` bracket
+future-entry persistence. It must not be used to claim omitted-`from_entry`
+`stop+limit` or trailing relative future-entry persistence, duplicate same-id
+omitted-`from_entry` relative targets, price-based same-tick entry exceptions,
+shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader
+multi-entry `strategy.exit`/reporting support.

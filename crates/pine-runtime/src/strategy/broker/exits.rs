@@ -536,6 +536,26 @@ impl BrokerState {
                 );
             }
             DeferredRelativeExitTrigger::Bracket {
+                downside: DeferredBracketLeg::RelativeLoss { ticks, mintick },
+                upside: DeferredBracketLeg::Absolute(upside),
+            } => {
+                if quantity != ExitQuantityRequest::Full {
+                    return;
+                }
+                let Some(downside) =
+                    self.exit_loss_price_from_ticks_for_entry(entry_id, ticks, mintick)
+                else {
+                    return;
+                };
+                self.place_all_entry_resolved_bracket(
+                    id,
+                    entry_id.to_owned(),
+                    downside,
+                    upside,
+                    bar_index,
+                );
+            }
+            DeferredRelativeExitTrigger::Bracket {
                 downside:
                     DeferredBracketLeg::RelativeLoss {
                         ticks: loss_ticks,
@@ -645,26 +665,7 @@ impl BrokerState {
         ) else {
             return;
         };
-        if !downside.is_finite() || !upside.is_finite() {
-            self.diagnostics.push(RuntimeDiagnostic {
-                code: "E_STRATEGY_EXIT_PRICE".to_owned(),
-                message: "`strategy.exit` price must be finite".to_owned(),
-            });
-            return;
-        }
-        let reserved_quantity = self.open_position_size_for_entry(&from_entry);
-        if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
-            return;
-        }
-        self.order_book.exits_mut().replace_or_append(PendingExit {
-            id,
-            from_entry,
-            trigger: PendingExitTrigger::Bracket { downside, upside },
-            quantity: PendingExitQuantity::Full,
-            reserved_quantity,
-            multiple_reservation: false,
-            last_update_bar_index: bar_index,
-        });
+        self.place_all_entry_resolved_bracket(id, from_entry, downside, upside, bar_index);
     }
 
     fn place_all_entry_resolved_bracket(
