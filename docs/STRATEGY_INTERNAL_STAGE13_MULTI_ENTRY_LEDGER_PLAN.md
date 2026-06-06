@@ -1869,6 +1869,41 @@ Future slices:
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
 
+### Slice 68: Same-Id Omitted Loss Future Entry
+
+Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
+subset for omitted-`from_entry` `strategy.exit` with a single `loss` trigger:
+when a full-position all-entry loss exit is placed while one same-entry-id long
+trade is open, the persistent all-entry template now also attaches to a later
+long trade with the same entry id using that later trade's broker-owned
+open-trade key and entry price. It does not claim same-id omitted bracket,
+trailing future-entry persistence, shorts, reversals, or host parity additions.
+
+Goal:
+
+- resolve the deferred all-entry loss template for the newest same-entry-id
+  open trade instead of requiring the entry id to be unique.
+- compute the later trade's loss stop from the later trade's own entry price
+  while preserving the existing current-open keyed pending exit.
+
+Closed evidence:
+
+- `resolve_all_entry_deferred_relative_exit_for_entry` now uses the latest
+  matching open-trade key and entry price for `LossTicks`; bracket and trailing
+  deferred same-id paths retain the existing unique-entry-id guard.
+- `strategy_exit_omitted_from_entry_loss_persists_for_later_same_entry_id`
+  proves the persistent omitted loss exit closes both same-id trades at prices
+  derived from their own entries.
+- `tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_persistent_same_id.pine`
+  records the conformance fixture for the narrowed public claim.
+
+Future slices:
+
+- duplicate same-id omitted-`from_entry` bracket/trailing future-entry
+  persistence;
+- price-based same-tick pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
 ### Slice 67: Same-Id Omitted Profit Future Entry
 
 Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
@@ -2239,7 +2274,8 @@ coverage without runtime changes. Slice 65 adds fixture-backed current same-id
 omitted `trail_points+trail_offset` trailing exits only. Slice 66 adds explicit
 fixture-backed current same-id omitted `trail_price+trail_offset` trailing
 coverage without runtime changes. Slice 67 adds fixture-backed same-id omitted
-profit-tick future-entry persistence only. These slices must not be used to
-claim future-entry same-id loss, bracket, or trailing persistence, price-based
+profit-tick future-entry persistence only. Slice 68 adds matching same-id
+omitted loss-tick future-entry persistence. These slices must not be used to
+claim future-entry same-id bracket or trailing persistence, price-based
 same-tick entry exceptions, shorts, reversals, `strategy.order()`,
 `close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.
