@@ -2313,6 +2313,36 @@ Future slices:
 
 - broader host parity coverage for future public JSON contracts.
 
+### Slice 90: Current Same-Id Omitted Loss/Stop Limit Bracket WASM Host Parity
+
+Status: closed on 2026-06-06. This slice adds WASM public JSON coverage for the
+current-open same-entry-id omitted-`from_entry` `loss+limit` and `stop+limit`
+bracket fixtures from Slices 63-64. It does not change runtime behavior, widen
+the Python binding claim, or claim trailing exits, future-entry persistence,
+shorts, reversals, `close_entries_rule`, or broader strategy reporting
+semantics.
+
+Goal:
+
+- prove that the WASM `run_script_csv` host path exposes the same public orders,
+  trades, position snapshots, plots, and empty diagnostics for the fixture-backed
+  current same-id omitted `loss+limit` and `stop+limit` bracket multi-entry exit
+  contracts already covered by runtime/broker tests.
+
+Closed evidence:
+
+- `runs_strategy_omitted_loss_limit_bracket_same_id_fixture_from_csv_to_public_strategy_json`
+  covers `strategy_pyramiding_exit_omitted_loss_limit_bracket_same_id.pine`
+  through the WASM CSV host path.
+- `runs_strategy_omitted_stop_limit_bracket_same_id_fixture_from_csv_to_public_strategy_json`
+  covers `strategy_pyramiding_exit_omitted_stop_limit_bracket_same_id.pine`
+  through the WASM CSV host path.
+
+Future slices:
+
+- matching Python public JSON parity coverage for the same fixtures;
+- broader host parity coverage for future public JSON contracts.
+
 ### Slice 74: Same-Id Omitted Trail-Points Future Runtime
 
 Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
@@ -2964,5 +2994,7 @@ Slice 87 adds matching Python public JSON parity coverage for those fixtures.
 Slice 88 adds WASM public JSON parity coverage for the current same-id omitted
 `loss+profit` and `stop+profit` bracket fixtures from Slices 61-62.
 Slice 89 adds matching Python public JSON parity coverage for those fixtures.
+Slice 90 adds WASM public JSON parity coverage for the current same-id omitted
+`loss+limit` and `stop+limit` bracket fixtures from Slices 63-64.
 These slices must not be used to claim shorts, reversals, `strategy.order()`,
 `close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.

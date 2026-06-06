@@ -110,7 +110,9 @@ Python binding public JSON host-parity coverage for those fixtures. Stage 13
 Slice 88 adds WASM public JSON host-parity coverage for the current same-id
 omitted `loss+profit` and `stop+profit` bracket fixtures from Slices 61-62.
 Stage 13 Slice 89 adds matching Python binding public JSON host-parity coverage
-for those fixtures.
+for those fixtures. Stage 13 Slice 90 adds WASM public JSON host-parity
+coverage for the current same-id omitted `loss+limit` and `stop+limit` bracket
+fixtures from Slices 63-64.
 Stage 13 Slice 75 adds fixture-backed same-tick limit-entry
 pyramiding-limit exceptions. Stage 13 Slice 76 adds matching stop-entry
 exceptions. Stage 13 Slice 77 adds matching stop-limit-entry exceptions while
