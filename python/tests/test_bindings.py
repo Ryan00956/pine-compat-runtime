@@ -640,6 +640,139 @@ def test_run_script_returns_strategy_pyramiding_exit_same_id_contract():
     assert "closedTrades" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_pyramiding_exit_bracket_from_entry_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_pyramiding_exit_bracket_from_entry.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_pyramiding_exit_profit_from_entry_bars.csv"
+        ),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0, 1, 2, 2, 1],
+        [0.0, 1.0, 4.0, 4.0, 3.0],
+        [0, 0, 0, 0, 1],
+    ]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L1",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 2.0,
+        },
+        {
+            "id": "L2",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.long",
+            "qty": 3.0,
+            "price": 3.0,
+        },
+        {
+            "id": "XB1",
+            "barIndex": 3,
+            "time": 4,
+            "direction": "strategy.exit",
+            "qty": 1.0,
+            "price": 4.0,
+        },
+    ]
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L1",
+            "entryBarIndex": 1,
+            "exitBarIndex": 3,
+            "entryTime": 2,
+            "exitTime": 4,
+            "entryPrice": 2.0,
+            "exitPrice": 4.0,
+            "qty": 1.0,
+            "profit": 2.0,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 1.0, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 4.0, "avgPrice": 2.75},
+        {"barIndex": 3, "size": 3.0, "avgPrice": 3.0},
+    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+    assert "closedTrades" not in result["strategy"]
+
+
+def test_run_script_returns_strategy_pyramiding_exit_trail_points_from_entry_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_pyramiding_exit_trail_points_from_entry.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_pyramiding_exit_trail_points_from_entry_bars.csv"
+        ),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0, 1, 2, 2, 2, 1],
+        [0.0, 1.0, 4.0, 4.0, 4.0, 3.0],
+        [0, 0, 0, 0, 0, 1],
+    ]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L1",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 2.0,
+        },
+        {
+            "id": "L2",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.long",
+            "qty": 3.0,
+            "price": 4.0,
+        },
+        {
+            "id": "XT1",
+            "barIndex": 4,
+            "time": 5,
+            "direction": "strategy.exit",
+            "qty": 1.0,
+            "price": 3.5,
+        },
+    ]
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L1",
+            "entryBarIndex": 1,
+            "exitBarIndex": 4,
+            "entryTime": 2,
+            "exitTime": 5,
+            "entryPrice": 2.0,
+            "exitPrice": 3.5,
+            "qty": 1.0,
+            "profit": 1.5,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 1.0, "avgPrice": 2.0},
+        {"barIndex": 2, "size": 4.0, "avgPrice": 3.5},
+        {"barIndex": 4, "size": 3.0, "avgPrice": 4.0},
+    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+    assert "closedTrades" not in result["strategy"]
+    assert "trailPrice" not in result["strategy"]
+    assert "trailOffset" not in result["strategy"]
+
+
 def test_run_script_returns_same_tick_limit_entries_contract():
     source = (
         ROOT
