@@ -46,6 +46,8 @@ const LINE_EXTENDS: &[&str] = &["extend.none", "extend.right", "extend.left", "e
 
 const TEXT_HALIGNS: &[&str] = &["text.align_left", "text.align_center", "text.align_right"];
 
+const TEXT_VALIGNS: &[&str] = &["text.align_top", "text.align_center", "text.align_bottom"];
+
 const TABLE_POSITIONS: &[&str] = &[
     "position.top_left",
     "position.top_center",
@@ -191,6 +193,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.set_text_color"
             | "box.set_text_size"
             | "box.set_text_halign"
+            | "box.set_text_valign"
             | "box.delete"
             | "box.copy"
             | "table.new"
@@ -566,6 +569,9 @@ impl Analyzer {
             }
             "box.set_text_halign" => {
                 self.validate_label_string_arg(signature, args, 1, "text_halign", TEXT_HALIGNS);
+            }
+            "box.set_text_valign" => {
+                self.validate_label_string_arg(signature, args, 1, "text_valign", TEXT_VALIGNS);
             }
             "table.new" => {
                 self.validate_label_string_arg(signature, args, 0, "position", TABLE_POSITIONS);

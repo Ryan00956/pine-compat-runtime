@@ -328,6 +328,10 @@ plot(close)
             snapshot.text_halign,
             PineValue::String("text.align_center".to_owned())
         );
+        assert_eq!(
+            snapshot.text_valign,
+            PineValue::String("text.align_center".to_owned())
+        );
     }
 }
 
@@ -352,6 +356,7 @@ box.set_text(id, "box text")
 box.set_text_color(id, color.white)
 box.set_text_size(id, size.small)
 box.set_text_halign(id, text.align_left)
+box.set_text_valign(id, text.align_top)
 plot(close)
 "#,
     );
@@ -366,7 +371,7 @@ plot(close)
 
     assert_eq!(result.boxes.len(), 1);
     let box_output = &result.boxes[0];
-    assert_eq!(box_output.snapshots.len(), 16);
+    assert_eq!(box_output.snapshots.len(), 17);
     assert_eq!(box_output.snapshots[1].left, PineValue::Int(1));
     assert_eq!(box_output.snapshots[2].top, PineValue::Float(2.0));
     assert_eq!(box_output.snapshots[3].left, PineValue::Int(0));
@@ -404,6 +409,10 @@ plot(close)
     assert_eq!(
         box_output.snapshots[15].text_halign,
         PineValue::String("text.align_left".to_owned())
+    );
+    assert_eq!(
+        box_output.snapshots[16].text_valign,
+        PineValue::String("text.align_top".to_owned())
     );
 }
 

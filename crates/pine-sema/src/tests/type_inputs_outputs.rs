@@ -653,7 +653,7 @@ fn rejects_line_side_effects_inside_functions() {
 #[test]
 fn accepts_minimal_box_new() {
     let analysis = analyze(
-        "id = box.new(bar_index, high, bar_index, low)\nother = box.new(left=0, top=open, right=bar_index, bottom=close)\ncopy = box.copy(id)\nbox.set_left(id, bar_index)\nbox.set_top(id, high)\nbox.set_right(id, bar_index)\nbox.set_bottom(id, low)\nbox.set_lefttop(id, bar_index, close)\nbox.set_rightbottom(id, bar_index, open)\nbox.set_bgcolor(id, color.green)\nbox.set_border_color(id, color.white)\nbox.set_border_width(id, 2)\nbox.set_border_style(id, line.style_dashed)\nbox.set_extend(id, extend.right)\nbox.set_text(id, \"box text\")\nbox.set_text_color(id, color.white)\nbox.set_text_size(id, size.small)\nbox.set_text_halign(id, text.align_left)\nbox.delete(na)\nbox.delete(id)\nplot(box.get_top(copy))\nplot(box.get_bottom(copy))\nplot(box.get_left(copy))\nplot(box.get_right(copy))\nplot(close)\n",
+        "id = box.new(bar_index, high, bar_index, low)\nother = box.new(left=0, top=open, right=bar_index, bottom=close)\ncopy = box.copy(id)\nbox.set_left(id, bar_index)\nbox.set_top(id, high)\nbox.set_right(id, bar_index)\nbox.set_bottom(id, low)\nbox.set_lefttop(id, bar_index, close)\nbox.set_rightbottom(id, bar_index, open)\nbox.set_bgcolor(id, color.green)\nbox.set_border_color(id, color.white)\nbox.set_border_width(id, 2)\nbox.set_border_style(id, line.style_dashed)\nbox.set_extend(id, extend.right)\nbox.set_text(id, \"box text\")\nbox.set_text_color(id, color.white)\nbox.set_text_size(id, size.small)\nbox.set_text_halign(id, text.align_left)\nbox.set_text_valign(id, text.align_top)\nbox.delete(na)\nbox.delete(id)\nplot(box.get_top(copy))\nplot(box.get_bottom(copy))\nplot(box.get_left(copy))\nplot(box.get_right(copy))\nplot(close)\n",
     );
 
     assert!(
@@ -738,19 +738,26 @@ fn accepts_minimal_box_new() {
             .iter()
             .any(|feature| feature.feature == "box.set_text_halign")
     );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "box.set_text_valign")
+    );
     assert!(analysis.hir.is_some());
 }
 
 #[test]
 fn rejects_unimplemented_box_methods() {
-    let analysis = analyze("box.set_text_valign(na, text.align_top)\nplot(close)\n");
+    let analysis = analyze("box.set_text_wrap(na, \"text.wrap_auto\")\nplot(close)\n");
 
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "box.set_text_valign"),
+            .any(|feature| feature.feature == "box.set_text_wrap"),
         "{:?}",
         analysis.compatibility.unsupported
     );

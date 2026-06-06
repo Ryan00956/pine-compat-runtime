@@ -16,4 +16,5 @@ for i = 0 to 0
         box.set_text_color(box_id, color.white)
         box.set_text_size(box_id, size.small)
         box.set_text_halign(box_id, text.align_left)
+        box.set_text_valign(box_id, text.align_top)
 plot(close)

@@ -664,6 +664,7 @@ fn box_snapshots_to_py(
             item.set_item("textColor", value_to_py(py, &snapshot.text_color)?)?;
             item.set_item("textSize", value_to_py(py, &snapshot.text_size)?)?;
             item.set_item("textHalign", value_to_py(py, &snapshot.text_halign)?)?;
+            item.set_item("textValign", value_to_py(py, &snapshot.text_valign)?)?;
         }
         output.append(item)?;
     }

@@ -5725,6 +5725,7 @@ def test_run_script_returns_box_outputs():
                     "textColor": None,
                     "textSize": "size.normal",
                     "textHalign": "text.align_center",
+                    "textValign": "text.align_center",
                 },
                 {
                     "barIndex": 1,
@@ -5742,6 +5743,7 @@ def test_run_script_returns_box_outputs():
                     "textColor": None,
                     "textSize": "size.normal",
                     "textHalign": "text.align_center",
+                    "textValign": "text.align_center",
                 },
             ],
         }
