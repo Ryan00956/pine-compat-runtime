@@ -1558,6 +1558,38 @@ Future slices:
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
 
+### Slice 49: Omitted Loss+Limit Bracket Persistence WASM Host Parity
+
+Status: closed on 2026-06-06. This slice adds WASM public JSON coverage for
+Slice 33's omitted-`from_entry` `loss+limit` bracket future-entry persistence
+fixture. It does not expand runtime semantics or public schema shape.
+
+Goal:
+
+- prove that the WASM `run_script_csv` host path exposes the same public orders,
+  trades, position snapshots, plots, diagnostics, and hidden-internal-field
+  boundary for the omitted `loss+limit` bracket persistent multi-entry fixture
+  already covered by CLI/runtime snapshots.
+
+Closed evidence:
+
+- `runs_strategy_omitted_loss_limit_bracket_persistent_fixture_from_csv_to_public_strategy_json`
+  runs
+  `strategy_pyramiding_exit_omitted_loss_limit_bracket_persistent_from_entries.pine`
+  with its dedicated bars CSV through the WASM CSV host path.
+- The test asserts the public schema version, the loss-side `XB` exit for the
+  first entry before the limit-side `XB` exit for the second entry, two closed
+  trades, aggregate position snapshots, plot values, strategy diagnostics, and
+  absence of internal pending/reservation/target/stop fields.
+
+Future slices:
+
+- Python public JSON parity coverage for the same omitted `loss+limit` bracket
+  persistent fixture;
+- duplicate same-id omitted-`from_entry` relative targets;
+- price-based same-tick pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
 ## Compatibility Contract
 
 The supported strategy subset remains the one recorded in
@@ -1611,7 +1643,9 @@ Slice 45 adds WASM public JSON parity coverage for Slice 31's omitted
 public JSON parity coverage for that fixture. Slice 47 adds WASM public JSON
 parity coverage for Slice 32's omitted `stop+profit` bracket persistent
 fixture, and Slice 48 adds matching Python public JSON parity coverage for that
-fixture. It must not be used to claim duplicate same-id omitted-`from_entry`
-relative targets, price-based same-tick entry exceptions, shorts, reversals,
+fixture. Slice 49 adds WASM public JSON parity coverage for Slice 33's omitted
+`loss+limit` bracket persistent fixture. It must not be used to claim duplicate
+same-id omitted-`from_entry` relative targets, price-based same-tick entry
+exceptions, shorts, reversals,
 `strategy.order()`, `close_entries_rule`, or broader multi-entry
 `strategy.exit`/reporting support.

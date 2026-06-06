@@ -153,6 +153,9 @@ omitted stop+profit bracket persistence fixture without widening the runtime
 subset.
 Stage 13 Slice 48 adds the matching Python binding public JSON host-parity
 coverage for the same fixture without widening the runtime subset.
+Stage 13 Slice 49 adds WASM public JSON host-parity coverage for the Slice 33
+omitted loss+limit bracket persistence fixture without widening the runtime
+subset.
 Stage 7 Slice 17 accepts
 `commission_type=strategy.commission.cash_per_contract`, and Stage 7 Slice 18
 accepts `commission_type=strategy.commission.cash_per_order`, both with finite
