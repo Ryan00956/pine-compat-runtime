@@ -1869,6 +1869,45 @@ Future slices:
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
 
+### Slice 71: Same-Id Omitted Loss+Limit Future Bracket
+
+Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
+subset for omitted-`from_entry` `strategy.exit` with a `loss+limit` bracket:
+when a full-position all-entry mixed relative/absolute bracket is placed while
+one same-entry-id long trade is open, the persistent all-entry template now
+also attaches to a later long trade with the same entry id using that later
+trade's broker-owned open-trade key and entry price for the loss leg while
+preserving the shared absolute limit. It does not claim same-id omitted
+`stop+limit`, trailing future-entry persistence, shorts, reversals, or host
+parity additions.
+
+Goal:
+
+- resolve the deferred all-entry `loss+limit` bracket template for the newest
+  same-entry-id open trade instead of requiring the entry id to be unique.
+- compute the later trade's loss leg from the later trade's own entry price
+  while preserving the existing absolute limit leg.
+
+Closed evidence:
+
+- `resolve_all_entry_deferred_relative_exit_for_entry` now uses the latest
+  matching open-trade key and entry price for `RelativeLoss+Absolute` brackets;
+  `stop+limit` and trailing deferred same-id paths retain the existing
+  unique-entry-id guard.
+- `strategy_exit_omitted_from_entry_loss_limit_bracket_persists_for_later_same_entry_id`
+  proves the persistent omitted bracket closes the earlier same-id trade
+  through its own loss leg while the later same-id trade exits through the
+  shared absolute limit.
+- `tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_limit_bracket_persistent_same_id.pine`
+  records the conformance fixture for the narrowed public claim.
+
+Future slices:
+
+- duplicate same-id omitted-`from_entry` `stop+limit` future-entry persistence;
+- duplicate same-id omitted-`from_entry` trailing future-entry persistence;
+- price-based same-tick pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
 ### Slice 70: Same-Id Omitted Stop+Profit Future Bracket
 
 Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
@@ -2355,8 +2394,9 @@ coverage without runtime changes. Slice 67 adds fixture-backed same-id omitted
 profit-tick future-entry persistence only. Slice 68 adds matching same-id
 omitted loss-tick future-entry persistence. Slice 69 adds matching same-id
 omitted `loss+profit` bracket future-entry persistence. Slice 70 adds matching
-same-id omitted `stop+profit` bracket future-entry persistence. These slices
-must not be used to claim future-entry same-id `loss+limit`, `stop+limit`, or
-trailing persistence, price-based same-tick entry exceptions, shorts,
-reversals, `strategy.order()`, `close_entries_rule`, or broader multi-entry
+same-id omitted `stop+profit` bracket future-entry persistence. Slice 71 adds
+matching same-id omitted `loss+limit` bracket future-entry persistence. These
+slices must not be used to claim future-entry same-id `stop+limit` or trailing
+persistence, price-based same-tick entry exceptions, shorts, reversals,
+`strategy.order()`, `close_entries_rule`, or broader multi-entry
 `strategy.exit`/reporting support.
