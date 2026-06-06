@@ -96,7 +96,9 @@ multi-entry exit/reporting semantics remain outside the supported subset unless
 fixture-backed. Stage 13 Slice 80 adds WASM public JSON host-parity coverage for
 the base `pyramiding`, `strategy.close(id)`, and `strategy.close_all()` fixtures.
 Stage 13 Slice 81 adds matching Python binding public JSON host-parity coverage
-for those fixtures.
+for those fixtures. Stage 13 Slice 82 adds WASM public JSON host-parity coverage
+for the absolute `strategy.exit(from_entry)`, relative profit
+`strategy.exit(from_entry)`, and same-id fan-out fixtures from Slices 14-16.
 Stage 13 Slice 75 adds fixture-backed same-tick limit-entry
 pyramiding-limit exceptions. Stage 13 Slice 76 adds matching stop-entry
 exceptions. Stage 13 Slice 77 adds matching stop-limit-entry exceptions while

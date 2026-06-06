@@ -256,6 +256,104 @@ fn runs_strategy_pyramiding_close_all_from_csv_to_public_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_pyramiding_exit_from_entry_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_pyramiding_exit_from_entry.pine"),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_from_entry_bars.csv"
+        ),
+    )
+    .expect("strategy pyramiding exit from_entry fixture should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
+    assert!(output.contains("\"values\":[0,1,2,2,1]"));
+    assert!(output.contains("\"values\":[0,1,4,4,3]"));
+    assert!(output.contains("\"values\":[0,0,0,0,1]"));
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L1\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":1,\"price\":2},{\"id\":\"L2\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.long\",\"qty\":3,\"price\":3},{\"id\":\"XL1\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":3}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L1\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":2,\"exitPrice\":3,\"qty\":1,\"profit\":1}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":1,\"size\":1,\"avgPrice\":2},{\"barIndex\":2,\"size\":4,\"avgPrice\":2.75},{\"barIndex\":3,\"size\":3,\"avgPrice\":3}]"
+    ));
+    assert!(output.contains("\"diagnostics\":[]"));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("closedTrades"));
+}
+
+#[test]
+fn runs_strategy_pyramiding_exit_profit_from_entry_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_profit_from_entry.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_profit_from_entry_bars.csv"
+        ),
+    )
+    .expect("strategy pyramiding profit exit from_entry fixture should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
+    assert!(output.contains("\"values\":[0,1,2,2,1]"));
+    assert!(output.contains("\"values\":[0,1,4,4,3]"));
+    assert!(output.contains("\"values\":[0,0,0,0,1]"));
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L1\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":1,\"price\":2},{\"id\":\"L2\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.long\",\"qty\":3,\"price\":3},{\"id\":\"XP1\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":4}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L1\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":2,\"exitPrice\":4,\"qty\":1,\"profit\":2}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":1,\"size\":1,\"avgPrice\":2},{\"barIndex\":2,\"size\":4,\"avgPrice\":2.75},{\"barIndex\":3,\"size\":3,\"avgPrice\":3}]"
+    ));
+    assert!(output.contains("\"diagnostics\":[]"));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("closedTrades"));
+}
+
+#[test]
+fn runs_strategy_pyramiding_exit_same_id_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_pyramiding_exit_same_id.pine"),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_same_id_bars.csv"
+        ),
+    )
+    .expect("strategy pyramiding same-id exit fixture should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 2);
+    assert!(output.contains("\"values\":[0,1,2,2,0]"));
+    assert!(output.contains("\"values\":[0,1,4,4,0]"));
+    assert!(output.contains("\"values\":[0,0,0,0,2]"));
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":1,\"price\":2},{\"id\":\"L\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.long\",\"qty\":3,\"price\":4},{\"id\":\"XL\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":5},{\"id\":\"XL\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":3,\"price\":5}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":2,\"exitPrice\":5,\"qty\":1,\"profit\":3},{\"id\":\"L\",\"entryBarIndex\":2,\"exitBarIndex\":3,\"entryTime\":3,\"exitTime\":4,\"entryPrice\":4,\"exitPrice\":5,\"qty\":3,\"profit\":3}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":1,\"size\":1,\"avgPrice\":2},{\"barIndex\":2,\"size\":4,\"avgPrice\":3.5},{\"barIndex\":3,\"size\":0,\"avgPrice\":null}]"
+    ));
+    assert!(output.contains("\"diagnostics\":[]"));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("closedTrades"));
+}
+
+#[test]
 fn runs_strategy_same_tick_limit_entries_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(

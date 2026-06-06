@@ -2077,6 +2077,38 @@ Future slices:
 
 - broader host parity coverage for future public JSON contracts.
 
+### Slice 82: `strategy.exit(from_entry)` WASM Host Parity
+
+Status: closed on 2026-06-06. This slice adds WASM public JSON coverage for the
+multi-entry exit fixtures from Slices 14-16: absolute `strategy.exit(from_entry)`
+matching, relative profit tick price basis, and same-id allocation fan-out. It
+does not change runtime behavior, widen the Python binding claim, or claim
+brackets, trailing exits, omitted-`from_entry` behavior, shorts, reversals,
+`close_entries_rule`, or broader strategy reporting semantics.
+
+Goal:
+
+- prove that the WASM `run_script_csv` host path exposes the same public orders,
+  trades, position snapshots, plots, and empty diagnostics for the fixture-backed
+  absolute, relative profit, and same-id multi-entry exit contracts already
+  covered by CLI/runtime snapshots.
+
+Closed evidence:
+
+- `runs_strategy_pyramiding_exit_from_entry_from_csv_to_public_strategy_json`
+  covers `strategy_pyramiding_exit_from_entry.pine` through the WASM CSV host
+  path.
+- `runs_strategy_pyramiding_exit_profit_from_entry_from_csv_to_public_strategy_json`
+  covers `strategy_pyramiding_exit_profit_from_entry.pine` through the WASM CSV
+  host path.
+- `runs_strategy_pyramiding_exit_same_id_from_csv_to_public_strategy_json` covers
+  `strategy_pyramiding_exit_same_id.pine` through the WASM CSV host path.
+
+Future slices:
+
+- matching Python public JSON parity coverage for the same fixtures;
+- broader host parity coverage for future public JSON contracts.
+
 ### Slice 74: Same-Id Omitted Trail-Points Future Runtime
 
 Status: closed on 2026-06-06. This slice widens the fixture-backed runtime
@@ -2715,6 +2747,8 @@ WASM public JSON parity coverage for the same-tick long limit, stop, and
 stop-limit entry fixtures. Slice 79 adds matching Python public JSON parity
 coverage for those fixtures. Slice 80 adds WASM public JSON parity coverage for
 the base multi-entry ledger fixtures. Slice 81 adds matching Python public JSON
-parity coverage for those fixtures. These slices must not be used to claim
-shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader
-multi-entry `strategy.exit`/reporting support.
+parity coverage for those fixtures. Slice 82 adds WASM public JSON parity
+coverage for the absolute `strategy.exit(from_entry)`, relative profit
+`strategy.exit(from_entry)`, and same-id fan-out fixtures from Slices 14-16.
+These slices must not be used to claim shorts, reversals, `strategy.order()`,
+`close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.
