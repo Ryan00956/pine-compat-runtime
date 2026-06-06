@@ -515,6 +515,33 @@ impl BrokerState {
                     bar_index,
                 );
             }
+            DeferredRelativeExitTrigger::Bracket {
+                downside:
+                    DeferredBracketLeg::RelativeLoss {
+                        ticks: loss_ticks,
+                        mintick: loss_mintick,
+                    },
+                upside:
+                    DeferredBracketLeg::RelativeProfit {
+                        ticks: profit_ticks,
+                        mintick: profit_mintick,
+                    },
+            } => {
+                if quantity != ExitQuantityRequest::Full {
+                    return;
+                }
+                self.place_all_entry_resolved_loss_profit_bracket(
+                    id,
+                    entry_id.to_owned(),
+                    DeferredLossProfitBracketSpec {
+                        loss_ticks,
+                        loss_mintick,
+                        profit_ticks,
+                        profit_mintick,
+                    },
+                    bar_index,
+                );
+            }
             _ => {}
         }
     }
@@ -570,6 +597,49 @@ impl BrokerState {
             id,
             from_entry,
             trigger: PendingExitTrigger::Stop(stop_price),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity,
+            multiple_reservation: false,
+            last_update_bar_index: bar_index,
+        });
+    }
+
+    fn place_all_entry_resolved_loss_profit_bracket(
+        &mut self,
+        id: String,
+        from_entry: String,
+        spec: DeferredLossProfitBracketSpec,
+        bar_index: usize,
+    ) {
+        let Some(downside) = self.exit_loss_price_from_ticks_for_entry(
+            &from_entry,
+            spec.loss_ticks,
+            spec.loss_mintick,
+        ) else {
+            return;
+        };
+        let Some(upside) = self.exit_profit_price_from_ticks_for_entry(
+            &from_entry,
+            spec.profit_ticks,
+            spec.profit_mintick,
+        ) else {
+            return;
+        };
+        if !downside.is_finite() || !upside.is_finite() {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_EXIT_PRICE".to_owned(),
+                message: "`strategy.exit` price must be finite".to_owned(),
+            });
+            return;
+        }
+        let reserved_quantity = self.open_position_size_for_entry(&from_entry);
+        if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
+            return;
+        }
+        self.order_book.exits_mut().replace_or_append(PendingExit {
+            id,
+            from_entry,
+            trigger: PendingExitTrigger::Bracket { downside, upside },
             quantity: PendingExitQuantity::Full,
             reserved_quantity,
             multiple_reservation: false,
