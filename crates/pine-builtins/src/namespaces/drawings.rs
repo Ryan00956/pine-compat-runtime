@@ -183,6 +183,12 @@ const LABEL_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const LABEL_GET_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::LabelCompatible,
+    optional: false,
+}];
+
 const LINE_NEW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "x1",
@@ -547,6 +553,27 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: LABEL_DELETE_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "label.get_x",
+        phase: BuiltinPhase::Phase1Core,
+        params: LABEL_GET_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "label.get_y",
+        phase: BuiltinPhase::Phase1Core,
+        params: LABEL_GET_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "label.get_text",
+        phase: BuiltinPhase::Phase1Core,
+        params: LABEL_GET_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_STRING),
         variadic: false,
     },
     BuiltinSignature {

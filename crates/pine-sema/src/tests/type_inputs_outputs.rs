@@ -500,6 +500,27 @@ fn accepts_label_mutation_methods() {
 }
 
 #[test]
+fn accepts_label_getter_methods() {
+    let analysis = analyze(
+        "id = label.new(bar_index, high, \"High\")\nplot(label.get_x(id))\nplot(label.get_y(id))\nplot(str.length(label.get_text(id)))\nplot(label.get_x(na))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "label.get_text")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn rejects_label_side_effects_inside_functions() {
     let analysis = analyze(
         "change(price) =>\n    id = label.new(bar_index, price, \"High\")\n    label.delete(id)\n    price\nplot(change(close))\n",
@@ -519,14 +540,14 @@ fn rejects_label_side_effects_inside_functions() {
 
 #[test]
 fn rejects_unimplemented_label_methods() {
-    let analysis = analyze("label.get_text(na)\nplot(close)\n");
+    let analysis = analyze("label.copy(na)\nplot(close)\n");
 
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "label.get_text"),
+            .any(|feature| feature.feature == "label.copy"),
         "{:?}",
         analysis.compatibility.unsupported
     );

@@ -611,19 +611,22 @@ dictionaries, so its binding tests assert the same top-level runtime keys and
 representative nested output families such as `plotShapes` and `plotCandles`.
 The Phase E drawing-object scaffold adds `labels`, `lines`, `boxes`, and
 `tables` as top-level runtime keys in `schemaVersion: 2`. The executable label
-subset covers `label.new`, selected `label.set_*` mutators, and `label.delete`
-with sparse snapshots and a 500-label runtime limit. The executable line subset
-covers `line.new`, selected endpoint/color/width/style/extend mutators, and
-`line.delete` with sparse snapshots and a 500-line runtime limit. The executable
-box subset covers `box.new`, selected geometry/background/border mutators, and
-`box.delete` with sparse snapshots and a 500-box runtime limit. The executable
-table subset covers `table.new` plus `table.cell` text/background/text-color
-cell writes with deterministic table dimensions, a 50-table runtime limit, and a
-1000-cell per-table limit. Deleting `na`, mutating `na`, or mutating an already
-deleted drawing object is a no-op where deletion exists; invalid non-`na` ids
-are runtime errors; ids are stable and not reused. Supported drawing creation,
-mutation, and cell writes are covered under realtime rollback, and drawing side
-effects inside user-defined functions are rejected under the existing
+subset covers `label.new`, selected `label.set_*` mutators, `label.delete`, and
+the fixture-backed `label.get_x`, `label.get_y`, and `label.get_text` getters
+over the latest existing label snapshot, with a 500-label runtime limit. The
+executable line subset covers `line.new`, selected
+endpoint/color/width/style/extend mutators, and `line.delete` with sparse
+snapshots and a 500-line runtime limit. The executable box subset covers
+`box.new`, selected geometry/background/border mutators, and `box.delete` with
+sparse snapshots and a 500-box runtime limit. The executable table subset covers
+`table.new` plus `table.cell` text/background/text-color cell writes with
+deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
+per-table limit. Deleting `na`, mutating `na`, or mutating an already deleted
+drawing object is a no-op where deletion exists; supported label getters return
+`na` for `na` or deleted label ids; invalid non-`na` ids are runtime errors; ids
+are stable and not reused. Supported drawing creation, mutation, getter, and
+cell writes are covered under realtime rollback where state changes, and drawing
+side effects inside user-defined functions are rejected under the existing
 side-effect policy. Keep unsupported coordinate modes and advanced object
 methods out of the supported matrix until they have fixtures and public-output
 coverage. `polyline.*` remains explicitly unsupported because it needs a

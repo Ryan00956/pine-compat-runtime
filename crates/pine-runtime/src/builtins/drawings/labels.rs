@@ -196,6 +196,27 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    pub(super) fn eval_label_get_x(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_label_get(args, "label.get_x", |snapshot| snapshot.x.clone())
+    }
+
+    pub(super) fn eval_label_get_y(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_label_get(args, "label.get_y", |snapshot| snapshot.y.clone())
+    }
+
+    pub(super) fn eval_label_get_text(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_label_get(args, "label.get_text", |snapshot| snapshot.text.clone())
+    }
+
     fn eval_label_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
@@ -253,6 +274,51 @@ impl<'a> HistoricalRuntime<'a> {
             label.snapshots.push(next);
         }
         Ok(PineValue::Void)
+    }
+
+    fn eval_label_get(
+        &mut self,
+        args: &[HirCallArg],
+        function_name: &str,
+        get_value: impl FnOnce(&LabelSnapshot) -> PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_get_id_arg(args, function_name)?;
+        let Some(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(label) = self.labels.iter().find(|label| label.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid label id `{id}`"),
+            });
+        };
+        let Some(latest) = label.snapshots.last() else {
+            return Err(RuntimeError {
+                message: format!("label `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Na);
+        }
+        Ok(get_value(latest))
+    }
+
+    fn eval_label_get_id_arg(
+        &mut self,
+        args: &[HirCallArg],
+        function_name: &str,
+    ) -> Result<Option<u32>, RuntimeError> {
+        let Some(id_arg) = call_arg_expr(args, 0, "id") else {
+            return Err(RuntimeError {
+                message: format!("{function_name} missing id argument"),
+            });
+        };
+        match self.eval_expr(id_arg)? {
+            PineValue::Label(id) => Ok(Some(id)),
+            PineValue::Na => Ok(None),
+            value => Err(RuntimeError {
+                message: format!("{function_name} expected label id, got {value:?}"),
+            }),
+        }
     }
 
     fn eval_label_option(
