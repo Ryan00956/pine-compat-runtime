@@ -293,6 +293,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "ta.wma",
     "ta.wpr",
     "table.cell",
+    "table.cell_set_bgcolor",
     "table.cell_set_text",
     "table.new",
     "timeframe.change",

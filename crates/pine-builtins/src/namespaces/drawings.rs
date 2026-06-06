@@ -685,6 +685,29 @@ const TABLE_CELL_SET_TEXT_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TABLE_CELL_SET_BGCOLOR_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::TableCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "column",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "row",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "bgcolor",
+        accepts: Accepts::ColorCompatible,
+        optional: false,
+    },
+];
+
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "label.new",
@@ -1103,6 +1126,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "table.cell_set_text",
         phase: BuiltinPhase::Phase1Core,
         params: TABLE_CELL_SET_TEXT_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "table.cell_set_bgcolor",
+        phase: BuiltinPhase::Phase1Core,
+        params: TABLE_CELL_SET_BGCOLOR_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

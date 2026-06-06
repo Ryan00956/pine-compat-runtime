@@ -92,6 +92,23 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    pub(super) fn eval_table_cell_set_bgcolor(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let column = self.eval_required_table_int_arg(args, 1, "column")?;
+        let row = self.eval_required_table_int_arg(args, 2, "row")?;
+        let bg_color = self.eval_required_table_arg(args, 3, "bgcolor")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        self.mutate_table_cell(id, column, row, false, |cell| {
+            cell.bg_color = bg_color;
+        })?;
+        Ok(PineValue::Void)
+    }
+
     fn eval_table_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
