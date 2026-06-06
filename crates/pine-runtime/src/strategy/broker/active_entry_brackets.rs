@@ -310,19 +310,11 @@ impl BrokerState {
         let Some(loss_offset) = self.exit_tick_price_offset(spec.loss_ticks, spec.mintick) else {
             return;
         };
-        let mut seen_entry_ids: Vec<String> = Vec::new();
         let mut pending_exits = Vec::new();
         for index in 0..self.trade_ledger.open_count() {
             let Some(open_trade) = self.trade_ledger.open_at(index) else {
                 continue;
             };
-            if seen_entry_ids
-                .iter()
-                .any(|entry_id| entry_id == &open_trade.id)
-            {
-                return;
-            }
-            seen_entry_ids.push(open_trade.id.clone());
             pending_exits.push(PendingExit {
                 id: id.clone(),
                 from_entry: open_trade.id.clone(),
