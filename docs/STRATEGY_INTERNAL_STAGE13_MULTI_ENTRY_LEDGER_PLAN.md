@@ -1930,7 +1930,39 @@ Closed evidence:
 
 Future slices:
 
-- duplicate same-id omitted-`from_entry` `stop+limit` and trailing targets;
+- duplicate same-id omitted-`from_entry` trailing targets;
+- duplicate same-id omitted-`from_entry` future-entry persistence;
+- price-based same-tick pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
+### Slice 64: Current Same-Id Omitted Stop+Limit Bracket Fixture
+
+Status: closed on 2026-06-06. This slice documents the already-supported
+fixture-backed current open-trade subset for omitted-`from_entry`
+`strategy.exit` with `stop` plus `limit` when multiple open long trades share
+the same entry id. Because `stop+limit` uses shared absolute prices and the
+existing all-entry absolute bracket path, this slice adds explicit coverage
+without runtime changes. It does not claim same-id omitted trailing,
+future-entry persistence, shorts, reversals, or host parity additions.
+
+Goal:
+
+- add explicit same-id fixture coverage for the absolute `stop+limit` bracket
+  path so the current-open bracket same-id closeout is fully fixture-backed.
+
+Closed evidence:
+
+- `strategy_exit_omitted_from_entry_stop_limit_bracket_handles_same_entry_id`
+  proves two same-id pyramided long trades close through the shared absolute
+  limit on the same eligible bar.
+- `tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_limit_bracket_same_id.pine`
+  records the conformance fixture for the narrowed public claim.
+- No runtime change was required because the existing omitted absolute bracket
+  path already allocates all open ledger entries.
+
+Future slices:
+
+- duplicate same-id omitted-`from_entry` trailing targets;
 - duplicate same-id omitted-`from_entry` future-entry persistence;
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
@@ -2100,8 +2132,10 @@ same-id omitted profit-tick exits only. Slice 60 adds fixture-backed current
 same-id omitted loss-tick exits only. Slice 61 adds fixture-backed current
 same-id omitted `loss+profit` bracket exits only. Slice 62 adds fixture-backed
 current same-id omitted `stop+profit` bracket exits only. Slice 63 adds
-fixture-backed current same-id omitted `loss+limit` bracket exits only. These
-slices must not be used to claim duplicate same-id omitted-`from_entry`
-`stop+limit`, trailing targets, future-entry same-id persistence, price-based
-same-tick entry exceptions, shorts, reversals, `strategy.order()`,
-`close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.
+fixture-backed current same-id omitted `loss+limit` bracket exits only. Slice
+64 adds explicit fixture-backed current same-id omitted `stop+limit` bracket
+coverage without runtime changes. These slices must not be used to claim
+duplicate same-id omitted-`from_entry` trailing targets, future-entry same-id
+persistence, price-based same-tick entry exceptions, shorts, reversals,
+`strategy.order()`, `close_entries_rule`, or broader multi-entry
+`strategy.exit`/reporting support.
