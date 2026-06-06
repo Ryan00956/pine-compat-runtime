@@ -633,7 +633,8 @@ snapshots and a 500-box runtime limit.
 The executable table subset covers
 `table.new` plus `table.cell` text/background/text-color cell writes and
 `table.cell_set_text` text mutations plus `table.cell_set_bgcolor` background
-color mutations for previously populated cells with
+color mutations plus `table.cell_set_text_color` text-color mutations for
+previously populated cells with
 deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
 per-table limit. Deleting `na`,
 mutating `na`, or mutating an already deleted
@@ -663,7 +664,9 @@ box snapshot and return `na` for `na` or deleted boxes; other box methods remain
 unsupported. `table.cell_set_text` updates only the target cell text snapshot
 after `table.cell` has populated that cell; `table.cell_set_bgcolor` updates
 only the target cell background color snapshot after `table.cell` has populated
-that cell; other table cell style/layout setters remain unsupported.
+that cell; `table.cell_set_text_color` updates only the target cell text-color
+snapshot after `table.cell` has populated that cell; other table cell
+style/layout setters remain unsupported.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state
 changes, and drawing side effects inside user-defined functions are rejected
 under the existing side-effect policy. Keep unsupported coordinate modes and advanced object

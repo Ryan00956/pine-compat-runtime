@@ -624,8 +624,8 @@ rules with bar-index left/right coordinates, price top/bottom coordinates,
 selected background/border fields, snapshot cloning, non-reused ids, and a
 500-object runtime limit. Tables use deterministic ids, fixed positive
 dimensions, and sparse cell snapshots for text/background/text-color writes
-and `table.cell_set_text`/`table.cell_set_bgcolor` mutations of previously
-populated cells.
+and `table.cell_set_text`/`table.cell_set_bgcolor`/
+`table.cell_set_text_color` mutations of previously populated cells.
 `*.delete(na)`, mutation of `na`, mutation after deletion, and deleting an
 already deleted drawing object are no-ops where deletion exists; invalid
 non-`na` ids are runtime errors. Labels, lines, and boxes each have a
@@ -659,6 +659,8 @@ updates the target previously populated cell text in the host-neutral table
 snapshot while preserving the cell's other supported fields.
 `table.cell_set_bgcolor` updates the target previously populated cell
 background color while preserving the cell's other supported fields.
+`table.cell_set_text_color` updates the target previously populated cell text
+color while preserving the cell's other supported fields.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from

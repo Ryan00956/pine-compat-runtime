@@ -295,6 +295,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "table.cell",
     "table.cell_set_bgcolor",
     "table.cell_set_text",
+    "table.cell_set_text_color",
     "table.new",
     "timeframe.change",
     "timeframe.from_seconds",
