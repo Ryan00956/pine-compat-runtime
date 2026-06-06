@@ -3443,6 +3443,100 @@ plot(strategy.closedtrades)
 }
 
 #[test]
+fn strategy_exit_omitted_from_entry_trail_price_handles_same_entry_id() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("exit", pyramiding=2)
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=1)
+if bar_index == 1
+    strategy.entry("L", strategy.long, qty=3)
+if bar_index == 2
+    strategy.exit("XT", trail_price=2.5, trail_offset=50)
+plot(strategy.opentrades)
+plot(strategy.position_size)
+plot(strategy.closedtrades)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar(1.0),
+            bar_ohlc(2.0, 3.0, 1.5, 2.0),
+            bar_ohlc(3.0, 4.0, 2.8, 3.0),
+            bar_ohlc(3.5, 4.0, 3.6, 3.8),
+            bar_ohlc(3.5, 3.5, 3.5, 3.5),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 4);
+    assert_eq!(strategy.orders[2].id, "XT");
+    assert_eq!(strategy.orders[2].direction, "strategy.exit");
+    assert_eq!(strategy.orders[2].bar_index, 4);
+    assert_eq!(strategy.orders[2].qty, 1.0);
+    assert_eq!(strategy.orders[2].price, 3.5);
+    assert_eq!(strategy.orders[3].id, "XT");
+    assert_eq!(strategy.orders[3].direction, "strategy.exit");
+    assert_eq!(strategy.orders[3].bar_index, 4);
+    assert_eq!(strategy.orders[3].qty, 3.0);
+    assert_eq!(strategy.orders[3].price, 3.5);
+    assert_eq!(strategy.trades.len(), 2);
+    assert_eq!(strategy.trades[0].id, "L");
+    assert_eq!(strategy.trades[0].exit_id, "XT");
+    assert_eq!(strategy.trades[0].entry_price, 2.0);
+    assert_eq!(strategy.trades[0].exit_price, 3.5);
+    assert_eq!(strategy.trades[0].qty, 1.0);
+    assert_eq!(strategy.trades[0].profit, 1.5);
+    assert_eq!(strategy.trades[1].id, "L");
+    assert_eq!(strategy.trades[1].exit_id, "XT");
+    assert_eq!(strategy.trades[1].entry_price, 3.0);
+    assert_eq!(strategy.trades[1].exit_price, 3.5);
+    assert_eq!(strategy.trades[1].qty, 3.0);
+    assert_eq!(strategy.trades[1].profit, 1.5);
+    assert_eq!(strategy.position.last().unwrap().size, 0.0);
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(2),
+            PineValue::Int(2),
+            PineValue::Int(2),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(1.0),
+            PineValue::Float(4.0),
+            PineValue::Float(4.0),
+            PineValue::Float(4.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+        ]
+    );
+}
+
+#[test]
 fn strategy_exit_omitted_from_entry_trail_price_persists_for_later_entry() {
     let source = SourceFile::new(
         "strategy.pine",
