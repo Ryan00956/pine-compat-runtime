@@ -131,7 +131,8 @@ WASM public JSON host-parity coverage for the same-id omitted `loss+limit` and
 those fixtures. Stage 13 Slice 100 adds WASM public JSON host-parity coverage
 for the same-id omitted `trail_price+trail_offset` and
 `trail_points+trail_offset` trailing future-entry persistence fixtures from
-Slices 73-74.
+Slices 73-74. Stage 13 Slice 101 adds matching Python binding public JSON
+host-parity coverage for those fixtures.
 Stage 13 Slice 75 adds fixture-backed same-tick limit-entry
 pyramiding-limit exceptions. Stage 13 Slice 76 adds matching stop-entry
 exceptions. Stage 13 Slice 77 adds matching stop-limit-entry exceptions while

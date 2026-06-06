@@ -2650,7 +2650,37 @@ Closed evidence:
 
 Future slices:
 
-- matching Python public JSON parity coverage for the same fixtures;
+- broader host parity coverage for future public JSON contracts.
+
+### Slice 101: Same-Id Omitted Trail-Price/Trail-Points Future Python Host Parity
+
+Status: closed on 2026-06-06. This slice adds Python binding public JSON
+coverage for the same-entry-id omitted-`from_entry`
+`trail_price+trail_offset` and `trail_points+trail_offset` trailing
+future-entry persistence fixtures from Slices 73-74. It does not change runtime
+behavior, widen the WASM claim, or claim shorts, reversals,
+`close_entries_rule`, or broader strategy reporting semantics.
+
+Goal:
+
+- prove that the Python `run_script` host path exposes the same public orders,
+  trades, position snapshots, plots, and empty diagnostics for the fixture-backed
+  same-id omitted trailing future-entry persistence contracts already covered by
+  runtime/broker tests and WASM.
+
+Closed evidence:
+
+- `test_run_script_returns_omitted_trail_price_persistent_same_id_fixture_contract`
+  covers
+  `strategy_pyramiding_exit_omitted_trail_price_persistent_same_id.pine` through
+  the Python binding.
+- `test_run_script_returns_omitted_trail_points_persistent_same_id_fixture_contract`
+  covers
+  `strategy_pyramiding_exit_omitted_trail_points_persistent_same_id.pine`
+  through the Python binding.
+
+Future slices:
+
 - broader host parity coverage for future public JSON contracts.
 
 ### Slice 74: Same-Id Omitted Trail-Points Future Runtime
@@ -3325,5 +3355,6 @@ Slice 99 adds matching Python public JSON parity coverage for those fixtures.
 Slice 100 adds WASM public JSON parity coverage for the same-id omitted
 `trail_price+trail_offset` and `trail_points+trail_offset` trailing
 future-entry persistence fixtures from Slices 73-74.
+Slice 101 adds matching Python public JSON parity coverage for those fixtures.
 These slices must not be used to claim shorts, reversals, `strategy.order()`,
 `close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.
