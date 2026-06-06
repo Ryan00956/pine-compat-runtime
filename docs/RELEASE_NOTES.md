@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 30 omitted-`from_entry`
+  `strategy.exit` loss-tick future-entry persistence for unique entry ids. A
+  full omitted-`from_entry` loss exit now persists for later pyramided long
+  entries and derives each later entry's stop from that entry's own fill price.
 - Closed Strategy Internal Stage 13 Slice 29 omitted-`from_entry`
   `strategy.exit` profit-tick future-entry persistence for unique entry ids. A
   full omitted-`from_entry` profit exit now persists for later pyramided long

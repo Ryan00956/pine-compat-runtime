@@ -1445,6 +1445,46 @@ fn omitted_profit_template_clears_when_replaced_by_absolute_all_entry_exit() {
 }
 
 #[test]
+fn omitted_loss_template_replaces_profit_template_for_later_entry() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    );
+
+    broker.entry_long("L1".to_owned(), 1, 10, 100.0, 1.0);
+    broker.place_all_entry_exit_profit_ticks("XP".to_owned(), 10.0, 0.01, 1);
+    broker.place_all_entry_exit_loss_ticks("XL".to_owned(), 20.0, 0.01, 2);
+
+    assert_eq!(deferred_relative_exit_count(&broker), 1);
+    let deferred_exit = broker
+        .order_book
+        .exits()
+        .find_deferred_relative_by_identity("XL", "")
+        .unwrap();
+    assert_eq!(
+        deferred_exit.trigger,
+        DeferredRelativeExitTrigger::LossTicks {
+            ticks: 20.0,
+            mintick: 0.01,
+        }
+    );
+
+    broker.place_pending_market_long_entry("L2".to_owned(), 3.0, 3);
+    broker.fill_pending_market_long_entries(4, 40, 105.0);
+
+    assert!(broker.pending_exit_by_identity("XP", "L2").is_none());
+    let pending_exit = broker.pending_exit_by_identity("XL", "L2").unwrap();
+    assert_eq!(pending_exit.trigger, PendingExitTrigger::Stop(104.8));
+    assert_eq!(pending_exit.reserved_quantity, 3.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn pending_market_entry_stores_entry_relative_loss_attachment() {
     let mut broker = BrokerState::new(100_000.0);
 

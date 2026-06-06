@@ -482,21 +482,40 @@ impl BrokerState {
             quantity,
             ..
         } = deferred_exit;
-        if let DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick } = trigger {
-            if quantity != ExitQuantityRequest::Full {
-                return;
+        match trigger {
+            DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick } => {
+                if quantity != ExitQuantityRequest::Full {
+                    return;
+                }
+                let Some(limit_price) =
+                    self.exit_profit_price_from_ticks_for_entry(entry_id, ticks, mintick)
+                else {
+                    return;
+                };
+                self.place_all_entry_resolved_profit_exit(
+                    id,
+                    entry_id.to_owned(),
+                    limit_price,
+                    bar_index,
+                );
             }
-            let Some(limit_price) =
-                self.exit_profit_price_from_ticks_for_entry(entry_id, ticks, mintick)
-            else {
-                return;
-            };
-            self.place_all_entry_resolved_profit_exit(
-                id,
-                entry_id.to_owned(),
-                limit_price,
-                bar_index,
-            );
+            DeferredRelativeExitTrigger::LossTicks { ticks, mintick } => {
+                if quantity != ExitQuantityRequest::Full {
+                    return;
+                }
+                let Some(stop_price) =
+                    self.exit_loss_price_from_ticks_for_entry(entry_id, ticks, mintick)
+                else {
+                    return;
+                };
+                self.place_all_entry_resolved_loss_exit(
+                    id,
+                    entry_id.to_owned(),
+                    stop_price,
+                    bar_index,
+                );
+            }
+            _ => {}
         }
     }
 
@@ -522,6 +541,35 @@ impl BrokerState {
             id,
             from_entry,
             trigger: PendingExitTrigger::Limit(limit_price),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity,
+            multiple_reservation: false,
+            last_update_bar_index: bar_index,
+        });
+    }
+
+    fn place_all_entry_resolved_loss_exit(
+        &mut self,
+        id: String,
+        from_entry: String,
+        stop_price: f64,
+        bar_index: usize,
+    ) {
+        if !stop_price.is_finite() {
+            self.diagnostics.push(RuntimeDiagnostic {
+                code: "E_STRATEGY_EXIT_PRICE".to_owned(),
+                message: "`strategy.exit` price must be finite".to_owned(),
+            });
+            return;
+        }
+        let reserved_quantity = self.open_position_size_for_entry(&from_entry);
+        if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
+            return;
+        }
+        self.order_book.exits_mut().replace_or_append(PendingExit {
+            id,
+            from_entry,
+            trigger: PendingExitTrigger::Stop(stop_price),
             quantity: PendingExitQuantity::Full,
             reserved_quantity,
             multiple_reservation: false,
@@ -623,7 +671,13 @@ impl BrokerState {
         }
         self.order_book
             .exits_mut()
-            .clear_all_entry_deferred_relative();
+            .replace_all_entry_deferred_relative(DeferredRelativeExit {
+                id,
+                from_entry: String::new(),
+                trigger: DeferredRelativeExitTrigger::LossTicks { ticks, mintick },
+                quantity: ExitQuantityRequest::Full,
+                last_update_bar_index: bar_index,
+            });
         self.order_book.exits_mut().replace_all_many(pending_exits);
     }
 
