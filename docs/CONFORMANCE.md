@@ -123,7 +123,8 @@ future-entry persistence fixtures from Slices 67-68. Stage 13 Slice 95 adds
 matching Python binding public JSON host-parity coverage for those fixtures.
 Stage 13 Slice 96 adds WASM public JSON host-parity coverage for the same-id
 omitted `loss+profit` and `stop+profit` bracket future-entry persistence
-fixtures from Slices 69-70.
+fixtures from Slices 69-70. Stage 13 Slice 97 adds matching Python binding
+public JSON host-parity coverage for those fixtures.
 Stage 13 Slice 75 adds fixture-backed same-tick limit-entry
 pyramiding-limit exceptions. Stage 13 Slice 76 adds matching stop-entry
 exceptions. Stage 13 Slice 77 adds matching stop-limit-entry exceptions while
