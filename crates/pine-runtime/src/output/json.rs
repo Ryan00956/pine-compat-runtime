@@ -547,6 +547,8 @@ fn boxes_json(boxes: &[BoxOutput]) -> String {
                 output.push_str(&value_json(&snapshot.text_color));
                 output.push_str(",\"textSize\":");
                 output.push_str(&value_json(&snapshot.text_size));
+                output.push_str(",\"textHalign\":");
+                output.push_str(&value_json(&snapshot.text_halign));
             }
             output.push('}');
         }
