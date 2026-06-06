@@ -373,11 +373,11 @@ entry-price-derived profit target. Omitted-`from_entry` full trailing exits
 (`trail_price+trail_offset` and
 `trail_points+trail_offset`) can close currently open pyramided long entries,
 using each entry's own entry-price-derived activation for `trail_points` when
-entry ids are unique. Omitted-`from_entry` full `trail_price+trail_offset`
-trailing exits can also persist for later open long entries until the position
-closes. Omitted-`from_entry` `trail_points+trail_offset` relative trailing
-future-entry persistence and duplicate same-id relative targets remain outside
-the current claim. Broader
+entry ids are unique. Omitted-`from_entry` full trailing exits can also persist
+for later open long entries until the position closes: `trail_price` uses the
+shared absolute activation price, while `trail_points` uses each unique entry's
+own entry-price-derived activation. Duplicate same-id relative targets remain
+outside the current claim. Broader
 multi-entry `strategy.exit` semantics remain outside the current claim.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that

@@ -1158,8 +1158,40 @@ Closed evidence:
 
 Future slices:
 
-- omitted-`from_entry` `trail_points+trail_offset` relative trailing
-  future-entry persistence;
+- duplicate same-id omitted-`from_entry` relative targets;
+- price-based same-tick pyramiding-limit exceptions;
+- host parity coverage for broader public JSON contracts.
+
+### Slice 36: Omitted `from_entry` Trail-Points Future-Entry Persistence
+
+Status: closed on 2026-06-06. This slice extends the full-quantity omitted-
+`from_entry` `trail_points+trail_offset` all-entry subset so it also covers later
+pyramided long entries with unique entry ids until the position closes. It does
+not claim duplicate same-id per-trade relative targets, shorts, reversals,
+`close_entries_rule`, or public pending-order schema.
+
+Goal:
+
+- keep a supported omitted-`from_entry`
+  `strategy.exit(..., trail_points=ticks, trail_offset=ticks)` call active for
+  later long entries, deriving each later entry's activation price from that
+  entry's own fill price.
+
+Closed evidence:
+
+- Broker placement for omitted-`from_entry` `trail_points+trail_offset` now
+  keeps the all-entry deferred relative template after expanding current open
+  unique entry ids.
+- Deferred all-entry resolution now handles `TrailPoints`, generating a
+  per-entry pending trailing exit for each later unique long entry using that
+  entry's own entry-price-derived activation and the shared trailing offset.
+- `strategy_pyramiding_exit_omitted_trail_points_persistent_from_entries.pine`
+  covers an exit call placed after `L1` opens and before `L2` opens; the later
+  `L2` is included in the same omitted exit family with its own trailing
+  activation.
+
+Future slices:
+
 - duplicate same-id omitted-`from_entry` relative targets;
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
@@ -1201,8 +1233,9 @@ fixture-backed omitted-`from_entry` unique-entry-id `loss+limit` bracket
 future-entry persistence plus Slice 34's fixture-backed omitted-`from_entry`
 `stop+limit` absolute bracket future-entry persistence plus Slice 35's
 fixture-backed omitted-`from_entry` `trail_price+trail_offset` absolute trailing
-future-entry persistence. It must not be used to claim omitted-`from_entry`
-`trail_points+trail_offset` relative trailing future-entry persistence,
-duplicate same-id omitted-`from_entry` relative targets, price-based same-tick
-entry exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`,
-or broader multi-entry `strategy.exit`/reporting support.
+future-entry persistence plus Slice 36's fixture-backed omitted-`from_entry`
+unique-entry-id `trail_points+trail_offset` relative trailing future-entry
+persistence. It must not be used to claim duplicate same-id omitted-`from_entry`
+relative targets, price-based same-tick entry exceptions, shorts, reversals,
+`strategy.order()`, `close_entries_rule`, or broader multi-entry
+`strategy.exit`/reporting support.
