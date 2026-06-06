@@ -701,9 +701,9 @@ Examples:
 - unsupported `request.security` variants outside the same-context identity and
   same-or-higher-timeframe scalar-expression provider subset
 - unsupported strategy declaration contexts and strategy order functions such as
-  `strategy.order`; `strategy.exit` same-side pairs, 3+ triggers, invalid
-  trailing combinations, and arbitrary future binding for unmatched `from_entry`
-  ids remain fixture-backed unsupported cases.
+  `strategy.order`; `strategy.exit` same-side pairs, custom OCA parameters, 3+
+  triggers, invalid trailing combinations, and arbitrary future binding for
+  unmatched `from_entry` ids remain fixture-backed unsupported cases.
   Stop-only `strategy.exit(id, from_entry, stop=price)`, limit-only
   `strategy.exit(id, from_entry, limit=price)`, profit-only
   `strategy.exit(id, from_entry, profit=ticks)`, loss-only
