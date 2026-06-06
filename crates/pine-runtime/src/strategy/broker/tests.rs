@@ -121,6 +121,7 @@ fn ledger_open_trade(id: &str, quantity: f64, entry_price: f64, commission: f64)
     let entry_bar_index = entry_price as usize;
     let entry_time = (entry_price as i64) * 10;
     OpenTrade {
+        key: 0,
         id: id.to_owned(),
         direction: TradeDirection::Long,
         quantity,
@@ -204,6 +205,7 @@ fn trade_ledger_allocates_omitted_entry_by_global_fifo() {
         vec![
             TradeAllocation {
                 trade_index: 0,
+                trade_key: 0,
                 entry_id: "A".to_owned(),
                 entry_price: 100.0,
                 entry_bar_index: 100,
@@ -213,6 +215,7 @@ fn trade_ledger_allocates_omitted_entry_by_global_fifo() {
             },
             TradeAllocation {
                 trade_index: 1,
+                trade_key: 1,
                 entry_id: "B".to_owned(),
                 entry_price: 110.0,
                 entry_bar_index: 110,
@@ -240,6 +243,34 @@ fn trade_ledger_append_long_rebuilds_weighted_net_position() {
 }
 
 #[test]
+fn trade_ledger_assigns_stable_open_trade_keys() {
+    let mut ledger = TradeLedger::default();
+    ledger.append_long(ledger_open_trade("A", 1.0, 100.0, 2.0));
+    ledger.append_long(ledger_open_trade("A", 2.0, 110.0, 4.0));
+
+    assert_eq!(ledger.open_at(0).map(|trade| trade.key), Some(0));
+    assert_eq!(ledger.open_at(1).map(|trade| trade.key), Some(1));
+    assert_eq!(ledger.open_quantity_for_key(0), 1.0);
+    assert_eq!(ledger.open_quantity_for_key(1), 2.0);
+    assert_eq!(ledger.open_entry_price_for_key(0), Some(100.0));
+    assert_eq!(ledger.open_entry_price_for_key(1), Some(110.0));
+
+    let allocations = ledger.allocate_exit_fifo(Some("A"), 1.0);
+    assert_eq!(allocations[0].trade_key, 0);
+    ledger.apply_allocations(&allocations);
+
+    assert!(ledger.open_by_key(0).is_none());
+    assert_eq!(
+        ledger.open_by_key(1).map(|trade| trade.entry_price),
+        Some(110.0)
+    );
+
+    ledger.append_long(ledger_open_trade("A", 3.0, 120.0, 6.0));
+    assert_eq!(ledger.open_at(1).map(|trade| trade.key), Some(2));
+    assert_eq!(ledger.open_quantity_for_key(2), 3.0);
+}
+
+#[test]
 fn default_pyramiding_limit_allows_only_one_long_entry() {
     let mut broker = BrokerState::new(100_000.0);
 
@@ -263,6 +294,7 @@ fn trade_ledger_allocates_matching_entry_by_fifo() {
         vec![
             TradeAllocation {
                 trade_index: 0,
+                trade_key: 0,
                 entry_id: "A".to_owned(),
                 entry_price: 100.0,
                 entry_bar_index: 100,
@@ -272,6 +304,7 @@ fn trade_ledger_allocates_matching_entry_by_fifo() {
             },
             TradeAllocation {
                 trade_index: 2,
+                trade_key: 2,
                 entry_id: "A".to_owned(),
                 entry_price: 120.0,
                 entry_bar_index: 120,
@@ -293,10 +326,9 @@ fn trade_ledger_applies_allocations_and_rebuilds_net_position() {
     let allocations = ledger.allocate_exit_fifo(None, 3.0);
     ledger.apply_allocations(&allocations);
 
-    assert_eq!(
-        ledger.open_trades(),
-        &[ledger_open_trade("C", 3.0, 120.0, 12.0)]
-    );
+    let mut expected = ledger_open_trade("C", 3.0, 120.0, 12.0);
+    expected.key = 2;
+    assert_eq!(ledger.open_trades(), &[expected]);
     assert_eq!(
         ledger.net_position(),
         NetPosition {

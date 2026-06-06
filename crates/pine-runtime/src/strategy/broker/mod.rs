@@ -279,6 +279,7 @@ impl BrokerState {
         let min_equity_before_entry = self.min_equity_before_open_trade;
         let max_equity_before_entry = self.max_equity_before_open_trade;
         let open_trade = OpenTrade {
+            key: 0,
             id: id.clone(),
             direction: TradeDirection::Long,
             quantity: qty,

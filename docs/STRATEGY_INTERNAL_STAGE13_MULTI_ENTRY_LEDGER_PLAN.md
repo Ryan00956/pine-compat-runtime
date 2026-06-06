@@ -1736,6 +1736,38 @@ Closed evidence:
 
 Future slices:
 
+- resolve omitted-`from_entry` relative targets against per-open-trade keys;
+- duplicate same-id omitted-`from_entry` relative targets;
+- price-based same-tick pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
+### Slice 55: Internal Open-Trade Key Foundation
+
+Status: closed on 2026-06-06. This slice adds a broker-owned internal key to
+each open trade so future omitted-`from_entry` relative exits can identify a
+specific open trade even when multiple open trades share the same entry id. It
+does not change runtime behavior, public JSON, conformance claims, or the
+current duplicate same-id unsupported boundary.
+
+Goal:
+
+- give the ledger a stable per-open-trade identity that is independent of the
+  open-trade vector index and distinct from the user-visible entry id.
+
+Closed evidence:
+
+- `OpenTrade` now carries an internal `key`; `TradeLedger::append_long` assigns
+  it from a monotonic `next_trade_key`.
+- `TradeAllocation` carries the source `trade_key`, and the ledger exposes
+  internal key-based lookup helpers for open quantity and entry price.
+- `trade_ledger_assigns_stable_open_trade_keys` proves that same-id open trades
+  receive different keys, allocations carry the key, surviving trades remain
+  addressable after FIFO removal shifts vector indexes, and later entries
+  receive a new key.
+
+Future slices:
+
+- resolve omitted-`from_entry` relative targets against per-open-trade keys;
 - duplicate same-id omitted-`from_entry` relative targets;
 - price-based same-tick pyramiding-limit exceptions;
 - broader host parity coverage for future public JSON contracts.
@@ -1800,7 +1832,8 @@ parity coverage for Slice 34's omitted `stop+limit` bracket persistent fixture.
 Slice 52 adds matching Python public JSON parity coverage for that fixture.
 Slice 53 adds WASM public JSON parity coverage for Slice 19's omitted current
 all-entry absolute exit fixture, and Slice 54 adds matching Python public JSON
-parity coverage for that fixture. It must not be used to claim duplicate
-same-id omitted-`from_entry` relative targets, price-based same-tick entry
-exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`, or
-broader multi-entry `strategy.exit`/reporting support.
+parity coverage for that fixture. Slice 55 adds only internal open-trade keys
+for future per-open-trade exit identity work. It must not be used to claim
+duplicate same-id omitted-`from_entry` relative targets, price-based same-tick
+entry exceptions, shorts, reversals, `strategy.order()`, `close_entries_rule`,
+or broader multi-entry `strategy.exit`/reporting support.

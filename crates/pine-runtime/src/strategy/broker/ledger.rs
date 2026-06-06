@@ -5,6 +5,7 @@ pub(super) enum TradeDirection {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct OpenTrade {
+    pub(super) key: u64,
     pub(super) id: String,
     pub(super) direction: TradeDirection,
     pub(super) quantity: f64,
@@ -37,6 +38,7 @@ impl Default for NetPosition {
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct TradeAllocation {
     pub(super) trade_index: usize,
+    pub(super) trade_key: u64,
     pub(super) entry_id: String,
     pub(super) entry_price: f64,
     pub(super) entry_bar_index: usize,
@@ -49,6 +51,7 @@ pub(super) struct TradeAllocation {
 pub(super) struct TradeLedger {
     open_trades: Vec<OpenTrade>,
     net_position: NetPosition,
+    next_trade_key: u64,
 }
 
 impl TradeLedger {
@@ -58,7 +61,9 @@ impl TradeLedger {
     }
 
     #[allow(dead_code)]
-    pub(super) fn append_long(&mut self, trade: OpenTrade) {
+    pub(super) fn append_long(&mut self, mut trade: OpenTrade) {
+        trade.key = self.next_trade_key;
+        self.next_trade_key = self.next_trade_key.saturating_add(1);
         self.open_trades.push(trade);
         self.rebuild_net_position();
     }
@@ -111,6 +116,7 @@ impl TradeLedger {
             let entry_commission = trade.entry_commission * (quantity / trade.quantity);
             allocations.push(TradeAllocation {
                 trade_index,
+                trade_key: trade.key,
                 entry_id: trade.id.clone(),
                 entry_price: trade.entry_price,
                 entry_bar_index: trade.entry_bar_index,
@@ -178,6 +184,11 @@ impl TradeLedger {
         self.open_trades.get(index)
     }
 
+    #[allow(dead_code)]
+    pub(super) fn open_by_key(&self, key: u64) -> Option<&OpenTrade> {
+        self.open_trades.iter().find(|trade| trade.key == key)
+    }
+
     #[cfg(test)]
     pub(super) fn append_open_trade_for_test(&mut self, trade: OpenTrade) {
         self.append_long(trade);
@@ -199,10 +210,24 @@ impl TradeLedger {
             .sum()
     }
 
+    #[allow(dead_code)]
+    pub(super) fn open_quantity_for_key(&self, key: u64) -> f64 {
+        self.open_trades
+            .iter()
+            .filter(|trade| trade.key == key)
+            .map(|trade| trade.quantity)
+            .sum()
+    }
+
     pub(super) fn first_open_entry_price_for_entry(&self, entry_id: &str) -> Option<f64> {
         self.open_trades
             .iter()
             .find(|trade| trade.id == entry_id)
             .map(|trade| trade.entry_price)
+    }
+
+    #[allow(dead_code)]
+    pub(super) fn open_entry_price_for_key(&self, key: u64) -> Option<f64> {
+        self.open_by_key(key).map(|trade| trade.entry_price)
     }
 }
