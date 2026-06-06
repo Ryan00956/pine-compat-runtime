@@ -336,6 +336,10 @@ plot(close)
             snapshot.text_wrap,
             PineValue::String("text.wrap_none".to_owned())
         );
+        assert_eq!(
+            snapshot.text_font_family,
+            PineValue::String("font.family_default".to_owned())
+        );
     }
 }
 
@@ -362,6 +366,7 @@ box.set_text_size(id, size.small)
 box.set_text_halign(id, text.align_left)
 box.set_text_valign(id, text.align_top)
 box.set_text_wrap(id, text.wrap_auto)
+box.set_text_font_family(id, font.family_monospace)
 plot(close)
 "#,
     );
@@ -376,7 +381,7 @@ plot(close)
 
     assert_eq!(result.boxes.len(), 1);
     let box_output = &result.boxes[0];
-    assert_eq!(box_output.snapshots.len(), 18);
+    assert_eq!(box_output.snapshots.len(), 19);
     assert_eq!(box_output.snapshots[1].left, PineValue::Int(1));
     assert_eq!(box_output.snapshots[2].top, PineValue::Float(2.0));
     assert_eq!(box_output.snapshots[3].left, PineValue::Int(0));
@@ -422,6 +427,10 @@ plot(close)
     assert_eq!(
         box_output.snapshots[17].text_wrap,
         PineValue::String("text.wrap_auto".to_owned())
+    );
+    assert_eq!(
+        box_output.snapshots[18].text_font_family,
+        PineValue::String("font.family_monospace".to_owned())
     );
 }
 

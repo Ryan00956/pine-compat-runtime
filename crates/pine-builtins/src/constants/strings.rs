@@ -79,6 +79,8 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     same_string_constant("text.align_bottom"),
     same_string_constant("text.wrap_none"),
     same_string_constant("text.wrap_auto"),
+    same_string_constant("font.family_default"),
+    same_string_constant("font.family_monospace"),
     same_string_constant("position.top_left"),
     same_string_constant("position.top_center"),
     same_string_constant("position.top_right"),

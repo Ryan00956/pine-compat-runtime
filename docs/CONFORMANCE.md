@@ -622,7 +622,8 @@ endpoint/color/width/style/extend mutators, `line.delete`, and fixture-backed
 cloning with `line.copy` over the latest existing line snapshot, with sparse
 snapshots and a 500-line runtime limit. The executable box subset covers
 `box.new`, selected geometry/background/border/extend/text/text-color/text-size/
-horizontal-alignment/vertical-alignment/text-wrap mutators, `box.delete`, and
+horizontal-alignment/vertical-alignment/text-wrap/font-family mutators,
+`box.delete`, and
 fixture-backed cloning with `box.copy` over the latest existing box
 snapshot, plus fixture-backed `box.get_left`, `box.get_right`, `box.get_top`,
 and `box.get_bottom` over the latest existing box snapshot, with sparse
@@ -648,10 +649,11 @@ snapshots. `box.set_text_color` records text color in box snapshots.
 `box.set_text_size` records text size in box snapshots. `box.set_text_halign`
 records horizontal text alignment in box snapshots. `box.set_text_valign`
 records vertical text alignment in box snapshots. `box.set_text_wrap` records
-text wrapping in box snapshots; font and richer layout methods remain
-unsupported. `box.get_left`, `box.get_right`, `box.get_top`, and
-`box.get_bottom` read the latest existing box snapshot and return `na` for `na`
-or deleted boxes; other box methods remain unsupported.
+text wrapping in box snapshots. `box.set_text_font_family` records font family
+in box snapshots; richer text formatting remains unsupported. `box.get_left`,
+`box.get_right`, `box.get_top`, and `box.get_bottom` read the latest existing
+box snapshot and return `na` for `na` or deleted boxes; other box methods remain
+unsupported.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state
 changes, and drawing side effects inside user-defined functions are rejected
 under the existing side-effect policy. Keep unsupported coordinate modes and advanced object

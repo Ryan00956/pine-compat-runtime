@@ -666,6 +666,10 @@ fn box_snapshots_to_py(
             item.set_item("textHalign", value_to_py(py, &snapshot.text_halign)?)?;
             item.set_item("textValign", value_to_py(py, &snapshot.text_valign)?)?;
             item.set_item("textWrap", value_to_py(py, &snapshot.text_wrap)?)?;
+            item.set_item(
+                "textFontFamily",
+                value_to_py(py, &snapshot.text_font_family)?,
+            )?;
         }
         output.append(item)?;
     }

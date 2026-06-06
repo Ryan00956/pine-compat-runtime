@@ -554,6 +554,19 @@ const BOX_SET_TEXT_WRAP_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const BOX_SET_TEXT_FONT_FAMILY_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::BoxCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "text_font_family",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
 const BOX_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "id",
     accepts: Accepts::BoxCompatible,
@@ -957,6 +970,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "box.set_text_wrap",
         phase: BuiltinPhase::Phase1Core,
         params: BOX_SET_TEXT_WRAP_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_text_font_family",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_TEXT_FONT_FAMILY_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

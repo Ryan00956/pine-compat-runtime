@@ -553,6 +553,8 @@ fn boxes_json(boxes: &[BoxOutput]) -> String {
                 output.push_str(&value_json(&snapshot.text_valign));
                 output.push_str(",\"textWrap\":");
                 output.push_str(&value_json(&snapshot.text_wrap));
+                output.push_str(",\"textFontFamily\":");
+                output.push_str(&value_json(&snapshot.text_font_family));
             }
             output.push('}');
         }

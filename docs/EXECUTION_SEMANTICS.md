@@ -646,10 +646,11 @@ the host-neutral snapshot. `box.set_text_halign` records the selected horizontal
 alignment constant in the host-neutral snapshot. `box.set_text_valign` records
 the selected vertical alignment constant in the host-neutral snapshot.
 `box.set_text_wrap` records the selected wrapping constant in the host-neutral
-snapshot; text rendering and font layout remain host responsibilities.
-`box.get_left`, `box.get_right`, `box.get_top`, and `box.get_bottom` read the
-corresponding value from the latest existing box snapshot and return `na` for
-`na` or deleted boxes.
+snapshot. `box.set_text_font_family` records the selected font-family constant
+in the host-neutral snapshot; text rendering and font layout remain host
+responsibilities. `box.get_left`, `box.get_right`, `box.get_top`, and
+`box.get_bottom` read the corresponding value from the latest existing box
+snapshot and return `na` for `na` or deleted boxes.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from

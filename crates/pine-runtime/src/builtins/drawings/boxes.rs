@@ -41,6 +41,7 @@ impl<'a> HistoricalRuntime<'a> {
                 text_halign: PineValue::String("text.align_center".to_owned()),
                 text_valign: PineValue::String("text.align_center".to_owned()),
                 text_wrap: PineValue::String("text.wrap_none".to_owned()),
+                text_font_family: PineValue::String("font.family_default".to_owned()),
             }],
         });
         Ok(PineValue::Box(id))
@@ -234,6 +235,17 @@ impl<'a> HistoricalRuntime<'a> {
         let text_wrap = self.eval_required_box_arg(args, 1, "text_wrap")?;
         self.mutate_box(id, |snapshot| {
             snapshot.text_wrap = text_wrap;
+        })
+    }
+
+    pub(super) fn eval_box_set_text_font_family(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let text_font_family = self.eval_required_box_arg(args, 1, "text_font_family")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.text_font_family = text_font_family;
         })
     }
 

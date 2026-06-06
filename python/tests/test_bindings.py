@@ -5727,6 +5727,7 @@ def test_run_script_returns_box_outputs():
                     "textHalign": "text.align_center",
                     "textValign": "text.align_center",
                     "textWrap": "text.wrap_none",
+                    "textFontFamily": "font.family_default",
                 },
                 {
                     "barIndex": 1,
@@ -5746,6 +5747,7 @@ def test_run_script_returns_box_outputs():
                     "textHalign": "text.align_center",
                     "textValign": "text.align_center",
                     "textWrap": "text.wrap_none",
+                    "textFontFamily": "font.family_default",
                 },
             ],
         }
