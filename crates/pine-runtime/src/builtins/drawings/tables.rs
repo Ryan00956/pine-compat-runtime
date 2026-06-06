@@ -64,22 +64,6 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
-        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
-            return Err(RuntimeError {
-                message: format!("invalid table id `{id}`"),
-            });
-        };
-        if column < 0 || column >= table.columns || row < 0 || row >= table.rows {
-            return Err(RuntimeError {
-                message: format!("table cell coordinate out of bounds `{column},{row}`"),
-            });
-        }
-        let Some(latest) = table.snapshots.last().cloned() else {
-            return Err(RuntimeError {
-                message: format!("table `{id}` has no snapshots"),
-            });
-        };
-        let mut next = latest.clone();
         let next_cell = TableCellSnapshot {
             column,
             row,
@@ -87,19 +71,24 @@ impl<'a> HistoricalRuntime<'a> {
             bg_color,
             text_color,
         };
-        match next
-            .cells
-            .iter_mut()
-            .find(|cell| cell.column == column && cell.row == row)
-        {
-            Some(cell) => *cell = next_cell,
-            None => next.cells.push(next_cell),
-        }
-        next.cells.sort_by_key(|cell| (cell.row, cell.column));
-        if next != latest {
-            next.bar_index = self.bars;
-            table.snapshots.push(next);
-        }
+        self.mutate_table_cell(id, column, row, |cell| *cell = next_cell)?;
+        Ok(PineValue::Void)
+    }
+
+    pub(super) fn eval_table_cell_set_text(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let column = self.eval_required_table_int_arg(args, 1, "column")?;
+        let row = self.eval_required_table_int_arg(args, 2, "row")?;
+        let text = self.eval_required_table_arg(args, 3, "text")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        self.mutate_table_cell(id, column, row, |cell| {
+            cell.text = text;
+        })?;
         Ok(PineValue::Void)
     }
 
@@ -160,5 +149,57 @@ impl<'a> HistoricalRuntime<'a> {
             Some(expr) => self.eval_expr(expr),
             None => Ok(default),
         }
+    }
+
+    fn mutate_table_cell<F>(
+        &mut self,
+        id: u32,
+        column: i64,
+        row: i64,
+        mutate: F,
+    ) -> Result<(), RuntimeError>
+    where
+        F: FnOnce(&mut TableCellSnapshot),
+    {
+        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid table id `{id}`"),
+            });
+        };
+        if column < 0 || column >= table.columns || row < 0 || row >= table.rows {
+            return Err(RuntimeError {
+                message: format!("table cell coordinate out of bounds `{column},{row}`"),
+            });
+        }
+        let Some(latest) = table.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("table `{id}` has no snapshots"),
+            });
+        };
+        let mut next = latest.clone();
+        match next
+            .cells
+            .iter_mut()
+            .find(|cell| cell.column == column && cell.row == row)
+        {
+            Some(cell) => mutate(cell),
+            None => {
+                let mut cell = TableCellSnapshot {
+                    column,
+                    row,
+                    text: PineValue::String(String::new()),
+                    bg_color: PineValue::Na,
+                    text_color: PineValue::Na,
+                };
+                mutate(&mut cell);
+                next.cells.push(cell);
+            }
+        }
+        next.cells.sort_by_key(|cell| (cell.row, cell.column));
+        if next != latest {
+            next.bar_index = self.bars;
+            table.snapshots.push(next);
+        }
+        Ok(())
     }
 }

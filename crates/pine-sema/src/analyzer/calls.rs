@@ -206,6 +206,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.copy"
             | "table.new"
             | "table.cell"
+            | "table.cell_set_text"
             | "strategy.entry"
             | "strategy.close"
             | "strategy.close_all"

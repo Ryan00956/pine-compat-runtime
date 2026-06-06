@@ -623,7 +623,8 @@ and a 500-object runtime limit. Boxes use the same lifecycle
 rules with bar-index left/right coordinates, price top/bottom coordinates,
 selected background/border fields, snapshot cloning, non-reused ids, and a
 500-object runtime limit. Tables use deterministic ids, fixed positive
-dimensions, and sparse cell snapshots for text/background/text-color writes.
+dimensions, and sparse cell snapshots for text/background/text-color writes
+and `table.cell_set_text` text mutations.
 `*.delete(na)`, mutation of `na`, mutation after deletion, and deleting an
 already deleted drawing object are no-ops where deletion exists; invalid
 non-`na` ids are runtime errors. Labels, lines, and boxes each have a
@@ -652,7 +653,9 @@ snapshot. `box.set_text_font_family` records the selected font-family constant
 in the host-neutral snapshot; text rendering and font layout remain host
 responsibilities. `box.get_left`, `box.get_right`, `box.get_top`, and
 `box.get_bottom` read the corresponding value from the latest existing box
-snapshot and return `na` for `na` or deleted boxes.
+snapshot and return `na` for `na` or deleted boxes. `table.cell_set_text`
+updates the target cell text in the host-neutral table snapshot while
+preserving the cell's other supported fields.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from

@@ -421,7 +421,8 @@ existing snapshot values.
 Table entries
 carry `position`, `columns`, `rows`, and sparse cell snapshots. Each table cell
 snapshot stores `column`, `row`, `text`, `bgColor`, and `textColor`, avoiding
-host-specific table layout assumptions. Delete calls append an `exists: false`
+host-specific table layout assumptions; `table.cell_set_text` mutates only the
+stored cell text. Delete calls append an `exists: false`
 snapshot for families with deletion; deleting `na` or an already deleted
 drawing object is a no-op; ids are not reused. The historical runtime caps
 labels, lines, and boxes at 500 objects, caps tables at 50 objects, and caps a

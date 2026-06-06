@@ -631,9 +631,10 @@ snapshot, plus fixture-backed `box.get_left`, `box.get_right`, `box.get_top`,
 and `box.get_bottom` over the latest existing box snapshot, with sparse
 snapshots and a 500-box runtime limit.
 The executable table subset covers
-`table.new` plus `table.cell` text/background/text-color cell writes with
-deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
-per-table limit. Deleting `na`, mutating `na`, or mutating an already deleted
+`table.new` plus `table.cell` text/background/text-color cell writes and
+`table.cell_set_text` text mutations with deterministic table dimensions, a
+50-table runtime limit, and a 1000-cell per-table limit. Deleting `na`,
+mutating `na`, or mutating an already deleted
 drawing object is a no-op where deletion exists; supported label getters return
 `na` for `na` or deleted label ids; invalid non-`na` ids are runtime errors; ids
 are stable and not reused. `label.set_xloc` records `xloc.bar_index` or
@@ -657,7 +658,8 @@ text wrapping in box snapshots. `box.set_text_font_family` records font family
 in box snapshots; richer text formatting remains unsupported. `box.get_left`,
 `box.get_right`, `box.get_top`, and `box.get_bottom` read the latest existing
 box snapshot and return `na` for `na` or deleted boxes; other box methods remain
-unsupported.
+unsupported. `table.cell_set_text` updates only the target cell text snapshot;
+other table cell style/layout setters remain unsupported.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state
 changes, and drawing side effects inside user-defined functions are rejected
 under the existing side-effect policy. Keep unsupported coordinate modes and advanced object
