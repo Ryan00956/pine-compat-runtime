@@ -98,7 +98,9 @@ pyramiding-limit exceptions. Stage 13 Slice 76 adds matching stop-entry
 exceptions. Stage 13 Slice 77 adds matching stop-limit-entry exceptions while
 preserving the existing activation-bar delay. Stage 13 Slice 78 adds WASM
 public JSON host-parity coverage for those same-tick long limit, stop, and
-stop-limit entry fixtures. Stage 13 Slice 11 adds fixture-backed `strategy.close(id)`
+stop-limit entry fixtures. Stage 13 Slice 79 adds matching Python binding
+public JSON host-parity coverage for those fixtures. Stage 13 Slice 11 adds
+fixture-backed `strategy.close(id)`
 matching for a requested pyramided long entry id. Stage 13 Slice 12 adds
 fixture-backed `strategy.close_all()` flattening across all open long ledger
 entries. Stage 13 Slice 14 adds fixture-backed absolute stop/limit

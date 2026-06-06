@@ -270,6 +270,135 @@ def test_run_script_returns_strategy_entry_stop_limit_contract():
     assert "limit" not in result["strategy"]
 
 
+def test_run_script_returns_same_tick_limit_entries_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_limit_entries.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_limit_entries_bars.csv"
+        ),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0, 2, 2],
+        [0.0, 4.0, 4.0],
+        [None, 9.0, 9.0],
+    ]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L1",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 9.0,
+        },
+        {
+            "id": "L2",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 3.0,
+            "price": 9.0,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 1.0, "avgPrice": 9.0},
+        {"barIndex": 1, "size": 4.0, "avgPrice": 9.0},
+    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+
+
+def test_run_script_returns_same_tick_stop_entries_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_entries.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_entries_bars.csv"
+        ),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0, 2, 2],
+        [0.0, 4.0, 4.0],
+        [None, 11.0, 11.0],
+    ]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L1",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 11.0,
+        },
+        {
+            "id": "L2",
+            "barIndex": 1,
+            "time": 2,
+            "direction": "strategy.long",
+            "qty": 3.0,
+            "price": 11.0,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 1, "size": 1.0, "avgPrice": 11.0},
+        {"barIndex": 1, "size": 4.0, "avgPrice": 11.0},
+    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+
+
+def test_run_script_returns_same_tick_stop_limit_entries_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries_bars.csv"
+        ),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0, 0, 2, 2],
+        [0.0, 0.0, 4.0, 4.0],
+        [None, None, 10.0, 10.0],
+    ]
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L1",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 10.0,
+        },
+        {
+            "id": "L2",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.long",
+            "qty": 3.0,
+            "price": 10.0,
+        },
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 2, "size": 1.0, "avgPrice": 10.0},
+        {"barIndex": 2, "size": 4.0, "avgPrice": 10.0},
+    ]
+    assert result["strategy"]["diagnostics"] == []
+    assert "pending" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_default_quantity_contract():
     result = pine_compat.run_script(
         'strategy("demo", default_qty_type=strategy.fixed, default_qty_value=3)\nif bar_index == 1\n    strategy.entry("D", strategy.long)\nplot(strategy.position_size)\n',
