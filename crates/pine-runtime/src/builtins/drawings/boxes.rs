@@ -234,6 +234,13 @@ impl<'a> HistoricalRuntime<'a> {
         self.eval_box_get(args, "box.get_bottom", |snapshot| snapshot.bottom.clone())
     }
 
+    pub(super) fn eval_box_get_left(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_box_get(args, "box.get_left", |snapshot| snapshot.left.clone())
+    }
+
     fn eval_box_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
