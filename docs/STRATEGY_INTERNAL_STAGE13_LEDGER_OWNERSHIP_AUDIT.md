@@ -235,3 +235,12 @@ Stage 13 Slice 17 extends the entry-specific price basis from single-trigger
 relative legs from the matched ledger entry price before routing through the
 existing pending-exit and allocation logic. Trailing `trail_points` and
 omitted-`from_entry` persistent all-entry exits remain future slices.
+
+## Slice 18 Follow-Up
+
+Stage 13 Slice 18 extends the entry-specific price basis to supported trailing
+`trail_points + trail_offset` exits. Active trailing placement and deferred
+relative trailing resolution now compute activation from the matched ledger
+entry price, then reuse the existing trailing activation, ratchet, fill, and
+allocation paths. Omitted-`from_entry` persistent all-entry exits remain a
+future slice.

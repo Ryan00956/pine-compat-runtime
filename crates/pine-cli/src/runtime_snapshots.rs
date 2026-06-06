@@ -626,6 +626,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_pyramiding_exit_bracket_from_entry.pine",
     ),
     (
+        "runtime_strategy_pyramiding_exit_trail_points_from_entry.json",
+        "tests/fixtures/runtime/strategy_pyramiding_exit_trail_points_from_entry.pine",
+    ),
+    (
         "runtime_strategy_pyramiding_exit_same_id.json",
         "tests/fixtures/runtime/strategy_pyramiding_exit_same_id.pine",
     ),

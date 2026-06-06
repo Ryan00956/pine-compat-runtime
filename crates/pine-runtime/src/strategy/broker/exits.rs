@@ -318,9 +318,11 @@ impl BrokerState {
                     offset_ticks,
                     mintick,
                 } => {
-                    let Some(activation_price_offset) =
-                        self.exit_tick_price_offset(activation_ticks, mintick)
-                    else {
+                    let Some(activation_price) = self.exit_trail_points_activation_price_for_entry(
+                        &from_entry,
+                        activation_ticks,
+                        mintick,
+                    ) else {
                         continue;
                     };
                     let Some(offset_price_distance) =
@@ -333,7 +335,7 @@ impl BrokerState {
                         from_entry,
                         PendingTrailingActivation::Points {
                             ticks: activation_ticks,
-                            price: self.avg_price + activation_price_offset,
+                            price: activation_price,
                         },
                         offset_price_distance,
                         quantity,
@@ -759,9 +761,11 @@ impl BrokerState {
         if self.reject_entry_relative_exit_for_pending_entry(&from_entry) {
             return;
         }
-        let Some(activation_price_offset) =
-            self.exit_tick_price_offset(spec.activation_ticks, spec.mintick)
-        else {
+        let Some(activation_price) = self.exit_trail_points_activation_price_for_entry(
+            &from_entry,
+            spec.activation_ticks,
+            spec.mintick,
+        ) else {
             return;
         };
         let Some(offset_price_distance) =
@@ -774,7 +778,7 @@ impl BrokerState {
             from_entry,
             PendingTrailingActivation::Points {
                 ticks: spec.activation_ticks,
-                price: self.avg_price + activation_price_offset,
+                price: activation_price,
             },
             offset_price_distance,
             quantity,
@@ -890,6 +894,19 @@ impl BrokerState {
             .unwrap_or(self.avg_price);
         self.exit_tick_price_offset(ticks, mintick)
             .map(|price_offset| base_price - price_offset)
+    }
+
+    fn exit_trail_points_activation_price_for_entry(
+        &mut self,
+        from_entry: &str,
+        ticks: f64,
+        mintick: f64,
+    ) -> Option<f64> {
+        let base_price = self
+            .first_open_entry_price_for_entry(from_entry)
+            .unwrap_or(self.avg_price);
+        self.exit_tick_price_offset(ticks, mintick)
+            .map(|price_offset| base_price + price_offset)
     }
 
     pub(super) fn exit_tick_price_offset(&mut self, ticks: f64, mintick: f64) -> Option<f64> {

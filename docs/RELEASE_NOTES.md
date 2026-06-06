@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 18 trailing `strategy.exit`
+  `trail_points` price basis for pyramided entries. Supported trailing
+  activation now converts from the matched open entry price instead of aggregate
+  average price.
 - Closed Strategy Internal Stage 13 Slice 17 bracket `strategy.exit` tick price
   basis for pyramided entries. Supported bracket `profit`/`loss` relative legs now
   convert from the matched open entry price instead of aggregate average price.

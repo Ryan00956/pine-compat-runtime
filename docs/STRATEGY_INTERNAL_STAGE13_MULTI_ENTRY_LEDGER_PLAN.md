@@ -542,7 +542,36 @@ Closed evidence:
 
 Future slices:
 
-- entry-specific trailing `trail_points` conversion;
+- omitted-`from_entry` persistent all-entry exit behavior;
+- price-based same-tick pyramiding-limit exceptions;
+- host parity coverage for broader public JSON contracts.
+
+### Slice 18: Multi-Entry Trailing `trail_points` Price Basis
+
+Status: closed on 2026-06-06. This slice makes supported trailing
+`trail_points` activation use the requested open entry's entry price when
+`from_entry` matches a pyramided long entry. It does not claim
+omitted-`from_entry` persistent all-entry exits, shorts, reversals,
+`close_entries_rule`, or public trailing-state fields.
+
+Goal:
+
+- calculate supported trailing `trail_points` activation prices from the matched
+  ledger entry price instead of the aggregate position average.
+
+Closed evidence:
+
+- Active trailing `trail_points + trail_offset` placement now uses the same
+  entry-specific price basis as the supported single-trigger and bracket
+  relative exits.
+- Deferred relative trailing resolution after a matching pending entry fills now
+  uses the filled entry price as the activation base.
+- `strategy_pyramiding_exit_trail_points_from_entry.pine` covers a trailing exit
+  that activates from `L1`'s entry-price-derived threshold, fills on the later
+  active stop, closes only `L1`, and leaves `L2` open.
+
+Future slices:
+
 - omitted-`from_entry` persistent all-entry exit behavior;
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
@@ -558,8 +587,8 @@ and Slice 14's fixture-backed absolute `strategy.exit` matching by open
 pyramided entry id plus Slice 15's fixture-backed single-trigger `profit`/`loss`
 tick conversion for a matched open pyramided entry id and Slice 16's
 fixture-backed same-entry-id exit allocation fan-out plus Slice 17's
-fixture-backed bracket `profit`/`loss` relative leg conversion. It must not be
-used to claim omitted-`from_entry` persistent all-entry exits, entry-specific
-trailing `trail_points` conversion, price-based same-tick entry exceptions,
-shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader
-multi-entry `strategy.exit`/reporting support.
+fixture-backed bracket `profit`/`loss` relative leg conversion plus Slice 18's
+fixture-backed trailing `trail_points` activation conversion. It must not be
+used to claim omitted-`from_entry` persistent all-entry exits, price-based
+same-tick entry exceptions, shorts, reversals, `strategy.order()`,
+`close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.

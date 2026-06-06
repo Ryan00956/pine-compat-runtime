@@ -901,6 +901,11 @@ mod tests {
                     "../../../tests/fixtures/runtime/strategy_pyramiding_exit_profit_from_entry_bars.csv"
                 )
             }
+            "tests/fixtures/runtime/strategy_pyramiding_exit_trail_points_from_entry.pine" => {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_pyramiding_exit_trail_points_from_entry_bars.csv"
+                )
+            }
             "tests/fixtures/runtime/strategy_pyramiding_exit_same_id.pine" => include_str!(
                 "../../../tests/fixtures/runtime/strategy_pyramiding_exit_same_id_bars.csv"
             ),
