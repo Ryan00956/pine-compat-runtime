@@ -444,9 +444,12 @@ impl BrokerState {
             });
             return;
         }
-        let allocations = self
-            .trade_ledger
-            .allocate_exit_fifo(Some(&pending_exit.from_entry), qty);
+        let from_entry_filter = if pending_exit.from_entry.is_empty() {
+            None
+        } else {
+            Some(pending_exit.from_entry.as_str())
+        };
+        let allocations = self.trade_ledger.allocate_exit_fifo(from_entry_filter, qty);
         let exit_commission = self.exit_commission_for_fill(qty, exit_price);
         let exit_id = pending_exit.id;
         let closed_entry_commission = if allocations.is_empty() {

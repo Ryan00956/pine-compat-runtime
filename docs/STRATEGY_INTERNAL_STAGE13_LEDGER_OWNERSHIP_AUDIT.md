@@ -244,3 +244,15 @@ relative trailing resolution now compute activation from the matched ledger
 entry price, then reuse the existing trailing activation, ratchet, fill, and
 allocation paths. Omitted-`from_entry` persistent all-entry exits remain a
 future slice.
+
+## Slice 19 Follow-Up
+
+Stage 13 Slice 19 introduces the first omitted-`from_entry` all-entry exit
+path. The runtime encodes omitted `from_entry` as an internal empty-string
+sentinel for the supported absolute stop/limit shapes; broker placement treats
+that sentinel as the current aggregate open quantity, and pending-exit fills
+allocate through `TradeLedger::allocate_exit_fifo(None, qty)`. This closes all
+currently open matching long ledger entries while preserving one public exit
+order and one closed trade per ledger allocation. Persistent future-entry
+behavior and omitted-`from_entry` relative/bracket/trailing forms remain future
+slices.

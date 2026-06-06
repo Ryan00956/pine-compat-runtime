@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 19 omitted-`from_entry`
+  `strategy.exit` current all-entry absolute exit support. Supported stop-only
+  and limit-only exits without `from_entry` now close all currently open
+  pyramided long entries through the ledger, while persistent future-entry
+  behavior remains out of scope.
 - Closed Strategy Internal Stage 13 Slice 18 trailing `strategy.exit`
   `trail_points` price basis for pyramided entries. Supported trailing
   activation now converts from the matched open entry price instead of aggregate

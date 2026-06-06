@@ -572,7 +572,36 @@ Closed evidence:
 
 Future slices:
 
-- omitted-`from_entry` persistent all-entry exit behavior;
+- omitted-`from_entry` persistent future-entry exit behavior;
+- price-based same-tick pyramiding-limit exceptions;
+- host parity coverage for broader public JSON contracts.
+
+### Slice 19: Omitted `from_entry` Current All-Entry Absolute Exit
+
+Status: closed on 2026-06-06. This slice accepts supported absolute stop-only
+and limit-only `strategy.exit` calls that omit `from_entry` for the currently
+open pyramided long entries. It does not claim the official persistent behavior
+for entries opened after the call, all-entry relative tick conversion, trailing,
+brackets, shorts, reversals, or `close_entries_rule`.
+
+Goal:
+
+- route omitted-`from_entry` absolute stop/limit exits through the ledger as an
+  all-entry FIFO allocation instead of silently ignoring the runtime call.
+
+Closed evidence:
+
+- Runtime `strategy.exit("XL", limit=price)` now uses an internal all-entry
+  pending exit sentinel and fills via `TradeLedger::allocate_exit_fifo(None,
+  qty)`.
+- `strategy_pyramiding_exit_omitted_from_entry_current.pine` covers two open
+  long entries with different ids and one omitted-`from_entry` limit exit that
+  records one public exit order and one closed trade per open ledger allocation.
+
+Future slices:
+
+- omitted-`from_entry` persistent future-entry exit behavior;
+- omitted-`from_entry` all-entry relative tick, bracket, and trailing behavior;
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
 
@@ -588,7 +617,10 @@ pyramided entry id plus Slice 15's fixture-backed single-trigger `profit`/`loss`
 tick conversion for a matched open pyramided entry id and Slice 16's
 fixture-backed same-entry-id exit allocation fan-out plus Slice 17's
 fixture-backed bracket `profit`/`loss` relative leg conversion plus Slice 18's
-fixture-backed trailing `trail_points` activation conversion. It must not be
-used to claim omitted-`from_entry` persistent all-entry exits, price-based
-same-tick entry exceptions, shorts, reversals, `strategy.order()`,
-`close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.
+fixture-backed trailing `trail_points` activation conversion plus Slice 19's
+fixture-backed omitted-`from_entry` current open-entry absolute stop/limit
+all-entry exit. It must not be used to claim omitted-`from_entry` persistent
+future-entry exits, omitted-`from_entry` relative tick/bracket/trailing
+all-entry exits, price-based same-tick entry exceptions, shorts, reversals,
+`strategy.order()`, `close_entries_rule`, or broader multi-entry
+`strategy.exit`/reporting support.

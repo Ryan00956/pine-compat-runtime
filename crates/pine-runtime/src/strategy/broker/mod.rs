@@ -576,6 +576,9 @@ impl BrokerState {
     }
 
     fn open_position_size_for_entry(&self, id: &str) -> f64 {
+        if id.is_empty() {
+            return self.position_size;
+        }
         self.trade_ledger.open_quantity_for_entry(id)
     }
 
@@ -584,6 +587,9 @@ impl BrokerState {
     }
 
     fn has_open_position_for_entry(&self, id: &str) -> bool {
+        if id.is_empty() {
+            return self.position_size > 0.0;
+        }
         self.open_position_size_for_entry(id) > 0.0
     }
 

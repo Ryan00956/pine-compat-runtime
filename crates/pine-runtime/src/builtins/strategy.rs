@@ -329,9 +329,11 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id_expr) = call_arg_expr(args, 0, "id") else {
             return Ok(PineValue::Void);
         };
-        let Some(from_entry_expr) = call_arg_expr(args, 1, "from_entry") else {
-            return Ok(PineValue::Void);
-        };
+        let from_entry_expr = args
+            .iter()
+            .find(|arg| arg.name.as_deref() == Some("from_entry"))
+            .or_else(|| args.get(1).filter(|arg| arg.name.is_none()))
+            .map(|arg| &arg.value);
         let stop_expr = args
             .iter()
             .find(|arg| arg.name.as_deref() == Some("stop"))
@@ -375,9 +377,12 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String(value) => value,
             _ => return Ok(PineValue::Void),
         };
-        let from_entry = match self.eval_expr(from_entry_expr)? {
-            PineValue::String(value) => value,
-            _ => return Ok(PineValue::Void),
+        let from_entry = match from_entry_expr {
+            Some(expr) => match self.eval_expr(expr)? {
+                PineValue::String(value) => value,
+                _ => return Ok(PineValue::Void),
+            },
+            None => String::new(),
         };
         let qty = if let Some(qty_expr) = qty_expr {
             Some(self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN))
@@ -420,6 +425,14 @@ impl<'a> HistoricalRuntime<'a> {
             && profit_expr.is_some()
             && stop_expr.is_none()
             && limit_expr.is_none();
+        if from_entry.is_empty()
+            && (!((stop_expr.is_some() != limit_expr.is_some())
+                && profit_expr.is_none()
+                && loss_expr.is_none())
+                || has_trailing)
+        {
+            return Ok(PineValue::Void);
+        }
         let has_unsupported_entry_relative_active_entry_exit = (trail_points_expr.is_some()
             && !is_trailing_only)
             || ((profit_expr.is_some() || loss_expr.is_some())
