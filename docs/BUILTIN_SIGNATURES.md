@@ -363,10 +363,12 @@ long entries with unique entry ids using each entry's own entry-price-derived
 target. Omitted-`from_entry` full brackets (`stop+limit`, `stop+profit`,
 `loss+limit`, and `loss+profit`) can close currently open pyramided long entries
 with unique entry ids, using each entry's own entry-price-derived relative legs
-when present. Omitted-`from_entry` full `trail_price+trail_offset` trailing
-exits can close currently open pyramided long entries. Omitted-`from_entry`
-`trail_points` trailing, relative future-entry persistence, and duplicate
-same-id relative targets remain outside the current claim. Broader
+when present. Omitted-`from_entry` full trailing exits (`trail_price+trail_offset`
+and `trail_points+trail_offset`) can close currently open pyramided long
+entries, using each entry's own entry-price-derived activation for
+`trail_points` when entry ids are unique. Omitted-`from_entry` relative
+future-entry persistence and duplicate same-id relative targets remain outside
+the current claim. Broader
 multi-entry `strategy.exit` semantics remain outside the current claim.
 `strategy.netprofit_percent`, `strategy.grossprofit_percent`, and
 `strategy.grossloss_percent` are read-only strategy-mode series floats that

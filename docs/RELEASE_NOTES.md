@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 28 omitted-`from_entry`
+  `strategy.exit` `trail_points+trail_offset` trailing all-entry support for
+  current unique entry ids. A full omitted-`from_entry` trail-points exit now
+  creates entry-specific trailing exits with each open entry's entry-price-based
+  activation.
 - Closed Strategy Internal Stage 13 Slice 27 omitted-`from_entry`
   `strategy.exit` `trail_price+trail_offset` trailing all-entry support for
   current open entries. A full omitted-`from_entry` trail-price trailing exit now

@@ -869,6 +869,40 @@ Future slices:
 - price-based same-tick pyramiding-limit exceptions;
 - host parity coverage for broader public JSON contracts.
 
+### Slice 28: Omitted `from_entry` Current All-Entry Trail Points
+
+Status: closed on 2026-06-06. This slice adds the full-quantity omitted-
+`from_entry` `trail_points+trail_offset` trailing subset for currently open
+pyramided long entries whose entry ids are unique. It covers current open entries
+only and does not claim relative future-entry persistence, duplicate same-id
+per-trade relative targets, shorts, reversals, `close_entries_rule`, or public
+pending-order schema.
+
+Goal:
+
+- expand omitted-`from_entry`
+  `strategy.exit(..., trail_points=ticks, trail_offset=ticks)` calls into
+  entry-specific trailing pending exits using each current open entry's own entry
+  price for activation.
+
+Closed evidence:
+
+- Broker placement for omitted-`from_entry` trail-points trailing exits now reads
+  current open ledger entries, rejects the unsupported duplicate-entry-id case
+  by preserving the old no-op boundary, and replaces the pending exit book with
+  one full-quantity trailing exit per unique entry id.
+- `strategy_pyramiding_exit_omitted_trail_points_from_entries.pine` covers two
+  open long entries with different ids and one omitted-`from_entry`
+  trail-points trailing exit that closes both entries through their active
+  trailing stops.
+
+Future slices:
+
+- omitted-`from_entry` relative future-entry persistence;
+- duplicate same-id omitted-`from_entry` relative targets;
+- price-based same-tick pyramiding-limit exceptions;
+- host parity coverage for broader public JSON contracts.
+
 ## Compatibility Contract
 
 The supported strategy subset remains the one recorded in
@@ -894,8 +928,9 @@ bracket all-entry exit plus Slice 25's fixture-backed omitted-`from_entry`
 current unique-entry-id `loss+limit` bracket all-entry exit plus Slice 26's
 fixture-backed omitted-`from_entry` current all-entry `stop+limit` bracket exit
 plus Slice 27's fixture-backed omitted-`from_entry` current all-entry
-`trail_price+trail_offset` trailing exit. It must not be used to claim
-omitted-`from_entry` `trail_points` trailing all-entry exits,
+`trail_price+trail_offset` trailing exit plus Slice 28's fixture-backed omitted-
+`from_entry` current unique-entry-id `trail_points+trail_offset` trailing exit.
+It must not be used to claim
 omitted-`from_entry` relative future-entry persistence, duplicate same-id
 omitted-`from_entry` relative targets, price-based same-tick entry exceptions,
 shorts, reversals, `strategy.order()`, `close_entries_rule`, or broader

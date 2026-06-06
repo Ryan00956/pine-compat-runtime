@@ -338,3 +338,14 @@ pending-exit path, so trailing activation and later stop fills reuse broker-owne
 trailing state plus FIFO ledger allocation. Omitted-`from_entry` `trail_points`
 trailing, relative future-entry persistence, duplicate same-entry-id relative
 targets, and public pending-order schema remain future work.
+
+## Slice 28 Follow-Up
+
+Stage 13 Slice 28 adds the omitted-`from_entry` full
+`trail_points+trail_offset` trailing shape for currently open pyramided long
+entries whose entry ids are unique. The broker now expands one omitted
+trail-points call into one entry-specific trailing pending exit per current
+ledger entry, computing each activation price from that entry's own entry price
+and allocating later fills through the existing ledger path. Relative
+future-entry persistence, duplicate same-entry-id relative targets, and public
+pending-order schema remain future work.

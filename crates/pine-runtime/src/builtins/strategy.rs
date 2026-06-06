@@ -453,6 +453,10 @@ impl<'a> HistoricalRuntime<'a> {
             && trail_price_expr.is_some()
             && trail_points_expr.is_none()
             && matches!(quantity, StrategyExitQuantityArg::Full);
+        let is_omitted_trail_points = is_trailing_only
+            && trail_points_expr.is_some()
+            && trail_price_expr.is_none()
+            && matches!(quantity, StrategyExitQuantityArg::Full);
         if from_entry.is_empty()
             && !(is_omitted_absolute_single
                 || is_omitted_absolute_bracket
@@ -460,7 +464,8 @@ impl<'a> HistoricalRuntime<'a> {
                 || is_omitted_loss_profit_bracket
                 || is_omitted_stop_profit_bracket
                 || is_omitted_loss_limit_bracket
-                || is_omitted_trail_price)
+                || is_omitted_trail_price
+                || is_omitted_trail_points)
         {
             return Ok(PineValue::Void);
         }
@@ -522,6 +527,16 @@ impl<'a> HistoricalRuntime<'a> {
                     .eval_expr(trail_offset_expr)?
                     .as_f64()
                     .unwrap_or(f64::NAN);
+                if from_entry.is_empty() {
+                    self.strategy_broker.place_all_entry_exit_trail_points(
+                        id,
+                        activation_ticks,
+                        trail_offset_ticks,
+                        mintick,
+                        self.bars,
+                    );
+                    return Ok(PineValue::Void);
+                }
                 self.place_exit_trail_points_quantity(
                     id,
                     from_entry,
