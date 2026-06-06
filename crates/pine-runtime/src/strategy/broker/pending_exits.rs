@@ -477,10 +477,12 @@ impl PendingExitBook {
         matching
     }
 
-    pub(super) fn remove_identities(&mut self, identities: &[(String, String)]) {
+    pub(super) fn remove_identities(&mut self, identities: &[(String, String, Option<u64>)]) {
         self.exits.retain(|pending_exit| {
-            !identities.iter().any(|(id, from_entry)| {
-                pending_exit.id == *id && pending_exit.from_entry == *from_entry
+            !identities.iter().any(|(id, from_entry, target_trade_key)| {
+                pending_exit.id == *id
+                    && pending_exit.from_entry == *from_entry
+                    && pending_exit.target_trade_key == *target_trade_key
             })
         });
     }

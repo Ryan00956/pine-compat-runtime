@@ -871,7 +871,11 @@ impl BrokerState {
                     .clear_for_entry(&pending_exit.from_entry);
                 continue;
             }
-            filled_identities.push((pending_exit.id.clone(), pending_exit.from_entry.clone()));
+            filled_identities.push((
+                pending_exit.id.clone(),
+                pending_exit.from_entry.clone(),
+                pending_exit.target_trade_key,
+            ));
             self.fill_pending_exit(pending_exit, bar_index, time, exit_price);
         }
 
