@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 Slice 23 omitted-`from_entry`
+  `strategy.exit` `loss+profit` bracket all-entry support for current unique
+  entry ids. A full omitted-`from_entry` loss+profit bracket now creates
+  entry-specific bracket exits for currently open pyramided long entries with
+  distinct ids.
 - Closed Strategy Internal Stage 13 Slice 22 omitted-`from_entry`
   `strategy.exit` loss-tick all-entry support for current unique entry ids. A
   full omitted-`from_entry` loss exit now creates entry-specific stop exits for

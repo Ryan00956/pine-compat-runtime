@@ -434,7 +434,14 @@ impl<'a> HistoricalRuntime<'a> {
             && limit_expr.is_none()
             && !has_trailing
             && matches!(quantity, StrategyExitQuantityArg::Full);
-        if from_entry.is_empty() && !(is_omitted_absolute_single || is_omitted_relative_single) {
+        let is_omitted_loss_profit_bracket = is_loss_profit_bracket
+            && !has_trailing
+            && matches!(quantity, StrategyExitQuantityArg::Full);
+        if from_entry.is_empty()
+            && !(is_omitted_absolute_single
+                || is_omitted_relative_single
+                || is_omitted_loss_profit_bracket)
+        {
             return Ok(PineValue::Void);
         }
         let has_unsupported_entry_relative_active_entry_exit = (trail_points_expr.is_some()
@@ -572,6 +579,19 @@ impl<'a> HistoricalRuntime<'a> {
                     .unwrap_or(f64::NAN);
                 let mintick =
                     pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
+                if from_entry.is_empty() {
+                    self.strategy_broker
+                        .place_all_entry_exit_loss_profit_bracket(
+                            id,
+                            LossProfitBracketSpec {
+                                loss_ticks,
+                                profit_ticks,
+                                mintick,
+                            },
+                            self.bars,
+                        );
+                    return Ok(PineValue::Void);
+                }
                 self.place_exit_loss_profit_bracket_quantity(
                     id,
                     from_entry,

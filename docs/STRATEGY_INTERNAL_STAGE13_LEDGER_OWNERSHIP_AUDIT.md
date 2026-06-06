@@ -288,3 +288,13 @@ own entry price. The duplicate same-entry-id case still preserves the no-op
 boundary because correct support requires per-trade targeting beyond the current
 `id + from_entry` pending-exit identity. Relative future-entry persistence,
 bracket, and trailing all-entry forms remain future slices.
+
+## Slice 23 Follow-Up
+
+Stage 13 Slice 23 extends the same current-open-entry expansion to the omitted-
+`from_entry` `loss+profit` bracket shape. The broker expands a full omitted
+`loss+profit` call into one pending bracket exit per currently open unique entry
+id, with both stop and target prices converted from that entry's own entry
+price. The duplicate same-entry-id case still preserves the no-op boundary, and
+other omitted-`from_entry` bracket shapes, trailing exits, and relative
+future-entry persistence remain future work.
