@@ -5425,7 +5425,7 @@ def test_run_script_returns_strategy_runtime_diagnostics():
     ]
 
 
-def test_run_script_returns_strategy_exit_missing_entry_diagnostics():
+def test_run_script_treats_strategy_exit_missing_entry_as_noop():
     result = pine_compat.run_script(
         'strategy("exit")\nif bar_index == 0\n    strategy.exit("XL", "L", stop=low)\n',
         BARS,
@@ -5436,21 +5436,16 @@ def test_run_script_returns_strategy_exit_missing_entry_diagnostics():
     assert result["strategy"]["trades"] == []
     assert result["strategy"]["position"] == []
     assert result["strategy"]["equity"] == FLAT_EQUITY
-    assert result["strategy"]["diagnostics"] == [
-        {
-            "code": "E_STRATEGY_EXIT_ENTRY",
-            "message": "`strategy.exit` from_entry must match the current long entry",
-        }
-    ]
+    assert result["strategy"]["diagnostics"] == []
 
 
-def test_run_script_returns_strategy_exit_wrong_entry_diagnostics():
+def test_run_script_treats_strategy_exit_wrong_entry_as_noop():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_exit_unmatched_from_entry_noop.pine"
+    ).read_text()
     result = pine_compat.run_script(
-        'strategy("exit")\n'
-        'if bar_index == 0\n'
-        '    strategy.entry("L", strategy.long, qty=2)\n'
-        'if bar_index == 1\n'
-        '    strategy.exit("XL", "OTHER", stop=low)\n',
+        source,
         BARS,
     )
 
@@ -5469,12 +5464,7 @@ def test_run_script_returns_strategy_exit_wrong_entry_diagnostics():
     assert result["strategy"]["position"] == [
         {"barIndex": 1, "size": 2.0, "avgPrice": 2.0}
     ]
-    assert result["strategy"]["diagnostics"] == [
-        {
-            "code": "E_STRATEGY_EXIT_ENTRY",
-            "message": "`strategy.exit` from_entry must match the current long entry",
-        }
-    ]
+    assert result["strategy"]["diagnostics"] == []
     strategy_json = json.dumps(result["strategy"])
     assert '"direction": "strategy.exit"' not in strategy_json
     assert "pending" not in strategy_json

@@ -35,7 +35,7 @@ and trade-key internals.
 
 Good next slices:
 
-- Clearer no-position and wrong-entry diagnostics for supported exit shapes.
+- Clearer no-position and wrong-entry no-op behavior for supported exit shapes.
 - More fixture-backed strategy state variables or count helpers.
 - Narrow order/trade accounting improvements that keep the current public output
   shape.
@@ -55,9 +55,9 @@ Keep out of scope until separately designed:
 - Realtime strategy handoff and intrabar path reconstruction.
 
 Recommended first slice: do not reopen broad broker foundations immediately
-after Stage 13. Prefer either a narrow diagnostics/accounting slice that keeps
-the public schema unchanged, or move to a small built-in coverage slice from a
-real fixture gap. Do not add short exposure, reversals, generic
+after Stage 13. Prefer either a narrow no-op/diagnostics/accounting slice that
+keeps the public schema unchanged, or move to a small built-in coverage slice
+from a real fixture gap. Do not add short exposure, reversals, generic
 `strategy.order()`, custom OCA, public pending-order fields, or any conformance
 widening without runtime behavior and host-parity evidence in the same slice.
 

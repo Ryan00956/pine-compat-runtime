@@ -5285,7 +5285,7 @@ strategy.exit("XL", "L", stop=low)
 }
 
 #[test]
-fn strategy_exit_stop_without_matching_entry_records_strategy_diagnostic() {
+fn strategy_exit_stop_without_matching_entry_is_noop() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"strategy("exit")
@@ -5306,12 +5306,11 @@ strategy.exit("XL", "L", stop=low)
     assert!(strategy.trades.is_empty());
     assert!(strategy.position.is_empty());
     assert_eq!(strategy.equity.len(), 1);
-    assert_eq!(strategy.diagnostics.len(), 1);
-    assert_eq!(strategy.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert!(strategy.diagnostics.is_empty());
 }
 
 #[test]
-fn strategy_exit_trailing_hir_dispatches_to_broker_validation() {
+fn strategy_exit_trailing_hir_without_matching_entry_is_noop() {
     let source = SourceFile::new(
         "strategy_exit_trailing_dispatch_hir.pine",
         r#"strategy("exit")
@@ -5339,8 +5338,7 @@ strategy.exit("XT", "L", stop=95)
     assert!(strategy.orders.is_empty());
     assert!(strategy.trades.is_empty());
     assert!(strategy.position.is_empty());
-    assert_eq!(strategy.diagnostics.len(), 1);
-    assert_eq!(strategy.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert!(strategy.diagnostics.is_empty());
 }
 
 #[test]

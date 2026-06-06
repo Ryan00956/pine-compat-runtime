@@ -300,19 +300,13 @@ mod tests {
     }
 
     #[test]
-    fn run_json_reports_strategy_exit_wrong_entry_diagnostics() {
+    fn run_json_treats_strategy_exit_wrong_entry_as_noop() {
         let base = std::env::temp_dir().join(format!(
             "pine-cli-wrong-entry-{}-{}",
             std::process::id(),
             std::thread::current().name().unwrap_or("test")
         ));
-        let script_path = base.with_extension("pine");
         let bars_path = base.with_extension("csv");
-        fs::write(
-            &script_path,
-            "strategy(\"exit\")\nif bar_index == 0\n    strategy.entry(\"L\", strategy.long, qty=2)\nif bar_index == 1\n    strategy.exit(\"XL\", \"OTHER\", stop=low)\n",
-        )
-        .expect("write strategy script");
         fs::write(
             &bars_path,
             "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
@@ -320,26 +314,25 @@ mod tests {
         .expect("write bars");
 
         let options = RunOptions {
-            path: script_path.display().to_string(),
+            path: workspace_path(
+                "tests/fixtures/runtime/strategy_exit_unmatched_from_entry_noop.pine",
+            ),
             bars_path: bars_path.display().to_string(),
             profile: false,
             request_bars: Vec::new(),
             library_sources: Vec::new(),
         };
-        let output = run_json_with_options(&options).expect("strategy diagnostic output");
+        let output = run_json_with_options(&options).expect("strategy no-op output");
 
         assert!(output.contains(
             "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":1,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2}]"
         ));
         assert!(output.contains("\"trades\":[]"));
         assert!(output.contains("\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2}]"));
-        assert!(output.contains(
-            "\"diagnostics\":[{\"code\":\"E_STRATEGY_EXIT_ENTRY\",\"message\":\"`strategy.exit` from_entry must match the current long entry\"}]"
-        ));
+        assert!(output.contains("\"diagnostics\":[]"));
         assert!(!output.contains("\"direction\":\"strategy.exit\""));
         assert!(!output.contains("pending"));
         assert!(!output.contains("reserved"));
-        let _ = fs::remove_file(script_path);
         let _ = fs::remove_file(bars_path);
     }
 }

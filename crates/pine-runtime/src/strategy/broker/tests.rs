@@ -1603,7 +1603,7 @@ fn pending_market_entry_attachment_uses_pending_quantity_for_reservations() {
 }
 
 #[test]
-fn pending_market_entry_attachment_rejects_unknown_from_entry() {
+fn pending_market_entry_attachment_unknown_from_entry_is_noop() {
     let mut broker = BrokerState::new(100_000.0);
 
     broker.place_pending_market_long_entry("L".to_owned(), 2.0, 0);
@@ -1611,8 +1611,7 @@ fn pending_market_entry_attachment_rejects_unknown_from_entry() {
 
     assert_eq!(pending_entry_count(&broker), 1);
     assert_eq!(pending_exit_count(&broker), 0);
-    assert_eq!(broker.diagnostics.len(), 1);
-    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
@@ -2449,14 +2448,13 @@ fn trade_counts_ignore_mismatched_close_and_exit() {
 }
 
 #[test]
-fn place_exit_while_flat_records_diagnostic_without_pending_state() {
+fn place_exit_while_flat_is_noop_without_pending_state() {
     let mut broker = BrokerState::new(100_000.0);
 
     broker.place_exit_stop("XL".to_owned(), "L".to_owned(), 95.0, 0);
 
     assert_eq!(pending_exit_count(&broker), 0);
-    assert_eq!(broker.diagnostics.len(), 1);
-    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
@@ -3240,18 +3238,17 @@ fn invalid_percent_quantity_records_diagnostic_without_changing_pending_exit() {
 }
 
 #[test]
-fn percent_quantity_while_flat_records_entry_diagnostic_before_percent_resolution() {
+fn percent_quantity_while_flat_is_noop_before_percent_resolution() {
     let mut broker = BrokerState::new(100_000.0);
 
     broker.place_exit_stop_qty_percent("XL".to_owned(), "L".to_owned(), 95.0, f64::NAN, 0);
 
     assert_eq!(pending_exit_count(&broker), 0);
-    assert_eq!(broker.diagnostics.len(), 1);
-    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
-fn percent_quantity_mismatched_entry_records_entry_diagnostic_before_percent_resolution() {
+fn percent_quantity_mismatched_entry_is_noop_before_percent_resolution() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop("KEEP".to_owned(), "L".to_owned(), 95.0, 0);
     let original_pending_exit = broker.pending_exit().cloned();
@@ -3259,8 +3256,7 @@ fn percent_quantity_mismatched_entry_records_entry_diagnostic_before_percent_res
     broker.place_exit_stop_qty_percent("BAD".to_owned(), "OTHER".to_owned(), 94.0, f64::NAN, 1);
 
     assert_eq!(broker.pending_exit().cloned(), original_pending_exit);
-    assert_eq!(broker.diagnostics.len(), 1);
-    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
@@ -3367,14 +3363,13 @@ fn close_long_invalid_percent_quantity_preserves_position_and_pending_exit() {
 }
 
 #[test]
-fn mismatched_entry_id_records_diagnostic_without_pending_state() {
+fn mismatched_entry_id_is_noop_without_pending_state() {
     let mut broker = broker_with_long_entry();
 
     broker.place_exit_stop("XL".to_owned(), "OTHER".to_owned(), 95.0, 0);
 
     assert_eq!(pending_exit_count(&broker), 0);
-    assert_eq!(broker.diagnostics.len(), 1);
-    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
@@ -3713,14 +3708,13 @@ fn place_exit_trail_points_records_entry_relative_activation() {
 }
 
 #[test]
-fn trailing_while_flat_records_diagnostic_without_pending_state() {
+fn trailing_while_flat_is_noop_without_pending_state() {
     let mut broker = BrokerState::new(100_000.0);
 
     broker.place_exit_trail_price("XT".to_owned(), "L".to_owned(), 105.0, 4.0, 0.5, 0);
 
     assert_eq!(pending_exit_count(&broker), 0);
-    assert_eq!(broker.diagnostics.len(), 1);
-    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
@@ -4597,18 +4591,17 @@ fn invalid_bracket_mintick_records_diagnostic_without_changing_pending_exit() {
 }
 
 #[test]
-fn bracket_while_flat_records_diagnostic_without_pending_state() {
+fn bracket_while_flat_is_noop_without_pending_state() {
     let mut broker = BrokerState::new(100_000.0);
 
     broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
 
     assert_eq!(pending_exit_count(&broker), 0);
-    assert_eq!(broker.diagnostics.len(), 1);
-    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
-fn bracket_with_mismatched_entry_records_diagnostic_without_changing_pending_exit() {
+fn bracket_with_mismatched_entry_is_noop_without_changing_pending_exit() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
 
@@ -4627,8 +4620,7 @@ fn bracket_with_mismatched_entry_records_diagnostic_without_changing_pending_exi
             last_update_bar_index: 0,
         })
     );
-    assert_eq!(broker.diagnostics.len(), 1);
-    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]
@@ -5554,14 +5546,13 @@ fn invalid_exit_mintick_records_diagnostic_without_changing_pending_exit() {
 }
 
 #[test]
-fn profit_ticks_without_matching_entry_record_diagnostic_without_pending_state() {
+fn profit_ticks_without_matching_entry_is_noop_without_pending_state() {
     let mut broker = broker_with_long_entry();
 
     broker.place_exit_profit_ticks("XP".to_owned(), "OTHER".to_owned(), 10.0, 0.01, 0);
 
     assert_eq!(pending_exit_count(&broker), 0);
-    assert_eq!(broker.diagnostics.len(), 1);
-    assert_eq!(broker.diagnostics[0].code, "E_STRATEGY_EXIT_ENTRY");
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]

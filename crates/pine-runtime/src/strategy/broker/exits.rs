@@ -1111,10 +1111,6 @@ impl BrokerState {
         {
             pending_entry_quantity
         } else {
-            self.diagnostics.push(RuntimeDiagnostic {
-                code: "E_STRATEGY_EXIT_ENTRY".to_owned(),
-                message: "`strategy.exit` from_entry must match the current long entry".to_owned(),
-            });
             return;
         };
 

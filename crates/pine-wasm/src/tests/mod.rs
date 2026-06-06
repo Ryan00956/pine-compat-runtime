@@ -113,38 +113,32 @@ fn runs_strategy_script_from_csv_to_empty_strategy_json() {
 }
 
 #[test]
-fn runs_strategy_exit_missing_entry_from_csv_to_strategy_diagnostic_json() {
+fn runs_strategy_exit_missing_entry_from_csv_as_noop_json() {
     let output = run_script_csv(
         "strategy(\"exit\")\nif bar_index == 0\n    strategy.exit(\"XL\", \"L\", stop=low)\n",
         "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
     )
-    .expect("strategy exit diagnostic script should run");
+    .expect("strategy exit no-op script should run");
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     assert_eq!(parsed["strategy"]["orders"], serde_json::json!([]));
     assert_eq!(parsed["strategy"]["trades"], serde_json::json!([]));
     assert_eq!(parsed["strategy"]["position"], serde_json::json!([]));
-    assert_eq!(
-        parsed["strategy"]["diagnostics"],
-        serde_json::json!([
-            {
-                "code": "E_STRATEGY_EXIT_ENTRY",
-                "message": "`strategy.exit` from_entry must match the current long entry"
-            }
-        ])
-    );
+    assert_eq!(parsed["strategy"]["diagnostics"], serde_json::json!([]));
     assert!(!output.contains("pending"));
     assert!(!output.contains("reserved"));
 }
 
 #[test]
-fn runs_strategy_exit_wrong_entry_from_csv_to_strategy_diagnostic_json() {
+fn runs_strategy_exit_wrong_entry_from_csv_as_noop_json() {
     let output = run_script_csv(
-        "strategy(\"exit\")\nif bar_index == 0\n    strategy.entry(\"L\", strategy.long, qty=2)\nif bar_index == 1\n    strategy.exit(\"XL\", \"OTHER\", stop=low)\n",
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_unmatched_from_entry_noop.pine"
+        ),
         "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
     )
-    .expect("strategy wrong-entry diagnostic script should run");
+    .expect("strategy wrong-entry no-op script should run");
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
@@ -172,15 +166,7 @@ fn runs_strategy_exit_wrong_entry_from_csv_to_strategy_diagnostic_json() {
             }
         ])
     );
-    assert_eq!(
-        parsed["strategy"]["diagnostics"],
-        serde_json::json!([
-            {
-                "code": "E_STRATEGY_EXIT_ENTRY",
-                "message": "`strategy.exit` from_entry must match the current long entry"
-            }
-        ])
-    );
+    assert_eq!(parsed["strategy"]["diagnostics"], serde_json::json!([]));
     assert!(!output.contains("\"direction\":\"strategy.exit\""));
     assert!(!output.contains("pending"));
     assert!(!output.contains("reserved"));

@@ -128,8 +128,9 @@ improved over time, but codes should remain stable once published.
 - `E_STRATEGY_CLOSE_QTY`: `strategy.close` quantity is not finite and positive.
 - `E_STRATEGY_CLOSE_QTY_PERCENT`: `strategy.close` percent quantity is not
   finite and positive.
-- `E_STRATEGY_EXIT_ENTRY`: `strategy.exit` could not find or use the referenced
-  entry.
+- `E_STRATEGY_EXIT_ENTRY`: `strategy.exit` could not use an active pending entry
+  attachment shape. Plain unmatched explicit `from_entry` calls in supported
+  exit shapes are no-ops instead.
 - `E_STRATEGY_EXIT_MINTICK`: `strategy.exit` tick conversion requires a finite
   positive minimum tick.
 - `E_STRATEGY_EXIT_PRICE`: `strategy.exit` price argument is not finite.

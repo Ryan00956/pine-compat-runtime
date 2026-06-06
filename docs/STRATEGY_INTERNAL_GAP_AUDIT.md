@@ -113,9 +113,9 @@ entry with a matching id." Pine's documented behavior is narrower:
   command creates no exit orders.
 
 Current docs and plans should use a narrower phrase such as active-entry exit
-attachment or same-calculation entry/exit attachment. The unsupported boundary
-should remain: unmatched missing-entry exits are no-op or diagnostic behavior,
-not persistent future reservations.
+attachment or same-calculation entry/exit attachment. The supported unmatched
+explicit-`from_entry` boundary is no-op behavior with no persistent future
+reservations.
 
 Current repo status: the supported absolute active-entry subset is fixture
 backed. A same-calculation `strategy.exit` using absolute `stop`, `limit`, or
@@ -284,8 +284,8 @@ Missing internal behavior:
   supported trigger families;
 - custom OCA names and OCA behavior;
 - exit comments and alert-message metadata;
-- no-op behavior for invalid `from_entry` ids where Pine does not create exit
-  orders.
+- broader no-op coverage for invalid `from_entry` ids outside the currently
+  supported trigger and quantity shapes.
 
 Gap size: medium.
 
