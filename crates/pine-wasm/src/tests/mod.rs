@@ -817,6 +817,48 @@ fn runs_strategy_exit_omitted_replaces_reservations_from_csv_to_public_strategy_
 }
 
 #[test]
+fn runs_strategy_omitted_current_all_entry_exit_fixture_from_csv_to_public_strategy_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_current.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_current_bars.csv"
+        ),
+    )
+    .expect("strategy omitted current all-entry exit fixture should run");
+
+    assert!(output.contains(&format!(
+        "\"schemaVersion\":{}",
+        PUBLIC_RUNTIME_SCHEMA_VERSION
+    )));
+    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 2);
+    assert!(output.contains(
+        "\"orders\":[{\"id\":\"L1\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":1,\"price\":2},{\"id\":\"L2\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.long\",\"qty\":3,\"price\":4},{\"id\":\"XL\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":5},{\"id\":\"XL\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":3,\"price\":5}]"
+    ));
+    assert!(output.contains(
+        "\"trades\":[{\"id\":\"L1\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":2,\"exitPrice\":5,\"qty\":1,\"profit\":3},{\"id\":\"L2\",\"entryBarIndex\":2,\"exitBarIndex\":3,\"entryTime\":3,\"exitTime\":4,\"entryPrice\":4,\"exitPrice\":5,\"qty\":3,\"profit\":3}]"
+    ));
+    assert!(output.contains(
+        "\"position\":[{\"barIndex\":1,\"size\":1,\"avgPrice\":2},{\"barIndex\":2,\"size\":4,\"avgPrice\":3.5},{\"barIndex\":3,\"size\":0,\"avgPrice\":null}]"
+    ));
+    assert!(output.contains("\"values\":[0,1,2,2,0]"));
+    assert!(output.contains("\"values\":[0,1,4,4,0]"));
+    assert!(output.contains("\"values\":[0,0,0,0,2]"));
+    assert!(output.contains("\"strategy\":{\"orders\":"));
+    assert!(output.contains("\"equity\":["));
+    assert!(output.contains("\"diagnostics\":[]}"));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("reservedQuantity"));
+    assert!(!output.contains("reserved_quantity"));
+    assert!(!output.contains("remainingQty"));
+    assert!(!output.contains("remaining_quantity"));
+    assert!(!output.contains("qtyPercent"));
+    assert!(!output.contains("qty_percent"));
+    assert!(!output.contains("exitReason"));
+}
+
+#[test]
 fn runs_strategy_exit_active_entry_attachment_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(
