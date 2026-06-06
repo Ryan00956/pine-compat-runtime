@@ -543,6 +543,8 @@ fn boxes_json(boxes: &[BoxOutput]) -> String {
                 output.push_str(&value_json(&snapshot.extend));
                 output.push_str(",\"text\":");
                 output.push_str(&value_json(&snapshot.text));
+                output.push_str(",\"textColor\":");
+                output.push_str(&value_json(&snapshot.text_color));
             }
             output.push('}');
         }

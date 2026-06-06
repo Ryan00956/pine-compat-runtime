@@ -640,10 +640,11 @@ snapshot into a new deterministic id, returns `na` for `na` or deleted boxes,
 and shares the box object limit. `box.set_extend` records the selected
 horizontal extend constant in the host-neutral snapshot; visual extension
 remains a host responsibility. `box.set_text` records the box text string in the
-host-neutral snapshot; text rendering, styling, and layout remain host
-responsibilities. `box.get_left`, `box.get_right`, `box.get_top`, and
-`box.get_bottom` read the corresponding value from the latest existing box
-snapshot and return `na` for `na` or deleted boxes.
+host-neutral snapshot. `box.set_text_color` records the text color in the
+host-neutral snapshot; text rendering and layout remain host responsibilities.
+`box.get_left`, `box.get_right`, `box.get_top`, and `box.get_bottom` read the
+corresponding value from the latest existing box snapshot and return `na` for
+`na` or deleted boxes.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from
