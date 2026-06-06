@@ -1501,6 +1501,46 @@ fn pending_stop_limit_entry_fills_after_activation_on_later_low_crossing_bar() {
 }
 
 #[test]
+fn pending_stop_limit_entries_triggered_together_can_exceed_pyramiding_limit() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        Default::default(),
+        Default::default(),
+        1,
+    );
+
+    broker.place_pending_stop_limit_long_entry("L1".to_owned(), 1.0, 105.0, 100.0, 0);
+    broker.place_pending_stop_limit_long_entry("L2".to_owned(), 3.0, 105.0, 100.0, 0);
+
+    assert_eq!(pending_entry_count(&broker), 2);
+
+    broker.fill_pending_stop_limit_long_entries(1, 20, 106.0, 99.0);
+
+    assert_eq!(pending_entry_count(&broker), 2);
+    assert!(broker.orders.is_empty());
+    assert_eq!(broker.position_size, 0.0);
+
+    broker.fill_pending_stop_limit_long_entries(2, 30, 104.0, 99.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(broker.orders.len(), 2);
+    assert_eq!(broker.orders[0].id, "L1");
+    assert_eq!(broker.orders[0].bar_index, 2);
+    assert_eq!(broker.orders[0].qty, 1.0);
+    assert_eq!(broker.orders[0].price, 100.0);
+    assert_eq!(broker.orders[1].id, "L2");
+    assert_eq!(broker.orders[1].bar_index, 2);
+    assert_eq!(broker.orders[1].qty, 3.0);
+    assert_eq!(broker.orders[1].price, 100.0);
+    assert_eq!(broker.position_size, 4.0);
+    assert_eq!(broker.avg_price, 100.0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn pending_market_entry_allows_attached_stop_exit_without_public_fill() {
     let mut broker = BrokerState::new(100_000.0);
 

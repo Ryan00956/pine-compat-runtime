@@ -612,6 +612,81 @@ plot(strategy.position_avg_price)
 }
 
 #[test]
+fn strategy_entry_stop_limit_orders_triggered_together_can_exceed_pyramiding_limit() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("entry")
+if bar_index == 0
+    strategy.entry("L1", strategy.long, qty=1, stop=11, limit=10)
+    strategy.entry("L2", strategy.long, qty=3, stop=11, limit=10)
+plot(strategy.opentrades)
+plot(strategy.position_size)
+plot(strategy.position_avg_price)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(11.0, 11.0, 10.0, 11.0),
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+            bar_ohlc(10.0, 10.0, 10.0, 10.0),
+        ],
+    )
+    .expect("runtime result");
+    let strategy = result.strategy.expect("strategy output");
+
+    assert_eq!(strategy.orders.len(), 2);
+    assert_eq!(strategy.orders[0].id, "L1");
+    assert_eq!(strategy.orders[0].direction, "strategy.long");
+    assert_eq!(strategy.orders[0].bar_index, 2);
+    assert_eq!(strategy.orders[0].qty, 1.0);
+    assert_eq!(strategy.orders[0].price, 10.0);
+    assert_eq!(strategy.orders[1].id, "L2");
+    assert_eq!(strategy.orders[1].direction, "strategy.long");
+    assert_eq!(strategy.orders[1].bar_index, 2);
+    assert_eq!(strategy.orders[1].qty, 3.0);
+    assert_eq!(strategy.orders[1].price, 10.0);
+    assert_eq!(strategy.position.last().unwrap().size, 4.0);
+    assert_eq!(strategy.position.last().unwrap().avg_price, Some(10.0));
+    assert!(strategy.diagnostics.is_empty());
+    assert_eq!(
+        result.plots[0].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(2),
+            PineValue::Int(2),
+        ]
+    );
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(4.0),
+            PineValue::Float(4.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(10.0),
+            PineValue::Float(10.0),
+        ]
+    );
+}
+
+#[test]
 fn strategy_entry_stop_limit_allows_same_calculation_absolute_exit_attachment() {
     let source = SourceFile::new(
         "strategy.pine",

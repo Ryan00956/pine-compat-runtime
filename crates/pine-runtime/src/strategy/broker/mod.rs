@@ -629,34 +629,36 @@ impl BrokerState {
         self.order_book
             .entries_mut()
             .activate_stop_limit_long_entries(bar_index, high);
-        let Some(pending_entry) = self
+        let pending_entries = self
             .order_book
             .entries_mut()
-            .take_first_eligible_stop_limit_long(
+            .take_all_eligible_stop_limit_long(
                 bar_index,
                 low,
                 self.limit_verification_price_offset,
-            )
-        else {
+            );
+        if pending_entries.is_empty() {
             return;
-        };
+        }
 
-        let PendingEntryKind::StopLimit { limit_price, .. } = pending_entry.kind else {
-            return;
-        };
-        let entry_id = pending_entry.id;
-        let filled = self.entry_long(
-            entry_id.clone(),
-            bar_index,
-            time,
-            limit_price,
-            pending_entry.quantity,
-        );
-        if filled {
-            self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
-            self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
-        } else {
-            self.order_book.exits_mut().clear_for_entry(&entry_id);
+        for pending_entry in pending_entries {
+            let PendingEntryKind::StopLimit { limit_price, .. } = pending_entry.kind else {
+                continue;
+            };
+            let entry_id = pending_entry.id;
+            let filled = self.entry_long_from_price_based_same_tick_exception(
+                entry_id.clone(),
+                bar_index,
+                time,
+                limit_price,
+                pending_entry.quantity,
+            );
+            if filled {
+                self.resolve_deferred_relative_exits_for_entry(&entry_id, bar_index);
+                self.expand_persistent_all_entry_exit_for_new_entry(bar_index);
+            } else {
+                self.order_book.exits_mut().clear_for_entry(&entry_id);
+            }
         }
         self.order_book.entries_mut().clear_all();
     }

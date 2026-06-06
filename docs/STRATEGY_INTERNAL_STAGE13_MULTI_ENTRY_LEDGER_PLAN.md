@@ -1926,7 +1926,36 @@ Closed evidence:
 
 Future slices:
 
-- same-tick stop-limit-entry pyramiding-limit exceptions;
+- broader host parity coverage for future public JSON contracts.
+
+### Slice 77: Same-Tick Stop-Limit Entry Pyramiding Exception
+
+Status: closed on 2026-06-06. This slice extends the fixture-backed
+price-based same-tick pyramiding-limit exception to multiple long stop-limit
+entries that are already activated and all eligible during the same historical
+limit-fill pass. It preserves the existing stop-limit activation-bar delay and
+does not claim shorts, reversals, `strategy.order()`, realtime tick
+recalculation, or host parity additions.
+
+Goal:
+
+- let a single stop-limit fill pass collect all eligible activated long
+  stop-limit entries, then append each resulting open trade even when the batch
+  exceeds the normal pyramiding limit.
+
+Closed evidence:
+
+- `pending_stop_limit_entries_triggered_together_can_exceed_pyramiding_limit`
+  proves the broker activates two stop-limit entries, skips activation-bar
+  fills, then fills both with `pyramiding=1` on the later limit pass.
+- `strategy_entry_stop_limit_orders_triggered_together_can_exceed_pyramiding_limit`
+  proves the public runtime emits two long orders and exposes two open trades
+  from the later historical fill bar.
+- `tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries.pine`
+  records the conformance fixture for the narrowed public claim.
+
+Future slices:
+
 - broader host parity coverage for future public JSON contracts.
 
 ### Slice 74: Same-Id Omitted Trail-Points Future Runtime
@@ -2561,6 +2590,7 @@ without runtime changes. Slice 73 adds explicit same-id omitted
 74 adds matching same-id omitted `trail_points+trail_offset` future-entry
 runtime support. Slice 75 adds fixture-backed same-tick limit-entry
 pyramiding-limit exceptions. Slice 76 adds matching same-tick stop-entry
-pyramiding-limit exceptions. These slices must not be used to claim same-tick
-stop-limit entry exceptions, shorts, reversals, `strategy.order()`,
+pyramiding-limit exceptions. Slice 77 adds matching same-tick stop-limit-entry
+pyramiding-limit exceptions while preserving activation-bar delay. These slices
+must not be used to claim shorts, reversals, `strategy.order()`,
 `close_entries_rule`, or broader multi-entry `strategy.exit`/reporting support.
