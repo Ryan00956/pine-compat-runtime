@@ -707,7 +707,6 @@ fn table_snapshots_to_py(
     }
     Ok(output.into_any().unbind())
 }
-
 fn table_cells_to_py(
     py: Python<'_>,
     cells: &[pine_runtime::TableCellSnapshot],
@@ -720,6 +719,7 @@ fn table_cells_to_py(
         item.set_item("text", value_to_py(py, &cell.text)?)?;
         item.set_item("bgColor", value_to_py(py, &cell.bg_color)?)?;
         item.set_item("textColor", value_to_py(py, &cell.text_color)?)?;
+        item.set_item("width", value_to_py(py, &cell.width)?)?;
         output.append(item)?;
     }
     Ok(output.into_any().unbind())

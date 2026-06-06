@@ -601,6 +601,8 @@ fn tables_json(tables: &[TableOutput]) -> String {
                 output.push_str(&value_json(&cell.bg_color));
                 output.push_str(",\"textColor\":");
                 output.push_str(&value_json(&cell.text_color));
+                output.push_str(",\"width\":");
+                output.push_str(&value_json(&cell.width));
                 output.push('}');
             }
             output.push_str("]}");

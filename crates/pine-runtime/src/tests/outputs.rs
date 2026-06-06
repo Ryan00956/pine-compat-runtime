@@ -558,10 +558,12 @@ if bar_index == 2
     table.cell_set_text(id, 1, 0, "B2")
     table.cell_set_bgcolor(id, 1, 0, color.red)
     table.cell_set_text_color(id, 1, 0, color.blue)
+    table.cell_set_width(id, 1, 0, 25)
 table.cell(na, 0, 1, "noop")
 table.cell_set_text(na, 0, 1, "noop")
 table.cell_set_bgcolor(na, 0, 1, color.red)
 table.cell_set_text_color(na, 0, 1, color.blue)
+table.cell_set_width(na, 0, 1, 25)
 plot(close)
 "#,
     );
@@ -583,7 +585,7 @@ plot(close)
     );
     assert_eq!(table.columns, 2);
     assert_eq!(table.rows, 2);
-    assert_eq!(table.snapshots.len(), 7);
+    assert_eq!(table.snapshots.len(), 8);
     assert!(table.snapshots[0].cells.is_empty());
     assert_eq!(table.snapshots[1].cells[0].column, 0);
     assert_eq!(table.snapshots[1].cells[0].row, 0);
@@ -617,6 +619,7 @@ plot(close)
         table.snapshots[6].cells[1].text_color,
         PineValue::Color(0x0000FF)
     );
+    assert_eq!(table.snapshots[7].cells[1].width, PineValue::Int(25));
 }
 
 #[test]
