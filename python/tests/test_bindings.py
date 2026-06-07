@@ -131,6 +131,22 @@ def test_run_script_converts_non_finite_plot_values_to_none():
     assert result["plots"][0]["values"] == [None, None, None]
 
 
+def test_run_script_returns_plotchar_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/plotchar.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["diagnostics"] == []
+    assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
+    assert result["plotChars"] == [
+        {
+            "id": 1,
+            "values": [None, False, True],
+            "chars": [None, "x", "x"],
+            "colors": [None, 32768, 32768],
+        }
+    ]
+
+
 def test_run_script_returns_math_edge_cases_as_none():
     source = (ROOT / "tests/fixtures/runtime/math_edge_cases.pine").read_text()
     result = pine_compat.run_script(source, BARS)

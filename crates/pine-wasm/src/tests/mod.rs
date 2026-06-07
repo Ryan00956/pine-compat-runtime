@@ -105,6 +105,30 @@ fn run_script_csv_serializes_non_finite_values_as_json_null() {
 }
 
 #[test]
+fn run_script_csv_returns_plotchar_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/plotchar.pine"),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+    )
+    .expect("plotchar fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(parsed["plots"][0]["values"], serde_json::json!([1, 2, 3]));
+    assert_eq!(
+        parsed["plotChars"],
+        serde_json::json!([
+            {
+                "id": 1,
+                "values": [null, false, true],
+                "chars": [null, "x", "x"],
+                "colors": [null, 32768, 32768]
+            }
+        ])
+    );
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
