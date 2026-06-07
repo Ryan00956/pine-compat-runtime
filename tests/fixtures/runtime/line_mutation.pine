@@ -11,4 +11,6 @@ for i = 0 to 0
         line.set_width(line_id, 2)
         line.set_style(line_id, line.style_dashed)
         line.set_extend(line_id, extend.right)
+        line.set_xloc(line_id, bar_index - 2, bar_index + 2, xloc.bar_index)
+line.set_xloc(na, bar_index, bar_index, xloc.bar_index)
 plot(close)

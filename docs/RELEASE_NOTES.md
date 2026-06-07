@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.set_xloc()` support for the `xloc.bar_index`
+  subset. It updates the latest existing line snapshot's x1 and x2 values;
+  `na` and deleted lines remain no-ops, and `xloc.bar_time` stays unsupported.
 - Added fixture-backed `line.get_price()` support over the latest existing
   bar-index line snapshot. It uses x1/y1/x2/y2 interpolation or extrapolation
   and returns `na` for `na`, deleted, vertical, or nonnumeric lines.

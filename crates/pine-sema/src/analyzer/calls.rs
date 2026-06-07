@@ -180,6 +180,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "line.set_x2"
             | "line.set_y2"
             | "line.set_xy2"
+            | "line.set_xloc"
             | "line.set_color"
             | "line.set_width"
             | "line.set_style"
@@ -644,6 +645,9 @@ impl Analyzer {
             }
             "line.set_extend" => {
                 self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
+            }
+            "line.set_xloc" => {
+                self.validate_label_string_arg(signature, args, 3, "xloc", &["xloc.bar_index"]);
             }
             "box.set_extend" => {
                 self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);

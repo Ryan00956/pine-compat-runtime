@@ -5740,6 +5740,45 @@ def test_run_script_returns_line_new_style_outputs():
     ]
 
 
+def test_run_script_returns_line_set_xloc_outputs():
+    result = pine_compat.run_script(
+        'indicator("line set xloc")\nif bar_index == 1\n    line_id = line.new(bar_index, low, bar_index + 1, high)\n    line.set_xloc(line_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nline.set_xloc(na, bar_index, bar_index, xloc.bar_index)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["lines"] == [
+        {
+            "id": 1,
+            "snapshots": [
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "x1": 1,
+                    "y1": 2.0,
+                    "x2": 2,
+                    "y2": 2.0,
+                    "color": None,
+                    "width": 1,
+                    "style": "line.style_solid",
+                    "extend": "extend.none",
+                },
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "x1": 0,
+                    "y1": 2.0,
+                    "x2": 4,
+                    "y2": 2.0,
+                    "color": None,
+                    "width": 1,
+                    "style": "line.style_solid",
+                    "extend": "extend.none",
+                },
+            ],
+        }
+    ]
+
+
 def test_run_script_returns_line_getter_plot_values():
     result = pine_compat.run_script(
         'indicator("line getters")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nif bar_index == 1\n    line.set_x1(line_id, bar_index - 10)\n    line.set_x2(line_id, bar_index + 10)\n    line.set_y1(line_id, low - 10)\n    line.set_y2(line_id, high + 10)\nplot(line.get_x1(line_id))\nplot(line.get_y1(line_id))\nplot(line.get_x2(line_id))\nplot(line.get_y2(line_id))\nplot(line.get_price(line_id, bar_index + 5))\n',

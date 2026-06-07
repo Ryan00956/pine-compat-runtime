@@ -98,6 +98,7 @@ line.set_xy1	partial	line id x1/y1 mutation snapshots only; deleted or na lines 
 line.set_x2	partial	line id x2 mutation snapshots only; deleted or na lines are no-op; later line methods unsupported	tests/fixtures/runtime/line_mutation.pine
 line.set_y2	partial	line id y2 mutation snapshots only; deleted or na lines are no-op; later line methods unsupported	tests/fixtures/runtime/line_mutation.pine
 line.set_xy2	partial	line id x2/y2 mutation snapshots only; deleted or na lines are no-op; later line methods unsupported	tests/fixtures/runtime/line_mutation.pine
+line.set_xloc	partial	line id x-location mutation for xloc.bar_index only; updates x1 and x2 snapshots; deleted or na lines are no-op; xloc.bar_time and chart.point line methods remain unsupported	tests/fixtures/runtime/line_mutation.pine
 line.set_color	partial	line id color mutation snapshots only; deleted or na lines are no-op; later line methods unsupported	tests/fixtures/runtime/line_mutation.pine;tests/fixtures/runtime/line_control_flow.pine
 line.set_width	partial	line id width mutation snapshots only; deleted or na lines are no-op; later line methods unsupported	tests/fixtures/runtime/line_mutation.pine;tests/fixtures/runtime/line_control_flow.pine
 line.set_style	partial	line id selected style mutation snapshots only; deleted or na lines are no-op; later line methods unsupported	tests/fixtures/runtime/line_mutation.pine;tests/fixtures/runtime/line_control_flow.pine

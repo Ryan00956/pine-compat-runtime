@@ -414,7 +414,8 @@ normalized Pine values, including `textAlign`, `textFontFamily`, and
 those host-neutral style snapshot fields for the x1/y1/x2/y2 overload when
 `xloc` is omitted or `xloc.bar_index`; chart-point overloads and
 `xloc.bar_time` coordinate semantics remain outside the current runtime output
-contract. Selected `line.set_*` mutators, `line.copy` cloning, and
+contract. Selected `line.set_*` mutators, including the `xloc.bar_index`
+`line.set_xloc` subset that rewrites x1 and x2, `line.copy` cloning, and
 `line.delete` reuse the same snapshot model; `line.get_x1`, `line.get_y1`,
 `line.get_x2`, and `line.get_y2` read latest existing line snapshot values;
 `line.get_price` derives a host-neutral bar-index price by interpolating or

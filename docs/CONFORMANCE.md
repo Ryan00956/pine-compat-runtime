@@ -623,8 +623,9 @@ snapshot, with a 500-label runtime limit. The
 executable line subset covers `line.new` x1/y1/x2/y2 creation with optional
 extend, color, style, and width initialization for existing host-neutral
 snapshot fields when `xloc` is omitted or `xloc.bar_index`; chart-point
-overloads, `xloc.bar_time`, and `line.set_xloc` remain unsupported. It also
-covers selected endpoint/color/width/style/extend mutators, `line.delete`,
+overloads and `xloc.bar_time` remain unsupported. It also covers selected
+endpoint/color/width/style/extend mutators, `line.set_xloc` for the
+`xloc.bar_index` subset that updates x1 and x2 snapshots, `line.delete`,
 fixture-backed cloning with `line.copy`, and fixture-backed `line.get_x1`,
 `line.get_y1`, `line.get_x2`, `line.get_y2`, and `line.get_price` getters over
 the latest existing line snapshot, with sparse snapshots and a 500-line runtime

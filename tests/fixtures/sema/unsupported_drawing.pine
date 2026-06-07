@@ -1,7 +1,7 @@
 //@version=5
 indicator("Unsupported drawing")
 label.set_point(na, na)
-line.set_xloc(na, bar_index, bar_index, xloc.bar_index)
+line.set_first_point(na, na)
 box.set_top_left_point(na, na)
 table.cell_set_text_wrap(na, 0, 0, text.wrap_auto)
 polyline.new(na)

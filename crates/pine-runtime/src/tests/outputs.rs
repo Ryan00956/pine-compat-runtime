@@ -155,10 +155,12 @@ line.set_xy1(id, bar_index, open)
 line.set_x2(id, 2)
 line.set_y2(id, close + 2)
 line.set_xy2(id, bar_index, close)
+line.set_xloc(id, 10, 12, xloc.bar_index)
 line.set_color(id, color.green)
 line.set_width(id, 2)
 line.set_style(id, line.style_dashed)
 line.set_extend(id, extend.right)
+line.set_xloc(na, 0, 1, xloc.bar_index)
 plot(close)
 "#,
     );
@@ -173,7 +175,7 @@ plot(close)
 
     assert_eq!(result.lines.len(), 1);
     let line = &result.lines[0];
-    assert_eq!(line.snapshots.len(), 11);
+    assert_eq!(line.snapshots.len(), 12);
     assert_eq!(line.snapshots[1].x1, PineValue::Int(1));
     assert_eq!(line.snapshots[2].y1, PineValue::Float(2.0));
     assert_eq!(line.snapshots[3].x1, PineValue::Int(0));
@@ -182,14 +184,16 @@ plot(close)
     assert_eq!(line.snapshots[5].y2, PineValue::Float(3.0));
     assert_eq!(line.snapshots[6].x2, PineValue::Int(0));
     assert_eq!(line.snapshots[6].y2, PineValue::Float(1.0));
-    assert_eq!(line.snapshots[7].color, PineValue::Color(0x008000));
-    assert_eq!(line.snapshots[8].width, PineValue::Int(2));
+    assert_eq!(line.snapshots[7].x1, PineValue::Int(10));
+    assert_eq!(line.snapshots[7].x2, PineValue::Int(12));
+    assert_eq!(line.snapshots[8].color, PineValue::Color(0x008000));
+    assert_eq!(line.snapshots[9].width, PineValue::Int(2));
     assert_eq!(
-        line.snapshots[9].style,
+        line.snapshots[10].style,
         PineValue::String("line.style_dashed".to_owned())
     );
     assert_eq!(
-        line.snapshots[10].extend,
+        line.snapshots[11].extend,
         PineValue::String("extend.right".to_owned())
     );
 }

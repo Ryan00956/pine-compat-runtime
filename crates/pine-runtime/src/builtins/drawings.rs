@@ -42,6 +42,7 @@ impl<'a> HistoricalRuntime<'a> {
             "line.set_x2" => self.eval_line_set_x2(args),
             "line.set_y2" => self.eval_line_set_y2(args),
             "line.set_xy2" => self.eval_line_set_xy2(args),
+            "line.set_xloc" => self.eval_line_set_xloc(args),
             "line.set_color" => self.eval_line_set_color(args),
             "line.set_width" => self.eval_line_set_width(args),
             "line.set_style" => self.eval_line_set_style(args),

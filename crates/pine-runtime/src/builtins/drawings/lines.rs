@@ -115,6 +115,20 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_line_set_xloc(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_line_id_arg(args)?;
+        let x1 = self.eval_required_line_arg(args, 1, "x1")?;
+        let x2 = self.eval_required_line_arg(args, 2, "x2")?;
+        let _xloc = self.eval_required_line_arg(args, 3, "xloc")?;
+        self.mutate_line(id, |snapshot| {
+            snapshot.x1 = x1;
+            snapshot.x2 = x2;
+        })
+    }
+
     pub(super) fn eval_line_set_color(
         &mut self,
         args: &[HirCallArg],

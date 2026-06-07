@@ -384,6 +384,29 @@ const LINE_SET_XY_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const LINE_SET_XLOC_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LineCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "x1",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "x2",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "xloc",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
 const LINE_SET_COLOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -970,6 +993,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "line.set_xy2",
         phase: BuiltinPhase::Phase1Core,
         params: LINE_SET_XY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_xloc",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_XLOC_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
