@@ -623,7 +623,7 @@ and a 500-object runtime limit. Boxes use the same lifecycle
 rules with bar-index left/right coordinates, price top/bottom coordinates,
 selected background/border fields, snapshot cloning, non-reused ids, and a
 500-object runtime limit. Tables use deterministic ids, fixed positive
-dimensions, optional `table.new` background-color and frame-color
+dimensions, optional `table.new` background-color, frame-color, and frame-width
 initialization, and sparse cell snapshots for text/background/text-color/width/height/text-size writes
 and final table-level mutations with `table.set_position` and
 `table.set_bgcolor`/`table.set_frame_color`/`table.set_frame_width`/
@@ -661,9 +661,10 @@ in the host-neutral snapshot; text rendering and font layout remain host
 responsibilities. `box.get_left`, `box.get_right`, `box.get_top`, and
 `box.get_bottom` read the corresponding value from the latest existing box
 snapshot and return `na` for `na` or deleted boxes. `table.set_position`
-updates the table's final position value. `table.new` optional `bgcolor` and
-`frame_color` initialize the table's final background-color and frame-color
-values; optional frame-width and border initializers remain unsupported.
+updates the table's final position value. `table.new` optional `bgcolor`,
+`frame_color`, and `frame_width` initialize the table's final background-color,
+frame-color, and frame-width values; optional border initializers remain
+unsupported.
 `table.set_bgcolor` updates the
 table's final background-color value. `table.set_frame_color` updates the
 table's final frame-color value. `table.set_frame_width` updates the table's
