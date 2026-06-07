@@ -290,6 +290,15 @@ def test_run_script_returns_session_fixture_contract():
     assert result["plots"][2]["values"] == [0.0, 0.0, 0.0]
 
 
+def test_run_script_returns_inputs_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/inputs.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["diagnostics"] == []
+    assert len(result["plots"]) == 1
+    assert result["plots"][0]["values"] == [0.0, 0.0, 3.0]
+
+
 def test_compile_script_rejects_deep_input_without_aborting_process():
     expression = "(" * 300 + "close" + ")" * 300
 
