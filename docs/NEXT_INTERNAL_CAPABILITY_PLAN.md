@@ -35,7 +35,8 @@ and trade-key internals.
 
 Good next slices:
 
-- Clearer no-position and wrong-entry no-op behavior for supported exit shapes.
+- Additional clearer no-position and wrong-entry no-op behavior for supported
+  exit shapes.
 - More fixture-backed strategy state variables or count helpers.
 - Narrow order/trade accounting improvements that keep the current public output
   shape.
@@ -60,6 +61,12 @@ keeps the public schema unchanged, or move to a small built-in coverage slice
 from a real fixture gap. Do not add short exposure, reversals, generic
 `strategy.order()`, custom OCA, public pending-order fields, or any conformance
 widening without runtime behavior and host-parity evidence in the same slice.
+
+Closed maintenance slice:
+
+- Supported `strategy.exit` while-flat no-op behavior is covered by a runtime
+  fixture, golden snapshot, conformance matrix entry, and Python/WASM host
+  parity tests without exposing pending-order or reservation internals.
 
 ## Direction 2: Built-In Coverage
 
