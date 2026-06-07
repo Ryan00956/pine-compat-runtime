@@ -369,6 +369,48 @@ fn runs_strategy_exit_profit_wrong_entry_from_csv_as_noop_json() {
 }
 
 #[test]
+fn runs_strategy_exit_loss_wrong_entry_from_csv_as_noop_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_loss_unmatched_from_entry_noop.pine"
+        ),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+    )
+    .expect("strategy loss wrong-entry no-op script should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(
+        parsed["strategy"]["orders"],
+        serde_json::json!([
+            {
+                "id": "L",
+                "barIndex": 1,
+                "time": 1,
+                "direction": "strategy.long",
+                "qty": 2,
+                "price": 2
+            }
+        ])
+    );
+    assert_eq!(parsed["strategy"]["trades"], serde_json::json!([]));
+    assert_eq!(
+        parsed["strategy"]["position"],
+        serde_json::json!([
+            {
+                "barIndex": 1,
+                "size": 2,
+                "avgPrice": 2
+            }
+        ])
+    );
+    assert_eq!(parsed["strategy"]["diagnostics"], serde_json::json!([]));
+    assert!(!output.contains("\"direction\":\"strategy.exit\""));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("reserved"));
+}
+
+#[test]
 fn runs_strategy_exit_bracket_wrong_entry_from_csv_as_noop_json() {
     let output = run_script_csv(
         include_str!(

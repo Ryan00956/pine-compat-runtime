@@ -5625,6 +5625,29 @@ fn profit_ticks_with_mismatched_entry_is_noop_without_changing_pending_exit() {
 }
 
 #[test]
+fn loss_ticks_with_mismatched_entry_is_noop_without_changing_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_limit("XLIMIT".to_owned(), "L".to_owned(), 110.0, 0);
+
+    broker.place_exit_loss_ticks("XL".to_owned(), "OTHER".to_owned(), 5.0, 0.5, 1);
+
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XLIMIT".to_owned(),
+            from_entry: "L".to_owned(),
+            target_trade_key: None,
+            trigger: PendingExitTrigger::Limit(110.0),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
+            multiple_reservation: false,
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn unchanged_repeated_profit_ticks_keep_original_eligibility_bar() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 1.0, 0);
