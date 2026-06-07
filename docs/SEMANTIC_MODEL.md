@@ -365,7 +365,7 @@ expressions.
 ## Arrays
 
 The current array subset supports float, int, bool, string, color, label-id,
-line-id, and box-id arrays:
+line-id, box-id, and table-id arrays:
 
 ```pine
 var values = array.new_float()
@@ -395,21 +395,25 @@ lines.push(line.new(bar_index, low, bar_index + 1, high))
 
 var boxes = array.new_box()
 boxes.push(box.new(bar_index, high, bar_index + 1, low))
+
+var tables = array.new_table()
+tables.push(table.new(position.top_right, 1, 1))
 ```
 
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`, and
 `array.new_color` return runtime-owned scalar array ids. `array.new_label`,
-`array.new_line`, and `array.new_box` return runtime-owned drawing-id arrays
-with `na` as the default initial value. `array.from` allocates a
+`array.new_line`, `array.new_box`, and `array.new_table` return runtime-owned
+drawing-id arrays with `na` as the default initial value. `array.from` allocates a
 runtime-owned array id with an element kind inferred from its arguments; at
 least one non-`na` supported typed value is required, `na` may be mixed into an
 otherwise typed array, mixed int/float arguments produce a float array, and
-label, line, or box ids infer the matching drawing-id array.
+label, line, box, or table ids infer the matching drawing-id array.
 Normal declarations allocate a fresh array whenever the declaration executes.
 `var` declarations preserve the array id and backing storage across bars.
 Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
 `array.new_color`, `array.new_label`, `array.new_line`, `array.new_box`,
+`array.new_table`,
 `array.from`, `array.push`, `array.get`, `array.set`, `array.size`,
 `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`,
 `array.fill`, `array.first`, `array.last`, and `array.copy`, `array.slice`,

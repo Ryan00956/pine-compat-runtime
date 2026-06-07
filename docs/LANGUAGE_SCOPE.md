@@ -115,9 +115,9 @@ Phase 1 executable subset:
   [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md), including moving averages,
   rolling statistics, momentum/history helpers, crosses, extremes, trend
   checks, value lookups, true range, volume flow helpers, and partial VWAP
-- partial float, int, bool, string, color, label-id, line-id, and box-id arrays with `array.new_float`,
+- partial float, int, bool, string, color, label-id, line-id, box-id, and table-id arrays with `array.new_float`,
   `array.new_int`, `array.new_bool`, `array.new_string`, `array.new_color`,
-  `array.new_label`, `array.new_line`, `array.new_box`,
+  `array.new_label`, `array.new_line`, `array.new_box`, `array.new_table`,
   `array.from`, `array.push`, `array.get`, `array.set`, `array.size`, `array.pop`,
   `array.insert`, `array.remove`, `array.shift`, `array.unshift`,
   `array.fill`, `array.first`, `array.last`, `array.copy`, `array.slice`,

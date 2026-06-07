@@ -942,6 +942,11 @@ impl Analyzer {
             ValueKind::BoxArray if matches!(value_type.kind, ValueKind::Box | ValueKind::Na) => {
                 return;
             }
+            ValueKind::TableArray
+                if matches!(value_type.kind, ValueKind::Table | ValueKind::Na) =>
+            {
+                return;
+            }
             ValueKind::FloatArray => "float arrays",
             ValueKind::IntArray => "int arrays",
             ValueKind::BoolArray => "bool arrays",
@@ -950,6 +955,7 @@ impl Analyzer {
             ValueKind::LabelArray => "label arrays",
             ValueKind::LineArray => "line arrays",
             ValueKind::BoxArray => "box arrays",
+            ValueKind::TableArray => "table arrays",
             _ => return,
         };
 

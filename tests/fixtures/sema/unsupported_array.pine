@@ -1,3 +1,3 @@
 //@version=5
 indicator("Unsupported array")
-a = array.new_table(0)
+a = array.new_linefill(0)
