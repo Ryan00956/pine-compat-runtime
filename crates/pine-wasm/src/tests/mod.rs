@@ -572,6 +572,17 @@ fn run_script_csv_returns_line_delete_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_line_copy_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/line_copy.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("line copy fixture should run");
+
+    assert_snapshot("runtime_line_copy.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
