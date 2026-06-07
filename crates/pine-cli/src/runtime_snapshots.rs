@@ -28,6 +28,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/color_outputs.pine",
     ),
     (
+        "runtime_global_series.json",
+        "tests/fixtures/runtime/global_series.pine",
+    ),
+    (
         "runtime_strings.json",
         "tests/fixtures/runtime/strings.pine",
     ),

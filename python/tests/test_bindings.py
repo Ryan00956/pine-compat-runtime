@@ -215,6 +215,30 @@ def test_run_script_returns_time_components_fixture_contract():
         assert plot["values"] == values
 
 
+def test_run_script_returns_global_series_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/global_series.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["diagnostics"] == []
+    assert len(result["plots"]) == 12
+    expected = [
+        [1.0, 2.0, 3.0],
+        [1.0, 2.0, 3.0],
+        [1.0, 2.0, 3.0],
+        [1.0, 2.0, 3.0],
+        [1.0, 1.0, 1.0],
+        [0.0, 1.0, 2.0],
+        [60000.0, 60001.0, 60002.0],
+        [1.0, 2.0, 3.0],
+        [1.0, 2.0, 3.0],
+        [1.0, 2.0, 3.0],
+        [1.0, 2.0, 3.0],
+        [0.0, 1.0, 2.0],
+    ]
+    for plot, values in zip(result["plots"], expected):
+        assert plot["values"] == values
+
+
 def test_compile_script_rejects_deep_input_without_aborting_process():
     expression = "(" * 300 + "close" + ")" * 300
 
