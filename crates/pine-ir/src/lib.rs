@@ -60,6 +60,7 @@ pub enum ValueKind {
     ColorArray,
     LabelArray,
     LineArray,
+    BoxArray,
     UserType,
     Tuple,
     Na,

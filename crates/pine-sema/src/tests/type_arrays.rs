@@ -260,6 +260,41 @@ fn accepts_label_array_from_constructor() {
 }
 
 #[test]
+fn accepts_box_array_operations() {
+    let analysis = analyze(
+        "values = array.new_box()\nid = box.new(bar_index, high, bar_index + 1, low)\narray.push(values, id)\nfirst = array.get(values, 0)\nbox.set_text(first, \"array\")\ncopy = array.copy(values)\nbox.set_bgcolor(copy.get(0), color.green)\nplot(array.size(values) + copy.size())\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "array.new_box")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn accepts_box_array_from_constructor() {
+    let analysis = analyze(
+        "first = box.new(bar_index, high, bar_index + 1, low)\nsecond = box.copy(first)\nvalues = array.from(first, second)\nbox.set_text(values.get(1), \"copy\")\nplot(values.size())\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_array_helper_operations() {
     let analysis = analyze(
         "values = array.new_int()\narray.unshift(values, 2)\narray.unshift(values, 1)\nfirst = array.first(values)\nlast = array.last(values)\nshifted = array.shift(values)\nplot(first + last + shifted + array.size(values))\n",
@@ -921,6 +956,36 @@ fn rejects_label_array_join() {
 }
 
 #[test]
+fn rejects_numeric_value_for_box_array_mutation() {
+    let analysis = analyze("values = array.new_box()\narray.push(values, close)\nplot(close)\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_box_array_join() {
+    let analysis = analyze("values = array.new_box()\ntext = array.join(values)\nplot(close)\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_array_method_call_on_namespace_like_variable_name() {
     let analysis =
         analyze("strategy = array.new_float()\nstrategy.push(close)\nplot(strategy.size())\n");
@@ -950,14 +1015,14 @@ fn rejects_unknown_float_array_method() {
 
 #[test]
 fn rejects_unsupported_array_function() {
-    let analysis = analyze("values = array.new_box(0)\nplot(close)\n");
+    let analysis = analyze("values = array.new_table(0)\nplot(close)\n");
 
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "array.new_box"),
+            .any(|feature| feature.feature == "array.new_table"),
         "{:?}",
         analysis.compatibility.unsupported
     );

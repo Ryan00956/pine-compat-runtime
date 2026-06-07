@@ -130,6 +130,23 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(self.new_array(ArrayElementKind::Label, size, initial_value))
     }
 
+    pub(crate) fn eval_array_new_box(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(size) = self.eval_array_new_size(args, "array.new_box")? else {
+            return Ok(PineValue::Na);
+        };
+
+        let initial_value = if let Some(value_arg) = args.get(1) {
+            self.eval_array_value(&value_arg.value, ArrayElementKind::Box)?
+        } else {
+            PineValue::Na
+        };
+
+        Ok(self.new_array(ArrayElementKind::Box, size, initial_value))
+    }
+
     pub(crate) fn eval_array_from(
         &mut self,
         args: &[HirCallArg],
@@ -1261,6 +1278,7 @@ impl<'a> HistoricalRuntime<'a> {
             (ArrayElementKind::Color, PineValue::Color(value)) => PineValue::Color(value),
             (ArrayElementKind::Label, PineValue::Label(value)) => PineValue::Label(value),
             (ArrayElementKind::Line, PineValue::Line(value)) => PineValue::Line(value),
+            (ArrayElementKind::Box, PineValue::Box(value)) => PineValue::Box(value),
             (_, PineValue::Na) => PineValue::Na,
             _ => PineValue::Na,
         })

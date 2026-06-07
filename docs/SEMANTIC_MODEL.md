@@ -364,8 +364,8 @@ expressions.
 
 ## Arrays
 
-The current array subset supports float, int, bool, string, color, label-id, and line-id
-arrays:
+The current array subset supports float, int, bool, string, color, label-id,
+line-id, and box-id arrays:
 
 ```pine
 var values = array.new_float()
@@ -392,21 +392,25 @@ labels.push(label.new(bar_index, high, "label"))
 
 var lines = array.new_line()
 lines.push(line.new(bar_index, low, bar_index + 1, high))
+
+var boxes = array.new_box()
+boxes.push(box.new(bar_index, high, bar_index + 1, low))
 ```
 
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`, and
-`array.new_color` return runtime-owned scalar array ids. `array.new_label` and
-`array.new_line` return runtime-owned drawing-id arrays with `na` as the default
-initial value. `array.from` allocates a
+`array.new_color` return runtime-owned scalar array ids. `array.new_label`,
+`array.new_line`, and `array.new_box` return runtime-owned drawing-id arrays
+with `na` as the default initial value. `array.from` allocates a
 runtime-owned array id with an element kind inferred from its arguments; at
 least one non-`na` supported typed value is required, `na` may be mixed into an
 otherwise typed array, mixed int/float arguments produce a float array, and
-label or line ids infer the matching drawing-id array.
+label, line, or box ids infer the matching drawing-id array.
 Normal declarations allocate a fresh array whenever the declaration executes.
 `var` declarations preserve the array id and backing storage across bars.
 Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
-`array.new_color`, `array.new_label`, `array.new_line`, `array.from`, `array.push`, `array.get`, `array.set`, `array.size`,
+`array.new_color`, `array.new_label`, `array.new_line`, `array.new_box`,
+`array.from`, `array.push`, `array.get`, `array.set`, `array.size`,
 `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`,
 `array.fill`, `array.first`, `array.last`, and `array.copy`, `array.slice`,
 `array.concat`, `array.includes`, `array.indexof`, `array.lastindexof`,

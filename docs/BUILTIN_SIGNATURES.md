@@ -638,27 +638,28 @@ array.new_string(size?: simple int, initial_value?: string-compatible) -> simple
 array.new_color(size?: simple int, initial_value?: color-compatible) -> simple color-array
 array.new_label(size?: simple int, initial_value?: label-compatible) -> simple label-array
 array.new_line(size?: simple int, initial_value?: line-compatible) -> simple line-array
+array.new_box(size?: simple int, initial_value?: box-compatible) -> simple box-array
 array.from(value, ...) -> simple inferred scalar-or-drawing-id-array
-array.size(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array) -> simple int
-array.push(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, value: element-compatible) -> void
-array.get(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, index: simple int) -> series element
-array.set(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, index: simple int, value: element-compatible) -> void
-array.insert(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, index: simple int, value: element-compatible) -> void
-array.pop(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array) -> series element
-array.remove(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, index: simple int) -> series element
-array.shift(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array) -> series element
-array.unshift(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, value: element-compatible) -> void
-array.fill(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, value: element-compatible, index_from?: simple int, index_to?: simple int) -> void
-array.first(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array) -> series element
-array.last(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array) -> series element
-array.copy(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array) -> same array kind
-array.slice(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, index_from: simple int, index_to: simple int) -> same array kind
-array.concat(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, id2: same array kind) -> same array kind
-array.includes(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, value: element-compatible) -> series bool
+array.size(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array) -> simple int
+array.push(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, value: element-compatible) -> void
+array.get(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, index: simple int) -> series element
+array.set(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, index: simple int, value: element-compatible) -> void
+array.insert(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, index: simple int, value: element-compatible) -> void
+array.pop(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array) -> series element
+array.remove(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, index: simple int) -> series element
+array.shift(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array) -> series element
+array.unshift(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, value: element-compatible) -> void
+array.fill(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, value: element-compatible, index_from?: simple int, index_to?: simple int) -> void
+array.first(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array) -> series element
+array.last(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array) -> series element
+array.copy(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array) -> same array kind
+array.slice(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, index_from: simple int, index_to: simple int) -> same array kind
+array.concat(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, id2: same array kind) -> same array kind
+array.includes(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, value: element-compatible) -> series bool
 array.every(id: float-array|int-array|bool-array) -> series bool
 array.some(id: float-array|int-array|bool-array) -> series bool
-array.indexof(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, value: element-compatible) -> simple int
-array.lastindexof(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array, value: element-compatible) -> simple int
+array.indexof(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, value: element-compatible) -> simple int
+array.lastindexof(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array, value: element-compatible) -> simple int
 array.binary_search(id: float-array|int-array, value: element-compatible) -> simple int
 array.binary_search_leftmost(id: float-array|int-array, value: element-compatible) -> simple int
 array.binary_search_rightmost(id: float-array|int-array, value: element-compatible) -> simple int
@@ -679,12 +680,12 @@ array.variance(id: float-array|int-array, biased?: bool-compatible) -> series fl
 array.stdev(id: float-array|int-array, biased?: bool-compatible) -> series float
 array.sort(id: float-array|int-array|string-array, order?: const string) -> void
 array.sort_indices(id: float-array|int-array|string-array, order?: const string) -> int-array
-array.reverse(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array) -> void
+array.reverse(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array) -> void
 array.join(id: float-array|int-array|bool-array|string-array|color-array, separator?: string-compatible) -> series string
-array.clear(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array) -> void
+array.clear(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|box-array) -> void
 ```
 
-The supported typed-array subset covers float, int, bool, string, color, label, and line
+The supported typed-array subset covers float, int, bool, string, color, label, line, and box
 arrays. Float arrays accept int or float values and store them as floats. Int
 arrays accept int values. Bool arrays accept bool values. String arrays accept
 string values. Color arrays accept color values. Label and line arrays accept

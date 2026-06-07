@@ -11,6 +11,7 @@ pub(crate) enum ArrayElementKind {
     Color,
     Label,
     Line,
+    Box,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -67,6 +68,7 @@ pub(crate) fn infer_array_from_kind(values: &[PineValue]) -> Option<ArrayElement
             PineValue::Color(_) => ArrayElementKind::Color,
             PineValue::Label(_) => ArrayElementKind::Label,
             PineValue::Line(_) => ArrayElementKind::Line,
+            PineValue::Box(_) => ArrayElementKind::Box,
             _ => return None,
         };
         inferred_kind = Some(match (inferred_kind, next_kind) {

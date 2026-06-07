@@ -28,6 +28,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "array.min",
     "array.mode",
     "array.new_bool",
+    "array.new_box",
     "array.new_color",
     "array.new_float",
     "array.new_int",

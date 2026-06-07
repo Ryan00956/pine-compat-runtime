@@ -488,20 +488,21 @@ per-bar locals.
 
 For arrays, the stored value is a runtime-owned array id. A normal
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
-`array.new_color`, `array.new_label`, or `array.new_line` declaration allocates
-a fresh array each time it executes. `array.new_label` and `array.new_line`
-create drawing-id arrays filled with `na` when no initial id is supplied.
+`array.new_color`, `array.new_label`, `array.new_line`, or `array.new_box`
+declaration allocates a fresh array each time it executes. `array.new_label`,
+`array.new_line`, and `array.new_box` create drawing-id arrays filled with `na`
+when no initial id is supplied.
 `array.from` also allocates a fresh inferred typed array and requires at least
-one non-`na` supported typed value, including label and line ids for drawing-id
-arrays. A `var` array declaration keeps the same id
+one non-`na` supported typed value, including label, line, and box ids for
+drawing-id arrays. A `var` array declaration keeps the same id
 and backing storage across bars, so mutations such as `array.push` or
 `values.push(...)` persist.
 Assigning an array to another variable copies the id, not the backing values;
 mutating either name mutates the same runtime-owned array. `array.copy` and
 `values.copy()` allocate a new array id initialized with the source array's
-current element values. For label-id and line-id arrays, copied elements still
-reference the same drawing objects; only the array container is independent. Realtime
-forming-bar rollback clones the confirmed
+current element values. For label-id, line-id, and box-id arrays, copied
+elements still reference the same drawing objects; only the array container is
+independent. Realtime forming-bar rollback clones the confirmed
 runtime store before executing a forming update, so array mutations and copies
 made during a forming update do not leak into the confirmed store until a
 confirmed update is committed.

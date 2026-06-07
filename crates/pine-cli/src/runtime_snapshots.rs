@@ -114,6 +114,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/box_getters.pine",
     ),
     (
+        "runtime_box_array.json",
+        "tests/fixtures/runtime/box_array.pine",
+    ),
+    (
         "runtime_drawing_methods.json",
         "tests/fixtures/runtime/drawing_methods.pine",
     ),

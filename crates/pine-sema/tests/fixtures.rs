@@ -1105,7 +1105,7 @@ fn reports_unsupported_drawing_fixture() {
 fn reports_unsupported_array_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array.pine",
-        "array.new_box",
+        "array.new_table",
         "array function",
     );
 }
