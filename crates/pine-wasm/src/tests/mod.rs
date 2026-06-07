@@ -157,6 +157,32 @@ fn run_script_csv_returns_plotshape_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_plotarrow_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/plotarrow.pine"),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+    )
+    .expect("plotarrow fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(parsed["plots"][0]["values"], serde_json::json!([1, 2, 3]));
+    assert_eq!(
+        parsed["plotArrows"],
+        serde_json::json!([
+            {
+                "id": 1,
+                "values": [null, 0, 1],
+                "colorUps": [null, 32768, 32768],
+                "colorDowns": [null, 16711680, 16711680],
+                "minHeights": [null, 5, 5],
+                "maxHeights": [null, 20, 20]
+            }
+        ])
+    );
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
