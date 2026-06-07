@@ -65,10 +65,10 @@ widening without runtime behavior and host-parity evidence in the same slice.
 Closed maintenance slice:
 
 - Supported `strategy.exit` while-flat no-op behavior is covered for
-  single-trigger stop/limit/profit/loss, stop+limit bracket, and trailing stop
-  shapes by runtime fixtures, golden snapshots, conformance matrix entries, and
-  Python/WASM host parity tests without exposing pending-order or reservation
-  internals.
+  single-trigger stop/limit/profit/loss, stop+limit and stop+profit bracket,
+  and trailing stop shapes by runtime fixtures, golden snapshots, conformance
+  matrix entries, and Python/WASM host parity tests without exposing
+  pending-order or reservation internals.
 - Supported explicit wrong-entry `strategy.exit` no-op behavior is covered for
   single-trigger stop/limit/profit/loss, stop+limit bracket, and trailing stop
   shapes by runtime fixtures, golden snapshots, conformance matrix entries,

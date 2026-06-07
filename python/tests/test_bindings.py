@@ -5548,6 +5548,28 @@ def test_run_script_treats_strategy_exit_bracket_while_flat_fixture_as_noop():
     assert "reserved" not in strategy_json
 
 
+def test_run_script_treats_strategy_exit_stop_profit_bracket_while_flat_fixture_as_noop():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_exit_stop_profit_bracket_while_flat_noop.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        BARS,
+    )
+
+    assert result["diagnostics"] == []
+    assert result["strategy"]["orders"] == []
+    assert result["strategy"]["trades"] == []
+    assert result["strategy"]["position"] == []
+    assert result["strategy"]["equity"] == FLAT_EQUITY
+    assert result["strategy"]["diagnostics"] == []
+    strategy_json = json.dumps(result["strategy"])
+    assert '"direction": "strategy.exit"' not in strategy_json
+    assert "pending" not in strategy_json
+    assert "reserved" not in strategy_json
+
+
 def test_run_script_treats_strategy_exit_trailing_while_flat_fixture_as_noop():
     source = (
         ROOT
