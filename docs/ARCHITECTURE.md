@@ -422,7 +422,8 @@ Table entries
 carry `position`, `columns`, `rows`, and sparse cell snapshots. Each table cell
 snapshot stores `column`, `row`, `text`, `bgColor`, `textColor`, `width`,
 `height`, `textSize`, `textHalign`, and `textValign`, avoiding
-host-specific table layout assumptions; `table.cell_set_text`,
+host-specific table layout assumptions; `table.set_position` updates the
+table's final position, while `table.cell_set_text`,
 `table.cell_set_bgcolor`, `table.cell_set_text_color`, and
 `table.cell_set_width`/`table.cell_set_height`/`table.cell_set_text_size`
 `table.cell_set_text_halign`/`table.cell_set_text_valign` mutate only the stored

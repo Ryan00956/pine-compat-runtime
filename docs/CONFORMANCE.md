@@ -632,7 +632,7 @@ and `box.get_bottom` over the latest existing box snapshot, with sparse
 snapshots and a 500-box runtime limit.
 The executable table subset covers
 `table.new` plus `table.cell` text/background/text-color/width/height/text-size
-cell writes and
+cell writes, `table.set_position` final-position mutations, and
 `table.cell_set_text` text mutations plus `table.cell_set_bgcolor` background
 color mutations plus `table.cell_set_text_color` text-color mutations plus
 `table.cell_set_width` width mutations plus `table.cell_set_height` height
@@ -666,7 +666,9 @@ text wrapping in box snapshots. `box.set_text_font_family` records font family
 in box snapshots; richer text formatting remains unsupported. `box.get_left`,
 `box.get_right`, `box.get_top`, and `box.get_bottom` read the latest existing
 box snapshot and return `na` for `na` or deleted boxes; other box methods remain
-unsupported. `table.cell_set_text` updates only the target cell text snapshot
+unsupported. `table.set_position` updates only the table's final position
+value, with table layout left to hosts. `table.cell_set_text` updates only the
+target cell text snapshot
 after `table.cell` has populated that cell; `table.cell_set_bgcolor` updates
 only the target cell background color snapshot after `table.cell` has populated
 that cell; `table.cell_set_text_color` updates only the target cell text-color

@@ -206,6 +206,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.copy"
             | "table.new"
             | "table.cell"
+            | "table.set_position"
             | "table.cell_set_text"
             | "table.cell_set_bgcolor"
             | "table.cell_set_text_color"
@@ -615,6 +616,9 @@ impl Analyzer {
             }
             "table.new" => {
                 self.validate_label_string_arg(signature, args, 0, "position", TABLE_POSITIONS);
+            }
+            "table.set_position" => {
+                self.validate_label_string_arg(signature, args, 1, "position", TABLE_POSITIONS);
             }
             "table.cell_set_text_halign" => {
                 self.validate_label_string_arg(signature, args, 3, "text_halign", TEXT_HALIGNS);

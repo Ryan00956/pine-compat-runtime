@@ -80,6 +80,24 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    pub(super) fn eval_table_set_position(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let position = self.eval_required_table_arg(args, 1, "position")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid table id `{id}`"),
+            });
+        };
+        table.position = position;
+        Ok(PineValue::Void)
+    }
+
     pub(super) fn eval_table_cell_set_text(
         &mut self,
         args: &[HirCallArg],
