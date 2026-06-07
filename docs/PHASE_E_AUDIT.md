@@ -58,7 +58,9 @@ truth for supported drawing claims.
   values, default style metadata, selected endpoint/color/width/style/extend
   mutators, and `line.delete`.
 - `box.new` is partial: bar-index left/right coordinates, numeric top/bottom
-  coordinates, selected geometry/background/border mutators, and `box.delete`.
+  coordinates, optional initialization for existing background/border/extend/
+  text/text-color/text-size/alignment/wrap/font-family/text-formatting snapshot
+  fields, selected geometry/background/border/text mutators, and `box.delete`.
 - `table.new` is partial: supported `position.*` constants plus positive column
   and row dimensions, with `table.cell` text/background/text-color writes.
 - `polyline.*` is unsupported and has a dedicated design note in

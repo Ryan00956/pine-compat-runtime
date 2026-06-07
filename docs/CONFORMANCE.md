@@ -624,9 +624,14 @@ executable line subset covers `line.new`, selected
 endpoint/color/width/style/extend mutators, `line.delete`, and fixture-backed
 cloning with `line.copy` over the latest existing line snapshot, with sparse
 snapshots and a 500-line runtime limit. The executable box subset covers
-`box.new`, selected geometry/background/border/extend/text/text-color/text-size/
-horizontal-alignment/vertical-alignment/text-wrap/font-family/text-formatting
-mutators,
+`box.new` left/top/right/bottom creation with optional background, border,
+extend, text, text-color, text-size, horizontal-alignment, vertical-alignment,
+text-wrap, font-family, and text-formatting initialization for existing
+host-neutral snapshot fields when `xloc` is omitted or `xloc.bar_index`;
+chart-point overloads, `xloc.bar_time`, and `box.set_xloc` remain unsupported.
+It also covers selected geometry/background/border/extend/text/text-color/
+text-size/horizontal-alignment/vertical-alignment/text-wrap/font-family/
+text-formatting mutators,
 `box.delete`, and
 fixture-backed cloning with `box.copy` over the latest existing box
 snapshot, plus fixture-backed `box.get_left`, `box.get_right`, `box.get_top`,

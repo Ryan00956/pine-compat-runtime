@@ -42,6 +42,8 @@ const LINE_STYLES: &[&str] = &[
     "line.style_arrow_both",
 ];
 
+const BOX_BORDER_STYLES: &[&str] = &["line.style_solid", "line.style_dotted", "line.style_dashed"];
+
 const LINE_EXTENDS: &[&str] = &["extend.none", "extend.right", "extend.left", "extend.both"];
 
 const TEXT_HALIGNS: &[&str] = &["text.align_left", "text.align_center", "text.align_right"];
@@ -609,6 +611,29 @@ impl Analyzer {
             "label.set_yloc" => {
                 self.validate_label_string_arg(signature, args, 1, "yloc", LABEL_YLOCS);
             }
+            "box.new" => {
+                self.validate_label_string_arg(
+                    signature,
+                    args,
+                    6,
+                    "border_style",
+                    BOX_BORDER_STYLES,
+                );
+                self.validate_label_string_arg(signature, args, 7, "extend", LINE_EXTENDS);
+                self.validate_label_string_arg(signature, args, 8, "xloc", &["xloc.bar_index"]);
+                self.validate_label_string_arg(signature, args, 11, "text_size", LABEL_SIZES);
+                self.validate_label_string_arg(signature, args, 13, "text_halign", TEXT_HALIGNS);
+                self.validate_label_string_arg(signature, args, 14, "text_valign", TEXT_VALIGNS);
+                self.validate_label_string_arg(signature, args, 15, "text_wrap", TEXT_WRAPS);
+                self.validate_label_string_arg(
+                    signature,
+                    args,
+                    16,
+                    "text_font_family",
+                    TEXT_FONT_FAMILIES,
+                );
+                self.validate_text_formatting_arg(signature, args, 18, "text_formatting");
+            }
             "line.set_style" => {
                 self.validate_label_string_arg(signature, args, 1, "style", LINE_STYLES);
             }
@@ -619,7 +644,10 @@ impl Analyzer {
                 self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
             }
             "box.set_border_style" => {
-                self.validate_label_string_arg(signature, args, 1, "style", LINE_STYLES);
+                self.validate_label_string_arg(signature, args, 1, "style", BOX_BORDER_STYLES);
+            }
+            "box.set_text_size" => {
+                self.validate_label_string_arg(signature, args, 1, "text_size", LABEL_SIZES);
             }
             "box.set_text_halign" => {
                 self.validate_label_string_arg(signature, args, 1, "text_halign", TEXT_HALIGNS);

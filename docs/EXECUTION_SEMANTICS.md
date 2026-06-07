@@ -622,7 +622,13 @@ selected color/width/style and extend fields, snapshot cloning, non-reused ids,
 and a 500-object runtime limit. Boxes use the same lifecycle
 rules with bar-index left/right coordinates, price top/bottom coordinates,
 selected background/border fields, snapshot cloning, non-reused ids, and a
-500-object runtime limit. Tables use deterministic ids, fixed positive
+500-object runtime limit. `box.new` can initialize existing box snapshot fields
+for background, border, extend, text, text color, text size, text alignment,
+text wrap, font family, and text formatting when `xloc` is omitted or
+`xloc.bar_index`; `force_overlay` is accepted but remains a host display
+responsibility. The chart-point overload, `xloc.bar_time` coordinate
+semantics, and `box.set_xloc` remain unsupported. Tables use deterministic ids,
+fixed positive
 dimensions, optional `table.new` background-color, frame-color, frame-width,
 border-color, and border-width initialization, and sparse cell snapshots for
 text/background/text-color/width/height/text-size writes and final table-level

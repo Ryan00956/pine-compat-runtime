@@ -415,8 +415,12 @@ normalized Pine values, including `textAlign`, `textFontFamily`, and
 cover `left`, `top`,
 `right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, `borderStyle`,
 `extend`, `text`, `textColor`, `textSize`, `textHalign`, `textValign`,
-`textWrap`, `textFontFamily`, and `textFormatting` for `box.new`, selected
-`box.set_*` mutators, `box.copy` cloning, and `box.delete`;
+`textWrap`, `textFontFamily`, and `textFormatting`. `box.new` can initialize
+those host-neutral style and text snapshot fields for the left/top/right/bottom
+overload when `xloc` is omitted or `xloc.bar_index`; chart-point overloads and
+`xloc.bar_time` coordinate semantics remain outside the current runtime output
+contract. Selected `box.set_*` mutators, `box.copy` cloning, and `box.delete`
+reuse the same snapshot model;
 `box.get_left`, `box.get_right`, `box.get_top`, and `box.get_bottom` read latest
 existing snapshot values.
 Table entries

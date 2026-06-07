@@ -5770,6 +5770,42 @@ def test_run_script_returns_box_outputs():
     ]
 
 
+def test_run_script_returns_box_new_style_outputs():
+    result = pine_compat.run_script(
+        'indicator("box new style")\nif bar_index == 1\n    box_id = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["boxes"] == [
+        {
+            "id": 1,
+            "snapshots": [
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "left": 1,
+                    "top": 2.0,
+                    "right": 2,
+                    "bottom": 2.0,
+                    "bgColor": 0x008000,
+                    "borderColor": 0xFFFFFF,
+                    "borderWidth": 2,
+                    "borderStyle": "line.style_dashed",
+                    "extend": "extend.right",
+                    "text": "styled",
+                    "textColor": 0xFFFFFF,
+                    "textSize": "size.small",
+                    "textHalign": "text.align_left",
+                    "textValign": "text.align_top",
+                    "textWrap": "text.wrap_auto",
+                    "textFontFamily": "font.family_monospace",
+                    "textFormatting": 3,
+                }
+            ],
+        }
+    ]
+
+
 def test_run_script_returns_box_text_formatting_outputs():
     result = pine_compat.run_script(
         'indicator("box formatting")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_text_formatting(box_id, text.format_bold + text.format_italic)\nbox.set_text_formatting(na, text.format_italic)\nplot(close)\n',

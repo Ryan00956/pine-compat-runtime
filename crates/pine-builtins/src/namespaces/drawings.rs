@@ -439,6 +439,81 @@ const BOX_NEW_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::NumericCompatible,
         optional: false,
     },
+    BuiltinParam {
+        name: "border_color",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "border_width",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "border_style",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "extend",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "xloc",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "bgcolor",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_size",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_color",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_halign",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_valign",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_wrap",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_font_family",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "force_overlay",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_formatting",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
 ];
 
 const BOX_SET_X_PARAMS: &[BuiltinParam] = &[

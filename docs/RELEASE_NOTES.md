@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added `box.new()` initialization support for existing host-neutral box
+  snapshot style and text fields, including border/background/extend/text,
+  alignment, wrapping, font family, and text-formatting masks. The supported
+  creation subset remains the left/top/right/bottom overload with `xloc`
+  omitted or `xloc.bar_index`; chart-point overloads and time-coordinate boxes
+  are still unsupported.
 - Added host-neutral `box.set_text_formatting()` support. Box snapshots now
   carry `textFormatting` masks for none/bold/italic combinations while leaving
   glyph styling to hosts.

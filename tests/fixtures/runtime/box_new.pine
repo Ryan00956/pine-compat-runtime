@@ -4,4 +4,6 @@ if bar_index == 1
     first = box.new(bar_index, high, bar_index, low)
 if bar_index == 2
     second = box.new(left=bar_index, top=open, right=bar_index, bottom=close)
+if bar_index == 3
+    styled = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)
 plot(close)

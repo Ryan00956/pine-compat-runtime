@@ -1,6 +1,5 @@
-use pine_ir::HirCallArg;
+use pine_ir::{HirCallArg, HirExpr};
 
-use crate::builtins::args::call_arg_expr;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -9,6 +8,26 @@ impl<'a> HistoricalRuntime<'a> {
         let top = self.eval_required_box_arg(args, 1, "top")?;
         let right = self.eval_required_box_arg(args, 2, "right")?;
         let bottom = self.eval_required_box_arg(args, 3, "bottom")?;
+        let border_color = self.eval_box_option_value(args, 4, "border_color", PineValue::Na)?;
+        let border_width =
+            self.eval_box_option_value(args, 5, "border_width", PineValue::Int(1))?;
+        let border_style = self.eval_box_option(args, 6, "border_style", "line.style_solid")?;
+        let extend = self.eval_box_option(args, 7, "extend", "extend.none")?;
+        let _xloc = self.eval_box_option(args, 8, "xloc", "xloc.bar_index")?;
+        let bg_color = self.eval_box_option_value(args, 9, "bgcolor", PineValue::Na)?;
+        let text =
+            self.eval_box_option_value(args, 10, "text", PineValue::String(String::new()))?;
+        let text_size = self.eval_box_option(args, 11, "text_size", "size.normal")?;
+        let text_color = self.eval_box_option_value(args, 12, "text_color", PineValue::Na)?;
+        let text_halign = self.eval_box_option(args, 13, "text_halign", "text.align_center")?;
+        let text_valign = self.eval_box_option(args, 14, "text_valign", "text.align_center")?;
+        let text_wrap = self.eval_box_option(args, 15, "text_wrap", "text.wrap_none")?;
+        let text_font_family =
+            self.eval_box_option(args, 16, "text_font_family", "font.family_default")?;
+        let _force_overlay =
+            self.eval_box_option_value(args, 17, "force_overlay", PineValue::Bool(false))?;
+        let text_formatting =
+            self.eval_box_text_formatting_option_value(args, 18, "text_formatting")?;
         if self.boxes.len() >= MAX_BOXES {
             return Err(RuntimeError {
                 message: format!("box count cannot exceed {MAX_BOXES}"),
@@ -30,19 +49,19 @@ impl<'a> HistoricalRuntime<'a> {
                 top,
                 right,
                 bottom,
-                bg_color: PineValue::Na,
-                border_color: PineValue::Na,
-                border_width: PineValue::Int(1),
-                border_style: PineValue::String("line.style_solid".to_owned()),
-                extend: PineValue::String("extend.none".to_owned()),
-                text: PineValue::String(String::new()),
-                text_color: PineValue::Na,
-                text_size: PineValue::String("size.normal".to_owned()),
-                text_halign: PineValue::String("text.align_center".to_owned()),
-                text_valign: PineValue::String("text.align_center".to_owned()),
-                text_wrap: PineValue::String("text.wrap_none".to_owned()),
-                text_font_family: PineValue::String("font.family_default".to_owned()),
-                text_formatting: PineValue::Int(0),
+                bg_color,
+                border_color,
+                border_width,
+                border_style,
+                extend,
+                text,
+                text_color,
+                text_size,
+                text_halign,
+                text_valign,
+                text_wrap,
+                text_font_family,
+                text_formatting,
             }],
         });
         Ok(PineValue::Box(id))
@@ -357,7 +376,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn eval_box_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
-        let Some(id_arg) = call_arg_expr(args, 0, "id") else {
+        let Some(id_arg) = box_call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
                 message: "box mutation missing id argument".to_owned(),
             });
@@ -377,7 +396,7 @@ impl<'a> HistoricalRuntime<'a> {
         index: usize,
         name: &str,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(arg) = call_arg_expr(args, index, name) else {
+        let Some(arg) = box_call_arg_expr(args, index, name) else {
             return Err(RuntimeError {
                 message: format!("box call missing {name} argument"),
             });
@@ -391,17 +410,60 @@ impl<'a> HistoricalRuntime<'a> {
         index: usize,
         name: &str,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(arg) = call_arg_expr(args, index, name) else {
+        let Some(arg) = box_call_arg_expr(args, index, name) else {
             return Err(RuntimeError {
                 message: format!("box call missing {name} argument"),
             });
         };
+        self.eval_box_text_formatting_expr(arg, name)
+    }
+
+    fn eval_box_text_formatting_option_value(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = box_call_arg_expr(args, index, name) else {
+            return Ok(PineValue::Int(0));
+        };
+        self.eval_box_text_formatting_expr(arg, name)
+    }
+
+    fn eval_box_text_formatting_expr(
+        &mut self,
+        arg: &HirExpr,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
         match self.eval_expr(arg)? {
             PineValue::Int(mask) if (0..=3).contains(&mask) => Ok(PineValue::Int(mask)),
             PineValue::Na => Ok(PineValue::Na),
             value => Err(RuntimeError {
                 message: format!("box call `{name}` expected text format mask, got {value:?}"),
             }),
+        }
+    }
+
+    fn eval_box_option(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+        default: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_box_option_value(args, index, name, PineValue::String(default.to_owned()))
+    }
+
+    fn eval_box_option_value(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+        default: PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        match box_call_arg_expr(args, index, name) {
+            Some(expr) => self.eval_expr(expr),
+            None => Ok(default),
         }
     }
 
@@ -466,7 +528,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         function_name: &str,
     ) -> Result<Option<u32>, RuntimeError> {
-        let Some(id_arg) = call_arg_expr(args, 0, "id") else {
+        let Some(id_arg) = box_call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
                 message: format!("{function_name} missing id argument"),
             });
@@ -479,4 +541,11 @@ impl<'a> HistoricalRuntime<'a> {
             }),
         }
     }
+}
+
+fn box_call_arg_expr<'a>(args: &'a [HirCallArg], index: usize, name: &str) -> Option<&'a HirExpr> {
+    args.iter()
+        .find(|arg| arg.name.as_deref() == Some(name))
+        .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
+        .map(|arg| &arg.value)
 }

@@ -283,7 +283,12 @@ fn collects_box_new_snapshots() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("boxes")
-box.new(bar_index, high, bar_index, low)
+if bar_index == 1
+    box.new(bar_index, high, bar_index, low)
+if bar_index == 2
+    box.new(left=bar_index, top=open, right=bar_index, bottom=close)
+if bar_index == 3
+    box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)
 plot(close)
 "#,
     );
@@ -294,22 +299,23 @@ plot(close)
         analysis.diagnostics
     );
 
-    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.boxes.len(), 3);
     assert!(result.labels.is_empty());
     assert!(result.lines.is_empty());
-    for (index, box_output) in result.boxes.iter().enumerate() {
-        assert_eq!(box_output.id, index as u32 + 1);
+    for (index, box_output) in result.boxes.iter().take(2).enumerate() {
+        let bar_index = index + 1;
+        assert_eq!(box_output.id, bar_index as u32);
         assert_eq!(box_output.snapshots.len(), 1);
         let snapshot = &box_output.snapshots[0];
-        assert_eq!(snapshot.bar_index, index);
+        assert_eq!(snapshot.bar_index, bar_index);
         assert!(snapshot.exists);
-        assert_eq!(snapshot.left, PineValue::Int(index as i64));
-        assert_eq!(snapshot.top, PineValue::Float(index as f64 + 1.0));
-        assert_eq!(snapshot.right, PineValue::Int(index as i64));
-        assert_eq!(snapshot.bottom, PineValue::Float(index as f64 + 1.0));
+        assert_eq!(snapshot.left, PineValue::Int(bar_index as i64));
+        assert_eq!(snapshot.top, PineValue::Float(bar_index as f64 + 1.0));
+        assert_eq!(snapshot.right, PineValue::Int(bar_index as i64));
+        assert_eq!(snapshot.bottom, PineValue::Float(bar_index as f64 + 1.0));
         assert_eq!(snapshot.bg_color, PineValue::Na);
         assert_eq!(snapshot.border_color, PineValue::Na);
         assert_eq!(snapshot.border_width, PineValue::Int(1));
@@ -342,6 +348,50 @@ plot(close)
         );
         assert_eq!(snapshot.text_formatting, PineValue::Int(0));
     }
+    let styled = &result.boxes[2];
+    assert_eq!(styled.id, 3);
+    assert_eq!(styled.snapshots.len(), 1);
+    let snapshot = &styled.snapshots[0];
+    assert_eq!(snapshot.bar_index, 3);
+    assert!(snapshot.exists);
+    assert_eq!(snapshot.left, PineValue::Int(3));
+    assert_eq!(snapshot.top, PineValue::Float(4.0));
+    assert_eq!(snapshot.right, PineValue::Int(4));
+    assert_eq!(snapshot.bottom, PineValue::Float(4.0));
+    assert_eq!(snapshot.bg_color, PineValue::Color(0x008000));
+    assert_eq!(snapshot.border_color, PineValue::Color(0xFFFFFF));
+    assert_eq!(snapshot.border_width, PineValue::Int(2));
+    assert_eq!(
+        snapshot.border_style,
+        PineValue::String("line.style_dashed".to_owned())
+    );
+    assert_eq!(
+        snapshot.extend,
+        PineValue::String("extend.right".to_owned())
+    );
+    assert_eq!(snapshot.text, PineValue::String("styled".to_owned()));
+    assert_eq!(snapshot.text_color, PineValue::Color(0xFFFFFF));
+    assert_eq!(
+        snapshot.text_size,
+        PineValue::String("size.small".to_owned())
+    );
+    assert_eq!(
+        snapshot.text_halign,
+        PineValue::String("text.align_left".to_owned())
+    );
+    assert_eq!(
+        snapshot.text_valign,
+        PineValue::String("text.align_top".to_owned())
+    );
+    assert_eq!(
+        snapshot.text_wrap,
+        PineValue::String("text.wrap_auto".to_owned())
+    );
+    assert_eq!(
+        snapshot.text_font_family,
+        PineValue::String("font.family_monospace".to_owned())
+    );
+    assert_eq!(snapshot.text_formatting, PineValue::Int(3));
 }
 
 #[test]
