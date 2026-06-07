@@ -2468,6 +2468,16 @@ fn place_exit_limit_while_flat_is_noop_without_pending_state() {
 }
 
 #[test]
+fn place_exit_profit_ticks_while_flat_is_noop_without_pending_state() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_exit_profit_ticks("XP".to_owned(), "L".to_owned(), 10.0, 0.5, 0);
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn place_exit_while_long_records_pending_stop() {
     let mut broker = broker_with_long_entry();
 
