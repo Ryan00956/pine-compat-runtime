@@ -5713,6 +5713,33 @@ def test_run_script_returns_line_outputs():
     ]
 
 
+def test_run_script_returns_line_new_style_outputs():
+    result = pine_compat.run_script(
+        'indicator("line new style")\nif bar_index == 1\n    line_id = line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["lines"] == [
+        {
+            "id": 1,
+            "snapshots": [
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "x1": 1,
+                    "y1": 2.0,
+                    "x2": 2,
+                    "y2": 2.0,
+                    "color": 0x008000,
+                    "width": 2,
+                    "style": "line.style_dashed",
+                    "extend": "extend.right",
+                }
+            ],
+        }
+    ]
+
+
 def test_run_script_returns_box_outputs():
     result = pine_compat.run_script(
         'indicator("boxes")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_bgcolor(box_id, color.green)\nplot(close)\n',

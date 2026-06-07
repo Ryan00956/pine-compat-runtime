@@ -620,10 +620,13 @@ mutation for `label.set_textalign`, text font-family snapshot mutation for
 fixture-backed cloning with `label.copy`, and the fixture-backed `label.get_x`,
 `label.get_y`, and `label.get_text` getters over the latest existing label
 snapshot, with a 500-label runtime limit. The
-executable line subset covers `line.new`, selected
-endpoint/color/width/style/extend mutators, `line.delete`, and fixture-backed
-cloning with `line.copy` over the latest existing line snapshot, with sparse
-snapshots and a 500-line runtime limit. The executable box subset covers
+executable line subset covers `line.new` x1/y1/x2/y2 creation with optional
+extend, color, style, and width initialization for existing host-neutral
+snapshot fields when `xloc` is omitted or `xloc.bar_index`; chart-point
+overloads, `xloc.bar_time`, and `line.set_xloc` remain unsupported. It also
+covers selected endpoint/color/width/style/extend mutators, `line.delete`, and
+fixture-backed cloning with `line.copy` over the latest existing line snapshot,
+with sparse snapshots and a 500-line runtime limit. The executable box subset covers
 `box.new` left/top/right/bottom creation with optional background, border,
 extend, text, text-color, text-size, horizontal-alignment, vertical-alignment,
 text-wrap, font-family, and text-formatting initialization for existing

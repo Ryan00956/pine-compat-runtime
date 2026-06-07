@@ -1,6 +1,5 @@
-use pine_ir::HirCallArg;
+use pine_ir::{HirCallArg, HirExpr};
 
-use crate::builtins::args::call_arg_expr;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -9,6 +8,13 @@ impl<'a> HistoricalRuntime<'a> {
         let y1 = self.eval_required_line_arg(args, 1, "y1")?;
         let x2 = self.eval_required_line_arg(args, 2, "x2")?;
         let y2 = self.eval_required_line_arg(args, 3, "y2")?;
+        let _xloc = self.eval_line_option(args, 4, "xloc", "xloc.bar_index")?;
+        let extend = self.eval_line_option(args, 5, "extend", "extend.none")?;
+        let color = self.eval_line_option_value(args, 6, "color", PineValue::Na)?;
+        let style = self.eval_line_option(args, 7, "style", "line.style_solid")?;
+        let width = self.eval_line_option_value(args, 8, "width", PineValue::Int(1))?;
+        let _force_overlay =
+            self.eval_line_option_value(args, 9, "force_overlay", PineValue::Bool(false))?;
         if self.lines.len() >= MAX_LINES {
             return Err(RuntimeError {
                 message: format!("line count cannot exceed {MAX_LINES}"),
@@ -30,10 +36,10 @@ impl<'a> HistoricalRuntime<'a> {
                 y1,
                 x2,
                 y2,
-                color: PineValue::Na,
-                width: PineValue::Int(1),
-                style: PineValue::String("line.style_solid".to_owned()),
-                extend: PineValue::String("extend.none".to_owned()),
+                color,
+                width,
+                style,
+                extend,
             }],
         });
         Ok(PineValue::Line(id))
@@ -224,7 +230,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn eval_line_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
-        let Some(id_arg) = call_arg_expr(args, 0, "id") else {
+        let Some(id_arg) = line_call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
                 message: "line mutation missing id argument".to_owned(),
             });
@@ -244,12 +250,35 @@ impl<'a> HistoricalRuntime<'a> {
         index: usize,
         name: &str,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(arg) = call_arg_expr(args, index, name) else {
+        let Some(arg) = line_call_arg_expr(args, index, name) else {
             return Err(RuntimeError {
                 message: format!("line.new missing {name} argument"),
             });
         };
         self.eval_expr(arg)
+    }
+
+    fn eval_line_option(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+        default: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_line_option_value(args, index, name, PineValue::String(default.to_owned()))
+    }
+
+    fn eval_line_option_value(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+        default: PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        match line_call_arg_expr(args, index, name) {
+            Some(expr) => self.eval_expr(expr),
+            None => Ok(default),
+        }
     }
 
     fn mutate_line(
@@ -281,4 +310,11 @@ impl<'a> HistoricalRuntime<'a> {
         }
         Ok(PineValue::Void)
     }
+}
+
+fn line_call_arg_expr<'a>(args: &'a [HirCallArg], index: usize, name: &str) -> Option<&'a HirExpr> {
+    args.iter()
+        .find(|arg| arg.name.as_deref() == Some(name))
+        .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
+        .map(|arg| &arg.value)
 }

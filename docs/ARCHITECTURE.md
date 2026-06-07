@@ -410,8 +410,12 @@ normalized Pine values, including `textAlign`, `textFontFamily`, and
 `label.new`, selected
 `label.set_*` mutators including x-location and y-location snapshot mutation,
 `label.copy` cloning, and `label.delete`. Line snapshots cover `x1`, `y1`,
-`x2`, `y2`, `color`, `width`, `style`, and `extend` for `line.new`, selected
-`line.set_*` mutators, `line.copy` cloning, and `line.delete`. Box snapshots
+`x2`, `y2`, `color`, `width`, `style`, and `extend`. `line.new` can initialize
+those host-neutral style snapshot fields for the x1/y1/x2/y2 overload when
+`xloc` is omitted or `xloc.bar_index`; chart-point overloads and
+`xloc.bar_time` coordinate semantics remain outside the current runtime output
+contract. Selected `line.set_*` mutators, `line.copy` cloning, and
+`line.delete` reuse the same snapshot model. Box snapshots
 cover `left`, `top`,
 `right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, `borderStyle`,
 `extend`, `text`, `textColor`, `textSize`, `textHalign`, `textValign`,

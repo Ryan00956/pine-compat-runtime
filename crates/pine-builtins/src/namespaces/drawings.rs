@@ -308,6 +308,36 @@ const LINE_NEW_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::NumericCompatible,
         optional: false,
     },
+    BuiltinParam {
+        name: "xloc",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "extend",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "color",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "style",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "width",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "force_overlay",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
 ];
 
 const LINE_SET_X_PARAMS: &[BuiltinParam] = &[

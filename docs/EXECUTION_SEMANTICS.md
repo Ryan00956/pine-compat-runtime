@@ -619,7 +619,11 @@ lifecycle snapshots, selected x-location and y-location snapshot mutation,
 snapshot cloning, non-reused ids, and a 500-object runtime limit. Lines use the
 same lifecycle rules with bar-index x coordinates, price y coordinates,
 selected color/width/style and extend fields, snapshot cloning, non-reused ids,
-and a 500-object runtime limit. Boxes use the same lifecycle
+and a 500-object runtime limit. `line.new` can initialize existing line
+snapshot fields for extend, color, style, and width when `xloc` is omitted or
+`xloc.bar_index`; `force_overlay` is accepted but remains a host display
+responsibility. The chart-point overload, `xloc.bar_time` coordinate semantics,
+and `line.set_xloc` remain unsupported. Boxes use the same lifecycle
 rules with bar-index left/right coordinates, price top/bottom coordinates,
 selected background/border fields, snapshot cloning, non-reused ids, and a
 500-object runtime limit. `box.new` can initialize existing box snapshot fields

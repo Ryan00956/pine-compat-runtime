@@ -611,6 +611,11 @@ impl Analyzer {
             "label.set_yloc" => {
                 self.validate_label_string_arg(signature, args, 1, "yloc", LABEL_YLOCS);
             }
+            "line.new" => {
+                self.validate_label_string_arg(signature, args, 4, "xloc", &["xloc.bar_index"]);
+                self.validate_label_string_arg(signature, args, 5, "extend", LINE_EXTENDS);
+                self.validate_label_string_arg(signature, args, 7, "style", LINE_STYLES);
+            }
             "box.new" => {
                 self.validate_label_string_arg(
                     signature,

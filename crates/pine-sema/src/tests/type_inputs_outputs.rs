@@ -629,7 +629,7 @@ fn rejects_unimplemented_label_methods() {
 #[test]
 fn accepts_minimal_line_new() {
     let analysis = analyze(
-        "id = line.new(bar_index - 1, low, bar_index, high)\nother = line.new(x1=0, y1=open, x2=bar_index, y2=close)\ncopy = line.copy(id)\nline.set_x1(id, bar_index)\nline.set_y1(id, low)\nline.set_xy1(id, bar_index, open)\nline.set_x2(id, bar_index)\nline.set_y2(id, high)\nline.set_xy2(id, bar_index, close)\nline.set_color(id, color.green)\nline.set_width(id, 2)\nline.set_style(id, line.style_dashed)\nline.set_extend(id, extend.right)\nline.delete(na)\nline.delete(id)\nplot(close)\n",
+        "id = line.new(bar_index - 1, low, bar_index, high)\nother = line.new(x1=0, y1=open, x2=bar_index, y2=close)\nstyled = line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)\ncopy = line.copy(id)\nline.set_x1(id, bar_index)\nline.set_y1(id, low)\nline.set_xy1(id, bar_index, open)\nline.set_x2(id, bar_index)\nline.set_y2(id, high)\nline.set_xy2(id, bar_index, close)\nline.set_color(id, color.green)\nline.set_width(id, 2)\nline.set_style(id, line.style_dashed)\nline.set_extend(id, extend.right)\nline.delete(na)\nline.delete(id)\nplot(close)\n",
     );
 
     assert!(
@@ -666,6 +666,23 @@ fn rejects_unimplemented_line_methods() {
             .any(|feature| feature.feature == "line.get_price"),
         "{:?}",
         analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_invalid_line_new_options() {
+    let analysis = analyze(
+        "id = line.new(x1=bar_index, y1=low, x2=bar_index, y2=high, xloc=xloc.bar_time, style=\"line.style_unknown\")\nplot(close)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"),
+        "{:?}",
+        analysis.diagnostics
     );
     assert!(analysis.hir.is_none());
 }

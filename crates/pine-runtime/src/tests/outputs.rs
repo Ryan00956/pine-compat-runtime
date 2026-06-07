@@ -81,7 +81,12 @@ fn collects_line_new_snapshots() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("lines")
-line.new(bar_index, low, bar_index, high)
+if bar_index == 1
+    line.new(bar_index, low, bar_index, high)
+if bar_index == 2
+    line.new(x1=bar_index, y1=open, x2=bar_index, y2=close)
+if bar_index == 3
+    line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)
 plot(close)
 "#,
     );
@@ -92,21 +97,22 @@ plot(close)
         analysis.diagnostics
     );
 
-    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_eq!(result.lines.len(), 3);
     assert!(result.labels.is_empty());
-    for (index, line) in result.lines.iter().enumerate() {
-        assert_eq!(line.id, index as u32 + 1);
+    for (index, line) in result.lines.iter().take(2).enumerate() {
+        let bar_index = index + 1;
+        assert_eq!(line.id, bar_index as u32);
         assert_eq!(line.snapshots.len(), 1);
         let snapshot = &line.snapshots[0];
-        assert_eq!(snapshot.bar_index, index);
+        assert_eq!(snapshot.bar_index, bar_index);
         assert!(snapshot.exists);
-        assert_eq!(snapshot.x1, PineValue::Int(index as i64));
-        assert_eq!(snapshot.y1, PineValue::Float(index as f64 + 1.0));
-        assert_eq!(snapshot.x2, PineValue::Int(index as i64));
-        assert_eq!(snapshot.y2, PineValue::Float(index as f64 + 1.0));
+        assert_eq!(snapshot.x1, PineValue::Int(bar_index as i64));
+        assert_eq!(snapshot.y1, PineValue::Float(bar_index as f64 + 1.0));
+        assert_eq!(snapshot.x2, PineValue::Int(bar_index as i64));
+        assert_eq!(snapshot.y2, PineValue::Float(bar_index as f64 + 1.0));
         assert_eq!(snapshot.color, PineValue::Na);
         assert_eq!(snapshot.width, PineValue::Int(1));
         assert_eq!(
@@ -115,6 +121,26 @@ plot(close)
         );
         assert_eq!(snapshot.extend, PineValue::String("extend.none".to_owned()));
     }
+    let styled = &result.lines[2];
+    assert_eq!(styled.id, 3);
+    assert_eq!(styled.snapshots.len(), 1);
+    let snapshot = &styled.snapshots[0];
+    assert_eq!(snapshot.bar_index, 3);
+    assert!(snapshot.exists);
+    assert_eq!(snapshot.x1, PineValue::Int(3));
+    assert_eq!(snapshot.y1, PineValue::Float(4.0));
+    assert_eq!(snapshot.x2, PineValue::Int(4));
+    assert_eq!(snapshot.y2, PineValue::Float(4.0));
+    assert_eq!(snapshot.color, PineValue::Color(0x008000));
+    assert_eq!(snapshot.width, PineValue::Int(2));
+    assert_eq!(
+        snapshot.style,
+        PineValue::String("line.style_dashed".to_owned())
+    );
+    assert_eq!(
+        snapshot.extend,
+        PineValue::String("extend.right".to_owned())
+    );
 }
 
 #[test]

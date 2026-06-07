@@ -55,8 +55,9 @@ truth for supported drawing claims.
   `label.set_size`, `label.set_tooltip`, and `label.delete` are partial and
   snapshot-backed.
 - `line.new` is partial: bar-index endpoint x values, numeric endpoint y
-  values, default style metadata, selected endpoint/color/width/style/extend
-  mutators, and `line.delete`.
+  values, optional initialization for existing extend/color/style/width snapshot
+  fields, selected endpoint/color/width/style/extend mutators, and
+  `line.delete`.
 - `box.new` is partial: bar-index left/right coordinates, numeric top/bottom
   coordinates, optional initialization for existing background/border/extend/
   text/text-color/text-size/alignment/wrap/font-family/text-formatting snapshot

@@ -4,4 +4,6 @@ if bar_index == 1
     first = line.new(bar_index, low, bar_index, high)
 if bar_index == 2
     second = line.new(x1=bar_index, y1=open, x2=bar_index, y2=close)
+if bar_index == 3
+    styled = line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)
 plot(close)

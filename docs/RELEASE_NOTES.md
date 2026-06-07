@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added `line.new()` initialization support for existing host-neutral line
+  snapshot style fields: extend, color, style, and width. The supported
+  creation subset remains the x1/y1/x2/y2 overload with `xloc` omitted or
+  `xloc.bar_index`; chart-point overloads and time-coordinate lines are still
+  unsupported.
 - Added `box.new()` initialization support for existing host-neutral box
   snapshot style and text fields, including border/background/extend/text,
   alignment, wrapping, font family, and text-formatting masks. The supported
