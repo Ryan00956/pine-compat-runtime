@@ -5779,6 +5779,58 @@ def test_run_script_returns_line_set_xloc_outputs():
     ]
 
 
+def test_run_script_returns_line_array_outputs():
+    result = pine_compat.run_script(
+        'indicator("line array")\nvar lines = array.new_line()\nif bar_index == 0\n    id = line.new(bar_index, low, bar_index + 1, high)\n    array.push(lines, id)\nif bar_index == 1\n    copied = array.copy(lines)\n    line.set_color(array.get(copied, 0), color.green)\n    if array.includes(lines, array.first(lines))\n        from_array = lines.get(0)\n        from_array.set_width(2)\nplot(array.size(lines))\n',
+        BARS,
+    )
+
+    assert result["plots"][0]["values"] == [1, 1, 1]
+    assert result["lines"] == [
+        {
+            "id": 1,
+            "snapshots": [
+                {
+                    "barIndex": 0,
+                    "exists": True,
+                    "x1": 0,
+                    "y1": 1.0,
+                    "x2": 1,
+                    "y2": 1.0,
+                    "color": None,
+                    "width": 1,
+                    "style": "line.style_solid",
+                    "extend": "extend.none",
+                },
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "x1": 0,
+                    "y1": 1.0,
+                    "x2": 1,
+                    "y2": 1.0,
+                    "color": 0x008000,
+                    "width": 1,
+                    "style": "line.style_solid",
+                    "extend": "extend.none",
+                },
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "x1": 0,
+                    "y1": 1.0,
+                    "x2": 1,
+                    "y2": 1.0,
+                    "color": 0x008000,
+                    "width": 2,
+                    "style": "line.style_solid",
+                    "extend": "extend.none",
+                },
+            ],
+        }
+    ]
+
+
 def test_run_script_returns_line_getter_plot_values():
     result = pine_compat.run_script(
         'indicator("line getters")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nif bar_index == 1\n    line.set_x1(line_id, bar_index - 10)\n    line.set_x2(line_id, bar_index + 10)\n    line.set_y1(line_id, low - 10)\n    line.set_y2(line_id, high + 10)\nplot(line.get_x1(line_id))\nplot(line.get_y1(line_id))\nplot(line.get_x2(line_id))\nplot(line.get_y2(line_id))\nplot(line.get_price(line_id, bar_index + 5))\n',

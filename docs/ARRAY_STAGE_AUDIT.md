@@ -15,7 +15,9 @@ Primary references:
 
 ## Stage Verdict
 
-Stage 3 arrays are complete for the current fixture-backed scalar subset.
+Stage 3 arrays are complete for the current fixture-backed scalar subset. A
+later compatibility slice added fixture-backed `array.new_line` line-id arrays
+on top of that scalar baseline without opening other drawing array families.
 
 The project should keep `array.*` marked `partial`, not `supported`, because the
 current implementation deliberately excludes generic arrays, object arrays, UDT
@@ -46,6 +48,7 @@ Element kinds:
 - `bool`
 - `string`
 - `color`
+- `line` ids
 
 Creation and inference:
 
@@ -54,6 +57,7 @@ Creation and inference:
 - `array.new_bool`
 - `array.new_string`
 - `array.new_color`
+- `array.new_line`
 - `array.from`
 
 General operations:
@@ -115,7 +119,8 @@ Method syntax:
 
 - Supported array functions lower to the same `array.*` runtime calls where
   listed in `tests/fixtures/conformance.tsv`.
-- Method syntax is supported for the scalar typed-array subset only.
+- Method syntax is supported for the scalar typed-array subset and line-id
+  arrays where listed in `tests/fixtures/conformance.tsv`.
 
 ## Known Gaps
 
@@ -127,14 +132,15 @@ Generic arrays:
 - `array.new<type>()` is not supported.
 - Type-template array declarations such as `array<float>` are not a general
   parser or semantic feature in the current subset.
-- `array.from` only infers the scalar element kinds listed above.
+- `array.from` only infers the scalar element kinds and line ids listed above.
 
 Reference and object arrays:
 
-- Arrays of `line`, `linefill`, `label`, `box`, `table`, `polyline`, and other
-  drawing/object ids are not supported.
-- They should wait for the drawing object output model, object id lifetime, and
-  rollback semantics.
+- Arrays of `linefill`, `label`, `box`, `table`, `polyline`, and other
+  drawing/object ids are not supported. Line-id arrays are the only
+  fixture-backed drawing-object array family.
+- Additional drawing-object arrays should wait for explicit object id lifetime,
+  rollback, and host-output semantics.
 
 User-defined type arrays:
 

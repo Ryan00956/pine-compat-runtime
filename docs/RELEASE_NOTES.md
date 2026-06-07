@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.new_line()` and line-id array support for the
+  existing generic array operations, including `array.from` inference and
+  shallow `array.copy`. String conversion, `array.join`, `varip` line arrays,
+  and label/box/table/linefill/polyline arrays remain unsupported.
 - Added fixture-backed drawing object method-call syntax for supported
   label/line/box/table id-first functions. Method calls lower to the existing
   namespace-call runtime paths, so this does not widen unsupported drawing

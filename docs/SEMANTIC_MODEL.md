@@ -364,7 +364,8 @@ expressions.
 
 ## Arrays
 
-The current array subset supports float, int, bool, string, and color arrays:
+The current array subset supports float, int, bool, string, color, and line-id
+arrays:
 
 ```pine
 var values = array.new_float()
@@ -385,18 +386,24 @@ names.push("seed")
 
 var shades = array.new_color()
 shades.push(color.red)
+
+var lines = array.new_line()
+lines.push(line.new(bar_index, low, bar_index + 1, high))
 ```
 
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`, and
-`array.new_color` return runtime-owned array ids. `array.from` allocates a
+`array.new_color` return runtime-owned scalar array ids. `array.new_line`
+returns a runtime-owned line-id array with `na` as the default initial value.
+`array.from` allocates a
 runtime-owned array id with an element kind inferred from its arguments; at
 least one non-`na` supported typed value is required, `na` may be mixed into an
-otherwise typed array, and mixed int/float arguments produce a float array.
+otherwise typed array, mixed int/float arguments produce a float array, and line
+ids infer a line-id array.
 Normal declarations allocate a fresh array whenever the declaration executes.
 `var` declarations preserve the array id and backing storage across bars.
 Supported operations are
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
-`array.new_color`, `array.from`, `array.push`, `array.get`, `array.set`, `array.size`,
+`array.new_color`, `array.new_line`, `array.from`, `array.push`, `array.get`, `array.set`, `array.size`,
 `array.insert`, `array.pop`, `array.remove`, `array.shift`, `array.unshift`,
 `array.fill`, `array.first`, `array.last`, and `array.copy`, `array.slice`,
 `array.concat`, `array.includes`, `array.indexof`, `array.lastindexof`,
@@ -431,7 +438,9 @@ method tables remain rejected. Non-array method calls outside the local UDT
 method subset continue to fail with receiver/type diagnostics.
 Float arrays accept int or float values and store them as floats. Int arrays
 accept int values. Bool arrays accept bool values. String
-arrays accept string values. Color arrays accept color values. Other array
+arrays accept string values. Color arrays accept color values. Line arrays
+accept line ids or `na`; `array.copy` is shallow for those line references.
+Other array
 constructors and unsupported `array.*` functions are rejected. Array assignment
 and UDF argument binding pass the runtime array id by reference. `array.copy`
 allocates a new array id with the same current element values, so later

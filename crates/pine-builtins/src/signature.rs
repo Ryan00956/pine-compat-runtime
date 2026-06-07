@@ -58,6 +58,7 @@ pub enum Accepts {
     PlotOrHLine,
     Array,
     Tuple,
+    ScalarArray,
     NumericArray,
     NumericOrBoolArray,
     NumericOrStringArray,

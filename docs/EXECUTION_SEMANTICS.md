@@ -487,16 +487,20 @@ syntactic callsite. The runtime stores this state separately from ordinary
 per-bar locals.
 
 For arrays, the stored value is a runtime-owned array id. A normal
-`array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`, or
-`array.new_color` declaration allocates a fresh array each time it executes.
-`array.from` also allocates a fresh inferred typed array and requires at least
-one non-`na` supported typed value. A `var` array declaration keeps the same id
+`array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
+`array.new_color`, or `array.new_line` declaration allocates a fresh array each
+time it executes. `array.new_line` creates line-id arrays filled with `na` when
+no initial line id is supplied. `array.from` also allocates a fresh inferred
+typed array and requires at least one non-`na` supported typed value, including
+line ids for line arrays. A `var` array declaration keeps the same id
 and backing storage across bars, so mutations such as `array.push` or
 `values.push(...)` persist.
 Assigning an array to another variable copies the id, not the backing values;
 mutating either name mutates the same runtime-owned array. `array.copy` and
 `values.copy()` allocate a new array id initialized with the source array's
-current element values. Realtime forming-bar rollback clones the confirmed
+current element values. For line-id arrays, copied elements still reference the
+same line objects; only the array container is independent. Realtime
+forming-bar rollback clones the confirmed
 runtime store before executing a forming update, so array mutations and copies
 made during a forming update do not leak into the confirmed store until a
 confirmed update is committed.
@@ -595,10 +599,12 @@ order. `array.sort_indices` returns a new int array containing the source
 indexes in sorted order, follows the same order and special-value rules, and
 leaves the source array unchanged. `array.reverse` reverses any supported typed
 array in place.
-`array.join` converts supported array elements to string
+`array.join` converts supported scalar array elements to string
 with the default numeric format, uses `,` as the default separator, and returns
 an empty string for empty arrays. Color elements render as normalized integer
-color values. Joined results over 40,960 characters are runtime errors.
+color values. Line arrays are intentionally not accepted by `array.join` or
+array string conversion in this subset. Joined results over 40,960 characters
+are runtime errors.
 `array.slice` returns a same-kind array with the half-open `[index_from,
 index_to)` window; negative, reversed, or out-of-range bounds return `na`.
 `array.concat` appends the second same-kind array to the first array in place

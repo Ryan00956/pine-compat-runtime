@@ -26,7 +26,7 @@ Implemented or partially implemented:
 - Partial `for` and `while` loops.
 - Constant non-negative history offsets and guarded dynamic integer offsets,
   including `series int`.
-- Partial float/int/bool/string/color arrays, reference assignment,
+- Partial float/int/bool/string/color/line arrays, reference assignment,
   `array.from`, `array.copy`, negative indexes for
   `array.get`/`array.set`/`array.insert`/`array.remove`, `array.slice`,
   `array.concat`, `array.fill`, search/binary search helpers, truth helpers,

@@ -192,6 +192,7 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
         Accepts::PlotOrHLine => matches!(arg_type.kind, ValueKind::Plot | ValueKind::HLine),
         Accepts::Array => is_array_kind(arg_type.kind),
         Accepts::Tuple => arg_type.kind == ValueKind::Tuple,
+        Accepts::ScalarArray => is_scalar_array_kind(arg_type.kind),
         Accepts::NumericArray => is_numeric_array_kind(arg_type.kind),
         Accepts::NumericOrBoolArray => {
             is_numeric_array_kind(arg_type.kind) || arg_type.kind == ValueKind::BoolArray
@@ -383,6 +384,7 @@ pub(crate) fn array_element_return_type(
         ValueKind::BoolArray => ValueKind::Bool,
         ValueKind::StringArray => ValueKind::String,
         ValueKind::ColorArray => ValueKind::Color,
+        ValueKind::LineArray => ValueKind::Line,
         _ => return None,
     };
     Some(PineType::new(Qualifier::Series, kind))
@@ -410,6 +412,7 @@ pub(crate) fn array_from_return_type(arg_types: &[Option<PineType>]) -> Option<P
             ValueKind::Bool => ValueKind::BoolArray,
             ValueKind::String => ValueKind::StringArray,
             ValueKind::Color => ValueKind::ColorArray,
+            ValueKind::Line => ValueKind::LineArray,
             _ => return None,
         };
         inferred_kind = Some(match (inferred_kind, next_kind) {
@@ -440,8 +443,20 @@ pub(crate) fn is_array_kind(kind: ValueKind) -> bool {
             | ValueKind::BoolArray
             | ValueKind::StringArray
             | ValueKind::ColorArray
+            | ValueKind::LineArray
     )
 }
 pub(crate) fn is_numeric_array_kind(kind: ValueKind) -> bool {
     matches!(kind, ValueKind::FloatArray | ValueKind::IntArray)
+}
+
+pub(crate) fn is_scalar_array_kind(kind: ValueKind) -> bool {
+    matches!(
+        kind,
+        ValueKind::FloatArray
+            | ValueKind::IntArray
+            | ValueKind::BoolArray
+            | ValueKind::StringArray
+            | ValueKind::ColorArray
+    )
 }

@@ -67,6 +67,19 @@ const ARRAY_NEW_COLOR_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_NEW_LINE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "size",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "initial_value",
+        accepts: Accepts::LineCompatible,
+        optional: true,
+    },
+];
+
 const ARRAY_FROM_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "value",
     accepts: Accepts::Any,
@@ -164,7 +177,7 @@ const ARRAY_PERCENTRANK_PARAMS: &[BuiltinParam] = &[
 const ARRAY_JOIN_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
-        accepts: Accepts::Array,
+        accepts: Accepts::ScalarArray,
         optional: false,
     },
     BuiltinParam {
@@ -319,6 +332,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_NEW_COLOR_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_COLOR_ARRAY),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.new_line",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NEW_LINE_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_LINE_ARRAY),
         variadic: false,
     },
     BuiltinSignature {

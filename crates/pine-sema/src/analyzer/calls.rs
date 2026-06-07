@@ -931,11 +931,15 @@ impl Analyzer {
             {
                 return;
             }
+            ValueKind::LineArray if matches!(value_type.kind, ValueKind::Line | ValueKind::Na) => {
+                return;
+            }
             ValueKind::FloatArray => "float arrays",
             ValueKind::IntArray => "int arrays",
             ValueKind::BoolArray => "bool arrays",
             ValueKind::StringArray => "string arrays",
             ValueKind::ColorArray => "color arrays",
+            ValueKind::LineArray => "line arrays",
             _ => return,
         };
 

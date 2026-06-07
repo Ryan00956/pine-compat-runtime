@@ -86,6 +86,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/line_getters.pine",
     ),
     (
+        "runtime_line_array.json",
+        "tests/fixtures/runtime/line_array.pine",
+    ),
+    (
         "runtime_box_new.json",
         "tests/fixtures/runtime/box_new.pine",
     ),
