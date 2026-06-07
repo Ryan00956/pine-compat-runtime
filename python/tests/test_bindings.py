@@ -171,6 +171,25 @@ def test_run_script_returns_colors_fixture_contract():
         assert plot["values"] == values
 
 
+def test_run_script_returns_syminfo_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/syminfo.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["diagnostics"] == []
+    assert len(result["plots"]) == 7
+    expected = [
+        [1.0, 1.0, 1.0],
+        [1.0, 1.0, 1.0],
+        [1.0, 1.0, 1.0],
+        [0.01, 0.01, 0.01],
+        [1.0, 1.0, 1.0],
+        [1.0, 1.0, 1.0],
+        [100.0, 100.0, 100.0],
+    ]
+    for plot, values in zip(result["plots"], expected):
+        assert plot["values"] == values
+
+
 def test_run_script_returns_timeframe_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/timeframe.pine").read_text()
     result = pine_compat.run_script(source, BARS)

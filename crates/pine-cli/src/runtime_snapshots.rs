@@ -59,6 +59,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/math_edge_cases.pine",
     ),
     (
+        "runtime_syminfo.json",
+        "tests/fixtures/runtime/syminfo.pine",
+    ),
+    (
         "runtime_alertcondition.json",
         "tests/fixtures/runtime/alertcondition.pine",
     ),
