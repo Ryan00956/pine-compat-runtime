@@ -12,4 +12,6 @@ for i = 0 to 0
         label.set_tooltip(label_id, "loop")
         label.set_textalign(label_id, text.align_left)
         label.set_text_font_family(label_id, font.family_monospace)
+        label.set_text_formatting(label_id, text.format_bold + text.format_italic)
+label.set_text_formatting(na, text.format_italic)
 plot(close)

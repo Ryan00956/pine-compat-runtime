@@ -122,6 +122,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "label.set_text",
     "label.set_textalign",
     "label.set_text_font_family",
+    "label.set_text_formatting",
     "label.set_textcolor",
     "label.set_tooltip",
     "label.set_x",

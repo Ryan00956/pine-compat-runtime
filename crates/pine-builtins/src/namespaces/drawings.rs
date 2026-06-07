@@ -51,8 +51,28 @@ const LABEL_NEW_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
     BuiltinParam {
+        name: "textalign",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
         name: "tooltip",
         accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_font_family",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "force_overlay",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_formatting",
+        accepts: Accepts::IntCompatible,
         optional: true,
     },
 ];
@@ -232,6 +252,19 @@ const LABEL_SET_TEXT_FONT_FAMILY_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "text_font_family",
         accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
+const LABEL_SET_TEXT_FORMATTING_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LabelCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "text_formatting",
+        accepts: Accepts::IntCompatible,
         optional: false,
     },
 ];
@@ -709,6 +742,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "label.set_text_font_family",
         phase: BuiltinPhase::Phase1Core,
         params: LABEL_SET_TEXT_FONT_FAMILY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "label.set_text_formatting",
+        phase: BuiltinPhase::Phase1Core,
+        params: LABEL_SET_TEXT_FORMATTING_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

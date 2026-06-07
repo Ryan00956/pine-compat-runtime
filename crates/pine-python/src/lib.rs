@@ -590,6 +590,10 @@ fn label_snapshots_to_py(
                 "textFontFamily",
                 value_to_py(py, &snapshot.text_font_family)?,
             )?;
+            item.set_item(
+                "textFormatting",
+                value_to_py(py, &snapshot.text_formatting)?,
+            )?;
         }
         output.append(item)?;
     }

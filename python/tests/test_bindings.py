@@ -5668,10 +5668,22 @@ def test_run_script_returns_label_outputs():
                     "tooltip": "",
                     "textAlign": "text.align_center",
                     "textFontFamily": "font.family_default",
+                    "textFormatting": 0,
                 }
             ],
         }
     ]
+
+
+def test_run_script_returns_label_text_formatting_outputs():
+    result = pine_compat.run_script(
+        'indicator("label formatting")\nif bar_index == 1\n    label_id = label.new(bar_index, high, "start", text_formatting=text.format_bold)\n    label.set_text_formatting(label_id, text.format_bold + text.format_italic)\nlabel.set_text_formatting(na, text.format_italic)\nplot(close)\n',
+        BARS,
+    )
+
+    snapshots = result["labels"][0]["snapshots"]
+    assert snapshots[0]["textFormatting"] == 1
+    assert snapshots[1]["textFormatting"] == 3
 
 
 def test_run_script_returns_line_outputs():

@@ -1,24 +1,22 @@
-use pine_ir::HirCallArg;
-
-use crate::builtins::args::call_arg_expr;
 use crate::*;
+use pine_ir::{HirCallArg, HirExpr};
 
 impl<'a> HistoricalRuntime<'a> {
     pub(super) fn eval_label_new(
         &mut self,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let Some(x_arg) = call_arg_expr(args, 0, "x") else {
+        let Some(x_arg) = label_call_arg_expr(args, 0, "x") else {
             return Err(RuntimeError {
                 message: "label.new missing x argument".to_owned(),
             });
         };
-        let Some(y_arg) = call_arg_expr(args, 1, "y") else {
+        let Some(y_arg) = label_call_arg_expr(args, 1, "y") else {
             return Err(RuntimeError {
                 message: "label.new missing y argument".to_owned(),
             });
         };
-        let Some(text_arg) = call_arg_expr(args, 2, "text") else {
+        let Some(text_arg) = label_call_arg_expr(args, 2, "text") else {
             return Err(RuntimeError {
                 message: "label.new missing text argument".to_owned(),
             });
@@ -33,8 +31,13 @@ impl<'a> HistoricalRuntime<'a> {
         let style = self.eval_label_option(args, 6, "style", "label.style_label_down")?;
         let text_color = self.eval_label_option_value(args, 7, "textcolor", PineValue::Na)?;
         let size = self.eval_label_option(args, 8, "size", "size.normal")?;
+        let text_align = self.eval_label_option(args, 9, "textalign", "text.align_center")?;
         let tooltip =
-            self.eval_label_option_value(args, 9, "tooltip", PineValue::String(String::new()))?;
+            self.eval_label_option_value(args, 10, "tooltip", PineValue::String(String::new()))?;
+        let text_font_family =
+            self.eval_label_option(args, 11, "text_font_family", "font.family_default")?;
+        let text_formatting =
+            self.eval_label_text_formatting_option_value(args, 13, "text_formatting")?;
         if self.labels.len() >= MAX_LABELS {
             return Err(RuntimeError {
                 message: format!("label count cannot exceed {MAX_LABELS}"),
@@ -62,8 +65,9 @@ impl<'a> HistoricalRuntime<'a> {
                 text_color,
                 size,
                 tooltip,
-                text_align: PineValue::String("text.align_center".to_owned()),
-                text_font_family: PineValue::String("font.family_default".to_owned()),
+                text_align,
+                text_font_family,
+                text_formatting,
             }],
         });
         Ok(PineValue::Label(id))
@@ -216,6 +220,17 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_label_set_text_formatting(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let text_formatting = self.eval_label_text_formatting_arg(args, 1, "text_formatting")?;
+        self.mutate_label(id, |snapshot| {
+            snapshot.text_formatting = text_formatting;
+        })
+    }
+
     pub(super) fn eval_label_delete(
         &mut self,
         args: &[HirCallArg],
@@ -308,7 +323,7 @@ impl<'a> HistoricalRuntime<'a> {
     }
 
     fn eval_label_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
-        let Some(id_arg) = call_arg_expr(args, 0, "id") else {
+        let Some(id_arg) = label_call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
                 message: "label mutation missing id argument".to_owned(),
             });
@@ -328,12 +343,54 @@ impl<'a> HistoricalRuntime<'a> {
         index: usize,
         name: &str,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(arg) = call_arg_expr(args, index, name) else {
+        let Some(arg) = label_call_arg_expr(args, index, name) else {
             return Err(RuntimeError {
                 message: format!("label mutation missing {name} argument"),
             });
         };
         self.eval_expr(arg)
+    }
+
+    fn eval_label_text_formatting_option_value(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = label_call_arg_expr(args, index, name) else {
+            return Ok(PineValue::Int(0));
+        };
+        self.eval_label_text_formatting_expr(arg, name)
+    }
+
+    fn eval_label_text_formatting_arg(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = label_call_arg_expr(args, index, name) else {
+            return Err(RuntimeError {
+                message: format!("label mutation missing {name} argument"),
+            });
+        };
+        self.eval_label_text_formatting_expr(arg, name)
+    }
+
+    fn eval_label_text_formatting_expr(
+        &mut self,
+        arg: &pine_ir::HirExpr,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        match self.eval_expr(arg)? {
+            PineValue::Int(mask) if (0..=3).contains(&mask) => Ok(PineValue::Int(mask)),
+            PineValue::Na => Ok(PineValue::Na),
+            value => Err(RuntimeError {
+                message: format!(
+                    "label mutation `{name}` expected text format mask, got {value:?}"
+                ),
+            }),
+        }
     }
 
     fn mutate_label(
@@ -397,7 +454,7 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         function_name: &str,
     ) -> Result<Option<u32>, RuntimeError> {
-        let Some(id_arg) = call_arg_expr(args, 0, "id") else {
+        let Some(id_arg) = label_call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
                 message: format!("{function_name} missing id argument"),
             });
@@ -428,9 +485,20 @@ impl<'a> HistoricalRuntime<'a> {
         name: &str,
         default: PineValue,
     ) -> Result<PineValue, RuntimeError> {
-        match call_arg_expr(args, index, name) {
+        match label_call_arg_expr(args, index, name) {
             Some(expr) => self.eval_expr(expr),
             None => Ok(default),
         }
     }
+}
+
+fn label_call_arg_expr<'a>(
+    args: &'a [HirCallArg],
+    index: usize,
+    name: &str,
+) -> Option<&'a HirExpr> {
+    args.iter()
+        .find(|arg| arg.name.as_deref() == Some(name))
+        .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
+        .map(|arg| &arg.value)
 }

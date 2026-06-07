@@ -948,6 +948,7 @@ fn collects_label_new_options() {
         "test.pine",
         r#"indicator("label options")
 label.new(x=bar_index, y=high, text="bar", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, tooltip="Tip")
+label.new(x=bar_index, y=low, text="styled", textalign=text.align_right, text_font_family=font.family_monospace, text_formatting=text.format_bold)
 plot(close)
 "#,
     );
@@ -960,6 +961,7 @@ plot(close)
 
     let bars = vec![bar(1.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    assert_eq!(result.labels.len(), 2);
     let snapshot = &result.labels[0].snapshots[0];
 
     assert_eq!(
@@ -975,6 +977,26 @@ plot(close)
     assert_eq!(snapshot.text_color, PineValue::Color(0xFFFFFF));
     assert_eq!(snapshot.size, PineValue::String("size.small".to_owned()));
     assert_eq!(snapshot.tooltip, PineValue::String("Tip".to_owned()));
+    assert_eq!(
+        snapshot.text_align,
+        PineValue::String("text.align_center".to_owned())
+    );
+    assert_eq!(
+        snapshot.text_font_family,
+        PineValue::String("font.family_default".to_owned())
+    );
+    assert_eq!(snapshot.text_formatting, PineValue::Int(0));
+
+    let styled = &result.labels[1].snapshots[0];
+    assert_eq!(
+        styled.text_align,
+        PineValue::String("text.align_right".to_owned())
+    );
+    assert_eq!(
+        styled.text_font_family,
+        PineValue::String("font.family_monospace".to_owned())
+    );
+    assert_eq!(styled.text_formatting, PineValue::Int(1));
 }
 
 #[test]
@@ -993,6 +1015,8 @@ label.set_size(id, size.small)
 label.set_tooltip(id, "Tip")
 label.set_textalign(id, text.align_left)
 label.set_text_font_family(id, font.family_monospace)
+label.set_text_formatting(id, text.format_bold + text.format_italic)
+label.set_text_formatting(na, text.format_italic)
 plot(close)
 "#,
     );
@@ -1007,7 +1031,7 @@ plot(close)
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
     let label = &result.labels[0];
 
-    assert_eq!(label.snapshots.len(), 11);
+    assert_eq!(label.snapshots.len(), 12);
     assert_eq!(label.snapshots[0].x, PineValue::Int(0));
     assert_eq!(label.snapshots[1].x, PineValue::Int(1));
     assert_eq!(label.snapshots[2].y, PineValue::Float(2.0));
@@ -1037,6 +1061,7 @@ plot(close)
         label.snapshots[10].text_font_family,
         PineValue::String("font.family_monospace".to_owned())
     );
+    assert_eq!(label.snapshots[11].text_formatting, PineValue::Int(3));
 }
 
 #[test]

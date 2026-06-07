@@ -461,6 +461,8 @@ fn labels_json(labels: &[LabelOutput]) -> String {
                 output.push_str(&value_json(&snapshot.text_align));
                 output.push_str(",\"textFontFamily\":");
                 output.push_str(&value_json(&snapshot.text_font_family));
+                output.push_str(",\"textFormatting\":");
+                output.push_str(&value_json(&snapshot.text_formatting));
             }
             output.push('}');
         }

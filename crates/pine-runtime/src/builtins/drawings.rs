@@ -29,6 +29,7 @@ impl<'a> HistoricalRuntime<'a> {
             "label.set_tooltip" => self.eval_label_set_tooltip(args),
             "label.set_textalign" => self.eval_label_set_textalign(args),
             "label.set_text_font_family" => self.eval_label_set_text_font_family(args),
+            "label.set_text_formatting" => self.eval_label_set_text_formatting(args),
             "label.delete" => self.eval_label_delete(args),
             "label.copy" => self.eval_label_copy(args),
             "label.get_x" => self.eval_label_get_x(args),

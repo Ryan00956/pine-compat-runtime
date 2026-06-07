@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added host-neutral label text-formatting support. `label.new()` can now
+  initialize `textalign`, `text_font_family`, and `text_formatting` snapshot
+  fields, and `label.set_text_formatting()` records none/bold/italic formatting
+  masks while leaving glyph styling to hosts.
 - Closed Strategy Internal Stage 13 Slice 34 omitted-`from_entry`
   `strategy.exit` stop+limit bracket future-entry persistence. A full omitted-
   `from_entry` stop+limit bracket now persists for later pyramided long entries

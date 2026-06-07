@@ -615,7 +615,8 @@ subset covers `label.new`, selected `label.set_*` mutators including
 fixture-backed x-location snapshot mutation for `label.set_xloc` and
 y-location snapshot mutation for `label.set_yloc`, text-alignment snapshot
 mutation for `label.set_textalign`, text font-family snapshot mutation for
-`label.set_text_font_family`, `label.delete`,
+`label.set_text_font_family`, text-formatting snapshot mutation for
+`label.set_text_formatting`, `label.delete`,
 fixture-backed cloning with `label.copy`, and the fixture-backed `label.get_x`,
 `label.get_y`, and `label.get_text` getters over the latest existing label
 snapshot, with a 500-label runtime limit. The
@@ -659,12 +660,17 @@ per-table limit. Deleting `na`,
 mutating `na`, or mutating an already deleted
 drawing object is a no-op where deletion exists; supported label getters return
 `na` for `na` or deleted label ids; invalid non-`na` ids are runtime errors; ids
-are stable and not reused. `label.set_xloc` records `xloc.bar_index` or
-`xloc.bar_time` plus the new `x` value in label snapshots; `label.set_yloc`
-records `yloc.price`, `yloc.abovebar`, or `yloc.belowbar`; `label.set_textalign`
-records horizontal text alignment in label snapshots.
-`label.set_text_font_family` records font family in label snapshots. Text
-layout remains host-specific. `label.copy` clones the latest existing label
+are stable and not reused. `label.new` can initialize host-neutral label
+`textalign`, `text_font_family`, and `text_formatting` snapshot fields; its
+`force_overlay` argument is accepted but left to the host display layer.
+`label.set_xloc` records `xloc.bar_index` or `xloc.bar_time` plus the new `x`
+value in label snapshots; `label.set_yloc` records `yloc.price`,
+`yloc.abovebar`, or `yloc.belowbar`; `label.set_textalign` records horizontal
+text alignment in label snapshots. `label.set_text_font_family` records font
+family in label snapshots. `label.set_text_formatting` records a
+`text.format_none`/`text.format_bold`/`text.format_italic` bitmask, including
+bold+italic combinations, while actual glyph styling remains host-specific.
+Text layout remains host-specific. `label.copy` clones the latest existing label
 snapshot into a new deterministic id, returns `na` for `na` or deleted labels,
 and shares the label runtime limit. `line.copy` clones the latest existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,

@@ -646,8 +646,13 @@ per-table limit. `label.set_xloc` stores `xloc.bar_index` or `xloc.bar_time`
 with the new x-coordinate in the host-neutral snapshot. `label.set_yloc` stores
 the selected y-location constant. `label.set_textalign` stores the selected
 horizontal text alignment constant. `label.set_text_font_family` stores the
-selected font-family constant. Above/below-bar, time/index, and text layout
-remain host responsibilities. `label.copy` clones the latest existing label
+selected font-family constant. `label.new` can initialize `textalign`,
+`text_font_family`, and a `text_formatting` mask in the host-neutral snapshot;
+`force_overlay` is accepted but remains a host display responsibility.
+`label.set_text_formatting` stores the selected
+`text.format_none`/`text.format_bold`/`text.format_italic` mask, including
+bold+italic combinations. Above/below-bar, time/index, glyph styling, and text
+layout remain host responsibilities. `label.copy` clones the latest existing label
 snapshot into a new deterministic id, returns `na` for `na` or deleted labels,
 and shares the label object limit. `line.copy` clones the latest existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
