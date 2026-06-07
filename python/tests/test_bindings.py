@@ -243,6 +243,27 @@ def test_run_script_returns_color_outputs_fixture_contract():
     ]
 
 
+def test_run_script_returns_hline_fill_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/io.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["diagnostics"] == []
+    assert result["plots"][0]["values"] == [None, 2.25, 3.75]
+    assert result["hlines"] == [
+        {
+            "id": 10,
+            "price": 2.0,
+        }
+    ]
+    assert result["fills"] == [
+        {
+            "id": 11,
+            "firstId": 7,
+            "secondId": 10,
+        }
+    ]
+
+
 def test_run_script_returns_math_edge_cases_as_none():
     source = (ROOT / "tests/fixtures/runtime/math_edge_cases.pine").read_text()
     result = pine_compat.run_script(source, BARS)
