@@ -303,6 +303,44 @@ fn run_script_csv_returns_hline_fill_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_alertcondition_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/alertcondition.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("alertcondition fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(
+        parsed["alerts"],
+        serde_json::json!([
+            {
+                "id": 3,
+                "barIndex": 1,
+                "time": 2,
+                "message": "Branch alert",
+                "source": "Branch"
+            },
+            {
+                "id": 1,
+                "barIndex": 2,
+                "time": 3,
+                "message": "Close is above two",
+                "source": "Above two"
+            },
+            {
+                "id": 1,
+                "barIndex": 3,
+                "time": 4,
+                "message": "Close is above two",
+                "source": "Above two"
+            }
+        ])
+    );
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),

@@ -264,6 +264,36 @@ def test_run_script_returns_hline_fill_fixture_contract():
     ]
 
 
+def test_run_script_returns_alertcondition_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/alertcondition.pine").read_text()
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+
+    assert result["diagnostics"] == []
+    assert result["alerts"] == [
+        {
+            "id": 3,
+            "barIndex": 1,
+            "time": 2,
+            "message": "Branch alert",
+            "source": "Branch",
+        },
+        {
+            "id": 1,
+            "barIndex": 2,
+            "time": 3,
+            "message": "Close is above two",
+            "source": "Above two",
+        },
+        {
+            "id": 1,
+            "barIndex": 3,
+            "time": 4,
+            "message": "Close is above two",
+            "source": "Above two",
+        },
+    ]
+
+
 def test_run_script_returns_math_edge_cases_as_none():
     source = (ROOT / "tests/fixtures/runtime/math_edge_cases.pine").read_text()
     result = pine_compat.run_script(source, BARS)
