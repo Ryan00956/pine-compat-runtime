@@ -40,6 +40,18 @@ const NAMED_INT_CONSTANTS: &[NamedIntConstant] = &[
         name: "syminfo.pricescale",
         value: 100,
     },
+    NamedIntConstant {
+        name: "text.format_none",
+        value: 0,
+    },
+    NamedIntConstant {
+        name: "text.format_bold",
+        value: 1,
+    },
+    NamedIntConstant {
+        name: "text.format_italic",
+        value: 2,
+    },
 ];
 
 #[must_use]

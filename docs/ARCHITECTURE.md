@@ -437,9 +437,10 @@ frame width, `table.set_border_color` updates the table's final border color,
 `table.cell_set_bgcolor`, `table.cell_set_text_color`, and
 `table.cell_set_width`/`table.cell_set_height`/`table.cell_set_text_size`
 `table.cell_set_text_halign`/`table.cell_set_text_valign`/
-`table.cell_set_tooltip`/`table.cell_set_text_font_family` mutate only the
-stored text/background/text color/width/height/text size/text alignment/
-tooltip/font-family for cells already
+`table.cell_set_tooltip`/`table.cell_set_text_font_family`/
+`table.cell_set_text_formatting` mutate only the stored text/background/text
+color/width/height/text size/text alignment/tooltip/font-family/text-formatting
+for cells already
 populated by `table.cell`, `table.clear` removes populated cells in an
 inclusive rectangular range and removes merged-cell records intersecting that
 range, `table.merge_cells` records inclusive host-neutral merge rectangles, and

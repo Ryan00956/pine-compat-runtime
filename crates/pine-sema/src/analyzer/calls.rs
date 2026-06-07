@@ -225,6 +225,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "table.cell_set_text_valign"
             | "table.cell_set_tooltip"
             | "table.cell_set_text_font_family"
+            | "table.cell_set_text_formatting"
             | "strategy.entry"
             | "strategy.close"
             | "strategy.close_all"
@@ -644,6 +645,7 @@ impl Analyzer {
                     "text_font_family",
                     TEXT_FONT_FAMILIES,
                 );
+                self.validate_text_formatting_arg(signature, args, 8, "text_formatting");
             }
             "table.cell_set_text_font_family" => {
                 self.validate_label_string_arg(
@@ -654,7 +656,43 @@ impl Analyzer {
                     TEXT_FONT_FAMILIES,
                 );
             }
+            "table.cell_set_text_formatting" => {
+                self.validate_text_formatting_arg(signature, args, 3, "text_formatting");
+            }
             _ => {}
+        }
+    }
+
+    fn validate_text_formatting_arg(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        index: usize,
+        name: &str,
+    ) {
+        for (arg_index, arg) in args.iter().enumerate() {
+            let is_target = arg.name.as_deref() == Some(name)
+                || (arg.name.is_none()
+                    && signature
+                        .params
+                        .get(arg_index)
+                        .is_some_and(|param| param.name == name && index == arg_index));
+            if !is_target {
+                continue;
+            }
+            let Some(value) = const_int_value(&arg.value) else {
+                continue;
+            };
+            if !(0..=3).contains(&value) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    format!(
+                        "`{}` argument `{name}` only supports text.format_none, text.format_bold, text.format_italic, or text.format_bold + text.format_italic",
+                        signature.name
+                    ),
+                    arg.span,
+                ));
+            }
         }
     }
 

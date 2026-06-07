@@ -6,6 +6,7 @@ pub(crate) const UNKNOWN: PineType = PineType::new(Qualifier::Series, ValueKind:
 pub(crate) fn const_int_value(expr: &Expr) -> Option<i64> {
     match &expr.kind {
         ExprKind::Literal(Literal::Int(value)) => Some(*value),
+        ExprKind::QualifiedName(parts) => pine_builtins::named_int_constant(&parts.join(".")),
         ExprKind::Unary {
             op: UnaryOp::Plus,
             expr,
@@ -14,6 +15,16 @@ pub(crate) fn const_int_value(expr: &Expr) -> Option<i64> {
             op: UnaryOp::Minus,
             expr,
         } => const_int_value(expr).and_then(i64::checked_neg),
+        ExprKind::Binary {
+            op: BinaryOp::Add,
+            left,
+            right,
+        } => const_int_value(left)?.checked_add(const_int_value(right)?),
+        ExprKind::Binary {
+            op: BinaryOp::Sub,
+            left,
+            right,
+        } => const_int_value(left)?.checked_sub(const_int_value(right)?),
         _ => None,
     }
 }

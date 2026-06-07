@@ -143,6 +143,8 @@ impl<'a> HistoricalRuntime<'a> {
             "text_font_family",
             PineValue::String("font.family_default".to_owned()),
         )?;
+        let text_formatting =
+            self.eval_table_text_formatting_option_value(args, 8, "text_formatting")?;
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
@@ -159,6 +161,7 @@ impl<'a> HistoricalRuntime<'a> {
             text_valign: PineValue::Na,
             tooltip,
             text_font_family,
+            text_formatting,
         };
         self.mutate_table_cell(id, column, row, true, |cell| *cell = next_cell)?;
         Ok(PineValue::Void)
@@ -484,6 +487,23 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    pub(super) fn eval_table_cell_set_text_formatting(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let column = self.eval_required_table_int_arg(args, 1, "column")?;
+        let row = self.eval_required_table_int_arg(args, 2, "row")?;
+        let text_formatting = self.eval_table_text_formatting_arg(args, 3, "text_formatting")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        self.mutate_table_cell(id, column, row, false, |cell| {
+            cell.text_formatting = text_formatting;
+        })?;
+        Ok(PineValue::Void)
+    }
+
     fn eval_table_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
@@ -540,6 +560,49 @@ impl<'a> HistoricalRuntime<'a> {
         match call_arg_expr(args, index, name) {
             Some(expr) => self.eval_expr(expr),
             None => Ok(default),
+        }
+    }
+
+    fn eval_table_text_formatting_option_value(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = call_arg_expr(args, index, name) else {
+            return Ok(PineValue::Int(0));
+        };
+        self.eval_table_text_formatting_expr(arg, name)
+    }
+
+    fn eval_table_text_formatting_arg(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = call_arg_expr(args, index, name) else {
+            return Err(RuntimeError {
+                message: format!("table mutation missing `{name}` argument"),
+            });
+        };
+        self.eval_table_text_formatting_expr(arg, name)
+    }
+
+    fn eval_table_text_formatting_expr(
+        &mut self,
+        arg: &HirExpr,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        let value = self.eval_expr(arg)?;
+        match value {
+            PineValue::Int(mask) if (0..=3).contains(&mask) => Ok(PineValue::Int(mask)),
+            PineValue::Na => Ok(PineValue::Na),
+            value => Err(RuntimeError {
+                message: format!(
+                    "table mutation `{name}` expected text format mask, got {value:?}"
+                ),
+            }),
         }
     }
 
@@ -731,6 +794,7 @@ impl<'a> HistoricalRuntime<'a> {
                     text_valign: PineValue::Na,
                     tooltip: PineValue::String(String::new()),
                     text_font_family: PineValue::String("font.family_default".to_owned()),
+                    text_formatting: PineValue::Int(0),
                 };
                 mutate(&mut cell);
                 next.cells.push(cell);

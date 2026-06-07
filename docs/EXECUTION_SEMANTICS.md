@@ -633,7 +633,8 @@ mutations with `table.set_position` and
 `table.cell_set_text_color`/`table.cell_set_width`/`table.cell_set_height`/
 `table.cell_set_text_size`/`table.cell_set_text_halign`/
 `table.cell_set_text_valign`/`table.cell_set_tooltip`/
-`table.cell_set_text_font_family` mutations of previously populated cells and
+`table.cell_set_text_font_family`/`table.cell_set_text_formatting` mutations
+of previously populated cells and
 `table.clear` inclusive rectangular cell-content removal snapshots,
 `table.merge_cells` inclusive merged-cell rectangle snapshots, plus
 `table.delete` deletion snapshots.
@@ -714,6 +715,10 @@ other supported fields; actual tooltip display remains a host responsibility.
 `table.cell_set_text_font_family` updates the target previously populated cell
 font-family in the host-neutral snapshot while preserving the cell's other
 supported fields; actual font rendering remains a host responsibility.
+`table.cell_set_text_formatting` updates the target previously populated cell
+text-formatting mask in the host-neutral snapshot while preserving the cell's
+other supported fields; actual bold/italic rendering remains a host
+responsibility.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from

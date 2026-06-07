@@ -107,6 +107,11 @@ const TABLE_CELL_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::ConstString,
         optional: true,
     },
+    BuiltinParam {
+        name: "text_formatting",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
 ];
 
 const TABLE_SET_POSITION_PARAMS: &[BuiltinParam] = &[
@@ -417,6 +422,29 @@ const TABLE_CELL_SET_TEXT_FONT_FAMILY_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TABLE_CELL_SET_TEXT_FORMATTING_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::TableCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "column",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "row",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "text_formatting",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+];
+
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "table.new",
@@ -562,6 +590,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "table.cell_set_text_font_family",
         phase: BuiltinPhase::Phase1Core,
         params: TABLE_CELL_SET_TEXT_FONT_FAMILY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "table.cell_set_text_formatting",
+        phase: BuiltinPhase::Phase1Core,
+        params: TABLE_CELL_SET_TEXT_FORMATTING_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

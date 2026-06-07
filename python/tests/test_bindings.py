@@ -5764,6 +5764,7 @@ def table_snapshots_without_empty_merges(tables):
                 for cell in snapshot["cells"]:
                     assert cell.pop("tooltip") == ""
                     assert cell.pop("textFontFamily") == "font.family_default"
+                    assert cell.pop("textFormatting") == 0
     return tables
 
 
@@ -6131,6 +6132,17 @@ def test_run_script_returns_table_cell_text_font_family_outputs():
     snapshots = result["tables"][0]["snapshots"]
     assert snapshots[1]["cells"][0]["textFontFamily"] == "font.family_monospace"
     assert snapshots[2]["cells"][0]["textFontFamily"] == "font.family_default"
+
+
+def test_run_script_returns_table_cell_text_formatting_outputs():
+    result = pine_compat.run_script(
+        'indicator("table formatting")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", text_formatting=text.format_bold)\n    table.cell_set_text_formatting(table_id, 0, 0, text.format_bold + text.format_italic)\ntable.cell_set_text_formatting(na, 0, 0, text.format_italic)\nplot(close)\n',
+        BARS,
+    )
+
+    snapshots = result["tables"][0]["snapshots"]
+    assert snapshots[1]["cells"][0]["textFormatting"] == 1
+    assert snapshots[2]["cells"][0]["textFormatting"] == 3
 
 
 def test_run_script_returns_plotchar_outputs():
