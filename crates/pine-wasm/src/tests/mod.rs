@@ -178,6 +178,46 @@ fn run_script_csv_returns_timeframe_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_time_components_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/time_components.pine"),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+    )
+    .expect("time components fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    let plots = parsed["plots"].as_array().expect("plots");
+    assert_eq!(plots.len(), 21);
+    let expected = [
+        serde_json::json!([1970, 1970]),
+        serde_json::json!([1, 1]),
+        serde_json::json!([1, 1]),
+        serde_json::json!([1, 1]),
+        serde_json::json!([5, 5]),
+        serde_json::json!([0, 0]),
+        serde_json::json!([0, 0]),
+        serde_json::json!([0, 0]),
+        serde_json::json!([2021, 2021]),
+        serde_json::json!([2, 2]),
+        serde_json::json!([5, 5]),
+        serde_json::json!([2, 2]),
+        serde_json::json!([3, 3]),
+        serde_json::json!([3, 3]),
+        serde_json::json!([4, 4]),
+        serde_json::json!([5, 5]),
+        serde_json::json!([0, 0]),
+        serde_json::json!([1, 1]),
+        serde_json::json!([1, 1]),
+        serde_json::json!([1, 1]),
+        serde_json::json!([1, 1]),
+    ];
+    for (plot, values) in plots.iter().zip(expected) {
+        assert_eq!(plot["values"], values);
+    }
+}
+
+#[test]
 fn run_script_csv_rejects_non_finite_ohlcv_values() {
     for (column, row) in [
         ("open", "0,NaN,1,1,1,1"),
