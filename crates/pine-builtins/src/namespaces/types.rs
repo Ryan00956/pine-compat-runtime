@@ -29,5 +29,7 @@ pub(crate) const SIMPLE_STRING_ARRAY: PineType =
     PineType::new(Qualifier::Simple, ValueKind::StringArray);
 pub(crate) const SIMPLE_COLOR_ARRAY: PineType =
     PineType::new(Qualifier::Simple, ValueKind::ColorArray);
+pub(crate) const SIMPLE_LABEL_ARRAY: PineType =
+    PineType::new(Qualifier::Simple, ValueKind::LabelArray);
 pub(crate) const SIMPLE_LINE_ARRAY: PineType =
     PineType::new(Qualifier::Simple, ValueKind::LineArray);

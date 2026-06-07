@@ -5686,6 +5686,19 @@ def test_run_script_returns_label_text_formatting_outputs():
     assert snapshots[1]["textFormatting"] == 3
 
 
+def test_run_script_returns_label_array_outputs():
+    result = pine_compat.run_script(
+        'indicator("label array")\nvar labels = array.new_label()\nif bar_index == 0\n    id = label.new(bar_index, high, "start")\n    array.push(labels, id)\nif bar_index == 1\n    copied = array.copy(labels)\n    label.set_text(array.get(copied, 0), "array")\n    if array.includes(labels, array.first(labels))\n        from_array = labels.get(0)\n        from_array.set_color(color.green)\nplot(array.size(labels))\n',
+        BARS,
+    )
+
+    assert result["plots"][0]["values"] == [1, 1, 1]
+    snapshots = result["labels"][0]["snapshots"]
+    assert snapshots[0]["text"] == "start"
+    assert snapshots[1]["text"] == "array"
+    assert snapshots[2]["color"] == 0x008000
+
+
 def test_run_script_returns_line_outputs():
     result = pine_compat.run_script(
         'indicator("lines")\nif bar_index == 1\n    line_id = line.new(bar_index, low, bar_index, high)\nplot(close)\n',

@@ -15,9 +15,10 @@ Primary references:
 
 ## Stage Verdict
 
-Stage 3 arrays are complete for the current fixture-backed scalar subset. A
-later compatibility slice added fixture-backed `array.new_line` line-id arrays
-on top of that scalar baseline without opening other drawing array families.
+Stage 3 arrays are complete for the current fixture-backed scalar subset. Later
+compatibility slices added fixture-backed `array.new_label` label-id arrays and
+`array.new_line` line-id arrays on top of that scalar baseline without opening
+other drawing array families.
 
 The project should keep `array.*` marked `partial`, not `supported`, because the
 current implementation deliberately excludes generic arrays, object arrays, UDT
@@ -48,6 +49,7 @@ Element kinds:
 - `bool`
 - `string`
 - `color`
+- `label` ids
 - `line` ids
 
 Creation and inference:
@@ -57,6 +59,7 @@ Creation and inference:
 - `array.new_bool`
 - `array.new_string`
 - `array.new_color`
+- `array.new_label`
 - `array.new_line`
 - `array.from`
 
@@ -136,9 +139,9 @@ Generic arrays:
 
 Reference and object arrays:
 
-- Arrays of `linefill`, `label`, `box`, `table`, `polyline`, and other
-  drawing/object ids are not supported. Line-id arrays are the only
-  fixture-backed drawing-object array family.
+- Arrays of `linefill`, `box`, `table`, `polyline`, and other drawing/object
+  ids are not supported. Label-id and line-id arrays are the only fixture-backed
+  drawing-object array families.
 - Additional drawing-object arrays should wait for explicit object id lifetime,
   rollback, and host-output semantics.
 

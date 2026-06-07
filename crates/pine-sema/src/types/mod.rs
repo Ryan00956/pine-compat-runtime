@@ -384,6 +384,7 @@ pub(crate) fn array_element_return_type(
         ValueKind::BoolArray => ValueKind::Bool,
         ValueKind::StringArray => ValueKind::String,
         ValueKind::ColorArray => ValueKind::Color,
+        ValueKind::LabelArray => ValueKind::Label,
         ValueKind::LineArray => ValueKind::Line,
         _ => return None,
     };
@@ -412,6 +413,7 @@ pub(crate) fn array_from_return_type(arg_types: &[Option<PineType>]) -> Option<P
             ValueKind::Bool => ValueKind::BoolArray,
             ValueKind::String => ValueKind::StringArray,
             ValueKind::Color => ValueKind::ColorArray,
+            ValueKind::Label => ValueKind::LabelArray,
             ValueKind::Line => ValueKind::LineArray,
             _ => return None,
         };
@@ -443,6 +445,7 @@ pub(crate) fn is_array_kind(kind: ValueKind) -> bool {
             | ValueKind::BoolArray
             | ValueKind::StringArray
             | ValueKind::ColorArray
+            | ValueKind::LabelArray
             | ValueKind::LineArray
     )
 }

@@ -264,7 +264,7 @@ Resolved implementation choices:
 - Non-`var` arrays are allocated when their declaration executes on each bar.
 - `var` arrays preserve their id and backing storage across bars.
 - Array values remain runtime-internal in JSON/Python/WASM outputs.
-- The current pass supports float, int, bool, string, color, and line-id arrays with
+- The current pass supports float, int, bool, string, color, label-id, and line-id arrays with
   array.from inference and size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/clear,
   negative indexes for get/set/insert/remove, plus numeric binary search/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev,
   numeric/string sort and sort_indices, all-supported-array reverse, and

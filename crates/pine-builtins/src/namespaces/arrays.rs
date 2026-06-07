@@ -80,6 +80,19 @@ const ARRAY_NEW_LINE_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_NEW_LABEL_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "size",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "initial_value",
+        accepts: Accepts::LabelCompatible,
+        optional: true,
+    },
+];
+
 const ARRAY_FROM_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "value",
     accepts: Accepts::Any,
@@ -339,6 +352,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_NEW_LINE_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_LINE_ARRAY),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.new_label",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NEW_LABEL_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_LABEL_ARRAY),
         variadic: false,
     },
     BuiltinSignature {

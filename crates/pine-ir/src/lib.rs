@@ -58,6 +58,7 @@ pub enum ValueKind {
     BoolArray,
     StringArray,
     ColorArray,
+    LabelArray,
     LineArray,
     UserType,
     Tuple,

@@ -14,6 +14,7 @@ pub(crate) enum ArrayElementKind {
     Bool,
     String,
     Color,
+    Label,
     Line,
 }
 
@@ -69,6 +70,7 @@ pub(crate) fn infer_array_from_kind(values: &[PineValue]) -> Option<ArrayElement
             PineValue::Bool(_) => ArrayElementKind::Bool,
             PineValue::String(_) => ArrayElementKind::String,
             PineValue::Color(_) => ArrayElementKind::Color,
+            PineValue::Label(_) => ArrayElementKind::Label,
             PineValue::Line(_) => ArrayElementKind::Line,
             _ => return None,
         };
@@ -329,6 +331,23 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(self.new_array(ArrayElementKind::Line, size, initial_value))
+    }
+
+    pub(crate) fn eval_array_new_label(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(size) = self.eval_array_new_size(args, "array.new_label")? else {
+            return Ok(PineValue::Na);
+        };
+
+        let initial_value = if let Some(value_arg) = args.get(1) {
+            self.eval_array_value(&value_arg.value, ArrayElementKind::Label)?
+        } else {
+            PineValue::Na
+        };
+
+        Ok(self.new_array(ArrayElementKind::Label, size, initial_value))
     }
 
     pub(crate) fn eval_array_from(
@@ -1460,6 +1479,7 @@ impl<'a> HistoricalRuntime<'a> {
             (ArrayElementKind::Bool, PineValue::Bool(value)) => PineValue::Bool(value),
             (ArrayElementKind::String, PineValue::String(value)) => PineValue::String(value),
             (ArrayElementKind::Color, PineValue::Color(value)) => PineValue::Color(value),
+            (ArrayElementKind::Label, PineValue::Label(value)) => PineValue::Label(value),
             (ArrayElementKind::Line, PineValue::Line(value)) => PineValue::Line(value),
             (_, PineValue::Na) => PineValue::Na,
             _ => PineValue::Na,

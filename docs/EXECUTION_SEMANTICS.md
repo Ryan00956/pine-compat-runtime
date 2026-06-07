@@ -488,18 +488,19 @@ per-bar locals.
 
 For arrays, the stored value is a runtime-owned array id. A normal
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
-`array.new_color`, or `array.new_line` declaration allocates a fresh array each
-time it executes. `array.new_line` creates line-id arrays filled with `na` when
-no initial line id is supplied. `array.from` also allocates a fresh inferred
-typed array and requires at least one non-`na` supported typed value, including
-line ids for line arrays. A `var` array declaration keeps the same id
+`array.new_color`, `array.new_label`, or `array.new_line` declaration allocates
+a fresh array each time it executes. `array.new_label` and `array.new_line`
+create drawing-id arrays filled with `na` when no initial id is supplied.
+`array.from` also allocates a fresh inferred typed array and requires at least
+one non-`na` supported typed value, including label and line ids for drawing-id
+arrays. A `var` array declaration keeps the same id
 and backing storage across bars, so mutations such as `array.push` or
 `values.push(...)` persist.
 Assigning an array to another variable copies the id, not the backing values;
 mutating either name mutates the same runtime-owned array. `array.copy` and
 `values.copy()` allocate a new array id initialized with the source array's
-current element values. For line-id arrays, copied elements still reference the
-same line objects; only the array container is independent. Realtime
+current element values. For label-id and line-id arrays, copied elements still
+reference the same drawing objects; only the array container is independent. Realtime
 forming-bar rollback clones the confirmed
 runtime store before executing a forming update, so array mutations and copies
 made during a forming update do not leak into the confirmed store until a
@@ -602,8 +603,8 @@ array in place.
 `array.join` converts supported scalar array elements to string
 with the default numeric format, uses `,` as the default separator, and returns
 an empty string for empty arrays. Color elements render as normalized integer
-color values. Line arrays are intentionally not accepted by `array.join` or
-array string conversion in this subset. Joined results over 40,960 characters
+color values. Label and line arrays are intentionally not accepted by
+`array.join` or array string conversion in this subset. Joined results over 40,960 characters
 are runtime errors.
 `array.slice` returns a same-kind array with the half-open `[index_from,
 index_to)` window; negative, reversed, or out-of-range bounds return `na`.
