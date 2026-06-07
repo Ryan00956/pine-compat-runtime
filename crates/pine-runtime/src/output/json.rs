@@ -625,6 +625,8 @@ fn tables_json(tables: &[TableOutput]) -> String {
                     output.push_str(&value_json(&cell.text_valign));
                     output.push_str(",\"tooltip\":");
                     output.push_str(&value_json(&cell.tooltip));
+                    output.push_str(",\"textFontFamily\":");
+                    output.push_str(&value_json(&cell.text_font_family));
                     output.push('}');
                 }
                 output.push(']');

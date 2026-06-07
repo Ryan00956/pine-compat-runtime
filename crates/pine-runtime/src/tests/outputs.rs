@@ -553,7 +553,7 @@ var id = table.new(position.top_right, 2, 2)
 if bar_index == 1
     table.cell(id, 0, 0, "A")
 if bar_index == 2
-    table.cell(id, column=1, row=0, text="B", bgcolor=color.green, text_color=color.white, tooltip="initial")
+    table.cell(id, column=1, row=0, text="B", bgcolor=color.green, text_color=color.white, tooltip="initial", text_font_family=font.family_monospace)
     table.cell(id, 0, 0, "C")
     table.cell_set_text(id, 1, 0, "B2")
     table.cell_set_bgcolor(id, 1, 0, color.red)
@@ -564,6 +564,7 @@ if bar_index == 2
     table.cell_set_text_halign(id, 1, 0, text.align_left)
     table.cell_set_text_valign(id, 1, 0, text.align_top)
     table.cell_set_tooltip(id, 1, 0, "updated")
+    table.cell_set_text_font_family(id, 1, 0, font.family_default)
     table.set_position(id, position.bottom_right)
     table.set_bgcolor(id, color.yellow)
     table.set_frame_color(id, color.black)
@@ -586,6 +587,7 @@ table.cell_set_text_size(na, 0, 1, size.small)
 table.cell_set_text_halign(na, 0, 1, text.align_left)
 table.cell_set_text_valign(na, 0, 1, text.align_top)
 table.cell_set_tooltip(na, 0, 1, "noop")
+table.cell_set_text_font_family(na, 0, 1, font.family_monospace)
 plot(close)
 "#,
     );
@@ -612,7 +614,7 @@ plot(close)
     assert_eq!(table.border_width, PineValue::Int(4));
     assert_eq!(table.columns, 2);
     assert_eq!(table.rows, 2);
-    assert_eq!(table.snapshots.len(), 13);
+    assert_eq!(table.snapshots.len(), 14);
     assert!(table.snapshots.iter().all(|snapshot| snapshot.exists));
     assert!(table.snapshots[0].cells.is_empty());
     assert_eq!(table.snapshots[1].cells[0].column, 0);
@@ -634,6 +636,10 @@ plot(close)
     assert_eq!(
         table.snapshots[2].cells[1].tooltip,
         PineValue::String("initial".to_owned())
+    );
+    assert_eq!(
+        table.snapshots[2].cells[1].text_font_family,
+        PineValue::String("font.family_monospace".to_owned())
     );
     assert_eq!(
         table.snapshots[3].cells[0].text,
@@ -668,6 +674,10 @@ plot(close)
     assert_eq!(
         table.snapshots[12].cells[1].tooltip,
         PineValue::String("updated".to_owned())
+    );
+    assert_eq!(
+        table.snapshots[13].cells[1].text_font_family,
+        PineValue::String("font.family_default".to_owned())
     );
 }
 
@@ -856,6 +866,11 @@ plot(close)
         r#"indicator("missing table tooltip cell")
 id = table.new(position.top_right, 2, 2)
 table.cell_set_tooltip(id, 0, 0, "bad")
+plot(close)
+"#,
+        r#"indicator("missing table font family cell")
+id = table.new(position.top_right, 2, 2)
+table.cell_set_text_font_family(id, 0, 0, font.family_monospace)
 plot(close)
 "#,
         r#"indicator("bad table merge bounds")

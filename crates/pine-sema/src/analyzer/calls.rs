@@ -224,6 +224,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "table.cell_set_text_halign"
             | "table.cell_set_text_valign"
             | "table.cell_set_tooltip"
+            | "table.cell_set_text_font_family"
             | "strategy.entry"
             | "strategy.close"
             | "strategy.close_all"
@@ -634,6 +635,24 @@ impl Analyzer {
             }
             "table.cell_set_text_valign" => {
                 self.validate_label_string_arg(signature, args, 3, "text_valign", TEXT_VALIGNS);
+            }
+            "table.cell" => {
+                self.validate_label_string_arg(
+                    signature,
+                    args,
+                    7,
+                    "text_font_family",
+                    TEXT_FONT_FAMILIES,
+                );
+            }
+            "table.cell_set_text_font_family" => {
+                self.validate_label_string_arg(
+                    signature,
+                    args,
+                    3,
+                    "text_font_family",
+                    TEXT_FONT_FAMILIES,
+                );
             }
             _ => {}
         }

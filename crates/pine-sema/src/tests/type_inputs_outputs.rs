@@ -813,7 +813,7 @@ fn rejects_box_side_effects_inside_functions() {
 #[test]
 fn accepts_minimal_table_new_and_cell() {
     let analysis = analyze(
-        "id = table.new(position.top_right, 2, 2, bgcolor=color.gray, frame_color=color.black, frame_width=2, border_color=color.white, border_width=1)\ntable.cell(id, 0, 0, \"A\")\ntable.cell(id, column=1, row=0, text=\"B\", bgcolor=color.green, text_color=color.white, tooltip=\"initial\")\ntable.cell_set_text(id, 1, 0, \"B2\")\ntable.cell_set_bgcolor(id, 1, 0, color.red)\ntable.cell_set_text_color(id, 1, 0, color.blue)\ntable.cell_set_width(id, 1, 0, 25)\ntable.cell_set_height(id, 1, 0, 40)\ntable.cell_set_text_size(id, 1, 0, size.small)\ntable.cell_set_text_halign(id, 1, 0, text.align_left)\ntable.cell_set_text_valign(id, 1, 0, text.align_top)\ntable.cell_set_tooltip(id, 1, 0, \"updated\")\ntable.merge_cells(id, 0, 0, 1, 0)\ntable.set_position(id, position.bottom_right)\ntable.set_bgcolor(id, color.yellow)\ntable.set_frame_color(id, color.black)\ntable.set_frame_width(id, 3)\ntable.set_border_color(id, color.white)\ntable.set_border_width(id, 4)\ntable.clear(id, 0, 0, 1, 1)\ntable.set_position(na, position.top_left)\ntable.set_bgcolor(na, color.red)\ntable.set_frame_color(na, color.blue)\ntable.set_frame_width(na, 2)\ntable.set_border_color(na, color.green)\ntable.set_border_width(na, 5)\ntable.cell_set_text(na, 0, 1, \"noop\")\ntable.cell_set_bgcolor(na, 0, 1, color.red)\ntable.cell_set_text_color(na, 0, 1, color.blue)\ntable.cell_set_width(na, 0, 1, 25)\ntable.cell_set_height(na, 0, 1, 40)\ntable.cell_set_text_size(na, 0, 1, size.small)\ntable.cell_set_text_halign(na, 0, 1, text.align_left)\ntable.cell_set_text_valign(na, 0, 1, text.align_top)\ntable.cell_set_tooltip(na, 0, 1, \"noop\")\ntable.cell(na, 0, 1, \"noop\")\ntable.merge_cells(na, 0, 0, 0, 0)\ntable.clear(na, 0, 0, 0, 0)\ntable.delete(na)\ntable.delete(id)\nplot(close)\n",
+        "id = table.new(position.top_right, 2, 2, bgcolor=color.gray, frame_color=color.black, frame_width=2, border_color=color.white, border_width=1)\ntable.cell(id, 0, 0, \"A\")\ntable.cell(id, column=1, row=0, text=\"B\", bgcolor=color.green, text_color=color.white, tooltip=\"initial\", text_font_family=font.family_monospace)\ntable.cell_set_text(id, 1, 0, \"B2\")\ntable.cell_set_bgcolor(id, 1, 0, color.red)\ntable.cell_set_text_color(id, 1, 0, color.blue)\ntable.cell_set_width(id, 1, 0, 25)\ntable.cell_set_height(id, 1, 0, 40)\ntable.cell_set_text_size(id, 1, 0, size.small)\ntable.cell_set_text_halign(id, 1, 0, text.align_left)\ntable.cell_set_text_valign(id, 1, 0, text.align_top)\ntable.cell_set_tooltip(id, 1, 0, \"updated\")\ntable.cell_set_text_font_family(id, 1, 0, font.family_default)\ntable.merge_cells(id, 0, 0, 1, 0)\ntable.set_position(id, position.bottom_right)\ntable.set_bgcolor(id, color.yellow)\ntable.set_frame_color(id, color.black)\ntable.set_frame_width(id, 3)\ntable.set_border_color(id, color.white)\ntable.set_border_width(id, 4)\ntable.clear(id, 0, 0, 1, 1)\ntable.set_position(na, position.top_left)\ntable.set_bgcolor(na, color.red)\ntable.set_frame_color(na, color.blue)\ntable.set_frame_width(na, 2)\ntable.set_border_color(na, color.green)\ntable.set_border_width(na, 5)\ntable.cell_set_text(na, 0, 1, \"noop\")\ntable.cell_set_bgcolor(na, 0, 1, color.red)\ntable.cell_set_text_color(na, 0, 1, color.blue)\ntable.cell_set_width(na, 0, 1, 25)\ntable.cell_set_height(na, 0, 1, 40)\ntable.cell_set_text_size(na, 0, 1, size.small)\ntable.cell_set_text_halign(na, 0, 1, text.align_left)\ntable.cell_set_text_valign(na, 0, 1, text.align_top)\ntable.cell_set_tooltip(na, 0, 1, \"noop\")\ntable.cell_set_text_font_family(na, 0, 1, font.family_monospace)\ntable.cell(na, 0, 1, \"noop\")\ntable.merge_cells(na, 0, 0, 0, 0)\ntable.clear(na, 0, 0, 0, 0)\ntable.delete(na)\ntable.delete(id)\nplot(close)\n",
     );
 
     assert!(
@@ -940,20 +940,27 @@ fn accepts_minimal_table_new_and_cell() {
             .iter()
             .any(|feature| feature.feature == "table.cell_set_tooltip")
     );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "table.cell_set_text_font_family")
+    );
     assert!(analysis.hir.is_some());
 }
 
 #[test]
 fn rejects_unimplemented_table_methods() {
     let analysis =
-        analyze("table.cell_set_text_font_family(na, 0, 0, font.family_monospace)\nplot(close)\n");
+        analyze("table.cell_set_text_formatting(na, 0, 0, \"text.format_bold\")\nplot(close)\n");
 
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "table.cell_set_text_font_family"),
+            .any(|feature| feature.feature == "table.cell_set_text_formatting"),
         "{:?}",
         analysis.compatibility.unsupported
     );
