@@ -4715,6 +4715,25 @@ fn loss_limit_bracket_while_flat_is_noop_without_pending_state() {
 }
 
 #[test]
+fn loss_profit_bracket_while_flat_is_noop_without_pending_state() {
+    let mut broker = BrokerState::new(100_000.0);
+
+    broker.place_exit_bracket_loss_profit_ticks(
+        "XB".to_owned(),
+        "L".to_owned(),
+        LossProfitBracketSpec {
+            loss_ticks: 10.0,
+            profit_ticks: 12.0,
+            mintick: 0.5,
+        },
+        0,
+    );
+
+    assert_eq!(pending_exit_count(&broker), 0);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn bracket_with_mismatched_entry_is_noop_without_changing_pending_exit() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
