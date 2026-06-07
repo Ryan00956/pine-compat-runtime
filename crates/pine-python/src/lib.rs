@@ -684,6 +684,7 @@ fn tables_to_py(py: Python<'_>, tables: &[pine_runtime::TableOutput]) -> PyResul
         let item = PyDict::new(py);
         item.set_item("id", table.id)?;
         item.set_item("position", value_to_py(py, &table.position)?)?;
+        item.set_item("bgColor", value_to_py(py, &table.bg_color)?)?;
         item.set_item("columns", table.columns)?;
         item.set_item("rows", table.rows)?;
         item.set_item("snapshots", table_snapshots_to_py(py, &table.snapshots)?)?;
@@ -738,7 +739,6 @@ fn alerts_to_py(py: Python<'_>, alerts: &[pine_runtime::AlertEvent]) -> PyResult
     }
     Ok(output.into_any().unbind())
 }
-
 fn values_to_py(py: Python<'_>, values: &[PineValue]) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for value in values {

@@ -576,6 +576,8 @@ fn tables_json(tables: &[TableOutput]) -> String {
         }
         output.push_str(&format!("{{\"id\":{},\"position\":", table.id));
         output.push_str(&value_json(&table.position));
+        output.push_str(",\"bgColor\":");
+        output.push_str(&value_json(&table.bg_color));
         output.push_str(&format!(
             ",\"columns\":{},\"rows\":{},\"snapshots\":[",
             table.columns, table.rows

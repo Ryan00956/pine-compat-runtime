@@ -564,8 +564,10 @@ if bar_index == 2
     table.cell_set_text_halign(id, 1, 0, text.align_left)
     table.cell_set_text_valign(id, 1, 0, text.align_top)
     table.set_position(id, position.bottom_right)
+    table.set_bgcolor(id, color.yellow)
 table.cell(na, 0, 1, "noop")
 table.set_position(na, position.top_left)
+table.set_bgcolor(na, color.red)
 table.cell_set_text(na, 0, 1, "noop")
 table.cell_set_bgcolor(na, 0, 1, color.red)
 table.cell_set_text_color(na, 0, 1, color.blue)
@@ -593,6 +595,7 @@ plot(close)
         table.position,
         PineValue::String("position.bottom_right".to_owned())
     );
+    assert_eq!(table.bg_color, PineValue::Color(0xFFFF00));
     assert_eq!(table.columns, 2);
     assert_eq!(table.rows, 2);
     assert_eq!(table.snapshots.len(), 12);

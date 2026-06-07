@@ -76,6 +76,7 @@ pub struct BoxSnapshot {
 pub struct TableOutput {
     pub id: u32,
     pub position: PineValue,
+    pub bg_color: PineValue,
     pub columns: i64,
     pub rows: i64,
     pub snapshots: Vec<TableSnapshot>,

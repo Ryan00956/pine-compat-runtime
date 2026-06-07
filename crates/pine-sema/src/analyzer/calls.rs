@@ -207,6 +207,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "table.new"
             | "table.cell"
             | "table.set_position"
+            | "table.set_bgcolor"
             | "table.cell_set_text"
             | "table.cell_set_bgcolor"
             | "table.cell_set_text_color"
