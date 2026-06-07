@@ -440,6 +440,17 @@ fn run_script_csv_returns_label_new_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_label_mutation_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/label_mutation.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("label mutation fixture should run");
+
+    assert_snapshot("runtime_label_mutation.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),

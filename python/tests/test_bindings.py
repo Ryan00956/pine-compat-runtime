@@ -377,6 +377,18 @@ def test_run_script_returns_label_new_fixture_contract():
     ]
 
 
+def test_run_script_returns_label_mutation_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/label_mutation.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_label_mutation.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_math_edge_cases_as_none():
     source = (ROOT / "tests/fixtures/runtime/math_edge_cases.pine").read_text()
     result = pine_compat.run_script(source, BARS)
