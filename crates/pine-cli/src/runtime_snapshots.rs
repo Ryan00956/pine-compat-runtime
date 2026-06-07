@@ -242,6 +242,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_exit_bracket_while_flat_noop.pine",
     ),
     (
+        "runtime_strategy_exit_trailing_while_flat_noop.json",
+        "tests/fixtures/runtime/strategy_exit_trailing_while_flat_noop.pine",
+    ),
+    (
         "runtime_strategy_exit_limit.json",
         "tests/fixtures/runtime/strategy_exit_limit.pine",
     ),
