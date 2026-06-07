@@ -55,6 +55,7 @@ Branch and loop interactions:
 - Loops inside `if` branches are covered.
 - `switch` inside loops is covered.
 - Loops inside user-defined function block bodies are covered.
+- Stateful TA callsites inside loops nested in UDF block bodies are covered.
 
 ## Current Rejections
 
@@ -80,6 +81,7 @@ Runtime fixtures:
 - `tests/fixtures/runtime/for_edges.pine`
 - `tests/fixtures/runtime/for_stateful.pine`
 - `tests/fixtures/runtime/local_scope.pine`
+- `tests/fixtures/runtime/loop_state_interactions.pine`
 - `tests/fixtures/runtime/switch.pine`
 - `tests/fixtures/runtime/while.pine`
 - `tests/fixtures/runtime/while_edges.pine`
@@ -103,6 +105,9 @@ Completed:
   declarations, local `var`, stateful callsites, and the runtime guard.
 - Covered branch interactions across `if`, `switch`, loops, and UDF block
   bodies.
+- Added a representative loop/state fixture covering `if`, `switch`, `for`,
+  `while`, `break`/`continue`, UDF block bodies, and stateful TA callsites in
+  one runtime path.
 - Preserved diagnostics for unsupported loop and switch forms.
 - Documented the supported compatibility boundary in
   `docs/LANGUAGE_SCOPE.md`, `docs/EXECUTION_SEMANTICS.md`, and

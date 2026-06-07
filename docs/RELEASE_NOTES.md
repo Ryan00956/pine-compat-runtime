@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added a representative loop/state interaction fixture covering `if`,
+  `switch`, `for`, `while`, `break`/`continue`, UDF block bodies, and stateful
+  TA callsites in one runtime snapshot without widening accepted syntax.
 - Added fixture-backed `array.new_table()` and table-id array support for the
   existing generic array operations, including `array.from` inference and
   shallow `array.copy`. String conversion, `array.join`, `varip` table arrays,
