@@ -237,6 +237,37 @@ fn run_script_csv_returns_plotcandle_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_color_outputs_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/color_outputs.pine"),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+    )
+    .expect("color outputs fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(parsed["plots"][0]["values"], serde_json::json!([1, 2, 3]));
+    assert_eq!(
+        parsed["bgColors"],
+        serde_json::json!([
+            {
+                "id": 1,
+                "values": [null, 32768, 32768]
+            }
+        ])
+    );
+    assert_eq!(
+        parsed["barColors"],
+        serde_json::json!([
+            {
+                "id": 2,
+                "values": [null, null, 16711680]
+            }
+        ])
+    );
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
