@@ -506,6 +506,17 @@ fn run_script_csv_returns_label_xloc_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_label_yloc_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/label_yloc.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("label yloc fixture should run");
+
+    assert_snapshot("runtime_label_yloc.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
