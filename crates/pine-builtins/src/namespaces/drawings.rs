@@ -701,6 +701,19 @@ const TABLE_SET_FRAME_COLOR_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TABLE_SET_FRAME_WIDTH_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::TableCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "frame_width",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+];
+
 const TABLE_CELL_SET_TEXT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1317,6 +1330,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "table.set_frame_color",
         phase: BuiltinPhase::Phase1Core,
         params: TABLE_SET_FRAME_COLOR_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "table.set_frame_width",
+        phase: BuiltinPhase::Phase1Core,
+        params: TABLE_SET_FRAME_WIDTH_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

@@ -686,6 +686,7 @@ fn tables_to_py(py: Python<'_>, tables: &[pine_runtime::TableOutput]) -> PyResul
         item.set_item("position", value_to_py(py, &table.position)?)?;
         item.set_item("bgColor", value_to_py(py, &table.bg_color)?)?;
         item.set_item("frameColor", value_to_py(py, &table.frame_color)?)?;
+        item.set_item("frameWidth", value_to_py(py, &table.frame_width)?)?;
         item.set_item("columns", table.columns)?;
         item.set_item("rows", table.rows)?;
         item.set_item("snapshots", table_snapshots_to_py(py, &table.snapshots)?)?;
@@ -752,7 +753,6 @@ fn value_to_py(py: Python<'_>, value: &PineValue) -> PyResult<Py<PyAny>> {
     append_value(py, &output, value)?;
     Ok(output.get_item(0)?.unbind())
 }
-
 fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -> PyResult<()> {
     match value {
         PineValue::Int(value) => output.append(*value),

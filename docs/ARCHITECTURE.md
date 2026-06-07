@@ -419,13 +419,14 @@ cover `left`, `top`,
 `box.get_left`, `box.get_right`, `box.get_top`, and `box.get_bottom` read latest
 existing snapshot values.
 Table entries
-carry `position`, `bgColor`, `frameColor`, `columns`, `rows`, and sparse cell
-snapshots. Each table cell snapshot stores `column`, `row`, `text`, `bgColor`,
-`textColor`, `width`, `height`, `textSize`, `textHalign`, and `textValign`,
-avoiding host-specific table layout assumptions; `table.set_position` updates
-the table's final position, `table.set_bgcolor` updates the table's final
-background color, `table.set_frame_color` updates the table's final frame
-color, while `table.cell_set_text`,
+carry `position`, `bgColor`, `frameColor`, `frameWidth`, `columns`, `rows`, and
+sparse cell snapshots. Each table cell snapshot stores `column`, `row`, `text`,
+`bgColor`, `textColor`, `width`, `height`, `textSize`, `textHalign`, and
+`textValign`, avoiding host-specific table layout assumptions;
+`table.set_position` updates the table's final position, `table.set_bgcolor`
+updates the table's final background color, `table.set_frame_color` updates the
+table's final frame color, `table.set_frame_width` updates the table's final
+frame width, while `table.cell_set_text`,
 `table.cell_set_bgcolor`, `table.cell_set_text_color`, and
 `table.cell_set_width`/`table.cell_set_height`/`table.cell_set_text_size`
 `table.cell_set_text_halign`/`table.cell_set_text_valign` mutate only the stored

@@ -580,6 +580,8 @@ fn tables_json(tables: &[TableOutput]) -> String {
         output.push_str(&value_json(&table.bg_color));
         output.push_str(",\"frameColor\":");
         output.push_str(&value_json(&table.frame_color));
+        output.push_str(",\"frameWidth\":");
+        output.push_str(&value_json(&table.frame_width));
         output.push_str(&format!(
             ",\"columns\":{},\"rows\":{},\"snapshots\":[",
             table.columns, table.rows
