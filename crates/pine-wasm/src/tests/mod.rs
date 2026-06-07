@@ -258,6 +258,23 @@ fn run_script_csv_returns_ta_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_dema_tema_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/dema_tema.pine"),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+    )
+    .expect("DEMA/TEMA fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    let plots = parsed["plots"].as_array().expect("plots");
+    assert_eq!(plots.len(), 3);
+    assert_eq!(plots[0]["values"], serde_json::json!([1, 1.75, 2.75]));
+    assert_eq!(plots[1]["values"], serde_json::json!([1, 1.875, 2.9375]));
+    assert_eq!(plots[2]["values"], serde_json::json!([null, null, null]));
+}
+
+#[test]
 fn run_script_csv_returns_strings_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strings.pine"),
