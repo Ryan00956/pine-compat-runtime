@@ -626,6 +626,20 @@ fn tables_json(tables: &[TableOutput]) -> String {
                     output.push('}');
                 }
                 output.push(']');
+                output.push_str(",\"mergedCells\":[");
+                for (merge_index, merged_cell) in snapshot.merged_cells.iter().enumerate() {
+                    if merge_index > 0 {
+                        output.push(',');
+                    }
+                    output.push_str(&format!(
+                        "{{\"startColumn\":{},\"startRow\":{},\"endColumn\":{},\"endRow\":{}}}",
+                        merged_cell.start_column,
+                        merged_cell.start_row,
+                        merged_cell.end_column,
+                        merged_cell.end_row
+                    ));
+                }
+                output.push(']');
             }
             output.push('}');
         }

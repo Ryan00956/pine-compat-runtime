@@ -118,6 +118,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/table_clear.pine",
     ),
     (
+        "runtime_table_merge_cells.json",
+        "tests/fixtures/runtime/table_merge_cells.pine",
+    ),
+    (
         "runtime_strategy_empty.json",
         "tests/fixtures/runtime/strategy_no_order.pine",
     ),

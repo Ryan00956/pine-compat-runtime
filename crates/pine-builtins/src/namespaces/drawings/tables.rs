@@ -64,6 +64,8 @@ const TABLE_CLEAR_PARAMS: &[BuiltinParam] = &[
     table_param("end_row", Accepts::IntCompatible),
 ];
 
+const TABLE_MERGE_CELLS_PARAMS: &[BuiltinParam] = TABLE_CLEAR_PARAMS;
+
 const TABLE_CELL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -378,6 +380,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "table.clear",
         phase: BuiltinPhase::Phase1Core,
         params: TABLE_CLEAR_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "table.merge_cells",
+        phase: BuiltinPhase::Phase1Core,
+        params: TABLE_MERGE_CELLS_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

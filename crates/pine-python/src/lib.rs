@@ -10,9 +10,11 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PyModule, PySequence};
 mod diagnostics;
+mod tables;
 #[cfg(test)]
 mod tests;
 use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
+use tables::tables_to_py;
 
 #[pyclass(name = "Program", skip_from_py_object)]
 #[derive(Clone)]
@@ -673,61 +675,6 @@ fn box_snapshots_to_py(
     }
     Ok(output.into_any().unbind())
 }
-fn tables_to_py(py: Python<'_>, tables: &[pine_runtime::TableOutput]) -> PyResult<Py<PyAny>> {
-    let output = PyList::empty(py);
-    for table in tables {
-        let item = PyDict::new(py);
-        item.set_item("id", table.id)?;
-        item.set_item("position", value_to_py(py, &table.position)?)?;
-        item.set_item("bgColor", value_to_py(py, &table.bg_color)?)?;
-        item.set_item("frameColor", value_to_py(py, &table.frame_color)?)?;
-        item.set_item("frameWidth", value_to_py(py, &table.frame_width)?)?;
-        item.set_item("borderColor", value_to_py(py, &table.border_color)?)?;
-        item.set_item("borderWidth", value_to_py(py, &table.border_width)?)?;
-        item.set_item("columns", table.columns)?;
-        item.set_item("rows", table.rows)?;
-        item.set_item("snapshots", table_snapshots_to_py(py, &table.snapshots)?)?;
-        output.append(item)?;
-    }
-    Ok(output.into_any().unbind())
-}
-fn table_snapshots_to_py(
-    py: Python<'_>,
-    snapshots: &[pine_runtime::TableSnapshot],
-) -> PyResult<Py<PyAny>> {
-    let output = PyList::empty(py);
-    for snapshot in snapshots {
-        let item = PyDict::new(py);
-        item.set_item("barIndex", snapshot.bar_index)?;
-        item.set_item("exists", snapshot.exists)?;
-        if snapshot.exists {
-            item.set_item("cells", table_cells_to_py(py, &snapshot.cells)?)?;
-        }
-        output.append(item)?;
-    }
-    Ok(output.into_any().unbind())
-}
-fn table_cells_to_py(
-    py: Python<'_>,
-    cells: &[pine_runtime::TableCellSnapshot],
-) -> PyResult<Py<PyAny>> {
-    let output = PyList::empty(py);
-    for cell in cells {
-        let item = PyDict::new(py);
-        item.set_item("column", cell.column)?;
-        item.set_item("row", cell.row)?;
-        item.set_item("text", value_to_py(py, &cell.text)?)?;
-        item.set_item("bgColor", value_to_py(py, &cell.bg_color)?)?;
-        item.set_item("textColor", value_to_py(py, &cell.text_color)?)?;
-        item.set_item("width", value_to_py(py, &cell.width)?)?;
-        item.set_item("height", value_to_py(py, &cell.height)?)?;
-        item.set_item("textSize", value_to_py(py, &cell.text_size)?)?;
-        item.set_item("textHalign", value_to_py(py, &cell.text_halign)?)?;
-        item.set_item("textValign", value_to_py(py, &cell.text_valign)?)?;
-        output.append(item)?;
-    }
-    Ok(output.into_any().unbind())
-}
 fn alerts_to_py(py: Python<'_>, alerts: &[pine_runtime::AlertEvent]) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for alert in alerts {
@@ -748,7 +695,7 @@ fn values_to_py(py: Python<'_>, values: &[PineValue]) -> PyResult<Py<PyAny>> {
     }
     Ok(output.into_any().unbind())
 }
-fn value_to_py(py: Python<'_>, value: &PineValue) -> PyResult<Py<PyAny>> {
+pub(crate) fn value_to_py(py: Python<'_>, value: &PineValue) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     append_value(py, &output, value)?;
     Ok(output.get_item(0)?.unbind())

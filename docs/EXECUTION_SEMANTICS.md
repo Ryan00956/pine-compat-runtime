@@ -633,7 +633,8 @@ mutations with `table.set_position` and
 `table.cell_set_text_color`/`table.cell_set_width`/`table.cell_set_height`/
 `table.cell_set_text_size`/`table.cell_set_text_halign`/
 `table.cell_set_text_valign` mutations of previously populated cells and
-`table.clear` inclusive rectangular cell-content removal snapshots plus
+`table.clear` inclusive rectangular cell-content removal snapshots,
+`table.merge_cells` inclusive merged-cell rectangle snapshots, plus
 `table.delete` deletion snapshots.
 `*.delete(na)`, mutation of `na`, mutation after deletion, and deleting an
 already deleted drawing object are no-ops where deletion exists; invalid
@@ -670,9 +671,14 @@ table's final background-color, frame-color, frame-width, border-color, and
 border-width values.
 `table.delete` appends an `exists: false` table snapshot. `table.clear` removes
 already populated cells in the inclusive rectangular range from `start_column`,
-`start_row` to `end_column`, `end_row`; it preserves the table object and
-table-level style fields. Later table-level or cell mutations of deleted tables
-are no-ops.
+`start_row` to `end_column`, `end_row`; it also removes merged-cell records
+that intersect the cleared range, while preserving the table object and
+table-level style fields. `table.merge_cells` appends inclusive
+`start_column`/`start_row` to `end_column`/`end_row` merge rectangles to the
+host-neutral table snapshot; deleted or `na` table ids are no-ops, invalid
+non-`na` ids are runtime errors, and out-of-bounds, reversed, or overlapping
+merge ranges are runtime errors. Later table-level or cell mutations of deleted
+tables are no-ops.
 `table.set_bgcolor` updates the
 table's final background-color value. `table.set_frame_color` updates the
 table's final frame-color value. `table.set_frame_width` updates the table's

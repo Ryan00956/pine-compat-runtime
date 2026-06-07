@@ -784,6 +784,49 @@ plot(close)
 }
 
 #[test]
+fn collects_table_merge_cell_snapshots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("table merge cells")
+var id = table.new(position.top_right, 4, 3)
+if bar_index == 1
+    table.cell(id, 0, 0, "Header")
+    table.merge_cells(id, 0, 0, 3, 0)
+    table.cell(id, 0, 1, "Body")
+    table.merge_cells(id, 0, 1, 1, 2)
+if bar_index == 2
+    table.clear(id, 0, 1, 1, 2)
+    table.delete(id)
+    table.merge_cells(id, 2, 1, 3, 2)
+table.merge_cells(na, 0, 0, 0, 0)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let table = &result.tables[0];
+
+    assert_eq!(table.snapshots.len(), 7);
+    assert_eq!(table.snapshots[2].merged_cells.len(), 1);
+    assert_eq!(table.snapshots[2].merged_cells[0].start_column, 0);
+    assert_eq!(table.snapshots[2].merged_cells[0].start_row, 0);
+    assert_eq!(table.snapshots[2].merged_cells[0].end_column, 3);
+    assert_eq!(table.snapshots[2].merged_cells[0].end_row, 0);
+    assert_eq!(table.snapshots[4].merged_cells.len(), 2);
+    assert_eq!(table.snapshots[5].merged_cells.len(), 1);
+    assert_eq!(table.snapshots[5].merged_cells[0].start_row, 0);
+    assert!(!table.snapshots[6].exists);
+    assert!(table.snapshots[6].merged_cells.is_empty());
+}
+
+#[test]
 fn rejects_invalid_table_shapes_and_cells() {
     for source_text in [
         r#"indicator("bad table size")
@@ -798,6 +841,17 @@ plot(close)
         r#"indicator("missing table cell")
 id = table.new(position.top_right, 2, 2)
 table.cell_set_text(id, 0, 0, "bad")
+plot(close)
+"#,
+        r#"indicator("bad table merge bounds")
+id = table.new(position.top_right, 2, 2)
+table.merge_cells(id, 0, 0, 2, 1)
+plot(close)
+"#,
+        r#"indicator("bad table merge overlap")
+id = table.new(position.top_right, 3, 3)
+table.merge_cells(id, 0, 0, 1, 1)
+table.merge_cells(id, 1, 1, 2, 2)
 plot(close)
 "#,
     ] {

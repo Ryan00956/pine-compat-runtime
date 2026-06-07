@@ -207,6 +207,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "table.new"
             | "table.delete"
             | "table.clear"
+            | "table.merge_cells"
             | "table.cell"
             | "table.set_position"
             | "table.set_bgcolor"

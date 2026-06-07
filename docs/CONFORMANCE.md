@@ -641,7 +641,7 @@ writes, `table.set_position` final-position mutations,
 `table.set_border_color` final border-color mutations,
 `table.set_border_width` final border-width mutations, `table.delete` deletion
 snapshots, `table.clear` inclusive rectangular cell-content removal snapshots,
-and
+`table.merge_cells` inclusive merged-cell rectangle snapshots, and
 `table.cell_set_text` text mutations plus `table.cell_set_bgcolor` background
 color mutations plus `table.cell_set_text_color` text-color mutations plus
 `table.cell_set_width` width mutations plus `table.cell_set_height` height
@@ -682,9 +682,14 @@ the table's final background-color, frame-color, frame-width, border-color, and
 border-width values.
 `table.delete` appends an `exists: false` table snapshot. `table.clear` removes
 already populated cells in the inclusive rectangular range from `start_column`,
-`start_row` to `end_column`, `end_row`; it preserves the table object and
-table-level style fields. Later table-level and cell mutations of deleted
-tables are no-ops.
+`start_row` to `end_column`, `end_row`; it also removes merged-cell records
+that intersect the cleared range, while preserving the table object and
+table-level style fields. `table.merge_cells` appends inclusive
+`start_column`/`start_row` to `end_column`/`end_row` merge rectangles to the
+host-neutral table snapshot; deleted or `na` table ids are no-ops, invalid
+non-`na` ids are runtime errors, and out-of-bounds, reversed, or overlapping
+merge ranges are runtime errors. Later table-level and cell mutations of
+deleted tables are no-ops.
 `table.set_bgcolor` updates only the
 table's final background-color value. `table.set_frame_color` updates only the
 table's final frame-color value. `table.set_frame_width` updates only the

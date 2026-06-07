@@ -5756,13 +5756,21 @@ def test_run_script_returns_box_outputs():
     ]
 
 
+def table_snapshots_without_empty_merges(tables):
+    for table in tables:
+        for snapshot in table["snapshots"]:
+            if snapshot["exists"]:
+                assert snapshot.pop("mergedCells") == []
+    return tables
+
+
 def test_run_script_returns_table_outputs():
     result = pine_compat.run_script(
         'indicator("tables")\nif bar_index == 1\n    table_id = table.new(position.top_right, 2, 2)\n    table.cell(table_id, 0, 0, "A", bgcolor=color.green, text_color=color.white)\n    table.cell_set_text(table_id, 0, 0, "B")\n    table.cell_set_bgcolor(table_id, 0, 0, color.red)\n    table.cell_set_text_color(table_id, 0, 0, color.blue)\n    table.cell_set_width(table_id, 0, 0, 25)\n    table.cell_set_height(table_id, 0, 0, 40)\n    table.cell_set_text_size(table_id, 0, 0, size.small)\n    table.cell_set_text_halign(table_id, 0, 0, text.align_left)\n    table.cell_set_text_valign(table_id, 0, 0, text.align_top)\n    table.set_position(table_id, position.bottom_right)\n    table.set_bgcolor(table_id, color.yellow)\n    table.set_frame_color(table_id, color.black)\n    table.set_frame_width(table_id, 3)\n    table.set_border_color(table_id, color.white)\n    table.set_border_width(table_id, 4)\nplot(close)\n',
         BARS,
     )
 
-    assert result["tables"] == [
+    assert table_snapshots_without_empty_merges(result["tables"]) == [
         {
             "id": 1,
             "position": "position.bottom_right",
@@ -5952,7 +5960,7 @@ def test_run_script_returns_table_delete_outputs():
         BARS,
     )
 
-    assert result["tables"] == [
+    assert table_snapshots_without_empty_merges(result["tables"]) == [
         {
             "id": 1,
             "position": "position.top_right",
@@ -5995,7 +6003,7 @@ def test_run_script_returns_table_clear_outputs():
         BARS,
     )
 
-    assert result["tables"] == [
+    assert table_snapshots_without_empty_merges(result["tables"]) == [
         {
             "id": 1,
             "position": "position.top_right",
@@ -6077,6 +6085,26 @@ def test_run_script_returns_table_clear_outputs():
                 {"barIndex": 2, "exists": True, "cells": []},
             ],
         }
+    ]
+
+
+def test_run_script_returns_table_merge_cell_outputs():
+    result = pine_compat.run_script(
+        'indicator("table merge")\nvar table_id = table.new(position.top_right, 3, 2)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.merge_cells(table_id, 0, 0, 2, 0)\n    table.cell(table_id, 0, 1, "B")\n    table.merge_cells(table_id, 0, 1, 1, 1)\nif bar_index == 2\n    table.clear(table_id, 0, 1, 1, 1)\ntable.merge_cells(na, 0, 0, 0, 0)\nplot(close)\n',
+        BARS,
+    )
+
+    snapshots = result["tables"][0]["snapshots"]
+    assert snapshots[0]["mergedCells"] == []
+    assert snapshots[2]["mergedCells"] == [
+        {"startColumn": 0, "startRow": 0, "endColumn": 2, "endRow": 0}
+    ]
+    assert snapshots[4]["mergedCells"] == [
+        {"startColumn": 0, "startRow": 0, "endColumn": 2, "endRow": 0},
+        {"startColumn": 0, "startRow": 1, "endColumn": 1, "endRow": 1},
+    ]
+    assert snapshots[5]["mergedCells"] == [
+        {"startColumn": 0, "startRow": 0, "endColumn": 2, "endRow": 0}
     ]
 
 

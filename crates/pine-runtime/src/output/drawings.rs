@@ -91,6 +91,15 @@ pub struct TableSnapshot {
     pub bar_index: usize,
     pub exists: bool,
     pub cells: Vec<TableCellSnapshot>,
+    pub merged_cells: Vec<TableMergedCellSnapshot>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TableMergedCellSnapshot {
+    pub start_column: i64,
+    pub start_row: i64,
+    pub end_column: i64,
+    pub end_row: i64,
 }
 
 #[derive(Debug, Clone, PartialEq)]

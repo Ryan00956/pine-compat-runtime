@@ -75,6 +75,7 @@ impl<'a> HistoricalRuntime<'a> {
             "table.new" => self.eval_table_new(args),
             "table.delete" => self.eval_table_delete(args),
             "table.clear" => self.eval_table_clear(args),
+            "table.merge_cells" => self.eval_table_merge_cells(args),
             "table.cell" => self.eval_table_cell(args),
             "table.set_position" => self.eval_table_set_position(args),
             "table.set_bgcolor" => self.eval_table_set_bgcolor(args),

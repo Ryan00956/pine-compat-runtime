@@ -57,6 +57,7 @@ impl<'a> HistoricalRuntime<'a> {
                 bar_index: self.bars,
                 exists: true,
                 cells: Vec::new(),
+                merged_cells: Vec::new(),
             }],
         });
         Ok(PineValue::Table(id))
@@ -87,6 +88,7 @@ impl<'a> HistoricalRuntime<'a> {
             bar_index: self.bars,
             exists: false,
             cells: Vec::new(),
+            merged_cells: Vec::new(),
         });
         Ok(PineValue::Void)
     }
@@ -104,6 +106,22 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         self.clear_table_cells(id, start_column, start_row, end_column, end_row)?;
+        Ok(PineValue::Void)
+    }
+
+    pub(super) fn eval_table_merge_cells(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let start_column = self.eval_required_table_int_arg(args, 1, "start_column")?;
+        let start_row = self.eval_required_table_int_arg(args, 2, "start_row")?;
+        let end_column = self.eval_required_table_int_arg(args, 3, "end_column")?;
+        let end_row = self.eval_required_table_int_arg(args, 4, "end_row")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        self.merge_table_cells(id, start_column, start_row, end_column, end_row)?;
         Ok(PineValue::Void)
     }
 
@@ -529,6 +547,89 @@ impl<'a> HistoricalRuntime<'a> {
                 || cell.row < start_row
                 || cell.row > end_row
         });
+        next.merged_cells.retain(|merged_cell| {
+            !rectangles_intersect(
+                (start_column, start_row, end_column, end_row),
+                (
+                    merged_cell.start_column,
+                    merged_cell.start_row,
+                    merged_cell.end_column,
+                    merged_cell.end_row,
+                ),
+            )
+        });
+        if next != latest {
+            next.bar_index = self.bars;
+            table.snapshots.push(next);
+        }
+        Ok(())
+    }
+
+    fn merge_table_cells(
+        &mut self,
+        id: u32,
+        start_column: i64,
+        start_row: i64,
+        end_column: i64,
+        end_row: i64,
+    ) -> Result<(), RuntimeError> {
+        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid table id `{id}`"),
+            });
+        };
+        let Some(latest) = table.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("table `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(());
+        }
+        if start_column > end_column || start_row > end_row {
+            return Err(RuntimeError {
+                message: "table merge start coordinate cannot exceed end coordinate".to_owned(),
+            });
+        }
+        if start_column < 0
+            || start_column >= table.columns
+            || end_column < 0
+            || end_column >= table.columns
+            || start_row < 0
+            || start_row >= table.rows
+            || end_row < 0
+            || end_row >= table.rows
+        {
+            return Err(RuntimeError {
+                message: format!(
+                    "table merge coordinate out of bounds `{start_column},{start_row}` to `{end_column},{end_row}`"
+                ),
+            });
+        }
+        if latest.merged_cells.iter().any(|merged_cell| {
+            rectangles_intersect(
+                (start_column, start_row, end_column, end_row),
+                (
+                    merged_cell.start_column,
+                    merged_cell.start_row,
+                    merged_cell.end_column,
+                    merged_cell.end_row,
+                ),
+            )
+        }) {
+            return Err(RuntimeError {
+                message: "table merge range intersects existing merged cells".to_owned(),
+            });
+        }
+        let mut next = latest.clone();
+        next.merged_cells.push(TableMergedCellSnapshot {
+            start_column,
+            start_row,
+            end_column,
+            end_row,
+        });
+        next.merged_cells
+            .sort_by_key(|cell| (cell.start_row, cell.start_column));
         if next != latest {
             next.bar_index = self.bars;
             table.snapshots.push(next);
@@ -601,4 +702,13 @@ impl<'a> HistoricalRuntime<'a> {
         }
         Ok(())
     }
+}
+
+fn rectangles_intersect(left: (i64, i64, i64, i64), right: (i64, i64, i64, i64)) -> bool {
+    let (start_column, start_row, end_column, end_row) = left;
+    let (other_start_column, other_start_row, other_end_column, other_end_row) = right;
+    start_column <= other_end_column
+        && end_column >= other_start_column
+        && start_row <= other_end_row
+        && end_row >= other_start_row
 }

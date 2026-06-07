@@ -20,7 +20,7 @@ pub use error::RuntimeError;
 pub use output::alerts::AlertEvent;
 pub use output::drawings::{
     BoxOutput, BoxSnapshot, LabelOutput, LabelSnapshot, LineOutput, LineSnapshot,
-    TableCellSnapshot, TableOutput, TableSnapshot,
+    TableCellSnapshot, TableMergedCellSnapshot, TableOutput, TableSnapshot,
 };
 pub use output::json::{public_runtime_profiled_result_json, public_runtime_result_json};
 pub use output::model::{
