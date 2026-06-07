@@ -147,6 +147,26 @@ def test_run_script_returns_plotchar_fixture_contract():
     ]
 
 
+def test_run_script_returns_plotshape_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/plotshape.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["diagnostics"] == []
+    assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
+    assert result["plotShapes"] == [
+        {
+            "id": 1,
+            "values": [None, False, True],
+            "styles": [None, "shape.triangleup", "shape.triangleup"],
+            "locations": [None, "location.belowbar", "location.belowbar"],
+            "colors": [None, 32768, 32768],
+            "texts": [None, "Buy", "Buy"],
+            "textColors": [None, 16777215, 16777215],
+            "sizes": [None, "size.small", "size.small"],
+        }
+    ]
+
+
 def test_run_script_returns_math_edge_cases_as_none():
     source = (ROOT / "tests/fixtures/runtime/math_edge_cases.pine").read_text()
     result = pine_compat.run_script(source, BARS)
