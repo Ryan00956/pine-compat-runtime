@@ -632,13 +632,15 @@ and `box.get_bottom` over the latest existing box snapshot, with sparse
 snapshots and a 500-box runtime limit.
 The executable table subset covers
 `table.new` position/dimension creation with optional `bgcolor`,
-`frame_color`, `frame_width`, `border_color`, and `border_width` initialization plus `table.cell` text/background/text-color/width/height/text-size cell
+`frame_color`, `frame_width`, `border_color`, and `border_width` initialization
+plus `table.cell` text/background/text-color/width/height/text-size cell
 writes, `table.set_position` final-position mutations,
 `table.set_bgcolor` final background-color mutations,
 `table.set_frame_color` final frame-color mutations,
 `table.set_frame_width` final frame-width mutations,
 `table.set_border_color` final border-color mutations,
-`table.set_border_width` final border-width mutations, and
+`table.set_border_width` final border-width mutations, `table.delete` deletion
+snapshots, and
 `table.cell_set_text` text mutations plus `table.cell_set_bgcolor` background
 color mutations plus `table.cell_set_text_color` text-color mutations plus
 `table.cell_set_width` width mutations plus `table.cell_set_height` height
@@ -677,6 +679,8 @@ value, with table layout left to hosts. `table.new` optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize only
 the table's final background-color, frame-color, frame-width, border-color, and
 border-width values.
+`table.delete` appends an `exists: false` table snapshot. Later table-level and
+cell mutations of deleted tables are no-ops.
 `table.set_bgcolor` updates only the
 table's final background-color value. `table.set_frame_color` updates only the
 table's final frame-color value. `table.set_frame_width` updates only the

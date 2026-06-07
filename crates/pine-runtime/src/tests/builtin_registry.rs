@@ -301,6 +301,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "table.cell_set_text_size",
     "table.cell_set_text_valign",
     "table.cell_set_width",
+    "table.delete",
     "table.new",
     "table.set_border_color",
     "table.set_border_width",

@@ -73,6 +73,7 @@ impl<'a> HistoricalRuntime<'a> {
             "box.get_left" => self.eval_box_get_left(args),
             "box.get_right" => self.eval_box_get_right(args),
             "table.new" => self.eval_table_new(args),
+            "table.delete" => self.eval_table_delete(args),
             "table.cell" => self.eval_table_cell(args),
             "table.set_position" => self.eval_table_set_position(args),
             "table.set_bgcolor" => self.eval_table_set_bgcolor(args),

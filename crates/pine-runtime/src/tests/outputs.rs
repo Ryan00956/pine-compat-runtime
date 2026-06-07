@@ -611,6 +611,7 @@ plot(close)
     assert_eq!(table.columns, 2);
     assert_eq!(table.rows, 2);
     assert_eq!(table.snapshots.len(), 12);
+    assert!(table.snapshots.iter().all(|snapshot| snapshot.exists));
     assert!(table.snapshots[0].cells.is_empty());
     assert_eq!(table.snapshots[1].cells[0].column, 0);
     assert_eq!(table.snapshots[1].cells[0].row, 0);
@@ -686,6 +687,50 @@ plot(close)
     assert_eq!(result.tables[1].frame_width, PineValue::Int(2));
     assert_eq!(result.tables[1].border_color, PineValue::Color(0xFFFFFF));
     assert_eq!(result.tables[1].border_width, PineValue::Int(1));
+    assert!(result.tables[0].snapshots[0].exists);
+    assert!(result.tables[1].snapshots[0].exists);
+}
+
+#[test]
+fn collects_table_delete_snapshots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("table delete")
+var id = table.new(position.top_right, 2, 2)
+if bar_index == 1
+    table.cell(id, 0, 0, "A")
+    table.delete(id)
+if bar_index == 2
+    table.cell(id, 0, 0, "ignored")
+    table.set_bgcolor(id, color.red)
+    table.delete(id)
+table.delete(na)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let table = &result.tables[0];
+
+    assert_eq!(table.snapshots.len(), 3);
+    assert!(table.snapshots[0].exists);
+    assert_eq!(table.snapshots[0].bar_index, 0);
+    assert!(table.snapshots[1].exists);
+    assert_eq!(
+        table.snapshots[1].cells[0].text,
+        PineValue::String("A".to_owned())
+    );
+    assert!(!table.snapshots[2].exists);
+    assert_eq!(table.snapshots[2].bar_index, 1);
+    assert!(table.snapshots[2].cells.is_empty());
+    assert_eq!(table.bg_color, PineValue::Na);
 }
 
 #[test]

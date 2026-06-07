@@ -55,10 +55,40 @@ impl<'a> HistoricalRuntime<'a> {
             rows,
             snapshots: vec![TableSnapshot {
                 bar_index: self.bars,
+                exists: true,
                 cells: Vec::new(),
             }],
         });
         Ok(PineValue::Table(id))
+    }
+
+    pub(super) fn eval_table_delete(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid table id `{id}`"),
+            });
+        };
+        let Some(latest) = table.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("table `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Void);
+        }
+        table.snapshots.push(TableSnapshot {
+            bar_index: self.bars,
+            exists: false,
+            cells: Vec::new(),
+        });
+        Ok(PineValue::Void)
     }
 
     pub(super) fn eval_table_cell(
@@ -104,6 +134,13 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("invalid table id `{id}`"),
             });
         };
+        if table
+            .snapshots
+            .last()
+            .is_some_and(|snapshot| !snapshot.exists)
+        {
+            return Ok(PineValue::Void);
+        }
         table.position = position;
         Ok(PineValue::Void)
     }
@@ -122,6 +159,13 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("invalid table id `{id}`"),
             });
         };
+        if table
+            .snapshots
+            .last()
+            .is_some_and(|snapshot| !snapshot.exists)
+        {
+            return Ok(PineValue::Void);
+        }
         table.bg_color = bg_color;
         Ok(PineValue::Void)
     }
@@ -140,6 +184,13 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("invalid table id `{id}`"),
             });
         };
+        if table
+            .snapshots
+            .last()
+            .is_some_and(|snapshot| !snapshot.exists)
+        {
+            return Ok(PineValue::Void);
+        }
         table.frame_color = frame_color;
         Ok(PineValue::Void)
     }
@@ -158,6 +209,13 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("invalid table id `{id}`"),
             });
         };
+        if table
+            .snapshots
+            .last()
+            .is_some_and(|snapshot| !snapshot.exists)
+        {
+            return Ok(PineValue::Void);
+        }
         table.frame_width = frame_width;
         Ok(PineValue::Void)
     }
@@ -176,6 +234,13 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("invalid table id `{id}`"),
             });
         };
+        if table
+            .snapshots
+            .last()
+            .is_some_and(|snapshot| !snapshot.exists)
+        {
+            return Ok(PineValue::Void);
+        }
         table.border_color = border_color;
         Ok(PineValue::Void)
     }
@@ -194,6 +259,13 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("invalid table id `{id}`"),
             });
         };
+        if table
+            .snapshots
+            .last()
+            .is_some_and(|snapshot| !snapshot.exists)
+        {
+            return Ok(PineValue::Void);
+        }
         table.border_width = border_width;
         Ok(PineValue::Void)
     }
@@ -409,16 +481,19 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("invalid table id `{id}`"),
             });
         };
-        if column < 0 || column >= table.columns || row < 0 || row >= table.rows {
-            return Err(RuntimeError {
-                message: format!("table cell coordinate out of bounds `{column},{row}`"),
-            });
-        }
         let Some(latest) = table.snapshots.last().cloned() else {
             return Err(RuntimeError {
                 message: format!("table `{id}` has no snapshots"),
             });
         };
+        if !latest.exists {
+            return Ok(());
+        }
+        if column < 0 || column >= table.columns || row < 0 || row >= table.rows {
+            return Err(RuntimeError {
+                message: format!("table cell coordinate out of bounds `{column},{row}`"),
+            });
+        }
         let mut next = latest.clone();
         match next
             .cells

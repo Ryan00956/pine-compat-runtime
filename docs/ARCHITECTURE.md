@@ -420,10 +420,11 @@ cover `left`, `top`,
 existing snapshot values.
 Table entries
 carry `position`, `bgColor`, `frameColor`, `frameWidth`, `borderColor`,
-`borderWidth`, `columns`, `rows`, and sparse cell snapshots. Each table cell
-snapshot stores `column`, `row`, `text`, `bgColor`, `textColor`, `width`,
-`height`, `textSize`, `textHalign`, and `textValign`, avoiding host-specific
-table layout assumptions;
+`borderWidth`, `columns`, `rows`, and sparse cell snapshots. Each table snapshot
+carries `exists`; existing table snapshots store cells whose entries carry
+`column`, `row`, `text`, `bgColor`, `textColor`, `width`, `height`, `textSize`,
+`textHalign`, and `textValign`, avoiding host-specific table layout
+assumptions;
 `table.new` may initialize the final background color, frame color, frame
 width, border color, and border width through its optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` arguments;
@@ -437,7 +438,8 @@ frame width, `table.set_border_color` updates the table's final border color,
 `table.cell_set_width`/`table.cell_set_height`/`table.cell_set_text_size`
 `table.cell_set_text_halign`/`table.cell_set_text_valign` mutate only the stored
 text/background/text color/width/height/text size/text alignment for cells
-already populated by `table.cell`.
+already populated by `table.cell`, and `table.delete` appends a deleted
+snapshot.
 Delete calls append an `exists: false`
 snapshot for families with deletion; deleting `na` or an already deleted
 drawing object is a no-op; ids are not reused. The historical runtime caps

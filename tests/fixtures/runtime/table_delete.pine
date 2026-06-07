@@ -1,0 +1,12 @@
+//@version=5
+indicator("Table delete")
+var table_id = table.new(position.top_right, 2, 2)
+if bar_index == 1
+    table.cell(table_id, 0, 0, "A")
+    table.delete(table_id)
+if bar_index == 2
+    table.cell(table_id, 0, 0, "ignored")
+    table.set_bgcolor(table_id, color.red)
+    table.delete(table_id)
+table.delete(na)
+plot(close)

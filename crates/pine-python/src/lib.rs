@@ -531,7 +531,6 @@ fn plot_candles_to_py(
     }
     Ok(output.into_any().unbind())
 }
-
 fn hlines_to_py(py: Python<'_>, hlines: &[pine_runtime::HLineOutput]) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for hline in hlines {
@@ -542,7 +541,6 @@ fn hlines_to_py(py: Python<'_>, hlines: &[pine_runtime::HLineOutput]) -> PyResul
     }
     Ok(output.into_any().unbind())
 }
-
 fn fills_to_py(py: Python<'_>, fills: &[pine_runtime::FillOutput]) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for fill in fills {
@@ -554,7 +552,6 @@ fn fills_to_py(py: Python<'_>, fills: &[pine_runtime::FillOutput]) -> PyResult<P
     }
     Ok(output.into_any().unbind())
 }
-
 fn labels_to_py(py: Python<'_>, labels: &[pine_runtime::LabelOutput]) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for label in labels {
@@ -702,7 +699,10 @@ fn table_snapshots_to_py(
     for snapshot in snapshots {
         let item = PyDict::new(py);
         item.set_item("barIndex", snapshot.bar_index)?;
-        item.set_item("cells", table_cells_to_py(py, &snapshot.cells)?)?;
+        item.set_item("exists", snapshot.exists)?;
+        if snapshot.exists {
+            item.set_item("cells", table_cells_to_py(py, &snapshot.cells)?)?;
+        }
         output.append(item)?;
     }
     Ok(output.into_any().unbind())

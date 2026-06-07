@@ -89,6 +89,7 @@ pub struct TableOutput {
 #[derive(Debug, Clone, PartialEq)]
 pub struct TableSnapshot {
     pub bar_index: usize,
+    pub exists: bool,
     pub cells: Vec<TableCellSnapshot>,
 }
 

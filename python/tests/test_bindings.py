@@ -5776,10 +5776,12 @@ def test_run_script_returns_table_outputs():
             "snapshots": [
                 {
                     "barIndex": 1,
+                    "exists": True,
                     "cells": [],
                 },
                 {
                     "barIndex": 1,
+                    "exists": True,
                     "cells": [
                         {
                             "column": 0,
@@ -5797,6 +5799,7 @@ def test_run_script_returns_table_outputs():
                 },
                 {
                     "barIndex": 1,
+                    "exists": True,
                     "cells": [
                         {
                             "column": 0,
@@ -5814,6 +5817,7 @@ def test_run_script_returns_table_outputs():
                 },
                 {
                     "barIndex": 1,
+                    "exists": True,
                     "cells": [
                         {
                             "column": 0,
@@ -5831,6 +5835,7 @@ def test_run_script_returns_table_outputs():
                 },
                 {
                     "barIndex": 1,
+                    "exists": True,
                     "cells": [
                         {
                             "column": 0,
@@ -5848,6 +5853,7 @@ def test_run_script_returns_table_outputs():
                 },
                 {
                     "barIndex": 1,
+                    "exists": True,
                     "cells": [
                         {
                             "column": 0,
@@ -5865,6 +5871,7 @@ def test_run_script_returns_table_outputs():
                 },
                 {
                     "barIndex": 1,
+                    "exists": True,
                     "cells": [
                         {
                             "column": 0,
@@ -5882,6 +5889,7 @@ def test_run_script_returns_table_outputs():
                 },
                 {
                     "barIndex": 1,
+                    "exists": True,
                     "cells": [
                         {
                             "column": 0,
@@ -5899,6 +5907,7 @@ def test_run_script_returns_table_outputs():
                 },
                 {
                     "barIndex": 1,
+                    "exists": True,
                     "cells": [
                         {
                             "column": 0,
@@ -5916,6 +5925,7 @@ def test_run_script_returns_table_outputs():
                 },
                 {
                     "barIndex": 1,
+                    "exists": True,
                     "cells": [
                         {
                             "column": 0,
@@ -5931,6 +5941,49 @@ def test_run_script_returns_table_outputs():
                         }
                     ],
                 },
+            ],
+        }
+    ]
+
+
+def test_run_script_returns_table_delete_outputs():
+    result = pine_compat.run_script(
+        'indicator("table delete")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.delete(table_id)\nif bar_index == 2\n    table.cell(table_id, 0, 0, "ignored")\n    table.delete(table_id)\ntable.delete(na)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["tables"] == [
+        {
+            "id": 1,
+            "position": "position.top_right",
+            "bgColor": None,
+            "frameColor": None,
+            "frameWidth": None,
+            "borderColor": None,
+            "borderWidth": None,
+            "columns": 1,
+            "rows": 1,
+            "snapshots": [
+                {"barIndex": 0, "exists": True, "cells": []},
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "cells": [
+                        {
+                            "column": 0,
+                            "row": 0,
+                            "text": "A",
+                            "bgColor": None,
+                            "textColor": None,
+                            "width": None,
+                            "height": None,
+                            "textSize": None,
+                            "textHalign": None,
+                            "textValign": None,
+                        }
+                    ],
+                },
+                {"barIndex": 1, "exists": False},
             ],
         }
     ]

@@ -595,35 +595,39 @@ fn tables_json(tables: &[TableOutput]) -> String {
                 output.push(',');
             }
             output.push_str(&format!(
-                "{{\"barIndex\":{},\"cells\":[",
-                snapshot.bar_index
+                "{{\"barIndex\":{},\"exists\":{}",
+                snapshot.bar_index, snapshot.exists
             ));
-            for (cell_index, cell) in snapshot.cells.iter().enumerate() {
-                if cell_index > 0 {
-                    output.push(',');
+            if snapshot.exists {
+                output.push_str(",\"cells\":[");
+                for (cell_index, cell) in snapshot.cells.iter().enumerate() {
+                    if cell_index > 0 {
+                        output.push(',');
+                    }
+                    output.push_str(&format!(
+                        "{{\"column\":{},\"row\":{},\"text\":",
+                        cell.column, cell.row
+                    ));
+                    output.push_str(&value_json(&cell.text));
+                    output.push_str(",\"bgColor\":");
+                    output.push_str(&value_json(&cell.bg_color));
+                    output.push_str(",\"textColor\":");
+                    output.push_str(&value_json(&cell.text_color));
+                    output.push_str(",\"width\":");
+                    output.push_str(&value_json(&cell.width));
+                    output.push_str(",\"height\":");
+                    output.push_str(&value_json(&cell.height));
+                    output.push_str(",\"textSize\":");
+                    output.push_str(&value_json(&cell.text_size));
+                    output.push_str(",\"textHalign\":");
+                    output.push_str(&value_json(&cell.text_halign));
+                    output.push_str(",\"textValign\":");
+                    output.push_str(&value_json(&cell.text_valign));
+                    output.push('}');
                 }
-                output.push_str(&format!(
-                    "{{\"column\":{},\"row\":{},\"text\":",
-                    cell.column, cell.row
-                ));
-                output.push_str(&value_json(&cell.text));
-                output.push_str(",\"bgColor\":");
-                output.push_str(&value_json(&cell.bg_color));
-                output.push_str(",\"textColor\":");
-                output.push_str(&value_json(&cell.text_color));
-                output.push_str(",\"width\":");
-                output.push_str(&value_json(&cell.width));
-                output.push_str(",\"height\":");
-                output.push_str(&value_json(&cell.height));
-                output.push_str(",\"textSize\":");
-                output.push_str(&value_json(&cell.text_size));
-                output.push_str(",\"textHalign\":");
-                output.push_str(&value_json(&cell.text_halign));
-                output.push_str(",\"textValign\":");
-                output.push_str(&value_json(&cell.text_valign));
-                output.push('}');
+                output.push(']');
             }
-            output.push_str("]}");
+            output.push('}');
         }
         output.push_str("]}");
     }

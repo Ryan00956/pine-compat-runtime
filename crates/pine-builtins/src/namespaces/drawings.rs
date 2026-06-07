@@ -654,6 +654,12 @@ const TABLE_NEW_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const TABLE_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::TableCompatible,
+    optional: false,
+}];
+
 const TABLE_CELL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1354,6 +1360,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TABLE_NEW_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_TABLE),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "table.delete",
+        phase: BuiltinPhase::Phase1Core,
+        params: TABLE_DELETE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
     BuiltinSignature {
