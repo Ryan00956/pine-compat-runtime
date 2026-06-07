@@ -31,6 +31,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "runtime_global_series.json",
         "tests/fixtures/runtime/global_series.pine",
     ),
+    (
+        "runtime_barstate.json",
+        "tests/fixtures/runtime/barstate.pine",
+    ),
     ("runtime_casts.json", "tests/fixtures/runtime/casts.pine"),
     (
         "runtime_strings.json",
