@@ -1878,6 +1878,17 @@ fn runs_strategy_entry_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_entry_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy entry fixture should run");
+
+    assert_snapshot("runtime_strategy_entry.json", &output);
+}
+
+#[test]
 fn runs_strategy_entry_limit_from_csv_to_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_entry_limit.pine"),

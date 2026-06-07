@@ -1132,6 +1132,20 @@ def test_run_script_returns_strategy_entry_contract():
     ]
 
 
+def test_run_script_returns_strategy_entry_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_entry.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_entry.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_entry_limit_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_entry_limit.pine").read_text()
     result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
