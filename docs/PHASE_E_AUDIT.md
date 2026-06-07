@@ -57,7 +57,8 @@ truth for supported drawing claims.
 - `line.new` is partial: bar-index endpoint x values, numeric endpoint y
   values, optional initialization for existing extend/color/style/width snapshot
   fields, selected endpoint/color/width/style/extend mutators, and
-  `line.delete`.
+  `line.delete`. `line.get_x1`, `line.get_y1`, `line.get_x2`, and
+  `line.get_y2` read the latest existing line snapshot.
 - `box.new` is partial: bar-index left/right coordinates, numeric top/bottom
   coordinates, optional initialization for existing background/border/extend/
   text/text-color/text-size/alignment/wrap/font-family/text-formatting snapshot

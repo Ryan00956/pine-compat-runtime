@@ -448,6 +448,12 @@ const LINE_COPY_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const LINE_GET_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::LineCompatible,
+    optional: false,
+}];
+
 const BOX_NEW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "left",
@@ -994,6 +1000,34 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: LINE_COPY_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_LINE),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.get_x1",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_GET_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.get_y1",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_GET_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.get_x2",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_GET_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.get_y2",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_GET_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {

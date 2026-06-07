@@ -666,7 +666,10 @@ layout remain host responsibilities. `label.copy` clones the latest existing lab
 snapshot into a new deterministic id, returns `na` for `na` or deleted labels,
 and shares the label object limit. `line.copy` clones the latest existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
-and shares the line object limit. `box.copy` clones the latest existing box
+and shares the line object limit. `line.get_x1`, `line.get_y1`,
+`line.get_x2`, and `line.get_y2` read the corresponding value from the latest
+existing line snapshot and return `na` for `na` or deleted lines.
+`line.get_price` remains unsupported. `box.copy` clones the latest existing box
 snapshot into a new deterministic id, returns `na` for `na` or deleted boxes,
 and shares the box object limit. `box.set_extend` records the selected
 horizontal extend constant in the host-neutral snapshot; visual extension

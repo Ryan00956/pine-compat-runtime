@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.get_x1()`, `line.get_y1()`, `line.get_x2()`, and
+  `line.get_y2()` support over the latest existing line snapshot. `na` and
+  deleted lines return `na`; `line.get_price()` remains unsupported.
 - Added `line.new()` initialization support for existing host-neutral line
   snapshot style fields: extend, color, style, and width. The supported
   creation subset remains the x1/y1/x2/y2 overload with `xloc` omitted or

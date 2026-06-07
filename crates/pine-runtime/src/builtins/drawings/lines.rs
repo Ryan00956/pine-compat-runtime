@@ -229,6 +229,34 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Line(copied_id))
     }
 
+    pub(super) fn eval_line_get_x1(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_line_get(args, "line.get_x1", |snapshot| snapshot.x1.clone())
+    }
+
+    pub(super) fn eval_line_get_y1(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_line_get(args, "line.get_y1", |snapshot| snapshot.y1.clone())
+    }
+
+    pub(super) fn eval_line_get_x2(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_line_get(args, "line.get_x2", |snapshot| snapshot.x2.clone())
+    }
+
+    pub(super) fn eval_line_get_y2(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_line_get(args, "line.get_y2", |snapshot| snapshot.y2.clone())
+    }
+
     fn eval_line_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = line_call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
@@ -278,6 +306,51 @@ impl<'a> HistoricalRuntime<'a> {
         match line_call_arg_expr(args, index, name) {
             Some(expr) => self.eval_expr(expr),
             None => Ok(default),
+        }
+    }
+
+    fn eval_line_get(
+        &mut self,
+        args: &[HirCallArg],
+        function_name: &str,
+        get_value: impl FnOnce(&LineSnapshot) -> PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_line_get_id_arg(args, function_name)?;
+        let Some(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(line) = self.lines.iter().find(|line| line.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid line id `{id}`"),
+            });
+        };
+        let Some(latest) = line.snapshots.last() else {
+            return Err(RuntimeError {
+                message: format!("line `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Na);
+        }
+        Ok(get_value(latest))
+    }
+
+    fn eval_line_get_id_arg(
+        &mut self,
+        args: &[HirCallArg],
+        function_name: &str,
+    ) -> Result<Option<u32>, RuntimeError> {
+        let Some(id_arg) = line_call_arg_expr(args, 0, "id") else {
+            return Err(RuntimeError {
+                message: format!("{function_name} missing id argument"),
+            });
+        };
+        match self.eval_expr(id_arg)? {
+            PineValue::Line(id) => Ok(Some(id)),
+            PineValue::Na => Ok(None),
+            value => Err(RuntimeError {
+                message: format!("{function_name} expected line id, got {value:?}"),
+            }),
         }
     }
 
