@@ -625,7 +625,7 @@ selected background/border fields, snapshot cloning, non-reused ids, and a
 500-object runtime limit. Tables use deterministic ids, fixed positive
 dimensions, and sparse cell snapshots for text/background/text-color/width/height/text-size writes
 and final table-level mutations with `table.set_position` and
-`table.set_bgcolor`, plus
+`table.set_bgcolor`/`table.set_frame_color`, plus
 `table.cell_set_text`/`table.cell_set_bgcolor`/
 `table.cell_set_text_color`/`table.cell_set_width`/`table.cell_set_height`/
 `table.cell_set_text_size`/`table.cell_set_text_halign`/
@@ -660,8 +660,9 @@ responsibilities. `box.get_left`, `box.get_right`, `box.get_top`, and
 `box.get_bottom` read the corresponding value from the latest existing box
 snapshot and return `na` for `na` or deleted boxes. `table.set_position`
 updates the table's final position value. `table.set_bgcolor` updates the
-table's final background-color value; visual anchoring and layout remain host
-responsibilities. `table.cell_set_text`
+table's final background-color value. `table.set_frame_color` updates the
+table's final frame-color value; visual anchoring, frame width, and layout
+remain host responsibilities. `table.cell_set_text`
 updates the target previously populated cell text in the host-neutral table
 snapshot while preserving the cell's other supported fields.
 `table.cell_set_bgcolor` updates the target previously populated cell

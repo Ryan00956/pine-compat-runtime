@@ -685,6 +685,7 @@ fn tables_to_py(py: Python<'_>, tables: &[pine_runtime::TableOutput]) -> PyResul
         item.set_item("id", table.id)?;
         item.set_item("position", value_to_py(py, &table.position)?)?;
         item.set_item("bgColor", value_to_py(py, &table.bg_color)?)?;
+        item.set_item("frameColor", value_to_py(py, &table.frame_color)?)?;
         item.set_item("columns", table.columns)?;
         item.set_item("rows", table.rows)?;
         item.set_item("snapshots", table_snapshots_to_py(py, &table.snapshots)?)?;
@@ -746,7 +747,6 @@ fn values_to_py(py: Python<'_>, values: &[PineValue]) -> PyResult<Py<PyAny>> {
     }
     Ok(output.into_any().unbind())
 }
-
 fn value_to_py(py: Python<'_>, value: &PineValue) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     append_value(py, &output, value)?;

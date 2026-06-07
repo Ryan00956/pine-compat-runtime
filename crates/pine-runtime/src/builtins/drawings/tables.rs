@@ -42,6 +42,7 @@ impl<'a> HistoricalRuntime<'a> {
             id,
             position,
             bg_color: PineValue::Na,
+            frame_color: PineValue::Na,
             columns,
             rows,
             snapshots: vec![TableSnapshot {
@@ -114,6 +115,24 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         table.bg_color = bg_color;
+        Ok(PineValue::Void)
+    }
+
+    pub(super) fn eval_table_set_frame_color(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let frame_color = self.eval_required_table_arg(args, 1, "frame_color")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid table id `{id}`"),
+            });
+        };
+        table.frame_color = frame_color;
         Ok(PineValue::Void)
     }
 
