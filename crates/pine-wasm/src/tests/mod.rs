@@ -303,6 +303,23 @@ fn run_script_csv_returns_barstate_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_session_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/session.pine"),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+    )
+    .expect("session fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    let plots = parsed["plots"].as_array().expect("plots");
+    assert_eq!(plots.len(), 3);
+    assert_eq!(plots[0]["values"], serde_json::json!([1, 1]));
+    assert_eq!(plots[1]["values"], serde_json::json!([0, 0]));
+    assert_eq!(plots[2]["values"], serde_json::json!([0, 0]));
+}
+
+#[test]
 fn run_script_csv_rejects_non_finite_ohlcv_values() {
     for (column, row) in [
         ("open", "0,NaN,1,1,1,1"),
