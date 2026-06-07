@@ -141,6 +141,35 @@ fn run_script_csv_returns_strings_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_colors_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/colors.pine"),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+    )
+    .expect("colors fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(parsed["bgColors"].as_array().expect("bgColors").len(), 1);
+    assert_eq!(
+        parsed["bgColors"][0]["values"],
+        serde_json::json!([4288217216u64, 4288217216u64])
+    );
+    let plots = parsed["plots"].as_array().expect("plots");
+    assert_eq!(plots.len(), 5);
+    let expected = [
+        serde_json::json!([1, 2]),
+        serde_json::json!([1, 1]),
+        serde_json::json!([458, 458]),
+        serde_json::json!([458, 458]),
+        serde_json::json!([255, 192]),
+    ];
+    for (plot, values) in plots.iter().zip(expected) {
+        assert_eq!(plot["values"], values);
+    }
+}
+
+#[test]
 fn run_script_csv_returns_timeframe_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/timeframe.pine"),

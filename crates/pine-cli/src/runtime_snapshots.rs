@@ -27,6 +27,7 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "runtime_color_outputs.json",
         "tests/fixtures/runtime/color_outputs.pine",
     ),
+    ("runtime_colors.json", "tests/fixtures/runtime/colors.pine"),
     (
         "runtime_global_series.json",
         "tests/fixtures/runtime/global_series.pine",
