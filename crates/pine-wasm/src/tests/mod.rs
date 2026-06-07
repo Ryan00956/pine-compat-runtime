@@ -187,6 +187,21 @@ fn run_script_csv_returns_computed_lengths_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_conditional_ta_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/conditional_ta.pine"),
+        "time,open,high,low,close,volume\n0,1,2,1,2,1\n1,2,4,2,4,1\n2,5,5,3,3,1\n3,3,6,3,6,1\n",
+    )
+    .expect("conditional TA fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    let plots = parsed["plots"].as_array().expect("plots");
+    assert_eq!(plots.len(), 1);
+    assert_eq!(plots[0]["values"], serde_json::json!([null, 3, 3, 5]));
+}
+
+#[test]
 fn run_script_csv_returns_strings_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strings.pine"),
