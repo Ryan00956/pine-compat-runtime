@@ -74,7 +74,10 @@ Realtime fixtures:
 Semantic fixtures:
 
 - `tests/fixtures/sema/unsupported_alert.pine`
+- `tests/fixtures/sema/unsupported_alert_dynamic_frequency.pine`
+- `tests/fixtures/sema/unsupported_alert_unknown_frequency.pine`
 - `tests/fixtures/sema/unsupported_alert_placeholder.pine`
+- `tests/fixtures/sema/unsupported_alertcondition_placeholder.pine`
 - `tests/fixtures/sema/unsupported_alert_function_side_effect.pine`
 - `tests/fixtures/sema/unsupported_imperative_alert_function_side_effect.pine`
 
@@ -172,7 +175,8 @@ focused.
 - Realtime alert policy is documented and fixture-backed.
 - Unsupported message, frequency, placeholder, UDF, requested-context, and
   strategy-alert variants have stable diagnostics or explicit maintenance
-  tails.
+  tails. Frequency diagnostics include literal, dynamic, and unknown
+  const-string fixture coverage.
 - CLI, Python, and WASM public outputs include the same alert keys and runtime
   schema version.
 - Matrix and snapshot tests catch accidental alert compatibility widening.

@@ -1231,9 +1231,36 @@ fn reports_unsupported_alert_fixture() {
 }
 
 #[test]
+fn reports_unsupported_alert_dynamic_frequency_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_alert_dynamic_frequency.pine",
+        "alert_frequency",
+        "alert.freq_all, alert.freq_once_per_bar, and alert.freq_once_per_bar_close",
+    );
+}
+
+#[test]
+fn reports_unsupported_alert_unknown_frequency_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_alert_unknown_frequency.pine",
+        "alert_frequency",
+        "alert.freq_all, alert.freq_once_per_bar, and alert.freq_once_per_bar_close",
+    );
+}
+
+#[test]
 fn reports_unsupported_alert_placeholder_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_alert_placeholder.pine",
+        "alert_placeholders",
+        "placeholder interpolation",
+    );
+}
+
+#[test]
+fn reports_unsupported_alertcondition_placeholder_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_alertcondition_placeholder.pine",
         "alert_placeholders",
         "placeholder interpolation",
     );

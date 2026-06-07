@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported alert dynamic frequency")
+freq = input.string("alert.freq_all", "Frequency")
+alert("x", freq=freq)

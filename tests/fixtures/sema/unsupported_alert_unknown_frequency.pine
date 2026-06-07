@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported alert unknown frequency")
+alert("x", freq=alert.freq_unknown)

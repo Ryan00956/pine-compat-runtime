@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported alertcondition placeholder")
+alertcondition(close > open, "Cross", "{{close}}")

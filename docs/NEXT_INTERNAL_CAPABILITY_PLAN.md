@@ -186,10 +186,13 @@ Closed slice:
 - The local const-string alert frequency subset is fixture-backed for
   `alert.freq_once_per_bar`, `alert.freq_all`, and
   `alert.freq_once_per_bar_close`.
+- Alert diagnostic fixtures cover dynamic frequency expressions, unknown
+  const-string frequency values, and alertcondition placeholder rejection.
 
 Good next slices:
 
-- Additional alert argument validation and diagnostics.
+- Additional alert argument validation and diagnostics beyond the current
+  message/title/frequency boundary.
 - More branch, loop, and realtime rollback fixtures.
 - Better parity tests for alert output through CLI, Python, and WASM.
 
