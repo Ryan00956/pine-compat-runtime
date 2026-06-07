@@ -666,7 +666,7 @@ fn collects_table_new_bgcolor_option() {
         "test.pine",
         r#"indicator("table new options")
 first = table.new(position.top_right, 2, 2)
-second = table.new(position.bottom_left, 1, 1, bgcolor=color.yellow)
+second = table.new(position.bottom_left, 1, 1, bgcolor=color.yellow, frame_color=color.black)
 plot(close)
 "#,
     );
@@ -682,7 +682,7 @@ plot(close)
     assert_eq!(result.tables.len(), 2);
     assert_eq!(result.tables[0].bg_color, PineValue::Na);
     assert_eq!(result.tables[1].bg_color, PineValue::Color(0xFFFF00));
-    assert_eq!(result.tables[1].frame_color, PineValue::Na);
+    assert_eq!(result.tables[1].frame_color, PineValue::Color(0x000000));
     assert_eq!(result.tables[1].frame_width, PineValue::Na);
     assert_eq!(result.tables[1].border_color, PineValue::Na);
     assert_eq!(result.tables[1].border_width, PineValue::Na);

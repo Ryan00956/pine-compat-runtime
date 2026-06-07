@@ -424,9 +424,9 @@ carry `position`, `bgColor`, `frameColor`, `frameWidth`, `borderColor`,
 snapshot stores `column`, `row`, `text`, `bgColor`, `textColor`, `width`,
 `height`, `textSize`, `textHalign`, and `textValign`, avoiding host-specific
 table layout assumptions;
-`table.new` may initialize the final background color through its optional
-`bgcolor` argument, while other optional table-level styling initializers remain
-unsupported;
+`table.new` may initialize the final background and frame colors through its
+optional `bgcolor` and `frame_color` arguments, while other optional
+table-level styling initializers remain unsupported;
 `table.set_position` updates the table's final position, `table.set_bgcolor`
 updates the table's final background color, `table.set_frame_color` updates the
 table's final frame color, `table.set_frame_width` updates the table's final
