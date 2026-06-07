@@ -69,6 +69,7 @@ Realtime fixtures:
 - `tests/fixtures/realtime/alertcondition_rollback.pine`
 - `tests/fixtures/realtime/alert_rollback.pine`
 - `tests/fixtures/realtime/alert_policy.pine`
+- `tests/fixtures/realtime/alert_frequency_rollback.pine`
 - `tests/fixtures/realtime/alert_frequency_close.pine`
 
 Semantic fixtures:
@@ -173,6 +174,9 @@ focused.
 - `alert()` support has semantic, runtime, incremental, realtime, matrix, and
   public-output coverage for its claimed subset.
 - Realtime alert policy is documented and fixture-backed.
+- Realtime alert-frequency rollback covers default once-per-bar suppression,
+  `alert.freq_all` repeated-call emission, abandoned forming event removal, and
+  confirmed/historical parity.
 - Unsupported message, frequency, placeholder, UDF, requested-context, and
   strategy-alert variants have stable diagnostics or explicit maintenance
   tails. Frequency diagnostics include literal, dynamic, and unknown

@@ -1,0 +1,8 @@
+//@version=5
+indicator("Alert frequency rollback")
+
+if close > 1
+    for i = 0 to 1
+        alert("Default once")
+    for i = 0 to 1
+        alert("All calls", alert.freq_all)

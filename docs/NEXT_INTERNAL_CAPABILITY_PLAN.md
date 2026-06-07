@@ -188,12 +188,16 @@ Closed slice:
   `alert.freq_once_per_bar_close`.
 - Alert diagnostic fixtures cover dynamic frequency expressions, unknown
   const-string frequency values, and alertcondition placeholder rejection.
+- Realtime alert-frequency rollback fixtures cover default once-per-bar
+  suppression and `alert.freq_all` repeated-call emission across forming and
+  confirmed updates.
 
 Good next slices:
 
 - Additional alert argument validation and diagnostics beyond the current
   message/title/frequency boundary.
-- More branch, loop, and realtime rollback fixtures.
+- More branch, loop, and realtime rollback fixtures beyond the current alert
+  policy and frequency rollback coverage.
 - Better parity tests for alert output through CLI, Python, and WASM.
 
 Keep out of scope until separately designed:

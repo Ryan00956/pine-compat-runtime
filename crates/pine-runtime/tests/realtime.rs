@@ -196,6 +196,57 @@ fn alert_frequency_close_fixture_only_emits_on_confirmed_updates() {
 }
 
 #[test]
+fn alert_frequency_rollback_fixture_recomputes_once_and_all_events() {
+    let fixture = "tests/fixtures/realtime/alert_frequency_rollback.pine";
+    let mut runtime = runtime_for_fixture(fixture);
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_alerts(&result.alerts, &[]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("forming update should expose current frequency-filtered alerts");
+    assert_alerts(
+        &result.alerts,
+        &[
+            (1, "alert", "Default once"),
+            (1, "alert", "All calls"),
+            (1, "alert", "All calls"),
+        ],
+    );
+    assert_alerts(&runtime.confirmed_result().alerts, &[]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(0.0)))
+        .expect("second forming update should drop abandoned frequency alerts");
+    assert_alerts(&result.alerts, &[]);
+    assert_alerts(&runtime.confirmed_result().alerts, &[]);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit frequency-filtered alerts");
+    assert_alerts(
+        &result.alerts,
+        &[
+            (1, "alert", "Default once"),
+            (1, "alert", "All calls"),
+            (1, "alert", "All calls"),
+        ],
+    );
+    assert_eq!(runtime.confirmed_result().alerts, result.alerts);
+
+    let hir = hir_for_fixture(fixture);
+    let historical = run_historical(&hir, &[bar(1.0), bar(4.0)])
+        .expect("equivalent historical execution should run");
+    assert_eq!(
+        alert_summaries(&result.alerts),
+        alert_summaries(&historical.alerts)
+    );
+}
+
+#[test]
 fn var_rollback_fixture_restores_confirmed_state_between_forming_updates() {
     let mut runtime = runtime_for_fixture("tests/fixtures/realtime/var_rollback.pine");
 
