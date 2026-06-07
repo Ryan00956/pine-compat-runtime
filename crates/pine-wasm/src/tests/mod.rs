@@ -682,6 +682,17 @@ fn run_script_csv_returns_table_cell_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_table_delete_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/table_delete.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("table delete fixture should run");
+
+    assert_snapshot("runtime_table_delete.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
