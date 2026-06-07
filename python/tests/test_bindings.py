@@ -206,6 +206,15 @@ def test_run_script_returns_conditional_ta_fixture_contract():
     assert result["plots"][0]["values"] == [None, 3.0, 3.0, 5.0]
 
 
+def test_run_script_returns_udf_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/udf.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["diagnostics"] == []
+    assert len(result["plots"]) == 1
+    assert result["plots"][0]["values"] == [None, 4.5, 6.5]
+
+
 def test_run_script_returns_strings_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strings.pine").read_text()
     result = pine_compat.run_script(source, BARS)
