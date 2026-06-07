@@ -341,6 +341,65 @@ fn run_script_csv_returns_alertcondition_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_alert_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/alert.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("alert fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(
+        parsed["alerts"],
+        serde_json::json!([
+            {
+                "id": 1,
+                "barIndex": 0,
+                "time": 1,
+                "message": "Every bar",
+                "source": "alert"
+            },
+            {
+                "id": 1,
+                "barIndex": 1,
+                "time": 2,
+                "message": "Every bar",
+                "source": "alert"
+            },
+            {
+                "id": 2,
+                "barIndex": 1,
+                "time": 2,
+                "message": "Branch alert",
+                "source": "alert"
+            },
+            {
+                "id": 1,
+                "barIndex": 2,
+                "time": 3,
+                "message": "Every bar",
+                "source": "alert"
+            },
+            {
+                "id": 3,
+                "barIndex": 2,
+                "time": 3,
+                "message": "Loop alert",
+                "source": "alert"
+            },
+            {
+                "id": 1,
+                "barIndex": 3,
+                "time": 4,
+                "message": "Every bar",
+                "source": "alert"
+            }
+        ])
+    );
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
