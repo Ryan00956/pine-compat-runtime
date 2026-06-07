@@ -671,7 +671,13 @@ plus `table.cell_set_tooltip` tooltip mutations plus
 populated cells
 with
 deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
-per-table limit. Deleting `na`,
+per-table limit. Supported label, line, box, and table id-first drawing
+functions can also use Pine method syntax, where the object receiver becomes
+the first function argument; for example, `id.set_text("x")` is analyzed and
+lowered as `label.set_text(id, "x")` when `id` is a label. This method syntax
+does not widen the supported method set: unsupported drawing methods,
+chart-point overloads, and unsupported xloc/time variants remain unsupported.
+Deleting `na`,
 mutating `na`, or mutating an already deleted
 drawing object is a no-op where deletion exists; supported label getters return
 `na` for `na` or deleted label ids; invalid non-`na` ids are runtime errors; ids

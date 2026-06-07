@@ -27,9 +27,10 @@ mod prelude {
     };
 
     pub(crate) use crate::analyzer::calls::{
-        array_method_builtin_name, expr_name, is_array_mutation_builtin,
-        is_array_mutation_method_call_name, is_output_or_declaration_builtin,
-        is_ta_vwap_bands_call, method_call_parts, receiver_call_arg,
+        array_method_builtin_name, drawing_method_builtin_name, expr_name,
+        is_array_mutation_builtin, is_array_mutation_method_call_name,
+        is_output_or_declaration_builtin, is_ta_vwap_bands_call, method_call_parts,
+        receiver_call_arg,
     };
     pub(crate) use crate::analyzer::context::{
         Analyzer, FunctionInfo, MAX_FUNCTION_CALL_DEPTH, MAX_SEMA_EXPR_DEPTH, MethodInfo,

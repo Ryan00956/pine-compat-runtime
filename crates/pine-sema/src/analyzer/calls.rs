@@ -139,6 +139,30 @@ pub(crate) fn array_method_builtin_name(method_name: &str) -> Option<&'static st
         _ => None,
     }
 }
+
+pub(crate) fn drawing_method_builtin_name(
+    receiver_kind: ValueKind,
+    method_name: &str,
+) -> Option<String> {
+    let namespace = match receiver_kind {
+        ValueKind::Label => "label",
+        ValueKind::Line => "line",
+        ValueKind::Box => "box",
+        ValueKind::Table => "table",
+        _ => return None,
+    };
+    let builtin_name = format!("{namespace}.{method_name}");
+    let signature = pine_builtins::get_phase_1_builtin(&builtin_name)?;
+    let first_param = signature.params.first()?;
+    let accepts_receiver = match receiver_kind {
+        ValueKind::Label => first_param.accepts == Accepts::LabelCompatible,
+        ValueKind::Line => first_param.accepts == Accepts::LineCompatible,
+        ValueKind::Box => first_param.accepts == Accepts::BoxCompatible,
+        ValueKind::Table => first_param.accepts == Accepts::TableCompatible,
+        _ => false,
+    };
+    accepts_receiver.then_some(builtin_name)
+}
 pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
     matches!(
         name,
@@ -388,6 +412,42 @@ impl Analyzer {
                 .unwrap_or(None),
             );
         }
+        if let Some(builtin_name) = drawing_method_builtin_name(receiver_type.kind, method_name) {
+            let signature = pine_builtins::get_phase_1_builtin(&builtin_name)
+                .expect("drawing method helper returned registered builtin");
+            self.check_feature_name(&builtin_name, callee.span);
+
+            if self.function_depth > 0 && is_output_or_declaration_builtin(&builtin_name) {
+                self.unsupported(
+                    "function_side_effect",
+                    "indicator, strategy, input, plot, plotchar, plotshape, plotarrow, plotbar, plotcandle, hline, fill, bgcolor, barcolor, alert, alertcondition, drawing calls, and strategy order calls are not supported inside user-defined functions",
+                    callee.span,
+                );
+            }
+
+            let mut method_args = Vec::with_capacity(args.len() + 1);
+            method_args.push(receiver_arg);
+            method_args.extend(args.iter().cloned());
+            let mut method_arg_types = Vec::with_capacity(arg_types.len() + 1);
+            method_arg_types.push(Some(receiver_type));
+            method_arg_types.extend(arg_types.iter().copied());
+
+            self.validate_call_args(signature, &method_args, &method_arg_types);
+            return MethodResolution::Resolved(self.return_type(signature, &method_arg_types));
+        }
+
+        if matches!(
+            receiver_type.kind,
+            ValueKind::Label | ValueKind::Line | ValueKind::Box | ValueKind::Table
+        ) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_UNKNOWN_METHOD",
+                format!("unknown drawing method `{method_name}`"),
+                callee.span,
+            ));
+            return MethodResolution::Resolved(None);
+        }
+
         if !is_array_kind(receiver_type.kind) {
             self.diagnostics.push(Diagnostic::error(
                 "E_METHOD_RECEIVER_TYPE",

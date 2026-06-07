@@ -650,6 +650,13 @@ of previously populated cells and
 `table.clear` inclusive rectangular cell-content removal snapshots,
 `table.merge_cells` inclusive merged-cell rectangle snapshots, plus
 `table.delete` deletion snapshots.
+Supported label, line, box, and table id-first drawing functions can also use
+Pine method-call syntax. The semantic analyzer and HIR lowering rewrite the
+receiver into the first function argument, so `id.set_text("x")` has the same
+runtime behavior as `label.set_text(id, "x")` when `id` is a label. This is an
+alias for the already supported function subset only; unsupported drawing
+methods, chart-point overloads, and unsupported xloc/time variants remain
+unsupported.
 `*.delete(na)`, mutation of `na`, mutation after deletion, and deleting an
 already deleted drawing object are no-ops where deletion exists; invalid
 non-`na` ids are runtime errors. Labels, lines, and boxes each have a

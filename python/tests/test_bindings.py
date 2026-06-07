@@ -5906,6 +5906,18 @@ def test_run_script_returns_box_set_xloc_outputs():
     ]
 
 
+def test_run_script_accepts_drawing_object_method_syntax():
+    result = pine_compat.run_script(
+        'indicator("drawing methods")\nvar label_id = label.new(bar_index, high, "start")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nvar box_id = box.new(bar_index, high, bar_index + 1, low)\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    label_id.set_text("method")\n    label_id.set_xy(bar_index, close)\n    line_id.set_xy1(bar_index, low)\n    line_id.set_color(color.green)\n    box_id.set_lefttop(bar_index, high)\n    box_id.set_xloc(bar_index - 1, bar_index + 1, xloc.bar_index)\n    table_id.cell(0, 0, "A")\n    table_id.set_bgcolor(color.green)\nplot(str.length(label_id.get_text()))\nplot(line_id.get_x1())\nplot(box_id.get_right())\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["plots"][0]["values"] == [5, 6, 6]
+    assert result["plots"][1]["values"] == [0, 1, 1]
+    assert result["plots"][2]["values"] == [1, 2, 2]
+    assert result["tables"][0]["bgColor"] == 0x008000
+
+
 def test_run_script_returns_box_new_style_outputs():
     result = pine_compat.run_script(
         'indicator("box new style")\nif bar_index == 1\n    box_id = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)\nplot(close)\n',

@@ -627,6 +627,81 @@ fn rejects_unimplemented_label_methods() {
 }
 
 #[test]
+fn accepts_drawing_object_method_syntax() {
+    let analysis = analyze(
+        "label_id = label.new(bar_index, high, \"start\")\nline_id = line.new(bar_index, low, bar_index + 1, high)\nbox_id = box.new(bar_index, high, bar_index + 1, low)\ntable_id = table.new(position.top_right, 1, 1)\nlabel_id.set_text(\"method\")\nlabel_id.set_xy(bar_index, close)\nline_id.set_xy1(bar_index, low)\nline_id.set_color(color.green)\nbox_id.set_lefttop(bar_index, high)\nbox_id.set_xloc(bar_index - 1, bar_index + 1, xloc.bar_index)\ntable_id.cell(0, 0, \"A\")\ntable_id.set_bgcolor(color.green)\nplot(str.length(label_id.get_text()))\nplot(line_id.get_x1())\nplot(box_id.get_right())\nplot(close)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "label.set_text")
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "line.set_xy1")
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "box.set_xloc")
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "table.cell")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_unknown_drawing_object_method_syntax() {
+    let analysis = analyze("id = label.new(bar_index, high, \"start\")\nid.set_point(na)\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_UNKNOWN_METHOD"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_drawing_object_method_side_effects_inside_functions() {
+    let analysis = analyze(
+        "change(price) =>\n    id = label.new(bar_index, price, \"start\")\n    id.set_text(\"method\")\n    price\nplot(change(close))\n",
+    );
+
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "function_side_effect"),
+        "{:?}",
+        analysis.compatibility.unsupported
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_minimal_line_new() {
     let analysis = analyze(
         "id = line.new(bar_index - 1, low, bar_index, high)\nother = line.new(x1=0, y1=open, x2=bar_index, y2=close)\nstyled = line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)\ncopy = line.copy(id)\nline.set_x1(id, bar_index)\nline.set_y1(id, low)\nline.set_xy1(id, bar_index, open)\nline.set_x2(id, bar_index)\nline.set_y2(id, high)\nline.set_xy2(id, bar_index, close)\nline.set_xloc(id, bar_index - 2, bar_index + 2, xloc.bar_index)\nline.set_color(id, color.green)\nline.set_width(id, 2)\nline.set_style(id, line.style_dashed)\nline.set_extend(id, extend.right)\nplot(line.get_price(copy, bar_index))\nplot(line.get_x1(copy))\nplot(line.get_y1(copy))\nplot(line.get_x2(copy))\nplot(line.get_y2(copy))\nline.delete(na)\nline.delete(id)\nplot(close)\n",

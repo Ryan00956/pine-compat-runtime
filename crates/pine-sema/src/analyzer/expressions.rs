@@ -745,12 +745,15 @@ impl Analyzer {
                     .resolve(receiver_name)
                     .map(|symbol| symbol.pine_type)
             })?;
-        if !is_array_kind(receiver_type.kind) {
+        let signature = if let Some(builtin_name) =
+            drawing_method_builtin_name(receiver_type.kind, method_name)
+        {
+            pine_builtins::get_phase_1_builtin(&builtin_name)?
+        } else if is_array_kind(receiver_type.kind) {
+            pine_builtins::get_phase_1_builtin(array_method_builtin_name(method_name)?)?
+        } else {
             return None;
-        }
-
-        let signature =
-            pine_builtins::get_phase_1_builtin(array_method_builtin_name(method_name)?)?;
+        };
         let mut method_arg_types = Vec::with_capacity(arg_types.len() + 1);
         method_arg_types.push(Some(receiver_type));
         method_arg_types.extend(arg_types.iter().copied());

@@ -464,6 +464,11 @@ snapshot for families with deletion; deleting `na` or an already deleted
 drawing object is a no-op; ids are not reused. The historical runtime caps
 labels, lines, and boxes at 500 objects, caps tables at 50 objects, and caps a
 single table at 1000 cells.
+Drawing-object method-call syntax is normalized before runtime. For supported
+label, line, box, and table id-first functions, semantic analysis validates the
+receiver type and lowering rewrites calls such as `id.set_text("x")` to the
+same HIR callee and argument list as `label.set_text(id, "x")`. Runtime modules
+therefore execute one canonical namespace-call path.
 
 Alert events are flat runtime events rather than sparse snapshots. Historical
 execution appends events in program order when an `alertcondition` call is

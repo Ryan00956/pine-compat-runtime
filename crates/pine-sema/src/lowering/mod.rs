@@ -449,7 +449,17 @@ impl Analyzer {
                 }
                 if pine_builtins::get_phase_1_builtin(&name).is_none()
                     && let Some((receiver_name, method_name)) = method_call_parts(callee)
-                    && let Some(builtin_name) = array_method_builtin_name(method_name)
+                    && let Some(builtin_name) = param_types
+                        .get(receiver_name)
+                        .map(|pine_type| pine_type.kind)
+                        .or_else(|| {
+                            self.bound_symbol(receiver_name, callee.span)
+                                .map(|symbol| symbol.pine_type.kind)
+                        })
+                        .and_then(|receiver_kind| {
+                            drawing_method_builtin_name(receiver_kind, method_name)
+                        })
+                        .or_else(|| array_method_builtin_name(method_name).map(ToOwned::to_owned))
                 {
                     let mut lowered_args = Vec::with_capacity(args.len() + 1);
                     let receiver_arg = receiver_call_arg(receiver_name, callee.span);
@@ -479,7 +489,7 @@ impl Analyzer {
                         pine_type,
                         series_id,
                         kind: HirExprKind::Call {
-                            callee: builtin_name.to_owned(),
+                            callee: builtin_name,
                             call_site_id: self.alloc_call_site(),
                             args: lowered_args,
                         },

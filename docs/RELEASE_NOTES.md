@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed drawing object method-call syntax for supported
+  label/line/box/table id-first functions. Method calls lower to the existing
+  namespace-call runtime paths, so this does not widen unsupported drawing
+  methods, chart-point overloads, or unsupported xloc/time variants.
 - Added fixture-backed `box.set_xloc()` support for the `xloc.bar_index`
   subset. It updates the latest existing box snapshot's left and right values;
   `na` and deleted boxes remain no-ops, and `xloc.bar_time` stays unsupported.

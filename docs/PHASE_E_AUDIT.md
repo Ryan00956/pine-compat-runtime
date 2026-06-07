@@ -68,6 +68,8 @@ truth for supported drawing claims.
   `box.set_xloc` for `xloc.bar_index`, and `box.delete`.
 - `table.new` is partial: supported `position.*` constants plus positive column
   and row dimensions, with `table.cell` text/background/text-color writes.
+- Supported label, line, box, and table id-first functions also accept Pine
+  method-call syntax as aliases for their namespace-call forms.
 - `polyline.*` is unsupported and has a dedicated design note in
   `docs/PHASE_E_POLYLINE_GATE.md`.
 
