@@ -203,6 +203,26 @@ def test_run_script_returns_plotbar_fixture_contract():
     ]
 
 
+def test_run_script_returns_plotcandle_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/plotcandle.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["diagnostics"] == []
+    assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
+    assert result["plotCandles"] == [
+        {
+            "id": 1,
+            "opens": [None, 2.0, 3.0],
+            "highs": [None, 2.0, 3.0],
+            "lows": [None, 2.0, 3.0],
+            "closes": [None, 2.0, 3.0],
+            "colors": [None, 32768, 32768],
+            "wickColors": [None, 16777215, 16777215],
+            "borderColors": [None, 16711680, 16711680],
+        }
+    ]
+
+
 def test_run_script_returns_math_edge_cases_as_none():
     source = (ROOT / "tests/fixtures/runtime/math_edge_cases.pine").read_text()
     result = pine_compat.run_script(source, BARS)
