@@ -181,6 +181,16 @@ def test_run_script_returns_math_fixture_contract():
         assert plot["values"] == values
 
 
+def test_run_script_returns_computed_lengths_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/computed_lengths.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["diagnostics"] == []
+    assert len(result["plots"]) == 2
+    assert result["plots"][0]["values"] == [None, 1.5, 2.5]
+    assert result["plots"][1]["values"] == [None, 3.0, 5.0]
+
+
 def test_run_script_returns_strings_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strings.pine").read_text()
     result = pine_compat.run_script(source, BARS)
