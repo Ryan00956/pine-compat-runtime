@@ -5578,6 +5578,49 @@ def test_run_script_returns_alert_events():
     ]
 
 
+def test_run_script_returns_alert_frequency_events():
+    source = (ROOT / "tests/fixtures/runtime/alert_frequency.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["alerts"] == [
+        {
+            "id": 1,
+            "barIndex": 0,
+            "time": 0,
+            "message": "Default once",
+            "source": "alert",
+        },
+        {
+            "id": 2,
+            "barIndex": 0,
+            "time": 0,
+            "message": "Explicit once",
+            "source": "alert",
+        },
+        {
+            "id": 3,
+            "barIndex": 0,
+            "time": 0,
+            "message": "All",
+            "source": "alert",
+        },
+        {
+            "id": 3,
+            "barIndex": 0,
+            "time": 0,
+            "message": "All",
+            "source": "alert",
+        },
+        {
+            "id": 4,
+            "barIndex": 0,
+            "time": 0,
+            "message": "Close",
+            "source": "alert",
+        },
+    ]
+
+
 def test_run_script_accepts_request_bars():
     result = pine_compat.run_script(
         'indicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n',

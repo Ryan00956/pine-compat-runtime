@@ -39,8 +39,10 @@ Runtime schema ownership is split from analysis and matrix schema ownership:
 CLI runtime JSON and WASM runtime JSON use the shared
 `public_runtime_result_json` helper, which serializes `alerts` with the same
 field names and value normalization. Python keeps explicit native-dictionary
-conversion, and `python/tests/test_bindings.py` covers both empty alert output
-and alert events with the same keys.
+conversion, and `python/tests/test_bindings.py` covers empty alert output,
+alertcondition events, imperative alert events, and the alert-frequency fixture
+with the same keys. WASM tests cover the same alert-frequency fixture through
+`runScriptCsv`.
 
 Phase H did not add a public realtime host API. Realtime behavior is covered by
 Rust runtime fixtures and tests.

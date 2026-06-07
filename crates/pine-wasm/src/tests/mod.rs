@@ -40,6 +40,57 @@ fn runs_script_from_csv_to_json() {
 }
 
 #[test]
+fn runs_alert_frequency_fixture_from_csv_to_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/alert_frequency.pine"),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+    )
+    .expect("alert frequency fixture should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(
+        parsed["alerts"],
+        serde_json::json!([
+            {
+                "id": 1,
+                "barIndex": 0,
+                "time": 0,
+                "message": "Default once",
+                "source": "alert"
+            },
+            {
+                "id": 2,
+                "barIndex": 0,
+                "time": 0,
+                "message": "Explicit once",
+                "source": "alert"
+            },
+            {
+                "id": 3,
+                "barIndex": 0,
+                "time": 0,
+                "message": "All",
+                "source": "alert"
+            },
+            {
+                "id": 3,
+                "barIndex": 0,
+                "time": 0,
+                "message": "All",
+                "source": "alert"
+            },
+            {
+                "id": 4,
+                "barIndex": 0,
+                "time": 0,
+                "message": "Close",
+                "source": "alert"
+            }
+        ])
+    );
+}
+
+#[test]
 fn run_script_csv_serializes_non_finite_values_as_json_null() {
     let output = run_script_csv(
         "indicator(\"nonfinite\")\nplot(1.0 / 0.0)\n",
