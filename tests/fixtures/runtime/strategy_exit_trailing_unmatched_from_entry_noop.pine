@@ -1,0 +1,8 @@
+//@version=5
+strategy("Strategy exit trailing unmatched from_entry no-op")
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 1
+    strategy.exit("XT", "OTHER", trail_price=2.5, trail_offset=50)
+plot(strategy.position_size)
+plot(strategy.closedtrades)

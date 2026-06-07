@@ -3718,6 +3718,29 @@ fn trailing_while_flat_is_noop_without_pending_state() {
 }
 
 #[test]
+fn trailing_with_mismatched_entry_is_noop_without_changing_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+
+    broker.place_exit_trail_price("XT".to_owned(), "OTHER".to_owned(), 105.0, 4.0, 0.5, 1);
+
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XS".to_owned(),
+            from_entry: "L".to_owned(),
+            target_trade_key: None,
+            trigger: PendingExitTrigger::Stop(95.0),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
+            multiple_reservation: false,
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn invalid_trailing_activation_price_records_diagnostic_without_changing_pending_exit() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
