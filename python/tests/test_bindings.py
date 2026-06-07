@@ -1862,6 +1862,20 @@ def test_run_script_returns_strategy_default_quantity_contract():
     assert result["plots"][0]["values"] == [0.0, 0.0, 3.0]
 
 
+def test_run_script_returns_strategy_default_quantity_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_default_quantity.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_default_quantity.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_percent_of_equity_default_quantity_contract():
     result = pine_compat.run_script(
         'strategy("demo", initial_capital=1000, default_qty_type=strategy.percent_of_equity, default_qty_value=25)\nif bar_index == 1\n    strategy.entry("D", strategy.long)\nplot(strategy.position_size)\n',
