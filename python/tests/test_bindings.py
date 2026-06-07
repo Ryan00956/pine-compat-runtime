@@ -5761,6 +5761,8 @@ def table_snapshots_without_empty_merges(tables):
         for snapshot in table["snapshots"]:
             if snapshot["exists"]:
                 assert snapshot.pop("mergedCells") == []
+                for cell in snapshot["cells"]:
+                    assert cell.pop("tooltip") == ""
     return tables
 
 
@@ -6106,6 +6108,17 @@ def test_run_script_returns_table_merge_cell_outputs():
     assert snapshots[5]["mergedCells"] == [
         {"startColumn": 0, "startRow": 0, "endColumn": 2, "endRow": 0}
     ]
+
+
+def test_run_script_returns_table_cell_tooltip_outputs():
+    result = pine_compat.run_script(
+        'indicator("table tooltip")\nvar table_id = table.new(position.top_right, 1, 1)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A", tooltip="initial")\n    table.cell_set_tooltip(table_id, 0, 0, "updated")\ntable.cell_set_tooltip(na, 0, 0, "noop")\nplot(close)\n',
+        BARS,
+    )
+
+    snapshots = result["tables"][0]["snapshots"]
+    assert snapshots[1]["cells"][0]["tooltip"] == "initial"
+    assert snapshots[2]["cells"][0]["tooltip"] == "updated"
 
 
 def test_run_script_returns_plotchar_outputs():

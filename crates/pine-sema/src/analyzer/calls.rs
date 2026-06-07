@@ -223,6 +223,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "table.cell_set_text_size"
             | "table.cell_set_text_halign"
             | "table.cell_set_text_valign"
+            | "table.cell_set_tooltip"
             | "strategy.entry"
             | "strategy.close"
             | "strategy.close_all"

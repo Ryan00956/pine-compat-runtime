@@ -553,7 +553,7 @@ var id = table.new(position.top_right, 2, 2)
 if bar_index == 1
     table.cell(id, 0, 0, "A")
 if bar_index == 2
-    table.cell(id, column=1, row=0, text="B", bgcolor=color.green, text_color=color.white)
+    table.cell(id, column=1, row=0, text="B", bgcolor=color.green, text_color=color.white, tooltip="initial")
     table.cell(id, 0, 0, "C")
     table.cell_set_text(id, 1, 0, "B2")
     table.cell_set_bgcolor(id, 1, 0, color.red)
@@ -563,6 +563,7 @@ if bar_index == 2
     table.cell_set_text_size(id, 1, 0, size.small)
     table.cell_set_text_halign(id, 1, 0, text.align_left)
     table.cell_set_text_valign(id, 1, 0, text.align_top)
+    table.cell_set_tooltip(id, 1, 0, "updated")
     table.set_position(id, position.bottom_right)
     table.set_bgcolor(id, color.yellow)
     table.set_frame_color(id, color.black)
@@ -584,6 +585,7 @@ table.cell_set_height(na, 0, 1, 40)
 table.cell_set_text_size(na, 0, 1, size.small)
 table.cell_set_text_halign(na, 0, 1, text.align_left)
 table.cell_set_text_valign(na, 0, 1, text.align_top)
+table.cell_set_tooltip(na, 0, 1, "noop")
 plot(close)
 "#,
     );
@@ -610,7 +612,7 @@ plot(close)
     assert_eq!(table.border_width, PineValue::Int(4));
     assert_eq!(table.columns, 2);
     assert_eq!(table.rows, 2);
-    assert_eq!(table.snapshots.len(), 12);
+    assert_eq!(table.snapshots.len(), 13);
     assert!(table.snapshots.iter().all(|snapshot| snapshot.exists));
     assert!(table.snapshots[0].cells.is_empty());
     assert_eq!(table.snapshots[1].cells[0].column, 0);
@@ -628,6 +630,10 @@ plot(close)
     assert_eq!(
         table.snapshots[2].cells[1].text_color,
         PineValue::Color(0xFFFFFF)
+    );
+    assert_eq!(
+        table.snapshots[2].cells[1].tooltip,
+        PineValue::String("initial".to_owned())
     );
     assert_eq!(
         table.snapshots[3].cells[0].text,
@@ -658,6 +664,10 @@ plot(close)
     assert_eq!(
         table.snapshots[11].cells[1].text_valign,
         PineValue::String("text.align_top".to_owned())
+    );
+    assert_eq!(
+        table.snapshots[12].cells[1].tooltip,
+        PineValue::String("updated".to_owned())
     );
 }
 
@@ -841,6 +851,11 @@ plot(close)
         r#"indicator("missing table cell")
 id = table.new(position.top_right, 2, 2)
 table.cell_set_text(id, 0, 0, "bad")
+plot(close)
+"#,
+        r#"indicator("missing table tooltip cell")
+id = table.new(position.top_right, 2, 2)
+table.cell_set_tooltip(id, 0, 0, "bad")
 plot(close)
 "#,
         r#"indicator("bad table merge bounds")

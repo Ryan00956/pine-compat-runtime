@@ -623,6 +623,8 @@ fn tables_json(tables: &[TableOutput]) -> String {
                     output.push_str(&value_json(&cell.text_halign));
                     output.push_str(",\"textValign\":");
                     output.push_str(&value_json(&cell.text_valign));
+                    output.push_str(",\"tooltip\":");
+                    output.push_str(&value_json(&cell.tooltip));
                     output.push('}');
                 }
                 output.push(']');

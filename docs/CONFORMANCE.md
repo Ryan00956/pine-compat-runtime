@@ -633,8 +633,8 @@ snapshots and a 500-box runtime limit.
 The executable table subset covers
 `table.new` position/dimension creation with optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialization
-plus `table.cell` text/background/text-color/width/height/text-size cell
-writes, `table.set_position` final-position mutations,
+plus `table.cell` text/background/text-color/tooltip cell writes,
+`table.set_position` final-position mutations,
 `table.set_bgcolor` final background-color mutations,
 `table.set_frame_color` final frame-color mutations,
 `table.set_frame_width` final frame-width mutations,
@@ -648,7 +648,8 @@ color mutations plus `table.cell_set_text_color` text-color mutations plus
 mutations plus `table.cell_set_text_size` text-size mutations for previously
 populated cells plus `table.cell_set_text_halign` horizontal text-alignment
 mutations plus `table.cell_set_text_valign` vertical text-alignment mutations
-for previously populated cells with
+plus `table.cell_set_tooltip` tooltip mutations for previously populated cells
+with
 deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
 per-table limit. Deleting `na`,
 mutating `na`, or mutating an already deleted
@@ -709,7 +710,9 @@ snapshot after `table.cell` has populated that cell, while text rendering
 remains host-specific; `table.cell_set_text_halign` updates only the target
 cell horizontal text-alignment snapshot after `table.cell` has populated that
 cell; `table.cell_set_text_valign` updates only the target cell vertical
-text-alignment snapshot after `table.cell` has populated that cell, while text
+text-alignment snapshot after `table.cell` has populated that cell;
+`table.cell_set_tooltip` updates only the target cell tooltip snapshot after
+`table.cell` has populated that cell, while tooltip display and text
 layout remains host-specific; other table cell
 style/layout setters remain unsupported.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state

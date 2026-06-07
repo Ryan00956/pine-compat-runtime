@@ -135,6 +135,8 @@ impl<'a> HistoricalRuntime<'a> {
         let text = self.eval_required_table_arg(args, 3, "text")?;
         let bg_color = self.eval_table_option_value(args, 4, "bgcolor", PineValue::Na)?;
         let text_color = self.eval_table_option_value(args, 5, "text_color", PineValue::Na)?;
+        let tooltip =
+            self.eval_table_option_value(args, 6, "tooltip", PineValue::String(String::new()))?;
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
@@ -149,6 +151,7 @@ impl<'a> HistoricalRuntime<'a> {
             text_size: PineValue::Na,
             text_halign: PineValue::Na,
             text_valign: PineValue::Na,
+            tooltip,
         };
         self.mutate_table_cell(id, column, row, true, |cell| *cell = next_cell)?;
         Ok(PineValue::Void)
@@ -440,6 +443,23 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    pub(super) fn eval_table_cell_set_tooltip(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let column = self.eval_required_table_int_arg(args, 1, "column")?;
+        let row = self.eval_required_table_int_arg(args, 2, "row")?;
+        let tooltip = self.eval_required_table_arg(args, 3, "tooltip")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        self.mutate_table_cell(id, column, row, false, |cell| {
+            cell.tooltip = tooltip;
+        })?;
+        Ok(PineValue::Void)
+    }
+
     fn eval_table_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
@@ -685,6 +705,7 @@ impl<'a> HistoricalRuntime<'a> {
                     text_size: PineValue::Na,
                     text_halign: PineValue::Na,
                     text_valign: PineValue::Na,
+                    tooltip: PineValue::String(String::new()),
                 };
                 mutate(&mut cell);
                 next.cells.push(cell);
