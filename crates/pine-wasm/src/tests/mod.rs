@@ -737,6 +737,17 @@ fn run_script_csv_returns_drawing_methods_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_loop_state_interactions_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/loop_state_interactions.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("loop state interactions fixture should run");
+
+    assert_snapshot("runtime_loop_state_interactions.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
