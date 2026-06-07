@@ -69,9 +69,9 @@ Closed maintenance slice:
   fixtures, golden snapshots, conformance matrix entries, and Python/WASM host
   parity tests without exposing pending-order or reservation internals.
 - Supported explicit wrong-entry `strategy.exit` no-op behavior is covered for
-  single-trigger stop/limit, stop+limit bracket, and trailing stop shapes by
-  runtime fixtures, golden snapshots, conformance matrix entries, and
-  Python/WASM host parity tests.
+  single-trigger stop/limit/profit, stop+limit bracket, and trailing stop
+  shapes by runtime fixtures, golden snapshots, conformance matrix entries,
+  and Python/WASM host parity tests.
 
 ## Direction 2: Built-In Coverage
 
