@@ -2275,6 +2275,17 @@ fn runs_strategy_default_quantity_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_default_quantity_override_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_default_quantity_override.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy default quantity override fixture should run");
+
+    assert_snapshot("runtime_strategy_default_quantity_override.json", &output);
+}
+
+#[test]
 fn runs_strategy_percent_of_equity_default_quantity_from_csv_to_strategy_json() {
     let output = run_script_csv(
         "strategy(\"demo\", initial_capital=1000, default_qty_type=strategy.percent_of_equity, default_qty_value=25)\nif bar_index == 1\n    strategy.entry(\"D\", strategy.long)\nplot(strategy.position_size)\n",
