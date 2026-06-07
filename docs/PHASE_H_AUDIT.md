@@ -14,17 +14,20 @@ runtime output model.
 - Runtime alert event shape is `{id, barIndex, time, message, source}`.
 - `alertcondition(condition, title, message)` accepts bool-compatible
   conditions plus const-string title/message values.
-- `alert(message)` accepts const-string messages.
+- `alert(message, freq?)` accepts const-string messages and a narrow
+  const-string frequency subset.
 - Reached true alert conditions and reached `alert()` calls emit events in
-  program order. False and `na` alert conditions emit nothing.
+  program order, subject to supported `alert()` frequency filtering. False and
+  `na` alert conditions emit nothing.
 - Realtime forming results expose the current forming alert events, while
   `confirmed_result()` exposes only committed events. Repeated forming updates
   recompute from the confirmed snapshot, so abandoned forming alert events do
   not leak or duplicate.
 - `alert` and `alertcondition` are classified as output side effects and remain
   rejected in UDFs and requested-context expressions.
-- Dynamic alert strings, `{{...}}` placeholder interpolation, frequency modes,
-  host delivery, strategy alerts, and other alert variants remain unsupported.
+- Dynamic alert strings, `{{...}}` placeholder interpolation,
+  `alert.freq_once_per_bar_close`, host delivery, strategy alerts, and other
+  alert variants remain unsupported.
 
 ## Schema And Host Surface
 
@@ -49,7 +52,7 @@ Compatibility matrix rows:
 
 - `alertcondition`: `partial`
 - `alert`: `partial`
-- `alert frequency`: `unsupported`
+- `alert frequency`: `partial`
 - `alert placeholders`: `unsupported`
 - `function side effects`: `unsupported`
 - `realtime forming rollback`: `partial`
@@ -58,6 +61,7 @@ Runtime fixtures:
 
 - `tests/fixtures/runtime/alertcondition.pine`
 - `tests/fixtures/runtime/alert.pine`
+- `tests/fixtures/runtime/alert_frequency.pine`
 
 Realtime fixtures:
 
@@ -76,6 +80,7 @@ Golden snapshots:
 
 - `tests/snapshots/runtime_alertcondition.json`
 - `tests/snapshots/runtime_alert.json`
+- `tests/snapshots/runtime_alert_frequency.json`
 - `tests/snapshots/runtime_io.json`, which keeps empty `alerts: []` in the
   no-alert baseline.
 - `tests/snapshots/matrix.json`, which records the alert conformance rows.
@@ -89,7 +94,7 @@ incremental append execution and compares the complete `RuntimeResult`.
 Manual checks on the closeout workspace:
 
 - `cargo run -q -p pine-cli -- matrix --format text | rg "alert|realtime forming rollback"`
-  reports `alertcondition` and `alert` as partial, `alert frequency` and
+  reports `alertcondition`, `alert`, and `alert frequency` as partial,
   `alert placeholders` as unsupported, and includes the realtime alert fixture
   paths.
 - `cargo run -q -p pine-cli -- run tests/fixtures/runtime/alertcondition.pine --bars tests/fixtures/runtime/bars.csv`
@@ -97,6 +102,9 @@ Manual checks on the closeout workspace:
   const title.
 - `cargo run -q -p pine-cli -- run tests/fixtures/runtime/alert.pine --bars tests/fixtures/runtime/bars.csv`
   emits `schemaVersion: 3` and `alert()` events with `source: "alert"`.
+- `cargo run -q -p pine-cli -- run tests/fixtures/runtime/alert_frequency.pine --bars tests/fixtures/runtime/bars.csv`
+  emits default/once-per-bar alert events once per callsite per bar and
+  `alert.freq_all` events for every reached call.
 
 ## Verification
 
@@ -128,8 +136,8 @@ and `python3 -m pytest python/tests`.
 
 ## Maintenance Tails
 
-- Alert frequency modes remain unsupported until deterministic historical and
-  realtime frequency semantics are designed.
+- `alert.freq_once_per_bar_close` remains unsupported until deterministic
+  realtime-close semantics are designed.
 - TradingView-style alert placeholder interpolation remains unsupported.
 - Dynamic/simple/input/series message strings remain unsupported for alert
   messages and alertcondition titles/messages.

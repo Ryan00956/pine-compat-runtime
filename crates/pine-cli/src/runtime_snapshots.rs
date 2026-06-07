@@ -32,6 +32,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/alertcondition.pine",
     ),
     ("runtime_alert.json", "tests/fixtures/runtime/alert.pine"),
+    (
+        "runtime_alert_frequency.json",
+        "tests/fixtures/runtime/alert_frequency.pine",
+    ),
     ("runtime_hline_fill.json", "tests/fixtures/runtime/io.pine"),
     (
         "runtime_label_new.json",

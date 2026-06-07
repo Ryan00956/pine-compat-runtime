@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use pine_ir::{HirProgram, ScriptMode};
 
@@ -66,6 +66,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) boxes: Vec<BoxOutput>,
     pub(crate) tables: Vec<TableOutput>,
     pub(crate) alerts: Vec<AlertEvent>,
+    pub(crate) alert_once_per_bar_calls: HashSet<CallSiteId>,
     pub(crate) strategy_broker: BrokerState,
     pub(crate) next_label_id: u32,
     pub(crate) next_line_id: u32,
@@ -172,6 +173,7 @@ impl<'a> HistoricalRuntime<'a> {
             boxes: Vec::new(),
             tables: Vec::new(),
             alerts: Vec::new(),
+            alert_once_per_bar_calls: HashSet::new(),
             strategy_broker: BrokerState::new_with_account_settings_and_pyramiding(
                 program.strategy_settings.initial_capital,
                 program.strategy_settings.commission,
@@ -251,6 +253,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.series_store.set_current_bar(bar_index);
         self.current_symbols.clear();
         self.current_series.clear();
+        self.alert_once_per_bar_calls.clear();
         if self.program.script_mode == ScriptMode::Strategy {
             self.strategy_broker
                 .fill_pending_market_long_entries(bar_index, bar.time, bar.open);

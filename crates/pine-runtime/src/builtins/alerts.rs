@@ -3,6 +3,12 @@ use pine_ir::{CallSiteId, HirCallArg};
 use crate::builtins::args::call_arg_expr;
 use crate::*;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum AlertFrequency {
+    All,
+    OncePerBar,
+}
+
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_alert_call(
         &mut self,
@@ -23,6 +29,12 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
         let message = self.alert_string_arg("alert", args, 0, "message")?;
+        let frequency = self.alert_frequency_arg(args)?;
+        if matches!(frequency, AlertFrequency::OncePerBar)
+            && !self.alert_once_per_bar_calls.insert(call_site_id)
+        {
+            return Ok(PineValue::Void);
+        }
         self.push_alert_event(call_site_id, "alert".to_owned(), message);
         Ok(PineValue::Void)
     }
@@ -75,6 +87,24 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String(value) => Ok(value),
             value => Err(RuntimeError {
                 message: format!("{callee} {name} evaluated to {value:?}"),
+            }),
+        }
+    }
+
+    fn alert_frequency_arg(&mut self, args: &[HirCallArg]) -> Result<AlertFrequency, RuntimeError> {
+        let Some(expr) = call_arg_expr(args, 1, "freq") else {
+            return Ok(AlertFrequency::OncePerBar);
+        };
+        match self.eval_expr(expr)? {
+            PineValue::String(value) if value == "alert.freq_all" => Ok(AlertFrequency::All),
+            PineValue::String(value) if value == "alert.freq_once_per_bar" => {
+                Ok(AlertFrequency::OncePerBar)
+            }
+            PineValue::String(value) => Err(RuntimeError {
+                message: format!("unsupported alert frequency {value:?}"),
+            }),
+            value => Err(RuntimeError {
+                message: format!("alert freq evaluated to {value:?}"),
             }),
         }
     }

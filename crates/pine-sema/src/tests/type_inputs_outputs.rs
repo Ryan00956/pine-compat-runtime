@@ -182,6 +182,8 @@ fn accepts_alertcondition_const_string_subset() {
 fn accepts_alert_const_string_subset() {
     let analysis = analyze(
         r#"alert("Reached")
+alert("Every call", alert.freq_all)
+alert("Once", freq=alert.freq_once_per_bar)
 "#,
     );
 
@@ -201,11 +203,12 @@ fn accepts_alert_const_string_subset() {
 }
 
 #[test]
-fn rejects_alert_dynamic_message_and_frequency() {
+fn rejects_alert_dynamic_message_and_unsupported_frequency() {
     let analysis = analyze(
         r#"message = input.string("Reached", "Message")
 alert(message)
 alert("Reached", freq="once")
+alert("Close", freq=alert.freq_once_per_bar_close)
 "#,
     );
 

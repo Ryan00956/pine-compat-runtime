@@ -384,10 +384,13 @@ for a narrow declarative subset. `condition` accepts bool-compatible values;
 strings. Runtime output serializes `title` as the alert event `source` and
 `message` as the alert event `message`.
 
-`alert(message)` is supported for const-string messages only. It emits an event
-whenever execution reaches the call and serializes `source` as `alert`.
-TradingView-style `{{...}}` placeholder interpolation and frequency arguments
-remain unsupported until deterministic policies are designed.
+`alert(message, freq?)` is supported for const-string messages only. It
+serializes `source` as `alert`. The default frequency is
+`alert.freq_once_per_bar`, which emits at most one event per alert callsite per
+bar even if a loop reaches the same callsite multiple times. `alert.freq_all`
+emits every reached call. `alert.freq_once_per_bar_close`, TradingView-style
+`{{...}}` placeholder interpolation, and other alert frequency values remain
+unsupported until their realtime-close policy is designed.
 
 Alert conditions execute like ordinary reached statements in global flow,
 including supported `if`, `switch`, `for`, and `while` bodies. This is a

@@ -1,3 +1,4 @@
 //@version=5
 indicator("Unsupported alert")
 alert("x", freq="once")
+alert("close", freq=alert.freq_once_per_bar_close)

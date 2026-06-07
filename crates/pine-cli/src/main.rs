@@ -237,7 +237,6 @@ mod tests {
         for feature in [
             "request.*",
             "strategy.*",
-            "alert frequency",
             "alert placeholders",
             "unsupported label/line/box/table methods",
             "polyline.*",

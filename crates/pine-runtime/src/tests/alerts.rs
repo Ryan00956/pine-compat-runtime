@@ -68,7 +68,7 @@ if bar_index == 2
         &timed_bars(&[1.0, 2.0, 3.0]),
     );
 
-    assert_eq!(result.alerts.len(), 6);
+    assert_eq!(result.alerts.len(), 5);
     assert_eq!(result.alerts[0].source, "alert");
     assert_eq!(result.alerts[0].message, "Every");
     assert_eq!(result.alerts[0].bar_index, 0);
@@ -80,8 +80,28 @@ if bar_index == 2
     assert_eq!(result.alerts[3].bar_index, 2);
     assert_eq!(result.alerts[4].message, "Loop");
     assert_eq!(result.alerts[4].bar_index, 2);
-    assert_eq!(result.alerts[5].message, "Loop");
-    assert_eq!(result.alerts[5].bar_index, 2);
+}
+
+#[test]
+fn alert_frequency_controls_same_bar_duplicate_calls() {
+    let result = run_alert_script(
+        r#"indicator("alerts")
+if bar_index == 0
+    for i = 0 to 1
+        alert("Default once")
+    for i = 0 to 1
+        alert("Explicit once", alert.freq_once_per_bar)
+    for i = 0 to 1
+        alert("All", alert.freq_all)
+"#,
+        &timed_bars(&[1.0]),
+    );
+
+    assert_eq!(result.alerts.len(), 4);
+    assert_eq!(result.alerts[0].message, "Default once");
+    assert_eq!(result.alerts[1].message, "Explicit once");
+    assert_eq!(result.alerts[2].message, "All");
+    assert_eq!(result.alerts[3].message, "All");
 }
 
 fn run_alert_script(source: &str, bars: &[Bar]) -> RuntimeResult {
