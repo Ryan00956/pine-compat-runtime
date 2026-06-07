@@ -4789,6 +4789,38 @@ fn stop_profit_bracket_with_mismatched_entry_is_noop_without_changing_pending_ex
 }
 
 #[test]
+fn loss_limit_bracket_with_mismatched_entry_is_noop_without_changing_pending_exit() {
+    let mut broker = broker_with_long_entry();
+    broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+
+    broker.place_exit_bracket_loss_limit_ticks(
+        "XB".to_owned(),
+        "OTHER".to_owned(),
+        LossLimitBracketSpec {
+            loss_ticks: 10.0,
+            limit_price: 110.0,
+            mintick: 0.5,
+        },
+        1,
+    );
+
+    assert_eq!(
+        broker.pending_exit().cloned(),
+        Some(PendingExit {
+            id: "XS".to_owned(),
+            from_entry: "L".to_owned(),
+            target_trade_key: None,
+            trigger: PendingExitTrigger::Stop(95.0),
+            quantity: PendingExitQuantity::Full,
+            reserved_quantity: 2.0,
+            multiple_reservation: false,
+            last_update_bar_index: 0,
+        })
+    );
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
 fn unchanged_repeated_bracket_keeps_original_eligibility_bar() {
     let mut broker = broker_with_long_entry();
     broker.place_exit_bracket("XB".to_owned(), "L".to_owned(), 95.0, 110.0, 0);
