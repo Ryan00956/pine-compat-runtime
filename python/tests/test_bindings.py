@@ -5742,7 +5742,7 @@ def test_run_script_returns_line_new_style_outputs():
 
 def test_run_script_returns_line_getter_plot_values():
     result = pine_compat.run_script(
-        'indicator("line getters")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nif bar_index == 1\n    line.set_x1(line_id, bar_index - 10)\n    line.set_x2(line_id, bar_index + 10)\n    line.set_y1(line_id, low - 10)\n    line.set_y2(line_id, high + 10)\nplot(line.get_x1(line_id))\nplot(line.get_y1(line_id))\nplot(line.get_x2(line_id))\nplot(line.get_y2(line_id))\n',
+        'indicator("line getters")\nvar line_id = line.new(bar_index, low, bar_index + 1, high)\nif bar_index == 1\n    line.set_x1(line_id, bar_index - 10)\n    line.set_x2(line_id, bar_index + 10)\n    line.set_y1(line_id, low - 10)\n    line.set_y2(line_id, high + 10)\nplot(line.get_x1(line_id))\nplot(line.get_y1(line_id))\nplot(line.get_x2(line_id))\nplot(line.get_y2(line_id))\nplot(line.get_price(line_id, bar_index + 5))\n',
         BARS,
     )
 
@@ -5750,6 +5750,7 @@ def test_run_script_returns_line_getter_plot_values():
     assert result["plots"][1]["values"] == [1.0, -8.0, -8.0]
     assert result["plots"][2]["values"] == [1, 11, 11]
     assert result["plots"][3]["values"] == [1.0, 12.0, 12.0]
+    assert result["plots"][4]["values"] == [1.0, 7.0, 8.0]
 
 
 def test_run_script_returns_box_outputs():

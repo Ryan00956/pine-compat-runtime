@@ -10,26 +10,32 @@ x1_value = line.get_x1(id)
 x2_value = line.get_x2(id)
 y1_value = line.get_y1(id)
 y2_value = line.get_y2(id)
+price_value = line.get_price(id, bar_index + 5)
 missing_x1 = nz(line.get_x1(na), -1)
 missing_x2 = nz(line.get_x2(na), -1)
 missing_y1 = nz(line.get_y1(na), -1)
 missing_y2 = nz(line.get_y2(na), -1)
+missing_price = nz(line.get_price(na, bar_index), -1)
 if bar_index == 2
     line.delete(id)
 deleted_x1 = bar_index >= 2 ? nz(line.get_x1(id), -1) : -1
 deleted_x2 = bar_index >= 2 ? nz(line.get_x2(id), -1) : -1
 deleted_y1 = bar_index >= 2 ? nz(line.get_y1(id), -1) : -1
 deleted_y2 = bar_index >= 2 ? nz(line.get_y2(id), -1) : -1
+deleted_price = bar_index >= 2 ? nz(line.get_price(id, bar_index), -1) : -1
 plot(x1_value)
 plot(x2_value)
 plot(y1_value)
 plot(y2_value)
+plot(price_value)
 plot(missing_x1)
 plot(missing_x2)
 plot(missing_y1)
 plot(missing_y2)
+plot(missing_price)
 plot(deleted_x1)
 plot(deleted_x2)
 plot(deleted_y1)
 plot(deleted_y2)
+plot(deleted_price)
 plot(close)

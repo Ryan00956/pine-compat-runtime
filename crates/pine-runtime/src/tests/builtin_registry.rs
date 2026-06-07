@@ -133,6 +133,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "label.set_yloc",
     "line.copy",
     "line.delete",
+    "line.get_price",
     "line.get_x1",
     "line.get_x2",
     "line.get_y1",

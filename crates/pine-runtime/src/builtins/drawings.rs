@@ -48,6 +48,7 @@ impl<'a> HistoricalRuntime<'a> {
             "line.set_extend" => self.eval_line_set_extend(args),
             "line.delete" => self.eval_line_delete(args),
             "line.copy" => self.eval_line_copy(args),
+            "line.get_price" => self.eval_line_get_price(args),
             "line.get_x1" => self.eval_line_get_x1(args),
             "line.get_y1" => self.eval_line_get_y1(args),
             "line.get_x2" => self.eval_line_get_x2(args),

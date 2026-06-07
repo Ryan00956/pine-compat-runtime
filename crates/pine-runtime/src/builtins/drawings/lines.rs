@@ -257,6 +257,69 @@ impl<'a> HistoricalRuntime<'a> {
         self.eval_line_get(args, "line.get_y2", |snapshot| snapshot.y2.clone())
     }
 
+    pub(super) fn eval_line_get_price(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_line_get_id_arg(args, "line.get_price")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let x_arg = match line_call_arg_expr(args, 1, "x") {
+            Some(arg) => self.eval_expr(arg)?,
+            None => {
+                return Err(RuntimeError {
+                    message: "line.get_price missing x argument".to_owned(),
+                });
+            }
+        };
+        let Some(x) = x_arg.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        if !x.is_finite() {
+            return Ok(PineValue::Na);
+        }
+
+        let Some(line) = self.lines.iter().find(|line| line.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid line id `{id}`"),
+            });
+        };
+        let Some(latest) = line.snapshots.last() else {
+            return Err(RuntimeError {
+                message: format!("line `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Na);
+        }
+        let Some(x1) = latest.x1.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(y1) = latest.y1.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(x2) = latest.x2.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(y2) = latest.y2.as_f64() else {
+            return Ok(PineValue::Na);
+        };
+        if !x1.is_finite() || !y1.is_finite() || !x2.is_finite() || !y2.is_finite() {
+            return Ok(PineValue::Na);
+        }
+        let dx = x2 - x1;
+        if dx == 0.0 {
+            return Ok(PineValue::Na);
+        }
+        let value = y1 + (x - x1) * ((y2 - y1) / dx);
+        if value.is_finite() {
+            Ok(PineValue::Float(value))
+        } else {
+            Ok(PineValue::Na)
+        }
+    }
+
     fn eval_line_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = line_call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {

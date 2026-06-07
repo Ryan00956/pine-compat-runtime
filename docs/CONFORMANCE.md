@@ -626,9 +626,11 @@ snapshot fields when `xloc` is omitted or `xloc.bar_index`; chart-point
 overloads, `xloc.bar_time`, and `line.set_xloc` remain unsupported. It also
 covers selected endpoint/color/width/style/extend mutators, `line.delete`,
 fixture-backed cloning with `line.copy`, and fixture-backed `line.get_x1`,
-`line.get_y1`, `line.get_x2`, and `line.get_y2` getters over the latest
-existing line snapshot, with sparse snapshots and a 500-line runtime limit.
-`line.get_price` remains unsupported. The executable box subset covers
+`line.get_y1`, `line.get_x2`, `line.get_y2`, and `line.get_price` getters over
+the latest existing line snapshot, with sparse snapshots and a 500-line runtime
+limit. `line.get_price` uses bar-index x1/y1/x2/y2 interpolation and
+extrapolation and returns `na` for `na`, deleted, vertical, or nonnumeric lines;
+time-coordinate price lookup remains unsupported. The executable box subset covers
 `box.new` left/top/right/bottom creation with optional background, border,
 extend, text, text-color, text-size, horizontal-alignment, vertical-alignment,
 text-wrap, font-family, and text-formatting initialization for existing

@@ -454,6 +454,19 @@ const LINE_GET_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const LINE_GET_PRICE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::LineCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "x",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+];
+
 const BOX_NEW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "left",
@@ -1000,6 +1013,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: LINE_COPY_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_LINE),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.get_price",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_GET_PRICE_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_FLOAT),
         variadic: false,
     },
     BuiltinSignature {

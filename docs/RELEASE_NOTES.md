@@ -2,9 +2,12 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.get_price()` support over the latest existing
+  bar-index line snapshot. It uses x1/y1/x2/y2 interpolation or extrapolation
+  and returns `na` for `na`, deleted, vertical, or nonnumeric lines.
 - Added fixture-backed `line.get_x1()`, `line.get_y1()`, `line.get_x2()`, and
   `line.get_y2()` support over the latest existing line snapshot. `na` and
-  deleted lines return `na`; `line.get_price()` remains unsupported.
+  deleted lines return `na`.
 - Added `line.new()` initialization support for existing host-neutral line
   snapshot style fields: extend, color, style, and width. The supported
   creation subset remains the x1/y1/x2/y2 overload with `xloc` omitted or
