@@ -217,6 +217,23 @@ fn run_script_csv_returns_udf_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_na_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/na.pine"),
+        "time,open,high,low,close,volume\n0,1,2,1,2,1\n1,5,5,3,3,1\n2,2,4,2,4,1\n3,6,6,5,5,1\n",
+    )
+    .expect("NA fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    let plots = parsed["plots"].as_array().expect("plots");
+    assert_eq!(plots.len(), 3);
+    assert_eq!(plots[0]["values"], serde_json::json!([2, 2, 3, 4]));
+    assert_eq!(plots[1]["values"], serde_json::json!([2, 2, 3, 4]));
+    assert_eq!(plots[2]["values"], serde_json::json!([2, 2, 4, 4]));
+}
+
+#[test]
 fn run_script_csv_returns_strings_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strings.pine"),

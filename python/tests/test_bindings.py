@@ -215,6 +215,23 @@ def test_run_script_returns_udf_fixture_contract():
     assert result["plots"][0]["values"] == [None, 4.5, 6.5]
 
 
+def test_run_script_returns_na_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/na.pine").read_text()
+    bars = [
+        {"time": 0, "open": 1.0, "high": 2.0, "low": 1.0, "close": 2.0, "volume": 1.0},
+        {"time": 1, "open": 5.0, "high": 5.0, "low": 3.0, "close": 3.0, "volume": 1.0},
+        {"time": 2, "open": 2.0, "high": 4.0, "low": 2.0, "close": 4.0, "volume": 1.0},
+        {"time": 3, "open": 6.0, "high": 6.0, "low": 5.0, "close": 5.0, "volume": 1.0},
+    ]
+    result = pine_compat.run_script(source, bars)
+
+    assert result["diagnostics"] == []
+    assert len(result["plots"]) == 3
+    assert result["plots"][0]["values"] == [2.0, 2.0, 3.0, 4.0]
+    assert result["plots"][1]["values"] == [2.0, 2.0, 3.0, 4.0]
+    assert result["plots"][2]["values"] == [2.0, 2.0, 4.0, 4.0]
+
+
 def test_run_script_returns_strings_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strings.pine").read_text()
     result = pine_compat.run_script(source, BARS)
