@@ -627,6 +627,11 @@ const TABLE_NEW_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::IntCompatible,
         optional: false,
     },
+    BuiltinParam {
+        name: "bgcolor",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
 ];
 
 const TABLE_CELL_PARAMS: &[BuiltinParam] = &[

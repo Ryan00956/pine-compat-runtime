@@ -11,6 +11,7 @@ impl<'a> HistoricalRuntime<'a> {
         let position = self.eval_required_table_arg(args, 0, "position")?;
         let columns = self.eval_required_table_int_arg(args, 1, "columns")?;
         let rows = self.eval_required_table_int_arg(args, 2, "rows")?;
+        let bg_color = self.eval_table_option_value(args, 3, "bgcolor", PineValue::Na)?;
         if columns <= 0 || rows <= 0 {
             return Err(RuntimeError {
                 message: "table dimensions must be positive".to_owned(),
@@ -41,7 +42,7 @@ impl<'a> HistoricalRuntime<'a> {
         self.tables.push(TableOutput {
             id,
             position,
-            bg_color: PineValue::Na,
+            bg_color,
             frame_color: PineValue::Na,
             frame_width: PineValue::Na,
             border_color: PineValue::Na,
