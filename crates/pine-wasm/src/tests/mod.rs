@@ -2510,6 +2510,17 @@ fn runs_strategy_close_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_close_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_close.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close fixture should run");
+
+    assert_snapshot("runtime_strategy_close.json", &output);
+}
+
+#[test]
 fn runs_strategy_close_qty_partial_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close_qty_partial.pine"),

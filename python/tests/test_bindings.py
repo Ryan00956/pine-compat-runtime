@@ -2388,6 +2388,18 @@ def test_run_script_returns_strategy_close_trade_contract():
     }
 
 
+def test_run_script_returns_strategy_close_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_close.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_strategy_close.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_close_qty_partial_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_close_qty_partial.pine").read_text()
     result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
