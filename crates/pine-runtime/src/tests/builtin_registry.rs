@@ -72,6 +72,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "box.set_lefttop",
     "box.set_right",
     "box.set_rightbottom",
+    "box.set_xloc",
     "box.set_text",
     "box.set_text_color",
     "box.set_text_font_family",

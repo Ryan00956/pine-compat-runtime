@@ -192,6 +192,20 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_box_set_xloc(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let left = self.eval_required_box_arg(args, 1, "left")?;
+        let right = self.eval_required_box_arg(args, 2, "right")?;
+        let _xloc = self.eval_required_box_arg(args, 3, "xloc")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.left = left;
+            snapshot.right = right;
+        })
+    }
+
     pub(super) fn eval_box_set_text(
         &mut self,
         args: &[HirCallArg],

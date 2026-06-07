@@ -436,6 +436,7 @@ box.set_lefttop(id, bar_index, open)
 box.set_right(id, 2)
 box.set_bottom(id, close + 2)
 box.set_rightbottom(id, bar_index, close)
+box.set_xloc(id, 10, 12, xloc.bar_index)
 box.set_bgcolor(id, color.green)
 box.set_border_color(id, color.white)
 box.set_border_width(id, 2)
@@ -449,6 +450,7 @@ box.set_text_valign(id, text.align_top)
 box.set_text_wrap(id, text.wrap_auto)
 box.set_text_font_family(id, font.family_monospace)
 box.set_text_formatting(id, text.format_bold + text.format_italic)
+box.set_xloc(na, 0, 1, xloc.bar_index)
 box.set_text_formatting(na, text.format_italic)
 plot(close)
 "#,
@@ -464,7 +466,7 @@ plot(close)
 
     assert_eq!(result.boxes.len(), 1);
     let box_output = &result.boxes[0];
-    assert_eq!(box_output.snapshots.len(), 20);
+    assert_eq!(box_output.snapshots.len(), 21);
     assert_eq!(box_output.snapshots[1].left, PineValue::Int(1));
     assert_eq!(box_output.snapshots[2].top, PineValue::Float(2.0));
     assert_eq!(box_output.snapshots[3].left, PineValue::Int(0));
@@ -473,49 +475,51 @@ plot(close)
     assert_eq!(box_output.snapshots[5].bottom, PineValue::Float(3.0));
     assert_eq!(box_output.snapshots[6].right, PineValue::Int(0));
     assert_eq!(box_output.snapshots[6].bottom, PineValue::Float(1.0));
-    assert_eq!(box_output.snapshots[7].bg_color, PineValue::Color(0x008000));
+    assert_eq!(box_output.snapshots[7].left, PineValue::Int(10));
+    assert_eq!(box_output.snapshots[7].right, PineValue::Int(12));
+    assert_eq!(box_output.snapshots[8].bg_color, PineValue::Color(0x008000));
     assert_eq!(
-        box_output.snapshots[8].border_color,
+        box_output.snapshots[9].border_color,
         PineValue::Color(0xFFFFFF)
     );
-    assert_eq!(box_output.snapshots[9].border_width, PineValue::Int(2));
+    assert_eq!(box_output.snapshots[10].border_width, PineValue::Int(2));
     assert_eq!(
-        box_output.snapshots[10].border_style,
+        box_output.snapshots[11].border_style,
         PineValue::String("line.style_dashed".to_owned())
     );
     assert_eq!(
-        box_output.snapshots[11].extend,
+        box_output.snapshots[12].extend,
         PineValue::String("extend.right".to_owned())
     );
     assert_eq!(
-        box_output.snapshots[12].text,
+        box_output.snapshots[13].text,
         PineValue::String("box text".to_owned())
     );
     assert_eq!(
-        box_output.snapshots[13].text_color,
+        box_output.snapshots[14].text_color,
         PineValue::Color(0xFFFFFF)
     );
     assert_eq!(
-        box_output.snapshots[14].text_size,
+        box_output.snapshots[15].text_size,
         PineValue::String("size.small".to_owned())
     );
     assert_eq!(
-        box_output.snapshots[15].text_halign,
+        box_output.snapshots[16].text_halign,
         PineValue::String("text.align_left".to_owned())
     );
     assert_eq!(
-        box_output.snapshots[16].text_valign,
+        box_output.snapshots[17].text_valign,
         PineValue::String("text.align_top".to_owned())
     );
     assert_eq!(
-        box_output.snapshots[17].text_wrap,
+        box_output.snapshots[18].text_wrap,
         PineValue::String("text.wrap_auto".to_owned())
     );
     assert_eq!(
-        box_output.snapshots[18].text_font_family,
+        box_output.snapshots[19].text_font_family,
         PineValue::String("font.family_monospace".to_owned())
     );
-    assert_eq!(box_output.snapshots[19].text_formatting, PineValue::Int(3));
+    assert_eq!(box_output.snapshots[20].text_formatting, PineValue::Int(3));
 }
 
 #[test]

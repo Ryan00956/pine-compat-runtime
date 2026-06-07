@@ -632,6 +632,29 @@ const BOX_SET_XY_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const BOX_SET_XLOC_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "id",
+        accepts: Accepts::BoxCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "left",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "right",
+        accepts: Accepts::IntCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "xloc",
+        accepts: Accepts::ConstString,
+        optional: false,
+    },
+];
+
 const BOX_SET_COLOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1161,6 +1184,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "box.set_extend",
         phase: BuiltinPhase::Phase1Core,
         params: BOX_SET_EXTEND_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_xloc",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_XLOC_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

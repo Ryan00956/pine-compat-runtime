@@ -64,7 +64,8 @@ truth for supported drawing claims.
 - `box.new` is partial: bar-index left/right coordinates, numeric top/bottom
   coordinates, optional initialization for existing background/border/extend/
   text/text-color/text-size/alignment/wrap/font-family/text-formatting snapshot
-  fields, selected geometry/background/border/text mutators, and `box.delete`.
+  fields, selected geometry/background/border/text mutators,
+  `box.set_xloc` for `xloc.bar_index`, and `box.delete`.
 - `table.new` is partial: supported `position.*` constants plus positive column
   and row dimensions, with `table.cell` text/background/text-color writes.
 - `polyline.*` is unsupported and has a dedicated design note in

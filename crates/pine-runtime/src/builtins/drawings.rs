@@ -66,6 +66,7 @@ impl<'a> HistoricalRuntime<'a> {
             "box.set_border_width" => self.eval_box_set_border_width(args),
             "box.set_border_style" => self.eval_box_set_border_style(args),
             "box.set_extend" => self.eval_box_set_extend(args),
+            "box.set_xloc" => self.eval_box_set_xloc(args),
             "box.set_text" => self.eval_box_set_text(args),
             "box.set_text_color" => self.eval_box_set_text_color(args),
             "box.set_text_size" => self.eval_box_set_text_size(args),

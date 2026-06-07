@@ -427,8 +427,9 @@ cover `left`, `top`,
 those host-neutral style and text snapshot fields for the left/top/right/bottom
 overload when `xloc` is omitted or `xloc.bar_index`; chart-point overloads and
 `xloc.bar_time` coordinate semantics remain outside the current runtime output
-contract. Selected `box.set_*` mutators, `box.copy` cloning, and `box.delete`
-reuse the same snapshot model;
+contract. Selected `box.set_*` mutators, including the `xloc.bar_index`
+`box.set_xloc` subset that rewrites left and right, `box.copy` cloning, and
+`box.delete` reuse the same snapshot model;
 `box.get_left`, `box.get_right`, `box.get_top`, and `box.get_bottom` read latest
 existing snapshot values.
 Table entries

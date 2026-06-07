@@ -199,6 +199,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.set_border_width"
             | "box.set_border_style"
             | "box.set_extend"
+            | "box.set_xloc"
             | "box.set_text"
             | "box.set_text_color"
             | "box.set_text_size"
@@ -651,6 +652,9 @@ impl Analyzer {
             }
             "box.set_extend" => {
                 self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
+            }
+            "box.set_xloc" => {
+                self.validate_label_string_arg(signature, args, 3, "xloc", &["xloc.bar_index"]);
             }
             "box.set_border_style" => {
                 self.validate_label_string_arg(signature, args, 1, "style", BOX_BORDER_STYLES);

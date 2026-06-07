@@ -5849,6 +5849,63 @@ def test_run_script_returns_box_outputs():
     ]
 
 
+def test_run_script_returns_box_set_xloc_outputs():
+    result = pine_compat.run_script(
+        'indicator("box set xloc")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index + 1, low)\n    box.set_xloc(box_id, bar_index - 1, bar_index + 3, xloc.bar_index)\nbox.set_xloc(na, bar_index, bar_index + 1, xloc.bar_index)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["boxes"] == [
+        {
+            "id": 1,
+            "snapshots": [
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "left": 1,
+                    "top": 2.0,
+                    "right": 2,
+                    "bottom": 2.0,
+                    "bgColor": None,
+                    "borderColor": None,
+                    "borderWidth": 1,
+                    "borderStyle": "line.style_solid",
+                    "extend": "extend.none",
+                    "text": "",
+                    "textColor": None,
+                    "textSize": "size.normal",
+                    "textHalign": "text.align_center",
+                    "textValign": "text.align_center",
+                    "textWrap": "text.wrap_none",
+                    "textFontFamily": "font.family_default",
+                    "textFormatting": 0,
+                },
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "left": 0,
+                    "top": 2.0,
+                    "right": 4,
+                    "bottom": 2.0,
+                    "bgColor": None,
+                    "borderColor": None,
+                    "borderWidth": 1,
+                    "borderStyle": "line.style_solid",
+                    "extend": "extend.none",
+                    "text": "",
+                    "textColor": None,
+                    "textSize": "size.normal",
+                    "textHalign": "text.align_center",
+                    "textValign": "text.align_center",
+                    "textWrap": "text.wrap_none",
+                    "textFontFamily": "font.family_default",
+                    "textFormatting": 0,
+                },
+            ],
+        }
+    ]
+
+
 def test_run_script_returns_box_new_style_outputs():
     result = pine_compat.run_script(
         'indicator("box new style")\nif bar_index == 1\n    box_id = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)\nplot(close)\n',

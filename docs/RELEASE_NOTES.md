@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.set_xloc()` support for the `xloc.bar_index`
+  subset. It updates the latest existing box snapshot's left and right values;
+  `na` and deleted boxes remain no-ops, and `xloc.bar_time` stays unsupported.
 - Added fixture-backed `line.set_xloc()` support for the `xloc.bar_index`
   subset. It updates the latest existing line snapshot's x1 and x2 values;
   `na` and deleted lines remain no-ops, and `xloc.bar_time` stays unsupported.
