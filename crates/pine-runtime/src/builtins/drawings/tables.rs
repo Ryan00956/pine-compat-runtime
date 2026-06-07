@@ -45,6 +45,7 @@ impl<'a> HistoricalRuntime<'a> {
             frame_color: PineValue::Na,
             frame_width: PineValue::Na,
             border_color: PineValue::Na,
+            border_width: PineValue::Na,
             columns,
             rows,
             snapshots: vec![TableSnapshot {
@@ -171,6 +172,24 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         table.border_color = border_color;
+        Ok(PineValue::Void)
+    }
+
+    pub(super) fn eval_table_set_border_width(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let border_width = self.eval_required_table_arg(args, 1, "border_width")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid table id `{id}`"),
+            });
+        };
+        table.border_width = border_width;
         Ok(PineValue::Void)
     }
 

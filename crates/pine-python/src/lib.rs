@@ -54,7 +54,6 @@ fn compile_script(source: &str, library_sources: Option<&Bound<'_, PyAny>>) -> P
         .ok_or_else(|| PyValueError::new_err("analysis did not produce executable HIR"))?;
     Ok(PyProgram { hir })
 }
-
 #[pyfunction(signature = (source, library_sources=None))]
 fn analyze_script(
     py: Python<'_>,
@@ -687,6 +686,7 @@ fn tables_to_py(py: Python<'_>, tables: &[pine_runtime::TableOutput]) -> PyResul
         item.set_item("frameColor", value_to_py(py, &table.frame_color)?)?;
         item.set_item("frameWidth", value_to_py(py, &table.frame_width)?)?;
         item.set_item("borderColor", value_to_py(py, &table.border_color)?)?;
+        item.set_item("borderWidth", value_to_py(py, &table.border_width)?)?;
         item.set_item("columns", table.columns)?;
         item.set_item("rows", table.rows)?;
         item.set_item("snapshots", table_snapshots_to_py(py, &table.snapshots)?)?;

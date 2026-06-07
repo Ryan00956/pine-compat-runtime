@@ -79,6 +79,7 @@ impl<'a> HistoricalRuntime<'a> {
             "table.set_frame_color" => self.eval_table_set_frame_color(args),
             "table.set_frame_width" => self.eval_table_set_frame_width(args),
             "table.set_border_color" => self.eval_table_set_border_color(args),
+            "table.set_border_width" => self.eval_table_set_border_width(args),
             "table.cell_set_text" => self.eval_table_cell_set_text(args),
             "table.cell_set_bgcolor" => self.eval_table_cell_set_bgcolor(args),
             "table.cell_set_text_color" => self.eval_table_cell_set_text_color(args),

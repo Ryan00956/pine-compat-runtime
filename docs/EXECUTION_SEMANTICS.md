@@ -626,7 +626,7 @@ selected background/border fields, snapshot cloning, non-reused ids, and a
 dimensions, and sparse cell snapshots for text/background/text-color/width/height/text-size writes
 and final table-level mutations with `table.set_position` and
 `table.set_bgcolor`/`table.set_frame_color`/`table.set_frame_width`/
-`table.set_border_color`, plus
+`table.set_border_color`/`table.set_border_width`, plus
 `table.cell_set_text`/`table.cell_set_bgcolor`/
 `table.cell_set_text_color`/`table.cell_set_width`/`table.cell_set_height`/
 `table.cell_set_text_size`/`table.cell_set_text_halign`/
@@ -664,8 +664,9 @@ updates the table's final position value. `table.set_bgcolor` updates the
 table's final background-color value. `table.set_frame_color` updates the
 table's final frame-color value. `table.set_frame_width` updates the table's
 final frame-width value. `table.set_border_color` updates the table's final
-border-color value; visual anchoring, border width, border rendering, and layout
-remain host responsibilities. `table.cell_set_text`
+border-color value. `table.set_border_width` updates the table's final
+border-width value; visual anchoring, border rendering, and layout remain host
+responsibilities. `table.cell_set_text`
 updates the target previously populated cell text in the host-neutral table
 snapshot while preserving the cell's other supported fields.
 `table.cell_set_bgcolor` updates the target previously populated cell
