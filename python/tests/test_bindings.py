@@ -1952,6 +1952,22 @@ def test_run_script_returns_strategy_cash_default_quantity_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_cash_default_quantity_limit_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_cash_default_quantity_limit.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_cash_default_quantity_limit.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_position_state_plots():
     result = pine_compat.run_script(
         'strategy("demo")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 2\n    strategy.close("L")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nplot(strategy.max_contracts_held_all)\nplot(strategy.max_contracts_held_long)\nplot(strategy.max_contracts_held_short)\n',
