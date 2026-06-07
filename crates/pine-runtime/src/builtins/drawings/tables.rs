@@ -14,6 +14,7 @@ impl<'a> HistoricalRuntime<'a> {
         let bg_color = self.eval_table_option_value(args, 3, "bgcolor", PineValue::Na)?;
         let frame_color = self.eval_table_option_value(args, 4, "frame_color", PineValue::Na)?;
         let frame_width = self.eval_table_option_value(args, 5, "frame_width", PineValue::Na)?;
+        let border_color = self.eval_table_option_value(args, 6, "border_color", PineValue::Na)?;
         if columns <= 0 || rows <= 0 {
             return Err(RuntimeError {
                 message: "table dimensions must be positive".to_owned(),
@@ -47,7 +48,7 @@ impl<'a> HistoricalRuntime<'a> {
             bg_color,
             frame_color,
             frame_width,
-            border_color: PineValue::Na,
+            border_color,
             border_width: PineValue::Na,
             columns,
             rows,

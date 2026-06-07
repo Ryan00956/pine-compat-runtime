@@ -632,7 +632,7 @@ and `box.get_bottom` over the latest existing box snapshot, with sparse
 snapshots and a 500-box runtime limit.
 The executable table subset covers
 `table.new` position/dimension creation with optional `bgcolor`,
-`frame_color`, and `frame_width` initialization plus `table.cell` text/background/text-color/width/height/text-size cell
+`frame_color`, `frame_width`, and `border_color` initialization plus `table.cell` text/background/text-color/width/height/text-size cell
 writes, `table.set_position` final-position mutations,
 `table.set_bgcolor` final background-color mutations,
 `table.set_frame_color` final frame-color mutations,
@@ -674,9 +674,9 @@ in box snapshots; richer text formatting remains unsupported. `box.get_left`,
 box snapshot and return `na` for `na` or deleted boxes; other box methods remain
 unsupported. `table.set_position` updates only the table's final position
 value, with table layout left to hosts. `table.new` optional `bgcolor`,
-`frame_color`, and `frame_width` initialize only the table's final
-background-color, frame-color, and frame-width values; optional border
-initializers remain unsupported.
+`frame_color`, `frame_width`, and `border_color` initialize only the table's
+final background-color, frame-color, frame-width, and border-color values;
+optional border-width initialization remains unsupported.
 `table.set_bgcolor` updates only the
 table's final background-color value. `table.set_frame_color` updates only the
 table's final frame-color value. `table.set_frame_width` updates only the
