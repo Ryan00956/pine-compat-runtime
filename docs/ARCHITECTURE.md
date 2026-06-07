@@ -415,8 +415,8 @@ normalized Pine values, including `textAlign`, `textFontFamily`, and
 cover `left`, `top`,
 `right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, `borderStyle`,
 `extend`, `text`, `textColor`, `textSize`, `textHalign`, `textValign`,
-`textWrap`, and `textFontFamily` for `box.new`, selected `box.set_*` mutators,
-`box.copy` cloning, and `box.delete`;
+`textWrap`, `textFontFamily`, and `textFormatting` for `box.new`, selected
+`box.set_*` mutators, `box.copy` cloning, and `box.delete`;
 `box.get_left`, `box.get_right`, `box.get_top`, and `box.get_bottom` read latest
 existing snapshot values.
 Table entries

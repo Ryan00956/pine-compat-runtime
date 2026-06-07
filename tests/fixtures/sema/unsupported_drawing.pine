@@ -2,6 +2,6 @@
 indicator("Unsupported drawing")
 label.set_point(na, na)
 line.get_price(na, bar_index)
-box.set_text_formatting(na, "text.format_bold")
+box.set_top_left_point(na, na)
 table.cell_set_text_wrap(na, 0, 0, text.wrap_auto)
 polyline.new(na)

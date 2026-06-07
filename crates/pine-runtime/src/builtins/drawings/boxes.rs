@@ -42,6 +42,7 @@ impl<'a> HistoricalRuntime<'a> {
                 text_valign: PineValue::String("text.align_center".to_owned()),
                 text_wrap: PineValue::String("text.wrap_none".to_owned()),
                 text_font_family: PineValue::String("font.family_default".to_owned()),
+                text_formatting: PineValue::Int(0),
             }],
         });
         Ok(PineValue::Box(id))
@@ -249,6 +250,17 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_box_set_text_formatting(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let text_formatting = self.eval_box_text_formatting_arg(args, 1, "text_formatting")?;
+        self.mutate_box(id, |snapshot| {
+            snapshot.text_formatting = text_formatting;
+        })
+    }
+
     pub(super) fn eval_box_delete(
         &mut self,
         args: &[HirCallArg],
@@ -371,6 +383,26 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         self.eval_expr(arg)
+    }
+
+    fn eval_box_text_formatting_arg(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = call_arg_expr(args, index, name) else {
+            return Err(RuntimeError {
+                message: format!("box call missing {name} argument"),
+            });
+        };
+        match self.eval_expr(arg)? {
+            PineValue::Int(mask) if (0..=3).contains(&mask) => Ok(PineValue::Int(mask)),
+            PineValue::Na => Ok(PineValue::Na),
+            value => Err(RuntimeError {
+                message: format!("box call `{name}` expected text format mask, got {value:?}"),
+            }),
+        }
     }
 
     fn mutate_box(

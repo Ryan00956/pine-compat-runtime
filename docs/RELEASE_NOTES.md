@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added host-neutral `box.set_text_formatting()` support. Box snapshots now
+  carry `textFormatting` masks for none/bold/italic combinations while leaving
+  glyph styling to hosts.
 - Added host-neutral label text-formatting support. `label.new()` can now
   initialize `textalign`, `text_font_family`, and `text_formatting` snapshot
   fields, and `label.set_text_formatting()` records none/bold/italic formatting

@@ -5742,6 +5742,7 @@ def test_run_script_returns_box_outputs():
                     "textValign": "text.align_center",
                     "textWrap": "text.wrap_none",
                     "textFontFamily": "font.family_default",
+                    "textFormatting": 0,
                 },
                 {
                     "barIndex": 1,
@@ -5762,10 +5763,22 @@ def test_run_script_returns_box_outputs():
                     "textValign": "text.align_center",
                     "textWrap": "text.wrap_none",
                     "textFontFamily": "font.family_default",
+                    "textFormatting": 0,
                 },
             ],
         }
     ]
+
+
+def test_run_script_returns_box_text_formatting_outputs():
+    result = pine_compat.run_script(
+        'indicator("box formatting")\nif bar_index == 1\n    box_id = box.new(bar_index, high, bar_index, low)\n    box.set_text_formatting(box_id, text.format_bold + text.format_italic)\nbox.set_text_formatting(na, text.format_italic)\nplot(close)\n',
+        BARS,
+    )
+
+    snapshots = result["boxes"][0]["snapshots"]
+    assert snapshots[0]["textFormatting"] == 0
+    assert snapshots[1]["textFormatting"] == 3
 
 
 def table_snapshots_without_empty_merges(tables):

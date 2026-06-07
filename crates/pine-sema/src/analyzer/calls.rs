@@ -203,6 +203,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.set_text_valign"
             | "box.set_text_wrap"
             | "box.set_text_font_family"
+            | "box.set_text_formatting"
             | "box.delete"
             | "box.copy"
             | "table.new"
@@ -637,6 +638,9 @@ impl Analyzer {
                     "text_font_family",
                     TEXT_FONT_FAMILIES,
                 );
+            }
+            "box.set_text_formatting" => {
+                self.validate_text_formatting_arg(signature, args, 1, "text_formatting");
             }
             "table.new" => {
                 self.validate_label_string_arg(signature, args, 0, "position", TABLE_POSITIONS);

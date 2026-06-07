@@ -668,8 +668,10 @@ alignment constant in the host-neutral snapshot. `box.set_text_valign` records
 the selected vertical alignment constant in the host-neutral snapshot.
 `box.set_text_wrap` records the selected wrapping constant in the host-neutral
 snapshot. `box.set_text_font_family` records the selected font-family constant
-in the host-neutral snapshot; text rendering and font layout remain host
-responsibilities. `box.get_left`, `box.get_right`, `box.get_top`, and
+in the host-neutral snapshot. `box.set_text_formatting` records the selected
+`text.format_none`/`text.format_bold`/`text.format_italic` mask, including
+bold+italic combinations; text rendering, glyph styling, and font layout remain
+host responsibilities. `box.get_left`, `box.get_right`, `box.get_top`, and
 `box.get_bottom` read the corresponding value from the latest existing box
 snapshot and return `na` for `na` or deleted boxes. `table.set_position`
 updates the table's final position value. `table.new` optional `bgcolor`,

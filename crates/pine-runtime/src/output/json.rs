@@ -561,6 +561,8 @@ fn boxes_json(boxes: &[BoxOutput]) -> String {
                 output.push_str(&value_json(&snapshot.text_wrap));
                 output.push_str(",\"textFontFamily\":");
                 output.push_str(&value_json(&snapshot.text_font_family));
+                output.push_str(",\"textFormatting\":");
+                output.push_str(&value_json(&snapshot.text_formatting));
             }
             output.push('}');
         }

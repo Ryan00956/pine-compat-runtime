@@ -75,6 +75,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "box.set_text",
     "box.set_text_color",
     "box.set_text_font_family",
+    "box.set_text_formatting",
     "box.set_text_halign",
     "box.set_text_size",
     "box.set_text_valign",

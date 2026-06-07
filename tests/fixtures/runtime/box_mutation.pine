@@ -19,4 +19,6 @@ for i = 0 to 0
         box.set_text_valign(box_id, text.align_top)
         box.set_text_wrap(box_id, text.wrap_auto)
         box.set_text_font_family(box_id, font.family_monospace)
+        box.set_text_formatting(box_id, text.format_bold + text.format_italic)
+box.set_text_formatting(na, text.format_italic)
 plot(close)
