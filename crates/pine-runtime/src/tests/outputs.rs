@@ -734,6 +734,56 @@ plot(close)
 }
 
 #[test]
+fn collects_table_clear_snapshots() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("table clear")
+var id = table.new(position.top_right, 3, 2)
+if bar_index == 1
+    table.cell(id, 0, 0, "A")
+    table.cell(id, 1, 0, "B")
+    table.cell(id, 2, 1, "C", bgcolor=na, text_color=color.white)
+    table.clear(id, 1, 0, 2, 1)
+if bar_index == 2
+    table.clear(id, 0, 0, 0, 0)
+    table.delete(id)
+    table.clear(id, 0, 0, 2, 1)
+table.clear(na, 0, 0, 0, 0)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let table = &result.tables[0];
+
+    assert_eq!(table.snapshots.len(), 7);
+    assert_eq!(table.snapshots[1].cells.len(), 1);
+    assert_eq!(table.snapshots[2].cells.len(), 2);
+    assert_eq!(table.snapshots[3].cells.len(), 3);
+    assert_eq!(table.snapshots[3].cells[2].bg_color, PineValue::Na);
+    assert_eq!(
+        table.snapshots[3].cells[2].text_color,
+        PineValue::Color(0xFFFFFF)
+    );
+    assert_eq!(table.snapshots[4].bar_index, 1);
+    assert_eq!(table.snapshots[4].cells.len(), 1);
+    assert_eq!(
+        table.snapshots[4].cells[0].text,
+        PineValue::String("A".to_owned())
+    );
+    assert_eq!(table.snapshots[5].bar_index, 2);
+    assert!(table.snapshots[5].cells.is_empty());
+    assert!(!table.snapshots[6].exists);
+}
+
+#[test]
 fn rejects_invalid_table_shapes_and_cells() {
     for source_text in [
         r#"indicator("bad table size")

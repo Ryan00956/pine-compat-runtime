@@ -640,7 +640,8 @@ writes, `table.set_position` final-position mutations,
 `table.set_frame_width` final frame-width mutations,
 `table.set_border_color` final border-color mutations,
 `table.set_border_width` final border-width mutations, `table.delete` deletion
-snapshots, and
+snapshots, `table.clear` inclusive rectangular cell-content removal snapshots,
+and
 `table.cell_set_text` text mutations plus `table.cell_set_bgcolor` background
 color mutations plus `table.cell_set_text_color` text-color mutations plus
 `table.cell_set_width` width mutations plus `table.cell_set_height` height
@@ -679,8 +680,11 @@ value, with table layout left to hosts. `table.new` optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize only
 the table's final background-color, frame-color, frame-width, border-color, and
 border-width values.
-`table.delete` appends an `exists: false` table snapshot. Later table-level and
-cell mutations of deleted tables are no-ops.
+`table.delete` appends an `exists: false` table snapshot. `table.clear` removes
+already populated cells in the inclusive rectangular range from `start_column`,
+`start_row` to `end_column`, `end_row`; it preserves the table object and
+table-level style fields. Later table-level and cell mutations of deleted
+tables are no-ops.
 `table.set_bgcolor` updates only the
 table's final background-color value. `table.set_frame_color` updates only the
 table's final frame-color value. `table.set_frame_width` updates only the

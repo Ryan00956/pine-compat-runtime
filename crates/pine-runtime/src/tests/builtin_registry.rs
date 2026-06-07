@@ -292,6 +292,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "ta.vwma",
     "ta.wma",
     "ta.wpr",
+    "table.clear",
     "table.cell",
     "table.cell_set_bgcolor",
     "table.cell_set_height",

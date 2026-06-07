@@ -5989,6 +5989,97 @@ def test_run_script_returns_table_delete_outputs():
     ]
 
 
+def test_run_script_returns_table_clear_outputs():
+    result = pine_compat.run_script(
+        'indicator("table clear")\nvar table_id = table.new(position.top_right, 2, 2)\nif bar_index == 1\n    table.cell(table_id, 0, 0, "A")\n    table.cell(table_id, 1, 0, "B", bgcolor=color.green)\n    table.clear(table_id, 1, 0, 1, 0)\nif bar_index == 2\n    table.clear(table_id, 0, 0, 0, 0)\ntable.clear(na, 0, 0, 0, 0)\nplot(close)\n',
+        BARS,
+    )
+
+    assert result["tables"] == [
+        {
+            "id": 1,
+            "position": "position.top_right",
+            "bgColor": None,
+            "frameColor": None,
+            "frameWidth": None,
+            "borderColor": None,
+            "borderWidth": None,
+            "columns": 2,
+            "rows": 2,
+            "snapshots": [
+                {"barIndex": 0, "exists": True, "cells": []},
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "cells": [
+                        {
+                            "column": 0,
+                            "row": 0,
+                            "text": "A",
+                            "bgColor": None,
+                            "textColor": None,
+                            "width": None,
+                            "height": None,
+                            "textSize": None,
+                            "textHalign": None,
+                            "textValign": None,
+                        }
+                    ],
+                },
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "cells": [
+                        {
+                            "column": 0,
+                            "row": 0,
+                            "text": "A",
+                            "bgColor": None,
+                            "textColor": None,
+                            "width": None,
+                            "height": None,
+                            "textSize": None,
+                            "textHalign": None,
+                            "textValign": None,
+                        },
+                        {
+                            "column": 1,
+                            "row": 0,
+                            "text": "B",
+                            "bgColor": 0x008000,
+                            "textColor": None,
+                            "width": None,
+                            "height": None,
+                            "textSize": None,
+                            "textHalign": None,
+                            "textValign": None,
+                        },
+                    ],
+                },
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "cells": [
+                        {
+                            "column": 0,
+                            "row": 0,
+                            "text": "A",
+                            "bgColor": None,
+                            "textColor": None,
+                            "width": None,
+                            "height": None,
+                            "textSize": None,
+                            "textHalign": None,
+                            "textValign": None,
+                        }
+                    ],
+                },
+                {"barIndex": 2, "exists": True, "cells": []},
+            ],
+        }
+    ]
+
+
 def test_run_script_returns_plotchar_outputs():
     result = pine_compat.run_script(
         'indicator("markers")\nplotchar(close > 2, char="x", color=color.green)\nplot(close)\n',

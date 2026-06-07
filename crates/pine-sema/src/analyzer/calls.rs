@@ -206,6 +206,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "box.copy"
             | "table.new"
             | "table.delete"
+            | "table.clear"
             | "table.cell"
             | "table.set_position"
             | "table.set_bgcolor"

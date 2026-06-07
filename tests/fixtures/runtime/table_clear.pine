@@ -1,0 +1,14 @@
+//@version=5
+indicator("Table clear")
+var table_id = table.new(position.top_right, 3, 2)
+if bar_index == 1
+    table.cell(table_id, 0, 0, "A")
+    table.cell(table_id, 1, 0, "B", bgcolor=color.green)
+    table.cell(table_id, 2, 1, "C", bgcolor=na, text_color=color.white)
+    table.clear(table_id, 1, 0, 2, 1)
+if bar_index == 2
+    table.clear(table_id, 0, 0, 0, 0)
+    table.delete(table_id)
+    table.clear(table_id, 0, 0, 2, 1)
+table.clear(na, 0, 0, 0, 0)
+plot(close)

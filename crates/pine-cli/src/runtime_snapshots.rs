@@ -114,6 +114,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/table_delete.pine",
     ),
     (
+        "runtime_table_clear.json",
+        "tests/fixtures/runtime/table_clear.pine",
+    ),
+    (
         "runtime_strategy_empty.json",
         "tests/fixtures/runtime/strategy_no_order.pine",
     ),

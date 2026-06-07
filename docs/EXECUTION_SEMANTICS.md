@@ -633,6 +633,7 @@ mutations with `table.set_position` and
 `table.cell_set_text_color`/`table.cell_set_width`/`table.cell_set_height`/
 `table.cell_set_text_size`/`table.cell_set_text_halign`/
 `table.cell_set_text_valign` mutations of previously populated cells and
+`table.clear` inclusive rectangular cell-content removal snapshots plus
 `table.delete` deletion snapshots.
 `*.delete(na)`, mutation of `na`, mutation after deletion, and deleting an
 already deleted drawing object are no-ops where deletion exists; invalid
@@ -667,8 +668,11 @@ updates the table's final position value. `table.new` optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize the
 table's final background-color, frame-color, frame-width, border-color, and
 border-width values.
-`table.delete` appends an `exists: false` table snapshot, and later table-level
-or cell mutations of deleted tables are no-ops.
+`table.delete` appends an `exists: false` table snapshot. `table.clear` removes
+already populated cells in the inclusive rectangular range from `start_column`,
+`start_row` to `end_column`, `end_row`; it preserves the table object and
+table-level style fields. Later table-level or cell mutations of deleted tables
+are no-ops.
 `table.set_bgcolor` updates the
 table's final background-color value. `table.set_frame_color` updates the
 table's final frame-color value. `table.set_frame_width` updates the table's

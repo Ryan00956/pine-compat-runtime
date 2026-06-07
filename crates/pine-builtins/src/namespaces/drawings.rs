@@ -654,11 +654,24 @@ const TABLE_NEW_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
-const TABLE_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
-    name: "id",
-    accepts: Accepts::TableCompatible,
-    optional: false,
-}];
+const fn table_param(name: &'static str, accepts: Accepts) -> BuiltinParam {
+    BuiltinParam {
+        name,
+        accepts,
+        optional: false,
+    }
+}
+
+const TABLE_ID_PARAM: BuiltinParam = table_param("id", Accepts::TableCompatible);
+const TABLE_DELETE_PARAMS: &[BuiltinParam] = &[TABLE_ID_PARAM];
+
+const TABLE_CLEAR_PARAMS: &[BuiltinParam] = &[
+    TABLE_ID_PARAM,
+    table_param("start_column", Accepts::IntCompatible),
+    table_param("start_row", Accepts::IntCompatible),
+    table_param("end_column", Accepts::IntCompatible),
+    table_param("end_row", Accepts::IntCompatible),
+];
 
 const TABLE_CELL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
@@ -1366,6 +1379,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "table.delete",
         phase: BuiltinPhase::Phase1Core,
         params: TABLE_DELETE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "table.clear",
+        phase: BuiltinPhase::Phase1Core,
+        params: TABLE_CLEAR_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

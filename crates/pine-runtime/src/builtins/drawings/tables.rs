@@ -91,6 +91,22 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Void)
     }
 
+    pub(super) fn eval_table_clear(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let start_column = self.eval_required_table_int_arg(args, 1, "start_column")?;
+        let start_row = self.eval_required_table_int_arg(args, 2, "start_row")?;
+        let end_column = self.eval_required_table_int_arg(args, 3, "end_column")?;
+        let end_row = self.eval_required_table_int_arg(args, 4, "end_row")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        self.clear_table_cells(id, start_column, start_row, end_column, end_row)?;
+        Ok(PineValue::Void)
+    }
+
     pub(super) fn eval_table_cell(
         &mut self,
         args: &[HirCallArg],
@@ -463,6 +479,61 @@ impl<'a> HistoricalRuntime<'a> {
             Some(expr) => self.eval_expr(expr),
             None => Ok(default),
         }
+    }
+
+    fn clear_table_cells(
+        &mut self,
+        id: u32,
+        start_column: i64,
+        start_row: i64,
+        end_column: i64,
+        end_row: i64,
+    ) -> Result<(), RuntimeError> {
+        let Some(table) = self.tables.iter_mut().find(|table| table.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid table id `{id}`"),
+            });
+        };
+        let Some(latest) = table.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("table `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(());
+        }
+        if start_column > end_column || start_row > end_row {
+            return Err(RuntimeError {
+                message: "table clear start coordinate cannot exceed end coordinate".to_owned(),
+            });
+        }
+        if start_column < 0
+            || start_column >= table.columns
+            || end_column < 0
+            || end_column >= table.columns
+            || start_row < 0
+            || start_row >= table.rows
+            || end_row < 0
+            || end_row >= table.rows
+        {
+            return Err(RuntimeError {
+                message: format!(
+                    "table clear coordinate out of bounds `{start_column},{start_row}` to `{end_column},{end_row}`"
+                ),
+            });
+        }
+        let mut next = latest.clone();
+        next.cells.retain(|cell| {
+            cell.column < start_column
+                || cell.column > end_column
+                || cell.row < start_row
+                || cell.row > end_row
+        });
+        if next != latest {
+            next.bar_index = self.bars;
+            table.snapshots.push(next);
+        }
+        Ok(())
     }
 
     fn mutate_table_cell<F>(

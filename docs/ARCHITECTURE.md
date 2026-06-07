@@ -438,8 +438,8 @@ frame width, `table.set_border_color` updates the table's final border color,
 `table.cell_set_width`/`table.cell_set_height`/`table.cell_set_text_size`
 `table.cell_set_text_halign`/`table.cell_set_text_valign` mutate only the stored
 text/background/text color/width/height/text size/text alignment for cells
-already populated by `table.cell`, and `table.delete` appends a deleted
-snapshot.
+already populated by `table.cell`, `table.clear` removes populated cells in an
+inclusive rectangular range, and `table.delete` appends a deleted snapshot.
 Delete calls append an `exists: false`
 snapshot for families with deletion; deleting `na` or an already deleted
 drawing object is a no-op; ids are not reused. The historical runtime caps
