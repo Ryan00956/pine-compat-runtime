@@ -201,6 +201,27 @@ fn runs_strategy_exit_while_flat_from_csv_as_noop_json() {
 }
 
 #[test]
+fn runs_strategy_exit_bracket_while_flat_from_csv_as_noop_json() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_bracket_while_flat_noop.pine"
+        ),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+    )
+    .expect("strategy exit bracket while-flat no-op script should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(parsed["strategy"]["orders"], serde_json::json!([]));
+    assert_eq!(parsed["strategy"]["trades"], serde_json::json!([]));
+    assert_eq!(parsed["strategy"]["position"], serde_json::json!([]));
+    assert_eq!(parsed["strategy"]["diagnostics"], serde_json::json!([]));
+    assert!(!output.contains("\"direction\":\"strategy.exit\""));
+    assert!(!output.contains("pending"));
+    assert!(!output.contains("reserved"));
+}
+
+#[test]
 fn runs_strategy_exit_wrong_entry_from_csv_as_noop_json() {
     let output = run_script_csv(
         include_str!(
