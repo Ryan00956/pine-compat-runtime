@@ -232,6 +232,23 @@ def test_run_script_returns_na_fixture_contract():
     assert result["plots"][2]["values"] == [2.0, 2.0, 4.0, 4.0]
 
 
+def test_run_script_returns_ta_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/ta.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["diagnostics"] == []
+    assert len(result["plots"]) == 5
+    expected = [
+        [1.0, 1.6666666666666665, 2.5555555555555554],
+        [1.0, 1.5, 2.25],
+        [None, 100.0, 100.0],
+        [None, 1.0, 1.0],
+        [0.0, 1.0, 1.0],
+    ]
+    for plot, values in zip(result["plots"], expected):
+        assert plot["values"] == values
+
+
 def test_run_script_returns_strings_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strings.pine").read_text()
     result = pine_compat.run_script(source, BARS)

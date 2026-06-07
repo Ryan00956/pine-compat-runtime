@@ -68,6 +68,7 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "runtime_conditional_ta.json",
         "tests/fixtures/runtime/conditional_ta.pine",
     ),
+    ("runtime_ta.json", "tests/fixtures/runtime/ta.pine"),
     ("runtime_math.json", "tests/fixtures/runtime/math.pine"),
     (
         "runtime_math_edge_cases.json",
