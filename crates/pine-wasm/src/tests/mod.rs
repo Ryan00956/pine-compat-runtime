@@ -2292,6 +2292,22 @@ fn runs_strategy_cash_default_quantity_from_csv_to_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_commission_cash_per_contract_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_commission_cash_per_contract.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy cash-per-contract commission fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_commission_cash_per_contract.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_position_state_from_csv_to_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 2\n    strategy.close(\"L\")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nplot(strategy.max_contracts_held_all)\nplot(strategy.max_contracts_held_long)\nplot(strategy.max_contracts_held_short)\n",
