@@ -19,6 +19,7 @@ const BUILTIN_COUNT: usize = core::SCRIPT_SIGNATURES.len()
     + requests::SIGNATURES.len()
     + strategy::SIGNATURES.len()
     + drawings::SIGNATURES.len()
+    + drawings::tables::SIGNATURES.len()
     + colors::SIGNATURES.len()
     + strings::SIGNATURES.len()
     + time::SIGNATURES.len()
@@ -42,6 +43,7 @@ const fn build_phase_1_builtins() -> [BuiltinSignature; BUILTIN_COUNT] {
     index = copy_signatures(&mut builtins, index, requests::SIGNATURES);
     index = copy_signatures(&mut builtins, index, strategy::SIGNATURES);
     index = copy_signatures(&mut builtins, index, drawings::SIGNATURES);
+    index = copy_signatures(&mut builtins, index, drawings::tables::SIGNATURES);
     index = copy_signatures(&mut builtins, index, colors::SIGNATURES);
     index = copy_signatures(&mut builtins, index, strings::SIGNATURES);
     index = copy_signatures(&mut builtins, index, time::SIGNATURES);
