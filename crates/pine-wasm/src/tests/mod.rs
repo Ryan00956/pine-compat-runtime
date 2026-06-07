@@ -649,6 +649,17 @@ fn run_script_csv_returns_box_copy_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_box_array_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/box_array.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("box array fixture should run");
+
+    assert_snapshot("runtime_box_array.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
