@@ -2338,6 +2338,22 @@ fn runs_strategy_cash_default_quantity_limit_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_cash_default_quantity_override_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_cash_default_quantity_override.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy cash default quantity override fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_cash_default_quantity_override.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_commission_cash_per_contract_fixture_contract() {
     let output = run_script_csv(
         include_str!(
