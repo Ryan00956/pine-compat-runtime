@@ -1,0 +1,10 @@
+//@version=5
+indicator("Math edge cases")
+plot(math.sqrt(-1))
+plot(math.log(0))
+plot(math.log10(0))
+plot(math.exp(1000))
+plot(math.acos(2))
+plot(math.asin(2))
+plot(math.pow(-1, 0.5))
+plot(math.random(5, 5, 7))

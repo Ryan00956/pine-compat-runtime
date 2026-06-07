@@ -194,13 +194,13 @@ math.avg	supported	fixture-derived executable subset	tests/fixtures/runtime/math
 math.floor	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.ceil	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.trunc	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.sqrt	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.sqrt	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.cbrt	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.log	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.log10	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.exp	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.acos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.asin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.log	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.log10	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.exp	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.acos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.asin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.atan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.sign	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.todegrees	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
@@ -227,11 +227,11 @@ syminfo.pricescale	supported	fixed default symbol metadata subset	tests/fixtures
 math.sin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.cos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.tan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.pow	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.pow	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.hypot	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.round	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.round_to_mintick	supported	fixture-derived executable subset using default syminfo.mintick	tests/fixtures/runtime/math.pine
-math.random	supported	fixture-derived deterministic callsite PRNG subset with optional min/max/seed	tests/fixtures/runtime/math.pine
+math.random	supported	fixture-derived deterministic callsite PRNG subset with optional min/max/seed	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.sum	supported	fixture-derived executable subset; simple and computed integer length expressions	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/computed_lengths.pine
 na	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine
 nz	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine

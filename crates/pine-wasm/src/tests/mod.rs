@@ -105,6 +105,24 @@ fn run_script_csv_serializes_non_finite_values_as_json_null() {
 }
 
 #[test]
+fn run_script_csv_returns_math_edge_cases_as_json_null() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+    )
+    .expect("math edge-case fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(parsed["plots"].as_array().expect("plots").len(), 8);
+    for plot in parsed["plots"].as_array().expect("plots") {
+        assert_eq!(plot["values"], serde_json::json!([null, null]));
+    }
+    assert!(!output.contains("NaN"));
+    assert!(!output.contains("Infinity"));
+}
+
+#[test]
 fn run_script_csv_rejects_non_finite_ohlcv_values() {
     for (column, row) in [
         ("open", "0,NaN,1,1,1,1"),

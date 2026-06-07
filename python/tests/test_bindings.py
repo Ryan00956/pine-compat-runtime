@@ -131,6 +131,16 @@ def test_run_script_converts_non_finite_plot_values_to_none():
     assert result["plots"][0]["values"] == [None, None, None]
 
 
+def test_run_script_returns_math_edge_cases_as_none():
+    source = (ROOT / "tests/fixtures/runtime/math_edge_cases.pine").read_text()
+    result = pine_compat.run_script(source, BARS)
+
+    assert result["diagnostics"] == []
+    assert len(result["plots"]) == 8
+    for plot in result["plots"]:
+        assert plot["values"] == [None, None, None]
+
+
 def test_compile_script_rejects_deep_input_without_aborting_process():
     expression = "(" * 300 + "close" + ")" * 300
 
