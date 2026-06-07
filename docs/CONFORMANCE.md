@@ -635,7 +635,8 @@ The executable table subset covers
 cell writes, `table.set_position` final-position mutations,
 `table.set_bgcolor` final background-color mutations,
 `table.set_frame_color` final frame-color mutations,
-`table.set_frame_width` final frame-width mutations, and
+`table.set_frame_width` final frame-width mutations,
+`table.set_border_color` final border-color mutations, and
 `table.cell_set_text` text mutations plus `table.cell_set_bgcolor` background
 color mutations plus `table.cell_set_text_color` text-color mutations plus
 `table.cell_set_width` width mutations plus `table.cell_set_height` height
@@ -673,8 +674,9 @@ unsupported. `table.set_position` updates only the table's final position
 value, with table layout left to hosts. `table.set_bgcolor` updates only the
 table's final background-color value. `table.set_frame_color` updates only the
 table's final frame-color value. `table.set_frame_width` updates only the
-table's final frame-width value; border rendering and table layout remain host
-responsibilities. `table.cell_set_text` updates only the target cell text snapshot
+table's final frame-width value. `table.set_border_color` updates only the
+table's final border-color value; border width, border rendering, and table
+layout remain host responsibilities. `table.cell_set_text` updates only the target cell text snapshot
 after `table.cell` has populated that cell; `table.cell_set_bgcolor` updates
 only the target cell background color snapshot after `table.cell` has populated
 that cell; `table.cell_set_text_color` updates only the target cell text-color

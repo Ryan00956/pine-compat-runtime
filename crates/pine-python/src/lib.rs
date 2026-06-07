@@ -9,7 +9,6 @@ use pine_syntax::{Diagnostic, SourceFile, Span};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PyModule, PySequence};
-
 mod diagnostics;
 #[cfg(test)]
 mod tests;
@@ -687,6 +686,7 @@ fn tables_to_py(py: Python<'_>, tables: &[pine_runtime::TableOutput]) -> PyResul
         item.set_item("bgColor", value_to_py(py, &table.bg_color)?)?;
         item.set_item("frameColor", value_to_py(py, &table.frame_color)?)?;
         item.set_item("frameWidth", value_to_py(py, &table.frame_width)?)?;
+        item.set_item("borderColor", value_to_py(py, &table.border_color)?)?;
         item.set_item("columns", table.columns)?;
         item.set_item("rows", table.rows)?;
         item.set_item("snapshots", table_snapshots_to_py(py, &table.snapshots)?)?;

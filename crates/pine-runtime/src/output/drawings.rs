@@ -79,6 +79,7 @@ pub struct TableOutput {
     pub bg_color: PineValue,
     pub frame_color: PineValue,
     pub frame_width: PineValue,
+    pub border_color: PineValue,
     pub columns: i64,
     pub rows: i64,
     pub snapshots: Vec<TableSnapshot>,

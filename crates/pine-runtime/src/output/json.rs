@@ -582,6 +582,8 @@ fn tables_json(tables: &[TableOutput]) -> String {
         output.push_str(&value_json(&table.frame_color));
         output.push_str(",\"frameWidth\":");
         output.push_str(&value_json(&table.frame_width));
+        output.push_str(",\"borderColor\":");
+        output.push_str(&value_json(&table.border_color));
         output.push_str(&format!(
             ",\"columns\":{},\"rows\":{},\"snapshots\":[",
             table.columns, table.rows

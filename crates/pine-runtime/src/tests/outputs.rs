@@ -567,11 +567,13 @@ if bar_index == 2
     table.set_bgcolor(id, color.yellow)
     table.set_frame_color(id, color.black)
     table.set_frame_width(id, 3)
+    table.set_border_color(id, color.white)
 table.cell(na, 0, 1, "noop")
 table.set_position(na, position.top_left)
 table.set_bgcolor(na, color.red)
 table.set_frame_color(na, color.blue)
 table.set_frame_width(na, 2)
+table.set_border_color(na, color.green)
 table.cell_set_text(na, 0, 1, "noop")
 table.cell_set_bgcolor(na, 0, 1, color.red)
 table.cell_set_text_color(na, 0, 1, color.blue)
@@ -602,6 +604,7 @@ plot(close)
     assert_eq!(table.bg_color, PineValue::Color(0xFFFF00));
     assert_eq!(table.frame_color, PineValue::Color(0x000000));
     assert_eq!(table.frame_width, PineValue::Int(3));
+    assert_eq!(table.border_color, PineValue::Color(0xFFFFFF));
     assert_eq!(table.columns, 2);
     assert_eq!(table.rows, 2);
     assert_eq!(table.snapshots.len(), 12);
