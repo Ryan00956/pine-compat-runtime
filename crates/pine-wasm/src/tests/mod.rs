@@ -275,6 +275,32 @@ fn run_script_csv_returns_dema_tema_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_macd_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/macd.pine"),
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+    )
+    .expect("MACD fixture should run");
+
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    let plots = parsed["plots"].as_array().expect("plots");
+    assert_eq!(plots.len(), 3);
+    let expected = [
+        [0.0, 0.16666666666666652, 0.30555555555555536],
+        [0.0, 0.11111111111111101, 0.24074074074074056],
+        [0.0, 0.05555555555555551, 0.0648148148148148],
+    ];
+    for (plot, expected_values) in plots.iter().zip(expected) {
+        let values = plot["values"].as_array().expect("MACD plot values");
+        for (actual, expected) in values.iter().zip(expected_values) {
+            let actual = actual.as_f64().expect("numeric MACD value");
+            assert!((actual - expected).abs() < 1e-12);
+        }
+    }
+}
+
+#[test]
 fn run_script_csv_returns_strings_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strings.pine"),

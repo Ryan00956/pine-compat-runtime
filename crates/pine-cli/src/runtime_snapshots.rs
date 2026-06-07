@@ -73,6 +73,7 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "runtime_dema_tema.json",
         "tests/fixtures/runtime/dema_tema.pine",
     ),
+    ("runtime_macd.json", "tests/fixtures/runtime/macd.pine"),
     ("runtime_math.json", "tests/fixtures/runtime/math.pine"),
     (
         "runtime_math_edge_cases.json",
