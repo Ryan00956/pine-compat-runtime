@@ -2019,6 +2019,20 @@ def test_run_script_returns_strategy_position_state_plots():
     ]
 
 
+def test_run_script_returns_strategy_equity_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_equity.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_equity.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_profit_state_plots():
     result = pine_compat.run_script(
         'strategy("demo", initial_capital=1000)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nplot(strategy.max_runup)\nplot(strategy.max_runup_percent)\nplot(strategy.max_drawdown)\nplot(strategy.max_drawdown_percent)\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nplot(strategy.max_runup)\nplot(strategy.max_runup_percent)\nplot(strategy.max_drawdown)\nplot(strategy.max_drawdown_percent)\n',

@@ -2418,6 +2418,17 @@ fn runs_strategy_position_state_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_equity_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_equity.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy equity fixture should run");
+
+    assert_snapshot("runtime_strategy_equity.json", &output);
+}
+
+#[test]
 fn runs_strategy_profit_state_from_csv_to_json() {
     let output = run_script_csv(
         "strategy(\"demo\", initial_capital=1000)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nplot(strategy.max_runup)\nplot(strategy.max_runup_percent)\nplot(strategy.max_drawdown)\nplot(strategy.max_drawdown_percent)\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nplot(strategy.max_runup)\nplot(strategy.max_runup_percent)\nplot(strategy.max_drawdown)\nplot(strategy.max_drawdown_percent)\n",
