@@ -1,0 +1,5 @@
+//@version=5
+indicator("Alert frequency close realtime")
+if close > 1
+    for i = 0 to 1
+        alert("Close alert", alert.freq_once_per_bar_close)

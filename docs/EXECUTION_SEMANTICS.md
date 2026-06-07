@@ -388,9 +388,11 @@ strings. Runtime output serializes `title` as the alert event `source` and
 serializes `source` as `alert`. The default frequency is
 `alert.freq_once_per_bar`, which emits at most one event per alert callsite per
 bar even if a loop reaches the same callsite multiple times. `alert.freq_all`
-emits every reached call. `alert.freq_once_per_bar_close`, TradingView-style
-`{{...}}` placeholder interpolation, and other alert frequency values remain
-unsupported until their realtime-close policy is designed.
+emits every reached call. `alert.freq_once_per_bar_close` emits at most one
+event per alert callsite only when execution is for a historical bar or a
+confirmed realtime bar update; forming realtime updates do not expose or commit
+close-frequency alert events. TradingView-style `{{...}}` placeholder
+interpolation and other alert frequency values remain unsupported.
 
 Alert conditions execute like ordinary reached statements in global flow,
 including supported `if`, `switch`, `for`, and `while` bodies. This is a

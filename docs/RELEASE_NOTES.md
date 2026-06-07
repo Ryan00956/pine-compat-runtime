@@ -3,10 +3,11 @@
 ## Unreleased
 
 - Added fixture-backed `alert()` frequency support for the const-string
-  `alert.freq_once_per_bar` default and `alert.freq_all` subset. The runtime
-  now suppresses repeated same-callsite default/once-per-bar alerts within a
-  bar while preserving every reached call for `alert.freq_all`;
-  `alert.freq_once_per_bar_close` remains unsupported.
+  `alert.freq_once_per_bar` default, `alert.freq_all`, and
+  `alert.freq_once_per_bar_close` subset. The runtime now suppresses repeated
+  same-callsite default/once-per-bar alerts within a bar, preserves every
+  reached call for `alert.freq_all`, and emits close-frequency alerts only on
+  historical or confirmed realtime bar-close execution.
 - Added a representative loop/state interaction fixture covering `if`,
   `switch`, `for`, `while`, `break`/`continue`, UDF block bodies, and stateful
   TA callsites in one runtime snapshot without widening accepted syntax.
@@ -1355,12 +1356,13 @@ consumer-visible output change is documented with snapshot updates.
   `alertcondition(condition, title, message)` is partially supported for
   bool-compatible conditions and const-string title/message, and
   `alert(message, freq?)` is partially supported for const-string messages and
-  the fixture-backed `alert.freq_once_per_bar`/`alert.freq_all` frequency
-  subset. Reached true conditions and reached alert calls emit deterministic
-  `{id, barIndex, time, message, source}` events in program order; forming
-  realtime events roll back until confirmed. `alert.freq_once_per_bar_close`
-  and TradingView-style placeholder interpolation remain unsupported until
-  deterministic semantics are designed.
+  the fixture-backed `alert.freq_once_per_bar`/`alert.freq_all`/
+  `alert.freq_once_per_bar_close` frequency subset. Reached true conditions and
+  reached alert calls emit deterministic `{id, barIndex, time, message,
+  source}` events in program order; forming realtime events roll back until
+  confirmed, and close-frequency alert calls emit only on historical or
+  confirmed realtime bar-close execution. TradingView-style placeholder
+  interpolation remains unsupported until deterministic semantics are designed.
 - The compatibility matrix source of truth is
   `tests/fixtures/conformance.tsv`; generated text and JSON matrix output must
   remain fixture-backed.

@@ -184,6 +184,7 @@ fn accepts_alert_const_string_subset() {
         r#"alert("Reached")
 alert("Every call", alert.freq_all)
 alert("Once", freq=alert.freq_once_per_bar)
+alert("Close", freq=alert.freq_once_per_bar_close)
 "#,
     );
 
@@ -208,7 +209,6 @@ fn rejects_alert_dynamic_message_and_unsupported_frequency() {
         r#"message = input.string("Reached", "Message")
 alert(message)
 alert("Reached", freq="once")
-alert("Close", freq=alert.freq_once_per_bar_close)
 "#,
     );
 

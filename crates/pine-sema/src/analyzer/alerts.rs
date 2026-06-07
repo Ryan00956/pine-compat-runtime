@@ -5,7 +5,10 @@ fn has_alert_placeholder(value: &str) -> bool {
 }
 
 fn is_supported_alert_frequency(value: &str) -> bool {
-    matches!(value, "alert.freq_all" | "alert.freq_once_per_bar")
+    matches!(
+        value,
+        "alert.freq_all" | "alert.freq_once_per_bar" | "alert.freq_once_per_bar_close"
+    )
 }
 
 impl Analyzer {
@@ -29,7 +32,7 @@ impl Analyzer {
                 if !supported {
                     self.unsupported(
                         "alert_frequency",
-                        "only alert.freq_all and alert.freq_once_per_bar are supported in the current alert frequency subset",
+                        "only alert.freq_all, alert.freq_once_per_bar, and alert.freq_once_per_bar_close are supported in the current alert frequency subset",
                         arg.span,
                     );
                 }

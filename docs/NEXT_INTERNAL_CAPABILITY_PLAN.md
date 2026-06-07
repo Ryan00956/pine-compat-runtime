@@ -181,9 +181,14 @@ state.
 Goal: make alert events more useful while keeping alert behavior deterministic
 and local to runtime output.
 
+Closed slice:
+
+- The local const-string alert frequency subset is fixture-backed for
+  `alert.freq_once_per_bar`, `alert.freq_all`, and
+  `alert.freq_once_per_bar_close`.
+
 Good next slices:
 
-- Narrow alert frequency semantics that can be expressed without host services.
 - Additional alert argument validation and diagnostics.
 - More branch, loop, and realtime rollback fixtures.
 - Better parity tests for alert output through CLI, Python, and WASM.
@@ -194,8 +199,8 @@ Keep out of scope until separately designed:
 - TradingView-style placeholder interpolation.
 - Host scheduling, throttling, or user notification policy.
 
-Recommended first slice: a local alert frequency subset only if the policy can
-be deterministic from bar-by-bar execution and tested without external services.
+Recommended next slice: choose alert work only when it is fixture-backed and
+does not require external delivery or host scheduling.
 
 ## Recommended Order
 

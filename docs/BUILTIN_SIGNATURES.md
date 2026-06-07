@@ -568,10 +568,11 @@ evaluates to `true`. `title` is serialized as event `source`; `message` is
 serialized as event `message`. `alert` serializes `source` as `alert` and
 supports a narrow const-string frequency subset: the default
 `alert.freq_once_per_bar` emits at most one event per callsite per bar, while
-`alert.freq_all` emits every reached call. `alert.freq_once_per_bar_close`,
-dynamic message/title strings, TradingView-style `{{...}}` placeholder
-interpolation, and alert side effects inside UDF or requested-context
-expressions are not part of the current subset.
+`alert.freq_all` emits every reached call. `alert.freq_once_per_bar_close`
+emits at most one event per callsite only during historical or confirmed
+realtime bar-close execution. Dynamic message/title strings, TradingView-style
+`{{...}}` placeholder interpolation, and alert side effects inside UDF or
+requested-context expressions are not part of the current subset.
 
 `color-compatible` should initially accept:
 

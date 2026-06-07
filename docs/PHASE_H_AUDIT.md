@@ -25,9 +25,8 @@ runtime output model.
   not leak or duplicate.
 - `alert` and `alertcondition` are classified as output side effects and remain
   rejected in UDFs and requested-context expressions.
-- Dynamic alert strings, `{{...}}` placeholder interpolation,
-  `alert.freq_once_per_bar_close`, host delivery, strategy alerts, and other
-  alert variants remain unsupported.
+- Dynamic alert strings, `{{...}}` placeholder interpolation, host delivery,
+  strategy alerts, and other alert variants remain unsupported.
 
 ## Schema And Host Surface
 
@@ -68,6 +67,7 @@ Realtime fixtures:
 - `tests/fixtures/realtime/alertcondition_rollback.pine`
 - `tests/fixtures/realtime/alert_rollback.pine`
 - `tests/fixtures/realtime/alert_policy.pine`
+- `tests/fixtures/realtime/alert_frequency_close.pine`
 
 Semantic fixtures:
 
@@ -103,8 +103,8 @@ Manual checks on the closeout workspace:
 - `cargo run -q -p pine-cli -- run tests/fixtures/runtime/alert.pine --bars tests/fixtures/runtime/bars.csv`
   emits `schemaVersion: 3` and `alert()` events with `source: "alert"`.
 - `cargo run -q -p pine-cli -- run tests/fixtures/runtime/alert_frequency.pine --bars tests/fixtures/runtime/bars.csv`
-  emits default/once-per-bar alert events once per callsite per bar and
-  `alert.freq_all` events for every reached call.
+  emits default/once-per-bar and close-frequency alert events once per callsite
+  per historical bar, and `alert.freq_all` events for every reached call.
 
 ## Verification
 
@@ -136,8 +136,6 @@ and `python3 -m pytest python/tests`.
 
 ## Maintenance Tails
 
-- `alert.freq_once_per_bar_close` remains unsupported until deterministic
-  realtime-close semantics are designed.
 - TradingView-style alert placeholder interpolation remains unsupported.
 - Dynamic/simple/input/series message strings remain unsupported for alert
   messages and alertcondition titles/messages.

@@ -42,10 +42,10 @@ Implemented or partially implemented:
   a later phase needs it.
 - Partial alert events for `alertcondition()` and `alert()` with a versioned
   public `alerts` runtime output. The Phase H alert subset is closed in
-  `docs/PHASE_H_AUDIT.md`; only `alert.freq_once_per_bar` and
-  `alert.freq_all` are supported for `alert()` frequency, while
-  `alert.freq_once_per_bar_close`, placeholders, host delivery, and strategy
-  alerts remain out of scope.
+  `docs/PHASE_H_AUDIT.md`; `alert.freq_once_per_bar`, `alert.freq_all`, and
+  `alert.freq_once_per_bar_close` are supported for const-string `alert()`
+  frequency, while placeholders, host delivery, and strategy alerts remain out
+  of scope.
 - Phase J libraries/user types are closed for the fixture-backed claimed
   subset in `docs/PHASE_J_AUDIT.md`: host-provided exact-key imports expose
   exported const expressions and pure exported functions, local scalar-field
@@ -434,7 +434,8 @@ Delivered scope:
 - `alertcondition(condition, title, message)` with bool-compatible conditions
   and const-string title/message values.
 - `alert(message, freq?)` with const-string messages plus
-  `alert.freq_once_per_bar` and `alert.freq_all`.
+  `alert.freq_once_per_bar`, `alert.freq_all`, and
+  `alert.freq_once_per_bar_close`.
 - Deterministic public runtime alert events in `schemaVersion: 3`.
 - Historical, incremental, and realtime rollback fixture coverage.
 - Stable diagnostics for unsupported frequency modes, placeholders,
@@ -442,8 +443,7 @@ Delivered scope:
 
 Maintenance tails:
 
-- `alert.freq_once_per_bar_close` and placeholder interpolation need a
-  dedicated design before support is claimed.
+- Placeholder interpolation needs a dedicated design before support is claimed.
 - Host-side alert delivery APIs are not part of the current runtime host
   surfaces.
 - Strategy alerts remain blocked on Phase G strategy runtime semantics.

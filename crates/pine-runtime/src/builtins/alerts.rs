@@ -7,6 +7,7 @@ use crate::*;
 enum AlertFrequency {
     All,
     OncePerBar,
+    OncePerBarClose,
 }
 
 impl<'a> HistoricalRuntime<'a> {
@@ -30,10 +31,24 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         let message = self.alert_string_arg("alert", args, 0, "message")?;
         let frequency = self.alert_frequency_arg(args)?;
-        if matches!(frequency, AlertFrequency::OncePerBar)
-            && !self.alert_once_per_bar_calls.insert(call_site_id)
-        {
-            return Ok(PineValue::Void);
+        match frequency {
+            AlertFrequency::All => {}
+            AlertFrequency::OncePerBar => {
+                if !self.alert_once_per_bar_calls.insert(call_site_id) {
+                    return Ok(PineValue::Void);
+                }
+            }
+            AlertFrequency::OncePerBarClose => {
+                if !matches!(
+                    self.current_bar_update_kind,
+                    BarUpdateKind::Historical | BarUpdateKind::Confirmed
+                ) {
+                    return Ok(PineValue::Void);
+                }
+                if !self.alert_once_per_bar_calls.insert(call_site_id) {
+                    return Ok(PineValue::Void);
+                }
+            }
         }
         self.push_alert_event(call_site_id, "alert".to_owned(), message);
         Ok(PineValue::Void)
@@ -99,6 +114,9 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::String(value) if value == "alert.freq_all" => Ok(AlertFrequency::All),
             PineValue::String(value) if value == "alert.freq_once_per_bar" => {
                 Ok(AlertFrequency::OncePerBar)
+            }
+            PineValue::String(value) if value == "alert.freq_once_per_bar_close" => {
+                Ok(AlertFrequency::OncePerBarClose)
             }
             PineValue::String(value) => Err(RuntimeError {
                 message: format!("unsupported alert frequency {value:?}"),

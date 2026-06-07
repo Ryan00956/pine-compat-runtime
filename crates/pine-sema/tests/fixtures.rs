@@ -1226,7 +1226,7 @@ fn reports_unsupported_alert_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_alert.pine",
         "alert_frequency",
-        "alert.freq_all and alert.freq_once_per_bar",
+        "alert.freq_all, alert.freq_once_per_bar, and alert.freq_once_per_bar_close",
     );
 }
 

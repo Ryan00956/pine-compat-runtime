@@ -93,15 +93,18 @@ if bar_index == 0
         alert("Explicit once", alert.freq_once_per_bar)
     for i = 0 to 1
         alert("All", alert.freq_all)
+    for i = 0 to 1
+        alert("Close", alert.freq_once_per_bar_close)
 "#,
         &timed_bars(&[1.0]),
     );
 
-    assert_eq!(result.alerts.len(), 4);
+    assert_eq!(result.alerts.len(), 5);
     assert_eq!(result.alerts[0].message, "Default once");
     assert_eq!(result.alerts[1].message, "Explicit once");
     assert_eq!(result.alerts[2].message, "All");
     assert_eq!(result.alerts[3].message, "All");
+    assert_eq!(result.alerts[4].message, "Close");
 }
 
 fn run_alert_script(source: &str, bars: &[Bar]) -> RuntimeResult {
