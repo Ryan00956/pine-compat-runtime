@@ -425,9 +425,8 @@ snapshot stores `column`, `row`, `text`, `bgColor`, `textColor`, `width`,
 `height`, `textSize`, `textHalign`, and `textValign`, avoiding host-specific
 table layout assumptions;
 `table.new` may initialize the final background color, frame color, frame
-width, and border color through its optional `bgcolor`, `frame_color`,
-`frame_width`, and `border_color` arguments, while border-width initialization
-remains unsupported;
+width, border color, and border width through its optional `bgcolor`,
+`frame_color`, `frame_width`, `border_color`, and `border_width` arguments;
 `table.set_position` updates the table's final position, `table.set_bgcolor`
 updates the table's final background color, `table.set_frame_color` updates the
 table's final frame color, `table.set_frame_width` updates the table's final
