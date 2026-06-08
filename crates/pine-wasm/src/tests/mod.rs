@@ -1072,6 +1072,17 @@ fn run_script_csv_returns_swma_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_obv_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/obv.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("obv fixture should run");
+
+    assert_snapshot("runtime_obv.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_macd_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/macd.pine"),
