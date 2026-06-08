@@ -3251,6 +3251,22 @@ fn runs_strategy_exit_reservation_qty_percent_replacement_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_reservation_qty_percent_clamp_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_qty_percent_clamp.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit reservation qty percent clamp fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_reservation_qty_percent_clamp.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_reservation_qty_bracket_clamp_fixture_contract() {
     let output = run_script_csv(
         include_str!(
