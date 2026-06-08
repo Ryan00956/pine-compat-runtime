@@ -1207,6 +1207,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_price_persistent_from_entries.pine",
     ),
     (
+        "runtime_strategy_pyramiding_exit_omitted_trail_price_persistent_same_id.json",
+        "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_price_persistent_same_id.pine",
+    ),
+    (
         "runtime_strategy_pyramiding_exit_omitted_trail_points_from_entries.json",
         "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_from_entries.pine",
     ),
