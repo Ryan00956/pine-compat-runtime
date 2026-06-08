@@ -8005,6 +8005,13 @@ def test_run_script_returns_omitted_trail_price_same_id_fixture_contract():
         ROOT
         / "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_price_same_id.pine"
     ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_pyramiding_exit_omitted_trail_price_same_id.json"
+        ).read_text()
+    )
+
     result = pine_compat.run_script(
         source,
         fixture_bars(
@@ -8088,6 +8095,7 @@ def test_run_script_returns_omitted_trail_price_same_id_fixture_contract():
     ]
     assert result["diagnostics"] == []
     assert result["strategy"]["diagnostics"] == []
+    assert result == expected
     strategy_json = json.dumps(result["strategy"])
     assert "pending" not in strategy_json
     assert "reservation" not in strategy_json
