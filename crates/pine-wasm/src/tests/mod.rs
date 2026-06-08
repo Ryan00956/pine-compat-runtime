@@ -1523,6 +1523,17 @@ fn run_script_csv_returns_covariance_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_median_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/median.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("median fixture should run");
+
+    assert_snapshot("runtime_median.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_macd_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/macd.pine"),
