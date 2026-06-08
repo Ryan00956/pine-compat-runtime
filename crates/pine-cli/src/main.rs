@@ -840,6 +840,9 @@ mod tests {
             "tests/fixtures/runtime/strategy_trade_outcome_counts.pine" => include_str!(
                 "../../../tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv"
             ),
+            "tests/fixtures/runtime/strategy_profit_percent_state.pine" => include_str!(
+                "../../../tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv"
+            ),
             "tests/fixtures/runtime/strategy_exit_profit_loss_interactions.pine" => include_str!(
                 "../../../tests/fixtures/runtime/strategy_exit_profit_loss_interactions_bars.csv"
             ),

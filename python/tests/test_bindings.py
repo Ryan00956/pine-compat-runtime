@@ -3955,6 +3955,22 @@ def test_run_script_returns_strategy_profit_percent_plots():
     assert "profitPercent" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_profit_percent_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_profit_percent_state.pine").read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_profit_percent_state.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_close_trade_contract():
     result = pine_compat.run_script(
         'strategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close("L")\n',
