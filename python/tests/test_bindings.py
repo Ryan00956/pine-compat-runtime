@@ -2105,6 +2105,55 @@ def test_run_script_returns_strategy_trade_count_plots():
     assert result["strategy"]["trades"][0]["id"] == "L"
 
 
+def test_run_script_returns_strategy_trade_count_fixture_plots():
+    source = (ROOT / "tests/fixtures/runtime/strategy_trade_counts.pine").read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0, 0, 0, 1],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+        [0, 0, 1, 0],
+        [0, 0, 1, 1],
+        [0, 0, 0, 0],
+        [None, 0, 0, 1],
+        [None, 0, 0, 0],
+    ]
+    assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
+    assert result["strategy"]["orders"] == [
+        {
+            "id": "L",
+            "barIndex": 2,
+            "time": 3,
+            "direction": "strategy.long",
+            "qty": 1.0,
+            "price": 3.0,
+        }
+    ]
+    assert result["strategy"]["trades"] == [
+        {
+            "id": "L",
+            "entryBarIndex": 2,
+            "exitBarIndex": 2,
+            "entryTime": 3,
+            "exitTime": 3,
+            "entryPrice": 3.0,
+            "exitPrice": 3.0,
+            "qty": 1.0,
+            "profit": 0.0,
+        }
+    ]
+    assert result["strategy"]["position"] == [
+        {"barIndex": 2, "size": 1.0, "avgPrice": 3.0},
+        {"barIndex": 2, "size": 0.0, "avgPrice": None},
+    ]
+    assert "closedTrades" not in result["strategy"]
+    assert "openTrades" not in result["strategy"]
+
+
 def test_run_script_returns_strategy_exit_trade_count_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_exit_trade_counts.pine").read_text()
     result = pine_compat.run_script(
