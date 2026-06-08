@@ -223,7 +223,8 @@ impl Analyzer {
             StmtKind::Continue => HirStmtKind::Continue,
             StmtKind::Decl { name, value, .. } => {
                 let symbol = self.lower_decl_symbol(name, statement.span)?;
-                if let Some(type_name) = self.user_type_name_of_expr(value) {
+                if let Some(type_name) = self.user_type_name_of_expr_with_params(value, param_exprs)
+                {
                     self.symbol_user_types.insert(symbol.id, type_name);
                 }
                 HirStmtKind::Decl {
@@ -559,7 +560,8 @@ impl Analyzer {
         let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
         let mut resolved_args = vec![None; function.params.len()];
         for (arg, param_index) in args.iter().zip(arg_indices) {
-            let arg_user_type = self.user_type_name_of_expr(&arg.value);
+            let arg_user_type =
+                self.user_type_name_of_expr_with_params(&arg.value, outer_param_exprs);
             let arg_expr =
                 self.lower_expr_with_params(&arg.value, outer_param_exprs, outer_param_types)?;
             let arg_type = self.type_of_expr_with_params(&arg.value, outer_param_types)?;
@@ -697,6 +699,25 @@ impl Analyzer {
         self.exit_lowering_inline();
         let body = body?;
         Some(prepend_block_statements(arg_statements, body))
+    }
+
+    fn user_type_name_of_expr_with_params(
+        &self,
+        expr: &Expr,
+        param_exprs: &HashMap<String, HirExpr>,
+    ) -> Option<String> {
+        if let Some(type_name) = self.user_type_name_of_expr(expr) {
+            return Some(type_name);
+        }
+        let name = match &expr.kind {
+            ExprKind::Identifier(name) => name,
+            ExprKind::QualifiedName(parts) if parts.len() == 1 => &parts[0],
+            _ => return None,
+        };
+        let HirExprKind::Symbol(symbol_id) = param_exprs.get(name)?.kind else {
+            return None;
+        };
+        self.symbol_user_types.get(&symbol_id).cloned()
     }
 
     pub(crate) fn lower_function_body(

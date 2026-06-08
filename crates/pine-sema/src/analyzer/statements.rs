@@ -195,7 +195,7 @@ impl Analyzer {
                 } else {
                     self.define_symbol_with_persistence(name, value_type, persistence, var_slot_id)
                 };
-                if let Some(type_name) = self.expr_user_type_name(value) {
+                if let Some(type_name) = self.user_type_name_of_expr(value) {
                     self.mark_symbol_user_type(symbol, type_name);
                 }
                 self.bind_symbol(name, statement.span, symbol);

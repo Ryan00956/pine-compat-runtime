@@ -2,9 +2,10 @@
 
 ## Unreleased
 
-- Added fixture-backed UDT passthrough through direct UDF parameters and return
-  values. Local UDT values can now be passed to a pure UDF that returns the same
-  parameter, assigned at the callsite, and field-read there; field mutation, UDF
+- Added fixture-backed UDT passthrough through UDF parameters and return values.
+  Local UDT values can now be passed to a pure UDF that directly returns the
+  same parameter, or a block-local alias chain that starts from that parameter,
+  assigned at the callsite, and field-read there; field mutation, UDF
   construction from untyped scalar parameters, imported UDT identity, UDT
   history, `varip`, nested UDT fields, and UDT arrays remain outside the
   supported subset.

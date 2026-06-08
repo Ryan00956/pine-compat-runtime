@@ -436,9 +436,10 @@ arrays.
 Local user-defined types are part of the executable Phase J subset only for
 top-level scalar `int`/`float`/`bool`/`string`/`color` fields. `Type.new(...)`
 constructs immutable runtime values, field reads are typed from the local UDT
-declaration, and ordinary variables plus `var` may hold those values. Direct
-UDF parameter passthrough is supported when the function returns the UDT
-parameter itself, so the returned value can be assigned and field-read at the
+declaration, and ordinary variables plus `var` may hold those values. UDF
+parameter passthrough is supported when the function returns the UDT parameter
+itself, or when a block-bodied function returns a local alias chain that starts
+from that parameter, so the returned value can be assigned and field-read at the
 callsite. UDT history references, field mutation, `varip`, nested UDT fields,
 UDT arrays, constructor inference from untyped scalar UDF parameters, and
 imported UDT identity remain outside the claim.

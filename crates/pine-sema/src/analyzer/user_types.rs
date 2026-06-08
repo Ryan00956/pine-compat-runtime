@@ -300,28 +300,19 @@ impl Analyzer {
                 .resolve(&parts[0])
                 .and_then(|symbol| self.symbol_user_types.get(&symbol.id).cloned()),
             ExprKind::Call { callee, args } => {
-                self.user_type_name_of_direct_udf_passthrough(expr_name(callee)?.as_str(), args)
+                self.user_type_name_of_udf_passthrough(expr_name(callee)?.as_str(), args)
             }
             _ => None,
         }
     }
 
-    pub(crate) fn user_type_name_of_direct_udf_passthrough(
+    pub(crate) fn user_type_name_of_udf_passthrough(
         &self,
         name: &str,
         args: &[CallArg],
     ) -> Option<String> {
         let function = self.functions.get(name)?;
-        let FunctionBody::Expr(expr) = &function.body else {
-            return None;
-        };
-        let ExprKind::Identifier(returned_param) = &expr.kind else {
-            return None;
-        };
-        let param_index = function
-            .params
-            .iter()
-            .position(|param| param == returned_param)?;
+        let param_index = returned_udf_param_index(&function.body, &function.params)?;
         let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
         let arg_index = arg_indices
             .iter()
@@ -445,4 +436,40 @@ impl Analyzer {
         };
         Some(PineType::new(Qualifier::Series, kind))
     }
+}
+
+fn returned_udf_param_index(body: &FunctionBody, params: &[String]) -> Option<usize> {
+    let returned_name = match body {
+        FunctionBody::Expr(expr) => identifier_name(expr)?,
+        FunctionBody::Block(statements) => {
+            let (last, prefix) = statements.split_last()?;
+            let StmtKind::Expr(expr) = &last.kind else {
+                return None;
+            };
+            let mut aliases = HashMap::new();
+            for statement in prefix {
+                if let StmtKind::Decl { name, value, .. } = &statement.kind
+                    && let Some(source_name) = identifier_name(value)
+                {
+                    aliases.insert(name.clone(), source_name.clone());
+                }
+            }
+            let mut name = identifier_name(expr)?.clone();
+            for _ in 0..=aliases.len() {
+                if let Some(index) = params.iter().position(|param| param == &name) {
+                    return Some(index);
+                }
+                name = aliases.get(&name)?.clone();
+            }
+            return None;
+        }
+    };
+    params.iter().position(|param| param == returned_name)
+}
+
+fn identifier_name(expr: &Expr) -> Option<&String> {
+    let ExprKind::Identifier(name) = &expr.kind else {
+        return None;
+    };
+    Some(name)
 }

@@ -50,6 +50,30 @@ plot(same.x - same.y)
 }
 
 #[test]
+fn accepts_udt_block_body_user_function_return() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+wrap(p) =>
+    copy = p
+    copy
+p = Point.new(close, open)
+wrapped = wrap(p)
+plot(wrapped.x + wrapped.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_unknown_user_method() {
     let analysis = analyze(
         r#"type Point
