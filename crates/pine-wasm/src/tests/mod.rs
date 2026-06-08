@@ -1292,6 +1292,17 @@ fn run_script_csv_returns_bop_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_bb_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/bb.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("bb fixture should run");
+
+    assert_snapshot("runtime_bb.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_alma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/alma.pine"),
