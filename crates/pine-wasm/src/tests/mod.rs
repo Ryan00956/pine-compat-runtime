@@ -3241,6 +3241,19 @@ fn runs_strategy_exit_qty_percent_full_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_qty_percent_full_clamp_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_qty_percent_full_clamp.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit qty percent full clamp fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_qty_percent_full_clamp.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_reservation_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(
