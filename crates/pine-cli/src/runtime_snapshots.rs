@@ -435,6 +435,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/varip_array.pine",
     ),
     (
+        "runtime_request_security_same_context.json",
+        "tests/fixtures/runtime/request_security_same_context.pine",
+    ),
+    (
         "runtime_strategy_empty.json",
         "tests/fixtures/runtime/strategy_no_order.pine",
     ),

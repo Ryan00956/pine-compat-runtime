@@ -1122,6 +1122,17 @@ fn run_script_csv_returns_varip_array_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_request_security_same_context_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/request_security_same_context.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("request.security same-context fixture should run");
+
+    assert_snapshot("runtime_request_security_same_context.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
