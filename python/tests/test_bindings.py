@@ -3374,6 +3374,24 @@ def test_run_script_returns_strategy_exit_qty_bracket_partial_fixture_contract()
     assert result == expected
 
 
+def test_run_script_returns_strategy_exit_qty_trailing_partial_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_exit_qty_trailing_partial.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_exit_qty_trailing_partial.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_qty_full_clamp_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_exit_qty_full_clamp.pine"
