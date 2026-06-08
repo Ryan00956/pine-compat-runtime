@@ -3490,6 +3490,24 @@ def test_run_script_returns_strategy_exit_trailing_fixture_contract():
     assert result["strategy"]["diagnostics"] == []
 
 
+def test_run_script_returns_strategy_exit_trail_points_fill_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_exit_trail_points_fill.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_exit_trail_points_fill.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_trailing_state_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_exit_trailing_state.pine").read_text()
     expected = json.loads(
