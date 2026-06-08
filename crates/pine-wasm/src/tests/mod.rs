@@ -3467,6 +3467,24 @@ fn runs_strategy_exit_reservation_qty_trailing_price_multi_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_reservation_qty_trailing_replacement_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_replacement.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_bars.csv"
+        ),
+    )
+    .expect("strategy exit reservation qty trailing replacement fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_reservation_qty_trailing_replacement.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_reservation_qty_percent_trailing_multi_fixture_contract() {
     let output = run_script_csv(
         include_str!(
