@@ -1165,6 +1165,18 @@ def test_run_script_returns_swma_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_accdist_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/accdist.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_accdist.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_obv_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/obv.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_obv.json").read_text())
