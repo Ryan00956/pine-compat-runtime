@@ -3390,6 +3390,20 @@ def test_run_script_returns_strategy_exit_qty_full_clamp_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_exit_qty_repeated_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_qty_repeated.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_qty_repeated.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_qty_precedence_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_exit_qty_precedence_stop.pine").read_text()
     result = pine_compat.run_script(
