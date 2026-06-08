@@ -2923,6 +2923,19 @@ fn runs_strategy_exit_bracket_loss_profit_profit_fill_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_bracket_mixed_pairs_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_bracket_mixed_pairs.pine"),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_bracket_mixed_pairs_bars.csv"
+        ),
+    )
+    .expect("strategy exit mixed bracket pairs fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_bracket_mixed_pairs.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_trailing_fixture_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_trail_price_fill.pine"),
