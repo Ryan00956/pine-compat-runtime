@@ -781,6 +781,17 @@ fn run_script_csv_returns_box_mutation_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_box_control_flow_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/box_control_flow.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("box control-flow fixture should run");
+
+    assert_snapshot("runtime_box_control_flow.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_box_getters_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/box_getters.pine"),
