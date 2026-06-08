@@ -983,6 +983,18 @@ def test_run_script_returns_block_statements_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_for_edges_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/for_edges.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_for_edges.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_math_edge_cases_as_none():
     source = (ROOT / "tests/fixtures/runtime/math_edge_cases.pine").read_text()
     result = pine_compat.run_script(source, BARS)
