@@ -627,6 +627,17 @@ fn run_script_csv_returns_array_join_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_array_slice_concat_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_slice_concat.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("array slice concat fixture should run");
+
+    assert_snapshot("runtime_array_slice_concat.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_line_new_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/line_new.pine"),

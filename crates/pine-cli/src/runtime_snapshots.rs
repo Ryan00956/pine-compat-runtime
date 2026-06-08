@@ -87,6 +87,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/array_join.pine",
     ),
     (
+        "runtime_array_slice_concat.json",
+        "tests/fixtures/runtime/array_slice_concat.pine",
+    ),
+    (
         "runtime_timeframe.json",
         "tests/fixtures/runtime/timeframe.pine",
     ),
