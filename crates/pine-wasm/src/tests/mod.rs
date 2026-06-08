@@ -3102,6 +3102,17 @@ fn runs_strategy_exit_trailing_replacement_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_trailing_repeated_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_repeated.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
+    )
+    .expect("strategy exit trailing repeated fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_trailing_repeated.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_omitted_trailing_replacement_fixture_contract() {
     let output = run_script_csv(
         include_str!(
