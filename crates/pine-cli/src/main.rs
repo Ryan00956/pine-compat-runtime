@@ -970,6 +970,11 @@ mod tests {
                     "../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_profit_from_entries_bars.csv"
                 )
             }
+            "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_profit_same_id.pine" => {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_profit_same_id_bars.csv"
+                )
+            }
             "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_profit_persistent_from_entries.pine" =>
             {
                 include_str!(
