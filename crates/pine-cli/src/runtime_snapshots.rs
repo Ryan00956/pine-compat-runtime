@@ -127,6 +127,7 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
     ("runtime_nvi.json", "tests/fixtures/runtime/nvi.pine"),
     ("runtime_obv.json", "tests/fixtures/runtime/obv.pine"),
     ("runtime_pvi.json", "tests/fixtures/runtime/pvi.pine"),
+    ("runtime_pvt.json", "tests/fixtures/runtime/pvt.pine"),
     (
         "runtime_dema_tema.json",
         "tests/fixtures/runtime/dema_tema.pine",
