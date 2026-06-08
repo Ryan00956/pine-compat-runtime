@@ -1067,6 +1067,17 @@ fn run_script_csv_returns_dynamic_history_scopes_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_series_history_offset_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/series_history_offset.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("series history offset fixture should run");
+
+    assert_snapshot("runtime_series_history_offset.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),

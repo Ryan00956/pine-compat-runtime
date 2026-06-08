@@ -415,6 +415,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/dynamic_history_scopes.pine",
     ),
     (
+        "runtime_series_history_offset.json",
+        "tests/fixtures/runtime/series_history_offset.pine",
+    ),
+    (
         "runtime_strategy_empty.json",
         "tests/fixtures/runtime/strategy_no_order.pine",
     ),
