@@ -2960,6 +2960,17 @@ fn runs_strategy_exit_bracket_replacement_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_bracket_state_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_bracket_state.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit bracket state fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_bracket_state.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_trailing_fixture_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_trail_price_fill.pine"),
