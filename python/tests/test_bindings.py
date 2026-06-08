@@ -1603,6 +1603,18 @@ def test_run_script_returns_pvt_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_vwap_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/vwap.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_vwap.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_wad_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/wad.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_wad.json").read_text())
