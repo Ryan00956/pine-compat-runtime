@@ -1226,6 +1226,17 @@ fn run_script_csv_returns_extreme_bars_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_tsi_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/tsi.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("tsi fixture should run");
+
+    assert_snapshot("runtime_tsi.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_alma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/alma.pine"),
