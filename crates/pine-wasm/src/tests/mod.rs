@@ -3413,6 +3413,24 @@ fn runs_strategy_exit_reservation_qty_mixed_trailing_multi_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_reservation_trailing_state_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_state.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_bars.csv"
+        ),
+    )
+    .expect("strategy exit reservation trailing state fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_reservation_trailing_state.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_reservation_qty_trailing_clamp_fixture_contract() {
     let output = run_script_csv(
         include_str!(
