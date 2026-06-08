@@ -289,6 +289,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/line_mutation.pine",
     ),
     (
+        "runtime_line_control_flow.json",
+        "tests/fixtures/runtime/line_control_flow.pine",
+    ),
+    (
         "runtime_line_delete.json",
         "tests/fixtures/runtime/line_delete.pine",
     ),
