@@ -3018,6 +3018,27 @@ def test_run_script_returns_strategy_exit_bracket_invalid_leg_fixture_contract()
     assert result == expected
 
 
+def test_run_script_returns_strategy_exit_bracket_loss_profit_loss_fill_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_fill.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_exit_bracket_loss_profit_loss_fill.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_bars.csv"
+        ),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_trailing_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_exit_trail_price_fill.pine").read_text()
     result = pine_compat.run_script(
