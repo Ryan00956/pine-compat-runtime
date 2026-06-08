@@ -1501,6 +1501,17 @@ fn run_script_csv_returns_wvad_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_correlation_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/correlation.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("correlation fixture should run");
+
+    assert_snapshot("runtime_correlation.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_macd_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/macd.pine"),
