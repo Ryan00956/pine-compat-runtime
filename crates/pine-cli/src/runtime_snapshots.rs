@@ -475,6 +475,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_default_quantity.pine",
     ),
     (
+        "runtime_strategy_builtin_default_quantity.json",
+        "tests/fixtures/runtime/strategy_builtin_default_quantity.pine",
+    ),
+    (
         "runtime_strategy_percent_of_equity_default_quantity.json",
         "tests/fixtures/runtime/strategy_percent_of_equity_default_quantity.pine",
     ),

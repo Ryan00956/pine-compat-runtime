@@ -3094,6 +3094,24 @@ def test_run_script_returns_strategy_default_quantity_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_strategy_builtin_default_quantity_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_builtin_default_quantity.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_builtin_default_quantity.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_default_quantity_override_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_default_quantity_override.pine"

@@ -3309,6 +3309,17 @@ fn runs_strategy_default_quantity_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_builtin_default_quantity_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_builtin_default_quantity.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy builtin default quantity fixture should run");
+
+    assert_snapshot("runtime_strategy_builtin_default_quantity.json", &output);
+}
+
+#[test]
 fn runs_strategy_default_quantity_override_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_default_quantity_override.pine"),
