@@ -2878,6 +2878,17 @@ fn runs_strategy_exit_bracket_interactions_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_bracket_invalid_leg_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_bracket_invalid_leg.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit bracket invalid-leg fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_bracket_invalid_leg.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_trailing_fixture_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_trail_price_fill.pine"),
