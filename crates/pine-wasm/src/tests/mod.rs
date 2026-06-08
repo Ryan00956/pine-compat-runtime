@@ -3080,6 +3080,17 @@ fn runs_strategy_exit_trailing_fixture_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_trailing_state_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_state.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
+    )
+    .expect("strategy exit trailing state fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_trailing_state.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_omitted_trailing_replacement_fixture_contract() {
     let output = run_script_csv(
         include_str!(
