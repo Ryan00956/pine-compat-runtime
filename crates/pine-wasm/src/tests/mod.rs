@@ -2679,6 +2679,17 @@ fn runs_strategy_trade_outcome_counts_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_trade_outcome_counts_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_trade_outcome_counts.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv"),
+    )
+    .expect("strategy trade outcome count fixture should run");
+
+    assert_snapshot("runtime_strategy_trade_outcome_counts.json", &output);
+}
+
+#[test]
 fn runs_strategy_profit_percent_state_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_profit_percent_state.pine"),
