@@ -4176,6 +4176,22 @@ fn runs_strategy_exit_reservation_bracket_single_downside_precedence_fixture_con
 }
 
 #[test]
+fn runs_strategy_exit_reservation_bracket_single_replacement_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_bracket_single_replacement.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit reservation bracket single replacement fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_reservation_bracket_single_replacement.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_trailing_reservation_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(
