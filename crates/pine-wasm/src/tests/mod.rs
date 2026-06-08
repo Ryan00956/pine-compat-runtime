@@ -5871,6 +5871,22 @@ fn runs_strategy_exit_active_entry_attachment_from_csv_to_public_strategy_json()
 }
 
 #[test]
+fn runs_strategy_exit_active_entry_attachment_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_active_entry_attachment.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit active-entry attachment fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_active_entry_attachment.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_active_entry_profit_attachment_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(

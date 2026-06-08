@@ -6226,6 +6226,24 @@ def test_run_script_returns_strategy_exit_active_entry_attachment_contract():
     assert "exitReason" not in strategy_json
 
 
+def test_run_script_returns_strategy_exit_active_entry_attachment_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_exit_active_entry_attachment.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_exit_active_entry_attachment.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_active_entry_profit_attachment_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_exit_active_entry_profit_attachment.pine"

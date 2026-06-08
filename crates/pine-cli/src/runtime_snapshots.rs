@@ -607,6 +607,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_exit_profit.pine",
     ),
     (
+        "runtime_strategy_exit_active_entry_attachment.json",
+        "tests/fixtures/runtime/strategy_exit_active_entry_attachment.pine",
+    ),
+    (
         "runtime_strategy_exit_active_entry_profit_attachment.json",
         "tests/fixtures/runtime/strategy_exit_active_entry_profit_attachment.pine",
     ),
