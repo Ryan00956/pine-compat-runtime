@@ -1666,6 +1666,17 @@ fn run_script_csv_returns_hma_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_if_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/if.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("if fixture should run");
+
+    assert_snapshot("runtime_if.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_macd_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/macd.pine"),
