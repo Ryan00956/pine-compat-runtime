@@ -378,6 +378,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
     ),
     ("runtime_switch.json", "tests/fixtures/runtime/switch.pine"),
     (
+        "runtime_block_statements.json",
+        "tests/fixtures/runtime/block_statements.pine",
+    ),
+    (
         "runtime_strategy_empty.json",
         "tests/fixtures/runtime/strategy_no_order.pine",
     ),

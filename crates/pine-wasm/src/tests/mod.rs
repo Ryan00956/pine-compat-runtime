@@ -957,6 +957,17 @@ fn run_script_csv_returns_switch_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_block_statements_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/block_statements.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("block statements fixture should run");
+
+    assert_snapshot("runtime_block_statements.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
