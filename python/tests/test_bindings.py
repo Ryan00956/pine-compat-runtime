@@ -5746,6 +5746,28 @@ def test_run_script_returns_omitted_current_all_entry_exit_fixture_contract():
     assert "exitReason" not in strategy_json
 
 
+def test_run_script_returns_omitted_persistent_all_entry_exit_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_persistent.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_pyramiding_exit_omitted_from_entry_persistent.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_persistent_bars.csv"
+        ),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_omitted_profit_same_id_fixture_contract():
     source = (
         ROOT

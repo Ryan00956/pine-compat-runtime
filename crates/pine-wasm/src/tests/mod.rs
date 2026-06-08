@@ -4324,6 +4324,24 @@ fn runs_strategy_omitted_current_all_entry_exit_fixture_from_csv_to_public_strat
 }
 
 #[test]
+fn runs_strategy_omitted_persistent_all_entry_exit_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_persistent.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_persistent_bars.csv"
+        ),
+    )
+    .expect("strategy omitted persistent all-entry exit fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_pyramiding_exit_omitted_from_entry_persistent.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_omitted_profit_same_id_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(
