@@ -1089,6 +1089,17 @@ fn run_script_csv_returns_max_bars_back_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_varip_scalar_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/varip_scalar.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("varip scalar fixture should run");
+
+    assert_snapshot("runtime_varip_scalar.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
