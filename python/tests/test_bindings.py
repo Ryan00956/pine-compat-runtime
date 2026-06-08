@@ -3441,6 +3441,24 @@ def test_run_script_returns_strategy_exit_qty_precedence_fixture_contract():
     assert "pending" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_exit_qty_precedence_bracket_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_exit_qty_precedence_bracket.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_exit_qty_precedence_bracket.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_qty_percent_partial_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine"

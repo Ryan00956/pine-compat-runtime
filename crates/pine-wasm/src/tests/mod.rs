@@ -3182,6 +3182,19 @@ fn runs_strategy_exit_qty_precedence_fixture_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_qty_precedence_bracket_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_qty_precedence_bracket.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit qty precedence bracket fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_qty_precedence_bracket.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_qty_percent_partial_fixture_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!(
