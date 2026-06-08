@@ -2499,6 +2499,17 @@ fn runs_strategy_variable_interactions_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_variable_interactions_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_variable_interactions.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy variable interactions fixture should run");
+
+    assert_snapshot("runtime_strategy_variable_interactions.json", &output);
+}
+
+#[test]
 fn runs_strategy_trade_counts_from_csv_to_json() {
     let output = run_script_csv(
         "strategy(\"demo\")\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=1)\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\nif bar_index == 2\n    strategy.close(\"L\")\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\n",

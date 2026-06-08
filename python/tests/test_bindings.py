@@ -2086,6 +2086,22 @@ def test_run_script_returns_strategy_variable_interaction_plots():
     ]
 
 
+def test_run_script_returns_strategy_variable_interactions_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_variable_interactions.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_variable_interactions.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_trade_count_plots():
     result = pine_compat.run_script(
         'strategy("demo")\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=1)\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\nif bar_index == 2\n    strategy.close("L")\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\n',
