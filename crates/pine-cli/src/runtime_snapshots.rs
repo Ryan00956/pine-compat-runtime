@@ -139,6 +139,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "runtime_valuewhen.json",
         "tests/fixtures/runtime/valuewhen.pine",
     ),
+    (
+        "runtime_extremes.json",
+        "tests/fixtures/runtime/extremes.pine",
+    ),
     ("runtime_swma.json", "tests/fixtures/runtime/swma.pine"),
     ("runtime_alma.json", "tests/fixtures/runtime/alma.pine"),
     ("runtime_linreg.json", "tests/fixtures/runtime/linreg.pine"),
