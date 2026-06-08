@@ -5982,6 +5982,24 @@ fn runs_strategy_omitted_trail_points_same_id_fixture_from_csv_to_public_strateg
 }
 
 #[test]
+fn runs_strategy_omitted_trail_points_same_id_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_same_id.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_same_id_bars.csv"
+        ),
+    )
+    .expect("strategy omitted trail_points same-id fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_pyramiding_exit_omitted_trail_points_same_id.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_omitted_trail_price_same_id_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(
