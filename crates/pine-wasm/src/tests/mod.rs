@@ -1160,6 +1160,17 @@ fn run_script_csv_returns_mom_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_roc_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/roc.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("roc fixture should run");
+
+    assert_snapshot("runtime_roc.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_alma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/alma.pine"),
