@@ -1545,6 +1545,17 @@ fn run_script_csv_returns_mode_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_percentile_linear_interpolation_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/percentile_linear_interpolation.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("percentile linear interpolation fixture should run");
+
+    assert_snapshot("runtime_percentile_linear_interpolation.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_macd_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/macd.pine"),

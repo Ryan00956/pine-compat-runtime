@@ -173,6 +173,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
     ("runtime_median.json", "tests/fixtures/runtime/median.pine"),
     ("runtime_mode.json", "tests/fixtures/runtime/mode.pine"),
     (
+        "runtime_percentile_linear_interpolation.json",
+        "tests/fixtures/runtime/percentile_linear_interpolation.pine",
+    ),
+    (
         "runtime_dema_tema.json",
         "tests/fixtures/runtime/dema_tema.pine",
     ),
