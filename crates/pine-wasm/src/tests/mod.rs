@@ -1078,6 +1078,17 @@ fn run_script_csv_returns_series_history_offset_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_max_bars_back_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/max_bars_back.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("max bars back fixture should run");
+
+    assert_snapshot("runtime_max_bars_back.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
