@@ -1094,6 +1094,17 @@ fn run_script_csv_returns_iii_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_nvi_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/nvi.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("nvi fixture should run");
+
+    assert_snapshot("runtime_nvi.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_obv_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/obv.pine"),
