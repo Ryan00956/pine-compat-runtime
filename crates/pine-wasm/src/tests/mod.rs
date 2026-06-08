@@ -3102,6 +3102,22 @@ fn runs_strategy_exit_trailing_replacement_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_trailing_activation_bar_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_trailing_activation_bar.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
+    )
+    .expect("strategy exit trailing activation bar fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_trailing_activation_bar.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_trailing_ratchet_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_ratchet.pine"),
