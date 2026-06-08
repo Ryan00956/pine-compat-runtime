@@ -7040,6 +7040,13 @@ const IMPORT_SOURCE: &str =
 const IMPORT_REQUEST_SOURCE: &str = "indicator(\"import request\")\nimport user/lib/1 as lib\nsame = request.security(\"NYSE:IBM\", timeframe.period, open + close)\nhigher = request.security(\"NYSE:IBM\", \"5\", close)\nplot(lib.scale(same))\nplot(higher + lib.offset)\n";
 const IMPORT_LIBRARY_JSON: &str = "{\"user/lib/1\":\"library(\\\"lib\\\")\\nexport offset = 2\\nexport scale(value) => value * offset\\n\"}";
 
+fn import_fixture_library_json() -> String {
+    serde_json::json!({
+        "user/lib/1": include_str!("../../../../tests/fixtures/libraries/import_lib.pine"),
+    })
+    .to_string()
+}
+
 #[test]
 fn library_source_json_runs_imported_function_subset() {
     let output = run_script_csv_with_libraries(
@@ -7050,6 +7057,32 @@ fn library_source_json_runs_imported_function_subset() {
     .expect("imported function subset should run");
 
     assert!(output.contains("\"values\":[4,6]"));
+}
+
+#[test]
+fn library_source_json_returns_import_fixture_contract() {
+    let library_json = import_fixture_library_json();
+    let output = run_script_csv_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        &library_json,
+    )
+    .expect("import fixture should run");
+
+    assert_snapshot("runtime_import.json", &output);
+}
+
+#[test]
+fn library_source_json_returns_import_state_fixture_contract() {
+    let library_json = import_fixture_library_json();
+    let output = run_script_csv_with_libraries(
+        include_str!("../../../../tests/fixtures/runtime/import_state.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        &library_json,
+    )
+    .expect("import state fixture should run");
+
+    assert_snapshot("runtime_import_state.json", &output);
 }
 
 #[test]

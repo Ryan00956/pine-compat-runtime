@@ -49,7 +49,7 @@ mod tests {
         PineValue, PlotSeries, RuntimeProfile, RuntimeResult, StrategyResult,
         public_runtime_profiled_result_json, public_runtime_result_json, run_historical,
     };
-    use pine_sema::analyze_source;
+    use pine_sema::{AnalysisInput, analyze_input, analyze_source};
     use pine_syntax::SourceFile;
     use std::{
         collections::BTreeSet,
@@ -555,6 +555,12 @@ mod tests {
         for (snapshot, fixture) in crate::runtime_snapshots::RUNTIME_SNAPSHOT_FIXTURES {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));
         }
+        for (snapshot, fixture, library_sources) in crate::runtime_snapshots::RUNTIME_LIBRARY_SNAPSHOT_FIXTURES {
+            assert_snapshot(
+                snapshot,
+                &runtime_library_fixture_json(fixture, library_sources),
+            );
+        }
     }
 
     #[test]
@@ -789,6 +795,32 @@ mod tests {
         let source_text = fs::read_to_string(workspace.join(fixture)).expect("fixture source");
         let source = SourceFile::new(fixture, source_text);
         let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{fixture} diagnostics: {:?}",
+            analysis.diagnostics
+        );
+        let bars = parse_bars_csv(runtime_fixture_bars_csv(fixture)).expect("bars fixture");
+        let result =
+            run_historical(&analysis.hir.expect("fixture HIR"), &bars).expect("runtime result");
+        public_runtime_result_json(&result)
+    }
+
+    fn runtime_library_fixture_json(fixture: &str, library_sources: &[(&str, &str)]) -> String {
+        let workspace = workspace_dir();
+        let source_text = fs::read_to_string(workspace.join(fixture)).expect("fixture source");
+        let source = SourceFile::new(fixture, source_text);
+        let libraries = library_sources
+            .iter()
+            .map(|(key, path)| {
+                let library_text =
+                    fs::read_to_string(workspace.join(path)).expect("library fixture source");
+                ((*key).to_owned(), SourceFile::new(*path, library_text))
+            })
+            .collect();
+        let input = AnalysisInput::with_library_sources(source, libraries)
+            .expect("library fixture input should be valid");
+        let analysis = analyze_input(&input);
         assert!(
             analysis.diagnostics.is_empty(),
             "{fixture} diagnostics: {:?}",

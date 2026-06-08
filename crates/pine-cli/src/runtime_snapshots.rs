@@ -1151,3 +1151,22 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_exit_trade_counts.pine",
     ),
 ];
+
+pub(crate) type RuntimeLibrarySnapshotFixture = (
+    &'static str,
+    &'static str,
+    &'static [(&'static str, &'static str)],
+);
+
+pub(crate) const RUNTIME_LIBRARY_SNAPSHOT_FIXTURES: &[RuntimeLibrarySnapshotFixture] = &[
+    (
+        "runtime_import.json",
+        "tests/fixtures/runtime/import.pine",
+        &[("user/lib/1", "tests/fixtures/libraries/import_lib.pine")],
+    ),
+    (
+        "runtime_import_state.json",
+        "tests/fixtures/runtime/import_state.pine",
+        &[("user/lib/1", "tests/fixtures/libraries/import_lib.pine")],
+    ),
+];
