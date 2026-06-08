@@ -549,6 +549,20 @@ def test_run_script_returns_array_search_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_array_statistics_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/array_statistics.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_array_statistics.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_line_new_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/line_new.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_line_new.json").read_text())
