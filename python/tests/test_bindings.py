@@ -3808,6 +3808,28 @@ def test_run_script_returns_strategy_exit_reservation_trailing_activation_mixed_
     assert result == expected
 
 
+def test_run_script_returns_strategy_exit_reservation_trailing_bracket_downside_order_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_exit_reservation_trailing_bracket_downside_order.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_exit_reservation_trailing_bracket_downside_order.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_bars.csv"
+        ),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_reservation_qty_percent_trailing_multi_fixture_contract():
     source = (
         ROOT
