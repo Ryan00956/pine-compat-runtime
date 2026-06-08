@@ -9950,6 +9950,25 @@ def test_run_script_treats_strategy_exit_wrong_entry_as_noop():
     assert "reserved" not in strategy_json
 
 
+def test_run_script_returns_strategy_exit_wrong_entry_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_exit_unmatched_from_entry_noop.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_exit_unmatched_from_entry_noop.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_treats_strategy_exit_limit_wrong_entry_as_noop():
     source = (
         ROOT

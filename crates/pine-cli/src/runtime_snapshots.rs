@@ -591,6 +591,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_exit_loss_profit_bracket_unmatched_from_entry_noop.pine",
     ),
     (
+        "runtime_strategy_exit_unmatched_from_entry_noop.json",
+        "tests/fixtures/runtime/strategy_exit_unmatched_from_entry_noop.pine",
+    ),
+    (
         "runtime_strategy_exit_limit_unmatched_from_entry_noop.json",
         "tests/fixtures/runtime/strategy_exit_limit_unmatched_from_entry_noop.pine",
     ),

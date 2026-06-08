@@ -2551,6 +2551,22 @@ fn runs_strategy_exit_wrong_entry_from_csv_as_noop_json() {
 }
 
 #[test]
+fn runs_strategy_exit_wrong_entry_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_unmatched_from_entry_noop.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy wrong-entry no-op fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_unmatched_from_entry_noop.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_limit_wrong_entry_from_csv_as_noop_json() {
     let output = run_script_csv(
         include_str!(
