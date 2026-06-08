@@ -386,6 +386,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/for_edges.pine",
     ),
     (
+        "runtime_for_stateful.json",
+        "tests/fixtures/runtime/for_stateful.pine",
+    ),
+    (
         "runtime_strategy_empty.json",
         "tests/fixtures/runtime/strategy_no_order.pine",
     ),
