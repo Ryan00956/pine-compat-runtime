@@ -177,6 +177,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/percentile_linear_interpolation.pine",
     ),
     (
+        "runtime_percentile_nearest_rank.json",
+        "tests/fixtures/runtime/percentile_nearest_rank.pine",
+    ),
+    (
         "runtime_dema_tema.json",
         "tests/fixtures/runtime/dema_tema.pine",
     ),
