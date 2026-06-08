@@ -2807,6 +2807,20 @@ def test_run_script_returns_strategy_exit_limit_trade_contract():
     }
 
 
+def test_run_script_returns_strategy_exit_limit_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_limit.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_limit.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_profit_trade_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_exit_profit.pine").read_text()
     result = pine_compat.run_script(

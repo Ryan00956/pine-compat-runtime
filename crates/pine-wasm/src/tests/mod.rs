@@ -2802,6 +2802,17 @@ fn runs_strategy_exit_limit_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_limit_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_limit.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit limit fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_limit.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_profit_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_profit.pine"),
