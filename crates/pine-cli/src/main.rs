@@ -848,6 +848,11 @@ mod tests {
                     "../../../tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_limit_entries_bars.csv"
                 )
             }
+            "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_entries.pine" => {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_entries_bars.csv"
+                )
+            }
             "tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_fill.pine" => {
                 include_str!(
                     "../../../tests/fixtures/runtime/strategy_exit_bracket_loss_profit_loss_bars.csv"
