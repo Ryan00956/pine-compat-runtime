@@ -3347,6 +3347,24 @@ fn runs_strategy_exit_reservation_qty_mixed_bracket_multi_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_reservation_qty_mixed_trailing_multi_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_qty_mixed_trailing_multi.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_bars.csv"
+        ),
+    )
+    .expect("strategy exit reservation qty mixed trailing multi fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_reservation_qty_mixed_trailing_multi.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_qty_trailing_partial_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_qty_trailing_partial.pine"),
