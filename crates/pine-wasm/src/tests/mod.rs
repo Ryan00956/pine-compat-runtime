@@ -3195,6 +3195,24 @@ fn runs_strategy_exit_qty_precedence_bracket_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_qty_precedence_trailing_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_qty_precedence_trailing.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_qty_precedence_trailing_bars.csv"
+        ),
+    )
+    .expect("strategy exit qty precedence trailing fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_qty_precedence_trailing.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_qty_percent_partial_fixture_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!(
