@@ -389,6 +389,7 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "runtime_for_stateful.json",
         "tests/fixtures/runtime/for_stateful.pine",
     ),
+    ("runtime_while.json", "tests/fixtures/runtime/while.pine"),
     (
         "runtime_strategy_empty.json",
         "tests/fixtures/runtime/strategy_no_order.pine",
