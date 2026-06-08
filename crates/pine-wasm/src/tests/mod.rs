@@ -1347,6 +1347,17 @@ fn run_script_csv_returns_pivots_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_pivot_point_levels_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/pivot_point_levels.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("pivot point levels fixture should run");
+
+    assert_snapshot("runtime_pivot_point_levels.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_alma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/alma.pine"),
