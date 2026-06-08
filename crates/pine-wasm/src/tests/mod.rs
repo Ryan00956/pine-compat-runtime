@@ -2414,6 +2414,17 @@ fn runs_strategy_exit_slippage_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_limit_verification_entry_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_limit_verification_entry.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy limit verification entry fixture should run");
+
+    assert_snapshot("runtime_strategy_limit_verification_entry.json", &output);
+}
+
+#[test]
 fn runs_strategy_limit_verification_exit_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_limit_verification_exit.pine"),

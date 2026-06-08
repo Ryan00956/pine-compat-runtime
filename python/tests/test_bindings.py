@@ -2278,6 +2278,55 @@ def test_run_script_returns_strategy_exit_slippage_plots():
     assert result["strategy"]["trades"][0]["profit"] == -2.0
 
 
+def test_run_script_returns_strategy_limit_verification_entry_plots():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_limit_verification_entry.pine"
+    ).read_text()
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert [plot["values"] for plot in result["plots"]] == [
+        [0.0, 0.0, 0.0, 0.0],
+        [0, 0, 0, 0],
+    ]
+    assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
+    assert result["strategy"]["orders"] == []
+    assert result["strategy"]["trades"] == []
+    assert result["strategy"]["position"] == []
+    assert result["strategy"]["equity"] == [
+        {
+            "barIndex": 0,
+            "cash": 100000.0,
+            "marketValue": 0.0,
+            "equity": 100000.0,
+            "netProfit": 0.0,
+        },
+        {
+            "barIndex": 1,
+            "cash": 100000.0,
+            "marketValue": 0.0,
+            "equity": 100000.0,
+            "netProfit": 0.0,
+        },
+        {
+            "barIndex": 2,
+            "cash": 100000.0,
+            "marketValue": 0.0,
+            "equity": 100000.0,
+            "netProfit": 0.0,
+        },
+        {
+            "barIndex": 3,
+            "cash": 100000.0,
+            "marketValue": 0.0,
+            "equity": 100000.0,
+            "netProfit": 0.0,
+        },
+    ]
+
+
 def test_run_script_returns_strategy_limit_verification_exit_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_limit_verification_exit.pine").read_text()
     result = pine_compat.run_script(
