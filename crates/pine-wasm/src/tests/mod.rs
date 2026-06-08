@@ -2987,6 +2987,22 @@ fn runs_strategy_exit_bracket_stop_limit_limit_fill_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_bracket_stop_limit_stop_fill_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_bracket_stop_limit_stop_fill.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit stop-limit bracket stop-fill fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_bracket_stop_limit_stop_fill.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_trailing_fixture_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_trail_price_fill.pine"),
