@@ -176,6 +176,7 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
     ("runtime_bbw.json", "tests/fixtures/runtime/bbw.pine"),
     ("runtime_kc.json", "tests/fixtures/runtime/kc.pine"),
     ("runtime_kcw.json", "tests/fixtures/runtime/kcw.pine"),
+    ("runtime_pivots.json", "tests/fixtures/runtime/pivots.pine"),
     ("runtime_math.json", "tests/fixtures/runtime/math.pine"),
     (
         "runtime_math_edge_cases.json",

@@ -1336,6 +1336,17 @@ fn run_script_csv_returns_kcw_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_pivots_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/pivots.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("pivots fixture should run");
+
+    assert_snapshot("runtime_pivots.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_alma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/alma.pine"),
