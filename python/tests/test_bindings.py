@@ -4300,6 +4300,22 @@ def test_run_script_returns_strategy_exit_reservation_fixture_contract():
     assert "qty_percent" not in result["strategy"]
 
 
+def test_run_script_returns_strategy_exit_reservation_state_fixture_contract():
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_exit_reservation_state.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_reservation_state.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_reservation_interactions_fixture_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_exit_reservation_interactions.pine"
