@@ -3746,6 +3746,26 @@ def test_run_script_returns_strategy_exit_reservation_qty_trailing_points_multi_
     assert result == expected
 
 
+def test_run_script_returns_strategy_exit_reservation_qty_trailing_price_multi_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_exit_reservation_qty_trailing_price_multi.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_exit_reservation_qty_trailing_price_multi.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/strategy_exit_reservation_trailing_bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_exit_reservation_qty_percent_trailing_multi_fixture_contract():
     source = (
         ROOT
