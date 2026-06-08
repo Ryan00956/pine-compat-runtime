@@ -1100,6 +1100,17 @@ fn run_script_csv_returns_varip_scalar_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_varip_local_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/varip_local.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("varip local fixture should run");
+
+    assert_snapshot("runtime_varip_local.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),
