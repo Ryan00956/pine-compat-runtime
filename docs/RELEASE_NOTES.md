@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Closed Strategy Internal Stage 13 release-note coverage through Slice 101. The
+  Stage 13 multi-entry ledger contract now records omitted-`from_entry`
+  trailing future-entry persistence, CLI/WASM/Python host parity for omitted
+  future-entry and same-entry-id fixtures, internal per-open-trade exit key
+  scoping, current and persistent same-entry-id omitted exits, and same-tick
+  price-based entry pyramiding-limit exceptions. The supported surface remains
+  limited to `tests/fixtures/conformance.tsv` and does not claim shorts,
+  reversals, `strategy.order()`, `close_entries_rule`, public pending-order or
+  reservation records, or broader multi-entry reporting.
 - Added fixture-backed `alert()` frequency support for the const-string
   `alert.freq_once_per_bar` default, `alert.freq_all`, and
   `alert.freq_once_per_bar_close` subset. The runtime now suppresses repeated
