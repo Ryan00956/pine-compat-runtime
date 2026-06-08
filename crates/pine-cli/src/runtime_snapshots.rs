@@ -376,6 +376,7 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "runtime_branch_loop_interactions.json",
         "tests/fixtures/runtime/branch_loop_interactions.pine",
     ),
+    ("runtime_switch.json", "tests/fixtures/runtime/switch.pine"),
     (
         "runtime_strategy_empty.json",
         "tests/fixtures/runtime/strategy_no_order.pine",
