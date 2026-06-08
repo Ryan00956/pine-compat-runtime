@@ -2462,6 +2462,17 @@ fn runs_strategy_position_state_from_csv_to_json() {
 }
 
 #[test]
+fn runs_strategy_position_state_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_position_state.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy position state fixture should run");
+
+    assert_snapshot("runtime_strategy_position_state.json", &output);
+}
+
+#[test]
 fn runs_strategy_equity_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_equity.pine"),

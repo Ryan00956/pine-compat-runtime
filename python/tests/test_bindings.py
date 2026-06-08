@@ -2019,6 +2019,20 @@ def test_run_script_returns_strategy_position_state_plots():
     ]
 
 
+def test_run_script_returns_strategy_position_state_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_position_state.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_position_state.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_equity_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_equity.pine").read_text()
     expected = json.loads(
