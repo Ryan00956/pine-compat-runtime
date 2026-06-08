@@ -3192,6 +3192,22 @@ fn runs_strategy_exit_reservation_qty_bracket_stop_limit_downside_multi_fixture_
 }
 
 #[test]
+fn runs_strategy_exit_reservation_qty_bracket_stop_limit_upside_multi_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_qty_bracket_stop_limit_upside_multi.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit reservation qty bracket stop limit upside multi fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_reservation_qty_bracket_stop_limit_upside_multi.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_qty_trailing_partial_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_qty_trailing_partial.pine"),
