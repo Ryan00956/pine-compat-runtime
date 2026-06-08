@@ -2403,6 +2403,17 @@ fn runs_strategy_commission_percent_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_slippage_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_slippage.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy slippage fixture should run");
+
+    assert_snapshot("runtime_strategy_slippage.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_slippage_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_slippage.pine"),
