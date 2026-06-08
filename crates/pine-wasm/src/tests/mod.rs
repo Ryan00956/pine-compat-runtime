@@ -550,6 +550,17 @@ fn run_script_csv_returns_array_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_array_methods_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_methods.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("array methods fixture should run");
+
+    assert_snapshot("runtime_array_methods.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_array_from_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_from.pine"),
