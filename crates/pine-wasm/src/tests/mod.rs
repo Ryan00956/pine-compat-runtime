@@ -3162,6 +3162,17 @@ fn runs_strategy_exit_trailing_close_cancel_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_trailing_interactions_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_interactions.pine"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
+    )
+    .expect("strategy exit trailing interactions fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_trailing_interactions.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_omitted_trailing_replacement_fixture_contract() {
     let output = run_script_csv(
         include_str!(
