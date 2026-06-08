@@ -181,6 +181,7 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "runtime_pivot_point_levels.json",
         "tests/fixtures/runtime/pivot_point_levels.pine",
     ),
+    ("runtime_cum.json", "tests/fixtures/runtime/cum.pine"),
     ("runtime_math.json", "tests/fixtures/runtime/math.pine"),
     (
         "runtime_math_edge_cases.json",
