@@ -3122,6 +3122,17 @@ fn runs_strategy_exit_qty_partial_fixture_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_qty_limit_partial_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_qty_limit_partial.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit qty limit partial fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_qty_limit_partial.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_qty_bracket_partial_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_qty_bracket_partial.pine"),
