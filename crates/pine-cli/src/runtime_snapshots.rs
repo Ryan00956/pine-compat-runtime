@@ -67,6 +67,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/array_fill.pine",
     ),
     (
+        "runtime_array_references.json",
+        "tests/fixtures/runtime/array_references.pine",
+    ),
+    (
         "runtime_timeframe.json",
         "tests/fixtures/runtime/timeframe.pine",
     ),
