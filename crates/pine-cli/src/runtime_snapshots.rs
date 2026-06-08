@@ -391,6 +391,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
     ),
     ("runtime_while.json", "tests/fixtures/runtime/while.pine"),
     (
+        "runtime_while_edges.json",
+        "tests/fixtures/runtime/while_edges.pine",
+    ),
+    (
         "runtime_strategy_empty.json",
         "tests/fixtures/runtime/strategy_no_order.pine",
     ),
