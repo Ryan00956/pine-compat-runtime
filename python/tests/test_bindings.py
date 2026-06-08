@@ -1819,6 +1819,18 @@ def test_run_script_returns_wma_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_hma_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/hma.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_hma.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_global_series_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/global_series.pine").read_text()
     result = pine_compat.run_script(source, BARS)
