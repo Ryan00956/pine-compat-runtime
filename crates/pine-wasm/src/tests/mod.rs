@@ -2847,6 +2847,24 @@ fn runs_strategy_exit_loss_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_profit_loss_interactions_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_profit_loss_interactions.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_profit_loss_interactions_bars.csv"
+        ),
+    )
+    .expect("strategy exit profit/loss interactions fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_profit_loss_interactions.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_bracket_fixture_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_bracket_both_hit.pine"),
