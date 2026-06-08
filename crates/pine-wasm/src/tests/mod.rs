@@ -4495,6 +4495,24 @@ fn runs_strategy_omitted_loss_profit_bracket_same_id_fixture_from_csv_to_public_
 }
 
 #[test]
+fn runs_strategy_omitted_loss_profit_bracket_from_entries_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_profit_bracket_from_entries.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_profit_bracket_from_entries_bars.csv"
+        ),
+    )
+    .expect("strategy omitted loss-profit bracket from entries fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_pyramiding_exit_omitted_loss_profit_bracket_from_entries.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_omitted_stop_profit_bracket_same_id_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(

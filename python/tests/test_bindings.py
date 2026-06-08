@@ -6103,6 +6103,28 @@ def test_run_script_returns_omitted_loss_profit_bracket_same_id_fixture_contract
     assert "closedTrades" not in strategy_json
 
 
+def test_run_script_returns_omitted_loss_profit_bracket_from_entries_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_profit_bracket_from_entries.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_pyramiding_exit_omitted_loss_profit_bracket_from_entries.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_profit_bracket_from_entries_bars.csv"
+        ),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_omitted_stop_profit_bracket_same_id_fixture_contract():
     source = (
         ROOT
