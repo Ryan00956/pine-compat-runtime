@@ -2869,6 +2869,17 @@ fn runs_strategy_exit_stop_from_csv_to_trade_json() {
 }
 
 #[test]
+fn runs_strategy_exit_stop_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_stop.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit stop fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_stop.json", &output);
+}
+
+#[test]
 fn runs_strategy_cancel_entry_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_cancel_entry.pine"),
