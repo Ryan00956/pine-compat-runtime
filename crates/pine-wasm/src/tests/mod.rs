@@ -3246,6 +3246,22 @@ fn runs_strategy_exit_qty_percent_bracket_partial_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_qty_percent_trailing_partial_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_qty_percent_trailing_partial.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
+    )
+    .expect("strategy exit qty percent trailing partial fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_qty_percent_trailing_partial.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_qty_percent_full_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_qty_percent_full.pine"),
