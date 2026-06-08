@@ -5768,6 +5768,28 @@ def test_run_script_returns_omitted_persistent_all_entry_exit_fixture_contract()
     assert result == expected
 
 
+def test_run_script_returns_omitted_profit_from_entries_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_profit_from_entries.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_pyramiding_exit_omitted_profit_from_entries.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_profit_from_entries_bars.csv"
+        ),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_omitted_profit_same_id_fixture_contract():
     source = (
         ROOT
