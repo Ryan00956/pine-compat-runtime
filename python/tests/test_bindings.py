@@ -1323,6 +1323,18 @@ def test_run_script_returns_extremes_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_extreme_bars_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/extreme_bars.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_extreme_bars.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_alma_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/alma.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_alma.json").read_text())
