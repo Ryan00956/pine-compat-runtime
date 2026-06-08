@@ -1,4 +1,8 @@
 //@version=5
 indicator("CCI")
 value = ta.cci(close, 3)
+flat = ta.cci(close * 0 + 1, 2)
+invalid = ta.cci(close, 0)
 plot(value)
+plot(na(flat) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)
