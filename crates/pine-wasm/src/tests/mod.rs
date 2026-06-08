@@ -3234,6 +3234,24 @@ fn runs_strategy_same_tick_limit_entries_from_csv_to_public_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_same_tick_limit_entries_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_limit_entries.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_limit_entries_bars.csv"
+        ),
+    )
+    .expect("strategy same-tick limit entries fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_pyramiding_limit_same_tick_limit_entries.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_same_tick_stop_entries_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(
