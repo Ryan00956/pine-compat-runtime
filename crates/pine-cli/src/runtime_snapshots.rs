@@ -190,6 +190,7 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/variance.pine",
     ),
     ("runtime_range.json", "tests/fixtures/runtime/range.pine"),
+    ("runtime_dev.json", "tests/fixtures/runtime/dev.pine"),
     (
         "runtime_dema_tema.json",
         "tests/fixtures/runtime/dema_tema.pine",

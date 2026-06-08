@@ -1611,6 +1611,17 @@ fn run_script_csv_returns_range_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_dev_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/dev.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("dev fixture should run");
+
+    assert_snapshot("runtime_dev.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_macd_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/macd.pine"),
