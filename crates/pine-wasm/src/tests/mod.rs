@@ -561,6 +561,17 @@ fn run_script_csv_returns_array_methods_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_computed_array_operands_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/computed_array_operands.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("computed array operands fixture should run");
+
+    assert_snapshot("runtime_computed_array_operands.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_array_from_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_from.pine"),

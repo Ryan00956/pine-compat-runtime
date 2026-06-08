@@ -60,6 +60,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/array_methods.pine",
     ),
     (
+        "runtime_computed_array_operands.json",
+        "tests/fixtures/runtime/computed_array_operands.pine",
+    ),
+    (
         "runtime_array_from.json",
         "tests/fixtures/runtime/array_from.pine",
     ),
