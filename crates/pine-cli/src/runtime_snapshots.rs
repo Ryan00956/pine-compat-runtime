@@ -253,6 +253,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/label_mutation.pine",
     ),
     (
+        "runtime_label_control_flow.json",
+        "tests/fixtures/runtime/label_control_flow.pine",
+    ),
+    (
         "runtime_label_delete.json",
         "tests/fixtures/runtime/label_delete.pine",
     ),

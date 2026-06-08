@@ -451,6 +451,17 @@ fn run_script_csv_returns_label_mutation_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_label_control_flow_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/label_control_flow.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("label control-flow fixture should run");
+
+    assert_snapshot("runtime_label_control_flow.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_label_delete_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/label_delete.pine"),

@@ -389,6 +389,20 @@ def test_run_script_returns_label_mutation_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_label_control_flow_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/label_control_flow.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_label_control_flow.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_label_delete_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/label_delete.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_label_delete.json").read_text())
