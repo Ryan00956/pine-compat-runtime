@@ -3320,6 +3320,24 @@ fn runs_strategy_same_tick_stop_limit_entries_from_csv_to_public_strategy_json()
 }
 
 #[test]
+fn runs_strategy_same_tick_stop_limit_entries_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries_bars.csv"
+        ),
+    )
+    .expect("strategy same-tick stop-limit entries fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_pyramiding_limit_same_tick_stop_limit_entries.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_default_quantity_from_csv_to_strategy_json() {
     let output = run_script_csv(
         "strategy(\"demo\", default_qty_type=strategy.fixed, default_qty_value=3)\nif bar_index == 1\n    strategy.entry(\"D\", strategy.long)\nplot(strategy.position_size)\n",

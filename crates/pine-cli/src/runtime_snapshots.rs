@@ -479,6 +479,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_entry_stop_limit.pine",
     ),
     (
+        "runtime_strategy_pyramiding_limit_same_tick_stop_limit_entries.json",
+        "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries.pine",
+    ),
+    (
         "runtime_strategy_default_quantity.json",
         "tests/fixtures/runtime/strategy_default_quantity.pine",
     ),

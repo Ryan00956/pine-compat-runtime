@@ -3102,6 +3102,28 @@ def test_run_script_returns_same_tick_stop_limit_entries_contract():
     assert "pending" not in result["strategy"]
 
 
+def test_run_script_returns_same_tick_stop_limit_entries_fixture_contract():
+    source = (
+        ROOT
+        / "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries.pine"
+    ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_pyramiding_limit_same_tick_stop_limit_entries.json"
+        ).read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars(
+            "tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_limit_entries_bars.csv"
+        ),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_strategy_default_quantity_contract():
     result = pine_compat.run_script(
         'strategy("demo", default_qty_type=strategy.fixed, default_qty_value=3)\nif bar_index == 1\n    strategy.entry("D", strategy.long)\nplot(strategy.position_size)\n',
