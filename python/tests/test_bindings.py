@@ -1181,6 +1181,18 @@ def test_run_script_returns_request_security_same_context_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_user_types_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/user_types.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_user_types.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_import_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/import.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_import.json").read_text())
