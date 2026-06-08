@@ -1105,6 +1105,17 @@ fn run_script_csv_returns_atr_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_supertrend_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/supertrend.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("supertrend fixture should run");
+
+    assert_snapshot("runtime_supertrend.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_alma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/alma.pine"),
