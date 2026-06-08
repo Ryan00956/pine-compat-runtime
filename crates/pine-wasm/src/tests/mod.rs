@@ -3166,6 +3166,17 @@ fn runs_strategy_exit_qty_repeated_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_exit_qty_replacement_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_qty_replacement.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit qty replacement fixture should run");
+
+    assert_snapshot("runtime_strategy_exit_qty_replacement.json", &output);
+}
+
+#[test]
 fn runs_strategy_exit_qty_precedence_fixture_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_exit_qty_precedence_stop.pine"),
