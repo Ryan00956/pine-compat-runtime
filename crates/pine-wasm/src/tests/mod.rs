@@ -1138,6 +1138,17 @@ fn run_script_csv_returns_sar_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_cross_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/cross.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("cross fixture should run");
+
+    assert_snapshot("runtime_cross.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_alma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/alma.pine"),
