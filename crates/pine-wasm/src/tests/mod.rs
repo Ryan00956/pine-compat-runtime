@@ -3521,6 +3521,24 @@ fn runs_strategy_exit_reservation_trailing_bracket_downside_order_fixture_contra
 }
 
 #[test]
+fn runs_strategy_exit_reservation_trailing_mixed_side_precedence_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_side_precedence.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_trailing_mixed_bars.csv"
+        ),
+    )
+    .expect("strategy exit reservation trailing mixed side precedence fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_reservation_trailing_mixed_side_precedence.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_reservation_qty_percent_trailing_multi_fixture_contract() {
     let output = run_script_csv(
         include_str!(
