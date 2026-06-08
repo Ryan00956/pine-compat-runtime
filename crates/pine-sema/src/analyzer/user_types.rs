@@ -1,9 +1,11 @@
 use std::collections::HashMap;
 
 use pine_ir::{PineType, Qualifier, ValueKind};
-use pine_syntax::{CallArg, Diagnostic, Expr, Program, Span, StmtKind};
+use pine_syntax::{CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Program, Span, StmtKind};
 
+use crate::analyzer::calls::expr_name;
 use crate::analyzer::context::Analyzer;
+use crate::analyzer::functions::resolve_udf_arg_indices;
 use crate::compatibility::FeatureUse;
 use crate::resolver::SymbolInfo;
 use crate::types::{UNKNOWN, can_assign, strongest_qualifier};
@@ -195,7 +197,9 @@ impl Analyzer {
         if parts.len() != 2 {
             return None;
         }
-        let symbol = self.bound_symbol(&parts[0], span)?;
+        let symbol = self
+            .bound_symbol(&parts[0], span)
+            .or_else(|| self.scope.resolve(&parts[0]))?;
         let type_name = self.symbol_user_types.get(&symbol.id)?;
         let user_type = self.user_types.get(type_name)?;
         let field = user_type
@@ -263,7 +267,9 @@ impl Analyzer {
         if parts.len() != 2 {
             return None;
         }
-        let symbol = self.bound_symbol(&parts[0], span)?;
+        let symbol = self
+            .bound_symbol(&parts[0], span)
+            .or_else(|| self.scope.resolve(&parts[0]))?;
         let type_name = self.symbol_user_types.get(&symbol.id)?;
         let user_type = self.user_types.get(type_name)?;
         let index = user_type
@@ -278,6 +284,66 @@ impl Analyzer {
 
     pub(crate) fn expr_user_type_name(&self, expr: &Expr) -> Option<String> {
         self.expr_user_types.get(&span_key(expr.span)).cloned()
+    }
+
+    pub(crate) fn user_type_name_of_expr(&self, expr: &Expr) -> Option<String> {
+        if let Some(type_name) = self.expr_user_type_name(expr) {
+            return Some(type_name);
+        }
+        match &expr.kind {
+            ExprKind::Identifier(name) => self
+                .scope
+                .resolve(name)
+                .and_then(|symbol| self.symbol_user_types.get(&symbol.id).cloned()),
+            ExprKind::QualifiedName(parts) if parts.len() == 1 => self
+                .scope
+                .resolve(&parts[0])
+                .and_then(|symbol| self.symbol_user_types.get(&symbol.id).cloned()),
+            ExprKind::Call { callee, args } => {
+                self.user_type_name_of_direct_udf_passthrough(expr_name(callee)?.as_str(), args)
+            }
+            _ => None,
+        }
+    }
+
+    pub(crate) fn user_type_name_of_direct_udf_passthrough(
+        &self,
+        name: &str,
+        args: &[CallArg],
+    ) -> Option<String> {
+        let function = self.functions.get(name)?;
+        let FunctionBody::Expr(expr) = &function.body else {
+            return None;
+        };
+        let ExprKind::Identifier(returned_param) = &expr.kind else {
+            return None;
+        };
+        let param_index = function
+            .params
+            .iter()
+            .position(|param| param == returned_param)?;
+        let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
+        let arg_index = arg_indices
+            .iter()
+            .position(|mapped_param_index| *mapped_param_index == param_index)?;
+        self.user_type_name_of_expr(&args[arg_index].value)
+    }
+
+    pub(crate) fn user_type_name_of_function_body(&self, body: &FunctionBody) -> Option<String> {
+        match body {
+            FunctionBody::Expr(expr) => self.user_type_name_of_expr(expr),
+            FunctionBody::Block(statements) => {
+                let last = statements.last()?;
+                match &last.kind {
+                    StmtKind::Expr(expr) => self.user_type_name_of_expr(expr),
+                    _ => None,
+                }
+            }
+        }
+    }
+
+    pub(crate) fn mark_expr_user_type(&mut self, span: Span, type_name: String) {
+        self.expr_user_types.insert(span_key(span), type_name);
     }
 
     pub(crate) fn mark_symbol_user_type(&mut self, symbol: SymbolInfo, type_name: String) {

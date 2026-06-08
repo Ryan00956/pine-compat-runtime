@@ -221,6 +221,7 @@ impl Analyzer {
         &mut self,
         name: &str,
         span: Span,
+        call_span: Span,
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) -> Option<PineType> {
@@ -267,12 +268,45 @@ impl Analyzer {
         for (arg_index, param_index) in arg_indices.iter().copied().enumerate() {
             resolved_arg_types[param_index] = arg_types.get(arg_index).copied().flatten();
         }
-        for (param, arg_type) in function.params.iter().zip(resolved_arg_types) {
-            self.define_local_symbol(param, arg_type.unwrap_or(UNKNOWN), None, false);
+        for (param_index, (param, arg_type)) in
+            function.params.iter().zip(resolved_arg_types).enumerate()
+        {
+            let symbol = self.define_local_symbol(param, arg_type.unwrap_or(UNKNOWN), None, false);
+            if let Some(arg_index) = arg_indices
+                .iter()
+                .position(|mapped_param_index| *mapped_param_index == param_index)
+                && let Some(type_name) = self.user_type_name_of_expr(&args[arg_index].value)
+            {
+                self.mark_symbol_user_type(symbol, type_name);
+            }
         }
         self.function_stack.push(name.to_owned());
         self.function_depth += 1;
         let return_type = self.analyze_function_body(&function.body, function.span);
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserType) {
+            let returned_type_name = self
+                .user_type_name_of_function_body(&function.body)
+                .or_else(|| {
+                    let FunctionBody::Expr(expr) = &function.body else {
+                        return None;
+                    };
+                    let ExprKind::Identifier(returned_param) = &expr.kind else {
+                        return None;
+                    };
+                    let param_index = function
+                        .params
+                        .iter()
+                        .position(|param| param == returned_param)?;
+                    let arg_index = arg_indices
+                        .iter()
+                        .position(|mapped_param_index| *mapped_param_index == param_index)?;
+                    self.user_type_name_of_expr(&args[arg_index].value)
+                });
+            if let Some(type_name) = returned_type_name {
+                self.mark_expr_user_type(call_span, type_name.clone());
+                self.mark_expr_user_type(span, type_name);
+            }
+        }
         self.function_depth -= 1;
         self.function_stack.pop();
         self.scope.pop_scope();

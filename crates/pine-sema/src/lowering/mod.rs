@@ -221,10 +221,16 @@ impl Analyzer {
             },
             StmtKind::Break => HirStmtKind::Break,
             StmtKind::Continue => HirStmtKind::Continue,
-            StmtKind::Decl { name, value, .. } => HirStmtKind::Decl {
-                symbol: self.lower_decl_symbol(name, statement.span)?.id,
-                value: self.lower_expr_with_params(value, param_exprs, param_types)?,
-            },
+            StmtKind::Decl { name, value, .. } => {
+                let symbol = self.lower_decl_symbol(name, statement.span)?;
+                if let Some(type_name) = self.user_type_name_of_expr(value) {
+                    self.symbol_user_types.insert(symbol.id, type_name);
+                }
+                HirStmtKind::Decl {
+                    symbol: symbol.id,
+                    value: self.lower_expr_with_params(value, param_exprs, param_types)?,
+                }
+            }
             StmtKind::Reassign { name, value } => HirStmtKind::Reassign {
                 symbol: self.bound_symbol(name, statement.span)?.id,
                 value: self.lower_expr_with_params(value, param_exprs, param_types)?,
@@ -290,9 +296,14 @@ impl Analyzer {
                 HirExprKind::Symbol(self.bound_symbol(name, expr.span)?.id)
             }
             ExprKind::QualifiedName(parts) => {
-                if let Some(field) = self.type_of_bound_user_type_field_access(parts, expr.span) {
+                if let Some(field) = self
+                    .type_of_bound_user_type_field_access(parts, expr.span)
+                    .or_else(|| self.type_of_user_type_field_access(parts))
+                {
                     let access = self.user_type_field_access_for_lowering(parts, expr.span)?;
-                    let receiver_symbol = self.bound_symbol(&access.receiver, expr.span)?;
+                    let receiver_symbol = self
+                        .bound_symbol(&access.receiver, expr.span)
+                        .or_else(|| self.scope.resolve(&access.receiver))?;
                     return Some(HirExpr {
                         pine_type: field,
                         series_id,
@@ -548,21 +559,25 @@ impl Analyzer {
         let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
         let mut resolved_args = vec![None; function.params.len()];
         for (arg, param_index) in args.iter().zip(arg_indices) {
+            let arg_user_type = self.user_type_name_of_expr(&arg.value);
             let arg_expr =
                 self.lower_expr_with_params(&arg.value, outer_param_exprs, outer_param_types)?;
             let arg_type = self.type_of_expr_with_params(&arg.value, outer_param_types)?;
-            resolved_args[param_index] = Some((arg_expr, arg_type));
+            resolved_args[param_index] = Some((arg_expr, arg_type, arg_user_type));
         }
 
         let mut param_exprs = HashMap::new();
         let mut param_types = HashMap::new();
         let mut arg_statements = Vec::new();
         for (param, resolved_arg) in function.params.iter().zip(resolved_args) {
-            let (arg_expr, arg_type) = resolved_arg?;
+            let (arg_expr, arg_type, arg_user_type) = resolved_arg?;
             if !self.record_lowering_temp_symbol(span) {
                 return None;
             }
             let symbol = self.fresh_temp_symbol(&format!("{name}.{param}"), arg_type);
+            if let Some(type_name) = arg_user_type {
+                self.symbol_user_types.insert(symbol.id, type_name);
+            }
             arg_statements.push(HirStmt {
                 kind: HirStmtKind::Decl {
                     symbol: symbol.id,

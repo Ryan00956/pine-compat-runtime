@@ -443,6 +443,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/user_types.pine",
     ),
     (
+        "runtime_user_type_functions.json",
+        "tests/fixtures/runtime/user_type_functions.pine",
+    ),
+    (
         "runtime_user_methods.json",
         "tests/fixtures/runtime/user_methods.pine",
     ),

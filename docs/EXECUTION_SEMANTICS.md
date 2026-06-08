@@ -517,9 +517,12 @@ containing the supported scalar field values in declaration order. Field reads
 return the stored scalar value. Normal declarations allocate a fresh UDT value
 when reached on each bar; `var` UDT declarations preserve the last confirmed
 UDT value across bars and roll back during realtime forming updates like other
-ordinary `var` values. Field mutation, UDT history references, UDT `varip`,
-nested UDT fields, UDT arrays, and imported UDT values are rejected before
-runtime execution.
+ordinary `var` values. UDFs may pass a local UDT value through a parameter and
+return that same parameter, after which the caller may store the returned value
+and read its fields. Field mutation, UDF construction from untyped scalar
+parameters, UDT history references, UDT `varip`, nested UDT fields, UDT arrays,
+and imported UDT values are rejected before runtime execution or remain outside
+the executable subset.
 
 Pure local UDT methods execute as receiver functions. The receiver value is
 passed as the first internal argument and the method body is evaluated through

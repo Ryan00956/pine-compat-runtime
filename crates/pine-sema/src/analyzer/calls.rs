@@ -365,7 +365,7 @@ impl Analyzer {
         }
 
         if self.functions.contains_key(&name) {
-            return self.analyze_udf_call(&name, callee.span, args, &arg_types);
+            return self.analyze_udf_call(&name, callee.span, span, args, &arg_types);
         }
 
         if let Some(reason) = unsupported_strategy_reason(&name) {

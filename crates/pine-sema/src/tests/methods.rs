@@ -28,6 +28,28 @@ plot(p.shift(2))
 }
 
 #[test]
+fn accepts_udt_passthrough_user_function() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+identity(p) => p
+p = Point.new(close, open)
+same = identity(p)
+plot(same.x - same.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_unknown_user_method() {
     let analysis = analyze(
         r#"type Point
