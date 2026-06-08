@@ -1512,6 +1512,17 @@ fn run_script_csv_returns_correlation_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_covariance_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/covariance.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("covariance fixture should run");
+
+    assert_snapshot("runtime_covariance.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_macd_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/macd.pine"),
