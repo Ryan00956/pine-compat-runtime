@@ -353,6 +353,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/table_cell.pine",
     ),
     (
+        "runtime_table_control_flow.json",
+        "tests/fixtures/runtime/table_control_flow.pine",
+    ),
+    (
         "runtime_table_delete.json",
         "tests/fixtures/runtime/table_delete.pine",
     ),

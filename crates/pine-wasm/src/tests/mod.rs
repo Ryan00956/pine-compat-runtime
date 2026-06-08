@@ -858,6 +858,17 @@ fn run_script_csv_returns_table_cell_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_table_control_flow_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/table_control_flow.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("table control-flow fixture should run");
+
+    assert_snapshot("runtime_table_control_flow.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_table_delete_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/table_delete.pine"),
