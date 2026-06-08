@@ -1127,6 +1127,17 @@ fn run_script_csv_returns_dmi_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_sar_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/sar.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("sar fixture should run");
+
+    assert_snapshot("runtime_sar.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_alma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/alma.pine"),

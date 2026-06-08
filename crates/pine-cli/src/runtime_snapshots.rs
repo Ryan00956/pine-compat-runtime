@@ -126,6 +126,7 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/supertrend.pine",
     ),
     ("runtime_dmi.json", "tests/fixtures/runtime/dmi.pine"),
+    ("runtime_sar.json", "tests/fixtures/runtime/sar.pine"),
     ("runtime_swma.json", "tests/fixtures/runtime/swma.pine"),
     ("runtime_alma.json", "tests/fixtures/runtime/alma.pine"),
     ("runtime_linreg.json", "tests/fixtures/runtime/linreg.pine"),
