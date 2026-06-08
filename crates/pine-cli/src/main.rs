@@ -1145,6 +1145,12 @@ mod tests {
                     "../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_persistent_from_entries_bars.csv"
                 )
             }
+            "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_persistent_same_id.pine" =>
+            {
+                include_str!(
+                    "../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_trail_points_persistent_same_id_bars.csv"
+                )
+            }
             "tests/fixtures/runtime/strategy_pyramiding_exit_same_id.pine" => include_str!(
                 "../../../tests/fixtures/runtime/strategy_pyramiding_exit_same_id_bars.csv"
             ),
