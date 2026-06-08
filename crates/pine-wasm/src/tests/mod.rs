@@ -5868,6 +5868,24 @@ fn runs_strategy_omitted_loss_limit_bracket_same_id_fixture_from_csv_to_public_s
 }
 
 #[test]
+fn runs_strategy_omitted_loss_limit_bracket_same_id_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_limit_bracket_same_id.pine"
+        ),
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_pyramiding_exit_omitted_loss_limit_bracket_same_id_bars.csv"
+        ),
+    )
+    .expect("strategy omitted loss+limit bracket same-id fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_pyramiding_exit_omitted_loss_limit_bracket_same_id.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_omitted_stop_limit_bracket_same_id_fixture_from_csv_to_public_strategy_json() {
     let output = run_script_csv(
         include_str!(
