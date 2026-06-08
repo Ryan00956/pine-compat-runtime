@@ -1303,6 +1303,17 @@ fn run_script_csv_returns_bb_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_bbw_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/bbw.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("bbw fixture should run");
+
+    assert_snapshot("runtime_bbw.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_alma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/alma.pine"),
