@@ -528,6 +528,17 @@ fn run_script_csv_returns_label_array_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_array_helpers_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_helpers.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("array helpers fixture should run");
+
+    assert_snapshot("runtime_array_helpers.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_line_new_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/line_new.pine"),
