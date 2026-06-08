@@ -3432,6 +3432,22 @@ fn runs_strategy_exit_reservation_fixture_from_csv_to_public_strategy_json() {
 }
 
 #[test]
+fn runs_strategy_exit_reservation_interactions_fixture_contract() {
+    let output = run_script_csv(
+        include_str!(
+            "../../../../tests/fixtures/runtime/strategy_exit_reservation_interactions.pine"
+        ),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy exit reservation interactions fixture should run");
+
+    assert_snapshot(
+        "runtime_strategy_exit_reservation_interactions.json",
+        &output,
+    );
+}
+
+#[test]
 fn runs_strategy_exit_omitted_single_replacement_fixture_contract() {
     let output = run_script_csv(
         include_str!(
