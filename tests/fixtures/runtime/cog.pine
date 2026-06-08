@@ -1,4 +1,8 @@
 //@version=5
 indicator("COG")
 value = ta.cog(close, 3)
+zero = ta.cog(close * 0, 2)
+invalid = ta.cog(close, 0)
 plot(value)
+plot(na(zero) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)

@@ -1259,6 +1259,17 @@ fn run_script_csv_returns_cci_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_cog_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/cog.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("cog fixture should run");
+
+    assert_snapshot("runtime_cog.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_alma_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/alma.pine"),
