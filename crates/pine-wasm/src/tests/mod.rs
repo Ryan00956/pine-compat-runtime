@@ -1567,6 +1567,17 @@ fn run_script_csv_returns_percentile_nearest_rank_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_percentrank_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/percentrank.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("percentrank fixture should run");
+
+    assert_snapshot("runtime_percentrank.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_macd_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/macd.pine"),

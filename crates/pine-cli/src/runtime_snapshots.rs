@@ -181,6 +181,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/percentile_nearest_rank.pine",
     ),
     (
+        "runtime_percentrank.json",
+        "tests/fixtures/runtime/percentrank.pine",
+    ),
+    (
         "runtime_dema_tema.json",
         "tests/fixtures/runtime/dema_tema.pine",
     ),
