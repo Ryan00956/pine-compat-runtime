@@ -160,7 +160,7 @@ table.cell_set_text_valign	partial	table id previously populated cell vertical t
 table.cell_set_tooltip	partial	table id previously populated cell tooltip mutation snapshots only; deleted or na table ids are no-op; tooltip display remains host responsibility and richer table cell text layout remains unsupported	tests/fixtures/runtime/table_cell.pine
 table.cell_set_text_font_family	partial	table id previously populated cell text font-family mutation snapshots only; deleted or na table ids are no-op; font rendering remains host responsibility and richer table cell text layout remains unsupported	tests/fixtures/runtime/table_cell.pine
 table.cell_set_text_formatting	partial	table id previously populated cell text-formatting mask snapshots for text.format_none/bold/italic combinations only; deleted or na table ids are no-op; bold/italic rendering remains host responsibility and richer table cell text layout remains unsupported	tests/fixtures/runtime/table_cell.pine
-color.new	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
+color.new	supported	apply 0..100 transparency to existing colors with omitted transparency defaulting to 0	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 color.rgb	supported	RGB color construction with optional 0..100 transparency argument	tests/fixtures/runtime/colors.pine
 color.r	supported	red channel extraction from literal, rgb/new, and gradient colors	tests/fixtures/runtime/colors.pine
 color.g	supported	green channel extraction from literal, rgb/new, and gradient colors	tests/fixtures/runtime/colors.pine
