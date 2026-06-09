@@ -1305,11 +1305,12 @@ fn run_script_csv_returns_na_fixture_contract() {
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 4);
+    assert_eq!(plots.len(), 5);
     assert_eq!(plots[0]["values"], serde_json::json!([2, 2, 3, 4]));
     assert_eq!(plots[1]["values"], serde_json::json!([2, 2, 3, 4]));
     assert_eq!(plots[2]["values"], serde_json::json!([2, 2, 4, 4]));
     assert_eq!(plots[3]["values"], serde_json::json!([0, 0, 0, 0]));
+    assert_eq!(plots[4]["values"], serde_json::json!([0, 0, 0, 0]));
 }
 
 #[test]

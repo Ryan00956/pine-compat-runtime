@@ -5,7 +5,9 @@ fallback = nz(previous, close)
 maybe_close = close > open ? close : na
 fixed = fixnan(maybe_close)
 na_nz_relation = na(previous) ? fallback - close : fallback - previous
+fixnan_carry_relation = na(maybe_close) and na(fixed[1]) ? (na(fixed) ? 0 : 1) : fixed - (na(maybe_close) ? fixed[1] : maybe_close)
 plot(na(previous) ? close : fallback)
 plot(fallback)
 plot(fixed)
 plot(na_nz_relation)
+plot(fixnan_carry_relation)
