@@ -9,6 +9,9 @@ method keepBlock(Point p) =>
     copy = p
     copy
 method choose(Point p, Point other) => other
+method chooseBlock(Point p, Point other) =>
+    copy = other
+    copy
 method wrap(Point p, Point other) => p.choose(other)
 method clone(Point p) => Point.new(p.x)
 method make(Point p, float x) => Point.new(x)
@@ -19,6 +22,7 @@ q = Point.new(open)
 same = p.keep()
 sameBlock = p.keepBlock()
 chosen = p.choose(q)
+chosenBlock = p.chooseBlock(q)
 wrapped = p.wrap(q)
 cloned = p.clone()
 made = p.make(open)
@@ -27,6 +31,7 @@ plot(p.shift(open))
 plot(same.x + close)
 plot(sameBlock.x + close)
 plot(chosen.x + close)
+plot(chosenBlock.x + close)
 plot(wrapped.x + close)
 plot(cloned.x + close)
 plot(made.x + close)

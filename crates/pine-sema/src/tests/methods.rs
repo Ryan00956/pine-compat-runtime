@@ -97,6 +97,31 @@ plot(same.x + same.y)
 }
 
 #[test]
+fn accepts_udt_parameter_block_alias_user_method_return() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+method chooseBlock(Point p, Point other) =>
+    copy = other
+    copy
+p = Point.new(close, open)
+q = Point.new(open, close)
+same = p.chooseBlock(q)
+plot(same.x + same.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_nested_udt_parameter_passthrough_user_method_return() {
     let analysis = analyze(
         r#"type Point
