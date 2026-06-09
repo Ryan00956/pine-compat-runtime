@@ -1164,10 +1164,15 @@ fn run_script_csv_returns_math_edge_cases_as_json_null() {
 
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    assert_eq!(parsed["plots"].as_array().expect("plots").len(), 8);
-    for plot in parsed["plots"].as_array().expect("plots") {
+    let plots = parsed["plots"].as_array().expect("plots");
+    assert_eq!(plots.len(), 12);
+    for plot in &plots[..8] {
         assert_eq!(plot["values"], serde_json::json!([null, null]));
     }
+    assert_eq!(plots[8]["values"], serde_json::json!([2, 2]));
+    assert_eq!(plots[9]["values"], serde_json::json!([-1, -1]));
+    assert_eq!(plots[10]["values"], serde_json::json!([1.3, 1.3]));
+    assert_eq!(plots[11]["values"], serde_json::json!([-1.2, -1.2]));
     assert!(!output.contains("NaN"));
     assert!(!output.contains("Infinity"));
 }

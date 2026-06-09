@@ -72,7 +72,7 @@ fn eval_math_round(
     if args.len() == 1 {
         return match value {
             PineValue::Int(value) => Ok(PineValue::Int(value)),
-            PineValue::Float(value) => Ok(PineValue::Float(value.round())),
+            PineValue::Float(value) => Ok(PineValue::Float(round_ties_up(value))),
             PineValue::Na => Ok(PineValue::Na),
             _ => Ok(PineValue::Na),
         };
@@ -86,7 +86,11 @@ fn eval_math_round(
     };
     let precision = precision.clamp(i32::MIN as i64, i32::MAX as i64) as i32;
     let factor = 10_f64.powi(precision);
-    Ok(finite_float_or_na((value * factor).round() / factor))
+    Ok(finite_float_or_na(round_ties_up(value * factor) / factor))
+}
+
+fn round_ties_up(value: f64) -> f64 {
+    (value + 0.5).floor()
 }
 
 fn eval_math_round_to_mintick(

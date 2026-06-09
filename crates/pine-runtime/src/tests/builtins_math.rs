@@ -199,6 +199,33 @@ plot(math.pow(-1, 0.5))
 }
 
 #[test]
+fn math_round_ties_round_up() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("math round ties")
+plot(math.round(1.5))
+plot(math.round(-1.5))
+plot(math.round(1.25, 1))
+plot(math.round(-1.25, 1))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_values_close(&result.plots[0].values, &[2.0, 2.0, 2.0, 2.0]);
+    assert_values_close(&result.plots[1].values, &[-1.0, -1.0, -1.0, -1.0]);
+    assert_values_close(&result.plots[2].values, &[1.3, 1.3, 1.3, 1.3]);
+    assert_values_close(&result.plots[3].values, &[-1.2, -1.2, -1.2, -1.2]);
+}
+
+#[test]
 fn runs_math_sum_over_historical_bars() {
     let source = SourceFile::new(
         "test.pine",

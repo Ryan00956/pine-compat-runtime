@@ -1238,9 +1238,13 @@ def test_run_script_returns_math_edge_cases_as_none():
     result = pine_compat.run_script(source, BARS)
 
     assert result["diagnostics"] == []
-    assert len(result["plots"]) == 8
-    for plot in result["plots"]:
+    assert len(result["plots"]) == 12
+    for plot in result["plots"][:8]:
         assert plot["values"] == [None, None, None]
+    assert result["plots"][8]["values"] == [2.0, 2.0, 2.0]
+    assert result["plots"][9]["values"] == [-1.0, -1.0, -1.0]
+    assert result["plots"][10]["values"] == [1.3, 1.3, 1.3]
+    assert result["plots"][11]["values"] == [-1.2, -1.2, -1.2]
 
 
 def test_run_script_returns_math_fixture_contract():
