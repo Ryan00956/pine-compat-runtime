@@ -635,7 +635,9 @@ impl Analyzer {
                     .map(|arg| self.type_of_expr_with_params(&arg.value, param_types))
                     .collect();
                 let name = expr_name(callee)?;
-                if let Some(pine_type) = self.type_of_user_type_constructor(&name, args) {
+                if let Some(pine_type) =
+                    self.type_of_user_type_constructor_with_params(&name, args, param_types)
+                {
                     Some(pine_type)
                 } else if let Some(signature) = pine_builtins::get_phase_1_builtin(&name) {
                     if is_ta_vwap_bands_call(&name, args) {

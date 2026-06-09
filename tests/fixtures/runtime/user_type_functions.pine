@@ -10,6 +10,8 @@ wrap(p) =>
     copy
 outer(p) => identity(p)
 choose(delta, p) => p
+cloneFrom(p) => Point.new(p.x, p.y)
+cloneFromNamed(p) => Point.new(y=p.y, x=p.x)
 make(x, y) => Point.new(x, y)
 makeAlias(x, y) =>
     ax = x
@@ -26,6 +28,8 @@ same = identity(p)
 wrapped = wrap(p)
 nested = outer(p)
 chosen = choose(p=p, delta=bar_index)
+cloned = cloneFrom(p)
+clonedNamed = cloneFromNamed(p)
 made = make(close, open)
 madeAlias = makeAlias(close, open)
 madeNamed = makeNamed(close, open)
@@ -35,6 +39,8 @@ plot(same.x + same.y)
 plot(wrapped.x + wrapped.y + bar_index)
 plot(nested.x + nested.y + wrapped.x)
 plot(chosen.x + chosen.y + bar_index)
+plot(cloned.x + cloned.y + bar_index)
+plot(clonedNamed.x + clonedNamed.y + bar_index)
 plot(made.x + made.y + bar_index)
 plot(madeAlias.x + madeAlias.y + bar_index)
 plot(madeNamed.x + madeNamed.y + bar_index)

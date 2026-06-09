@@ -258,10 +258,11 @@ impl Analyzer {
         ))
     }
 
-    pub(crate) fn type_of_user_type_constructor(
+    pub(crate) fn type_of_user_type_constructor_with_params(
         &self,
         callee_name: &str,
         args: &[CallArg],
+        param_types: &HashMap<String, PineType>,
     ) -> Option<PineType> {
         let type_name = callee_name.strip_suffix(".new")?;
         let user_type = self.user_types.get(type_name)?;
@@ -270,7 +271,7 @@ impl Analyzer {
         }
         let mut qualifier = Qualifier::Const;
         for arg in args {
-            let arg_type = self.type_of_expr(&arg.value)?;
+            let arg_type = self.type_of_expr_with_params(&arg.value, param_types)?;
             qualifier = strongest_qualifier(qualifier, arg_type.qualifier);
         }
         Some(PineType::new(qualifier, ValueKind::UserType))
@@ -280,6 +281,7 @@ impl Analyzer {
         &self,
         callee_name: &str,
         args: &[CallArg],
+        param_types: &HashMap<String, PineType>,
     ) -> Option<UdtConstructor> {
         let type_name = callee_name.strip_suffix(".new")?;
         let user_type = self.user_types.get(type_name)?;
@@ -301,7 +303,11 @@ impl Analyzer {
         }
         Some(UdtConstructor {
             field_args: field_args.into_iter().collect::<Option<_>>()?,
-            pine_type: self.type_of_user_type_constructor(callee_name, args)?,
+            pine_type: self.type_of_user_type_constructor_with_params(
+                callee_name,
+                args,
+                param_types,
+            )?,
         })
     }
 

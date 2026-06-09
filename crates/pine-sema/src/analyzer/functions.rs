@@ -265,20 +265,22 @@ impl Analyzer {
             feature: "function".to_owned(),
             span: function.span,
         });
-        self.scope.push_scope();
         let mut resolved_arg_types = vec![None; function.params.len()];
+        let mut resolved_arg_user_types = vec![None; function.params.len()];
         for (arg_index, param_index) in arg_indices.iter().copied().enumerate() {
             resolved_arg_types[param_index] = arg_types.get(arg_index).copied().flatten();
+            resolved_arg_user_types[param_index] = args
+                .get(arg_index)
+                .and_then(|arg| self.user_type_name_of_expr(&arg.value));
         }
-        for (param_index, (param, arg_type)) in
-            function.params.iter().zip(resolved_arg_types).enumerate()
+        self.scope.push_scope();
+        for (param, (arg_type, arg_user_type)) in function
+            .params
+            .iter()
+            .zip(resolved_arg_types.into_iter().zip(resolved_arg_user_types))
         {
             let symbol = self.define_local_symbol(param, arg_type.unwrap_or(UNKNOWN), None, false);
-            if let Some(arg_index) = arg_indices
-                .iter()
-                .position(|mapped_param_index| *mapped_param_index == param_index)
-                && let Some(type_name) = self.user_type_name_of_expr(&args[arg_index].value)
-            {
+            if let Some(type_name) = arg_user_type {
                 self.mark_symbol_user_type(symbol, type_name);
             }
         }

@@ -439,7 +439,9 @@ impl Analyzer {
             ),
             ExprKind::Call { callee, args } => {
                 let name = expr_name(callee)?;
-                if let Some(constructor) = self.user_type_constructor_for_lowering(&name, args) {
+                if let Some(constructor) =
+                    self.user_type_constructor_for_lowering(&name, args, param_types)
+                {
                     return Some(HirExpr {
                         pine_type,
                         series_id,
