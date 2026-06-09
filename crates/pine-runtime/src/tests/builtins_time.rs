@@ -30,6 +30,7 @@ plot(second(ts))
 plot(dayofweek == dayofweek.friday ? 1 : 0)
 plot(dayofweek(ts) == dayofweek.tuesday ? 1 : 0)
 plot(na(year(na)) and na(weekofyear(na)) and na(dayofweek(na)) ? 1 : 0)
+plot(year(ts, "Etc/UTC") == 2021 and month(ts, "GMT") == 2 and weekofyear(ts, "Z") == 5 and dayofmonth(ts, "+0000") == 2 and dayofweek(ts, "+00:00") == dayofweek.tuesday and hour(ts, na) == 3 and minute(ts, "UTC") == 4 and second(ts, "Etc/UTC") == 5 ? 1 : 0)
 plot(made_ts == ts and date_ts == 1609459200000 ? 1 : 0)
 plot(na(timestamp(na, 1, 1)) ? 1 : 0)
 "#,
@@ -82,6 +83,7 @@ plot(na(timestamp(na, 1, 1)) ? 1 : 0)
     assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
 }
 
 #[test]
