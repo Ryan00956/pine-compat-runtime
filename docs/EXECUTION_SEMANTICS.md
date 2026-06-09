@@ -520,8 +520,9 @@ UDT value across bars and roll back during realtime forming updates like other
 ordinary `var` values. UDFs may pass a local UDT value through a parameter and
 return that same parameter, or return a block-local alias chain that starts from
 that parameter, or return a nested passthrough UDF call that maps back to that
-parameter. The caller may then store the returned value and read its fields.
-Field mutation, UDF construction from untyped scalar parameters, UDT history
+parameter. Positional and named arguments both preserve the parameter identity.
+The caller may then store the returned value and read its fields. Field
+mutation, UDF construction from untyped scalar parameters, UDT history
 references, UDT `varip`, nested UDT fields, UDT arrays, and imported UDT values
 are rejected before runtime execution or remain outside the executable subset.
 

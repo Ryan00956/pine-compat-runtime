@@ -440,8 +440,9 @@ declaration, and ordinary variables plus `var` may hold those values. UDF
 parameter passthrough is supported when the function returns the UDT parameter
 itself, when a block-bodied function returns a local alias chain that starts
 from that parameter, or when a nested passthrough UDF call maps back to that
-parameter, so the returned value can be assigned and field-read at the callsite.
-UDT history references, field mutation, `varip`, nested UDT fields, UDT arrays,
+parameter. Positional and named arguments both preserve the parameter identity,
+so the returned value can be assigned and field-read at the callsite. UDT
+history references, field mutation, `varip`, nested UDT fields, UDT arrays,
 constructor inference from untyped scalar UDF parameters, and imported UDT
 identity remain outside the claim.
 

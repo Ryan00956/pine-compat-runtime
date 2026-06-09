@@ -97,6 +97,28 @@ plot(nested.x + nested.y)
 }
 
 #[test]
+fn accepts_udt_named_arg_passthrough_user_function_return() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+choose(delta, p) => p
+p = Point.new(close, open)
+chosen = choose(p=p, delta=1)
+plot(chosen.x + chosen.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_unknown_user_method() {
     let analysis = analyze(
         r#"type Point
