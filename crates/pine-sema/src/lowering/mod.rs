@@ -731,6 +731,20 @@ impl Analyzer {
         if let Some(type_name) = self.user_type_name_of_expr(expr) {
             return Some(type_name);
         }
+        if let ExprKind::Ternary {
+            then_expr,
+            else_expr,
+            ..
+        } = &expr.kind
+        {
+            return match (
+                self.user_type_name_of_expr_with_params(then_expr, param_exprs),
+                self.user_type_name_of_expr_with_params(else_expr, param_exprs),
+            ) {
+                (Some(then_name), Some(else_name)) if then_name == else_name => Some(then_name),
+                _ => None,
+            };
+        }
         let name = match &expr.kind {
             ExprKind::Identifier(name) => name,
             ExprKind::QualifiedName(parts) if parts.len() == 1 => &parts[0],

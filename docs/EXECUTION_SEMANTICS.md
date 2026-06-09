@@ -523,12 +523,13 @@ updated value back to the receiver symbol, including the receiver's persistent
 slot when applicable. UDFs may pass a local UDT value through a parameter and
 return that same parameter, or return a block-local alias chain that starts from
 that parameter, or return a nested passthrough UDF call that maps back to that
-parameter. Pure UDFs may also construct and return a local UDT, directly or
-through nested pure constructor-helper UDF calls, from local UDT parameter
-scalar fields, scalar fields read through block-local UDT aliases of those
-parameters, block-local scalar aliases of those fields, scalar parameters whose
-types are inferred from the call arguments, or block-local scalar aliases of
-those scalar parameters, using positional or named constructor field arguments.
+parameter. Pure UDFs may also construct and return a local UDT, directly,
+through nested pure constructor-helper UDF calls, or through same-local-UDT
+ternary constructor branches, from local UDT parameter scalar fields, scalar
+fields read through block-local UDT aliases of those parameters, block-local
+scalar aliases of those fields, scalar parameters whose types are inferred from
+the call arguments, or block-local scalar aliases of those scalar parameters,
+using positional or named constructor field arguments.
 Positional and named UDF call arguments both preserve the parameter identity.
 The caller may then store the returned value and read its fields. Field
 mutation inside UDFs or methods, UDT history references, UDT `varip`, nested

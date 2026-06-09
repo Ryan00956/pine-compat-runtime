@@ -60,7 +60,23 @@ impl Analyzer {
                 let else_type = self.analyze_expr(else_expr);
                 match (condition_type, then_type, else_type) {
                     (Some(condition_type), Some(then_type), Some(else_type)) => {
-                        self.merge_branch_types(condition_type, then_type, else_type, expr.span)
+                        let pine_type = self.merge_branch_types(
+                            condition_type,
+                            then_type,
+                            else_type,
+                            expr.span,
+                        )?;
+                        if pine_type.kind == ValueKind::UserType
+                            && !self.mark_ternary_user_type(expr.span, then_expr, else_expr)
+                        {
+                            self.diagnostics.push(Diagnostic::error(
+                                "E_BRANCH_TYPE",
+                                "ternary user-defined type branches must resolve to the same local UDT",
+                                expr.span,
+                            ));
+                            return None;
+                        }
+                        Some(pine_type)
                     }
                     _ => None,
                 }

@@ -354,6 +354,40 @@ impl Analyzer {
             ExprKind::Call { callee, args } => {
                 self.user_type_name_of_udf_passthrough(expr_name(callee)?.as_str(), args)
             }
+            ExprKind::Ternary {
+                then_expr,
+                else_expr,
+                ..
+            } => self.user_type_name_of_ternary_branches(then_expr, else_expr),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn mark_ternary_user_type(
+        &mut self,
+        span: Span,
+        then_expr: &Expr,
+        else_expr: &Expr,
+    ) -> bool {
+        let Some(type_name) = self.user_type_name_of_ternary_branches(then_expr, else_expr) else {
+            return false;
+        };
+        self.mark_expr_user_type(span, type_name);
+        true
+    }
+
+    fn user_type_name_of_ternary_branches(
+        &self,
+        then_expr: &Expr,
+        else_expr: &Expr,
+    ) -> Option<String> {
+        match (
+            self.user_type_name_of_expr(then_expr),
+            self.user_type_name_of_expr(else_expr),
+        ) {
+            (Some(then_name), Some(else_name)) if then_name == else_name => Some(then_name),
+            (Some(then_name), None) if is_na_expr(else_expr) => Some(then_name),
+            (None, Some(else_name)) if is_na_expr(then_expr) => Some(else_name),
             _ => None,
         }
     }
@@ -579,4 +613,12 @@ fn identifier_name(expr: &Expr) -> Option<&String> {
         return None;
     };
     Some(name)
+}
+
+fn is_na_expr(expr: &Expr) -> bool {
+    match &expr.kind {
+        ExprKind::Identifier(name) => name == "na",
+        ExprKind::QualifiedName(parts) if parts.len() == 1 => parts[0] == "na",
+        _ => false,
+    }
 }
