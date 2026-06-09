@@ -199,8 +199,8 @@ math.cbrt	supported	numeric cube root with fixture-backed positive cube roundtri
 math.log	supported	natural logarithm with fixture-backed exp roundtrip and non-positive inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.log10	supported	base-10 logarithm with fixture-backed pow(10, x) roundtrip and non-positive inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.exp	supported	natural exponential with fixture-backed log roundtrip and overflow returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.acos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.asin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.acos	supported	inverse cosine with fixture-backed asin complement relation over bounded inputs and out-of-domain inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.asin	supported	inverse sine with fixture-backed acos complement relation over bounded inputs and out-of-domain inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.atan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.sign	supported	numeric sign with fixture-backed odd symmetry relation	tests/fixtures/runtime/math.pine
 math.todegrees	supported	numeric radians-to-degrees conversion with fixture-backed toradians roundtrip	tests/fixtures/runtime/math.pine
