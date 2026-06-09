@@ -1985,7 +1985,7 @@ fn run_script_csv_returns_strings_fixture_contract() {
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 28);
+    assert_eq!(plots.len(), 29);
     assert_eq!(plots[0]["values"], serde_json::json!([3, 3]));
     for plot in &plots[1..] {
         assert_eq!(plot["values"], serde_json::json!([1, 1]));

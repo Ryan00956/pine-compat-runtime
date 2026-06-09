@@ -1390,7 +1390,7 @@ def test_run_script_returns_strings_fixture_contract():
     result = pine_compat.run_script(source, BARS)
 
     assert result["diagnostics"] == []
-    assert len(result["plots"]) == 28
+    assert len(result["plots"]) == 29
     assert result["plots"][0]["values"] == [3.0, 3.0, 3.0]
     for plot in result["plots"][1:]:
         assert plot["values"] == [1.0, 1.0, 1.0]

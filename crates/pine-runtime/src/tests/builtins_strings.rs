@@ -74,7 +74,8 @@ plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
 plot(matched and empty_match ? 1 : 0)
 plot(na(missing_match) ? 1 : 0)
-plot(mid + empty_pos + na_pos)
+plot(mid + empty_pos)
+plot(na(na_pos) ? 1 : 0)
 plot(na(missing_pos) ? 1 : 0)
 plot(slice == "M" and tail == "MA" and wide == "MA" and na_begin == "S" ? 1 : 0)
 plot(trimmed == upper and repeated == "ab-ab" and empty_repeat == "" ? 1 : 0)
@@ -111,33 +112,9 @@ plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_tim
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
     assert_values_close(&result.plots[0].values, &[3.0, 3.0]);
-    assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[26].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[27].values, &[1.0, 1.0]);
+    for plot in &result.plots[1..] {
+        assert_values_close(&plot.values, &[1.0, 1.0]);
+    }
 }
 
 #[test]

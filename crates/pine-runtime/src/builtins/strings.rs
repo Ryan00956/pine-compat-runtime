@@ -340,7 +340,7 @@ impl<'a> HistoricalRuntime<'a> {
         };
         let pattern = match self.eval_expr(&args[1].value)? {
             PineValue::String(pattern) => pattern,
-            PineValue::Na => return Ok(PineValue::Int(0)),
+            PineValue::Na => return Ok(PineValue::Na),
             _ => return Ok(PineValue::Na),
         };
         if pattern.is_empty() {
