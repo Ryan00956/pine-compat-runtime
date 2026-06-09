@@ -300,9 +300,9 @@ ta.rising	supported	series int/float trend-window checks	tests/fixtures/runtime/
 ta.falling	supported	series int/float trend-window checks	tests/fixtures/runtime/trend.pine
 ta.barssince	supported	bool-compatible condition callsite state returning bars since the most recent true condition, 0 on true and na until the condition has first been true	tests/fixtures/runtime/barssince.pine
 ta.valuewhen	supported	bool-compatible condition with valuewhen source and simple-int occurrence, returning the requested recent true-condition source value or na before enough matches	tests/fixtures/runtime/valuewhen.pine
-ta.cross	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
-ta.crossover	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
-ta.crossunder	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
+ta.cross	supported	numeric source1/source2 prior-bar crossing check, true on crossover or crossunder and false without comparable current or previous numeric values	tests/fixtures/runtime/cross.pine
+ta.crossover	supported	numeric source1/source2 prior-bar upward crossing check, with simple numeric source2 treated as constant and false without comparable values	tests/fixtures/runtime/cross.pine
+ta.crossunder	supported	numeric source1/source2 prior-bar downward crossing check, with simple numeric source2 treated as constant and false without comparable values	tests/fixtures/runtime/cross.pine
 ta.highest	supported	source/length form plus length-only high source overload	tests/fixtures/runtime/extremes.pine
 ta.lowest	supported	source/length form plus length-only low source overload	tests/fixtures/runtime/extremes.pine
 ta.highestbars	supported	source/length form plus length-only high source overload	tests/fixtures/runtime/extreme_bars.pine
