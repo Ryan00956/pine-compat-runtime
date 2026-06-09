@@ -197,7 +197,7 @@ math.trunc	supported	integer truncation result with argument qualifier and na pr
 math.sqrt	supported	numeric square root with fixture-backed square/absolute-value relation and negative inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.cbrt	supported	numeric cube root with fixture-backed positive cube roundtrip relation	tests/fixtures/runtime/math.pine
 math.log	supported	natural logarithm with fixture-backed exp roundtrip and non-positive inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.log10	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.log10	supported	base-10 logarithm with fixture-backed pow(10, x) roundtrip and non-positive inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.exp	supported	natural exponential with fixture-backed log roundtrip and overflow returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.acos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.asin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
