@@ -577,10 +577,10 @@ top-level `type` declarations with scalar int/float/bool/string/color fields,
 `Type.new(...)` construction, field reads on local values, ordinary variables,
 `var` persistence, and UDF parameter passthrough/returns through positional or
 named arguments with direct returns, block-local aliases, or nested passthrough
-calls. Local scalar fields can be reassigned outside UDF/method bodies. Field
-mutation inside UDFs or methods, UDF construction from untyped scalar
-parameters, `varip`, history references on UDT values, UDT fields, UDT arrays,
-and imported UDTs remain outside the supported matrix.
+calls, plus UDF construction/returns from inferred scalar parameters. Local
+scalar fields can be reassigned outside UDF/method bodies. Field mutation
+inside UDFs or methods, `varip`, history references on UDT values, UDT fields,
+UDT arrays, and imported UDTs remain outside the supported matrix.
 User-defined methods are partial for pure methods on local UDT receivers with
 scalar or local UDT parameters and direct or nested-method UDT parameter
 passthrough returns. The receiver is passed as the first internal parameter.
@@ -1014,7 +1014,7 @@ array.*              partial      float/int/bool/string/color/label/line/box/tab
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
 import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only
-user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, var persistence, scalar field mutation outside UDF/method bodies, and UDF parameter passthrough/returns through positional or named arguments with direct returns, block-local aliases, or nested passthrough calls only
+user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, var persistence, scalar field mutation outside UDF/method bodies, and UDF parameter passthrough/returns or constructor returns through positional or named scalar arguments with direct returns, block-local aliases, or nested passthrough calls only
 user-defined methods partial      pure methods on local UDT receivers with scalar or local UDT parameters and direct or nested-method UDT parameter passthrough returns only
 ```
 

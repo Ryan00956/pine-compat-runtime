@@ -10,14 +10,17 @@ wrap(p) =>
     copy
 outer(p) => identity(p)
 choose(delta, p) => p
+make(x, y) => Point.new(x, y)
 
 p = Point.new(close, open)
 same = identity(p)
 wrapped = wrap(p)
 nested = outer(p)
 chosen = choose(p=p, delta=bar_index)
+made = make(close, open)
 plot(same.x - same.y)
 plot(same.x + same.y)
 plot(wrapped.x + wrapped.y + bar_index)
 plot(nested.x + nested.y + wrapped.x)
 plot(chosen.x + chosen.y + bar_index)
+plot(made.x + made.y + bar_index)

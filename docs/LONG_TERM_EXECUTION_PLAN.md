@@ -496,7 +496,9 @@ Delivered scope:
 - Exact-key `import ... as alias` for exported const expressions and pure
   exported functions.
 - Local scalar-field user-defined types with `Type.new(...)`, field reads,
-  ordinary variables, and `var` persistence.
+  ordinary variables, `var` persistence, scalar field mutation outside
+  UDF/method bodies, and UDF constructor returns from inferred scalar
+  parameters.
 - Pure methods on local UDT receivers with scalar or local UDT parameters and
   direct or nested-method UDT parameter passthrough returns.
 
