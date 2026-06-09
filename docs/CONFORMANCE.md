@@ -579,11 +579,12 @@ local for-expression constructor results, `var` persistence, and UDF parameter
 passthrough/returns through positional or named arguments with direct returns,
 block-local aliases, or nested passthrough calls, plus UDF construction/returns,
 directly, through nested pure
-constructor-helper UDF calls, or through same-local-UDT ternary or switch
-constructor branches, from local UDT parameter scalar fields, scalar fields read through
-block-local UDT aliases of those parameters, block-local scalar aliases of
-those fields, inferred scalar parameters, or block-local scalar aliases of
-those scalar parameters using positional or named constructor field arguments.
+constructor-helper UDF calls, or through same-local-UDT ternary, switch, or
+final if/else constructor branches, from local UDT parameter scalar fields,
+scalar fields read through block-local UDT aliases of those parameters,
+block-local scalar aliases of those fields, inferred scalar parameters, or
+block-local scalar aliases of those scalar parameters using positional or named
+constructor field arguments.
 Local scalar fields can be reassigned outside UDF/method bodies. Field
 mutation inside UDFs or methods, `varip`, history references on UDT values, UDT
 fields, UDT arrays, and imported UDTs remain outside the supported matrix.
@@ -592,12 +593,12 @@ scalar or local UDT parameters and direct UDT passthrough returns, block-local
 receiver or local UDT parameter alias passthrough returns, nested-method UDT
 parameter passthrough returns, plus local UDT constructor returns, directly,
 through nested pure constructor-helper UDF calls, or through same-local-UDT
-ternary, switch, or final if/else constructor branches, from receiver or local UDT parameter
-scalar fields, scalar fields read through block-local receiver or local UDT parameter
-aliases, block-local scalar aliases of those fields, inferred scalar
-parameters, or block-local scalar aliases of those parameters using positional
-or named constructor field arguments. The receiver is passed as the first
-internal parameter. Returned receiver values,
+ternary, switch, or final if/else constructor branches, from receiver or local
+UDT parameter scalar fields, scalar fields read through block-local receiver or
+local UDT parameter aliases, block-local scalar aliases of those fields,
+inferred scalar parameters, or block-local scalar aliases of those parameters
+using positional or named constructor field arguments. The receiver is passed
+as the first internal parameter. Returned receiver values,
 block-local receiver aliases, local UDT parameter values, block-local local UDT
 parameter aliases, or constructed local UDT values may be assigned and
 field-read at the callsite. Side effects,
