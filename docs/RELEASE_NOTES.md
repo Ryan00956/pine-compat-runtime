@@ -8,10 +8,11 @@
   from that parameter, or a nested passthrough UDF call that maps back to that
   parameter, assigned at the callsite through positional or named arguments,
   and field-read there. Pure local UDT methods may also return the receiver
-  itself or another local UDT parameter and allow the caller to assign and
-  field-read that returned value; field mutation, UDF construction from untyped
-  scalar parameters, imported UDT identity, UDT history, `varip`, nested UDT
-  fields, and UDT arrays remain outside the supported subset.
+  itself, another local UDT parameter, or a nested method passthrough call that
+  maps back to one of those method parameters, and allow the caller to assign
+  and field-read that returned value; field mutation, UDF construction from
+  untyped scalar parameters, imported UDT identity, UDT history, `varip`,
+  nested UDT fields, and UDT arrays remain outside the supported subset.
 - Closed Strategy Internal Stage 13 release-note coverage through Slice 101. The
   Stage 13 multi-entry ledger contract now records omitted-`from_entry`
   trailing future-entry persistence, CLI/WASM/Python host parity for omitted

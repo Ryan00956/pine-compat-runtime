@@ -498,7 +498,7 @@ Delivered scope:
 - Local scalar-field user-defined types with `Type.new(...)`, field reads,
   ordinary variables, and `var` persistence.
 - Pure methods on local UDT receivers with scalar or local UDT parameters and
-  UDT parameter passthrough returns.
+  direct or nested-method UDT parameter passthrough returns.
 
 Maintenance tails:
 

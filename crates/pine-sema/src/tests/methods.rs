@@ -73,6 +73,30 @@ plot(same.x + same.y)
 }
 
 #[test]
+fn accepts_nested_udt_parameter_passthrough_user_method_return() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+method choose(Point p, Point other) => other
+method wrap(Point p, Point other) => p.choose(other)
+p = Point.new(close, open)
+q = Point.new(open, close)
+same = p.wrap(q)
+plot(same.x + same.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_passthrough_user_function() {
     let analysis = analyze(
         r#"type Point

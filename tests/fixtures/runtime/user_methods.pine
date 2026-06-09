@@ -6,11 +6,14 @@ type Point
 method shift(Point p, float delta) => p.x + delta
 method keep(Point p) => p
 method choose(Point p, Point other) => other
+method wrap(Point p, Point other) => p.choose(other)
 
 p = Point.new(close)
 q = Point.new(open)
 same = p.keep()
 chosen = p.choose(q)
+wrapped = p.wrap(q)
 plot(p.shift(open))
 plot(same.x + close)
 plot(chosen.x + close)
+plot(wrapped.x + close)

@@ -163,11 +163,17 @@ impl Analyzer {
         self.mark_symbol_user_type(receiver, method.receiver_type.clone());
 
         let mut resolved_arg_types = vec![None; method.params.len()];
+        let mut resolved_arg_user_types = vec![None; method.params.len()];
         for (arg_index, param_index) in arg_indices.iter().copied().enumerate() {
             resolved_arg_types[param_index] = arg_types.get(arg_index).copied().flatten();
+            resolved_arg_user_types[param_index] = args
+                .get(arg_index)
+                .and_then(|arg| self.user_type_name_of_expr(&arg.value));
         }
-        for (param_index, (param, arg_type)) in
-            method.params.iter().zip(resolved_arg_types).enumerate()
+        for (param, (arg_type, arg_user_type)) in method
+            .params
+            .iter()
+            .zip(resolved_arg_types.into_iter().zip(resolved_arg_user_types))
         {
             let arg_type = arg_type.unwrap_or(UNKNOWN);
             let symbol = self.define_local_symbol(&param.name, arg_type, None, false);
@@ -182,11 +188,7 @@ impl Analyzer {
                 ));
             }
             if let Some(expected_type_name) = &param.user_type_name {
-                let actual_type_name = arg_indices
-                    .iter()
-                    .position(|mapped_param_index| *mapped_param_index == param_index)
-                    .and_then(|arg_index| self.user_type_name_of_expr(&args[arg_index].value));
-                if actual_type_name.as_deref() == Some(expected_type_name.as_str()) {
+                if arg_user_type.as_deref() == Some(expected_type_name.as_str()) {
                     self.mark_symbol_user_type(symbol, expected_type_name.clone());
                 } else {
                     self.diagnostics.push(Diagnostic::error(
