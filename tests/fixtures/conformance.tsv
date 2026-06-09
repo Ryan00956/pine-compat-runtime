@@ -243,7 +243,7 @@ ta.tema	supported	series numeric source/simple-int positive length triple EMA ch
 ta.rma	supported	Wilder running moving average over numeric series sources with positive integer length	tests/fixtures/runtime/ta.pine
 ta.rsi	supported	RMA-smoothed gain/loss relative strength index over numeric series sources with positive integer length	tests/fixtures/runtime/ta.pine
 ta.macd	supported	EMA-derived MACD, signal, and histogram tuple over numeric series sources with positive integer lengths	tests/fixtures/runtime/macd.pine
-ta.tsi	supported	fixture-derived True Strength Index subset	tests/fixtures/runtime/tsi.pine
+ta.tsi	supported	series numeric source with prior-bar momentum and positive simple-int short/long lengths, returning double-EMA momentum over double-EMA absolute momentum ratio or na for first bar, flat denominator, non-series source, or invalid lengths	tests/fixtures/runtime/tsi.pine
 ta.cmo	supported	fixture-derived Chande Momentum Oscillator subset	tests/fixtures/runtime/cmo.pine
 ta.cci	supported	fixture-derived Commodity Channel Index subset	tests/fixtures/runtime/cci.pine
 ta.cog	supported	fixture-derived Center of Gravity subset	tests/fixtures/runtime/cog.pine
