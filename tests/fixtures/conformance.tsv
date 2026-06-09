@@ -283,7 +283,7 @@ ta.vwma	supported	rolling volume-weighted moving average over series/simple nume
 ta.mfi	supported	fixture-derived Money Flow Index subset	tests/fixtures/runtime/mfi.pine
 ta.wma	supported	linear weighted moving average over series/simple numeric source with oldest-to-newest weights 1..length once the requested window is ready	tests/fixtures/runtime/wma.pine
 ta.hma	supported	Hull moving average over series/simple numeric source using WMA(2 * WMA(source, floor(length / 2)) - WMA(source, length), round(sqrt(length))) once all staged windows are ready	tests/fixtures/runtime/hma.pine
-ta.swma	supported	fixture-derived executable subset	tests/fixtures/runtime/swma.pine
+ta.swma	supported	fixed 4-bar symmetrically weighted moving average over series numeric source with oldest-to-newest weights [1, 2, 2, 1] / 6 once the window is ready	tests/fixtures/runtime/swma.pine
 ta.alma	supported	fixture-derived executable subset	tests/fixtures/runtime/alma.pine
 ta.linreg	supported	fixture-derived executable subset	tests/fixtures/runtime/linreg.pine
 ta.stoch	supported	fixture-derived stochastic oscillator subset	tests/fixtures/runtime/stoch.pine
