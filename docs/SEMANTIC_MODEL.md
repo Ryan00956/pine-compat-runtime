@@ -451,20 +451,22 @@ or methods, `varip`, nested UDT fields, UDT arrays, and imported UDT identity
 remain outside the claim.
 
 Pure user-defined methods are supported for local UDT receivers with scalar or
-local UDT parameters, including direct and nested method UDT parameter
-passthrough returns, and local UDT constructor returns from receiver scalar
-fields or inferred scalar parameters using positional or named constructor
-field arguments. The receiver is analyzed as the first internal argument and
-the method body lowers through the existing inlined UDF path, so callsite state
-and side-effect checks follow the local function rules. When a pure method
-returns the receiver itself, another local UDT parameter, a nested method
-passthrough call that maps back to one of those parameters, or a local UDT
-constructed from receiver scalar fields or inferred scalar parameters, the
-callsite keeps that UDT identity so the returned value can be assigned and
-field-read. Methods with side effects, recursion, unsupported parameter
-families, mismatched UDT parameter identity, unknown receivers, and imported
-method tables remain rejected. Non-array method calls outside the local UDT
-method subset continue to fail with receiver/type diagnostics.
+local UDT parameters, including direct UDT passthrough returns, block-local
+receiver alias passthrough returns, nested method UDT parameter passthrough
+returns, and local UDT constructor returns from receiver scalar fields or
+inferred scalar parameters using positional or named constructor field
+arguments. The receiver is analyzed as the first internal argument and the
+method body lowers through the existing inlined UDF path, so callsite state and
+side-effect checks follow the local function rules. When a pure method returns
+the receiver itself, a block-local alias chain that starts from the receiver,
+another local UDT parameter, a nested method passthrough call that maps back to
+one of those parameters, or a local UDT constructed from receiver scalar fields
+or inferred scalar parameters, the callsite keeps that UDT identity so the
+returned value can be assigned and field-read. Methods with side effects,
+recursion, unsupported parameter families, mismatched UDT parameter identity,
+unknown receivers, and imported method tables remain rejected. Non-array method
+calls outside the local UDT method subset continue to fail with receiver/type
+diagnostics.
 Float arrays accept int or float values and store them as floats. Int arrays
 accept int values. Bool arrays accept bool values. String
 arrays accept string values. Color arrays accept color values. Label and line

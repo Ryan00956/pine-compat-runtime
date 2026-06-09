@@ -50,6 +50,30 @@ plot(same.x + same.y)
 }
 
 #[test]
+fn accepts_udt_receiver_block_alias_user_method_return() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+method keepBlock(Point p) =>
+    copy = p
+    copy
+p = Point.new(close, open)
+same = p.keepBlock()
+plot(same.x + same.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_parameter_passthrough_user_method_return() {
     let analysis = analyze(
         r#"type Point
