@@ -19,6 +19,9 @@ method makeBlock(Point p, float x) =>
     ax = x
     Point.new(ax)
 method makeNamed(Point p, float x) => Point.new(x=x)
+method makeNamedBlock(Point p, float x) =>
+    ax = x
+    Point.new(x=ax)
 
 p = Point.new(close)
 q = Point.new(open)
@@ -31,6 +34,7 @@ cloned = p.clone()
 made = p.make(open)
 madeBlock = p.makeBlock(open)
 madeNamed = p.makeNamed(open)
+madeNamedBlock = p.makeNamedBlock(open)
 plot(p.shift(open))
 plot(same.x + close)
 plot(sameBlock.x + close)
@@ -41,3 +45,4 @@ plot(cloned.x + close)
 plot(made.x + close)
 plot(madeBlock.x + close)
 plot(madeNamed.x + close)
+plot(madeNamedBlock.x + close)

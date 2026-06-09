@@ -234,6 +234,29 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_udt_named_constructor_return_from_user_method_scalar_alias() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method makeNamedBlock(Point p, float x) =>
+    ax = x
+    Point.new(x=ax)
+p = Point.new(close)
+made = p.makeNamedBlock(open)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_passthrough_user_function() {
     let analysis = analyze(
         r#"type Point
