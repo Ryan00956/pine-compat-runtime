@@ -317,11 +317,12 @@ The analyzer should reject these with clear diagnostics:
 - user-defined method forms outside pure local-UDT receiver methods with scalar
   or local UDT parameters, direct UDT passthrough returns, block-local receiver
   or local UDT parameter alias passthrough returns, nested-method UDT parameter
-  passthrough returns, and local UDT constructor returns from receiver scalar
-  fields, inferred scalar parameters, or block-local scalar aliases of those
-  parameters using positional or named constructor field arguments; side
-  effects, recursion, imported methods, unknown receivers, mismatched UDT
-  parameter identity, and unsupported parameter families remain rejected
+  passthrough returns, and local UDT constructor returns from receiver or local
+  UDT parameter scalar fields, inferred scalar parameters, or block-local
+  scalar aliases of those parameters using positional or named constructor field
+  arguments; side effects, recursion, imported methods, unknown receivers,
+  mismatched UDT parameter identity, and unsupported parameter families remain
+  rejected
 - non-array method calls outside the local UDT method subset; unsupported
   receiver families remain ordinary receiver/type diagnostics rather than a
   widened method claim

@@ -504,9 +504,9 @@ Delivered scope:
   direct UDT passthrough returns, block-local receiver alias passthrough
   returns, block-local local UDT parameter alias passthrough returns,
   nested-method UDT parameter passthrough returns, plus local UDT constructor
-  returns from receiver scalar fields, inferred scalar parameters, or
-  block-local scalar aliases of those parameters using positional or named
-  constructor field arguments.
+  returns from receiver or local UDT parameter scalar fields, inferred scalar
+  parameters, or block-local scalar aliases of those parameters using
+  positional or named constructor field arguments.
 
 Maintenance tails:
 
