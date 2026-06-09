@@ -799,6 +799,27 @@ plot(y)
 }
 
 #[test]
+fn accepts_integer_rounding_math_functions_as_int_values() {
+    let analysis = analyze(
+        r#"indicator("integer rounding types")
+floor_values = array.new_int(1, math.floor(close / 2))
+ceil_values = array.new_int(1, math.ceil(close / 2))
+trunc_values = array.new_int(1, math.trunc(close / 2))
+round_values = array.new_int(1, math.round(close / 2))
+plot(array.size(floor_values) + array.size(ceil_values) + array.size(trunc_values) + array.size(round_values))
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_syminfo_metadata() {
     let analysis = analyze(
         r#"indicator("syminfo")

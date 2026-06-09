@@ -72,7 +72,7 @@ fn eval_math_round(
     if args.len() == 1 {
         return match value {
             PineValue::Int(value) => Ok(PineValue::Int(value)),
-            PineValue::Float(value) => Ok(PineValue::Float(round_ties_up(value))),
+            PineValue::Float(value) => Ok(float_to_int_or_na(round_ties_up(value))),
             PineValue::Na => Ok(PineValue::Na),
             _ => Ok(PineValue::Na),
         };
@@ -91,6 +91,15 @@ fn eval_math_round(
 
 fn round_ties_up(value: f64) -> f64 {
     (value + 0.5).floor()
+}
+
+fn float_to_int_or_na(value: f64) -> PineValue {
+    const I64_MAX_EXCLUSIVE: f64 = 9_223_372_036_854_775_808.0;
+    if !value.is_finite() || value < i64::MIN as f64 || value >= I64_MAX_EXCLUSIVE {
+        PineValue::Na
+    } else {
+        PineValue::Int(value as i64)
+    }
 }
 
 fn eval_math_round_to_mintick(
@@ -174,7 +183,7 @@ fn eval_math_floor(
 ) -> Result<PineValue, RuntimeError> {
     match args.value(context, 0)? {
         PineValue::Int(value) => Ok(PineValue::Int(value)),
-        PineValue::Float(value) => Ok(PineValue::Float(value.floor())),
+        PineValue::Float(value) => Ok(float_to_int_or_na(value.floor())),
         PineValue::Na => Ok(PineValue::Na),
         _ => Ok(PineValue::Na),
     }
@@ -186,7 +195,7 @@ fn eval_math_ceil(
 ) -> Result<PineValue, RuntimeError> {
     match args.value(context, 0)? {
         PineValue::Int(value) => Ok(PineValue::Int(value)),
-        PineValue::Float(value) => Ok(PineValue::Float(value.ceil())),
+        PineValue::Float(value) => Ok(float_to_int_or_na(value.ceil())),
         PineValue::Na => Ok(PineValue::Na),
         _ => Ok(PineValue::Na),
     }
@@ -198,7 +207,7 @@ fn eval_math_trunc(
 ) -> Result<PineValue, RuntimeError> {
     match args.value(context, 0)? {
         PineValue::Int(value) => Ok(PineValue::Int(value)),
-        PineValue::Float(value) => Ok(PineValue::Float(value.trunc())),
+        PineValue::Float(value) => Ok(float_to_int_or_na(value.trunc())),
         PineValue::Na => Ok(PineValue::Na),
         _ => Ok(PineValue::Na),
     }

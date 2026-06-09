@@ -219,10 +219,43 @@ plot(math.round(-1.25, 1))
     let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_values_close(&result.plots[0].values, &[2.0, 2.0, 2.0, 2.0]);
-    assert_values_close(&result.plots[1].values, &[-1.0, -1.0, -1.0, -1.0]);
+    assert_eq!(result.plots[0].values, vec![PineValue::Int(2); 4]);
+    assert_eq!(result.plots[1].values, vec![PineValue::Int(-1); 4]);
     assert_values_close(&result.plots[2].values, &[1.3, 1.3, 1.3, 1.3]);
     assert_values_close(&result.plots[3].values, &[-1.2, -1.2, -1.2, -1.2]);
+}
+
+#[test]
+fn integer_rounding_math_functions_return_int_values() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("integer rounding")
+plot(math.floor(1.9))
+plot(math.ceil(1.1))
+plot(math.trunc(-1.9))
+plot(math.round(-1.5))
+plot(math.round(1.25, 1))
+plot(math.floor(1e20))
+plot(math.round(1e20))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots[0].values, vec![PineValue::Int(1); 4]);
+    assert_eq!(result.plots[1].values, vec![PineValue::Int(2); 4]);
+    assert_eq!(result.plots[2].values, vec![PineValue::Int(-1); 4]);
+    assert_eq!(result.plots[3].values, vec![PineValue::Int(-1); 4]);
+    assert_values_close(&result.plots[4].values, &[1.3, 1.3, 1.3, 1.3]);
+    assert_eq!(result.plots[5].values, vec![PineValue::Na; 4]);
+    assert_eq!(result.plots[6].values, vec![PineValue::Na; 4]);
 }
 
 #[test]

@@ -368,9 +368,9 @@ pub(crate) fn promoted_kind_type(
 pub(crate) fn round_return_type(arg_types: &[Option<PineType>]) -> Option<PineType> {
     let number_type = arg_types.first().copied().flatten()?;
     if arg_types.len() > 1 {
-        Some(PineType::new(number_type.qualifier, ValueKind::Float))
+        promoted_kind_type(arg_types, ValueKind::Float)
     } else {
-        Some(number_type)
+        Some(PineType::new(number_type.qualifier, ValueKind::Int))
     }
 }
 pub(crate) fn array_element_return_type(
