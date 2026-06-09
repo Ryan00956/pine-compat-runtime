@@ -647,6 +647,8 @@ impl Analyzer {
             &format!("{method_name}.{receiver_name}"),
             receiver_expr.pine_type,
         );
+        self.symbol_user_types
+            .insert(receiver_temp.id, method.receiver_type.clone());
         arg_statements.push(HirStmt {
             kind: HirStmtKind::Decl {
                 symbol: receiver_temp.id,
@@ -665,17 +667,22 @@ impl Analyzer {
 
         let mut resolved_args = vec![None; method.params.len()];
         for (arg, param_index) in args.iter().zip(arg_indices) {
+            let arg_user_type =
+                self.user_type_name_of_expr_with_params(&arg.value, outer_param_exprs);
             let arg_expr =
                 self.lower_expr_with_params(&arg.value, outer_param_exprs, outer_param_types)?;
             let arg_type = self.type_of_expr_with_params(&arg.value, outer_param_types)?;
-            resolved_args[param_index] = Some((arg_expr, arg_type));
+            resolved_args[param_index] = Some((arg_expr, arg_type, arg_user_type));
         }
         for (param, resolved_arg) in method.params.iter().zip(resolved_args) {
-            let (arg_expr, arg_type) = resolved_arg?;
+            let (arg_expr, arg_type, arg_user_type) = resolved_arg?;
             if !self.record_lowering_temp_symbol(receiver_span) {
                 return None;
             }
             let symbol = self.fresh_temp_symbol(&format!("{method_name}.{}", param.name), arg_type);
+            if let Some(type_name) = arg_user_type {
+                self.symbol_user_types.insert(symbol.id, type_name);
+            }
             arg_statements.push(HirStmt {
                 kind: HirStmtKind::Decl {
                     symbol: symbol.id,

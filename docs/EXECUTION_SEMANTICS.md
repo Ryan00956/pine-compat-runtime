@@ -528,9 +528,10 @@ are rejected before runtime execution or remain outside the executable subset.
 
 Pure local UDT methods execute as receiver functions. The receiver value is
 passed as the first internal argument and the method body is evaluated through
-the same lowered expression path as a local UDF body. Method side effects,
-recursive methods, unsupported parameter families, unknown receivers, and
-imported methods are rejected during semantic analysis.
+the same lowered expression path as a local UDF body. A pure method may return
+the receiver itself; the caller may store that returned UDT value and read its
+fields. Method side effects, recursive methods, unsupported parameter families,
+unknown receivers, and imported methods are rejected during semantic analysis.
 
 ### `varip`
 

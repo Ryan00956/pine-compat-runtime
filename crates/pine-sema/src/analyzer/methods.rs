@@ -85,6 +85,7 @@ impl Analyzer {
         receiver_name: &str,
         method_name: &str,
         span: Span,
+        call_span: Span,
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) -> Option<Option<PineType>> {
@@ -179,6 +180,12 @@ impl Analyzer {
         self.function_stack.push(stack_name);
         self.function_depth += 1;
         let return_type = self.analyze_function_body(&method.body, method.span);
+        if return_type.is_some_and(|pine_type| pine_type.kind == ValueKind::UserType)
+            && let Some(type_name) = self.user_type_name_of_function_body(&method.body)
+        {
+            self.mark_expr_user_type(call_span, type_name.clone());
+            self.mark_expr_user_type(span, type_name);
+        }
         self.function_depth -= 1;
         self.function_stack.pop();
         self.scope.pop_scope();

@@ -2,11 +2,13 @@
 
 ## Unreleased
 
-- Added fixture-backed UDT passthrough through UDF parameters and return values.
-  Local UDT values can now be passed to a pure UDF that directly returns the
-  same parameter, or a block-local alias chain that starts from that parameter,
-  or a nested passthrough UDF call that maps back to that parameter, assigned at
-  the callsite through positional or named arguments, and field-read there;
+- Added fixture-backed UDT passthrough through UDF parameters, UDF returns, and
+  pure receiver methods. Local UDT values can now be passed to a pure UDF that
+  directly returns the same parameter, or a block-local alias chain that starts
+  from that parameter, or a nested passthrough UDF call that maps back to that
+  parameter, assigned at the callsite through positional or named arguments,
+  and field-read there. Pure local UDT methods may also return the receiver
+  itself and allow the caller to assign and field-read that returned value;
   field mutation, UDF construction from untyped scalar parameters, imported UDT
   identity, UDT history, `varip`, nested UDT fields, and UDT arrays remain
   outside the supported subset.

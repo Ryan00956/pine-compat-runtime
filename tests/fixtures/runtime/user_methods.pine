@@ -4,6 +4,9 @@ type Point
     float x
 
 method shift(Point p, float delta) => p.x + delta
+method keep(Point p) => p
 
 p = Point.new(close)
+same = p.keep()
 plot(p.shift(open))
+plot(same.x + close)

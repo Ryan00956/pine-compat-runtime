@@ -359,7 +359,7 @@ impl Analyzer {
             return self.return_type(signature, &arg_types);
         }
 
-        match self.analyze_method_call(callee, args, &arg_types) {
+        match self.analyze_method_call(callee, span, args, &arg_types) {
             MethodResolution::Resolved(pine_type) => return pine_type,
             MethodResolution::NotMethod => {}
         }
@@ -385,6 +385,7 @@ impl Analyzer {
     pub(crate) fn analyze_method_call(
         &mut self,
         callee: &Expr,
+        call_span: Span,
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) -> MethodResolution {
@@ -406,6 +407,7 @@ impl Analyzer {
                     receiver_name,
                     method_name,
                     callee.span,
+                    call_span,
                     args,
                     arg_types,
                 )
