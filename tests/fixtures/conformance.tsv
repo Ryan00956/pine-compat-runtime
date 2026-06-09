@@ -281,7 +281,7 @@ ta.range	supported	rolling max-minus-min range over series/simple numeric source
 ta.dev	supported	rolling mean absolute deviation over series/simple numeric source once the requested window is ready	tests/fixtures/runtime/dev.pine
 ta.vwma	supported	rolling volume-weighted moving average over series/simple numeric source using sum(source * volume) / sum(volume) once the requested window is ready	tests/fixtures/runtime/vwma.pine
 ta.mfi	supported	fixture-derived Money Flow Index subset	tests/fixtures/runtime/mfi.pine
-ta.wma	supported	fixture-derived executable subset	tests/fixtures/runtime/wma.pine
+ta.wma	supported	linear weighted moving average over series/simple numeric source with oldest-to-newest weights 1..length once the requested window is ready	tests/fixtures/runtime/wma.pine
 ta.hma	supported	fixture-derived executable subset	tests/fixtures/runtime/hma.pine
 ta.swma	supported	fixture-derived executable subset	tests/fixtures/runtime/swma.pine
 ta.alma	supported	fixture-derived executable subset	tests/fixtures/runtime/alma.pine
