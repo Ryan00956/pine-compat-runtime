@@ -24,14 +24,12 @@ pub(crate) fn prepend_block_statements(mut prefix: Vec<HirStmt>, expr: HirExpr) 
     }
 }
 
-fn single_expr_branch(branch: &[Stmt]) -> Option<&Expr> {
-    let [statement] = branch else {
+fn branch_return_expr(branch: &[Stmt]) -> Option<(&[Stmt], &Expr)> {
+    let (last, prefix) = branch.split_last()?;
+    let StmtKind::Expr(expr) = &last.kind else {
         return None;
     };
-    let StmtKind::Expr(expr) = &statement.kind else {
-        return None;
-    };
-    Some(expr)
+    Some((prefix, expr))
 }
 
 fn for_statement_expr(
@@ -829,8 +827,8 @@ impl Analyzer {
                         condition,
                         then_branch,
                         else_branch,
-                    } if single_expr_branch(then_branch).is_some()
-                        && single_expr_branch(else_branch).is_some() =>
+                    } if branch_return_expr(then_branch).is_some()
+                        && branch_return_expr(else_branch).is_some() =>
                     {
                         return self.lower_function_if_return(
                             prefix,
@@ -908,10 +906,8 @@ impl Analyzer {
             .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))
             .collect::<Option<Vec<_>>>();
         let condition_expr = self.lower_expr_with_params(condition, param_exprs, param_types);
-        let then_expr =
-            self.lower_expr_with_params(single_expr_branch(then_branch)?, param_exprs, param_types);
-        let else_expr =
-            self.lower_expr_with_params(single_expr_branch(else_branch)?, param_exprs, param_types);
+        let then_expr = self.lower_function_branch_return(then_branch, param_exprs, param_types);
+        let else_expr = self.lower_function_branch_return(else_branch, param_exprs, param_types);
         self.lower_symbol_overrides.pop();
 
         let condition_expr = condition_expr?;
@@ -940,6 +936,25 @@ impl Analyzer {
             },
         };
         Some(prepend_block_statements(lowered_statements?, result))
+    }
+
+    fn lower_function_branch_return(
+        &mut self,
+        branch: &[Stmt],
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        let (prefix, result) = branch_return_expr(branch)?;
+        let lowered_statements = prefix
+            .iter()
+            .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))
+            .collect::<Option<Vec<_>>>()?;
+        let result = self.lower_expr_with_params(result, param_exprs, param_types)?;
+        if lowered_statements.is_empty() {
+            Some(result)
+        } else {
+            Some(prepend_block_statements(lowered_statements, result))
+        }
     }
 
     fn enter_lowering_inline(&mut self, span: Span) -> bool {

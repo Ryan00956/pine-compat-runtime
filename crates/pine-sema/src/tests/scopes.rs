@@ -338,6 +338,20 @@ fn accepts_block_body_function_final_if_expression_return() {
 }
 
 #[test]
+fn accepts_block_body_function_final_if_branch_block_return() {
+    let analysis = analyze(
+        "choose(src, flag) =>\n    if flag\n        v = src + 1\n        v\n    else\n        v = src + 10\n        v\nplot(choose(close, close > open))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_block_body_function_final_for_expression_return() {
     let analysis = analyze("loopLast(n) =>\n    for i = 0 to n\n        i\nplot(loopLast(2))\n");
 
@@ -358,6 +372,23 @@ fn rejects_block_body_function_without_final_expression() {
             .diagnostics
             .iter()
             .any(|diagnostic| diagnostic.code == "E_FUNCTION_RETURN")
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_block_body_function_final_if_branch_without_final_expression() {
+    let analysis = analyze(
+        "choose(src, flag) =>\n    if flag\n        v = src + 1\n    else\n        src\nplot(choose(close, close > open))\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_FUNCTION_RETURN"),
+        "{:?}",
+        analysis.diagnostics
     );
     assert!(analysis.hir.is_none());
 }

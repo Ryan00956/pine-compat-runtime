@@ -1313,10 +1313,11 @@ def test_run_script_returns_udf_fixture_contract():
     result = pine_compat.run_script(source, BARS)
 
     assert result["diagnostics"] == []
-    assert len(result["plots"]) == 3
+    assert len(result["plots"]) == 4
     assert result["plots"][0]["values"] == [None, 4.5, 6.5]
     assert result["plots"][1]["values"] == [1.0, 2.0, 13.0]
-    assert result["plots"][2]["values"] == [2.0, 2.0, 2.0]
+    assert result["plots"][2]["values"] == [2.0, 3.0, 13.0]
+    assert result["plots"][3]["values"] == [2.0, 2.0, 2.0]
 
 
 def test_run_script_returns_na_fixture_contract():

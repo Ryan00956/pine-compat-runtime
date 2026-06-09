@@ -136,14 +136,12 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
     }
 }
 
-fn single_expr_branch(branch: &[Stmt]) -> Option<&Expr> {
-    let [statement] = branch else {
+fn branch_return_expr(branch: &[Stmt]) -> Option<(&[Stmt], &Expr)> {
+    let (last, prefix) = branch.split_last()?;
+    let StmtKind::Expr(expr) = &last.kind else {
         return None;
     };
-    let StmtKind::Expr(expr) = &statement.kind else {
-        return None;
-    };
-    Some(expr)
+    Some((prefix, expr))
 }
 pub(crate) fn statement_contains_output_or_declaration_call(statement: &Stmt) -> bool {
     match &statement.kind {
@@ -353,8 +351,8 @@ impl Analyzer {
                         condition,
                         then_branch,
                         else_branch,
-                    } if single_expr_branch(then_branch).is_some()
-                        && single_expr_branch(else_branch).is_some() =>
+                    } if branch_return_expr(then_branch).is_some()
+                        && branch_return_expr(else_branch).is_some() =>
                     {
                         self.analyze_function_if_return(
                             condition,
@@ -398,8 +396,13 @@ impl Analyzer {
             span,
         });
 
-        let then_type = self.analyze_expr(single_expr_branch(then_branch)?)?;
-        let else_type = self.analyze_expr(single_expr_branch(else_branch)?)?;
+        self.block_depth += 1;
+        let then_type = self.analyze_function_branch_return(then_branch);
+        let else_type = self.analyze_function_branch_return(else_branch);
+        self.block_depth -= 1;
+
+        let then_type = then_type?;
+        let else_type = else_type?;
         let pine_type = self.merge_branch_types(condition_type, then_type, else_type, span)?;
         if pine_type.kind == ValueKind::UserType
             && self
@@ -414,6 +417,17 @@ impl Analyzer {
             return None;
         }
         Some(pine_type)
+    }
+
+    fn analyze_function_branch_return(&mut self, branch: &[Stmt]) -> Option<PineType> {
+        let (prefix, result) = branch_return_expr(branch)?;
+        self.scope.push_scope();
+        for statement in prefix {
+            self.analyze_stmt(statement);
+        }
+        let pine_type = self.analyze_expr(result);
+        self.scope.pop_scope();
+        pine_type
     }
 
     pub(crate) fn report_udf_arg_error(

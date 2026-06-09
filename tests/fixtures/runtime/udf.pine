@@ -10,9 +10,17 @@ chooseIf(src, flip) =>
         src
     else
         src + 10
+chooseBlock(src, flip) =>
+    if flip
+        v = src + 1
+        v
+    else
+        v = src + 10
+        v
 loopLast(n) =>
     for i = 0 to n
         i
 plot(ma + offset(close))
 plot(chooseIf(close, bar_index < 2))
+plot(chooseBlock(close, bar_index < 2))
 plot(loopLast(2))

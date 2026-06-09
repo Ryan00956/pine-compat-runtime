@@ -425,8 +425,8 @@ impl Analyzer {
         then_branch: &[Stmt],
         else_branch: &[Stmt],
     ) -> Option<String> {
-        let then_expr = single_expr_branch(then_branch)?;
-        let else_expr = single_expr_branch(else_branch)?;
+        let then_expr = branch_return_expr(then_branch)?;
+        let else_expr = branch_return_expr(else_branch)?;
         match (
             self.user_type_name_of_expr(then_expr),
             self.user_type_name_of_expr(else_expr),
@@ -683,11 +683,9 @@ fn is_na_expr(expr: &Expr) -> bool {
     }
 }
 
-fn single_expr_branch(branch: &[Stmt]) -> Option<&Expr> {
-    let [statement] = branch else {
-        return None;
-    };
-    let StmtKind::Expr(expr) = &statement.kind else {
+fn branch_return_expr(branch: &[Stmt]) -> Option<&Expr> {
+    let last = branch.last()?;
+    let StmtKind::Expr(expr) = &last.kind else {
         return None;
     };
     Some(expr)
