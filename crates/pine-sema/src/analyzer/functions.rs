@@ -135,6 +135,16 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
         ExprKind::Literal(_) | ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => false,
     }
 }
+
+fn single_expr_branch(branch: &[Stmt]) -> Option<&Expr> {
+    let [statement] = branch else {
+        return None;
+    };
+    let StmtKind::Expr(expr) = &statement.kind else {
+        return None;
+    };
+    Some(expr)
+}
 pub(crate) fn statement_contains_output_or_declaration_call(statement: &Stmt) -> bool {
     match &statement.kind {
         StmtKind::Expr(expr) => contains_output_or_declaration_call(expr),
@@ -339,6 +349,20 @@ impl Analyzer {
                 }
                 match &last.kind {
                     StmtKind::Expr(expr) => self.analyze_expr(expr),
+                    StmtKind::If {
+                        condition,
+                        then_branch,
+                        else_branch,
+                    } if single_expr_branch(then_branch).is_some()
+                        && single_expr_branch(else_branch).is_some() =>
+                    {
+                        self.analyze_function_if_return(
+                            condition,
+                            then_branch,
+                            else_branch,
+                            last.span,
+                        )
+                    }
                     _ => {
                         self.analyze_stmt(last);
                         self.diagnostics.push(Diagnostic::error(
@@ -351,6 +375,38 @@ impl Analyzer {
                 }
             }
         }
+    }
+
+    fn analyze_function_if_return(
+        &mut self,
+        condition: &Expr,
+        then_branch: &[Stmt],
+        else_branch: &[Stmt],
+        span: Span,
+    ) -> Option<PineType> {
+        let condition_type = self.analyze_expr(condition)?;
+        self.expect_bool(condition_type, condition.span);
+        self.compatibility.supported.push(FeatureUse {
+            feature: "if".to_owned(),
+            span,
+        });
+
+        let then_type = self.analyze_expr(single_expr_branch(then_branch)?)?;
+        let else_type = self.analyze_expr(single_expr_branch(else_branch)?)?;
+        let pine_type = self.merge_branch_types(condition_type, then_type, else_type, span)?;
+        if pine_type.kind == ValueKind::UserType
+            && self
+                .user_type_name_of_if_branches(then_branch, else_branch)
+                .is_none()
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_BRANCH_TYPE",
+                "if user-defined type branches must resolve to the same local UDT",
+                span,
+            ));
+            return None;
+        }
+        Some(pine_type)
     }
 
     pub(crate) fn report_udf_arg_error(

@@ -420,6 +420,24 @@ impl Analyzer {
         resolved_type_name
     }
 
+    pub(crate) fn user_type_name_of_if_branches(
+        &self,
+        then_branch: &[Stmt],
+        else_branch: &[Stmt],
+    ) -> Option<String> {
+        let then_expr = single_expr_branch(then_branch)?;
+        let else_expr = single_expr_branch(else_branch)?;
+        match (
+            self.user_type_name_of_expr(then_expr),
+            self.user_type_name_of_expr(else_expr),
+        ) {
+            (Some(then_name), Some(else_name)) if then_name == else_name => Some(then_name),
+            (Some(then_name), None) if is_na_expr(else_expr) => Some(then_name),
+            (None, Some(else_name)) if is_na_expr(then_expr) => Some(else_name),
+            _ => None,
+        }
+    }
+
     fn user_type_name_of_for_body(&self, body: &[Stmt]) -> Option<String> {
         let last = body.last()?;
         let StmtKind::Expr(expr) = &last.kind else {
@@ -450,6 +468,11 @@ impl Analyzer {
                 let last = statements.last()?;
                 match &last.kind {
                     StmtKind::Expr(expr) => self.user_type_name_of_expr(expr),
+                    StmtKind::If {
+                        then_branch,
+                        else_branch,
+                        ..
+                    } => self.user_type_name_of_if_branches(then_branch, else_branch),
                     _ => None,
                 }
             }
@@ -657,4 +680,14 @@ fn is_na_expr(expr: &Expr) -> bool {
         ExprKind::QualifiedName(parts) if parts.len() == 1 => parts[0] == "na",
         _ => false,
     }
+}
+
+fn single_expr_branch(branch: &[Stmt]) -> Option<&Expr> {
+    let [statement] = branch else {
+        return None;
+    };
+    let StmtKind::Expr(expr) = &statement.kind else {
+        return None;
+    };
+    Some(expr)
 }

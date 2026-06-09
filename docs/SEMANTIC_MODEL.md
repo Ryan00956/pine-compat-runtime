@@ -445,7 +445,7 @@ parameter itself, when a block-bodied function returns a local alias chain that
 starts from that parameter, or when a nested passthrough UDF call maps back to
 that parameter. Pure UDFs may also construct and return a local UDT value,
 directly, through nested pure constructor-helper UDF calls, or through
-same-local-UDT ternary or switch constructor branches, from local UDT parameter
+same-local-UDT ternary, switch, or final if/else constructor branches, from local UDT parameter
 scalar fields, scalar fields read through block-local UDT aliases of those
 parameters, block-local scalar aliases of those fields, parameters whose scalar
 types are inferred at the callsite, or block-local scalar aliases of those
@@ -460,7 +460,7 @@ local UDT parameters, including direct UDT passthrough returns, block-local
 receiver or local UDT parameter alias passthrough returns, nested method UDT
 parameter passthrough returns, and local UDT constructor returns, directly,
 through nested pure constructor-helper UDF calls, or through same-local-UDT
-ternary or switch constructor branches, from receiver or local UDT parameter
+ternary, switch, or final if/else constructor branches, from receiver or local UDT parameter
 scalar fields, scalar fields read through block-local receiver or local UDT
 parameter aliases, block-local scalar aliases of those fields, inferred scalar
 parameters, or block-local scalar aliases of those parameters using positional
@@ -472,7 +472,7 @@ pure method returns the receiver itself, a block-local alias chain that starts
 from the receiver or another local UDT parameter, another local UDT parameter,
 a nested method passthrough call that maps back to one of those parameters, or
 a local UDT constructed directly, through a nested pure constructor-helper UDF
-call, or through same-local-UDT ternary or switch constructor branches from
+call, or through same-local-UDT ternary, switch, or final if/else constructor branches from
 receiver or local UDT parameter scalar fields, scalar fields read through
 block-local receiver or local UDT parameter aliases, block-local scalar aliases
 of those fields, inferred scalar parameters, or block-local scalar aliases of

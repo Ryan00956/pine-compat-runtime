@@ -312,7 +312,7 @@ The analyzer should reject these with clear diagnostics:
   local for-expression constructor results, `var` persistence, scalar field
   mutation outside UDF/method bodies, and UDF constructor returns, directly,
   through nested pure constructor-helper UDF calls, or through same-local-UDT
-  ternary or switch constructor branches, from local UDT parameter scalar
+  ternary, switch, or final if/else constructor branches, from local UDT parameter scalar
   fields, scalar fields read through block-local UDT aliases of those
   parameters, block-local scalar aliases of those fields,
   inferred scalar parameters, or block-local scalar aliases of those scalar

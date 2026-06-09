@@ -46,6 +46,11 @@ method cloneSwitch(Point p, int mode) =>
         0 => Point.new(p.x)
         1 => Point.new(p.x + 5)
         => Point.new(p.x + 10)
+method cloneIf(Point p, bool flip) =>
+    if flip
+        Point.new(p.x)
+    else
+        Point.new(p.x + 10)
 method make(Point p, float x) => Point.new(x)
 method makeBlock(Point p, float x) =>
     ax = x
@@ -76,6 +81,7 @@ clonedOtherViaMake = p.cloneOtherViaMake(q)
 clonedOtherViaMakeNamed = p.cloneOtherViaMakeNamed(q)
 clonedTernary = p.cloneTernary(bar_index < 2)
 clonedSwitch = p.cloneSwitch(bar_index)
+clonedIf = p.cloneIf(bar_index < 2)
 made = p.make(open)
 madeBlock = p.makeBlock(open)
 madeNamed = p.makeNamed(open)
@@ -100,6 +106,7 @@ plot(clonedOtherViaMake.x + close)
 plot(clonedOtherViaMakeNamed.x + close)
 plot(clonedTernary.x + close)
 plot(clonedSwitch.x + close)
+plot(clonedIf.x + close)
 plot(made.x + close)
 plot(madeBlock.x + close)
 plot(madeNamed.x + close)

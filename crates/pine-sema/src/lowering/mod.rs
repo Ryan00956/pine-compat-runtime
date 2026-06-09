@@ -23,6 +23,17 @@ pub(crate) fn prepend_block_statements(mut prefix: Vec<HirStmt>, expr: HirExpr) 
         },
     }
 }
+
+fn single_expr_branch(branch: &[Stmt]) -> Option<&Expr> {
+    let [statement] = branch else {
+        return None;
+    };
+    let StmtKind::Expr(expr) = &statement.kind else {
+        return None;
+    };
+    Some(expr)
+}
+
 pub(crate) fn lower_literal(literal: &Literal) -> HirLiteral {
     match literal {
         Literal::Int(value) => HirLiteral::Int(*value),
@@ -792,8 +803,25 @@ impl Analyzer {
             }
             FunctionBody::Block(statements) => {
                 let (last, prefix) = statements.split_last()?;
-                let StmtKind::Expr(result) = &last.kind else {
-                    return None;
+                let result = match &last.kind {
+                    StmtKind::Expr(result) => result,
+                    StmtKind::If {
+                        condition,
+                        then_branch,
+                        else_branch,
+                    } if single_expr_branch(then_branch).is_some()
+                        && single_expr_branch(else_branch).is_some() =>
+                    {
+                        return self.lower_function_if_return(
+                            prefix,
+                            condition,
+                            then_branch,
+                            else_branch,
+                            param_exprs,
+                            param_types,
+                        );
+                    }
+                    _ => return None,
                 };
                 self.lower_symbol_overrides.push(HashMap::new());
                 let lowered_statements = prefix
@@ -820,6 +848,55 @@ impl Analyzer {
                 })
             }
         }
+    }
+
+    fn lower_function_if_return(
+        &mut self,
+        prefix: &[Stmt],
+        condition: &Expr,
+        then_branch: &[Stmt],
+        else_branch: &[Stmt],
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        self.lower_symbol_overrides.push(HashMap::new());
+        let lowered_statements = prefix
+            .iter()
+            .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))
+            .collect::<Option<Vec<_>>>();
+        let condition_expr = self.lower_expr_with_params(condition, param_exprs, param_types);
+        let then_expr =
+            self.lower_expr_with_params(single_expr_branch(then_branch)?, param_exprs, param_types);
+        let else_expr =
+            self.lower_expr_with_params(single_expr_branch(else_branch)?, param_exprs, param_types);
+        self.lower_symbol_overrides.pop();
+
+        let condition_expr = condition_expr?;
+        let then_expr = then_expr?;
+        let else_expr = else_expr?;
+        let pine_type = PineType::new(
+            strongest_qualifier(
+                condition_expr.pine_type.qualifier,
+                strongest_qualifier(then_expr.pine_type.qualifier, else_expr.pine_type.qualifier),
+            ),
+            common_kind(then_expr.pine_type.kind, else_expr.pine_type.kind)?,
+        );
+        let series_id =
+            if pine_type.qualifier == Qualifier::Series && pine_type.kind != ValueKind::Tuple {
+                Some(self.alloc_series())
+            } else {
+                None
+            };
+        let result = HirExpr {
+            pine_type,
+            series_id,
+            kind: HirExprKind::Ternary {
+                condition: Box::new(condition_expr),
+                then_expr: Box::new(then_expr),
+                else_expr: Box::new(else_expr),
+            },
+        };
+        Some(prepend_block_statements(lowered_statements?, result))
     }
 
     fn enter_lowering_inline(&mut self, span: Span) -> bool {

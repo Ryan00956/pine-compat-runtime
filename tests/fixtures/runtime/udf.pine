@@ -5,4 +5,10 @@ ma = smooth(len=2, src=close)
 offset(src) =>
     shifted = src + 1
     shifted
+chooseIf(src, flip) =>
+    if flip
+        src
+    else
+        src + 10
 plot(ma + offset(close))
+plot(chooseIf(close, bar_index < 2))

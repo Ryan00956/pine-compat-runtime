@@ -1262,8 +1262,9 @@ fn run_script_csv_returns_udf_fixture_contract() {
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 1);
+    assert_eq!(plots.len(), 2);
     assert_eq!(plots[0]["values"], serde_json::json!([null, 4.5, 6.5]));
+    assert_eq!(plots[1]["values"], serde_json::json!([1, 2, 13]));
 }
 
 #[test]

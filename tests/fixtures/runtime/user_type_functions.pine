@@ -44,6 +44,11 @@ cloneSwitch(p, mode) =>
         0 => Point.new(p.x, p.y)
         1 => Point.new(p.x + 5, p.y)
         => Point.new(p.x + 10, p.y)
+cloneIf(p, flip) =>
+    if flip
+        Point.new(p.x, p.y)
+    else
+        Point.new(p.x + 10, p.y)
 
 p = Point.new(close, open)
 same = identity(p)
@@ -60,6 +65,7 @@ clonedViaMake = cloneViaMake(p)
 clonedViaMakeNamed = cloneViaMakeNamed(p)
 clonedTernary = cloneTernary(p, bar_index < 2)
 clonedSwitch = cloneSwitch(p, bar_index)
+clonedIf = cloneIf(p, bar_index < 2)
 made = make(close, open)
 madeAlias = makeAlias(close, open)
 madeNamed = makeNamed(close, open)
@@ -79,6 +85,7 @@ plot(clonedViaMake.x + clonedViaMake.y + bar_index)
 plot(clonedViaMakeNamed.x + clonedViaMakeNamed.y + bar_index)
 plot(clonedTernary.x + clonedTernary.y + bar_index)
 plot(clonedSwitch.x + clonedSwitch.y + bar_index)
+plot(clonedIf.x + clonedIf.y + bar_index)
 plot(made.x + made.y + bar_index)
 plot(madeAlias.x + madeAlias.y + bar_index)
 plot(madeNamed.x + madeNamed.y + bar_index)

@@ -528,7 +528,7 @@ block-local alias chain that starts from that parameter, or return a nested
 passthrough UDF call that maps back to that parameter. Pure UDFs may also
 construct and return a local UDT, directly,
 through nested pure constructor-helper UDF calls, or through same-local-UDT
-ternary or switch constructor branches, from local UDT parameter scalar fields,
+ternary, switch, or final if/else constructor branches, from local UDT parameter scalar fields,
 scalar fields read through block-local UDT aliases of those parameters,
 block-local scalar aliases of those fields, scalar parameters whose types are
 inferred from the call arguments, or block-local scalar aliases of those scalar

@@ -407,6 +407,31 @@ plot(made.x + close)
 }
 
 #[test]
+fn accepts_udt_final_if_constructor_return_from_user_method_receiver_fields() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method cloneIf(Point p, bool flip) =>
+    if flip
+        Point.new(p.x)
+    else
+        Point.new(p.x + 10)
+p = Point.new(close)
+made = p.cloneIf(bar_index < 2)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_constructor_return_from_user_method_scalar_param() {
     let analysis = analyze(
         r#"type Point

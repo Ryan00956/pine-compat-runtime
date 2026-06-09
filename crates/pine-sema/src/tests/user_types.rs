@@ -413,6 +413,32 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_user_type_final_if_constructor_return_from_udf_udt_param_fields() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+cloneFrom(p, flip) =>
+    if flip
+        Point.new(p.x, p.y)
+    else
+        Point.new(p.x + 10, p.y)
+p = Point.new(close, open)
+made = cloneFrom(p, bar_index < 2)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_user_type_for_expression_constructor_assignment() {
     let analysis = analyze(
         r#"type Point
@@ -467,6 +493,34 @@ type Other
 value = switch bar_index
     0 => Point.new(close)
     => Other.new(open)
+plot(value.x)
+"#,
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_BRANCH_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_mismatched_user_type_final_if_constructor_branches() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+type Other
+    float x
+choose(flip) =>
+    if flip
+        Point.new(close)
+    else
+        Other.new(open)
+value = choose(close > open)
 plot(value.x)
 "#,
     );

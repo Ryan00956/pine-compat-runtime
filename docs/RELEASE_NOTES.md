@@ -23,7 +23,7 @@
   expressions may construct and return a local UDT value from their final body
   expression. Pure UDFs may construct and return local UDT values, directly,
   through nested pure constructor-helper UDF calls, or through same-local-UDT
-  ternary or switch constructor branches, from local UDT parameter scalar
+  ternary, switch, or final if/else constructor branches, from local UDT parameter scalar
   fields, scalar fields read through block-local UDT aliases of those
   parameters, block-local scalar aliases of those fields, inferred scalar
   parameters, or block-local scalar aliases of those scalar parameters using
