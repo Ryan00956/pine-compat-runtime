@@ -275,7 +275,7 @@ ta.mode	supported	series/simple numeric source rolling mode	tests/fixtures/runti
 ta.percentile_linear_interpolation	supported	series/simple numeric source linear percentile	tests/fixtures/runtime/percentile_linear_interpolation.pine
 ta.percentile_nearest_rank	supported	series/simple numeric source nearest-rank percentile	tests/fixtures/runtime/percentile_nearest_rank.pine
 ta.percentrank	supported	series/simple numeric source percent rank	tests/fixtures/runtime/percentrank.pine
-ta.stdev	supported	fixture-derived executable subset	tests/fixtures/runtime/stdev.pine
+ta.stdev	supported	rolling standard deviation over series/simple numeric source with default biased=true and explicit sample biased=false subset	tests/fixtures/runtime/stdev.pine
 ta.variance	supported	fixture-derived executable subset	tests/fixtures/runtime/variance.pine
 ta.range	supported	fixture-derived executable subset	tests/fixtures/runtime/range.pine
 ta.dev	supported	fixture-derived executable subset	tests/fixtures/runtime/dev.pine
