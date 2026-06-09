@@ -222,6 +222,56 @@ plot(copy.x + copy.y)
 }
 
 #[test]
+fn accepts_user_type_constructor_return_from_udf_udt_param_field_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+cloneFrom(p) =>
+    ax = p.x
+    ay = p.y
+    Point.new(ax, ay)
+p = Point.new(close, open)
+copy = cloneFrom(p)
+plot(copy.x + copy.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_user_type_named_constructor_return_from_udf_udt_param_field_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+cloneFrom(p) =>
+    ax = p.x
+    ay = p.y
+    Point.new(y=ay, x=ax)
+p = Point.new(close, open)
+copy = cloneFrom(p)
+plot(copy.x + copy.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_user_type_constructor_return_from_user_function_scalar_alias() {
     let analysis = analyze(
         r#"type Point

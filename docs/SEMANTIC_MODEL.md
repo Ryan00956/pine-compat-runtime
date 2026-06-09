@@ -443,8 +443,9 @@ type. UDF parameter passthrough is supported when the function returns the UDT
 parameter itself, when a block-bodied function returns a local alias chain that
 starts from that parameter, or when a nested passthrough UDF call maps back to
 that parameter. Pure UDFs may also construct and return a local UDT value from
-local UDT parameter scalar fields, parameters whose scalar types are inferred
-at the callsite, or block-local scalar aliases of those scalar parameters,
+local UDT parameter scalar fields, block-local scalar aliases of those
+fields, parameters whose scalar types are inferred at the callsite, or
+block-local scalar aliases of those scalar parameters,
 using positional or named constructor field arguments. Positional and named UDF
 call arguments both preserve the parameter identity, so returned UDT values can
 be assigned and field-read at the callsite. UDT history references, field
@@ -455,8 +456,9 @@ Pure user-defined methods are supported for local UDT receivers with scalar or
 local UDT parameters, including direct UDT passthrough returns, block-local
 receiver or local UDT parameter alias passthrough returns, nested method UDT
 parameter passthrough returns, and local UDT constructor returns from receiver
-or local UDT parameter scalar fields, inferred scalar parameters, or
-block-local scalar aliases of those parameters using positional or named
+or local UDT parameter scalar fields, block-local scalar aliases of those
+fields, inferred scalar parameters, or block-local scalar aliases of those
+parameters using positional or named
 constructor field arguments. The receiver is analyzed as the first internal
 argument and the method body lowers through the existing inlined UDF path, so
 callsite state and side-effect checks follow the local function rules. When a
@@ -464,7 +466,8 @@ pure method returns the receiver itself, a block-local alias chain that starts
 from the receiver or another local UDT parameter, another local UDT parameter,
 a nested method passthrough call that maps back to one of those parameters, or
 a local UDT constructed from receiver or local UDT parameter scalar fields,
-inferred scalar parameters, or block-local scalar aliases of those parameters,
+block-local scalar aliases of those fields, inferred scalar parameters, or
+block-local scalar aliases of those parameters,
 the callsite keeps that UDT identity so the returned value can be assigned and
 field-read. Methods with side effects, recursion, unsupported
 parameter families, mismatched UDT parameter identity, unknown receivers, and

@@ -16,6 +16,15 @@ method wrap(Point p, Point other) => p.choose(other)
 method clone(Point p) => Point.new(p.x)
 method cloneOther(Point p, Point other) => Point.new(other.x)
 method cloneOtherNamed(Point p, Point other) => Point.new(x=other.x)
+method cloneAlias(Point p) =>
+    ax = p.x
+    Point.new(ax)
+method cloneOtherAlias(Point p, Point other) =>
+    ox = other.x
+    Point.new(ox)
+method cloneOtherNamedAlias(Point p, Point other) =>
+    ox = other.x
+    Point.new(x=ox)
 method make(Point p, float x) => Point.new(x)
 method makeBlock(Point p, float x) =>
     ax = x
@@ -35,6 +44,9 @@ wrapped = p.wrap(q)
 cloned = p.clone()
 clonedOther = p.cloneOther(q)
 clonedOtherNamed = p.cloneOtherNamed(q)
+clonedAlias = p.cloneAlias()
+clonedOtherAlias = p.cloneOtherAlias(q)
+clonedOtherNamedAlias = p.cloneOtherNamedAlias(q)
 made = p.make(open)
 madeBlock = p.makeBlock(open)
 madeNamed = p.makeNamed(open)
@@ -48,6 +60,9 @@ plot(wrapped.x + close)
 plot(cloned.x + close)
 plot(clonedOther.x + close)
 plot(clonedOtherNamed.x + close)
+plot(clonedAlias.x + close)
+plot(clonedOtherAlias.x + close)
+plot(clonedOtherNamedAlias.x + close)
 plot(made.x + close)
 plot(madeBlock.x + close)
 plot(madeNamed.x + close)

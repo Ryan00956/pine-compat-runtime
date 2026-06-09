@@ -214,6 +214,58 @@ plot(copy.x + copy.y)
 }
 
 #[test]
+fn accepts_udt_constructor_return_from_user_method_udt_param_field_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+method cloneOtherAlias(Point p, Point other) =>
+    ox = other.x
+    oy = other.y
+    Point.new(ox, oy)
+p = Point.new(close, open)
+q = Point.new(open, close)
+copy = p.cloneOtherAlias(q)
+plot(copy.x + copy.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_udt_named_constructor_return_from_user_method_udt_param_field_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+method cloneOtherAlias(Point p, Point other) =>
+    ox = other.x
+    oy = other.y
+    Point.new(y=oy, x=ox)
+p = Point.new(close, open)
+q = Point.new(open, close)
+copy = p.cloneOtherAlias(q)
+plot(copy.x + copy.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_constructor_return_from_user_method_scalar_param() {
     let analysis = analyze(
         r#"type Point

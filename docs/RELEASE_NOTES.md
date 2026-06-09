@@ -12,16 +12,17 @@
   local UDT parameter, another local UDT parameter, or a nested method
   passthrough call that maps back to one of those method parameters, or
   construct and return a local UDT from receiver or local UDT parameter scalar
-  fields, inferred scalar parameters, or block-local scalar aliases of those
-  parameters using positional or named constructor field arguments, and allow
-  the caller to assign and field-read that returned value. Local scalar UDT
+  fields, block-local scalar aliases of those fields, inferred scalar
+  parameters, or block-local scalar aliases of those parameters using
+  positional or named constructor field arguments, and allow the caller to
+  assign and field-read that returned value. Local scalar UDT
   fields can now be reassigned with `value.field := expr` outside UDF/method
   bodies. Pure UDFs may construct and return local UDT values from local UDT
-  parameter scalar fields, inferred scalar parameters, or block-local scalar
-  aliases of those scalar parameters using positional or named constructor
-  field arguments; field mutation inside functions or methods, imported UDT
-  identity, UDT history, `varip`, nested UDT fields, and UDT arrays remain
-  outside the supported subset.
+  parameter scalar fields, block-local scalar aliases of those fields, inferred
+  scalar parameters, or block-local scalar aliases of those scalar parameters
+  using positional or named constructor field arguments; field mutation inside
+  functions or methods, imported UDT identity, UDT history, `varip`, nested UDT
+  fields, and UDT arrays remain outside the supported subset.
 - Closed Strategy Internal Stage 13 release-note coverage through Slice 101. The
   Stage 13 multi-entry ledger contract now records omitted-`from_entry`
   trailing future-entry persistence, CLI/WASM/Python host parity for omitted
