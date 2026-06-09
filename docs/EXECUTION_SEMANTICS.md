@@ -506,11 +506,12 @@ Assigning an array to another variable copies the id, not the backing values;
 mutating either name mutates the same runtime-owned array. Passing an array to a
 user-defined function also passes the array id, so side-effect-free helpers can
 read the same backing values through parameters. Array mutation inside
-user-defined functions remains outside the executable subset. `array.copy` and
-`values.copy()` allocate a new array id initialized with the source array's
-current element values. For label-id, line-id, box-id, and table-id arrays,
-copied elements still reference the same drawing objects; only the array
-container is independent. Realtime forming-bar rollback clones the confirmed
+user-defined functions remains outside the executable subset. Top-level
+branches and loops mutate the same array id they can read after control flow
+continues. `array.copy` and `values.copy()` allocate a new array id initialized
+with the source array's current element values. For label-id, line-id, box-id,
+and table-id arrays, copied elements still reference the same drawing objects;
+only the array container is independent. Realtime forming-bar rollback clones the confirmed
 runtime store before executing a forming update, so array mutations and copies
 made during a forming update do not leak into the confirmed store until a
 confirmed update is committed.
