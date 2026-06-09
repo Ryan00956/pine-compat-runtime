@@ -503,7 +503,10 @@ for drawing-id arrays. A `var` array declaration keeps the same id
 and backing storage across bars, so mutations such as `array.push` or
 `values.push(...)` persist.
 Assigning an array to another variable copies the id, not the backing values;
-mutating either name mutates the same runtime-owned array. `array.copy` and
+mutating either name mutates the same runtime-owned array. Passing an array to a
+user-defined function also passes the array id, so side-effect-free helpers can
+read the same backing values through parameters. Array mutation inside
+user-defined functions remains outside the executable subset. `array.copy` and
 `values.copy()` allocate a new array id initialized with the source array's
 current element values. For label-id, line-id, box-id, and table-id arrays,
 copied elements still reference the same drawing objects; only the array

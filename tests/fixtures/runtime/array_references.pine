@@ -1,4 +1,7 @@
 indicator("Array references fixture")
+first_int(values) => values.get(0)
+int_size(values) => array.size(values)
+
 numbers = array.new_int()
 alias = numbers
 copied = array.copy(numbers)
@@ -14,6 +17,8 @@ plot(array.size(copied))
 plot(array.get(copied, 0))
 plot(method_copied.size())
 plot(method_copied.get(0))
+plot(first_int(numbers) + int_size(numbers))
+plot(first_int(copied) + int_size(copied))
 
 floats = array.new_float(1, close)
 float_copy = floats.copy()

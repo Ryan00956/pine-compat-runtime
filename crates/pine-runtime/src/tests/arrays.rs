@@ -607,6 +607,9 @@ fn runs_array_reference_and_copy_operations() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("array references")
+first_int(values) => values.get(0)
+int_size(values) => array.size(values)
+
 source = array.new_int()
 alias = source
 copy = array.copy(source)
@@ -620,6 +623,8 @@ plot(array.size(copy))
 plot(array.get(copy, 0))
 plot(method_copy.size())
 plot(method_copy.get(0))
+plot(first_int(source) + int_size(source))
+plot(first_int(copy) + int_size(copy))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -632,13 +637,15 @@ plot(method_copy.get(0))
     let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 6);
+    assert_eq!(result.plots.len(), 8);
     assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[3].values, &[2.0, 2.0, 2.0]);
     assert_values_close(&result.plots[4].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[5].values, &[3.0, 3.0, 3.0]);
+    assert_values_close(&result.plots[6].values, &[2.0, 2.0, 2.0]);
+    assert_values_close(&result.plots[7].values, &[3.0, 3.0, 3.0]);
 }
 
 #[test]

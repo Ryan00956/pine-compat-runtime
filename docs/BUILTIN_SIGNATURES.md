@@ -694,7 +694,9 @@ arrays. Float arrays accept int or float values and store them as floats. Int
 arrays accept int values. Bool arrays accept bool values. String arrays accept
 string values. Color arrays accept color values. Label, line, box, and table arrays accept
 their matching drawing ids or `na` and keep reference elements shallow across
-`array.copy`. `array.from` infers the array
+`array.copy`. Array assignment and side-effect-free user-defined function
+parameters pass the array id; array mutation inside user-defined functions
+remains unsupported. `array.from` infers the array
 kind from its arguments, requires at least one non-`na` supported typed value,
 allows `na` in otherwise typed arrays, and promotes mixed int/float arguments
 to a float array. `array.join` and `str.tostring(array)` remain limited to
