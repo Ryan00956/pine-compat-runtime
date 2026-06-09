@@ -248,7 +248,7 @@ ta.cmo	supported	series numeric source/simple-int positive length rolling positi
 ta.cci	supported	series numeric source/simple-int positive length rolling Commodity Channel Index over ready non-na windows, returning (current - mean) / (0.015 * mean absolute deviation) or na until windows are ready, for zero deviation, non-numeric source, or invalid length	tests/fixtures/runtime/cci.pine
 ta.cog	supported	series numeric source/simple-int positive length rolling Center of Gravity over ready non-na windows, returning -sum(source * reverse window weight) / sum(source) or na until windows are ready, for zero window sum, non-numeric source, or invalid length	tests/fixtures/runtime/cog.pine
 ta.ao	supported	zero-argument Awesome Oscillator over current-bar hl2, returning SMA(hl2, 5) - SMA(hl2, 34) once both fixed non-na windows are ready or na before readiness or when high/low are unavailable	tests/fixtures/runtime/ao.pine
-ta.bop	supported	fixture-derived Balance of Power subset	tests/fixtures/runtime/bop.pine
+ta.bop	supported	zero-argument Balance of Power over current-bar OHLC, returning (close - open) / (high - low) or na when any OHLC value is unavailable or high equals low	tests/fixtures/runtime/bop.pine
 ta.bb	supported	Bollinger Bands basis, upper, and lower tuple over ready rolling numeric windows	tests/fixtures/runtime/bb.pine
 ta.bbw	supported	Bollinger Bands Width over ready rolling windows	tests/fixtures/runtime/bbw.pine
 ta.kc	supported	fixture-derived Keltner Channels subset	tests/fixtures/runtime/kc.pine
