@@ -46,6 +46,7 @@ acos_asin_complement = math.acos(inverse_trig_input) + math.asin(inverse_trig_in
 atan_unit_relation = math.atan(close / close) * 4 - math.pi
 e_exp_relation = math.exp(1) - math.e
 pi_degrees_relation = math.todegrees(math.pi) - 180
+phi_rphi_difference_relation = math.phi - math.rphi - 1
 trig_zero_relation = math.sin(close - close) + math.tan(close - close) + math.cos(close - close) - 1
 hypot_abs_relation = math.hypot(close, 0) - math.abs(close)
 plot(x)
@@ -92,5 +93,6 @@ plot(acos_asin_complement)
 plot(atan_unit_relation)
 plot(e_exp_relation)
 plot(pi_degrees_relation)
+plot(phi_rphi_difference_relation)
 plot(trig_zero_relation)
 plot(hypot_abs_relation)

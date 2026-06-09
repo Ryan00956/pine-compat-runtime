@@ -207,8 +207,8 @@ math.todegrees	supported	numeric radians-to-degrees conversion with fixture-back
 math.toradians	supported	numeric degrees-to-radians conversion with fixture-backed todegrees roundtrip	tests/fixtures/runtime/math.pine
 math.pi	supported	pi constant with fixture-backed todegrees(pi)=180 relation	tests/fixtures/runtime/math.pine
 math.e	supported	Euler's number constant with fixture-backed exp(1) relation	tests/fixtures/runtime/math.pine
-math.phi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.rphi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.phi	supported	golden-ratio constant with fixture-backed rphi difference relation	tests/fixtures/runtime/math.pine
+math.rphi	supported	inverse golden-ratio constant with fixture-backed phi difference relation	tests/fixtures/runtime/math.pine
 syminfo.tickerid	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.ticker	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.prefix	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
