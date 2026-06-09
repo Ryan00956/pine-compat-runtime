@@ -172,9 +172,9 @@ scientific numeric literal	supported	integer and decimal float literals with e/E
 str.length	supported	string length with fixture-backed upper/lower case relation	tests/fixtures/runtime/strings.pine
 str.upper	supported	ASCII uppercase conversion with fixture-backed length-preserving relation	tests/fixtures/runtime/strings.pine
 str.lower	supported	ASCII lowercase conversion with fixture-backed length-preserving relation	tests/fixtures/runtime/strings.pine
-str.contains	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
-str.startswith	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
-str.endswith	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
+str.contains	supported	literal substring containment including empty pattern; na required args return na	tests/fixtures/runtime/strings.pine
+str.startswith	supported	literal prefix check including empty pattern; na required args return na	tests/fixtures/runtime/strings.pine
+str.endswith	supported	literal suffix check including empty pattern; na required args return na	tests/fixtures/runtime/strings.pine
 str.pos	supported	first substring position, empty substring at 0, and na for no match or na required args	tests/fixtures/runtime/strings.pine
 str.substring	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
 str.trim	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
