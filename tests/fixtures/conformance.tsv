@@ -260,7 +260,7 @@ ta.cum	supported	cumulative sum over numeric series sources across historical ba
 ta.max	supported	all-time maximum over executed non-na source values	tests/fixtures/runtime/all_time_extremes.pine
 ta.min	supported	all-time minimum over executed non-na source values	tests/fixtures/runtime/all_time_extremes.pine
 ta.accdist	supported	cumulative Accumulation/Distribution variable over OHLCV bars with zero-range bars returning na and resetting state	tests/fixtures/runtime/accdist.pine
-ta.iii	supported	fixture-derived executable subset	tests/fixtures/runtime/iii.pine
+ta.iii	supported	Intraday Intensity Index variable over OHLCV bars with zero range or zero volume returning na	tests/fixtures/runtime/iii.pine
 ta.nvi	supported	fixture-derived executable subset	tests/fixtures/runtime/nvi.pine
 ta.obv	supported	fixture-derived executable subset	tests/fixtures/runtime/obv.pine
 ta.pvi	supported	fixture-derived executable subset	tests/fixtures/runtime/pvi.pine
