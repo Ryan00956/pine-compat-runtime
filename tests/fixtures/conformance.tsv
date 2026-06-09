@@ -277,7 +277,7 @@ ta.percentile_nearest_rank	supported	series/simple numeric source nearest-rank p
 ta.percentrank	supported	series/simple numeric source percent rank	tests/fixtures/runtime/percentrank.pine
 ta.stdev	supported	rolling standard deviation over series/simple numeric source with default biased=true and explicit sample biased=false subset	tests/fixtures/runtime/stdev.pine
 ta.variance	supported	rolling variance over series/simple numeric source with default biased=true and explicit sample biased=false subset	tests/fixtures/runtime/variance.pine
-ta.range	supported	fixture-derived executable subset	tests/fixtures/runtime/range.pine
+ta.range	supported	rolling max-minus-min range over series/simple numeric source once the requested window is ready	tests/fixtures/runtime/range.pine
 ta.dev	supported	fixture-derived executable subset	tests/fixtures/runtime/dev.pine
 ta.vwma	supported	fixture-derived executable subset	tests/fixtures/runtime/vwma.pine
 ta.mfi	supported	fixture-derived Money Flow Index subset	tests/fixtures/runtime/mfi.pine
