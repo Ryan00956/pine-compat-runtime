@@ -44,6 +44,7 @@ log10_pow10_roundtrip = math.log10(math.pow(10, close)) - close
 inverse_trig_input = math.min(1, math.max(-1, close - 2))
 acos_asin_complement = math.acos(inverse_trig_input) + math.asin(inverse_trig_input) - math.pi / 2
 atan_unit_relation = math.atan(close / close) * 4 - math.pi
+e_exp_relation = math.exp(1) - math.e
 plot(x)
 plot(y)
 plot(avg_value)
@@ -86,3 +87,4 @@ plot(log_exp_roundtrip)
 plot(log10_pow10_roundtrip)
 plot(acos_asin_complement)
 plot(atan_unit_relation)
+plot(e_exp_relation)
