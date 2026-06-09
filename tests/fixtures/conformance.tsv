@@ -190,7 +190,7 @@ str.format_time	supported	UTC timestamp formatting subset	tests/fixtures/runtime
 math.abs	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.max	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.min	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.avg	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.avg	supported	variadic numeric average with fixture-backed offset relation	tests/fixtures/runtime/math.pine
 math.floor	supported	integer rounding result with argument qualifier and na propagation	tests/fixtures/runtime/math.pine
 math.ceil	supported	integer rounding result with argument qualifier and na propagation	tests/fixtures/runtime/math.pine
 math.trunc	supported	integer truncation result with argument qualifier and na propagation	tests/fixtures/runtime/math.pine

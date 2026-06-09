@@ -1252,11 +1252,12 @@ def test_run_script_returns_math_fixture_contract():
     result = pine_compat.run_script(source, BARS)
 
     assert result["diagnostics"] == []
-    assert len(result["plots"]) == 29
+    assert len(result["plots"]) == 30
     expected = [
         [2.0, 1.0, 2.0],
         [2.0, 1.0, 2.0],
         [1.0, 2.0, 3.0],
+        [0.0, 0.0, 0.0],
         [1.0, 2.0, 3.0],
         [1.0, 1.0, 2.0],
         [1.0, 1.4142135623730951, 1.7320508075688772],
@@ -1280,7 +1281,7 @@ def test_run_script_returns_math_fixture_contract():
         [1.01, 2.0100000000000002, 3.0100000000000002],
         [0.01, 0.01, 0.01],
         [17.044006538018998, 14.290355590862742, 15.77378930199836],
-        [0.41627086372635447, 0.2277553881254537, 0.8642252595989811],
+        [0.4363826024362413, 0.7995938689489258, 0.5404007415363339],
         [None, None, 6.0],
         [None, None, None],
     ]
