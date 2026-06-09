@@ -583,11 +583,12 @@ inside UDFs or methods, `varip`, history references on UDT values, UDT fields,
 UDT arrays, and imported UDTs remain outside the supported matrix.
 User-defined methods are partial for pure methods on local UDT receivers with
 scalar or local UDT parameters and direct or nested-method UDT parameter
-passthrough returns. The receiver is passed as the first internal parameter.
-Returned receiver or local UDT parameter values may be assigned and field-read
-at the callsite. Side effects, recursion, unknown receiver types, imported
-methods, mismatched UDT parameter identity, and unsupported parameter families
-remain outside the supported matrix.
+passthrough returns, plus local UDT constructor returns from receiver scalar
+fields. The receiver is passed as the first internal parameter. Returned
+receiver values, local UDT parameter values, or constructed local UDT values
+may be assigned and field-read at the callsite. Side effects, recursion,
+unknown receiver types, imported methods, mismatched UDT parameter identity,
+and unsupported parameter families remain outside the supported matrix.
 Phase J Slice 9 deliberately keeps imported UDT identity and imported methods
 as a maintenance tail: exported constants/functions are source-graph scoped,
 but UDT type identity and method tables are local to the root source for now.
@@ -1015,7 +1016,7 @@ request.security_lower_tf unsupported lower-timeframe array-returning request AP
 request.*            unsupported  request families beyond the narrow request.security subsets
 import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only
 user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, var persistence, scalar field mutation outside UDF/method bodies, and UDF parameter passthrough/returns or constructor returns through positional or named scalar arguments with direct returns, block-local aliases, or nested passthrough calls only
-user-defined methods partial      pure methods on local UDT receivers with scalar or local UDT parameters and direct or nested-method UDT parameter passthrough returns only
+user-defined methods partial      pure methods on local UDT receivers with scalar or local UDT parameters, direct or nested-method UDT parameter passthrough returns, and local UDT constructor returns from receiver scalar fields only
 ```
 
 The matrix should be generated from conformance metadata once the test harness

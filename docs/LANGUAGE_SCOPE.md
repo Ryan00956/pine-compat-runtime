@@ -314,10 +314,10 @@ The analyzer should reject these with clear diagnostics:
   inside functions or methods, `varip`, UDT history references, UDT fields, UDT
   arrays, and imported UDTs remain rejected
 - user-defined method forms outside pure local-UDT receiver methods with scalar
-  or local UDT parameters and direct or nested-method UDT parameter passthrough
-  returns; side effects, recursion, imported methods, unknown receivers,
-  mismatched UDT parameter identity, and unsupported parameter families remain
-  rejected
+  or local UDT parameters, direct or nested-method UDT parameter passthrough
+  returns, and local UDT constructor returns from receiver scalar fields; side
+  effects, recursion, imported methods, unknown receivers, mismatched UDT
+  parameter identity, and unsupported parameter families remain rejected
 - non-array method calls outside the local UDT method subset; unsupported
   receiver families remain ordinary receiver/type diagnostics rather than a
   widened method claim

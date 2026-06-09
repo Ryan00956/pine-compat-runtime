@@ -500,7 +500,8 @@ Delivered scope:
   UDF/method bodies, and UDF constructor returns from inferred scalar
   parameters.
 - Pure methods on local UDT receivers with scalar or local UDT parameters and
-  direct or nested-method UDT parameter passthrough returns.
+  direct or nested-method UDT parameter passthrough returns, plus local UDT
+  constructor returns from receiver scalar fields.
 
 Maintenance tails:
 

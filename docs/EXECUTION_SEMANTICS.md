@@ -535,8 +535,9 @@ Pure local UDT methods execute as receiver functions. The receiver value is
 passed as the first internal argument and the method body is evaluated through
 the same lowered expression path as a local UDF body. A pure method may accept
 additional local UDT parameters and return the receiver itself or another local
-UDT parameter directly or through a nested method passthrough call; the caller
-may store that returned UDT value and read its fields. Method side effects,
+UDT parameter directly or through a nested method passthrough call, or
+construct and return a local UDT from receiver scalar fields; the caller may
+store that returned UDT value and read its fields. Method side effects,
 recursive methods, unsupported parameter families, mismatched UDT parameter
 identity, unknown receivers, and imported methods are rejected during semantic
 analysis.
