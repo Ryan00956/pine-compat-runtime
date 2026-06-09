@@ -315,6 +315,53 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_udt_nested_constructor_return_from_user_method_receiver_fields() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+make(x, y) => Point.new(x, y)
+method cloneViaMake(Point p) => make(p.x, p.y)
+p = Point.new(close, open)
+made = p.cloneViaMake()
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_udt_named_nested_constructor_return_from_user_method_udt_param_fields() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+makeNamed(x, y) => Point.new(y=y, x=x)
+method cloneOtherViaMake(Point p, Point other) => makeNamed(other.x, other.y)
+p = Point.new(close, open)
+q = Point.new(open, close)
+made = p.cloneOtherViaMake(q)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_constructor_return_from_user_method_scalar_param() {
     let analysis = analyze(
         r#"type Point

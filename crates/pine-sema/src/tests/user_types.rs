@@ -320,6 +320,52 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_user_type_nested_constructor_return_from_udf_udt_param_fields() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+make(x, y) => Point.new(x, y)
+cloneFrom(p) => make(p.x, p.y)
+p = Point.new(close, open)
+made = cloneFrom(p)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_user_type_named_nested_constructor_return_from_udf_udt_param_fields() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+makeNamed(x, y) => Point.new(y=y, x=x)
+cloneFrom(p) => makeNamed(p.x, p.y)
+p = Point.new(close, open)
+made = cloneFrom(p)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_user_type_constructor_return_from_user_function_scalar_alias() {
     let analysis = analyze(
         r#"type Point

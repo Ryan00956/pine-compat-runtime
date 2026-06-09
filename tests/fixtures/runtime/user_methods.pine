@@ -3,6 +3,9 @@ indicator("User-defined methods")
 type Point
     float x
 
+makePoint(x) => Point.new(x)
+makePointNamed(x) => Point.new(x=x)
+
 method shift(Point p, float delta) => p.x + delta
 method keep(Point p) => p
 method keepBlock(Point p) =>
@@ -34,6 +37,9 @@ method cloneOtherObjectAlias(Point p, Point other) =>
 method cloneOtherNamedObjectAlias(Point p, Point other) =>
     copy = other
     Point.new(x=copy.x)
+method cloneViaMake(Point p) => makePoint(p.x)
+method cloneOtherViaMake(Point p, Point other) => makePoint(other.x)
+method cloneOtherViaMakeNamed(Point p, Point other) => makePointNamed(other.x)
 method make(Point p, float x) => Point.new(x)
 method makeBlock(Point p, float x) =>
     ax = x
@@ -59,6 +65,9 @@ clonedOtherNamedAlias = p.cloneOtherNamedAlias(q)
 clonedObjectAlias = p.cloneObjectAlias()
 clonedOtherObjectAlias = p.cloneOtherObjectAlias(q)
 clonedOtherNamedObjectAlias = p.cloneOtherNamedObjectAlias(q)
+clonedViaMake = p.cloneViaMake()
+clonedOtherViaMake = p.cloneOtherViaMake(q)
+clonedOtherViaMakeNamed = p.cloneOtherViaMakeNamed(q)
 made = p.make(open)
 madeBlock = p.makeBlock(open)
 madeNamed = p.makeNamed(open)
@@ -78,6 +87,9 @@ plot(clonedOtherNamedAlias.x + close)
 plot(clonedObjectAlias.x + close)
 plot(clonedOtherObjectAlias.x + close)
 plot(clonedOtherNamedObjectAlias.x + close)
+plot(clonedViaMake.x + close)
+plot(clonedOtherViaMake.x + close)
+plot(clonedOtherViaMakeNamed.x + close)
 plot(made.x + close)
 plot(madeBlock.x + close)
 plot(madeNamed.x + close)
