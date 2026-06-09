@@ -124,7 +124,7 @@ pub(crate) fn format_string_placeholders(
                     });
                 };
                 let placeholder = &format_string[start..end];
-                if let Some(formatted) = format_placeholder(placeholder, values, runtime) {
+                if let Some(formatted) = format_placeholder(placeholder, values, runtime)? {
                     result.push_str(&formatted);
                 } else {
                     result.push('{');
@@ -147,26 +147,56 @@ pub(crate) fn format_placeholder(
     placeholder: &str,
     values: &[PineValue],
     runtime: &HistoricalRuntime<'_>,
-) -> Option<String> {
+) -> Result<Option<String>, RuntimeError> {
     let mut parts = placeholder.splitn(3, ',').map(str::trim);
-    let index = parts.next()?.parse::<usize>().ok()?;
-    let value = values.get(index)?;
+    let Some(index) = parts.next().and_then(|part| part.parse::<usize>().ok()) else {
+        return Ok(None);
+    };
+    let Some(value) = values.get(index) else {
+        return Ok(None);
+    };
     let Some(modifier) = parts.next() else {
-        return Some(runtime.stringify_value(value, "#,###.###"));
+        return Ok(Some(runtime.stringify_value(value, "#,###.###")));
     };
 
+    if matches!(modifier, "date" | "time") {
+        return format_datetime_placeholder(modifier, parts.next().map(str::trim), value, runtime)
+            .map(Some);
+    }
+
     if modifier != "number" {
-        return Some(runtime.stringify_value(value, "#,###.###"));
+        return Ok(Some(runtime.stringify_value(value, "#,###.###")));
     }
 
     let format = match parts.next().map(str::trim) {
         Some("integer") => "#,###",
         Some("percent") => "#.##%",
-        Some("currency") => return Some(format_currency_placeholder(value, runtime)),
+        Some("currency") => return Ok(Some(format_currency_placeholder(value, runtime))),
         Some(format) if !format.is_empty() => format,
         _ => "#,###.###",
     };
-    Some(runtime.stringify_value(value, format))
+    Ok(Some(runtime.stringify_value(value, format)))
+}
+
+pub(crate) fn format_datetime_placeholder(
+    modifier: &str,
+    format: Option<&str>,
+    value: &PineValue,
+    runtime: &HistoricalRuntime<'_>,
+) -> Result<String, RuntimeError> {
+    let PineValue::Int(timestamp) = value else {
+        return Ok(runtime.stringify_value(value, "#,###.###"));
+    };
+    let format = match (modifier, format.filter(|format| !format.is_empty())) {
+        (_, Some(format)) => format,
+        ("date", None) => "yyyy-MM-dd",
+        ("time", None) => "HH:mm:ss",
+        _ => unreachable!("validated str.format date/time modifier"),
+    };
+    let datetime = utc_datetime_from_millis(*timestamp).map_err(|_| RuntimeError {
+        message: format!("str.format timestamp is out of range: {timestamp}"),
+    })?;
+    Ok(format_utc_datetime(datetime, format))
 }
 
 pub(crate) fn format_currency_placeholder(

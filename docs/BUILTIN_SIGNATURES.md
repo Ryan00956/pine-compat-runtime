@@ -1109,10 +1109,11 @@ fixture-covered non-color array values. Numeric formatting supports the default
 custom patterns using `#`, `0`, `.`, `,`, and trailing `%` tokens.
 `str.format` supports indexed placeholders such as `{0}`, numeric placeholders
 such as `{0,number,#.00}`, and fixture-covered `integer`, `percent`, and
-`currency` number presets. Missing placeholder indexes remain literal text.
-Unmatched braces are runtime errors. Quote handling inside format strings and
-non-numeric format modifiers outside the fixture-covered subset are not yet
-claimed.
+`currency` number presets. It also supports fixture-covered UTC timestamp
+placeholders such as `{0,date,yyyy-MM-dd}` and `{0,time,HH:mm:ssZ}`. Missing
+placeholder indexes remain literal text. Unmatched braces are runtime errors.
+Quote handling inside format strings and non-numeric format modifiers outside
+the fixture-covered subset are not yet claimed.
 `str.match` uses Rust regex syntax for the fixture-covered subset. It returns
 the first matched substring, an empty string when there is no match, `na` for
 `na` inputs, and a runtime error for invalid regex patterns.
