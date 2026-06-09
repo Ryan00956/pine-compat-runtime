@@ -279,7 +279,7 @@ ta.stdev	supported	rolling standard deviation over series/simple numeric source 
 ta.variance	supported	rolling variance over series/simple numeric source with default biased=true and explicit sample biased=false subset	tests/fixtures/runtime/variance.pine
 ta.range	supported	rolling max-minus-min range over series/simple numeric source once the requested window is ready	tests/fixtures/runtime/range.pine
 ta.dev	supported	rolling mean absolute deviation over series/simple numeric source once the requested window is ready	tests/fixtures/runtime/dev.pine
-ta.vwma	supported	fixture-derived executable subset	tests/fixtures/runtime/vwma.pine
+ta.vwma	supported	rolling volume-weighted moving average over series/simple numeric source using sum(source * volume) / sum(volume) once the requested window is ready	tests/fixtures/runtime/vwma.pine
 ta.mfi	supported	fixture-derived Money Flow Index subset	tests/fixtures/runtime/mfi.pine
 ta.wma	supported	fixture-derived executable subset	tests/fixtures/runtime/wma.pine
 ta.hma	supported	fixture-derived executable subset	tests/fixtures/runtime/hma.pine
