@@ -55,13 +55,16 @@ impl Analyzer {
                     continue;
                 }
                 names.push(param.name.clone());
-                let Some(pine_type) = self.method_param_type(&param.type_name, param.span) else {
+                let Some((pine_type, user_type_name)) =
+                    self.method_param_type(&param.type_name, param.span)
+                else {
                     valid = false;
                     continue;
                 };
                 params.push(MethodParamInfo {
                     name: param.name.clone(),
                     pine_type,
+                    user_type_name,
                 });
             }
             if !valid {
@@ -163,8 +166,11 @@ impl Analyzer {
         for (arg_index, param_index) in arg_indices.iter().copied().enumerate() {
             resolved_arg_types[param_index] = arg_types.get(arg_index).copied().flatten();
         }
-        for (param, arg_type) in method.params.iter().zip(resolved_arg_types) {
+        for (param_index, (param, arg_type)) in
+            method.params.iter().zip(resolved_arg_types).enumerate()
+        {
             let arg_type = arg_type.unwrap_or(UNKNOWN);
+            let symbol = self.define_local_symbol(&param.name, arg_type, None, false);
             if !can_assign(param.pine_type, arg_type) {
                 self.diagnostics.push(Diagnostic::error(
                     "E_METHOD_ARG_TYPE",
@@ -175,7 +181,24 @@ impl Analyzer {
                     span,
                 ));
             }
-            self.define_local_symbol(&param.name, arg_type, None, false);
+            if let Some(expected_type_name) = &param.user_type_name {
+                let actual_type_name = arg_indices
+                    .iter()
+                    .position(|mapped_param_index| *mapped_param_index == param_index)
+                    .and_then(|arg_index| self.user_type_name_of_expr(&args[arg_index].value));
+                if actual_type_name.as_deref() == Some(expected_type_name.as_str()) {
+                    self.mark_symbol_user_type(symbol, expected_type_name.clone());
+                } else {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_METHOD_ARG_TYPE",
+                        format!(
+                            "cannot pass argument to method parameter `{}` of user-defined type `{}`",
+                            param.name, expected_type_name
+                        ),
+                        span,
+                    ));
+                }
+            }
         }
         self.function_stack.push(stack_name);
         self.function_depth += 1;
@@ -192,13 +215,19 @@ impl Analyzer {
         Some(return_type)
     }
 
-    fn method_param_type(&mut self, name: &str, span: Span) -> Option<PineType> {
+    fn method_param_type(&mut self, name: &str, span: Span) -> Option<(PineType, Option<String>)> {
         let kind = match name {
             "int" => ValueKind::Int,
             "float" => ValueKind::Float,
             "bool" => ValueKind::Bool,
             "string" => ValueKind::String,
             "color" => ValueKind::Color,
+            _ if self.user_types.contains_key(name) => {
+                return Some((
+                    PineType::new(Qualifier::Series, ValueKind::UserType),
+                    Some(name.to_owned()),
+                ));
+            }
             _ => {
                 self.diagnostics.push(Diagnostic::error(
                     "E_METHOD_PARAM",
@@ -208,6 +237,6 @@ impl Analyzer {
                 return None;
             }
         };
-        Some(PineType::new(Qualifier::Series, kind))
+        Some((PineType::new(Qualifier::Series, kind), None))
     }
 }

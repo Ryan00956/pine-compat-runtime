@@ -581,10 +581,11 @@ calls. UDT values are immutable in this subset. Field mutation, UDF construction
 from untyped scalar parameters, `varip`, history references on UDT values, UDT
 fields, UDT arrays, and imported UDTs remain outside the supported matrix.
 User-defined methods are partial for pure methods on local UDT receivers with
-scalar parameters and direct receiver passthrough returns. The receiver is
-passed as the first internal parameter. Returned receiver values may be assigned
-and field-read at the callsite. Side effects, recursion, unknown receiver
-types, imported methods, and unsupported parameter families remain outside the
+scalar or local UDT parameters and direct UDT parameter passthrough returns.
+The receiver is passed as the first internal parameter. Returned receiver or
+local UDT parameter values may be assigned and field-read at the callsite. Side
+effects, recursion, unknown receiver types, imported methods, mismatched UDT
+parameter identity, and unsupported parameter families remain outside the
 supported matrix.
 Phase J Slice 9 deliberately keeps imported UDT identity and imported methods
 as a maintenance tail: exported constants/functions are source-graph scoped,
@@ -1013,7 +1014,7 @@ request.security_lower_tf unsupported lower-timeframe array-returning request AP
 request.*            unsupported  request families beyond the narrow request.security subsets
 import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only
 user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, var persistence, and UDF parameter passthrough/returns through positional or named arguments with direct returns, block-local aliases, or nested passthrough calls only
-user-defined methods partial      pure methods on local UDT receivers with scalar parameters and receiver passthrough returns only
+user-defined methods partial      pure methods on local UDT receivers with scalar or local UDT parameters and UDT parameter passthrough returns only
 ```
 
 The matrix should be generated from conformance metadata once the test harness

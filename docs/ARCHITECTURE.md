@@ -83,8 +83,9 @@ records local scalar-field type declarations, constructor calls, field reads,
 and pure UDT methods before lowering. UDT values lower to immutable runtime
 values, and local UDT methods lower through the same inlined body machinery as
 ordinary UDF calls with the receiver passed as the first internal parameter.
-Imported UDT identity and imported method tables are not part of the current
-source-graph contract.
+Method-local UDT parameter identity is checked during semantic analysis and
+carried into lowering for passthrough returns. Imported UDT identity and
+imported method tables are not part of the current source-graph contract.
 
 ### `pine-ir`
 

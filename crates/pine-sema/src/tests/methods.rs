@@ -50,6 +50,29 @@ plot(same.x + same.y)
 }
 
 #[test]
+fn accepts_udt_parameter_passthrough_user_method_return() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+method choose(Point p, Point other) => other
+p = Point.new(close, open)
+q = Point.new(open, close)
+same = p.choose(q)
+plot(same.x + same.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_passthrough_user_function() {
     let analysis = analyze(
         r#"type Point
@@ -155,6 +178,32 @@ plot(p.missing())
             .diagnostics
             .iter()
             .any(|diagnostic| diagnostic.code == "E_UNKNOWN_METHOD")
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_wrong_udt_user_method_parameter() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+type LabelInfo
+    float x
+method choose(Point p, Point other) => other
+p = Point.new(close)
+info = LabelInfo.new(open)
+chosen = p.choose(info)
+plot(chosen.x)
+"#,
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_METHOD_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
     );
     assert!(analysis.hir.is_none());
 }

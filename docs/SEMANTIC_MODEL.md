@@ -446,16 +446,17 @@ history references, field mutation, `varip`, nested UDT fields, UDT arrays,
 constructor inference from untyped scalar UDF parameters, and imported UDT
 identity remain outside the claim.
 
-Pure user-defined methods are supported for local UDT receivers with scalar
-parameters, including direct receiver passthrough returns. The receiver is
-analyzed as the first internal argument and the method body lowers through the
-existing inlined UDF path, so callsite state and side-effect checks follow the
-local function rules. When a pure method returns the receiver itself, the
-callsite keeps the receiver UDT identity so the returned value can be assigned
-and field-read. Methods with side effects, recursion, unsupported parameter
-families, unknown receivers, and imported method tables remain rejected.
-Non-array method calls outside the local UDT method subset continue to fail
-with receiver/type diagnostics.
+Pure user-defined methods are supported for local UDT receivers with scalar or
+local UDT parameters, including direct UDT parameter passthrough returns. The
+receiver is analyzed as the first internal argument and the method body lowers
+through the existing inlined UDF path, so callsite state and side-effect checks
+follow the local function rules. When a pure method returns the receiver itself
+or another local UDT parameter, the callsite keeps that UDT identity so the
+returned value can be assigned and field-read. Methods with side effects,
+recursion, unsupported parameter families, mismatched UDT parameter identity,
+unknown receivers, and imported method tables remain rejected. Non-array method
+calls outside the local UDT method subset continue to fail with receiver/type
+diagnostics.
 Float arrays accept int or float values and store them as floats. Int arrays
 accept int values. Bool arrays accept bool values. String
 arrays accept string values. Color arrays accept color values. Label and line

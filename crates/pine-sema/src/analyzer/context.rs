@@ -81,6 +81,7 @@ pub(crate) struct MethodInfo {
 pub(crate) struct MethodParamInfo {
     pub(crate) name: String,
     pub(crate) pine_type: PineType,
+    pub(crate) user_type_name: Option<String>,
 }
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum UdfArgError {
