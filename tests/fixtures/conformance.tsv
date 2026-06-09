@@ -246,7 +246,7 @@ ta.macd	supported	EMA-derived MACD, signal, and histogram tuple over numeric ser
 ta.tsi	supported	series numeric source with prior-bar momentum and positive simple-int short/long lengths, returning double-EMA momentum over double-EMA absolute momentum ratio or na for first bar, flat denominator, non-series source, or invalid lengths	tests/fixtures/runtime/tsi.pine
 ta.cmo	supported	series numeric source/simple-int positive length rolling positive and negative prior-bar change sums, returning 100 * (positive - negative) / (positive + negative) or na until windows are ready, for flat denominator, non-series source, or invalid length	tests/fixtures/runtime/cmo.pine
 ta.cci	supported	series numeric source/simple-int positive length rolling Commodity Channel Index over ready non-na windows, returning (current - mean) / (0.015 * mean absolute deviation) or na until windows are ready, for zero deviation, non-numeric source, or invalid length	tests/fixtures/runtime/cci.pine
-ta.cog	supported	fixture-derived Center of Gravity subset	tests/fixtures/runtime/cog.pine
+ta.cog	supported	series numeric source/simple-int positive length rolling Center of Gravity over ready non-na windows, returning -sum(source * reverse window weight) / sum(source) or na until windows are ready, for zero window sum, non-numeric source, or invalid length	tests/fixtures/runtime/cog.pine
 ta.ao	supported	fixture-derived Awesome Oscillator subset	tests/fixtures/runtime/ao.pine
 ta.bop	supported	fixture-derived Balance of Power subset	tests/fixtures/runtime/bop.pine
 ta.bb	supported	Bollinger Bands basis, upper, and lower tuple over ready rolling numeric windows	tests/fixtures/runtime/bb.pine
