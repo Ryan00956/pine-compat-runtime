@@ -6,7 +6,9 @@ length = input.int(1, "Length")
 var values = array.new_int()
 array.push(values, 1)
 simple_length = math.min(array.size(values), 1)
+maybe_offset = bar_index == 2 ? na : length
 
 plot(close[length])
 plot((close + open)[length])
 plot(close[simple_length])
+plot(close[maybe_offset])
