@@ -238,8 +238,8 @@ nz	supported	missing-value replacement with fixture-backed history fallback rela
 fixnan	supported	callsite last non-na numeric/color subset with fixture-backed numeric carry relation	tests/fixtures/runtime/na.pine
 ta.sma	supported	series numeric source/simple-int length callsite rolling mean, returning na for non-positive length or until a full non-na window is ready; simple/computed length expressions and UDF/conditional callsites are fixture-backed	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/conditional_ta.pine;tests/fixtures/runtime/udf.pine;tests/fixtures/runtime/computed_lengths.pine
 ta.ema	supported	exponential moving average over numeric series sources with positive integer length	tests/fixtures/runtime/ta.pine
-ta.dema	supported	fixture-derived double exponential moving average subset	tests/fixtures/runtime/dema_tema.pine
-ta.tema	supported	fixture-derived triple exponential moving average subset	tests/fixtures/runtime/dema_tema.pine
+ta.dema	supported	series numeric source/simple-int positive length double EMA chain, seeded from the first numeric source value and returning na for non-numeric source or non-positive length	tests/fixtures/runtime/dema_tema.pine
+ta.tema	supported	series numeric source/simple-int positive length triple EMA chain, seeded from the first numeric source value and returning na for non-numeric source or non-positive length	tests/fixtures/runtime/dema_tema.pine
 ta.rma	supported	Wilder running moving average over numeric series sources with positive integer length	tests/fixtures/runtime/ta.pine
 ta.rsi	supported	RMA-smoothed gain/loss relative strength index over numeric series sources with positive integer length	tests/fixtures/runtime/ta.pine
 ta.macd	supported	EMA-derived MACD, signal, and histogram tuple over numeric series sources with positive integer lengths	tests/fixtures/runtime/macd.pine
