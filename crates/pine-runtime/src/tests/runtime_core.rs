@@ -342,6 +342,7 @@ plot(barstate.isrealtime ? 1 : 0)
 plot(session.ismarket ? 1 : 0)
 plot(session.ispremarket ? 1 : 0)
 plot(session.ispostmarket ? 1 : 0)
+plot(session.ismarket and not session.ispremarket and not session.ispostmarket ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -363,6 +364,7 @@ plot(session.ispostmarket ? 1 : 0)
     assert_values_close(&result.plots[6].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[7].values, &[0.0, 0.0, 0.0]);
     assert_values_close(&result.plots[8].values, &[0.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[9].values, &[1.0, 1.0, 1.0]);
 }
 
 #[test]

@@ -2271,10 +2271,15 @@ def test_run_script_returns_session_fixture_contract():
     result = pine_compat.run_script(source, BARS)
 
     assert result["diagnostics"] == []
-    assert len(result["plots"]) == 3
-    assert result["plots"][0]["values"] == [1.0, 1.0, 1.0]
-    assert result["plots"][1]["values"] == [0.0, 0.0, 0.0]
-    assert result["plots"][2]["values"] == [0.0, 0.0, 0.0]
+    expected = [
+        [1.0, 1.0, 1.0],
+        [0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0],
+        [1.0, 1.0, 1.0],
+    ]
+    assert len(result["plots"]) == len(expected)
+    for plot, values in zip(result["plots"], expected):
+        assert plot["values"] == values
 
 
 def test_run_script_returns_inputs_fixture_contract():

@@ -2241,10 +2241,16 @@ fn run_script_csv_returns_session_fixture_contract() {
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 3);
-    assert_eq!(plots[0]["values"], serde_json::json!([1, 1]));
-    assert_eq!(plots[1]["values"], serde_json::json!([0, 0]));
-    assert_eq!(plots[2]["values"], serde_json::json!([0, 0]));
+    let expected = [
+        serde_json::json!([1, 1]),
+        serde_json::json!([0, 0]),
+        serde_json::json!([0, 0]),
+        serde_json::json!([1, 1]),
+    ];
+    assert_eq!(plots.len(), expected.len());
+    for (plot, values) in plots.iter().zip(expected) {
+        assert_eq!(plot["values"], values);
+    }
 }
 
 #[test]
