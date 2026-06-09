@@ -116,6 +116,19 @@ pub(crate) fn format_string_placeholders(
     let mut chars = format_string.char_indices().peekable();
     while let Some((byte_index, ch)) = chars.next() {
         match ch {
+            '\'' => {
+                if chars.peek().is_some_and(|(_, next)| *next == '\'') {
+                    chars.next();
+                    result.push('\'');
+                } else {
+                    for (_, literal) in chars.by_ref() {
+                        if literal == '\'' {
+                            break;
+                        }
+                        result.push(literal);
+                    }
+                }
+            }
             '{' => {
                 let start = byte_index + ch.len_utf8();
                 let Some((end, _)) = chars.find(|(_, next)| *next == '}') else {
