@@ -74,6 +74,29 @@ plot(wrapped.x + wrapped.y)
 }
 
 #[test]
+fn accepts_udt_nested_passthrough_user_function_return() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+inner(p) => p
+outer(p) => inner(p)
+p = Point.new(close, open)
+nested = outer(p)
+plot(nested.x + nested.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_unknown_user_method() {
     let analysis = analyze(
         r#"type Point

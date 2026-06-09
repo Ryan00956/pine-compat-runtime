@@ -4,7 +4,7 @@ use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Program, Span, StmtKind};
 
 use crate::analyzer::calls::expr_name;
-use crate::analyzer::context::Analyzer;
+use crate::analyzer::context::{Analyzer, FunctionInfo};
 use crate::analyzer::functions::resolve_udf_arg_indices;
 use crate::compatibility::FeatureUse;
 use crate::resolver::SymbolInfo;
@@ -312,7 +312,8 @@ impl Analyzer {
         args: &[CallArg],
     ) -> Option<String> {
         let function = self.functions.get(name)?;
-        let param_index = returned_udf_param_index(&function.body, &function.params)?;
+        let param_index =
+            returned_udf_param_index(&function.body, &function.params, &self.functions, 0)?;
         let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
         let arg_index = arg_indices
             .iter()
@@ -438,9 +439,17 @@ impl Analyzer {
     }
 }
 
-fn returned_udf_param_index(body: &FunctionBody, params: &[String]) -> Option<usize> {
-    let returned_name = match body {
-        FunctionBody::Expr(expr) => identifier_name(expr)?,
+fn returned_udf_param_index(
+    body: &FunctionBody,
+    params: &[String],
+    functions: &HashMap<String, FunctionInfo>,
+    depth: usize,
+) -> Option<usize> {
+    if depth > params.len() + functions.len() {
+        return None;
+    }
+    match body {
+        FunctionBody::Expr(expr) => returned_expr_param_index(expr, params, functions, depth),
         FunctionBody::Block(statements) => {
             let (last, prefix) = statements.split_last()?;
             let StmtKind::Expr(expr) = &last.kind else {
@@ -454,17 +463,63 @@ fn returned_udf_param_index(body: &FunctionBody, params: &[String]) -> Option<us
                     aliases.insert(name.clone(), source_name.clone());
                 }
             }
-            let mut name = identifier_name(expr)?.clone();
-            for _ in 0..=aliases.len() {
-                if let Some(index) = params.iter().position(|param| param == &name) {
-                    return Some(index);
-                }
-                name = aliases.get(&name)?.clone();
-            }
-            return None;
+            returned_expr_param_index_with_aliases(expr, params, functions, &aliases, depth)
         }
+    }
+}
+
+fn returned_expr_param_index(
+    expr: &Expr,
+    params: &[String],
+    functions: &HashMap<String, FunctionInfo>,
+    depth: usize,
+) -> Option<usize> {
+    returned_expr_param_index_with_aliases(expr, params, functions, &HashMap::new(), depth)
+}
+
+fn returned_expr_param_index_with_aliases(
+    expr: &Expr,
+    params: &[String],
+    functions: &HashMap<String, FunctionInfo>,
+    aliases: &HashMap<String, String>,
+    depth: usize,
+) -> Option<usize> {
+    if let Some(returned_name) = identifier_name(expr) {
+        return aliased_param_index(returned_name, params, aliases);
+    }
+    let ExprKind::Call { callee, args } = &expr.kind else {
+        return None;
     };
-    params.iter().position(|param| param == returned_name)
+    let callee_name = expr_name(callee)?;
+    let function = functions.get(&callee_name)?;
+    let returned_param_index =
+        returned_udf_param_index(&function.body, &function.params, functions, depth + 1)?;
+    let arg_indices = resolve_udf_arg_indices(&function.params, args).ok()?;
+    let arg_index = arg_indices
+        .iter()
+        .position(|mapped_param_index| *mapped_param_index == returned_param_index)?;
+    returned_expr_param_index_with_aliases(
+        &args[arg_index].value,
+        params,
+        functions,
+        aliases,
+        depth,
+    )
+}
+
+fn aliased_param_index(
+    returned_name: &str,
+    params: &[String],
+    aliases: &HashMap<String, String>,
+) -> Option<usize> {
+    let mut name = returned_name.to_owned();
+    for _ in 0..=aliases.len() {
+        if let Some(index) = params.iter().position(|param| param == &name) {
+            return Some(index);
+        }
+        name = aliases.get(&name)?.clone();
+    }
+    None
 }
 
 fn identifier_name(expr: &Expr) -> Option<&String> {

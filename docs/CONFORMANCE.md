@@ -575,11 +575,11 @@ functions remain outside the supported matrix.
 Local user-defined types are partial. The supported subset is limited to
 top-level `type` declarations with scalar int/float/bool/string/color fields,
 `Type.new(...)` construction, field reads on local values, ordinary variables,
-`var` persistence, and UDF parameter passthrough/returns through direct returns
-or block-local aliases. UDT values are immutable in this subset. Field mutation,
-UDF construction from untyped scalar parameters, `varip`, history references on
-UDT values, UDT fields, UDT arrays, and imported UDTs remain outside the
-supported matrix.
+`var` persistence, and UDF parameter passthrough/returns through direct returns,
+block-local aliases, or nested passthrough calls. UDT values are immutable in
+this subset. Field mutation, UDF construction from untyped scalar parameters,
+`varip`, history references on UDT values, UDT fields, UDT arrays, and imported
+UDTs remain outside the supported matrix.
 User-defined methods are partial for pure methods on local UDT receivers with
 scalar parameters. The receiver is passed as the first internal parameter.
 Side effects, recursion, unknown receiver types, imported methods, and
@@ -1010,7 +1010,7 @@ array.*              partial      float/int/bool/string/color/label/line/box/tab
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
 import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only
-user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, var persistence, and UDF parameter passthrough/returns through direct returns or block-local aliases only
+user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, var persistence, and UDF parameter passthrough/returns through direct returns, block-local aliases, or nested passthrough calls only
 user-defined methods partial      pure methods on local UDT receivers with scalar parameters only
 ```
 
