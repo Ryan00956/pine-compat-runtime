@@ -1189,7 +1189,7 @@ fn run_script_csv_returns_math_fixture_contract() {
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 36);
+    assert_eq!(plots.len(), 37);
     let expected = [
         serde_json::json!([2, 1]),
         serde_json::json!([2, 1]),
@@ -1221,6 +1221,7 @@ fn run_script_csv_returns_math_fixture_contract() {
         serde_json::json!([0.4363826024362413, 0.7995938689489258]),
         serde_json::json!([null, null]),
         serde_json::json!([null, null]),
+        serde_json::json!([0, 0]),
         serde_json::json!([0, 0]),
         serde_json::json!([0, 0]),
         serde_json::json!([0, 0]),

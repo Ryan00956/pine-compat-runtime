@@ -37,6 +37,7 @@ abs_symmetry_relation = math.abs(close - 2) - math.abs(2 - close)
 sign_symmetry_relation = math.sign(close - 2) + math.sign(2 - close)
 degree_radian_roundtrip = math.toradians(math.todegrees(close)) - close
 pow_square_relation = math.pow(close, 2) - close * close
+sqrt_square_relation = math.sqrt(close * close) - math.abs(close)
 plot(x)
 plot(y)
 plot(avg_value)
@@ -73,3 +74,4 @@ plot(abs_symmetry_relation)
 plot(sign_symmetry_relation)
 plot(degree_radian_roundtrip)
 plot(pow_square_relation)
+plot(sqrt_square_relation)
