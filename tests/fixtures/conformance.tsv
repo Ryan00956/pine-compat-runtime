@@ -205,7 +205,7 @@ math.atan	supported	inverse tangent with fixture-backed atan(1)=pi/4 relation	te
 math.sign	supported	numeric sign with fixture-backed odd symmetry relation	tests/fixtures/runtime/math.pine
 math.todegrees	supported	numeric radians-to-degrees conversion with fixture-backed toradians roundtrip	tests/fixtures/runtime/math.pine
 math.toradians	supported	numeric degrees-to-radians conversion with fixture-backed todegrees roundtrip	tests/fixtures/runtime/math.pine
-math.pi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.pi	supported	pi constant with fixture-backed todegrees(pi)=180 relation	tests/fixtures/runtime/math.pine
 math.e	supported	Euler's number constant with fixture-backed exp(1) relation	tests/fixtures/runtime/math.pine
 math.phi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.rphi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
