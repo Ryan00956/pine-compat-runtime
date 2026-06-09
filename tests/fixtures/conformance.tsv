@@ -169,9 +169,9 @@ color.t	supported	fixture-derived executable subset	tests/fixtures/runtime/color
 color.from_gradient	supported	linear RGBA interpolation with endpoint clamping	tests/fixtures/runtime/colors.pine
 hex color literal	supported	#RRGGBB and #RRGGBBAA literals normalize to const colors	tests/fixtures/runtime/colors.pine;tests/fixtures/syntax/phase1_basic.pine
 scientific numeric literal	supported	integer and decimal float literals with e/E exponent notation parse as floats	tests/fixtures/syntax/phase1_basic.pine
-str.length	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
-str.upper	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
-str.lower	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
+str.length	supported	string length with fixture-backed upper/lower case relation	tests/fixtures/runtime/strings.pine
+str.upper	supported	ASCII uppercase conversion with fixture-backed length-preserving relation	tests/fixtures/runtime/strings.pine
+str.lower	supported	ASCII lowercase conversion with fixture-backed length-preserving relation	tests/fixtures/runtime/strings.pine
 str.contains	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
 str.startswith	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
 str.endswith	supported	fixture-derived executable subset	tests/fixtures/runtime/strings.pine
