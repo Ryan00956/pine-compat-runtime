@@ -251,7 +251,7 @@ ta.ao	supported	zero-argument Awesome Oscillator over current-bar hl2, returning
 ta.bop	supported	zero-argument Balance of Power over current-bar OHLC, returning (close - open) / (high - low) or na when any OHLC value is unavailable or high equals low	tests/fixtures/runtime/bop.pine
 ta.bb	supported	Bollinger Bands basis, upper, and lower tuple over ready rolling numeric windows	tests/fixtures/runtime/bb.pine
 ta.bbw	supported	Bollinger Bands Width over ready rolling windows	tests/fixtures/runtime/bbw.pine
-ta.kc	supported	fixture-derived Keltner Channels subset	tests/fixtures/runtime/kc.pine
+ta.kc	supported	Keltner Channels tuple over series numeric source, positive simple-int length, simple numeric multiplier, and optional bool-compatible useTrueRange; returns EMA basis plus/minus multiplier times EMA of true range by default or high-low span when useTrueRange is false, seeded from the first numeric values, or all-na tuple for invalid length or missing source/range/multiplier	tests/fixtures/runtime/kc.pine
 ta.kcw	supported	fixture-derived Keltner Channels Width subset	tests/fixtures/runtime/kcw.pine
 ta.pivothigh	supported	fixture-derived pivot high subset	tests/fixtures/runtime/pivots.pine
 ta.pivotlow	supported	fixture-derived pivot low subset	tests/fixtures/runtime/pivots.pine
