@@ -237,7 +237,7 @@ na	supported	missing-value predicate with fixture-backed history fallback relati
 nz	supported	missing-value replacement with fixture-backed history fallback relation	tests/fixtures/runtime/na.pine
 fixnan	supported	callsite last non-na numeric/color subset with fixture-backed numeric carry relation	tests/fixtures/runtime/na.pine
 ta.sma	supported	fixture-derived executable subset; simple and computed integer length expressions	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/conditional_ta.pine;tests/fixtures/runtime/udf.pine;tests/fixtures/runtime/computed_lengths.pine
-ta.ema	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
+ta.ema	supported	exponential moving average over numeric series sources with positive integer length	tests/fixtures/runtime/ta.pine
 ta.dema	supported	fixture-derived double exponential moving average subset	tests/fixtures/runtime/dema_tema.pine
 ta.tema	supported	fixture-derived triple exponential moving average subset	tests/fixtures/runtime/dema_tema.pine
 ta.rma	supported	fixture-derived executable subset	tests/fixtures/runtime/ta.pine
