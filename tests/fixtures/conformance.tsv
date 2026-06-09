@@ -227,7 +227,7 @@ syminfo.pricescale	supported	fixed default pricescale symbol metadata subset use
 math.sin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.cos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.tan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.pow	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.pow	supported	numeric exponentiation with fixture-backed square relation and invalid fractional negative base returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.hypot	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.round	supported	single-argument integer rounding or precision decimal float rounding with ties rounding up and na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.round_to_mintick	supported	fixture-derived executable subset using default syminfo.mintick	tests/fixtures/runtime/math.pine
