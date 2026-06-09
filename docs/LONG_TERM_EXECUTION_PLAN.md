@@ -498,7 +498,7 @@ Delivered scope:
 - Local scalar-field user-defined types with `Type.new(...)`, field reads,
   ordinary variables, `var` persistence, scalar field mutation outside
   UDF/method bodies, and UDF constructor returns from inferred scalar
-  parameters.
+  parameters using positional or named constructor field arguments.
 - Pure methods on local UDT receivers with scalar or local UDT parameters and
   direct or nested-method UDT parameter passthrough returns, plus local UDT
   constructor returns from receiver scalar fields or inferred scalar

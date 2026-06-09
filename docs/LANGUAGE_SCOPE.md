@@ -310,9 +310,10 @@ The analyzer should reject these with clear diagnostics:
   accepts top-level `type` declarations with int/float/bool/string/color
   fields, `Type.new(...)` construction, local field reads, ordinary variables,
   `var` persistence, scalar field mutation outside UDF/method bodies, and UDF
-  constructor returns from inferred scalar parameters only; field mutation
-  inside functions or methods, `varip`, UDT history references, UDT fields, UDT
-  arrays, and imported UDTs remain rejected
+  constructor returns from inferred scalar parameters using positional or named
+  constructor field arguments only; field mutation inside functions or methods,
+  `varip`, UDT history references, UDT fields, UDT arrays, and imported UDTs
+  remain rejected
 - user-defined method forms outside pure local-UDT receiver methods with scalar
   or local UDT parameters, direct or nested-method UDT parameter passthrough
   returns, and local UDT constructor returns from receiver scalar fields or

@@ -178,6 +178,27 @@ plot(p.x + p.y)
 }
 
 #[test]
+fn accepts_user_type_named_constructor_return_from_user_function() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+make(x, y) => Point.new(y=y, x=x)
+p = make(close, open)
+plot(p.x + p.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_user_type_field_mutation_inside_function() {
     let analysis = analyze(
         r#"type Point

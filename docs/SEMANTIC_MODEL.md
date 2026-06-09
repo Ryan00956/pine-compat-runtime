@@ -443,11 +443,12 @@ type. UDF parameter passthrough is supported when the function returns the UDT
 parameter itself, when a block-bodied function returns a local alias chain that
 starts from that parameter, or when a nested passthrough UDF call maps back to
 that parameter. Pure UDFs may also construct and return a local UDT value from
-parameters whose scalar types are inferred at the callsite. Positional and
-named arguments both preserve the parameter identity, so returned UDT values can
-be assigned and field-read at the callsite. UDT history references, field
-mutation inside UDFs or methods, `varip`, nested UDT fields, UDT arrays, and
-imported UDT identity remain outside the claim.
+parameters whose scalar types are inferred at the callsite, using positional or
+named constructor field arguments. Positional and named UDF call arguments both
+preserve the parameter identity, so returned UDT values can be assigned and
+field-read at the callsite. UDT history references, field mutation inside UDFs
+or methods, `varip`, nested UDT fields, UDT arrays, and imported UDT identity
+remain outside the claim.
 
 Pure user-defined methods are supported for local UDT receivers with scalar or
 local UDT parameters, including direct and nested method UDT parameter
