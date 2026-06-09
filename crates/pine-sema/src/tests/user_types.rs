@@ -439,6 +439,30 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_user_type_final_for_constructor_return_from_udf_udt_param_fields() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+cloneFrom(p, count) =>
+    for i = 0 to count
+        Point.new(p.x + i, p.y)
+p = Point.new(close, open)
+made = cloneFrom(p, 2)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_user_type_for_expression_constructor_assignment() {
     let analysis = analyze(
         r#"type Point

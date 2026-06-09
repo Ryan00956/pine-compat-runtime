@@ -363,6 +363,13 @@ impl Analyzer {
                             last.span,
                         )
                     }
+                    StmtKind::For {
+                        counter,
+                        from,
+                        to,
+                        step,
+                        body,
+                    } => self.analyze_for_expr(counter, from, to, step.as_ref(), body, last.span),
                     _ => {
                         self.analyze_stmt(last);
                         self.diagnostics.push(Diagnostic::error(

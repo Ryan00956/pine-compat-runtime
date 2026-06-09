@@ -34,6 +34,26 @@ fn single_expr_branch(branch: &[Stmt]) -> Option<&Expr> {
     Some(expr)
 }
 
+fn for_statement_expr(
+    counter: &str,
+    from: &Expr,
+    to: &Expr,
+    step: &Option<Expr>,
+    body: &[Stmt],
+    span: Span,
+) -> Expr {
+    Expr {
+        span,
+        kind: ExprKind::For {
+            counter: counter.to_owned(),
+            from: Box::new(from.clone()),
+            to: Box::new(to.clone()),
+            step: step.clone().map(Box::new),
+            body: body.to_vec(),
+        },
+    }
+}
+
 pub(crate) fn lower_literal(literal: &Literal) -> HirLiteral {
     match literal {
         Literal::Int(value) => HirLiteral::Int(*value),
@@ -821,33 +841,56 @@ impl Analyzer {
                             param_types,
                         );
                     }
+                    StmtKind::For {
+                        counter,
+                        from,
+                        to,
+                        step,
+                        body,
+                    } => {
+                        let expr = for_statement_expr(counter, from, to, step, body, last.span);
+                        return self.lower_function_return_expr(
+                            prefix,
+                            &expr,
+                            param_exprs,
+                            param_types,
+                        );
+                    }
                     _ => return None,
                 };
-                self.lower_symbol_overrides.push(HashMap::new());
-                let lowered_statements = prefix
-                    .iter()
-                    .map(|statement| {
-                        self.lower_stmt_with_params(statement, param_exprs, param_types)
-                    })
-                    .collect::<Option<Vec<_>>>();
-                let result = lowered_statements.and_then(|statements| {
-                    Some((
-                        statements,
-                        self.lower_expr_with_params(result, param_exprs, param_types)?,
-                    ))
-                });
-                self.lower_symbol_overrides.pop();
-                let (statements, result) = result?;
-                Some(HirExpr {
-                    pine_type: result.pine_type,
-                    series_id: result.series_id,
-                    kind: HirExprKind::Block {
-                        statements,
-                        result: Box::new(result),
-                    },
-                })
+                self.lower_function_return_expr(prefix, result, param_exprs, param_types)
             }
         }
+    }
+
+    fn lower_function_return_expr(
+        &mut self,
+        prefix: &[Stmt],
+        result: &Expr,
+        param_exprs: &HashMap<String, HirExpr>,
+        param_types: &HashMap<String, PineType>,
+    ) -> Option<HirExpr> {
+        self.lower_symbol_overrides.push(HashMap::new());
+        let lowered_statements = prefix
+            .iter()
+            .map(|statement| self.lower_stmt_with_params(statement, param_exprs, param_types))
+            .collect::<Option<Vec<_>>>();
+        let result = lowered_statements.and_then(|statements| {
+            Some((
+                statements,
+                self.lower_expr_with_params(result, param_exprs, param_types)?,
+            ))
+        });
+        self.lower_symbol_overrides.pop();
+        let (statements, result) = result?;
+        Some(HirExpr {
+            pine_type: result.pine_type,
+            series_id: result.series_id,
+            kind: HirExprKind::Block {
+                statements,
+                result: Box::new(result),
+            },
+        })
     }
 
     fn lower_function_if_return(

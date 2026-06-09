@@ -528,11 +528,12 @@ block-local alias chain that starts from that parameter, or return a nested
 passthrough UDF call that maps back to that parameter. Pure UDFs may also
 construct and return a local UDT, directly,
 through nested pure constructor-helper UDF calls, or through same-local-UDT
-ternary, switch, or final if/else constructor branches, from local UDT parameter scalar fields,
-scalar fields read through block-local UDT aliases of those parameters,
-block-local scalar aliases of those fields, scalar parameters whose types are
-inferred from the call arguments, or block-local scalar aliases of those scalar
-parameters, using positional or named constructor field arguments.
+ternary, switch, final if/else constructor branches, or final for bodies, from
+local UDT parameter scalar fields, scalar fields read through block-local UDT
+aliases of those parameters, block-local scalar aliases of those fields, scalar
+parameters whose types are inferred from the call arguments, or block-local
+scalar aliases of those scalar parameters, using positional or named
+constructor field arguments.
 Positional and named UDF call arguments both preserve the parameter identity.
 The caller may then store the returned value and read its fields. Field
 mutation inside UDFs or methods, UDT history references, UDT `varip`, nested

@@ -338,6 +338,18 @@ fn accepts_block_body_function_final_if_expression_return() {
 }
 
 #[test]
+fn accepts_block_body_function_final_for_expression_return() {
+    let analysis = analyze("loopLast(n) =>\n    for i = 0 to n\n        i\nplot(loopLast(2))\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn rejects_block_body_function_without_final_expression() {
     let analysis = analyze("double(x) =>\n    y = x * 2\nplot(double(close))\n");
 

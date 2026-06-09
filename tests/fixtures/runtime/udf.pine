@@ -10,5 +10,9 @@ chooseIf(src, flip) =>
         src
     else
         src + 10
+loopLast(n) =>
+    for i = 0 to n
+        i
 plot(ma + offset(close))
 plot(chooseIf(close, bar_index < 2))
+plot(loopLast(2))

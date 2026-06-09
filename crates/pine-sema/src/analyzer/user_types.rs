@@ -473,6 +473,7 @@ impl Analyzer {
                         else_branch,
                         ..
                     } => self.user_type_name_of_if_branches(then_branch, else_branch),
+                    StmtKind::For { body, .. } => self.user_type_name_of_for_body(body),
                     _ => None,
                 }
             }

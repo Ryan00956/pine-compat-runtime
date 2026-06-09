@@ -312,9 +312,9 @@ The analyzer should reject these with clear diagnostics:
   local for-expression constructor results, `var` persistence, scalar field
   mutation outside UDF/method bodies, and UDF constructor returns, directly,
   through nested pure constructor-helper UDF calls, or through same-local-UDT
-  ternary, switch, or final if/else constructor branches, from local UDT parameter scalar
-  fields, scalar fields read through block-local UDT aliases of those
-  parameters, block-local scalar aliases of those fields,
+  ternary, switch, final if/else constructor branches, or final for bodies, from
+  local UDT parameter scalar fields, scalar fields read through block-local UDT
+  aliases of those parameters, block-local scalar aliases of those fields,
   inferred scalar parameters, or block-local scalar aliases of those scalar
   parameters using positional or named constructor field arguments only; field mutation
   inside functions or methods, `varip`, UDT history references, UDT fields, UDT
@@ -324,11 +324,11 @@ The analyzer should reject these with clear diagnostics:
   or local UDT parameter alias passthrough returns, nested-method UDT parameter
   passthrough returns, and local UDT constructor returns, directly, through
   nested pure constructor-helper UDF calls, or through same-local-UDT ternary,
-  switch, or final if/else constructor branches, from receiver or local UDT
-  parameter scalar fields, scalar fields read through block-local receiver or
-  local UDT parameter aliases, block-local scalar aliases of those fields,
-  inferred scalar parameters, or block-local scalar aliases of those parameters
-  using positional or named constructor field arguments; side effects,
+  switch, final if/else constructor branches, or final for bodies, from receiver
+  or local UDT parameter scalar fields, scalar fields read through block-local
+  receiver or local UDT parameter aliases, block-local scalar aliases of those
+  fields, inferred scalar parameters, or block-local scalar aliases of those
+  parameters using positional or named constructor field arguments; side effects,
   recursion, imported methods, unknown receivers, mismatched UDT parameter
   identity, and unsupported parameter families remain rejected
 - non-array method calls outside the local UDT method subset; unsupported

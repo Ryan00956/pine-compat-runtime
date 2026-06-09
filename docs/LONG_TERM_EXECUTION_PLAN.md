@@ -499,19 +499,21 @@ Delivered scope:
   ordinary variables, local for-expression constructor results, `var`
   persistence, scalar field mutation outside UDF/method bodies, and UDF
   constructor returns, directly, through nested pure constructor-helper UDF
-  calls, or through same-local-UDT ternary, switch, or final if/else constructor branches, from
-  local UDT parameter scalar fields, scalar fields read through block-local UDT
-  aliases of those parameters, block-local scalar aliases of those fields,
-  inferred scalar parameters, or block-local scalar aliases of those scalar
-  parameters using positional or named constructor field arguments.
+  calls, or through same-local-UDT ternary, switch, final if/else constructor
+  branches, or final for bodies, from local UDT parameter scalar fields, scalar
+  fields read through block-local UDT aliases of those parameters, block-local
+  scalar aliases of those fields, inferred scalar parameters, or block-local
+  scalar aliases of those scalar parameters using positional or named
+  constructor field arguments.
 - Pure methods on local UDT receivers with scalar or local UDT parameters and
   direct UDT passthrough returns, block-local receiver alias passthrough
   returns, block-local local UDT parameter alias passthrough returns,
   nested-method UDT parameter passthrough returns, plus local UDT constructor
   returns, directly, through nested pure constructor-helper UDF calls, or
-  through same-local-UDT ternary, switch, or final if/else constructor branches, from receiver
-  or local UDT parameter scalar fields, scalar fields read through block-local
-  receiver or local UDT parameter aliases, block-local scalar aliases of those
+  through same-local-UDT ternary, switch, final if/else constructor branches,
+  or final for bodies, from receiver or local UDT parameter scalar fields,
+  scalar fields read through block-local receiver or local UDT parameter aliases,
+  block-local scalar aliases of those
   fields, inferred scalar parameters, or block-local scalar aliases of those
   parameters using positional or named constructor field arguments.
 
