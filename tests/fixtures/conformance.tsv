@@ -230,7 +230,7 @@ math.tan	supported	trigonometric tangent with fixture-backed zero-angle identity
 math.pow	supported	numeric exponentiation with fixture-backed square relation and invalid fractional negative base returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.hypot	supported	numeric hypotenuse with fixture-backed zero-leg absolute-value relation	tests/fixtures/runtime/math.pine
 math.round	supported	single-argument integer rounding or precision decimal float rounding with ties rounding up and na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.round_to_mintick	supported	fixture-derived executable subset using default syminfo.mintick	tests/fixtures/runtime/math.pine
+math.round_to_mintick	supported	default syminfo.mintick rounding with fixture-backed one-tick offset relation	tests/fixtures/runtime/math.pine
 math.random	supported	fixture-derived deterministic callsite PRNG subset with optional min/max/seed	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.sum	supported	rolling non-na window sums; simple and computed integer length expressions	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/computed_lengths.pine
 na	supported	fixture-derived executable subset	tests/fixtures/runtime/na.pine
