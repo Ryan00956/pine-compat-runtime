@@ -289,7 +289,7 @@ ta.linreg	supported	rolling least-squares linear regression over series numeric 
 ta.stoch	supported	fixture-derived stochastic oscillator subset	tests/fixtures/runtime/stoch.pine
 ta.wpr	supported	fixture-derived Williams Percent Range subset	tests/fixtures/runtime/wpr.pine
 ta.tr	supported	built-in true range variable plus handle_na function subset	tests/fixtures/runtime/ta.pine
-ta.atr	supported	fixture-derived executable subset	tests/fixtures/runtime/atr.pine
+ta.atr	supported	Wilder/RMA-smoothed true range over OHLC bars with positive simple integer length, using high-low on the first bar when previous close is unavailable	tests/fixtures/runtime/atr.pine
 ta.supertrend	supported	fixture-derived Supertrend line and direction tuple subset	tests/fixtures/runtime/supertrend.pine
 ta.dmi	supported	fixture-derived directional movement tuple subset	tests/fixtures/runtime/dmi.pine
 ta.sar	supported	fixture-derived Parabolic SAR subset	tests/fixtures/runtime/sar.pine
