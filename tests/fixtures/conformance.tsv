@@ -224,9 +224,9 @@ syminfo.mintick	supported	fixed default mintick subset used by math.round_to_min
 syminfo.pointvalue	supported	fixed default pointvalue symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.minmove	supported	fixed default minmove symbol metadata subset used with pricescale to derive mintick	tests/fixtures/runtime/syminfo.pine
 syminfo.pricescale	supported	fixed default pricescale symbol metadata subset used with minmove to derive mintick	tests/fixtures/runtime/syminfo.pine
-math.sin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.cos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.tan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.sin	supported	trigonometric sine with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine
+math.cos	supported	trigonometric cosine with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine
+math.tan	supported	trigonometric tangent with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine
 math.pow	supported	numeric exponentiation with fixture-backed square relation and invalid fractional negative base returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.hypot	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.round	supported	single-argument integer rounding or precision decimal float rounding with ties rounding up and na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
