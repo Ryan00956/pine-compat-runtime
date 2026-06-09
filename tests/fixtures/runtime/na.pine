@@ -4,6 +4,8 @@ previous = close[1]
 fallback = nz(previous, close)
 maybe_close = close > open ? close : na
 fixed = fixnan(maybe_close)
+na_nz_relation = na(previous) ? fallback - close : fallback - previous
 plot(na(previous) ? close : fallback)
 plot(fallback)
 plot(fixed)
+plot(na_nz_relation)

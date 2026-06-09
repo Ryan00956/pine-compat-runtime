@@ -1355,10 +1355,11 @@ def test_run_script_returns_na_fixture_contract():
     result = pine_compat.run_script(source, bars)
 
     assert result["diagnostics"] == []
-    assert len(result["plots"]) == 3
+    assert len(result["plots"]) == 4
     assert result["plots"][0]["values"] == [2.0, 2.0, 3.0, 4.0]
     assert result["plots"][1]["values"] == [2.0, 2.0, 3.0, 4.0]
     assert result["plots"][2]["values"] == [2.0, 2.0, 4.0, 4.0]
+    assert result["plots"][3]["values"] == [0.0, 0.0, 0.0, 0.0]
 
 
 def test_run_script_returns_ta_fixture_contract():
