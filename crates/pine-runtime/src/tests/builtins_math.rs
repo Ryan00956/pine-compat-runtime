@@ -265,9 +265,11 @@ fn runs_math_sum_over_historical_bars() {
         r#"indicator("math sum")
 value = math.sum(close, 3)
 with_na = math.sum(bar_index == 3 ? na : close, 3)
+recovers_after_na = math.sum(bar_index == 1 ? na : close, 2)
 invalid = math.sum(close, 0)
 plot(value)
 plot(with_na)
+plot(recovers_after_na)
 plot(invalid)
 "#,
     );
@@ -288,7 +290,11 @@ plot(invalid)
     assert_eq!(result.plots[1].values[1], PineValue::Na);
     assert_values_close(&result.plots[1].values[2..3], &[7.0]);
     assert_eq!(result.plots[1].values[3], PineValue::Na);
-    assert_eq!(result.plots[2].values, vec![PineValue::Na; 4]);
+    assert_eq!(result.plots[2].values[0], PineValue::Na);
+    assert_eq!(result.plots[2].values[1], PineValue::Na);
+    assert_eq!(result.plots[2].values[2], PineValue::Na);
+    assert_values_close(&result.plots[2].values[3..], &[12.0]);
+    assert_eq!(result.plots[3].values, vec![PineValue::Na; 4]);
 }
 
 #[test]
