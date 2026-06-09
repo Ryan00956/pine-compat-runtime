@@ -5,7 +5,7 @@ input.int	supported	defval plus common min/max/step/options/metadata parameter s
 input.float	supported	defval plus common min/max/step/options/metadata parameter subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/inputs.pine
 input.bool	supported	defval plus common metadata parameter subset	tests/fixtures/runtime/io.pine
 input.source	supported	defval plus common metadata parameter subset	tests/fixtures/runtime/io.pine
-input.color	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
+input.color	supported	color defval plus common metadata parameter subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/colors.pine
 input.string	supported	defval/options plus common metadata parameter subset	tests/fixtures/runtime/io.pine
 input.price	supported	defval plus common min/max/step/options/metadata parameter subset	tests/fixtures/runtime/inputs.pine
 input.time	supported	defval plus common int/options/metadata parameter subset	tests/fixtures/runtime/inputs.pine
