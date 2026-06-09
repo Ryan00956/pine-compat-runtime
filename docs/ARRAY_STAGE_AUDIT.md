@@ -23,8 +23,9 @@ opening other drawing array families.
 
 The project should keep `array.*` marked `partial`, not `supported`, because the
 current implementation deliberately excludes generic arrays, object arrays, UDT
-arrays, maps, matrices, `varip`, Pine's shallow slice/window semantics, and
-several advanced sorting forms.
+arrays, maps, matrices, `varip` value families outside the fixture-backed scalar
+typed-array subset, Pine's shallow slice/window semantics, and several advanced
+sorting forms.
 
 The next implementation work should not continue adding random array helpers.
 Future array work should be chosen from the explicit gap list below and should
@@ -41,6 +42,8 @@ Runtime model:
 - Non-`var` declarations allocate when they execute.
 - `var` declarations preserve array ids and backing storage across bars.
 - Realtime forming-bar rollback covers array state.
+- Scalar typed-array ids referenced by supported `varip` declarations preserve
+  their backing contents across repeated forming updates.
 - Runtime array growth is guarded by the 100,000 element limit.
 
 Element kinds:
@@ -164,9 +167,12 @@ Maps and matrices:
 
 `varip`:
 
-- `varip` arrays are not supported because intrabar persistence is still
-  rejected.
-- This belongs to the dedicated `varip` phase.
+- Scalar typed-array ids for `float`, `int`, `bool`, `string`, and `color`
+  declarations are fixture-backed for historical var-like execution and
+  realtime intrabar persistence.
+- Drawing id arrays, UDT arrays, generic arrays, tuples, and other value
+  families remain unsupported for `varip` until their realtime handoff and
+  rollback rules are designed.
 
 History and snapshots:
 
