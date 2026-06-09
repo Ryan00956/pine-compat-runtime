@@ -162,11 +162,29 @@ pub(crate) fn format_placeholder(
     let format = match parts.next().map(str::trim) {
         Some("integer") => "#",
         Some("percent") => "#.##%",
-        Some("currency") => "#,###.00",
+        Some("currency") => return Some(format_currency_placeholder(value, runtime)),
         Some(format) if !format.is_empty() => format,
         _ => "#,###.###",
     };
     Some(runtime.stringify_value(value, format))
+}
+
+pub(crate) fn format_currency_placeholder(
+    value: &PineValue,
+    runtime: &HistoricalRuntime<'_>,
+) -> String {
+    let formatted = match value {
+        PineValue::Int(value) => format_number(*value as f64, "#,###.00"),
+        PineValue::Float(value) => format_number(*value, "#,###.00"),
+        _ => return runtime.stringify_value(value, "#,###.00"),
+    };
+    if formatted == "NaN" {
+        formatted
+    } else if let Some(unsigned) = formatted.strip_prefix('-') {
+        format!("-${unsigned}")
+    } else {
+        format!("${formatted}")
+    }
 }
 
 pub(crate) fn format_number(value: f64, format: &str) -> String {
