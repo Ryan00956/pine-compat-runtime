@@ -310,18 +310,18 @@ The analyzer should reject these with clear diagnostics:
   accepts top-level `type` declarations with int/float/bool/string/color
   fields, `Type.new(...)` construction, local field reads, ordinary variables,
   `var` persistence, scalar field mutation outside UDF/method bodies, and UDF
-  constructor returns from inferred scalar parameters using positional or named
-  constructor field arguments only; field mutation inside functions or methods,
-  `varip`, UDT history references, UDT fields, UDT arrays, and imported UDTs
-  remain rejected
+  constructor returns from inferred scalar parameters or block-local scalar
+  aliases of those parameters using positional or named constructor field
+  arguments only; field mutation inside functions or methods, `varip`, UDT
+  history references, UDT fields, UDT arrays, and imported UDTs remain rejected
 - user-defined method forms outside pure local-UDT receiver methods with scalar
   or local UDT parameters, direct UDT passthrough returns, block-local receiver
   or local UDT parameter alias passthrough returns, nested-method UDT parameter
   passthrough returns, and local UDT constructor returns from receiver scalar
-  fields or inferred scalar parameters using positional or named constructor
-  field arguments; side effects, recursion, imported methods, unknown
-  receivers, mismatched UDT parameter identity, and unsupported parameter
-  families remain rejected
+  fields, inferred scalar parameters, or block-local scalar aliases of those
+  parameters using positional or named constructor field arguments; side
+  effects, recursion, imported methods, unknown receivers, mismatched UDT
+  parameter identity, and unsupported parameter families remain rejected
 - non-array method calls outside the local UDT method subset; unsupported
   receiver families remain ordinary receiver/type diagnostics rather than a
   widened method claim

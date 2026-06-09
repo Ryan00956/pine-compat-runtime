@@ -189,6 +189,29 @@ plot(made.x + close)
 }
 
 #[test]
+fn accepts_udt_constructor_return_from_user_method_scalar_alias() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method makeBlock(Point p, float x) =>
+    ax = x
+    Point.new(ax)
+p = Point.new(close)
+made = p.makeBlock(open)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_named_constructor_return_from_user_method() {
     let analysis = analyze(
         r#"type Point

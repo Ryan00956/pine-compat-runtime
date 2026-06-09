@@ -577,22 +577,24 @@ top-level `type` declarations with scalar int/float/bool/string/color fields,
 `Type.new(...)` construction, field reads on local values, ordinary variables,
 `var` persistence, and UDF parameter passthrough/returns through positional or
 named arguments with direct returns, block-local aliases, or nested passthrough
-calls, plus UDF construction/returns from inferred scalar parameters using
-positional or named constructor field arguments. Local scalar fields can be
-reassigned outside UDF/method bodies. Field mutation inside UDFs or methods,
-`varip`, history references on UDT values, UDT fields, UDT arrays, and imported
-UDTs remain outside the supported matrix.
+calls, plus UDF construction/returns from inferred scalar parameters or
+block-local scalar aliases of those parameters using positional or named
+constructor field arguments. Local scalar fields can be reassigned outside
+UDF/method bodies. Field mutation inside UDFs or methods, `varip`, history
+references on UDT values, UDT fields, UDT arrays, and imported UDTs remain
+outside the supported matrix.
 User-defined methods are partial for pure methods on local UDT receivers with
 scalar or local UDT parameters and direct UDT passthrough returns, block-local
 receiver or local UDT parameter alias passthrough returns, nested-method UDT
 parameter passthrough returns, plus local UDT constructor returns from receiver
-scalar fields or inferred scalar parameters using positional or named
-constructor field arguments. The receiver is passed as the first internal
-parameter. Returned receiver values, block-local receiver aliases, local UDT
-parameter values, block-local local UDT parameter aliases, or constructed local
-UDT values may be assigned and field-read at the callsite. Side effects,
-recursion, unknown receiver types, imported methods, mismatched UDT parameter
-identity, and unsupported parameter families remain outside the supported
+scalar fields, inferred scalar parameters, or block-local scalar aliases of
+those parameters using positional or named constructor field arguments. The
+receiver is passed as the first internal parameter. Returned receiver values,
+block-local receiver aliases, local UDT parameter values, block-local local UDT
+parameter aliases, or constructed local UDT values may be assigned and
+field-read at the callsite. Side effects, recursion, unknown receiver types,
+imported methods, mismatched UDT parameter identity, and unsupported parameter
+families remain outside the supported
 matrix.
 Phase J Slice 9 deliberately keeps imported UDT identity and imported methods
 as a maintenance tail: exported constants/functions are source-graph scoped,
@@ -1020,8 +1022,8 @@ array.*              partial      float/int/bool/string/color/label/line/box/tab
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
 import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only
-user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, var persistence, scalar field mutation outside UDF/method bodies, and UDF parameter passthrough/returns or constructor returns through positional or named scalar arguments and positional or named constructor field arguments with direct returns, block-local aliases, or nested passthrough calls only
-user-defined methods partial      pure methods on local UDT receivers with scalar or local UDT parameters, direct UDT passthrough returns, block-local receiver or local UDT parameter alias passthrough returns, nested-method UDT parameter passthrough returns, and local UDT constructor returns from receiver scalar fields or inferred scalar parameters using positional or named constructor field arguments only
+user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, var persistence, scalar field mutation outside UDF/method bodies, UDF parameter passthrough/returns through positional or named scalar arguments with direct returns, UDT block-local aliases, or nested passthrough calls, and UDF constructor returns from inferred scalar parameters or block-local scalar aliases of those parameters using positional or named constructor field arguments only
+user-defined methods partial      pure methods on local UDT receivers with scalar or local UDT parameters, direct UDT passthrough returns, block-local receiver or local UDT parameter alias passthrough returns, nested-method UDT parameter passthrough returns, and local UDT constructor returns from receiver scalar fields, inferred scalar parameters, or block-local scalar aliases of those parameters using positional or named constructor field arguments only
 ```
 
 The matrix should be generated from conformance metadata once the test harness

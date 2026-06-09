@@ -15,6 +15,9 @@ method chooseBlock(Point p, Point other) =>
 method wrap(Point p, Point other) => p.choose(other)
 method clone(Point p) => Point.new(p.x)
 method make(Point p, float x) => Point.new(x)
+method makeBlock(Point p, float x) =>
+    ax = x
+    Point.new(ax)
 method makeNamed(Point p, float x) => Point.new(x=x)
 
 p = Point.new(close)
@@ -26,6 +29,7 @@ chosenBlock = p.chooseBlock(q)
 wrapped = p.wrap(q)
 cloned = p.clone()
 made = p.make(open)
+madeBlock = p.makeBlock(open)
 madeNamed = p.makeNamed(open)
 plot(p.shift(open))
 plot(same.x + close)
@@ -35,4 +39,5 @@ plot(chosenBlock.x + close)
 plot(wrapped.x + close)
 plot(cloned.x + close)
 plot(made.x + close)
+plot(madeBlock.x + close)
 plot(madeNamed.x + close)

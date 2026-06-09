@@ -524,10 +524,11 @@ slot when applicable. UDFs may pass a local UDT value through a parameter and
 return that same parameter, or return a block-local alias chain that starts from
 that parameter, or return a nested passthrough UDF call that maps back to that
 parameter. Pure UDFs may also construct and return a local UDT from scalar
-parameters whose types are inferred from the call arguments, using positional
-or named constructor field arguments. Positional and named UDF call arguments
-both preserve the parameter identity. The caller may then store the returned
-value and read its fields. Field mutation inside UDFs or methods, UDT history
+parameters whose types are inferred from the call arguments, or from
+block-local scalar aliases of those parameters, using positional or named
+constructor field arguments. Positional and named UDF call arguments both
+preserve the parameter identity. The caller may then store the returned value
+and read its fields. Field mutation inside UDFs or methods, UDT history
 references, UDT `varip`, nested UDT fields, UDT arrays, and imported UDT values
 are rejected before runtime execution or remain outside the executable subset.
 
@@ -538,11 +539,12 @@ additional local UDT parameters and return the receiver itself, a block-local
 alias chain that starts from the receiver or another local UDT parameter,
 another local UDT parameter directly or through a nested method passthrough
 call, or construct and return a local UDT from receiver scalar fields or
-inferred scalar parameters using positional or named constructor field
-arguments; the caller may store that returned UDT value and read its fields.
-Method side effects, recursive methods, unsupported parameter families,
-mismatched UDT parameter identity, unknown receivers, and imported methods are
-rejected during semantic analysis.
+inferred scalar parameters, including block-local scalar aliases of those
+parameters, using positional or named constructor field arguments; the caller
+may store that returned UDT value and read its fields. Method side effects,
+recursive methods, unsupported parameter families, mismatched UDT parameter
+identity, unknown receivers, and imported methods are rejected during semantic
+analysis.
 
 ### `varip`
 
