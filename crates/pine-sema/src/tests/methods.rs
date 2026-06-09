@@ -119,6 +119,27 @@ plot(copy.x + copy.y)
 }
 
 #[test]
+fn accepts_udt_constructor_return_from_user_method_scalar_param() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method make(Point p, float x) => Point.new(x)
+p = Point.new(close)
+made = p.make(open)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_passthrough_user_function() {
     let analysis = analyze(
         r#"type Point

@@ -501,7 +501,8 @@ Delivered scope:
   parameters.
 - Pure methods on local UDT receivers with scalar or local UDT parameters and
   direct or nested-method UDT parameter passthrough returns, plus local UDT
-  constructor returns from receiver scalar fields.
+  constructor returns from receiver scalar fields or inferred scalar
+  parameters.
 
 Maintenance tails:
 
