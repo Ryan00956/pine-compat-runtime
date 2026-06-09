@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 
 use pine_ir::{PineType, Qualifier, ValueKind};
-use pine_syntax::{CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Program, Span, StmtKind};
+use pine_syntax::{
+    CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Program, Span, StmtKind, SwitchArm,
+};
 
 use crate::analyzer::calls::expr_name;
 use crate::analyzer::context::{Analyzer, FunctionInfo};
@@ -359,6 +361,7 @@ impl Analyzer {
                 else_expr,
                 ..
             } => self.user_type_name_of_ternary_branches(then_expr, else_expr),
+            ExprKind::Switch { arms, .. } => self.user_type_name_of_switch_arms(arms),
             _ => None,
         }
     }
@@ -390,6 +393,30 @@ impl Analyzer {
             (None, Some(else_name)) if is_na_expr(then_expr) => Some(else_name),
             _ => None,
         }
+    }
+
+    pub(crate) fn mark_switch_user_type(&mut self, span: Span, arms: &[SwitchArm]) -> bool {
+        let Some(type_name) = self.user_type_name_of_switch_arms(arms) else {
+            return false;
+        };
+        self.mark_expr_user_type(span, type_name);
+        true
+    }
+
+    fn user_type_name_of_switch_arms(&self, arms: &[SwitchArm]) -> Option<String> {
+        let mut resolved_type_name = None;
+        for arm in arms {
+            match self.user_type_name_of_expr(&arm.result) {
+                Some(type_name) => match &resolved_type_name {
+                    Some(resolved) if resolved != &type_name => return None,
+                    Some(_) => {}
+                    None => resolved_type_name = Some(type_name),
+                },
+                None if is_na_expr(&arm.result) => {}
+                None => return None,
+            }
+        }
+        resolved_type_name
     }
 
     pub(crate) fn user_type_name_of_udf_passthrough(

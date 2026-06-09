@@ -21,11 +21,11 @@
   fields can now be reassigned with `value.field := expr` outside UDF/method
   bodies. Pure UDFs may construct and return local UDT values, directly,
   through nested pure constructor-helper UDF calls, or through same-local-UDT
-  ternary constructor branches, from local UDT parameter scalar fields, scalar
-  fields read through block-local UDT aliases of those parameters, block-local
-  scalar aliases of those fields, inferred scalar parameters, or block-local
-  scalar aliases of those scalar parameters using positional or named
-  constructor field arguments; field mutation inside
+  ternary or switch constructor branches, from local UDT parameter scalar
+  fields, scalar fields read through block-local UDT aliases of those
+  parameters, block-local scalar aliases of those fields, inferred scalar
+  parameters, or block-local scalar aliases of those scalar parameters using
+  positional or named constructor field arguments; field mutation inside
   functions or methods, imported UDT identity, UDT history, `varip`, nested UDT
   fields, and UDT arrays remain outside the supported subset.
 - Closed Strategy Internal Stage 13 release-note coverage through Slice 101. The

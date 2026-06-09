@@ -388,6 +388,31 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_user_type_switch_constructor_return_from_udf_udt_param_fields() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+cloneFrom(p, mode) =>
+    switch mode
+        0 => Point.new(p.x, p.y)
+        => Point.new(p.x + 10, p.y)
+p = Point.new(close, open)
+made = cloneFrom(p, bar_index)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_mismatched_user_type_ternary_constructor_branches() {
     let analysis = analyze(
         r#"type Point
@@ -395,6 +420,31 @@ fn rejects_mismatched_user_type_ternary_constructor_branches() {
 type Other
     float x
 value = close > open ? Point.new(close) : Other.new(open)
+plot(value.x)
+"#,
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_BRANCH_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_mismatched_user_type_switch_constructor_arms() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+type Other
+    float x
+value = switch bar_index
+    0 => Point.new(close)
+    => Other.new(open)
 plot(value.x)
 "#,
     );

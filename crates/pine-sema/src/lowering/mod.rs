@@ -745,6 +745,20 @@ impl Analyzer {
                 _ => None,
             };
         }
+        if let ExprKind::Switch { arms, .. } = &expr.kind {
+            let mut resolved_type_name = None;
+            for arm in arms {
+                match self.user_type_name_of_expr_with_params(&arm.result, param_exprs) {
+                    Some(type_name) => match &resolved_type_name {
+                        Some(resolved) if resolved != &type_name => return None,
+                        Some(_) => {}
+                        None => resolved_type_name = Some(type_name),
+                    },
+                    None => return None,
+                }
+            }
+            return resolved_type_name;
+        }
         let name = match &expr.kind {
             ExprKind::Identifier(name) => name,
             ExprKind::QualifiedName(parts) if parts.len() == 1 => &parts[0],

@@ -193,11 +193,20 @@ impl Analyzer {
             return None;
         }
 
-        result_type.map(|pine_type| {
-            PineType::new(
+        result_type.and_then(|pine_type| {
+            let pine_type = PineType::new(
                 strongest_qualifier(condition_qualifier, pine_type.qualifier),
                 pine_type.kind,
-            )
+            );
+            if pine_type.kind == ValueKind::UserType && !self.mark_switch_user_type(span, arms) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_BRANCH_TYPE",
+                    "switch user-defined type arms must resolve to the same local UDT",
+                    span,
+                ));
+                return None;
+            }
+            Some(pine_type)
         })
     }
 

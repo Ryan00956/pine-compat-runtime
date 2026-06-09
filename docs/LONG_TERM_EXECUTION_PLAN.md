@@ -498,22 +498,22 @@ Delivered scope:
 - Local scalar-field user-defined types with `Type.new(...)`, field reads,
   ordinary variables, `var` persistence, scalar field mutation outside
   UDF/method bodies, and UDF constructor returns, directly, through nested pure
-  constructor-helper UDF calls, or through same-local-UDT ternary constructor
-  branches, from local UDT parameter scalar fields, scalar fields read through
-  block-local UDT aliases of those parameters, block-local scalar aliases of
-  those fields, inferred scalar parameters, or block-local scalar aliases of
-  those scalar parameters using positional or named constructor field
-  arguments.
+  constructor-helper UDF calls, or through same-local-UDT ternary or switch
+  constructor branches, from local UDT parameter scalar fields, scalar fields
+  read through block-local UDT aliases of those parameters, block-local scalar
+  aliases of those fields, inferred scalar parameters, or block-local scalar
+  aliases of those scalar parameters using positional or named constructor
+  field arguments.
 - Pure methods on local UDT receivers with scalar or local UDT parameters and
   direct UDT passthrough returns, block-local receiver alias passthrough
   returns, block-local local UDT parameter alias passthrough returns,
   nested-method UDT parameter passthrough returns, plus local UDT constructor
   returns, directly, through nested pure constructor-helper UDF calls, or
-  through same-local-UDT ternary constructor branches, from receiver or local
-  UDT parameter scalar fields, scalar fields read through block-local receiver
-  or local UDT parameter aliases, block-local scalar aliases of those fields,
-  inferred scalar parameters, or block-local scalar aliases of those parameters
-  using positional or named constructor field arguments.
+  through same-local-UDT ternary or switch constructor branches, from receiver
+  or local UDT parameter scalar fields, scalar fields read through block-local
+  receiver or local UDT parameter aliases, block-local scalar aliases of those
+  fields, inferred scalar parameters, or block-local scalar aliases of those
+  parameters using positional or named constructor field arguments.
 
 Maintenance tails:
 
