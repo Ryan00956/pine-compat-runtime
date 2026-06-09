@@ -262,7 +262,7 @@ ta.min	supported	all-time minimum over executed non-na source values	tests/fixtu
 ta.accdist	supported	cumulative Accumulation/Distribution variable over OHLCV bars with zero-range bars returning na and resetting state	tests/fixtures/runtime/accdist.pine
 ta.iii	supported	Intraday Intensity Index variable over OHLCV bars with zero range or zero volume returning na	tests/fixtures/runtime/iii.pine
 ta.nvi	supported	Negative Volume Index variable starting at 1 and updating on lower-volume bars from close relative change	tests/fixtures/runtime/nvi.pine
-ta.obv	supported	fixture-derived executable subset	tests/fixtures/runtime/obv.pine
+ta.obv	supported	On Balance Volume variable accumulating signed volume from close direction after the first bar	tests/fixtures/runtime/obv.pine
 ta.pvi	supported	fixture-derived executable subset	tests/fixtures/runtime/pvi.pine
 ta.pvt	supported	fixture-derived executable subset	tests/fixtures/runtime/pvt.pine
 ta.vwap	supported	fixture-derived variable, source-call, source/anchor-call, and source/anchor/bands-call subset; cumulative over runtime bars with anchor reset; session-derived anchoring not yet implemented	tests/fixtures/runtime/vwap.pine
