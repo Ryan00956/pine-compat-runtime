@@ -195,7 +195,7 @@ math.floor	supported	integer rounding result with argument qualifier and na prop
 math.ceil	supported	integer rounding result with argument qualifier and na propagation	tests/fixtures/runtime/math.pine
 math.trunc	supported	integer truncation result with argument qualifier and na propagation	tests/fixtures/runtime/math.pine
 math.sqrt	supported	numeric square root with fixture-backed square/absolute-value relation and negative inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.cbrt	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.cbrt	supported	numeric cube root with fixture-backed positive cube roundtrip relation	tests/fixtures/runtime/math.pine
 math.log	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.log10	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.exp	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
