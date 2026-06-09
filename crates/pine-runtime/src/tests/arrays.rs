@@ -700,6 +700,7 @@ plot(array.binary_search_leftmost(numbers, 4))
 plot(array.binary_search_rightmost(numbers, 4))
 plot(numbers.binary_search_leftmost(2))
 plot(numbers.binary_search_rightmost(2))
+plot(array.binary_search_leftmost(numbers, 1) == 0 and array.binary_search_rightmost(numbers, 1) == 0 and array.binary_search_leftmost(numbers, 9) == 2 and array.binary_search_rightmost(numbers, 9) == 2 ? 1 : 0)
 
 truth_flags = array.from(true, true)
 plot(array.every(truth_flags) and truth_flags.some() ? 1 : 0)
@@ -741,7 +742,7 @@ plot(colors.includes(color.green) ? colors.indexof(color.green) : 0)
     let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 19);
+    assert_eq!(result.plots.len(), 20);
     assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0]);
     assert_values_close(&result.plots[2].values, &[2.0, 2.0, 2.0]);
@@ -759,8 +760,9 @@ plot(colors.includes(color.green) ? colors.indexof(color.green) : 0)
     assert_values_close(&result.plots[14].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[15].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[16].values, &[1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[17].values, &[2.0, 2.0, 2.0]);
-    assert_values_close(&result.plots[18].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[17].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[18].values, &[2.0, 2.0, 2.0]);
+    assert_values_close(&result.plots[19].values, &[1.0, 1.0, 1.0]);
 }
 
 #[test]

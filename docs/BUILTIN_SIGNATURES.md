@@ -720,8 +720,9 @@ array receivers.
 string array receivers.
 Binary search helpers expect the current array contents to be sorted ascending;
 `array.binary_search` returns `-1` when not found, while leftmost/rightmost
-return the nearest existing insertion-side index and return `-1` for empty
-arrays. `array.every` and `array.some` are limited to float, int, and bool
+return the nearest existing insertion-side index, clamping searches below the
+minimum or above the maximum to the nearest valid edge, and return `-1` for
+empty arrays. `array.every` and `array.some` are limited to float, int, and bool
 arrays; false, zero, and `na` elements are falsey, other numeric values are
 truthy, empty arrays return `true` for `every` and `false` for `some`.
 `array.abs` allocates a new same-kind array containing the absolute
