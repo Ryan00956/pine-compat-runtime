@@ -316,9 +316,10 @@ The analyzer should reject these with clear diagnostics:
   local UDT parameter scalar fields, scalar fields read through block-local UDT
   aliases of those parameters, block-local scalar aliases of those fields,
   inferred scalar parameters, or block-local scalar aliases of those scalar
-  parameters using positional or named constructor field arguments only; field mutation
-  inside functions or methods, `varip`, UDT history references, UDT fields, UDT
-  arrays, and imported UDTs remain rejected
+  parameters using positional or named constructor field arguments only; final
+  if/else branches and final for bodies may also return local UDT aliases of
+  local UDT parameters; field mutation inside functions or methods, `varip`,
+  UDT history references, UDT fields, UDT arrays, and imported UDTs remain rejected
 - user-defined method forms outside pure local-UDT receiver methods with scalar
   or local UDT parameters, direct UDT passthrough returns, block-local receiver
   or local UDT parameter alias passthrough returns, nested-method UDT parameter
@@ -328,9 +329,11 @@ The analyzer should reject these with clear diagnostics:
   or local UDT parameter scalar fields, scalar fields read through block-local
   receiver or local UDT parameter aliases, block-local scalar aliases of those
   fields, inferred scalar parameters, or block-local scalar aliases of those
-  parameters using positional or named constructor field arguments; side effects,
-  recursion, imported methods, unknown receivers, mismatched UDT parameter
-  identity, and unsupported parameter families remain rejected
+  parameters using positional or named constructor field arguments; final
+  if/else branches and final for bodies may also return local UDT aliases of the
+  receiver or local UDT parameters; side effects, recursion, imported methods,
+  unknown receivers, mismatched UDT parameter identity, and unsupported parameter
+  families remain rejected
 - non-array method calls outside the local UDT method subset; unsupported
   receiver families remain ordinary receiver/type diagnostics rather than a
   widened method claim

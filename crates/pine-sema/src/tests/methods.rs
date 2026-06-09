@@ -459,6 +459,33 @@ plot(made.x + close)
 }
 
 #[test]
+fn accepts_udt_final_if_branch_udt_alias_return_from_user_method_receiver() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method cloneIf(Point p, bool flip) =>
+    if flip
+        q = p
+        q
+    else
+        q = p
+        q
+p = Point.new(close)
+made = p.cloneIf(bar_index < 2)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_final_for_constructor_return_from_user_method_receiver_fields() {
     let analysis = analyze(
         r#"type Point
@@ -466,6 +493,30 @@ fn accepts_udt_final_for_constructor_return_from_user_method_receiver_fields() {
 method cloneFor(Point p, int count) =>
     for i = 0 to count
         Point.new(p.x + i)
+p = Point.new(close)
+made = p.cloneFor(2)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_udt_final_for_udt_alias_return_from_user_method_receiver() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method cloneFor(Point p, int count) =>
+    for i = 0 to count
+        q = p
+        q
 p = Point.new(close)
 made = p.cloneFor(2)
 plot(made.x + close)

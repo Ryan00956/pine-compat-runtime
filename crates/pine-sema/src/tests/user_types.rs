@@ -467,6 +467,34 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_user_type_final_if_branch_udt_alias_return_from_udf_udt_param() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+cloneFrom(p, flip) =>
+    if flip
+        q = p
+        q
+    else
+        q = p
+        q
+p = Point.new(close, open)
+made = cloneFrom(p, bar_index < 2)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_user_type_final_for_constructor_return_from_udf_udt_param_fields() {
     let analysis = analyze(
         r#"type Point
@@ -475,6 +503,31 @@ fn accepts_user_type_final_for_constructor_return_from_udf_udt_param_fields() {
 cloneFrom(p, count) =>
     for i = 0 to count
         Point.new(p.x + i, p.y)
+p = Point.new(close, open)
+made = cloneFrom(p, 2)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_user_type_final_for_udt_alias_return_from_udf_udt_param() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+cloneFrom(p, count) =>
+    for i = 0 to count
+        q = p
+        q
 p = Point.new(close, open)
 made = cloneFrom(p, 2)
 plot(made.x + made.y)

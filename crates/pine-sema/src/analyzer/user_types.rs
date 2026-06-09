@@ -425,11 +425,11 @@ impl Analyzer {
         then_branch: &[Stmt],
         else_branch: &[Stmt],
     ) -> Option<String> {
-        let then_expr = branch_return_expr(then_branch)?;
-        let else_expr = branch_return_expr(else_branch)?;
+        let (_, then_expr) = branch_return_expr(then_branch)?;
+        let (_, else_expr) = branch_return_expr(else_branch)?;
         match (
-            self.user_type_name_of_expr(then_expr),
-            self.user_type_name_of_expr(else_expr),
+            self.user_type_name_of_branch_return(then_branch),
+            self.user_type_name_of_branch_return(else_branch),
         ) {
             (Some(then_name), Some(else_name)) if then_name == else_name => Some(then_name),
             (Some(then_name), None) if is_na_expr(else_expr) => Some(then_name),
@@ -439,11 +439,67 @@ impl Analyzer {
     }
 
     fn user_type_name_of_for_body(&self, body: &[Stmt]) -> Option<String> {
-        let last = body.last()?;
-        let StmtKind::Expr(expr) = &last.kind else {
-            return None;
-        };
-        self.user_type_name_of_expr(expr)
+        self.user_type_name_of_branch_return(body)
+    }
+
+    fn user_type_name_of_branch_return(&self, branch: &[Stmt]) -> Option<String> {
+        let (prefix, expr) = branch_return_expr(branch)?;
+        let aliases = self.local_user_type_aliases(prefix);
+        self.user_type_name_of_expr_with_local_aliases(expr, &aliases)
+    }
+
+    fn local_user_type_aliases(&self, prefix: &[Stmt]) -> HashMap<String, String> {
+        let mut aliases = HashMap::new();
+        for statement in prefix {
+            if let StmtKind::Decl { name, value, .. } = &statement.kind
+                && let Some(type_name) =
+                    self.user_type_name_of_expr_with_local_aliases(value, &aliases)
+            {
+                aliases.insert(name.clone(), type_name);
+            }
+        }
+        aliases
+    }
+
+    fn user_type_name_of_expr_with_local_aliases(
+        &self,
+        expr: &Expr,
+        aliases: &HashMap<String, String>,
+    ) -> Option<String> {
+        if let Some(type_name) = self.user_type_name_of_expr(expr) {
+            return Some(type_name);
+        }
+        match &expr.kind {
+            ExprKind::Identifier(name) => aliases.get(name).cloned(),
+            ExprKind::QualifiedName(parts) if parts.len() == 1 => aliases.get(&parts[0]).cloned(),
+            ExprKind::Ternary {
+                then_expr,
+                else_expr,
+                ..
+            } => match (
+                self.user_type_name_of_expr_with_local_aliases(then_expr, aliases),
+                self.user_type_name_of_expr_with_local_aliases(else_expr, aliases),
+            ) {
+                (Some(then_name), Some(else_name)) if then_name == else_name => Some(then_name),
+                _ => None,
+            },
+            ExprKind::Switch { arms, .. } => {
+                let mut resolved_type_name = None;
+                for arm in arms {
+                    match self.user_type_name_of_expr_with_local_aliases(&arm.result, aliases) {
+                        Some(type_name) => match &resolved_type_name {
+                            Some(resolved) if resolved != &type_name => return None,
+                            Some(_) => {}
+                            None => resolved_type_name = Some(type_name),
+                        },
+                        None => return None,
+                    }
+                }
+                resolved_type_name
+            }
+            ExprKind::For { body, .. } => self.user_type_name_of_for_body(body),
+            _ => None,
+        }
     }
 
     pub(crate) fn user_type_name_of_udf_passthrough(
@@ -597,20 +653,46 @@ fn returned_udf_param_index(
     match body {
         FunctionBody::Expr(expr) => returned_expr_param_index(expr, params, functions, depth),
         FunctionBody::Block(statements) => {
-            let (last, prefix) = statements.split_last()?;
-            let StmtKind::Expr(expr) = &last.kind else {
-                return None;
-            };
-            let mut aliases = HashMap::new();
-            for statement in prefix {
-                if let StmtKind::Decl { name, value, .. } = &statement.kind
-                    && let Some(source_name) = identifier_name(value)
-                {
-                    aliases.insert(name.clone(), source_name.clone());
-                }
-            }
+            returned_statements_param_index(statements, params, functions, &HashMap::new(), depth)
+        }
+    }
+}
+
+fn returned_statements_param_index(
+    statements: &[Stmt],
+    params: &[String],
+    functions: &HashMap<String, FunctionInfo>,
+    outer_aliases: &HashMap<String, String>,
+    depth: usize,
+) -> Option<usize> {
+    let (last, prefix) = statements.split_last()?;
+    let mut aliases = outer_aliases.clone();
+    for statement in prefix {
+        if let StmtKind::Decl { name, value, .. } = &statement.kind
+            && let Some(source_name) = identifier_name(value)
+        {
+            aliases.insert(name.clone(), source_name.clone());
+        }
+    }
+    match &last.kind {
+        StmtKind::Expr(expr) => {
             returned_expr_param_index_with_aliases(expr, params, functions, &aliases, depth)
         }
+        StmtKind::If {
+            then_branch,
+            else_branch,
+            ..
+        } => {
+            let then_index =
+                returned_statements_param_index(then_branch, params, functions, &aliases, depth)?;
+            let else_index =
+                returned_statements_param_index(else_branch, params, functions, &aliases, depth)?;
+            (then_index == else_index).then_some(then_index)
+        }
+        StmtKind::For { body, .. } => {
+            returned_statements_param_index(body, params, functions, &aliases, depth)
+        }
+        _ => None,
     }
 }
 
@@ -683,10 +765,10 @@ fn is_na_expr(expr: &Expr) -> bool {
     }
 }
 
-fn branch_return_expr(branch: &[Stmt]) -> Option<&Expr> {
-    let last = branch.last()?;
+fn branch_return_expr(branch: &[Stmt]) -> Option<(&[Stmt], &Expr)> {
+    let (last, prefix) = branch.split_last()?;
     let StmtKind::Expr(expr) = &last.kind else {
         return None;
     };
-    Some(expr)
+    Some((prefix, expr))
 }
