@@ -78,6 +78,7 @@ plot(syminfo.mintick)
 plot(syminfo.pointvalue)
 plot(syminfo.minmove)
 plot(syminfo.pricescale)
+plot(syminfo.mintick == syminfo.minmove / syminfo.pricescale and syminfo.pointvalue == 1 ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -97,6 +98,7 @@ plot(syminfo.pricescale)
     assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[6].values, &[100.0, 100.0]);
+    assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
 }
 
 #[test]

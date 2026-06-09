@@ -1421,7 +1421,6 @@ def test_run_script_returns_syminfo_fixture_contract():
     result = pine_compat.run_script(source, BARS)
 
     assert result["diagnostics"] == []
-    assert len(result["plots"]) == 7
     expected = [
         [1.0, 1.0, 1.0],
         [1.0, 1.0, 1.0],
@@ -1430,7 +1429,9 @@ def test_run_script_returns_syminfo_fixture_contract():
         [1.0, 1.0, 1.0],
         [1.0, 1.0, 1.0],
         [100.0, 100.0, 100.0],
+        [1.0, 1.0, 1.0],
     ]
+    assert len(result["plots"]) == len(expected)
     for plot, values in zip(result["plots"], expected):
         assert plot["values"] == values
 

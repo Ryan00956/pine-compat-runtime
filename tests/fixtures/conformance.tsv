@@ -220,10 +220,10 @@ syminfo.session	supported	fixed default symbol metadata subset	tests/fixtures/ru
 syminfo.timezone	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.root	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.volumetype	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
-syminfo.mintick	supported	fixed default mintick subset used by math.round_to_mintick	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/syminfo.pine
-syminfo.pointvalue	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
-syminfo.minmove	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
-syminfo.pricescale	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.mintick	supported	fixed default mintick subset used by math.round_to_mintick and equal to minmove/pricescale	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/syminfo.pine
+syminfo.pointvalue	supported	fixed default pointvalue symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.minmove	supported	fixed default minmove symbol metadata subset used with pricescale to derive mintick	tests/fixtures/runtime/syminfo.pine
+syminfo.pricescale	supported	fixed default pricescale symbol metadata subset used with minmove to derive mintick	tests/fixtures/runtime/syminfo.pine
 math.sin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.cos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.tan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
