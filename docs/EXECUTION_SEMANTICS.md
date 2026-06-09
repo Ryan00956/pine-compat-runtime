@@ -585,7 +585,9 @@ confirmed baseline. A confirmed update also seeds from the latest forming
 confirmed runtime for the next bar.
 
 Skipped local declaration sites do not initialize before their first executed
-reach. `array.copy` returns an independent array id, and a `varip` slot that is
+reach. Assigning a `varip` scalar typed-array slot to another variable preserves
+the same array id, so mutations through either name update the same backing
+store. `array.copy` returns an independent array id, and a `varip` slot that is
 reassigned to that copy retains the copied backing store across repeated forming
 updates without aliasing the source. Array mutation inside UDFs remains rejected
 by the existing function side-effect rules. Drawing object ids are rejected for

@@ -655,7 +655,11 @@ fn runs_varip_array_with_var_like_historical_state() {
         r#"indicator("varip arrays")
 varip values = array.new_int()
 values.push(1)
+
+varip alias = values
+alias.push(20)
 plot(values.size())
+plot(alias.size())
 
 varip copy = array.copy(values)
 copy.push(10)
@@ -680,11 +684,12 @@ plot(branch_out)
     let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 4);
-    assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0, 4.0]);
-    assert_values_close(&result.plots[1].values, &[2.0, 3.0, 4.0, 5.0]);
-    assert_values_close(&result.plots[2].values, &[1.0, 2.0, 3.0, 4.0]);
-    assert_values_close(&result.plots[3].values, &[0.0, 0.0, 1.0, 2.0]);
+    assert_eq!(result.plots.len(), 5);
+    assert_values_close(&result.plots[0].values, &[2.0, 4.0, 6.0, 8.0]);
+    assert_values_close(&result.plots[1].values, &[2.0, 4.0, 6.0, 8.0]);
+    assert_values_close(&result.plots[2].values, &[3.0, 4.0, 5.0, 6.0]);
+    assert_values_close(&result.plots[3].values, &[2.0, 4.0, 6.0, 8.0]);
+    assert_values_close(&result.plots[4].values, &[0.0, 0.0, 1.0, 2.0]);
 }
 
 #[test]

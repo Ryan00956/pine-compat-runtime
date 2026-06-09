@@ -22,9 +22,12 @@ plot(colors.size())
 
 varip source = array.new_int()
 source.push(1)
+varip alias = source
+alias.push(20)
 varip copy = array.copy(source)
 copy.push(10)
 plot(source.size())
+plot(alias.size())
 plot(copy.size())
 
 branch_out = close - close
