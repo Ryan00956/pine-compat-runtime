@@ -309,11 +309,12 @@ The analyzer should reject these with clear diagnostics:
 - user-defined type forms outside the local scalar-field subset; Phase J
   accepts top-level `type` declarations with int/float/bool/string/color
   fields, `Type.new(...)` construction, local field reads, ordinary variables,
-  `var` persistence, scalar field mutation outside UDF/method bodies, and UDF
-  constructor returns, directly, through nested pure constructor-helper UDF
-  calls, or through same-local-UDT ternary or switch constructor branches, from
-  local UDT parameter scalar fields, scalar fields read through block-local UDT
-  aliases of those parameters, block-local scalar aliases of those fields,
+  local for-expression constructor results, `var` persistence, scalar field
+  mutation outside UDF/method bodies, and UDF constructor returns, directly,
+  through nested pure constructor-helper UDF calls, or through same-local-UDT
+  ternary or switch constructor branches, from local UDT parameter scalar
+  fields, scalar fields read through block-local UDT aliases of those
+  parameters, block-local scalar aliases of those fields,
   inferred scalar parameters, or block-local scalar aliases of those scalar
   parameters using positional or named constructor field arguments only; field mutation
   inside functions or methods, `varip`, UDT history references, UDT fields, UDT

@@ -520,10 +520,13 @@ value across bars and roll back during realtime forming updates like other
 ordinary `var` values. Local scalar-field reassignment evaluates the right-hand
 expression, replaces that field in the current UDT value, and writes the
 updated value back to the receiver symbol, including the receiver's persistent
-slot when applicable. UDFs may pass a local UDT value through a parameter and
-return that same parameter, or return a block-local alias chain that starts from
-that parameter, or return a nested passthrough UDF call that maps back to that
-parameter. Pure UDFs may also construct and return a local UDT, directly,
+slot when applicable. Local `for` expressions may construct a local UDT in
+their final body expression, return the final iteration's UDT value, and allow
+the caller to store that value and read its fields. UDFs may pass a local UDT
+value through a parameter and return that same parameter, or return a
+block-local alias chain that starts from that parameter, or return a nested
+passthrough UDF call that maps back to that parameter. Pure UDFs may also
+construct and return a local UDT, directly,
 through nested pure constructor-helper UDF calls, or through same-local-UDT
 ternary or switch constructor branches, from local UDT parameter scalar fields,
 scalar fields read through block-local UDT aliases of those parameters,

@@ -759,6 +759,13 @@ impl Analyzer {
             }
             return resolved_type_name;
         }
+        if let ExprKind::For { body, .. } = &expr.kind {
+            let last = body.last()?;
+            let StmtKind::Expr(result) = &last.kind else {
+                return None;
+            };
+            return self.user_type_name_of_expr_with_params(result, param_exprs);
+        }
         let name = match &expr.kind {
             ExprKind::Identifier(name) => name,
             ExprKind::QualifiedName(parts) if parts.len() == 1 => &parts[0],

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use pine_ir::{PineType, Qualifier, ValueKind};
 use pine_syntax::{
-    CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Program, Span, StmtKind, SwitchArm,
+    CallArg, Diagnostic, Expr, ExprKind, FunctionBody, Program, Span, Stmt, StmtKind, SwitchArm,
 };
 
 use crate::analyzer::calls::expr_name;
@@ -362,6 +362,7 @@ impl Analyzer {
                 ..
             } => self.user_type_name_of_ternary_branches(then_expr, else_expr),
             ExprKind::Switch { arms, .. } => self.user_type_name_of_switch_arms(arms),
+            ExprKind::For { body, .. } => self.user_type_name_of_for_body(body),
             _ => None,
         }
     }
@@ -417,6 +418,14 @@ impl Analyzer {
             }
         }
         resolved_type_name
+    }
+
+    fn user_type_name_of_for_body(&self, body: &[Stmt]) -> Option<String> {
+        let last = body.last()?;
+        let StmtKind::Expr(expr) = &last.kind else {
+            return None;
+        };
+        self.user_type_name_of_expr(expr)
     }
 
     pub(crate) fn user_type_name_of_udf_passthrough(

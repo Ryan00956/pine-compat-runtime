@@ -8,3 +8,6 @@ p = Point.new(close, open)
 plot(p.x + p.y)
 p.x := high
 plot(p.x + p.y)
+looped = for i = 0 to 1
+    Point.new(p.x + i, p.y)
+plot(looped.x + looped.y)

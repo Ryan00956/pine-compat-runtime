@@ -413,6 +413,28 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_user_type_for_expression_constructor_assignment() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+p = Point.new(close, open)
+made = for i = 0 to 1
+    Point.new(p.x + i, p.y)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_mismatched_user_type_ternary_constructor_branches() {
     let analysis = analyze(
         r#"type Point
