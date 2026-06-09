@@ -242,7 +242,7 @@ ta.dema	supported	fixture-derived double exponential moving average subset	tests
 ta.tema	supported	fixture-derived triple exponential moving average subset	tests/fixtures/runtime/dema_tema.pine
 ta.rma	supported	Wilder running moving average over numeric series sources with positive integer length	tests/fixtures/runtime/ta.pine
 ta.rsi	supported	RMA-smoothed gain/loss relative strength index over numeric series sources with positive integer length	tests/fixtures/runtime/ta.pine
-ta.macd	supported	fixture-derived executable subset	tests/fixtures/runtime/macd.pine
+ta.macd	supported	EMA-derived MACD, signal, and histogram tuple over numeric series sources with positive integer lengths	tests/fixtures/runtime/macd.pine
 ta.tsi	supported	fixture-derived True Strength Index subset	tests/fixtures/runtime/tsi.pine
 ta.cmo	supported	fixture-derived Chande Momentum Oscillator subset	tests/fixtures/runtime/cmo.pine
 ta.cci	supported	fixture-derived Commodity Channel Index subset	tests/fixtures/runtime/cci.pine
