@@ -12,13 +12,15 @@
   local UDT parameter, another local UDT parameter, or a nested method
   passthrough call that maps back to one of those method parameters, or
   construct and return a local UDT from receiver or local UDT parameter scalar
-  fields, block-local scalar aliases of those fields, inferred scalar
-  parameters, or block-local scalar aliases of those parameters using
+  fields, scalar fields read through block-local receiver or local UDT
+  parameter aliases, block-local scalar aliases of those fields, inferred
+  scalar parameters, or block-local scalar aliases of those parameters using
   positional or named constructor field arguments, and allow the caller to
   assign and field-read that returned value. Local scalar UDT
   fields can now be reassigned with `value.field := expr` outside UDF/method
   bodies. Pure UDFs may construct and return local UDT values from local UDT
-  parameter scalar fields, block-local scalar aliases of those fields, inferred
+  parameter scalar fields, scalar fields read through block-local UDT aliases
+  of those parameters, block-local scalar aliases of those fields, inferred
   scalar parameters, or block-local scalar aliases of those scalar parameters
   using positional or named constructor field arguments; field mutation inside
   functions or methods, imported UDT identity, UDT history, `varip`, nested UDT

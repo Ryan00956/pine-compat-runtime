@@ -20,6 +20,12 @@ cloneFromNamedAlias(p) =>
     ax = p.x
     ay = p.y
     Point.new(y=ay, x=ax)
+cloneFromObjectAlias(p) =>
+    copy = p
+    Point.new(copy.x, copy.y)
+cloneFromNamedObjectAlias(p) =>
+    copy = p
+    Point.new(y=copy.y, x=copy.x)
 make(x, y) => Point.new(x, y)
 makeAlias(x, y) =>
     ax = x
@@ -40,6 +46,8 @@ cloned = cloneFrom(p)
 clonedNamed = cloneFromNamed(p)
 clonedAlias = cloneFromAlias(p)
 clonedNamedAlias = cloneFromNamedAlias(p)
+clonedObjectAlias = cloneFromObjectAlias(p)
+clonedNamedObjectAlias = cloneFromNamedObjectAlias(p)
 made = make(close, open)
 madeAlias = makeAlias(close, open)
 madeNamed = makeNamed(close, open)
@@ -53,6 +61,8 @@ plot(cloned.x + cloned.y + bar_index)
 plot(clonedNamed.x + clonedNamed.y + bar_index)
 plot(clonedAlias.x + clonedAlias.y + bar_index)
 plot(clonedNamedAlias.x + clonedNamedAlias.y + bar_index)
+plot(clonedObjectAlias.x + clonedObjectAlias.y + bar_index)
+plot(clonedNamedObjectAlias.x + clonedNamedObjectAlias.y + bar_index)
 plot(made.x + made.y + bar_index)
 plot(madeAlias.x + madeAlias.y + bar_index)
 plot(madeNamed.x + madeNamed.y + bar_index)

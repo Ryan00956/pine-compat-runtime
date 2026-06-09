@@ -25,6 +25,15 @@ method cloneOtherAlias(Point p, Point other) =>
 method cloneOtherNamedAlias(Point p, Point other) =>
     ox = other.x
     Point.new(x=ox)
+method cloneObjectAlias(Point p) =>
+    copy = p
+    Point.new(copy.x)
+method cloneOtherObjectAlias(Point p, Point other) =>
+    copy = other
+    Point.new(copy.x)
+method cloneOtherNamedObjectAlias(Point p, Point other) =>
+    copy = other
+    Point.new(x=copy.x)
 method make(Point p, float x) => Point.new(x)
 method makeBlock(Point p, float x) =>
     ax = x
@@ -47,6 +56,9 @@ clonedOtherNamed = p.cloneOtherNamed(q)
 clonedAlias = p.cloneAlias()
 clonedOtherAlias = p.cloneOtherAlias(q)
 clonedOtherNamedAlias = p.cloneOtherNamedAlias(q)
+clonedObjectAlias = p.cloneObjectAlias()
+clonedOtherObjectAlias = p.cloneOtherObjectAlias(q)
+clonedOtherNamedObjectAlias = p.cloneOtherNamedObjectAlias(q)
 made = p.make(open)
 madeBlock = p.makeBlock(open)
 madeNamed = p.makeNamed(open)
@@ -63,6 +75,9 @@ plot(clonedOtherNamed.x + close)
 plot(clonedAlias.x + close)
 plot(clonedOtherAlias.x + close)
 plot(clonedOtherNamedAlias.x + close)
+plot(clonedObjectAlias.x + close)
+plot(clonedOtherObjectAlias.x + close)
+plot(clonedOtherNamedObjectAlias.x + close)
 plot(made.x + close)
 plot(madeBlock.x + close)
 plot(madeNamed.x + close)
