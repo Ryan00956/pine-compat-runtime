@@ -299,7 +299,7 @@ ta.roc	supported	series int/float source rate of change	tests/fixtures/runtime/r
 ta.rising	supported	series int/float trend-window checks	tests/fixtures/runtime/trend.pine
 ta.falling	supported	series int/float trend-window checks	tests/fixtures/runtime/trend.pine
 ta.barssince	supported	bool-compatible condition callsite state returning bars since the most recent true condition, 0 on true and na until the condition has first been true	tests/fixtures/runtime/barssince.pine
-ta.valuewhen	supported	fixture-derived executable subset	tests/fixtures/runtime/valuewhen.pine
+ta.valuewhen	supported	bool-compatible condition with valuewhen source and simple-int occurrence, returning the requested recent true-condition source value or na before enough matches	tests/fixtures/runtime/valuewhen.pine
 ta.cross	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
 ta.crossover	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
 ta.crossunder	supported	fixture-derived executable subset	tests/fixtures/runtime/cross.pine
