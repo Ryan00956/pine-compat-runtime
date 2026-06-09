@@ -202,7 +202,7 @@ math.exp	supported	fixture-derived executable subset	tests/fixtures/runtime/math
 math.acos	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.asin	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.atan	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
-math.sign	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
+math.sign	supported	numeric sign with fixture-backed odd symmetry relation	tests/fixtures/runtime/math.pine
 math.todegrees	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.toradians	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
 math.pi	supported	fixture-derived executable subset	tests/fixtures/runtime/math.pine
