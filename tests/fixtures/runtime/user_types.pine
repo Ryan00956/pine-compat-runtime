@@ -6,3 +6,5 @@ type Point
 
 p = Point.new(close, open)
 plot(p.x + p.y)
+p.x := high
+plot(p.x + p.y)

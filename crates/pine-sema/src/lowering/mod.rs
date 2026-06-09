@@ -236,6 +236,19 @@ impl Analyzer {
                 symbol: self.bound_symbol(name, statement.span)?.id,
                 value: self.lower_expr_with_params(value, param_exprs, param_types)?,
             },
+            StmtKind::FieldReassign {
+                receiver,
+                field,
+                value,
+            } => {
+                let parts = vec![receiver.clone(), field.clone()];
+                let access = self.user_type_field_access_for_lowering(&parts, statement.span)?;
+                HirStmtKind::FieldReassign {
+                    symbol: self.bound_symbol(receiver, statement.span)?.id,
+                    field_index: access.index,
+                    value: self.lower_expr_with_params(value, param_exprs, param_types)?,
+                }
+            }
             StmtKind::TupleDecl { names, value } => HirStmtKind::TupleDecl {
                 symbols: names
                     .iter()

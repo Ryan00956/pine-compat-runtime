@@ -575,6 +575,7 @@ fn visit_statement_exprs(statement: &Stmt, visitor: &mut impl FnMut(&Expr)) {
         StmtKind::Expr(expr)
         | StmtKind::Decl { value: expr, .. }
         | StmtKind::Reassign { value: expr, .. }
+        | StmtKind::FieldReassign { value: expr, .. }
         | StmtKind::TupleDecl { value: expr, .. } => visit_expr(expr, visitor),
         StmtKind::If {
             condition,

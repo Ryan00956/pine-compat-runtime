@@ -104,6 +104,7 @@ pub(crate) fn contains_output_or_declaration_call(expr: &Expr) -> bool {
                     StmtKind::Expr(expr) => contains_output_or_declaration_call(expr),
                     StmtKind::Decl { value, .. }
                     | StmtKind::Reassign { value, .. }
+                    | StmtKind::FieldReassign { value, .. }
                     | StmtKind::TupleDecl { value, .. } => {
                         contains_output_or_declaration_call(value)
                     }
@@ -139,6 +140,7 @@ pub(crate) fn statement_contains_output_or_declaration_call(statement: &Stmt) ->
         StmtKind::Expr(expr) => contains_output_or_declaration_call(expr),
         StmtKind::Decl { value, .. }
         | StmtKind::Reassign { value, .. }
+        | StmtKind::FieldReassign { value, .. }
         | StmtKind::TupleDecl { value, .. } => contains_output_or_declaration_call(value),
         StmtKind::If {
             condition,

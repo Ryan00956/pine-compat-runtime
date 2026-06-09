@@ -3,5 +3,7 @@ type Point
     float x
 
 p = Point.new(close)
-p.x := open
-plot(p.x)
+touch() =>
+    p.x := open
+    p.x
+plot(touch())

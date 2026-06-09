@@ -16,6 +16,7 @@ improved over time, but codes should remain stable once published.
 ## Parsing
 
 - `E_PARSE_BLOCK`: invalid or unterminated statement block.
+- `E_PARSE_ASSIGN`: invalid reassignment.
 - `E_PARSE_DECL`: invalid declaration.
 - `E_PARSE_EXPECTED`: expected token was missing.
 - `E_PARSE_EXPR`: expected expression.
@@ -66,6 +67,8 @@ improved over time, but codes should remain stable once published.
 - `E_UDT_DUPLICATE`: duplicate user-defined type declaration.
 - `E_UDT_FIELD_DUPLICATE`: duplicate field in a user-defined type declaration.
 - `E_UDT_FIELD_TYPE`: unsupported or unknown user-defined type field type.
+- `E_UDT_FIELD_MUTATION`: field reassignment targets a value that is not a
+  supported local user-defined type.
 - `E_UDT_UNKNOWN_FIELD`: field read references a field not declared on the
   receiver's user-defined type.
 - `E_METHOD_ARG_TYPE`: user-defined method argument type does not match the

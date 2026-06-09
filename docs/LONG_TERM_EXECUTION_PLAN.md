@@ -505,9 +505,10 @@ Maintenance tails:
 - Remote registry lookup, version resolution, re-exports, wildcard/unaliased
   imports, imported UDT identity, imported methods, private exported UDTs, and
   advanced library visibility remain unsupported.
-- UDT field mutation, UDT history references, `varip` UDTs, nested UDT fields,
-  UDT arrays, recursive UDTs, method side effects, recursive methods, generic
-  methods, and strategy-library interactions remain unsupported.
+- UDT field mutation inside functions or methods, UDT history references,
+  `varip` UDTs, nested UDT fields, UDT arrays, recursive UDTs, method side
+  effects, recursive methods, generic methods, and strategy-library
+  interactions remain unsupported.
 
 Risks:
 

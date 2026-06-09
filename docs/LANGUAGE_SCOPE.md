@@ -309,9 +309,9 @@ The analyzer should reject these with clear diagnostics:
 - user-defined type forms outside the local scalar-field subset; Phase J
   accepts top-level `type` declarations with int/float/bool/string/color
   fields, `Type.new(...)` construction, local field reads, ordinary variables,
-  and `var` persistence only; UDT values are immutable, and field mutation,
-  `varip`, UDT history references, UDT fields, UDT arrays, and imported UDTs
-  remain rejected
+  `var` persistence, and scalar field mutation outside UDF/method bodies only;
+  field mutation inside functions or methods, `varip`, UDT history references,
+  UDT fields, UDT arrays, and imported UDTs remain rejected
 - user-defined method forms outside pure local-UDT receiver methods with scalar
   or local UDT parameters and direct or nested-method UDT parameter passthrough
   returns; side effects, recursion, imported methods, unknown receivers,

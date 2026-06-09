@@ -152,6 +152,11 @@ pub enum HirStmtKind {
         symbol: SymbolId,
         value: HirExpr,
     },
+    FieldReassign {
+        symbol: SymbolId,
+        field_index: usize,
+        value: HirExpr,
+    },
     TupleDecl {
         symbols: Vec<SymbolId>,
         value: HirExpr,

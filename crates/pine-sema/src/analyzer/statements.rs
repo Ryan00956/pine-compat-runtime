@@ -242,6 +242,33 @@ impl Analyzer {
                     self.bind_symbol(name, statement.span, symbol);
                 }
             }
+            StmtKind::FieldReassign {
+                receiver,
+                field,
+                value,
+            } => {
+                if self.function_depth > 0 {
+                    self.unsupported(
+                        "function_side_effect",
+                        "mutating user-defined type fields inside user-defined functions or methods is not supported",
+                        statement.span,
+                    );
+                }
+                let target = self.resolve_user_type_field_mutation(receiver, field, statement.span);
+                let value_type = self.analyze_expr(value);
+                if let (Some(target), Some(value_type)) = (target, value_type) {
+                    self.validate_assignment(
+                        &format!("{receiver}.{field}"),
+                        target.pine_type,
+                        value_type,
+                        statement.span,
+                    );
+                    self.compatibility.supported.push(FeatureUse {
+                        feature: "user-defined type field mutation".to_owned(),
+                        span: statement.span,
+                    });
+                }
+            }
             StmtKind::TupleDecl { .. } => {
                 self.analyze_tuple_decl(statement);
             }

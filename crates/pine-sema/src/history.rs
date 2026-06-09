@@ -55,6 +55,7 @@ pub(crate) fn max_bars_back_from_stmt(statement: &HirStmt) -> Option<u32> {
         HirStmtKind::Expr(expr)
         | HirStmtKind::Decl { value: expr, .. }
         | HirStmtKind::Reassign { value: expr, .. }
+        | HirStmtKind::FieldReassign { value: expr, .. }
         | HirStmtKind::TupleDecl { value: expr, .. } => max_bars_back_from_expr(expr),
         HirStmtKind::If {
             condition,
@@ -163,6 +164,7 @@ impl HistoryRequirementCollector {
             HirStmtKind::Expr(expr)
             | HirStmtKind::Decl { value: expr, .. }
             | HirStmtKind::Reassign { value: expr, .. }
+            | HirStmtKind::FieldReassign { value: expr, .. }
             | HirStmtKind::TupleDecl { value: expr, .. } => self.visit_expr(expr),
             HirStmtKind::If {
                 condition,

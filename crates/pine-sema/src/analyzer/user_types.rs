@@ -34,6 +34,10 @@ pub(crate) struct UdtFieldAccess {
     pub(crate) index: usize,
 }
 
+pub(crate) struct UdtFieldMutation {
+    pub(crate) pine_type: PineType,
+}
+
 pub(crate) fn span_key(span: Span) -> (usize, usize) {
     (span.start, span.end)
 }
@@ -187,6 +191,48 @@ impl Analyzer {
             symbol.pine_type.qualifier,
             field.pine_type.kind,
         ))
+    }
+
+    pub(crate) fn resolve_user_type_field_mutation(
+        &mut self,
+        receiver: &str,
+        field_name: &str,
+        span: Span,
+    ) -> Option<UdtFieldMutation> {
+        let Some(symbol) = self.scope.resolve(receiver) else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_UNKNOWN_SYMBOL",
+                format!("cannot reassign unknown symbol `{receiver}`"),
+                span,
+            ));
+            return None;
+        };
+        let Some(type_name) = self.symbol_user_types.get(&symbol.id).cloned() else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_UDT_FIELD_MUTATION",
+                format!("cannot mutate field `{field_name}` on non-UDT `{receiver}`"),
+                span,
+            ));
+            return None;
+        };
+        let user_type = self.user_types.get(&type_name)?;
+        let Some(field_kind) = user_type
+            .fields
+            .iter()
+            .find(|field| field.name == field_name)
+            .map(|field| field.pine_type.kind)
+        else {
+            self.diagnostics.push(Diagnostic::error(
+                "E_UDT_UNKNOWN_FIELD",
+                format!("unknown field `{field_name}` on `{type_name}`"),
+                span,
+            ));
+            return None;
+        };
+        self.bind_symbol(receiver, span, symbol);
+        Some(UdtFieldMutation {
+            pine_type: PineType::new(symbol.pine_type.qualifier, field_kind),
+        })
     }
 
     pub(crate) fn type_of_bound_user_type_field_access(

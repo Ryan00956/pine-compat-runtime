@@ -55,6 +55,29 @@ impl<'a> HistoricalRuntime<'a> {
                 self.assign_persistent_symbol(*symbol, value.clone());
                 self.set_symbol_value(*symbol, value);
             }
+            HirStmtKind::FieldReassign {
+                symbol,
+                field_index,
+                value,
+            } => {
+                let value = self.eval_expr(value)?;
+                let mut fields = match self.current_symbols.get(symbol).cloned() {
+                    Some(PineValue::UserType(fields)) => fields,
+                    Some(PineValue::Na) | None => return Ok(StmtControl::None),
+                    Some(_) => {
+                        return Err(RuntimeError {
+                            message: "field mutation receiver is not a user-defined value"
+                                .to_owned(),
+                        });
+                    }
+                };
+                if *field_index < fields.len() {
+                    fields[*field_index] = value;
+                }
+                let updated = PineValue::UserType(fields);
+                self.assign_persistent_symbol(*symbol, updated.clone());
+                self.set_symbol_value(*symbol, updated);
+            }
             HirStmtKind::TupleDecl { symbols, value } => {
                 let value = self.eval_expr(value)?;
                 let PineValue::Tuple(values) = value else {

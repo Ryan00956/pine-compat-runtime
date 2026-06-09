@@ -58,6 +58,11 @@ pub enum StmtKind {
         name: String,
         value: Expr,
     },
+    FieldReassign {
+        receiver: String,
+        field: String,
+        value: Expr,
+    },
     TupleDecl {
         names: Vec<String>,
         value: Expr,

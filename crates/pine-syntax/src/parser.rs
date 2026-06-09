@@ -172,25 +172,29 @@ impl Parser {
                     .is_some_and(|token| matches!(token.kind, TokenKind::Identifier(_)))
                 && self.nth_at(3, TokenKind::ColonEq)
             {
-                let end = self
-                    .tokens
-                    .get(self.pos + 2)
-                    .map_or(start, |token| token.span);
-                let feature = if name == "strategy" {
-                    "strategy state variable mutation"
-                } else {
-                    "user-defined type field mutation"
+                self.bump();
+                self.bump();
+                let TokenKind::Identifier(field) = self.current().kind.clone() else {
+                    self.error_here("E_PARSE_ASSIGN", "expected field name after `.`");
+                    return None;
                 };
-                while !self.at(TokenKind::Newline)
-                    && !self.at(TokenKind::Dedent)
-                    && !self.at(TokenKind::Eof)
-                {
-                    self.bump();
+                self.bump();
+                self.expect(TokenKind::ColonEq, "expected `:=` in field reassignment")?;
+                let value = self.parse_expr(0)?;
+                if name == "strategy" {
+                    return Some(Stmt {
+                        span: start.merge(value.span),
+                        kind: StmtKind::Unsupported {
+                            feature: "strategy state variable mutation".to_owned(),
+                        },
+                    });
                 }
                 return Some(Stmt {
-                    span: start.merge(end),
-                    kind: StmtKind::Unsupported {
-                        feature: feature.to_owned(),
+                    span: start.merge(value.span),
+                    kind: StmtKind::FieldReassign {
+                        receiver: name,
+                        field,
+                        value,
                     },
                 });
             }

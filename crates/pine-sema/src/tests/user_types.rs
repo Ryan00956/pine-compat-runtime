@@ -130,12 +130,42 @@ varip p = Point.new(close)
 }
 
 #[test]
-fn rejects_user_type_field_mutation() {
+fn accepts_user_type_field_mutation() {
     let analysis = analyze(
         r#"type Point
     float x
 p = Point.new(close)
 p.x := 1
+plot(p.x)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| { feature.feature == "user-defined type field mutation" })
+    );
+}
+
+#[test]
+fn rejects_user_type_field_mutation_inside_function() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+p = Point.new(close)
+touch() =>
+    p.x := 1
+    p.x
+plot(touch())
 "#,
     );
 
@@ -144,7 +174,9 @@ p.x := 1
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| { feature.feature == "user-defined type field mutation" })
+            .any(|feature| { feature.feature == "function_side_effect" }),
+        "{:?}",
+        analysis.compatibility.unsupported
     );
     assert!(analysis.hir.is_none());
 }

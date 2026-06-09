@@ -512,19 +512,23 @@ runtime store before executing a forming update, so array mutations and copies
 made during a forming update do not leak into the confirmed store until a
 confirmed update is committed.
 
-For local user-defined types, `Type.new(...)` creates an immutable runtime value
-containing the supported scalar field values in declaration order. Field reads
-return the stored scalar value. Normal declarations allocate a fresh UDT value
-when reached on each bar; `var` UDT declarations preserve the last confirmed
-UDT value across bars and roll back during realtime forming updates like other
-ordinary `var` values. UDFs may pass a local UDT value through a parameter and
+For local user-defined types, `Type.new(...)` creates a runtime value containing
+the supported scalar field values in declaration order. Field reads return the
+stored scalar value. Normal declarations allocate a fresh UDT value when
+reached on each bar; `var` UDT declarations preserve the last confirmed UDT
+value across bars and roll back during realtime forming updates like other
+ordinary `var` values. Local scalar-field reassignment evaluates the right-hand
+expression, replaces that field in the current UDT value, and writes the
+updated value back to the receiver symbol, including the receiver's persistent
+slot when applicable. UDFs may pass a local UDT value through a parameter and
 return that same parameter, or return a block-local alias chain that starts from
 that parameter, or return a nested passthrough UDF call that maps back to that
 parameter. Positional and named arguments both preserve the parameter identity.
 The caller may then store the returned value and read its fields. Field
-mutation, UDF construction from untyped scalar parameters, UDT history
-references, UDT `varip`, nested UDT fields, UDT arrays, and imported UDT values
-are rejected before runtime execution or remain outside the executable subset.
+mutation inside UDFs or methods, UDF construction from untyped scalar
+parameters, UDT history references, UDT `varip`, nested UDT fields, UDT arrays,
+and imported UDT values are rejected before runtime execution or remain outside
+the executable subset.
 
 Pure local UDT methods execute as receiver functions. The receiver value is
 passed as the first internal argument and the method body is evaluated through

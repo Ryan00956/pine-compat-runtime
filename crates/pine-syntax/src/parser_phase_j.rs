@@ -467,9 +467,16 @@ mod tests {
     fn parses_field_mutation_as_unsupported_boundary() {
         let parsed = parse("p.x := 1\n");
 
-        let StmtKind::Unsupported { feature } = &parsed.program.statements[0].kind else {
-            panic!("expected unsupported field mutation");
+        let StmtKind::FieldReassign {
+            receiver,
+            field,
+            value,
+        } = &parsed.program.statements[0].kind
+        else {
+            panic!("expected field mutation");
         };
-        assert_eq!(feature, "user-defined type field mutation");
+        assert_eq!(receiver, "p");
+        assert_eq!(field, "x");
+        assert!(matches!(value.kind, ExprKind::Literal(_)));
     }
 }

@@ -72,6 +72,15 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
             name: name.clone(),
             value: rewrite_expr(value, context),
         },
+        StmtKind::FieldReassign {
+            receiver,
+            field,
+            value,
+        } => StmtKind::FieldReassign {
+            receiver: receiver.clone(),
+            field: field.clone(),
+            value: rewrite_expr(value, context),
+        },
         StmtKind::TupleDecl { names, value } => StmtKind::TupleDecl {
             names: names.clone(),
             value: rewrite_expr(value, context),

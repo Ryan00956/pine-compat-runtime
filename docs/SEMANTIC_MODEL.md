@@ -435,16 +435,18 @@ string arrays.
 arrays.
 Local user-defined types are part of the executable Phase J subset only for
 top-level scalar `int`/`float`/`bool`/`string`/`color` fields. `Type.new(...)`
-constructs immutable runtime values, field reads are typed from the local UDT
-declaration, and ordinary variables plus `var` may hold those values. UDF
-parameter passthrough is supported when the function returns the UDT parameter
-itself, when a block-bodied function returns a local alias chain that starts
-from that parameter, or when a nested passthrough UDF call maps back to that
-parameter. Positional and named arguments both preserve the parameter identity,
-so the returned value can be assigned and field-read at the callsite. UDT
-history references, field mutation, `varip`, nested UDT fields, UDT arrays,
-constructor inference from untyped scalar UDF parameters, and imported UDT
-identity remain outside the claim.
+constructs runtime values, field reads are typed from the local UDT
+declaration, and ordinary variables plus `var` may hold those values. Local
+scalar fields can be reassigned with `value.field := expr` outside UDF/method
+bodies; the assigned expression must be compatible with the declared field
+type. UDF parameter passthrough is supported when the function returns the UDT
+parameter itself, when a block-bodied function returns a local alias chain that
+starts from that parameter, or when a nested passthrough UDF call maps back to
+that parameter. Positional and named arguments both preserve the parameter
+identity, so the returned value can be assigned and field-read at the callsite.
+UDT history references, field mutation inside UDFs or methods, `varip`, nested
+UDT fields, UDT arrays, constructor inference from untyped scalar UDF
+parameters, and imported UDT identity remain outside the claim.
 
 Pure user-defined methods are supported for local UDT receivers with scalar or
 local UDT parameters, including direct and nested method UDT parameter
