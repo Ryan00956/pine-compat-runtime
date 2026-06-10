@@ -3613,29 +3613,16 @@ def test_run_script_returns_margin_call_contract():
 
 def test_run_script_returns_strategy_trade_outcome_count_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_trade_outcome_counts.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_trade_outcome_counts.json").read_text()
+    )
+
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv"),
     )
 
-    assert [plot["values"] for plot in result["plots"]] == [
-        [0, 0, 1, 1, 1, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [0, 0, 1, 1, 1, 2, 2, 2, 3],
-        [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        [0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 2.0, 2.0, 2.0],
-        [None, None, 1.0, 1.0, 1.0, -0.5, -0.5, -0.5, -1.0 / 3.0],
-        [None, None, 50.0, 50.0, 50.0, 0.0, 0.0, 0.0, 0.0],
-        [None, None, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        [None, None, 50.0, 50.0, 50.0, 50.0, 50.0, 50.0, 50.0],
-        [None, None, None, None, None, 2.0, 2.0, 2.0, 2.0],
-        [None, None, None, None, None, 50.0, 50.0, 50.0, 50.0],
-    ]
-    assert [trade["profit"] for trade in result["strategy"]["trades"]] == [1.0, -2.0, 0.0]
-    assert "winTrades" not in result["strategy"]
-    assert "lossTrades" not in result["strategy"]
-    assert "evenTrades" not in result["strategy"]
+    assert result == expected
 
 
 def test_run_script_returns_strategy_profit_percent_plots():
