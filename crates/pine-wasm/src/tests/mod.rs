@@ -2032,19 +2032,14 @@ fn runs_strategy_exit_stop_profit_bracket_while_flat_from_csv_as_noop_json() {
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_exit_stop_profit_bracket_while_flat_noop.pine"
         ),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy exit stop profit bracket while-flat no-op script should run");
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    assert_eq!(parsed["strategy"]["orders"], serde_json::json!([]));
-    assert_eq!(parsed["strategy"]["trades"], serde_json::json!([]));
-    assert_eq!(parsed["strategy"]["position"], serde_json::json!([]));
-    assert_eq!(parsed["strategy"]["diagnostics"], serde_json::json!([]));
-    assert!(!output.contains("\"direction\":\"strategy.exit\""));
-    assert!(!output.contains("pending"));
-    assert!(!output.contains("reserved"));
+    assert_snapshot(
+        "runtime_strategy_exit_stop_profit_bracket_while_flat_noop.json",
+        &output,
+    );
 }
 
 #[test]
