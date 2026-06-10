@@ -59,6 +59,7 @@ standard_with_na = array.from(close, na, high)
 standardized_with_na = array.standardize(standard_with_na)
 plot(standardized_with_na.size())
 plot(na(standardized_with_na.get(1)) ? 1 : 0)
+plot(standardized_with_na.get(0) + standardized_with_na.get(2))
 
 covariance_x = array.from(1, 2, 3)
 covariance_y = array.from(1, 5, 7)
