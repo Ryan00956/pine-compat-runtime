@@ -1197,6 +1197,52 @@ fn analyze_script_reports_unsupported_user_method_fixture() {
 }
 
 #[test]
+fn analyze_script_reports_unsupported_user_type_varip_fixture() {
+    let output = analyze_script(include_str!(
+        "../../../../tests/fixtures/sema/unsupported_user_type_varip.pine"
+    ));
+
+    assert!(output.contains("\"executable\":false"));
+    assert!(output.contains("\"code\":\"E_UNSUPPORTED_FEATURE\""));
+    assert!(output.contains("\"feature\":\"varip\""));
+    assert!(output.contains("other value families"));
+}
+
+#[test]
+fn analyze_script_reports_unsupported_user_type_field_mutation_fixture() {
+    let output = analyze_script(include_str!(
+        "../../../../tests/fixtures/sema/unsupported_user_type_field_mutation.pine"
+    ));
+
+    assert!(output.contains("\"executable\":false"));
+    assert!(output.contains("\"code\":\"E_UNSUPPORTED_FEATURE\""));
+    assert!(output.contains("\"feature\":\"function_side_effect\""));
+    assert!(output.contains("mutating user-defined type fields"));
+}
+
+#[test]
+fn analyze_script_reports_unsupported_user_method_side_effect_fixture() {
+    let output = analyze_script(include_str!(
+        "../../../../tests/fixtures/sema/unsupported_user_method_side_effect.pine"
+    ));
+
+    assert!(output.contains("\"executable\":false"));
+    assert!(output.contains("\"code\":\"E_UNSUPPORTED_FEATURE\""));
+    assert!(output.contains("\"feature\":\"function_side_effect\""));
+    assert!(output.contains("inside user-defined functions"));
+}
+
+#[test]
+fn analyze_script_reports_unsupported_non_array_method_fixture() {
+    let output = analyze_script(include_str!(
+        "../../../../tests/fixtures/sema/unsupported_non_array_method.pine"
+    ));
+
+    assert!(output.contains("\"executable\":false"));
+    assert!(output.contains("\"code\":\"E_METHOD_RECEIVER_TYPE\""));
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),

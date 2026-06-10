@@ -1253,6 +1253,63 @@ def test_compile_script_reports_unsupported_user_method_fixture():
         raise AssertionError("unsupported UDT method fixture should fail")
 
 
+def test_compile_script_reports_unsupported_user_type_varip_fixture():
+    source = (ROOT / "tests/fixtures/sema/unsupported_user_type_varip.pine").read_text()
+
+    try:
+        pine_compat.compile_script(source)
+    except ValueError as error:
+        message = str(error)
+        assert "E_UNSUPPORTED_FEATURE" in message
+        assert "`varip` is not supported" in message
+        assert "other value families" in message
+    else:
+        raise AssertionError("unsupported UDT varip fixture should fail")
+
+
+def test_compile_script_reports_unsupported_user_type_field_mutation_fixture():
+    source = (
+        ROOT / "tests/fixtures/sema/unsupported_user_type_field_mutation.pine"
+    ).read_text()
+
+    try:
+        pine_compat.compile_script(source)
+    except ValueError as error:
+        message = str(error)
+        assert "E_UNSUPPORTED_FEATURE" in message
+        assert "`function_side_effect` is not supported" in message
+        assert "mutating user-defined type fields" in message
+    else:
+        raise AssertionError("unsupported UDT field mutation fixture should fail")
+
+
+def test_compile_script_reports_unsupported_user_method_side_effect_fixture():
+    source = (
+        ROOT / "tests/fixtures/sema/unsupported_user_method_side_effect.pine"
+    ).read_text()
+
+    try:
+        pine_compat.compile_script(source)
+    except ValueError as error:
+        message = str(error)
+        assert "E_UNSUPPORTED_FEATURE" in message
+        assert "`function_side_effect` is not supported" in message
+        assert "inside user-defined functions" in message
+    else:
+        raise AssertionError("unsupported UDT method side-effect fixture should fail")
+
+
+def test_compile_script_reports_unsupported_non_array_method_fixture():
+    source = (ROOT / "tests/fixtures/sema/unsupported_non_array_method.pine").read_text()
+
+    try:
+        pine_compat.compile_script(source)
+    except ValueError as error:
+        assert "E_METHOD_RECEIVER_TYPE" in str(error)
+    else:
+        raise AssertionError("unsupported non-array method fixture should fail")
+
+
 def test_run_script_returns_import_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/import.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_import.json").read_text())
