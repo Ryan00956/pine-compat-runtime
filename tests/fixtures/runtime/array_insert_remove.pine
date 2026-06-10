@@ -7,6 +7,11 @@ removed = ints.remove(0)
 plot(removed)
 plot(ints.get(0) * 10 + ints.get(1))
 
+floats = array.new_float()
+floats.push(close)
+floats.insert(1, high)
+plot(floats.get(0) + floats.get(1))
+
 words = array.new_string()
 words.push("a")
 words.push("c")
