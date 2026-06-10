@@ -49,6 +49,7 @@ Runtime fixtures:
 - `tests/fixtures/runtime/import.pine`
 - `tests/fixtures/runtime/import_state.pine`
 - `tests/fixtures/runtime/user_types.pine`
+- `tests/fixtures/runtime/user_type_functions.pine`
 - `tests/fixtures/runtime/user_methods.pine`
 
 Realtime fixtures:
@@ -70,6 +71,7 @@ Semantic fixtures:
 - `tests/fixtures/sema/unsupported_user_type_field_mutation.pine`
 - `tests/fixtures/sema/unsupported_user_method.pine`
 - `tests/fixtures/sema/unsupported_user_method_side_effect.pine`
+- `tests/fixtures/sema/unsupported_non_array_method.pine`
 
 The matrix snapshot records the same fixture paths and keeps unsupported tails
 visible in the row notes.
@@ -84,8 +86,15 @@ Manual and automated host coverage on the closeout workspace:
 
 - `cargo test -p pine-cli library_source`
 - `cargo test -p pine-cli runs_imported_function_with_library_source_integration_fixture`
+- `python3 -m pytest python/tests/test_bindings.py -q -k "user_type_functions_fixture_contract or user_methods_fixture_contract"`
+- `python3 -m pytest python/tests/test_bindings.py -q -k "unsupported_user_type_field_fixture or unsupported_user_method_fixture"`
+- `python3 -m pytest python/tests/test_bindings.py -q -k "unsupported_user_type_varip_fixture or unsupported_user_type_field_mutation_fixture or unsupported_user_method_side_effect_fixture or unsupported_non_array_method_fixture"`
 - `python3 -m pytest python/tests`
 - `cargo test -p pine-wasm library_source_json`
+- `cargo test -p pine-wasm run_script_csv_returns_user_type_functions_fixture_contract`
+- `cargo test -p pine-wasm run_script_csv_returns_user_methods_fixture_contract`
+- `cargo test -p pine-wasm analyze_script_reports_unsupported_user`
+- `cargo test -p pine-wasm analyze_script_reports_unsupported_non_array_method_fixture`
 - `cargo run -p pine-cli -- matrix`
 
 WASM request-bar dataset injection remains a separate Phase F gap. It does not
@@ -108,11 +117,12 @@ The supported subset preserves diagnostic-only boundaries:
 - recursive imported functions: `E_RECURSIVE_FUNCTION`
 - imported UDT constructors: `E_IMPORT_UNKNOWN_EXPORT`
 - imported methods: `E_UNKNOWN_METHOD`
+- unsupported UDT field types: `E_UDT_FIELD_TYPE`
 - unsupported UDT forms: `E_UNSUPPORTED_FEATURE`
 - unsupported UDT field mutation: `E_UNSUPPORTED_FEATURE`
 - unsupported UDT `varip`: `E_UNSUPPORTED_FEATURE`
 - unsupported user method declarations and side effects:
-  `E_UNSUPPORTED_FEATURE`
+  `E_METHOD_RECEIVER_TYPE` or `E_UNSUPPORTED_FEATURE`
 
 ## Verification
 
