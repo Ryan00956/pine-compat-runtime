@@ -1532,11 +1532,16 @@ def test_run_script_returns_syminfo_fixture_contract():
 
 def test_run_script_returns_generic_input_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/generic_input.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_generic_input.json").read_text()
+    )
 
-    assert result["diagnostics"] == []
-    assert len(result["plots"]) == 1
-    assert result["plots"][0]["values"] == [None, 2.25, 3.75]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_timeframe_fixture_contract():

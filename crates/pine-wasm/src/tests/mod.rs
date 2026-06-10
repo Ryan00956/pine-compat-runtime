@@ -2044,15 +2044,11 @@ fn run_script_csv_returns_syminfo_fixture_contract() {
 fn run_script_csv_returns_generic_input_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/generic_input.pine"),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("generic input fixture should run");
 
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 1);
-    assert_eq!(plots[0]["values"], serde_json::json!([null, 2.25]));
+    assert_snapshot("runtime_generic_input.json", &output);
 }
 
 #[test]
