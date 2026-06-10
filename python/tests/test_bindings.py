@@ -235,34 +235,14 @@ def test_run_script_returns_alert_fixture_contract():
 
 def test_run_script_returns_label_new_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/label_new.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads((ROOT / "tests/snapshots/runtime_label_new.json").read_text())
 
-    assert result["diagnostics"] == []
-    assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
-    assert result["labels"] == [
-        {
-            "id": 1,
-            "snapshots": [
-                {
-                    "barIndex": 0,
-                    "exists": True,
-                    "x": 0,
-                    "y": 1.0,
-                    "text": "start",
-                    "xloc": "xloc.bar_index",
-                    "yloc": "yloc.price",
-                    "color": None,
-                    "style": "label.style_label_down",
-                    "textColor": None,
-                    "size": "size.normal",
-                    "tooltip": "",
-                    "textAlign": "text.align_center",
-                    "textFontFamily": "font.family_default",
-                    "textFormatting": 0,
-                }
-            ],
-        }
-    ]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_label_mutation_fixture_contract():
