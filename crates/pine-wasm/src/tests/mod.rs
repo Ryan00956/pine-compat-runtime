@@ -141,26 +141,11 @@ fn run_script_csv_returns_plotarrow_fixture_contract() {
 fn run_script_csv_returns_plotbar_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/plotbar.pine"),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("plotbar fixture should run");
 
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    assert_eq!(parsed["plots"][0]["values"], serde_json::json!([1, 2, 3]));
-    assert_eq!(
-        parsed["plotBars"],
-        serde_json::json!([
-            {
-                "id": 1,
-                "opens": [null, 2, 3],
-                "highs": [null, 2, 3],
-                "lows": [null, 2, 3],
-                "closes": [null, 2, 3],
-                "colors": [null, 32768, 32768]
-            }
-        ])
-    );
+    assert_snapshot("runtime_plotbar.json", &output);
 }
 
 #[test]

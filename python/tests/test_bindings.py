@@ -169,20 +169,14 @@ def test_run_script_returns_plotarrow_fixture_contract():
 
 def test_run_script_returns_plotbar_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/plotbar.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads((ROOT / "tests/snapshots/runtime_plotbar.json").read_text())
 
-    assert result["diagnostics"] == []
-    assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
-    assert result["plotBars"] == [
-        {
-            "id": 1,
-            "opens": [None, 2.0, 3.0],
-            "highs": [None, 2.0, 3.0],
-            "lows": [None, 2.0, 3.0],
-            "closes": [None, 2.0, 3.0],
-            "colors": [None, 32768, 32768],
-        }
-    ]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_plotcandle_fixture_contract():
