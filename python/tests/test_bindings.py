@@ -3363,38 +3363,16 @@ def test_run_script_returns_strategy_exit_trade_count_plots():
 
 def test_run_script_returns_strategy_closedtrades_field_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_closedtrades_fields.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_closedtrades_fields.json").read_text()
+    )
+
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/bars.csv"),
     )
 
-    assert [plot["values"] for plot in result["plots"]] == [
-        [None, None, 2.0, 2.0],
-        [0, 0, 1, 1],
-        [None, None, 3.0, 3.0],
-        [0, 0, 1, 1],
-        [None, None, 1, 1],
-        [None, None, 2, 2],
-        [None, None, 2, 2],
-        [None, None, 3, 3],
-        [None, None, 0.0, 0.0],
-        [None, None, 2.0, 2.0],
-        [None, None, 2.0, 2.0],
-        [None, None, 2.0, 2.0],
-        [None, None, 0.0, 0.0],
-        [1, 1, 1, 1],
-        [1, 1, 1, 1],
-        [None, None, None, None],
-    ]
-    assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
-    assert result["strategy"]["trades"][0]["entryPrice"] == 2.0
-    assert result["strategy"]["trades"][0]["exitPrice"] == 3.0
-    assert result["strategy"]["trades"][0]["entryTime"] == 2
-    assert result["strategy"]["trades"][0]["exitTime"] == 3
-    assert result["strategy"]["trades"][0]["qty"] == 2.0
-    assert result["strategy"]["trades"][0]["profit"] == 2.0
-    assert "closedTrades" not in result["strategy"]
-    assert "openTrades" not in result["strategy"]
+    assert result == expected
 
 
 def test_run_script_returns_strategy_cash_per_contract_commission_plots():
