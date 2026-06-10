@@ -4,6 +4,10 @@ var tables = array.new_table()
 if bar_index == 0
     first = table.new(position.top_right, 1, 1)
     second = table.new(position.bottom_left, 1, 1)
+    empty_slot = array.new_table(1)
+    seeded = array.new_table(2, first)
+    if na(empty_slot.get(0)) and seeded.size() == 2
+        table.cell(seeded.get(1), 0, 0, "seeded")
     tables.push(first)
     tables.unshift(second)
     tables.insert(1, first)
