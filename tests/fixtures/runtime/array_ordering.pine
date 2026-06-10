@@ -52,6 +52,8 @@ plot(word_indices.get(0) == 3 and word_indices.get(1) == 2 and word_indices.get(
 empty_sort = array.new_float()
 array.sort(empty_sort)
 plot(empty_sort.size())
+empty_sort_indices = empty_sort.sort_indices()
+plot(empty_sort_indices.size())
 
 colors = array.new_color()
 colors.push(color.red)
