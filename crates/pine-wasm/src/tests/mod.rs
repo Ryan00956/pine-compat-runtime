@@ -2701,15 +2701,12 @@ fn runs_strategy_same_tick_stop_limit_entries_fixture_contract() {
 #[test]
 fn runs_strategy_default_quantity_from_csv_to_strategy_json() {
     let output = run_script_csv(
-        "strategy(\"demo\", default_qty_type=strategy.fixed, default_qty_value=3)\nif bar_index == 1\n    strategy.entry(\"D\", strategy.long)\nplot(strategy.position_size)\n",
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_default_quantity.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy default quantity script should run");
 
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"D\",\"barIndex\":2,\"time\":2,\"direction\":\"strategy.long\",\"qty\":3,\"price\":3}]"
-    ));
-    assert!(output.contains("\"values\":[0,0,3]"));
+    assert_snapshot("runtime_strategy_default_quantity.json", &output);
 }
 
 #[test]
