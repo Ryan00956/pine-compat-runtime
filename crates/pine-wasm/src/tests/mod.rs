@@ -1254,71 +1254,14 @@ fn run_script_csv_returns_math_edge_cases_as_json_null() {
 }
 
 #[test]
-#[allow(clippy::approx_constant)]
 fn run_script_csv_returns_math_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math.pine"),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("math fixture should run");
 
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 48);
-    let expected = [
-        serde_json::json!([2, 1]),
-        serde_json::json!([2, 1]),
-        serde_json::json!([1, 2]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([1, 2]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([1, 1.4142135623730951]),
-        serde_json::json!([1, 1.2599210498948732]),
-        serde_json::json!([0, 0.6931471805599453]),
-        serde_json::json!([0, 0.3010299956639812]),
-        serde_json::json!([2.718281828459045, 7.38905609893065]),
-        serde_json::json!([3.141592653589793, 1.5707963267948966]),
-        serde_json::json!([-1.5707963267948966, 0]),
-        serde_json::json!([0.7853981633974483, 1.1071487177940904]),
-        serde_json::json!([-1, 0]),
-        serde_json::json!([57.29577951308232, 114.59155902616465]),
-        serde_json::json!([0.017453292519943295, 0.03490658503988659]),
-        serde_json::json!([8.095942459548628, 8.095942459548628]),
-        serde_json::json!([0.8414709848078965, 0.9092974268256816]),
-        serde_json::json!([0.5403023058681398, -0.4161468365471424]),
-        serde_json::json!([1.5574077246549023, -2.185039863261519]),
-        serde_json::json!([1, 4]),
-        serde_json::json!([2.23606797749979, 3.605551275463989]),
-        serde_json::json!([0.33, 0.67]),
-        serde_json::json!([1.01, 2.01]),
-        serde_json::json!([0.01, 0.01]),
-        serde_json::json!([17.044006538018998, 14.290355590862742]),
-        serde_json::json!([0.4363826024362413, 0.7995938689489258]),
-        serde_json::json!([null, null]),
-        serde_json::json!([null, null]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-        serde_json::json!([0, 0]),
-    ];
-    for (plot, values) in plots.iter().zip(expected) {
-        assert_eq!(plot["values"], values);
-    }
+    assert_snapshot("runtime_math.json", &output);
 }
 
 #[test]
