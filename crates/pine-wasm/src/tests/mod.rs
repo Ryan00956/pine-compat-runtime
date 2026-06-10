@@ -2088,18 +2088,11 @@ fn run_script_csv_returns_macd_fixture_contract() {
 fn run_script_csv_returns_strings_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strings.pine"),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strings fixture should run");
 
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 29);
-    assert_eq!(plots[0]["values"], serde_json::json!([3, 3]));
-    for plot in &plots[1..] {
-        assert_eq!(plot["values"], serde_json::json!([1, 1]));
-    }
+    assert_snapshot("runtime_strings.json", &output);
 }
 
 #[test]
