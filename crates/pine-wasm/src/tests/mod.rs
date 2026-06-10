@@ -3148,15 +3148,7 @@ fn runs_strategy_close_qty_partial_from_csv_to_trade_json() {
     )
     .expect("strategy close qty partial fixture should run");
 
-    assert!(output.contains("\"values\":[0,2,1.25,1.25]"));
-    assert!(output.contains("\"values\":[0,0,0.75,0.75]"));
-    assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":2,\"exitTime\":3,\"entryPrice\":2,\"exitPrice\":3,\"qty\":0.75,\"profit\":0.75}]"
-    ));
-    assert!(output.contains(
-        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":2,\"size\":1.25,\"avgPrice\":2}]"
-    ));
-    assert!(!output.contains("pending"));
+    assert_snapshot("runtime_strategy_close_qty_partial.json", &output);
 }
 
 #[test]
