@@ -1128,6 +1128,9 @@ extra = array.new_string()
 extra.push("d")
 words.concat(extra)
 plot(tail.join("|") == "b|c" and words.join("|") == "a|b|c|d" ? 1 : 0)
+empty_extra = array.new_string()
+words.concat(empty_extra)
+plot(words.join("|") == "a|b|c|d" and empty_extra.size() == 0 ? 1 : 0)
 
 colors = array.new_color()
 colors.push(color.red)
@@ -1143,12 +1146,18 @@ floats.push(high)
 float_head = array.slice(floats, 0, 2)
 plot(float_head.size())
 plot(float_head.get(0) == close and na(float_head.get(1)) ? 1 : 0)
+float_more = array.from(na, high)
+float_returned = floats.concat(float_more)
+plot(float_returned.size() == 5 and floats.size() == 5 and na(floats.get(3)) and floats.get(4) == high and float_more.size() == 2 ? 1 : 0)
 
 flags = array.from(true, false, true)
 flag_tail = flags.slice(1, 3)
 flag_tail.set(0, true)
 plot(flag_tail.size())
 plot(flag_tail.get(0) and flag_tail.get(1) and not flags.get(1) ? 1 : 0)
+bool_more = array.from(false)
+flags.concat(bool_more)
+plot(flags.size() == 4 and not flags.get(3) and bool_more.size() == 1 ? 1 : 0)
 
 empty_window = ints.slice(2, 2)
 plot(empty_window.size())
@@ -1165,7 +1174,7 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     let bars = vec![bar(1.0), bar(2.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 14);
+    assert_eq!(result.plots.len(), 17);
     assert_values_close(&result.plots[0].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[1].values, &[23.0, 23.0]);
     assert_values_close(&result.plots[2].values, &[2.0, 2.0]);
@@ -1174,12 +1183,15 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     assert_values_close(&result.plots[5].values, &[4.0, 4.0]);
     assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[8].values, &[2.0, 2.0]);
-    assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[10].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[9].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[12].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[12].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[15].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
 }
 
 #[test]
