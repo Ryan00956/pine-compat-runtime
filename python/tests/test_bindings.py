@@ -1514,13 +1514,14 @@ def test_run_script_returns_macd_fixture_contract():
 
 def test_run_script_returns_strings_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strings.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads((ROOT / "tests/snapshots/runtime_strings.json").read_text())
 
-    assert result["diagnostics"] == []
-    assert len(result["plots"]) == 29
-    assert result["plots"][0]["values"] == [3.0, 3.0, 3.0]
-    for plot in result["plots"][1:]:
-        assert plot["values"] == [1.0, 1.0, 1.0]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_colors_fixture_contract():
