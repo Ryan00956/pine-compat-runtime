@@ -2987,20 +2987,12 @@ fn runs_strategy_variable_interactions_fixture_contract() {
 #[test]
 fn runs_strategy_trade_counts_from_csv_to_json() {
     let output = run_script_csv(
-        "strategy(\"demo\")\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=1)\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\nif bar_index == 2\n    strategy.close(\"L\")\nplot(strategy.closedtrades)\nplot(strategy.opentrades)\n",
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_trade_counts.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy trade count script should run");
 
-    assert!(output.contains("\"values\":[0,0,1]"));
-    assert!(output.contains("\"values\":[0,0,0]"));
-    assert!(output.contains("\"strategy\":{\"orders\":["));
-    assert!(output.contains("\"trades\":["));
-    assert!(output.contains("\"position\":["));
-    assert!(output.contains("\"equity\":["));
-    assert!(output.contains("\"diagnostics\":[]}"));
-    assert!(!output.contains("closedTrades"));
-    assert!(!output.contains("openTrades"));
+    assert_snapshot("runtime_strategy_trade_counts.json", &output);
 }
 
 #[test]
