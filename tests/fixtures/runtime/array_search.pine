@@ -17,6 +17,7 @@ plot(numbers.binary_search_rightmost(2))
 plot(array.binary_search_leftmost(numbers, 1) == 0 and array.binary_search_rightmost(numbers, 1) == 0 and array.binary_search_leftmost(numbers, 9) == 2 and array.binary_search_rightmost(numbers, 9) == 2 ? 1 : 0)
 empty_numbers = array.new_int()
 plot(empty_numbers.binary_search_leftmost(1))
+plot(empty_numbers.binary_search_rightmost(1))
 
 truth_flags = array.from(true, true)
 plot(array.every(truth_flags) and truth_flags.some() ? 1 : 0)
