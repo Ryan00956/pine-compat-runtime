@@ -1205,6 +1205,20 @@ def test_run_script_returns_user_types_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_user_type_functions_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/user_type_functions.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_user_type_functions.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_user_methods_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/user_methods.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_user_methods.json").read_text())

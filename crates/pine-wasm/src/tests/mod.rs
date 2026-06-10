@@ -1155,6 +1155,17 @@ fn run_script_csv_returns_user_types_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_user_type_functions_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/user_type_functions.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("user-defined type functions fixture should run");
+
+    assert_snapshot("runtime_user_type_functions.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_user_methods_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/user_methods.pine"),
