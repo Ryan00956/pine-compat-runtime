@@ -2276,24 +2276,14 @@ def test_run_script_returns_global_series_fixture_contract():
 
 def test_run_script_returns_casts_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/casts.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads((ROOT / "tests/snapshots/runtime_casts.json").read_text())
 
-    assert result["diagnostics"] == []
-    assert len(result["plots"]) == 10
-    expected = [
-        [None, 1.5, 2.5],
-        [0.0, 1.0, 1.0],
-        [0.0, 0.0, 0.0],
-        [0.0, 1.0, 1.0],
-        [1.0, 0.0, 1.0],
-        [3.0, 1.0, 3.0],
-        [0.0, 0.0, 0.0],
-        [1.0, 1.0, 1.0],
-        [0.0, 0.0, 0.0],
-        [1.0, 1.0, 1.0],
-    ]
-    for plot, values in zip(result["plots"], expected):
-        assert plot["values"] == values
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_barstate_fixture_contract():
