@@ -2965,14 +2965,12 @@ fn runs_strategy_profit_state_fixture_contract() {
 #[test]
 fn runs_strategy_variable_interactions_from_csv_to_json() {
     let output = run_script_csv(
-        "strategy(\"demo\")\nscale(value) => value * 10\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(strategy.position_size[1])\nplot(strategy.openprofit[1])\nplot(scale(strategy.position_size))\n",
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_variable_interactions.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy variable interaction script should run");
 
-    assert!(output.contains("\"values\":[null,0,0]"));
-    assert!(output.contains("\"values\":[null,0,0]"));
-    assert!(output.contains("\"values\":[0,0,20]"));
+    assert_snapshot("runtime_strategy_variable_interactions.json", &output);
 }
 
 #[test]

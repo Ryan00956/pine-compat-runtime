@@ -3288,16 +3288,19 @@ def test_run_script_returns_strategy_profit_summary_plots():
 
 
 def test_run_script_returns_strategy_variable_interaction_plots():
-    result = pine_compat.run_script(
-        'strategy("demo")\nscale(value) => value * 10\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(strategy.position_size[1])\nplot(strategy.openprofit[1])\nplot(scale(strategy.position_size))\n',
-        BARS,
+    source = (
+        ROOT / "tests/fixtures/runtime/strategy_variable_interactions.pine"
+    ).read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_variable_interactions.json").read_text()
     )
 
-    assert [plot["values"] for plot in result["plots"]] == [
-        [None, 0.0, 0.0],
-        [None, 0.0, 0.0],
-        [0.0, 0.0, 20.0],
-    ]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_strategy_variable_interactions_fixture_contract():
