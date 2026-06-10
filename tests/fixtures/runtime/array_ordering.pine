@@ -49,6 +49,10 @@ plot(words.get(0) == "" and words.get(1) == "c" and words.get(2) == "b" and word
 word_indices = words.sort_indices(order.ascending)
 plot(word_indices.get(0) == 3 and word_indices.get(1) == 2 and word_indices.get(2) == 1 and word_indices.get(3) == 0 ? 1 : 0)
 
+empty_sort = array.new_float()
+array.sort(empty_sort)
+plot(empty_sort.size())
+
 colors = array.new_color()
 colors.push(color.red)
 colors.push(color.green)
