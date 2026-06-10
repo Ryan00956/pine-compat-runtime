@@ -1177,6 +1177,26 @@ fn run_script_csv_returns_user_methods_fixture_contract() {
 }
 
 #[test]
+fn analyze_script_reports_unsupported_user_type_field_fixture() {
+    let output = analyze_script(include_str!(
+        "../../../../tests/fixtures/sema/unsupported_user_type.pine"
+    ));
+
+    assert!(output.contains("\"executable\":false"));
+    assert!(output.contains("\"code\":\"E_UDT_FIELD_TYPE\""));
+}
+
+#[test]
+fn analyze_script_reports_unsupported_user_method_fixture() {
+    let output = analyze_script(include_str!(
+        "../../../../tests/fixtures/sema/unsupported_user_method.pine"
+    ));
+
+    assert!(output.contains("\"executable\":false"));
+    assert!(output.contains("\"code\":\"E_METHOD_RECEIVER_TYPE\""));
+}
+
+#[test]
 fn run_script_csv_returns_math_edge_cases_as_json_null() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/math_edge_cases.pine"),

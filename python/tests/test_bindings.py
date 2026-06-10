@@ -1231,6 +1231,28 @@ def test_run_script_returns_user_methods_fixture_contract():
     assert result == expected
 
 
+def test_compile_script_reports_unsupported_user_type_field_fixture():
+    source = (ROOT / "tests/fixtures/sema/unsupported_user_type.pine").read_text()
+
+    try:
+        pine_compat.compile_script(source)
+    except ValueError as error:
+        assert "E_UDT_FIELD_TYPE" in str(error)
+    else:
+        raise AssertionError("unsupported UDT field fixture should fail")
+
+
+def test_compile_script_reports_unsupported_user_method_fixture():
+    source = (ROOT / "tests/fixtures/sema/unsupported_user_method.pine").read_text()
+
+    try:
+        pine_compat.compile_script(source)
+    except ValueError as error:
+        assert "E_METHOD_RECEIVER_TYPE" in str(error)
+    else:
+        raise AssertionError("unsupported UDT method fixture should fail")
+
+
 def test_run_script_returns_import_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/import.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_import.json").read_text())
