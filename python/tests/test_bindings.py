@@ -3656,35 +3656,15 @@ def test_run_script_returns_strategy_profit_percent_fixture_contract():
 
 
 def test_run_script_returns_strategy_close_trade_contract():
+    source = (ROOT / "tests/fixtures/runtime/strategy_close.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_strategy_close.json").read_text())
+
     result = pine_compat.run_script(
-        'strategy("demo")\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close("L")\n',
-        BARS,
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
     )
 
-    assert result["strategy"]["trades"] == [
-        {
-            "id": "L",
-            "entryBarIndex": 2,
-            "exitBarIndex": 2,
-            "entryTime": 2,
-            "exitTime": 2,
-            "entryPrice": 3.0,
-            "exitPrice": 3.0,
-            "qty": 2.0,
-            "profit": 0.0,
-        }
-    ]
-    assert result["strategy"]["position"] == [
-        {"barIndex": 2, "size": 2.0, "avgPrice": 3.0},
-        {"barIndex": 2, "size": 0.0, "avgPrice": None},
-    ]
-    assert result["strategy"]["equity"][-1] == {
-        "barIndex": 2,
-        "cash": 100000.0,
-        "marketValue": 0.0,
-        "equity": 100000.0,
-        "netProfit": 0.0,
-    }
+    assert result == expected
 
 
 def test_run_script_returns_strategy_close_fixture_contract():

@@ -3121,17 +3121,12 @@ fn runs_strategy_profit_percent_state_fixture_contract() {
 #[test]
 fn runs_strategy_close_from_csv_to_trade_json() {
     let output = run_script_csv(
-        "strategy(\"demo\")\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nif bar_index == 2\n    strategy.close(\"L\")\n",
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_close.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy close script should run");
 
-    assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":2,\"exitBarIndex\":2,\"entryTime\":2,\"exitTime\":2,\"entryPrice\":3,\"exitPrice\":3,\"qty\":2,\"profit\":0}]"
-    ));
-    assert!(output.contains(
-        "\"position\":[{\"barIndex\":2,\"size\":2,\"avgPrice\":3},{\"barIndex\":2,\"size\":0,\"avgPrice\":null}]"
-    ));
+    assert_snapshot("runtime_strategy_close.json", &output);
 }
 
 #[test]
