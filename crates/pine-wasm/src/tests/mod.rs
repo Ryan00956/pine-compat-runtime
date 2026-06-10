@@ -3100,14 +3100,11 @@ fn runs_strategy_trade_outcome_counts_fixture_contract() {
 fn runs_strategy_profit_percent_state_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_profit_percent_state.pine"),
-        "time,open,high,low,close,volume\n1,1,1,1,1,100\n2,2,2,2,2,100\n3,3,3,3,3,100\n4,4,4,4,4,100\n5,4,4,4,4,100\n6,2,2,2,2,100\n7,3,3,3,3,100\n8,5,5,5,5,100\n9,5,5,5,5,100\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_trade_outcome_counts_bars.csv"),
     )
     .expect("strategy profit percent state script should run");
 
-    assert!(output.contains("\"values\":[0,0,1,1,1,-1,-1,-1,-1]"));
-    assert!(output.contains("\"values\":[0,0,0.1,0.1,0.1,-0.1,-0.1,-0.1,-0.1]"));
-    assert!(output.contains("\"values\":[0,0,0,0,0,0.2,0.2,0.2,0.2]"));
-    assert!(!output.contains("profitPercent"));
+    assert_snapshot("runtime_strategy_profit_percent_state.json", &output);
 }
 
 #[test]
