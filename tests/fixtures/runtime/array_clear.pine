@@ -1,0 +1,36 @@
+indicator("Array clear fixture")
+
+floats = array.from(close, high, na)
+array.clear(floats)
+array.clear(floats)
+array.push(floats, low)
+plot(array.size(floats))
+plot(array.get(floats, 0))
+
+ints = array.from(bar_index, 10)
+ints.clear()
+ints.push(7)
+plot(ints.size())
+plot(ints.get(0))
+
+flags = array.from(true, false)
+array.clear(flags)
+flags.push(bar_index == 0)
+plot(flags.size())
+plot(flags.get(0) ? 1 : 0)
+
+words = array.from("a", "b")
+words.clear()
+words.push("z")
+plot(words.size())
+plot(words.get(0) == "z" ? 1 : 0)
+
+colors = array.from(color.red, color.green)
+array.clear(colors)
+colors.push(color.blue)
+plot(colors.size())
+plot(colors.get(0) == color.blue ? 1 : 0)
+
+empty = array.new_float()
+empty.clear()
+plot(empty.size())

@@ -367,6 +367,71 @@ plot(color.b(first) + color.g(last))
 }
 
 #[test]
+fn runs_array_clear_operations() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("array clear")
+floats = array.from(close, high, na)
+array.clear(floats)
+array.clear(floats)
+array.push(floats, low)
+plot(array.size(floats))
+plot(array.get(floats, 0))
+
+ints = array.from(bar_index, 10)
+ints.clear()
+ints.push(7)
+plot(ints.size())
+plot(ints.get(0))
+
+flags = array.from(true, false)
+array.clear(flags)
+flags.push(bar_index == 0)
+plot(flags.size())
+plot(flags.get(0) ? 1 : 0)
+
+words = array.from("a", "b")
+words.clear()
+words.push("z")
+plot(words.size())
+plot(words.get(0) == "z" ? 1 : 0)
+
+colors = array.from(color.red, color.green)
+array.clear(colors)
+colors.push(color.blue)
+plot(colors.size())
+plot(colors.get(0) == color.blue ? 1 : 0)
+
+empty = array.new_float()
+empty.clear()
+plot(empty.size())
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 11);
+    assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[1].values, &[1.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[3].values, &[7.0, 7.0, 7.0]);
+    assert_values_close(&result.plots[4].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[5].values, &[1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[6].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[7].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[8].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[9].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[10].values, &[0.0, 0.0, 0.0]);
+}
+
+#[test]
 fn runs_array_helper_operations() {
     let source = SourceFile::new(
         "test.pine",
