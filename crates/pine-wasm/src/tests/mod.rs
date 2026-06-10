@@ -174,35 +174,11 @@ fn run_script_csv_returns_color_outputs_fixture_contract() {
 fn run_script_csv_returns_hline_fill_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/io.pine"),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("hline/fill fixture should run");
 
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    assert_eq!(
-        parsed["plots"][0]["values"],
-        serde_json::json!([null, 2.25, 3.75])
-    );
-    assert_eq!(
-        parsed["hlines"],
-        serde_json::json!([
-            {
-                "id": 10,
-                "price": 2
-            }
-        ])
-    );
-    assert_eq!(
-        parsed["fills"],
-        serde_json::json!([
-            {
-                "id": 11,
-                "firstId": 7,
-                "secondId": 10
-            }
-        ])
-    );
+    assert_snapshot("runtime_hline_fill.json", &output);
 }
 
 #[test]

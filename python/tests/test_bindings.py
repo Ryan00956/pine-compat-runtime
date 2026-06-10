@@ -205,23 +205,14 @@ def test_run_script_returns_color_outputs_fixture_contract():
 
 def test_run_script_returns_hline_fill_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/io.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads((ROOT / "tests/snapshots/runtime_hline_fill.json").read_text())
 
-    assert result["diagnostics"] == []
-    assert result["plots"][0]["values"] == [None, 2.25, 3.75]
-    assert result["hlines"] == [
-        {
-            "id": 10,
-            "price": 2.0,
-        }
-    ]
-    assert result["fills"] == [
-        {
-            "id": 11,
-            "firstId": 7,
-            "secondId": 10,
-        }
-    ]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_alertcondition_fixture_contract():
