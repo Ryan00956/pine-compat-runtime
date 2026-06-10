@@ -3032,16 +3032,11 @@ fn runs_strategy_closedtrades_fields_from_csv_to_json() {
 fn runs_strategy_opentrades_fields_from_csv_to_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_opentrades_fields.pine"),
-        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+        include_str!("../../../../tests/fixtures/runtime/strategy_opentrades_fields_bars.csv"),
     )
     .expect("strategy open trade fields script should run");
 
-    assert!(output.contains("\"values\":[null,2,null,null]"));
-    assert!(output.contains("\"values\":[null,1,null,null]"));
-    assert!(output.contains("\"values\":[null,null,null,null]"));
-    assert!(output.contains("\"trades\":["));
-    assert!(!output.contains("closedTrades"));
-    assert!(!output.contains("openTrades"));
+    assert_snapshot("runtime_strategy_opentrades_fields.json", &output);
 }
 
 #[test]

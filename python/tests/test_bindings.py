@@ -3555,28 +3555,16 @@ def test_run_script_returns_strategy_limit_verification_exit_plots():
 
 def test_run_script_returns_strategy_opentrades_field_plots():
     source = (ROOT / "tests/fixtures/runtime/strategy_opentrades_fields.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_opentrades_fields.json").read_text()
+    )
+
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/strategy_opentrades_fields_bars.csv"),
     )
 
-    assert [plot["values"] for plot in result["plots"]] == [
-        [None, 2.0, None],
-        [None, 1, None],
-        [None, 1, None],
-        [None, 20, None],
-        [None, 2.0, None],
-        [None, 0.0, None],
-        [None, 0.0, None],
-        [None, 4.0, None],
-        [None, 2.0, None],
-        [None, None, None],
-    ] + [[None, None, None] for _ in range(27)]
-    assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
-    assert result["strategy"]["trades"][0]["entryPrice"] == 2.0
-    assert result["strategy"]["trades"][0]["exitPrice"] == 3.0
-    assert "closedTrades" not in result["strategy"]
-    assert "openTrades" not in result["strategy"]
+    assert result == expected
 
 
 def test_run_script_returns_margin_capital_held_plot():
