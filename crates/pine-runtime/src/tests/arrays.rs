@@ -1029,6 +1029,8 @@ floats = array.new_float()
 floats.push(1.25)
 floats.push(2.5)
 plot(floats.join() == "1.25,2.5" ? 1 : 0)
+floats.push(na)
+plot(array.join(floats, "|") == "1.25|2.5|NaN" ? 1 : 0)
 
 flags = array.new_bool()
 flags.push(false)
@@ -1039,6 +1041,7 @@ words = array.new_string()
 words.push("a")
 words.push("b")
 plot(words.join("-") == "a-b" ? 1 : 0)
+plot(words.join(na) == "a,b" ? 1 : 0)
 
 colors = array.new_color()
 colors.push(color.red)
@@ -1059,7 +1062,7 @@ plot(array.join(empty, "|") == "" ? 1 : 0)
     let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 6);
+    assert_eq!(result.plots.len(), 8);
     for plot in &result.plots {
         assert_values_close(&plot.values, &[1.0, 1.0]);
     }
