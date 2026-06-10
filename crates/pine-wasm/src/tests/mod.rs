@@ -2055,40 +2055,11 @@ fn run_script_csv_returns_generic_input_fixture_contract() {
 fn run_script_csv_returns_timeframe_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/timeframe.pine"),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("timeframe fixture should run");
 
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    let plots = parsed["plots"].as_array().expect("plots");
-    let expected = [
-        serde_json::json!([1, 1]),
-        serde_json::json!([60, 60]),
-        serde_json::json!([60, 60]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([45, 45]),
-        serde_json::json!([3600, 3600]),
-        serde_json::json!([86400, 86400]),
-        serde_json::json!([1209600, 1209600]),
-        serde_json::json!([7776000, 7776000]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([1, 0]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([1, 1]),
-    ];
-    assert_eq!(plots.len(), expected.len());
-    for (plot, values) in plots.iter().zip(expected) {
-        assert_eq!(plot["values"], values);
-    }
+    assert_snapshot("runtime_timeframe.json", &output);
 }
 
 #[test]

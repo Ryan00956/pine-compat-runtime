@@ -1546,35 +1546,14 @@ def test_run_script_returns_generic_input_fixture_contract():
 
 def test_run_script_returns_timeframe_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/timeframe.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads((ROOT / "tests/snapshots/runtime_timeframe.json").read_text())
 
-    assert result["diagnostics"] == []
-    expected = [
-        [1.0, 1.0, 1.0],
-        [60.0, 60.0, 60.0],
-        [60.0, 60.0, 60.0],
-        [1.0, 1.0, 1.0],
-        [45.0, 45.0, 45.0],
-        [3600.0, 3600.0, 3600.0],
-        [86400.0, 86400.0, 86400.0],
-        [1209600.0, 1209600.0, 1209600.0],
-        [7776000.0, 7776000.0, 7776000.0],
-        [1.0, 1.0, 1.0],
-        [1.0, 1.0, 1.0],
-        [1.0, 1.0, 1.0],
-        [1.0, 1.0, 1.0],
-        [1.0, 1.0, 1.0],
-        [1.0, 1.0, 1.0],
-        [1.0, 1.0, 1.0],
-        [1.0, 1.0, 1.0],
-        [1.0, 1.0, 1.0],
-        [1.0, 0.0, 0.0],
-        [1.0, 1.0, 1.0],
-        [1.0, 1.0, 1.0],
-    ]
-    assert len(result["plots"]) == len(expected)
-    for plot, values in zip(result["plots"], expected):
-        assert plot["values"] == values
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_time_components_fixture_contract():
