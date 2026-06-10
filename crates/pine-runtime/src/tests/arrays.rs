@@ -1135,6 +1135,24 @@ colors.push(color.green)
 colors_tail = colors.slice(1, 2)
 colors.concat(colors_tail)
 plot(colors.get(2) == color.green ? 1 : 0)
+
+floats = array.new_float()
+floats.push(close)
+floats.push(na)
+floats.push(high)
+float_head = array.slice(floats, 0, 2)
+plot(float_head.size())
+plot(float_head.get(0) == close and na(float_head.get(1)) ? 1 : 0)
+
+flags = array.from(true, false, true)
+flag_tail = flags.slice(1, 3)
+flag_tail.set(0, true)
+plot(flag_tail.size())
+plot(flag_tail.get(0) and flag_tail.get(1) and not flags.get(1) ? 1 : 0)
+
+empty_window = ints.slice(2, 2)
+plot(empty_window.size())
+plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(ints, 2, 1)) ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -1147,7 +1165,7 @@ plot(colors.get(2) == color.green ? 1 : 0)
     let bars = vec![bar(1.0), bar(2.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 8);
+    assert_eq!(result.plots.len(), 14);
     assert_values_close(&result.plots[0].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[1].values, &[23.0, 23.0]);
     assert_values_close(&result.plots[2].values, &[2.0, 2.0]);
@@ -1156,6 +1174,12 @@ plot(colors.get(2) == color.green ? 1 : 0)
     assert_values_close(&result.plots[5].values, &[4.0, 4.0]);
     assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[8].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[10].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[12].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
 }
 
 #[test]
