@@ -1393,6 +1393,20 @@ def test_run_script_returns_conditional_ta_fixture_contract():
     assert result["plots"][0]["values"] == [None, 3.0, 3.0, 5.0]
 
 
+def test_run_script_returns_conditional_ta_snapshot_contract():
+    source = (ROOT / "tests/fixtures/runtime/conditional_ta.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_conditional_ta.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_udf_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/udf.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_udf.json").read_text())

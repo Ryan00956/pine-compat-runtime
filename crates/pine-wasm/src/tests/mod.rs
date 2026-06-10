@@ -1291,6 +1291,17 @@ fn run_script_csv_returns_conditional_ta_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_conditional_ta_snapshot_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/conditional_ta.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("conditional TA fixture should run");
+
+    assert_snapshot("runtime_conditional_ta.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_udf_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/udf.pine"),
