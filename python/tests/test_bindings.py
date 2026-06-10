@@ -10070,31 +10070,19 @@ def test_run_script_treats_strategy_exit_stop_profit_bracket_wrong_entry_as_noop
         ROOT
         / "tests/fixtures/runtime/strategy_exit_stop_profit_bracket_unmatched_from_entry_noop.pine"
     ).read_text()
-    result = pine_compat.run_script(
-        source,
-        BARS,
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_exit_stop_profit_bracket_unmatched_from_entry_noop.json"
+        ).read_text()
     )
 
-    assert result["diagnostics"] == []
-    assert result["strategy"]["orders"] == [
-        {
-            "id": "L",
-            "barIndex": 1,
-            "time": 1,
-            "direction": "strategy.long",
-            "qty": 2.0,
-            "price": 2.0,
-        }
-    ]
-    assert result["strategy"]["trades"] == []
-    assert result["strategy"]["position"] == [
-        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0}
-    ]
-    assert result["strategy"]["diagnostics"] == []
-    strategy_json = json.dumps(result["strategy"])
-    assert '"direction": "strategy.exit"' not in strategy_json
-    assert "pending" not in strategy_json
-    assert "reserved" not in strategy_json
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_treats_strategy_exit_loss_limit_bracket_wrong_entry_as_noop():

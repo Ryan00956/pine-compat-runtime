@@ -2218,40 +2218,14 @@ fn runs_strategy_exit_stop_profit_bracket_wrong_entry_from_csv_as_noop_json() {
         include_str!(
             "../../../../tests/fixtures/runtime/strategy_exit_stop_profit_bracket_unmatched_from_entry_noop.pine"
         ),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy stop profit bracket wrong-entry no-op script should run");
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    assert_eq!(
-        parsed["strategy"]["orders"],
-        serde_json::json!([
-            {
-                "id": "L",
-                "barIndex": 1,
-                "time": 1,
-                "direction": "strategy.long",
-                "qty": 2,
-                "price": 2
-            }
-        ])
+    assert_snapshot(
+        "runtime_strategy_exit_stop_profit_bracket_unmatched_from_entry_noop.json",
+        &output,
     );
-    assert_eq!(parsed["strategy"]["trades"], serde_json::json!([]));
-    assert_eq!(
-        parsed["strategy"]["position"],
-        serde_json::json!([
-            {
-                "barIndex": 1,
-                "size": 2,
-                "avgPrice": 2
-            }
-        ])
-    );
-    assert_eq!(parsed["strategy"]["diagnostics"], serde_json::json!([]));
-    assert!(!output.contains("\"direction\":\"strategy.exit\""));
-    assert!(!output.contains("pending"));
-    assert!(!output.contains("reserved"));
 }
 
 #[test]
