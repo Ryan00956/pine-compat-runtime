@@ -3203,17 +3203,12 @@ fn runs_strategy_close_all_fixture_contract() {
 #[test]
 fn runs_strategy_exit_stop_from_csv_to_trade_json() {
     let output = run_script_csv(
-        "strategy(\"demo\")\nif bar_index == 0\n    strategy.entry(\"L\", strategy.long, qty=2)\n    strategy.exit(\"XL\", \"L\", stop=9)\n",
-        "time,open,high,low,close,volume\n10,10,10,10,10,1\n20,11,12,8,11,1\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_stop.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy exit stop script should run");
 
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.long\",\"qty\":2,\"price\":11},{\"id\":\"XL\",\"barIndex\":1,\"time\":20,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":9}]"
-    ));
-    assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":20,\"exitTime\":20,\"entryPrice\":11,\"exitPrice\":9,\"qty\":2,\"profit\":-4}]"
-    ));
+    assert_snapshot("runtime_strategy_exit_stop.json", &output);
 }
 
 #[test]
