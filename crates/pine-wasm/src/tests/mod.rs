@@ -3274,13 +3274,7 @@ fn runs_strategy_exit_profit_from_csv_to_trade_json() {
     )
     .expect("strategy exit profit script should run");
 
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XP\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":3.5}]"
-    ));
-    assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":2,\"exitPrice\":3.5,\"qty\":2,\"profit\":3}]"
-    ));
-    assert!(output.contains("\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":3,\"size\":0,\"avgPrice\":null}]"));
+    assert_snapshot("runtime_strategy_exit_profit.json", &output);
 }
 
 #[test]

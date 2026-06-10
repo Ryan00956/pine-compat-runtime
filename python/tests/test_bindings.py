@@ -3829,53 +3829,16 @@ def test_run_script_returns_strategy_exit_limit_fixture_contract():
 
 def test_run_script_returns_strategy_exit_profit_trade_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_exit_profit.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_profit.json").read_text()
+    )
+
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/bars.csv"),
     )
 
-    assert result["strategy"]["orders"] == [
-        {
-            "id": "L",
-            "barIndex": 1,
-            "time": 2,
-            "direction": "strategy.long",
-            "qty": 2.0,
-            "price": 2.0,
-        },
-        {
-            "id": "XP",
-            "barIndex": 3,
-            "time": 4,
-            "direction": "strategy.exit",
-            "qty": 2.0,
-            "price": 3.5,
-        },
-    ]
-    assert result["strategy"]["trades"] == [
-        {
-            "id": "L",
-            "entryBarIndex": 1,
-            "exitBarIndex": 3,
-            "entryTime": 2,
-            "exitTime": 4,
-            "entryPrice": 2.0,
-            "exitPrice": 3.5,
-            "qty": 2.0,
-            "profit": 3.0,
-        }
-    ]
-    assert result["strategy"]["position"] == [
-        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
-        {"barIndex": 3, "size": 0.0, "avgPrice": None},
-    ]
-    assert result["strategy"]["equity"][-1] == {
-        "barIndex": 3,
-        "cash": 100003.0,
-        "marketValue": 0.0,
-        "equity": 100003.0,
-        "netProfit": 3.0,
-    }
+    assert result == expected
 
 
 def test_run_script_returns_strategy_exit_loss_trade_contract():
