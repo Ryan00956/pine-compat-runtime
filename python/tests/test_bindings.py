@@ -3757,18 +3757,18 @@ def test_run_script_returns_strategy_cancel_all_entry_exit_contract():
     source = (
         ROOT / "tests/fixtures/runtime/strategy_cancel_all_entry_exit.pine"
     ).read_text()
-    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_cancel_all_entry_exit.json"
+        ).read_text()
+    )
 
-    assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 0.0, 0.0, 0.0],
-        [0, 0, 0, 0],
-    ]
-    assert result["strategy"]["orders"] == []
-    assert result["strategy"]["trades"] == []
-    assert result["strategy"]["position"] == []
-    assert result["strategy"]["diagnostics"] == []
-    assert "pending" not in result["strategy"]
-    assert "cancel" not in result["strategy"]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_strategy_exit_stop_trade_contract():

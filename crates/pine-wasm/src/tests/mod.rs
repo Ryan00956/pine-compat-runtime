@@ -3246,17 +3246,7 @@ fn runs_strategy_cancel_all_entry_exit_fixture_from_csv_to_public_strategy_json(
     )
     .expect("strategy cancel all entry exit script should run");
 
-    assert!(output.contains(&format!(
-        "\"schemaVersion\":{}",
-        PUBLIC_RUNTIME_SCHEMA_VERSION
-    )));
-    assert!(output.contains("\"values\":[0,0,0,0]"));
-    assert!(output.contains("\"orders\":[]"));
-    assert!(output.contains("\"trades\":[]"));
-    assert!(output.contains("\"position\":[]"));
-    assert!(output.contains("\"diagnostics\":[]"));
-    assert!(!output.contains("pending"));
-    assert!(!output.contains("cancel"));
+    assert_snapshot("runtime_strategy_cancel_all_entry_exit.json", &output);
 }
 
 #[test]
