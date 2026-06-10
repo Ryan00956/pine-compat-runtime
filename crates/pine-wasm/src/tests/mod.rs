@@ -1268,16 +1268,11 @@ fn run_script_csv_returns_math_fixture_contract() {
 fn run_script_csv_returns_computed_lengths_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/computed_lengths.pine"),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("computed lengths fixture should run");
 
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 2);
-    assert_eq!(plots[0]["values"], serde_json::json!([null, 1.5]));
-    assert_eq!(plots[1]["values"], serde_json::json!([null, 3]));
+    assert_snapshot("runtime_computed_lengths.json", &output);
 }
 
 #[test]

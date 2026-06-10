@@ -1366,12 +1366,16 @@ def test_run_script_returns_math_fixture_contract():
 
 def test_run_script_returns_computed_lengths_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/computed_lengths.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_computed_lengths.json").read_text()
+    )
 
-    assert result["diagnostics"] == []
-    assert len(result["plots"]) == 2
-    assert result["plots"][0]["values"] == [None, 1.5, 2.5]
-    assert result["plots"][1]["values"] == [None, 3.0, 5.0]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_conditional_ta_fixture_contract():
