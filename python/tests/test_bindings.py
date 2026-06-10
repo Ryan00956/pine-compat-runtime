@@ -1338,18 +1338,18 @@ def test_run_script_returns_import_state_fixture_contract():
     assert result == expected
 
 
-def test_run_script_returns_math_edge_cases_as_none():
+def test_run_script_returns_math_edge_cases_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/math_edge_cases.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_math_edge_cases.json").read_text()
+    )
 
-    assert result["diagnostics"] == []
-    assert len(result["plots"]) == 12
-    for plot in result["plots"][:8]:
-        assert plot["values"] == [None, None, None]
-    assert result["plots"][8]["values"] == [2.0, 2.0, 2.0]
-    assert result["plots"][9]["values"] == [-1.0, -1.0, -1.0]
-    assert result["plots"][10]["values"] == [1.3, 1.3, 1.3]
-    assert result["plots"][11]["values"] == [-1.2, -1.2, -1.2]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_math_fixture_contract():
