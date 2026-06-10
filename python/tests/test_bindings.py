@@ -1424,6 +1424,18 @@ def test_run_script_returns_na_fixture_contract():
     assert result["plots"][4]["values"] == [0.0, 0.0, 0.0, 0.0]
 
 
+def test_run_script_returns_na_snapshot_contract():
+    source = (ROOT / "tests/fixtures/runtime/na.pine").read_text()
+    expected = json.loads((ROOT / "tests/snapshots/runtime_na.json").read_text())
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_ta_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/ta.pine").read_text()
     result = pine_compat.run_script(source, BARS)

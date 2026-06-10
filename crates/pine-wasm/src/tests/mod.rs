@@ -1321,6 +1321,17 @@ fn run_script_csv_returns_na_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_na_snapshot_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/na.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("NA fixture should run");
+
+    assert_snapshot("runtime_na.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_ta_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/ta.pine"),
