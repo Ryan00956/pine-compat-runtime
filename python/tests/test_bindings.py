@@ -1476,18 +1476,14 @@ def test_run_script_returns_dema_tema_fixture_contract():
 
 def test_run_script_returns_macd_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/macd.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads((ROOT / "tests/snapshots/runtime_macd.json").read_text())
 
-    assert result["diagnostics"] == []
-    assert len(result["plots"]) == 3
-    expected = [
-        [0.0, 0.16666666666666652, 0.30555555555555536],
-        [0.0, 0.11111111111111101, 0.24074074074074056],
-        [0.0, 0.05555555555555551, 0.0648148148148148],
-    ]
-    for plot, values in zip(result["plots"], expected):
-        for actual, expected_value in zip(plot["values"], values):
-            assert abs(actual - expected_value) < 1e-12
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_strings_fixture_contract():
