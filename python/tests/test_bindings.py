@@ -3599,62 +3599,16 @@ def test_run_script_returns_margin_entry_affordability_contract():
 
 def test_run_script_returns_margin_call_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_margin_call_long.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_margin_call_long.json").read_text()
+    )
+
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/strategy_margin_call_long_bars.csv"),
     )
 
-    assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 48.0, 48.0],
-        [0.0, 36.0, 36.0],
-        [0, 1, 1],
-    ]
-    assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
-    assert result["strategy"]["orders"] == [
-        {
-            "id": "L",
-            "barIndex": 1,
-            "time": 2,
-            "direction": "strategy.long",
-            "qty": 100.0,
-            "price": 4.0,
-        },
-        {
-            "id": "Margin Call",
-            "barIndex": 1,
-            "time": 2,
-            "direction": "strategy.short",
-            "qty": 52.0,
-            "price": 3.0,
-        },
-    ]
-    assert result["strategy"]["trades"] == [
-        {
-            "id": "L",
-            "entryBarIndex": 1,
-            "exitBarIndex": 1,
-            "entryTime": 2,
-            "exitTime": 2,
-            "entryPrice": 4.0,
-            "exitPrice": 3.0,
-            "qty": 52.0,
-            "profit": -52.0,
-        }
-    ]
-    assert result["strategy"]["position"] == [
-        {"barIndex": 1, "size": 100.0, "avgPrice": 4.0},
-        {"barIndex": 1, "size": 48.0, "avgPrice": 4.0},
-    ]
-    assert result["strategy"]["equity"][-1] == {
-        "barIndex": 2,
-        "cash": -79.0,
-        "marketValue": 144.0,
-        "equity": 65.0,
-        "netProfit": -100.0,
-    }
-    assert result["strategy"]["diagnostics"] == []
-    assert "closedTrades" not in result["strategy"]
-    assert "openTrades" not in result["strategy"]
+    assert result == expected
 
 
 def test_run_script_returns_strategy_trade_outcome_count_plots():
