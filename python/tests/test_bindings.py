@@ -133,18 +133,14 @@ def test_run_script_converts_non_finite_plot_values_to_none():
 
 def test_run_script_returns_plotchar_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/plotchar.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads((ROOT / "tests/snapshots/runtime_plotchar.json").read_text())
 
-    assert result["diagnostics"] == []
-    assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
-    assert result["plotChars"] == [
-        {
-            "id": 1,
-            "values": [None, False, True],
-            "chars": [None, "x", "x"],
-            "colors": [None, 32768, 32768],
-        }
-    ]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_plotshape_fixture_contract():
