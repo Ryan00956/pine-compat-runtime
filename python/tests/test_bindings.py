@@ -3741,48 +3741,16 @@ def test_run_script_returns_strategy_close_all_trade_contract():
 
 def test_run_script_returns_strategy_cancel_entry_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_cancel_entry.pine").read_text()
-    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_cancel_entry.json").read_text()
+    )
 
-    assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 0.0, 0.0, 0.0],
-        [None, None, None, None],
-    ]
-    assert result["strategy"]["orders"] == []
-    assert result["strategy"]["trades"] == []
-    assert result["strategy"]["position"] == []
-    assert result["strategy"]["equity"] == [
-        {
-            "barIndex": 0,
-            "cash": 100000.0,
-            "marketValue": 0.0,
-            "equity": 100000.0,
-            "netProfit": 0.0,
-        },
-        {
-            "barIndex": 1,
-            "cash": 100000.0,
-            "marketValue": 0.0,
-            "equity": 100000.0,
-            "netProfit": 0.0,
-        },
-        {
-            "barIndex": 2,
-            "cash": 100000.0,
-            "marketValue": 0.0,
-            "equity": 100000.0,
-            "netProfit": 0.0,
-        },
-        {
-            "barIndex": 3,
-            "cash": 100000.0,
-            "marketValue": 0.0,
-            "equity": 100000.0,
-            "netProfit": 0.0,
-        },
-    ]
-    assert result["strategy"]["diagnostics"] == []
-    assert "pending" not in result["strategy"]
-    assert "cancel" not in result["strategy"]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_strategy_cancel_all_entry_exit_contract():
