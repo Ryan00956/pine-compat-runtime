@@ -3314,16 +3314,7 @@ fn runs_strategy_exit_bracket_fixture_from_csv_to_trade_json() {
     )
     .expect("strategy exit bracket fixture should run");
 
-    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":100},{\"id\":\"XB\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":95}]"
-    ));
-    assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":2,\"exitTime\":2,\"entryPrice\":100,\"exitPrice\":95,\"qty\":2,\"profit\":-10}]"
-    ));
-    assert!(output.contains(
-        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":100},{\"barIndex\":1,\"size\":0,\"avgPrice\":null}]"
-    ));
+    assert_snapshot("runtime_strategy_exit_bracket_both_hit.json", &output);
 }
 
 #[test]
