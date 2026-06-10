@@ -2943,14 +2943,12 @@ fn runs_strategy_equity_fixture_contract() {
 #[test]
 fn runs_strategy_profit_state_from_csv_to_json() {
     let output = run_script_csv(
-        "strategy(\"demo\", initial_capital=1000)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nplot(strategy.max_runup)\nplot(strategy.max_runup_percent)\nplot(strategy.max_drawdown)\nplot(strategy.max_drawdown_percent)\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nplot(strategy.max_runup)\nplot(strategy.max_runup_percent)\nplot(strategy.max_drawdown)\nplot(strategy.max_drawdown_percent)\n",
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_profit_state.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy profit state script should run");
 
-    assert!(output.contains("\"values\":[0,0,0]"));
-    assert!(output.contains("\"values\":[0,0,0]"));
-    assert!(output.contains("\"values\":[1000,1000,1000]"));
+    assert_snapshot("runtime_strategy_profit_state.json", &output);
 }
 
 #[test]

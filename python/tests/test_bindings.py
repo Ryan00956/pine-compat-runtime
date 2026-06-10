@@ -3244,27 +3244,17 @@ def test_run_script_returns_strategy_equity_fixture_contract():
 
 
 def test_run_script_returns_strategy_profit_state_plots():
-    result = pine_compat.run_script(
-        'strategy("demo", initial_capital=1000)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nplot(strategy.max_runup)\nplot(strategy.max_runup_percent)\nplot(strategy.max_drawdown)\nplot(strategy.max_drawdown_percent)\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(strategy.openprofit)\nplot(strategy.netprofit)\nplot(strategy.equity)\nplot(strategy.max_runup)\nplot(strategy.max_runup_percent)\nplot(strategy.max_drawdown)\nplot(strategy.max_drawdown_percent)\n',
-        BARS,
+    source = (ROOT / "tests/fixtures/runtime/strategy_profit_state.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_profit_state.json").read_text()
     )
 
-    assert result["plots"] == [
-        {"id": 1, "values": [0.0, 0.0, 0.0]},
-        {"id": 2, "values": [0.0, 0.0, 0.0]},
-        {"id": 3, "values": [1000.0, 1000.0, 1000.0]},
-        {"id": 4, "values": [0.0, 0.0, 0.0]},
-        {"id": 5, "values": [0.0, 0.0, 0.0]},
-        {"id": 6, "values": [0.0, 0.0, 0.0]},
-        {"id": 7, "values": [0.0, 0.0, 0.0]},
-        {"id": 9, "values": [0.0, 0.0, 0.0]},
-        {"id": 10, "values": [0.0, 0.0, 0.0]},
-        {"id": 11, "values": [1000.0, 1000.0, 1000.0]},
-        {"id": 12, "values": [0.0, 0.0, 0.0]},
-        {"id": 13, "values": [0.0, 0.0, 0.0]},
-        {"id": 14, "values": [0.0, 0.0, 0.0]},
-        {"id": 15, "values": [0.0, 0.0, 0.0]},
-    ]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_strategy_profit_state_fixture_contract():
