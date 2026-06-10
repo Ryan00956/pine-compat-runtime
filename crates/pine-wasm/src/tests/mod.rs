@@ -2077,31 +2077,11 @@ fn run_script_csv_returns_time_components_fixture_contract() {
 fn run_script_csv_returns_global_series_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/global_series.pine"),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("global series fixture should run");
 
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 12);
-    let expected = [
-        serde_json::json!([1, 2]),
-        serde_json::json!([1, 2]),
-        serde_json::json!([1, 2]),
-        serde_json::json!([1, 2]),
-        serde_json::json!([1, 1]),
-        serde_json::json!([0, 1]),
-        serde_json::json!([60000, 60001]),
-        serde_json::json!([1, 2]),
-        serde_json::json!([1, 2]),
-        serde_json::json!([1, 2]),
-        serde_json::json!([1, 2]),
-        serde_json::json!([0, 1]),
-    ];
-    for (plot, values) in plots.iter().zip(expected) {
-        assert_eq!(plot["values"], values);
-    }
+    assert_snapshot("runtime_global_series.json", &output);
 }
 
 #[test]
