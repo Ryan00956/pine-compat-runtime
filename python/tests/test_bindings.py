@@ -1464,13 +1464,14 @@ def test_run_script_returns_ta_fixture_contract():
 
 def test_run_script_returns_dema_tema_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/dema_tema.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads((ROOT / "tests/snapshots/runtime_dema_tema.json").read_text())
 
-    assert result["diagnostics"] == []
-    assert len(result["plots"]) == 3
-    assert result["plots"][0]["values"] == [1.0, 1.75, 2.75]
-    assert result["plots"][1]["values"] == [1.0, 1.875, 2.9375]
-    assert result["plots"][2]["values"] == [None, None, None]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_macd_fixture_contract():
