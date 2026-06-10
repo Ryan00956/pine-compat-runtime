@@ -3047,10 +3047,7 @@ fn runs_strategy_margin_capital_held_from_csv_to_json() {
     )
     .expect("strategy margin capital held script should run");
 
-    assert!(output.contains("\"values\":[0,2,3,0]"));
-    assert!(output.contains("\"trades\":["));
-    assert!(!output.contains("closedTrades"));
-    assert!(!output.contains("openTrades"));
+    assert_snapshot("runtime_strategy_margin_capital_held_long.json", &output);
 }
 
 #[test]

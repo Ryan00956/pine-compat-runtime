@@ -3569,17 +3569,16 @@ def test_run_script_returns_strategy_opentrades_field_plots():
 
 def test_run_script_returns_margin_capital_held_plot():
     source = (ROOT / "tests/fixtures/runtime/strategy_margin_capital_held_long.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_margin_capital_held_long.json").read_text()
+    )
+
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/bars.csv"),
     )
 
-    assert [plot["values"] for plot in result["plots"]] == [[0.0, 2.0, 3.0, 0.0]]
-    assert set(result["strategy"]) == set(EMPTY_STRATEGY_RESULT)
-    assert result["strategy"]["trades"][0]["entryPrice"] == 2.0
-    assert result["strategy"]["trades"][0]["exitPrice"] == 4.0
-    assert "closedTrades" not in result["strategy"]
-    assert "openTrades" not in result["strategy"]
+    assert result == expected
 
 
 def test_run_script_returns_margin_entry_affordability_contract():
