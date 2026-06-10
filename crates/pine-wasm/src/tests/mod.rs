@@ -1346,24 +1346,11 @@ fn run_script_csv_returns_na_snapshot_contract() {
 fn run_script_csv_returns_ta_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/ta.pine"),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("TA fixture should run");
 
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    let plots = parsed["plots"].as_array().expect("plots");
-    assert_eq!(plots.len(), 5);
-    let ema_values = plots[0]["values"].as_array().expect("EMA values");
-    let expected_ema = [1.0, 1.6666666666666665, 2.5555555555555554];
-    for (actual, expected) in ema_values.iter().zip(expected_ema) {
-        let actual = actual.as_f64().expect("numeric EMA value");
-        assert!((actual - expected).abs() < 1e-12);
-    }
-    assert_eq!(plots[1]["values"], serde_json::json!([1, 1.5, 2.25]));
-    assert_eq!(plots[2]["values"], serde_json::json!([null, 100, 100]));
-    assert_eq!(plots[3]["values"], serde_json::json!([null, 1, 1]));
-    assert_eq!(plots[4]["values"], serde_json::json!([0, 1, 1]));
+    assert_snapshot("runtime_ta.json", &output);
 }
 
 #[test]
