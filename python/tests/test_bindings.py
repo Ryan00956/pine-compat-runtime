@@ -193,22 +193,14 @@ def test_run_script_returns_plotcandle_fixture_contract():
 
 def test_run_script_returns_color_outputs_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/color_outputs.pine").read_text()
-    result = pine_compat.run_script(source, BARS)
+    expected = json.loads((ROOT / "tests/snapshots/runtime_color_outputs.json").read_text())
 
-    assert result["diagnostics"] == []
-    assert result["plots"][0]["values"] == [1.0, 2.0, 3.0]
-    assert result["bgColors"] == [
-        {
-            "id": 1,
-            "values": [None, 32768, 32768],
-        }
-    ]
-    assert result["barColors"] == [
-        {
-            "id": 2,
-            "values": [None, None, 16711680],
-        }
-    ]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_hline_fill_fixture_contract():
