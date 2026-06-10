@@ -119,28 +119,11 @@ fn run_script_csv_returns_plotchar_fixture_contract() {
 fn run_script_csv_returns_plotshape_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/plotshape.pine"),
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("plotshape fixture should run");
 
-    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
-    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
-    assert_eq!(parsed["plots"][0]["values"], serde_json::json!([1, 2, 3]));
-    assert_eq!(
-        parsed["plotShapes"],
-        serde_json::json!([
-            {
-                "id": 1,
-                "values": [null, false, true],
-                "styles": [null, "shape.triangleup", "shape.triangleup"],
-                "locations": [null, "location.belowbar", "location.belowbar"],
-                "colors": [null, 32768, 32768],
-                "texts": [null, "Buy", "Buy"],
-                "textColors": [null, 16777215, 16777215],
-                "sizes": [null, "size.small", "size.small"]
-            }
-        ])
-    );
+    assert_snapshot("runtime_plotshape.json", &output);
 }
 
 #[test]
