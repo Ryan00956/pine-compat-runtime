@@ -3060,15 +3060,7 @@ fn runs_strategy_margin_entry_affordability_from_csv_to_json() {
     )
     .expect("strategy margin entry affordability script should run");
 
-    assert!(output.contains("\"values\":[0,0,0,1]"));
-    assert!(output.contains("\"values\":[0,0,0,4]"));
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"covered-market\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.long\",\"qty\":1,\"price\":4}]"
-    ));
-    assert!(output.contains("\"position\":[{\"barIndex\":3,\"size\":1,\"avgPrice\":4}]"));
-    assert!(output.contains("\"code\":\"E_STRATEGY_MARGIN\""));
-    assert!(!output.contains("closedTrades"));
-    assert!(!output.contains("openTrades"));
+    assert_snapshot("runtime_strategy_margin_entry_affordability.json", &output);
 }
 
 #[test]
