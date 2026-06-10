@@ -4,6 +4,10 @@ var lines = array.new_line()
 if bar_index == 0
     first = line.new(bar_index, low, bar_index + 1, high)
     second = line.copy(first)
+    empty_slot = array.new_line(1)
+    seeded = array.new_line(2, first)
+    if na(empty_slot.get(0)) and seeded.size() == 2
+        line.set_color(seeded.get(1), color.red)
     lines.push(first)
     lines.unshift(second)
     lines.insert(1, first)
