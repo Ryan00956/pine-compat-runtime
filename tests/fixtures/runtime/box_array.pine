@@ -4,6 +4,10 @@ var boxes = array.new_box()
 if bar_index == 0
     first = box.new(bar_index, high, bar_index + 1, low)
     second = box.copy(first)
+    empty_slot = array.new_box(1)
+    seeded = array.new_box(2, first)
+    if na(empty_slot.get(0)) and seeded.size() == 2
+        box.set_text(seeded.get(1), "seeded")
     boxes.push(first)
     boxes.unshift(second)
     boxes.insert(1, first)
