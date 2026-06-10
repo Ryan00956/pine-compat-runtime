@@ -2253,15 +2253,12 @@ fn runs_strategy_exit_trailing_wrong_entry_from_csv_as_noop_json() {
 #[test]
 fn runs_strategy_entry_from_csv_to_strategy_json() {
     let output = run_script_csv(
-        "strategy(\"demo\")\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(close)\n",
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_entry.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy entry script should run");
 
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":2,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":3}]"
-    ));
-    assert!(output.contains("\"position\":[{\"barIndex\":2,\"size\":2,\"avgPrice\":3}]"));
+    assert_snapshot("runtime_strategy_entry.json", &output);
 }
 
 #[test]
