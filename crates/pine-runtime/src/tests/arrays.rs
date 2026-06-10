@@ -946,6 +946,8 @@ float_indices_source.push(high)
 float_indices_source.push(close)
 float_indices = array.sort_indices(float_indices_source)
 plot(float_indices.get(0) * 100 + float_indices.get(1) * 10 + float_indices.get(2))
+array.reverse(floats)
+plot(na(floats.get(0)) and floats.get(1) == high and floats.get(2) == close ? 1 : 0)
 
 words = array.new_string()
 words.push("b")
@@ -958,12 +960,20 @@ words.sort(order.descending)
 plot(words.get(0) == "" and words.get(1) == "c" and words.get(2) == "b" and words.get(3) == "a" ? 1 : 0)
 word_indices = words.sort_indices(order.ascending)
 plot(word_indices.get(0) == 3 and word_indices.get(1) == 2 and word_indices.get(2) == 1 and word_indices.get(3) == 0 ? 1 : 0)
+words.reverse()
+plot(words.get(0) == "a" and words.get(1) == "b" and words.get(2) == "c" and words.get(3) == "" ? 1 : 0)
+
+flags = array.from(true, false, false)
+flags.reverse()
+plot(not flags.get(0) and not flags.get(1) and flags.get(2) ? 1 : 0)
 
 empty_sort = array.new_float()
 array.sort(empty_sort)
 plot(empty_sort.size())
 empty_sort_indices = empty_sort.sort_indices()
 plot(empty_sort_indices.size())
+empty_sort.reverse()
+plot(empty_sort.size())
 
 colors = array.new_color()
 colors.push(color.red)
@@ -982,7 +992,7 @@ plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
     let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 16);
+    assert_eq!(result.plots.len(), 20);
     assert_values_close(&result.plots[0].values, &[123.0, 123.0]);
     assert_values_close(&result.plots[1].values, &[321.0, 321.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
@@ -996,9 +1006,13 @@ plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
     assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[13].values, &[0.0, 0.0]);
-    assert_values_close(&result.plots[14].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[16].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[17].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[18].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
 }
 
 #[test]
