@@ -4,6 +4,10 @@ var labels = array.new_label()
 if bar_index == 0
     first = label.new(bar_index, high, "first")
     second = label.copy(first)
+    empty_slot = array.new_label(1)
+    seeded = array.new_label(2, first)
+    if na(empty_slot.get(0)) and seeded.size() == 2
+        label.set_tooltip(seeded.get(1), "seeded")
     labels.push(first)
     labels.unshift(second)
     labels.insert(1, first)
