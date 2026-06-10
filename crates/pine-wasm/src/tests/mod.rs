@@ -2910,16 +2910,12 @@ fn runs_strategy_limit_verification_exit_fixture_contract() {
 #[test]
 fn runs_strategy_position_state_from_csv_to_json() {
     let output = run_script_csv(
-        "strategy(\"demo\")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 1\n    strategy.entry(\"L\", strategy.long, qty=2)\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 2\n    strategy.close(\"L\")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nplot(strategy.max_contracts_held_all)\nplot(strategy.max_contracts_held_long)\nplot(strategy.max_contracts_held_short)\n",
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_position_state.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy position state script should run");
 
-    assert!(output.contains("\"values\":[0,0,2]"));
-    assert!(output.contains("\"values\":[null,null,3]"));
-    assert!(output.contains("\"values\":[0,0,0]"));
-    assert!(output.contains("\"values\":[null,null,null]"));
-    assert!(output.contains("\"values\":[0,0,2]"));
+    assert_snapshot("runtime_strategy_position_state.json", &output);
 }
 
 #[test]

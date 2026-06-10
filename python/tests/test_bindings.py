@@ -3202,22 +3202,17 @@ def test_run_script_returns_strategy_cash_default_quantity_override_fixture_cont
 
 
 def test_run_script_returns_strategy_position_state_plots():
-    result = pine_compat.run_script(
-        'strategy("demo")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 1\n    strategy.entry("L", strategy.long, qty=2)\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nif bar_index == 2\n    strategy.close("L")\nplot(strategy.position_size)\nplot(strategy.position_avg_price)\nplot(strategy.max_contracts_held_all)\nplot(strategy.max_contracts_held_long)\nplot(strategy.max_contracts_held_short)\n',
-        BARS,
+    source = (ROOT / "tests/fixtures/runtime/strategy_position_state.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_position_state.json").read_text()
     )
 
-    assert result["plots"] == [
-        {"id": 1, "values": [0.0, 0.0, 2.0]},
-        {"id": 2, "values": [None, None, 3.0]},
-        {"id": 4, "values": [0.0, 0.0, 2.0]},
-        {"id": 5, "values": [None, None, 3.0]},
-        {"id": 7, "values": [0.0, 0.0, 0.0]},
-        {"id": 8, "values": [None, None, None]},
-        {"id": 9, "values": [0.0, 0.0, 2.0]},
-        {"id": 10, "values": [0.0, 0.0, 2.0]},
-        {"id": 11, "values": [0.0, 0.0, 0.0]},
-    ]
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
 
 
 def test_run_script_returns_strategy_position_state_fixture_contract():
