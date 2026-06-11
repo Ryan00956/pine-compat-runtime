@@ -55,7 +55,7 @@ truth for request claims.
   direct OHLCV/time sources, pure arithmetic and ternaries, history references,
   `na`, `nz`, selected stateless `math.*` calls, fixed-mintick
   `math.round_to_mintick`, `math.sum`, `ta.sma`, `ta.ema`, `ta.rsi`, `ta.atr`,
-  `ta.highest`, and `ta.lowest`.
+  `ta.highest`, `ta.lowest`, `ta.change`, `ta.mom`, and `ta.roc`.
 - Provider-backed requested expressions run in an isolated requested context.
   Chart-runtime history, `ta.*` callsite state, `var` storage, arrays, drawing
   objects, and outputs are not shared with requested-context evaluation.

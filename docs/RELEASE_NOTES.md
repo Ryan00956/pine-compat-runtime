@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported `ta.change`, `ta.mom`, and `ta.roc` calls in
+  same-context and provider-backed scalar expressions, with requested-context
+  history buffers isolated from chart state.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported `ta.highest` and `ta.lowest` calls in same-context and
   provider-backed scalar expressions, with requested-context extrema callsite
   state isolated from chart state.

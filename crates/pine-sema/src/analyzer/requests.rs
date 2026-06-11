@@ -244,5 +244,8 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.atr"
             | "ta.highest"
             | "ta.lowest"
+            | "ta.change"
+            | "ta.mom"
+            | "ta.roc"
     )
 }

@@ -273,10 +273,10 @@ Request data:
   OHLCV/time sources, pure arithmetic and ternaries, history references, `na`,
   `nz`, selected stateless `math.*` calls, fixed-mintick
   `math.round_to_mintick`, `math.sum`, `ta.sma`, `ta.ema`, `ta.rsi`, `ta.atr`,
-  `ta.highest`, and `ta.lowest`; local variable aliases, extrema offset helpers
-  such as `ta.highestbars`/`ta.lowestbars`, and stateful math calls such as
-  `math.random` are not part of this subset. Requested-context rolling callsite
-  state is isolated from chart state.
+  `ta.highest`, `ta.lowest`, `ta.change`, `ta.mom`, and `ta.roc`; local variable
+  aliases, extrema offset helpers such as `ta.highestbars`/`ta.lowestbars`, and
+  stateful math calls such as `math.random` are not part of this subset.
+  Requested-context rolling callsite state is isolated from chart state.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
   the last confirmed value.

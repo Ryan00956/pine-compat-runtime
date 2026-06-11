@@ -509,6 +509,47 @@ fn request_security_isolates_provider_extrema_state_from_chart_state() {
 }
 
 #[test]
+fn request_security_evaluates_provider_momentum_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request momentum\")\nprovider_change = request.security(\"NYSE:IBM\", timeframe.period, ta.change(close))\nprovider_mom = request.security(\"NYSE:IBM\", timeframe.period, ta.mom(close, 2))\nprovider_roc = request.security(\"NYSE:IBM\", timeframe.period, ta.roc(close, 2))\nchart_change = ta.change(close)\nchart_mom = ta.mom(close, 2)\nchart_roc = ta.roc(close, 2)\nplot(provider_change)\nplot(provider_mom)\nplot(provider_roc)\nplot(chart_change)\nplot(chart_mom)\nplot(chart_roc)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 22.0),
+            timed_bar(120_000, 26.0),
+            timed_bar(180_000, 25.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 11.0),
+            timed_bar(180_000, 17.0),
+        ])
+        .expect("provider ta.change/ta.mom/ta.roc expressions should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[2.0, 4.0, -1.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_values_close(&result.plots[1].values[2..], &[6.0, 3.0]);
+    assert_eq!(result.plots[2].values[0], PineValue::Na);
+    assert_eq!(result.plots[2].values[1], PineValue::Na);
+    assert_values_close(&result.plots[2].values[2..], &[30.0, 13.636363636363635]);
+    assert_eq!(result.plots[3].values[0], PineValue::Na);
+    assert_values_close(&result.plots[3].values[1..], &[2.0, 4.0, 6.0]);
+    assert_eq!(result.plots[4].values[0], PineValue::Na);
+    assert_eq!(result.plots[4].values[1], PineValue::Na);
+    assert_values_close(&result.plots[4].values[2..], &[6.0, 10.0]);
+    assert_eq!(result.plots[5].values[0], PineValue::Na);
+    assert_eq!(result.plots[5].values[1], PineValue::Na);
+    assert_values_close(&result.plots[5].values[2..], &[120.0, 142.85714285714286]);
+}
+
+#[test]
 fn request_security_evaluates_provider_ema_in_requested_context() {
     let program = compile_program(
         "indicator(\"request ema\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, ta.ema(close, 2)))\n",
