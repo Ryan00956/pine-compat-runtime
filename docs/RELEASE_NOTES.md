@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Designed the shared host alert event envelope for future `both` running-alert
+  selection across top-level `alerts[]` and `strategy.alerts[]`. This does not
+  enable `both`, add envelope builders, or change public runtime JSON.
 - Added a host-only strategy order-fill delivery-candidate builder over
   `RunningAlertConfig` and public `strategy.alerts` events. It remains a
   test/debug helper and does not add realtime source wiring, network delivery,

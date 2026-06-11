@@ -64,8 +64,9 @@ RunningAlertEventSelection
 
 The first implementation slice should focus on `strategyOrderFills` only,
 because the strategy order-fill renderer is already explicit and host-owned.
-`both` should stay design-only until indicator alert-call host rendering and
-strategy order-fill rendering can share one deterministic event envelope.
+`both` should stay implementation-pending until the shared host event envelope
+in `docs/STRATEGY_REALTIME_ALERT_DELIVERY_PLAN.md` has executable builders and
+host tests for both event streams.
 
 `messageTemplate` is host data. The initial supported strategy template token is
 the exact `{{strategy.order.alert_message}}` token already implemented by the
@@ -130,8 +131,9 @@ leaving room for a realtime host loop later.
 3. Closed on 2026-06-11: add a strategy order-fill evaluation helper that takes
    one config and one public `StrategyOrderFillAlertOutput`, returning either a
    rendered host message or a host diagnostic. The helper accepts
-   `strategyOrderFills` only; `both` remains design-only until indicator alert
-   calls and strategy order fills share one deterministic host event envelope.
+   `strategyOrderFills` only; `both` remains implementation-pending until
+   indicator alert calls and strategy order fills share executable host envelope
+   builders and tests.
    Default JSON remains unchanged.
 4. Closed on 2026-06-11: expose the helper explicitly through Python, CLI, and
    WASM host wrappers with tests that default runtime output stays unchanged.

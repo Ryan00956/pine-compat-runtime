@@ -114,9 +114,54 @@ both                -> one shared host event envelope
 ```
 
 The current runtime helper supports `strategyOrderFills` only. `both` must
-remain design-only until indicator alert calls and strategy order fills share a
-single host envelope with stable event kind, bar identity, message template, and
-dedupe fields.
+remain implementation-pending until indicator alert calls and strategy order
+fills have executable builders for a single host envelope with stable event
+kind, bar identity, message template, and dedupe fields.
+
+## Shared Host Event Envelope
+
+The shared envelope is a host-only normalization layer over already-public
+runtime events. It is not a new `RuntimeResult` field and is not serialized by
+default CLI, Python, or WASM runtime outputs.
+
+```text
+HostAlertEventEnvelope
+  eventKind: indicatorAlertCall | strategyOrderFill
+  barIndex: usize
+  time: i64
+  eventId: string
+  rawMessage: string
+  sourceStream: alerts | strategy.alerts
+```
+
+Mapping rules:
+
+- `AlertEvent` maps to `indicatorAlertCall`, `sourceStream=alerts`,
+  `eventId=AlertEvent.id` converted to string, and `rawMessage=message`.
+- `StrategyOrderFillAlertOutput` maps to `strategyOrderFill`,
+  `sourceStream=strategy.alerts`, `eventId=id`, and `rawMessage=message`.
+- `barIndex` and `time` are copied directly from the public event.
+- Event kind stays part of the dedupe key, so identical event ids from different
+  streams do not collide.
+
+The envelope should be the only input shape accepted by a future `both`
+selector. Hosts may build envelopes from historical outputs for test/debug
+replay, but live delivery still requires an explicitly realtime event source.
+
+Rendering rules:
+
+- `indicatorAlertCall` candidates use the event `rawMessage` as the rendered
+  delivery message in the first shared-envelope slice. Broader alert-message
+  templates and Pine-source placeholder interpolation remain unsupported.
+- `strategyOrderFill` candidates keep using `RunningAlertConfig.messageTemplate`
+  and the existing `{{strategy.order.alert_message}}` renderer.
+- Unsupported event kind/template combinations are host diagnostics, not Pine
+  semantic diagnostics.
+
+This design is sufficient to specify `both`, but not to enable it. Enabling
+`both` still requires executable envelope builders for both streams, host tests
+that prove stable ordering and dedupe, and explicit CLI/Python/WASM wrapper
+decisions.
 
 ## Delivery Candidate
 
@@ -174,7 +219,8 @@ separate implementation plan before support is claimed.
 - Do not replay historical backtests as delivered realtime alerts by default.
 - Do not change `RuntimeResult`, `alerts[]`, `strategy.alerts[]`, CLI JSON,
   Python dictionaries, or WASM runtime JSON.
-- Do not support `both` until a shared event envelope exists.
+- Do not support `both` until executable shared-envelope builders and host tests
+  exist for both event streams.
 - Do not claim realtime strategy alert delivery until realtime strategy
   execution itself is fixture-backed.
 
@@ -186,8 +232,10 @@ separate implementation plan before support is claimed.
 3. Closed on 2026-06-11: add a host-only strategy order-fill candidate builder
    over `RunningAlertConfig` plus public `strategy.alerts` events. This remains
    a test/debug replay helper unless wired to a realtime event source.
-4. Design the shared event envelope for `indicatorAlertCalls` and
-   `strategyOrderFills`; only then consider enabling `both`.
+4. Closed on 2026-06-11: design the shared host event envelope for
+   `indicatorAlertCalls` and `strategyOrderFills`. `both` remains
+   implementation-pending until executable envelope builders and host tests
+   exist.
 5. Design concrete external delivery adapters separately, including
    persistence, retries, authentication, and failure reporting.
 
