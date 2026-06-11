@@ -1535,6 +1535,38 @@ fn request_security_evaluates_provider_bop_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_ao_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request ao\")\nprovider_ao = request.security(\"NYSE:IBM\", timeframe.period, ta.ao())\nchart_ao = ta.ao()\nplot(provider_ao)\nplot(chart_ao)\n",
+    );
+    let provider_bars: Vec<_> = (0_i64..36)
+        .map(|index| {
+            let hl2 = 100.0 + 2.0 * index as f64;
+            timed_ohlcv(index * 60_000, hl2, hl2 + 1.0, hl2 - 1.0, hl2, 1.0)
+        })
+        .collect();
+    let chart_bars: Vec<_> = (0_i64..36)
+        .map(|index| {
+            let hl2 = 10.0 + 3.0 * index as f64;
+            timed_ohlcv(index * 60_000, hl2, hl2 + 1.0, hl2 - 1.0, hl2, 1.0)
+        })
+        .collect();
+    let environment = external_symbol_environment("NYSE:IBM", provider_bars);
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&chart_bars)
+        .expect("provider ta.ao expression should run");
+
+    for value in &result.plots[0].values[..33] {
+        assert_eq!(*value, PineValue::Na);
+    }
+    assert_values_close(&result.plots[0].values[33..], &[29.0, 29.0, 29.0]);
+    for value in &result.plots[1].values[..33] {
+        assert_eq!(*value, PineValue::Na);
+    }
+    assert_values_close(&result.plots[1].values[33..], &[43.5, 43.5, 43.5]);
+}
+
+#[test]
 fn request_security_evaluates_provider_mfi_in_requested_context() {
     let program = compile_program(
         "indicator(\"request mfi\")\nprovider_mfi = request.security(\"NYSE:IBM\", timeframe.period, ta.mfi(close, 3))\nchart_mfi = ta.mfi(close, 3)\nplot(provider_mfi)\nplot(chart_mfi)\n",

@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported zero-argument `ta.ao` calls in same-context and
+  provider-backed scalar expressions.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported zero-argument `ta.bop` calls in same-context and
   provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to
