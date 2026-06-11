@@ -510,20 +510,22 @@ Current state: indicator-style alert events are supported in a narrow runtime
 event model. Strategy order-fill alert metadata is stored internally on
 supported strategy order paths, and
 `docs/STRATEGY_ORDER_FILL_ALERTS_DESIGN.md` defines the order-fill alert event
-boundary. Strategy order-fill alerts are still not emitted.
+boundary. The broker now records internal order-fill alert events for supported
+entry, exit, close, and close_all fills, including `disable_alert` suppression
+and exit leg-specific message selection. Strategy order-fill alerts are still
+not exposed through public host output.
 
 Missing internal behavior:
 
-- order-fill alert messages;
 - strategy-specific placeholder data for order fills;
-- alert events tied to broker fills rather than reached alert calls.
+- public alert events tied to broker fills rather than reached alert calls.
 
 Gap size: medium.
 
-Best next slice: add an internal-only broker-owned order-fill alert event model
-from `docs/STRATEGY_ORDER_FILL_ALERTS_DESIGN.md`, with broker tests and a
-public JSON stability fixture. External delivery and public JSON expansion
-remain out of scope until a later schema slice.
+Best next slice: design the public schema for exposing broker-owned
+order-fill alert events, including CLI/Python/WASM host parity. External alert
+delivery remains out of scope until public schema and placeholder rendering are
+closed.
 
 ## Recommended Internal Roadmap
 

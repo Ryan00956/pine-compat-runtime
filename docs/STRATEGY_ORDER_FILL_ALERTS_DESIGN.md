@@ -126,9 +126,11 @@ Any public exposure of strategy order-fill alerts must:
 
 Until that slice lands, `alerts[]` and `strategy` public JSON remain unchanged.
 
-## Next Implementation Slice
+## Internal Event Slice
 
-The next safe runtime slice is internal-only:
+Closed on 2026-06-11.
+
+The first runtime slice is internal-only:
 
 1. add the broker-owned `StrategyOrderFillAlertEvent` collection;
 2. record entry, exit, close, and close_all fill events from existing metadata;
@@ -137,5 +139,12 @@ The next safe runtime slice is internal-only:
 5. add broker unit tests for event content and suppression;
 6. add a runtime snapshot proving public JSON remains byte-for-byte unchanged.
 
-Only after that internal slice is stable should a separate schema slice expose
-strategy order-fill alerts to hosts.
+The broker now records those events internally. Public runtime output remains
+unchanged.
+
+## Next Public Schema Slice
+
+Only after the internal event model stays stable should a separate schema slice
+expose strategy order-fill alerts to hosts. That slice must decide between a
+schema-versioned `strategy.alerts` array and a top-level typed alert union, then
+update CLI, Python, and WASM host parity together.

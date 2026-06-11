@@ -47,11 +47,21 @@ fn exit_metadata(label: &str) -> StrategyExitMetadata {
 }
 
 fn close_metadata(label: &str) -> StrategyOrderMetadata {
+    order_metadata(label, true)
+}
+
+fn order_metadata(label: &str, disable_alert: bool) -> StrategyOrderMetadata {
     StrategyOrderMetadata {
         comment: Some(format!("{label} comment")),
         alert_message: Some(format!("{label} alert")),
-        disable_alert: true,
+        disable_alert,
     }
+}
+
+fn exit_alert_metadata(label: &str, disable_alert: bool) -> StrategyExitMetadata {
+    let mut metadata = exit_metadata(label);
+    metadata.disable_alert = disable_alert;
+    metadata
 }
 
 fn margin_broker(initial_capital: f64, margin_long: f64) -> BrokerState {
@@ -3516,6 +3526,162 @@ fn close_all_metadata_is_recorded_for_each_internal_closed_trade_metric() {
             .all(|metrics| metrics.close_metadata == metadata)
     );
     assert_eq!(broker.result().trades.len(), 2);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn entry_metadata_records_internal_order_fill_alert_without_public_output() {
+    let mut broker = BrokerState::new(100_000.0);
+    let metadata = order_metadata("entry", false);
+
+    assert!(broker.entry_long_with_metadata("L".to_owned(), 1, 20, 100.0, 2.0, metadata));
+
+    assert_eq!(
+        broker.order_fill_alerts,
+        vec![StrategyOrderFillAlertEvent {
+            id: "L".to_owned(),
+            bar_index: 1,
+            time: 20,
+            direction: "strategy.long".to_owned(),
+            qty: 2.0,
+            price: 100.0,
+            entry_id: Some("L".to_owned()),
+            exit_id: None,
+            message: "entry alert".to_owned(),
+        }]
+    );
+    assert_eq!(broker.result().orders.len(), 1);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn disabled_entry_metadata_suppresses_internal_order_fill_alert() {
+    let mut broker = BrokerState::new(100_000.0);
+    let metadata = order_metadata("entry", true);
+
+    assert!(broker.entry_long_with_metadata("L".to_owned(), 1, 20, 100.0, 2.0, metadata));
+
+    assert!(broker.order_fill_alerts.is_empty());
+    assert_eq!(broker.result().orders.len(), 1);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn close_metadata_records_internal_order_fill_alerts() {
+    let mut close_broker = broker_with_long_entry();
+    close_broker.order_fill_alerts.clear();
+    let metadata = order_metadata("close", false);
+
+    close_broker.with_next_close_metadata(metadata, |broker| {
+        broker.close_long("L".to_owned(), 1, 20, 110.0);
+    });
+
+    assert_eq!(
+        close_broker.order_fill_alerts,
+        vec![StrategyOrderFillAlertEvent {
+            id: "L".to_owned(),
+            bar_index: 1,
+            time: 20,
+            direction: "strategy.close".to_owned(),
+            qty: 2.0,
+            price: 110.0,
+            entry_id: Some("L".to_owned()),
+            exit_id: Some("L".to_owned()),
+            message: "close alert".to_owned(),
+        }]
+    );
+
+    let mut close_all_broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    );
+    assert!(close_all_broker.entry_long("L1".to_owned(), 0, 10, 100.0, 1.0));
+    assert!(close_all_broker.entry_long("L2".to_owned(), 1, 20, 110.0, 2.0));
+    close_all_broker.order_fill_alerts.clear();
+    let metadata = order_metadata("close all", false);
+
+    close_all_broker.with_next_close_metadata(metadata, |broker| {
+        broker.close_all_long(2, 30, 120.0);
+    });
+
+    assert_eq!(
+        close_all_broker
+            .order_fill_alerts
+            .iter()
+            .map(|event| (
+                event.id.as_str(),
+                event.direction.as_str(),
+                event.qty,
+                event.message.as_str()
+            ))
+            .collect::<Vec<_>>(),
+        vec![
+            ("L1", "strategy.close_all", 1.0, "close all alert"),
+            ("L2", "strategy.close_all", 2.0, "close all alert"),
+        ]
+    );
+    assert_eq!(close_all_broker.result().trades.len(), 2);
+    assert!(close_all_broker.diagnostics.is_empty());
+}
+
+#[test]
+fn exit_metadata_records_leg_specific_internal_order_fill_alert_messages() {
+    let mut profit_broker = broker_with_long_entry();
+    profit_broker.order_fill_alerts.clear();
+    let metadata = exit_alert_metadata("exit", false);
+    profit_broker.with_next_exit_metadata(metadata, |broker| {
+        broker.place_exit_limit("XP".to_owned(), "L".to_owned(), 110.0, 0);
+    });
+
+    profit_broker.evaluate_pending_exits(1, 20, 110.0, 100.0);
+
+    assert_eq!(profit_broker.order_fill_alerts.len(), 1);
+    assert_eq!(
+        profit_broker.order_fill_alerts[0].message,
+        "exit profit alert"
+    );
+    assert_eq!(
+        profit_broker.order_fill_alerts[0].exit_id,
+        Some("XP".to_owned())
+    );
+    assert_eq!(profit_broker.result().trades.len(), 1);
+
+    let mut loss_broker = broker_with_long_entry();
+    loss_broker.order_fill_alerts.clear();
+    let metadata = exit_alert_metadata("exit", false);
+    loss_broker.with_next_exit_metadata(metadata, |broker| {
+        broker.place_exit_stop("XS".to_owned(), "L".to_owned(), 95.0, 0);
+    });
+
+    loss_broker.evaluate_pending_exits(1, 20, 100.0, 95.0);
+
+    assert_eq!(loss_broker.order_fill_alerts.len(), 1);
+    assert_eq!(loss_broker.order_fill_alerts[0].message, "exit loss alert");
+    assert_eq!(
+        loss_broker.order_fill_alerts[0].exit_id,
+        Some("XS".to_owned())
+    );
+    assert_eq!(loss_broker.result().trades.len(), 1);
+}
+
+#[test]
+fn disabled_exit_metadata_suppresses_internal_order_fill_alert() {
+    let mut broker = broker_with_long_entry();
+    broker.order_fill_alerts.clear();
+    let metadata = exit_alert_metadata("exit", true);
+    broker.with_next_exit_metadata(metadata, |broker| {
+        broker.place_exit_limit("XP".to_owned(), "L".to_owned(), 110.0, 0);
+    });
+
+    broker.evaluate_pending_exits(1, 20, 110.0, 100.0);
+
+    assert!(broker.order_fill_alerts.is_empty());
+    assert_eq!(broker.result().trades.len(), 1);
     assert!(broker.diagnostics.is_empty());
 }
 

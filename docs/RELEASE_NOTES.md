@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added an internal broker-owned strategy order-fill alert event model for
+  supported `strategy.entry`, `strategy.exit`, `strategy.close`, and
+  `strategy.close_all` fills. The broker now records fill-time alert payloads,
+  honors `disable_alert`, and selects `strategy.exit` profit/loss messages by
+  filled leg. Public JSON, host output, placeholder rendering, and external
+  alert delivery remain unchanged.
 - Closed the Strategy Order-Fill Alerts design gate. Future strategy
   order-fill alert work now has an internal broker event boundary for
   fill-time message selection, `disable_alert` suppression, placeholder

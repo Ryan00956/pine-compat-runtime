@@ -48,6 +48,20 @@ pub(crate) struct StrategyExitMetadata {
     pub(crate) disable_alert: bool,
 }
 
+#[allow(dead_code)]
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct StrategyOrderFillAlertEvent {
+    pub(crate) id: String,
+    pub(crate) bar_index: usize,
+    pub(crate) time: i64,
+    pub(crate) direction: String,
+    pub(crate) qty: f64,
+    pub(crate) price: f64,
+    pub(crate) entry_id: Option<String>,
+    pub(crate) exit_id: Option<String>,
+    pub(crate) message: String,
+}
+
 struct EntryFill {
     id: String,
     bar_index: usize,
@@ -88,6 +102,7 @@ pub struct BrokerState {
     max_drawdown_percent: f64,
     max_contracts_held_long: f64,
     orders: Vec<StrategyOrderEvent>,
+    order_fill_alerts: Vec<StrategyOrderFillAlertEvent>,
     trades: Vec<StrategyTrade>,
     closed_trade_metrics: Vec<ClosedTradeMetrics>,
     position: Vec<StrategyPositionSnapshot>,
@@ -225,6 +240,7 @@ impl BrokerState {
             max_drawdown_percent: 0.0,
             max_contracts_held_long: 0.0,
             orders: Vec::new(),
+            order_fill_alerts: Vec::new(),
             trades: Vec::new(),
             closed_trade_metrics: Vec::new(),
             position: Vec::new(),
@@ -407,6 +423,8 @@ impl BrokerState {
         let equity_on_entry = self.cash;
         let min_equity_before_entry = self.min_equity_before_open_trade;
         let max_equity_before_entry = self.max_equity_before_open_trade;
+        let alert_id = fill.id.clone();
+        let alert_metadata = fill.metadata.clone();
         let open_trade = OpenTrade {
             key: 0,
             id: fill.id.clone(),
@@ -435,6 +453,20 @@ impl BrokerState {
             "strategy.long",
             fill.qty,
             fill_price,
+        );
+        self.record_order_fill_alert_from_order_metadata(
+            &alert_metadata,
+            StrategyOrderFillAlertEvent {
+                id: alert_id.clone(),
+                bar_index: fill.bar_index,
+                time: fill.time,
+                direction: "strategy.long".to_owned(),
+                qty: fill.qty,
+                price: fill_price,
+                entry_id: Some(alert_id),
+                exit_id: None,
+                message: String::new(),
+            },
         );
         self.record_position_snapshot(fill.bar_index);
         true

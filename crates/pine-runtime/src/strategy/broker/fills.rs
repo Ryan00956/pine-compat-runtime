@@ -1,7 +1,8 @@
 use super::{
-    BrokerState, ClosedTradeMetrics, StrategyOrderMetadata,
+    BrokerState, ClosedTradeMetrics, StrategyExitMetadata, StrategyOrderFillAlertEvent,
+    StrategyOrderMetadata,
     ledger::{OpenTrade, TradeAllocation},
-    pending_exits::PendingExit,
+    pending_exits::{PendingExit, PendingExitTrigger},
 };
 use crate::{RuntimeDiagnostic, StrategyOrderEvent, StrategyTrade};
 
@@ -68,6 +69,46 @@ struct ClosedTradeFill {
     close_metadata: StrategyOrderMetadata,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StrategyExitFillAlertKind {
+    Profit,
+    Loss,
+    Trailing,
+    Generic,
+}
+
+fn pending_exit_alert_kind(
+    trigger: &PendingExitTrigger,
+    raw_exit_price: f64,
+) -> StrategyExitFillAlertKind {
+    match trigger {
+        PendingExitTrigger::Limit(_) => StrategyExitFillAlertKind::Profit,
+        PendingExitTrigger::Stop(_) => StrategyExitFillAlertKind::Loss,
+        PendingExitTrigger::Trailing(_) => StrategyExitFillAlertKind::Trailing,
+        PendingExitTrigger::Bracket { downside, upside } if raw_exit_price == *downside => {
+            StrategyExitFillAlertKind::Loss
+        }
+        PendingExitTrigger::Bracket {
+            downside: _,
+            upside,
+        } if raw_exit_price == *upside => StrategyExitFillAlertKind::Profit,
+        PendingExitTrigger::Bracket { .. } => StrategyExitFillAlertKind::Generic,
+    }
+}
+
+fn exit_alert_message(metadata: &StrategyExitMetadata, kind: StrategyExitFillAlertKind) -> String {
+    let specific = match kind {
+        StrategyExitFillAlertKind::Profit => metadata.alert_profit.as_ref(),
+        StrategyExitFillAlertKind::Loss => metadata.alert_loss.as_ref(),
+        StrategyExitFillAlertKind::Trailing => metadata.alert_trailing.as_ref(),
+        StrategyExitFillAlertKind::Generic => None,
+    };
+    specific
+        .or(metadata.alert_message.as_ref())
+        .cloned()
+        .unwrap_or_default()
+}
+
 impl BrokerState {
     pub(super) fn record_open_long_legacy_state(&mut self, trade: &OpenTrade) {
         self.position_size = trade.quantity;
@@ -124,6 +165,31 @@ impl BrokerState {
             qty,
             price,
         });
+    }
+
+    pub(super) fn record_order_fill_alert_from_order_metadata(
+        &mut self,
+        metadata: &StrategyOrderMetadata,
+        mut event: StrategyOrderFillAlertEvent,
+    ) {
+        if metadata.disable_alert {
+            return;
+        }
+        event.message = metadata.alert_message.clone().unwrap_or_default();
+        self.order_fill_alerts.push(event);
+    }
+
+    fn record_order_fill_alert_from_exit_metadata(
+        &mut self,
+        metadata: &StrategyExitMetadata,
+        kind: StrategyExitFillAlertKind,
+        mut event: StrategyOrderFillAlertEvent,
+    ) {
+        if metadata.disable_alert {
+            return;
+        }
+        event.message = exit_alert_message(metadata, kind);
+        self.order_fill_alerts.push(event);
     }
 
     fn record_closed_trade_fill(&mut self, fill: ClosedTradeFill) {
@@ -285,6 +351,20 @@ impl BrokerState {
                 commission,
                 close_metadata: metadata.clone(),
             });
+            self.record_order_fill_alert_from_order_metadata(
+                &metadata,
+                StrategyOrderFillAlertEvent {
+                    id: allocation.entry_id.clone(),
+                    bar_index,
+                    time,
+                    direction: "strategy.close_all".to_owned(),
+                    qty: allocation.quantity,
+                    price,
+                    entry_id: Some(allocation.entry_id.clone()),
+                    exit_id: Some(allocation.entry_id.clone()),
+                    message: String::new(),
+                },
+            );
         }
 
         self.cash += qty * price - exit_commission;
@@ -405,8 +485,22 @@ impl BrokerState {
             qty,
             profit,
             commission,
-            close_metadata: metadata,
+            close_metadata: metadata.clone(),
         });
+        self.record_order_fill_alert_from_order_metadata(
+            &metadata,
+            StrategyOrderFillAlertEvent {
+                id: id.clone(),
+                bar_index,
+                time,
+                direction: "strategy.close".to_owned(),
+                qty,
+                price,
+                entry_id: Some(id.clone()),
+                exit_id: Some(id.clone()),
+                message: String::new(),
+            },
+        );
 
         self.cash += qty * price - exit_commission;
         if qty >= self.position_size {
@@ -443,7 +537,8 @@ impl BrokerState {
             });
             return;
         }
-        let exit_price = self.long_exit_fill_price(exit_price);
+        let raw_exit_price = exit_price;
+        let exit_price = self.long_exit_fill_price(raw_exit_price);
         if !exit_price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_PRICE".to_owned(),
@@ -451,6 +546,8 @@ impl BrokerState {
             });
             return;
         }
+        let alert_kind = pending_exit_alert_kind(&pending_exit.trigger, raw_exit_price);
+        let alert_metadata = pending_exit.metadata.clone();
         let allocations = if let Some(target_trade_key) = pending_exit.target_trade_key {
             self.trade_ledger
                 .allocate_exit_for_key(target_trade_key, qty)
@@ -483,6 +580,22 @@ impl BrokerState {
                 "strategy.exit",
                 qty,
                 exit_price,
+            );
+            self.record_order_fill_alert_from_exit_metadata(
+                &alert_metadata,
+                alert_kind,
+                StrategyOrderFillAlertEvent {
+                    id: exit_id.clone(),
+                    bar_index,
+                    time,
+                    direction: "strategy.exit".to_owned(),
+                    qty,
+                    price: exit_price,
+                    entry_id: (!pending_exit.from_entry.is_empty())
+                        .then(|| pending_exit.from_entry.clone()),
+                    exit_id: Some(exit_id.clone()),
+                    message: String::new(),
+                },
             );
             self.record_closed_trade_fill(ClosedTradeFill {
                 entry_id: pending_exit.from_entry,
@@ -518,6 +631,21 @@ impl BrokerState {
                     "strategy.exit",
                     allocation.quantity,
                     exit_price,
+                );
+                self.record_order_fill_alert_from_exit_metadata(
+                    &alert_metadata,
+                    alert_kind,
+                    StrategyOrderFillAlertEvent {
+                        id: exit_id.clone(),
+                        bar_index,
+                        time,
+                        direction: "strategy.exit".to_owned(),
+                        qty: allocation.quantity,
+                        price: exit_price,
+                        entry_id: Some(allocation.entry_id.clone()),
+                        exit_id: Some(exit_id.clone()),
+                        message: String::new(),
+                    },
                 );
                 self.record_closed_trade_fill(ClosedTradeFill {
                     entry_id: allocation.entry_id.clone(),
