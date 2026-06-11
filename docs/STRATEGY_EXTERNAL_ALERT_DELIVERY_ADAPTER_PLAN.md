@@ -37,7 +37,9 @@ Already supported:
   `strategy.alerts` events;
 - a design-only shared host event envelope for future `both` selection;
 - pure host-side external delivery identity, attempt status, attempt record,
-  result status, and result types without external delivery side effects.
+  result status, and result types without external delivery side effects;
+- a host-side `DeliveryAttemptStore` trait plus in-memory implementation for
+  tests, covering reserve, start, and complete flows.
 
 Still unsupported:
 
@@ -60,9 +62,9 @@ The adapter layer should have this conceptual shape:
 
 ```text
 DeliveryCandidate
-  -> DeliveryAttemptStore.reserve(candidate, adapterId)
+  -> DeliveryAttemptStore.reserve(dedupeKey, adapterId)
   -> ExternalDeliveryAdapter.deliver(candidate, attempt)
-  -> DeliveryAttemptStore.record(result)
+  -> DeliveryAttemptStore.complete(attempt, result)
   -> HostDeliveryDiagnostics
 ```
 
@@ -216,7 +218,9 @@ headers.
    retry, authentication, payload, and failure-reporting boundaries.
 2. Closed on 2026-06-11: add pure host-side attempt/result types and tests
    without external delivery.
-3. Add a durable-attempt-store trait plus an in-memory implementation for tests.
+3. Closed on 2026-06-11: add a delivery-attempt-store trait plus an in-memory
+   implementation for tests. The in-memory store does not claim restart-safe
+   durability.
 4. Add a local-log or test-collector adapter that exercises attempt recording
    without network delivery.
 5. Design and implement a webhook adapter only after URL validation, secret

@@ -55,8 +55,8 @@ Keep out of scope until separately designed:
 - Arbitrary future binding for unmatched `from_entry` ids.
 - Public pending-order, reservation, remaining-quantity, or exit-reason records.
 - Realtime strategy handoff and intrabar path reconstruction.
-- External strategy alert delivery before the host-owned durable attempt-store,
-  retry, authentication, and failure-reporting model from
+- External strategy alert delivery before the host-owned restart-safe durable
+  attempt-store, retry, authentication, and failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
 Recommended first slice: do not reopen broad broker foundations immediately

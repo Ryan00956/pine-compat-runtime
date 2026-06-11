@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added a host-side `DeliveryAttemptStore` trait and
+  `InMemoryDeliveryAttemptStore` test implementation for future alert delivery
+  adapters. The slice covers reserve/start/complete attempt recording without
+  adding network delivery, restart-safe persistence, or public runtime JSON
+  fields.
 - Added pure host-side external delivery identity, attempt record/status, and
   result/status models for future alert delivery adapters. The slice adds tests
   for serialization, retry classification, and adapter+dedupe identity without

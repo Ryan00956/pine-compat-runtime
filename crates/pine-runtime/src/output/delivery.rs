@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
@@ -252,6 +252,112 @@ impl ExternalDeliveryResult {
     }
 }
 
+pub trait DeliveryAttemptStore {
+    fn reserve(
+        &mut self,
+        dedupe_key: DeliveryDedupeKey,
+        adapter_id: String,
+        scheduled_at: i64,
+    ) -> DeliveryAttemptRecord;
+
+    fn start(
+        &mut self,
+        identity: &ExternalDeliveryIdentity,
+        attempt_number: u32,
+        started_at: i64,
+    ) -> Option<DeliveryAttemptRecord>;
+
+    fn complete(
+        &mut self,
+        identity: &ExternalDeliveryIdentity,
+        attempt_number: u32,
+        result: &ExternalDeliveryResult,
+    ) -> Option<DeliveryAttemptRecord>;
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct InMemoryDeliveryAttemptStore {
+    attempts: BTreeMap<ExternalDeliveryIdentity, Vec<DeliveryAttemptRecord>>,
+}
+
+impl InMemoryDeliveryAttemptStore {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn attempts(&self, identity: &ExternalDeliveryIdentity) -> &[DeliveryAttemptRecord] {
+        self.attempts
+            .get(identity)
+            .map(Vec::as_slice)
+            .unwrap_or(&[])
+    }
+
+    pub fn latest_attempt(
+        &self,
+        identity: &ExternalDeliveryIdentity,
+    ) -> Option<&DeliveryAttemptRecord> {
+        self.attempts(identity).last()
+    }
+
+    pub fn identity_count(&self) -> usize {
+        self.attempts.len()
+    }
+
+    fn find_attempt_mut(
+        &mut self,
+        identity: &ExternalDeliveryIdentity,
+        attempt_number: u32,
+    ) -> Option<&mut DeliveryAttemptRecord> {
+        self.attempts
+            .get_mut(identity)?
+            .iter_mut()
+            .find(|attempt| attempt.attempt_number == attempt_number)
+    }
+}
+
+impl DeliveryAttemptStore for InMemoryDeliveryAttemptStore {
+    fn reserve(
+        &mut self,
+        dedupe_key: DeliveryDedupeKey,
+        adapter_id: String,
+        scheduled_at: i64,
+    ) -> DeliveryAttemptRecord {
+        let identity = ExternalDeliveryIdentity::new(adapter_id.clone(), dedupe_key.clone());
+        let attempts = self.attempts.entry(identity).or_default();
+        let next_attempt_number = attempts
+            .len()
+            .checked_add(1)
+            .and_then(|count| u32::try_from(count).ok())
+            .expect("delivery attempt count fits in u32");
+        let record =
+            DeliveryAttemptRecord::new(dedupe_key, adapter_id, next_attempt_number, scheduled_at);
+        attempts.push(record.clone());
+        record
+    }
+
+    fn start(
+        &mut self,
+        identity: &ExternalDeliveryIdentity,
+        attempt_number: u32,
+        started_at: i64,
+    ) -> Option<DeliveryAttemptRecord> {
+        let attempt = self.find_attempt_mut(identity, attempt_number)?;
+        *attempt = attempt.clone().start(started_at);
+        Some(attempt.clone())
+    }
+
+    fn complete(
+        &mut self,
+        identity: &ExternalDeliveryIdentity,
+        attempt_number: u32,
+        result: &ExternalDeliveryResult,
+    ) -> Option<DeliveryAttemptRecord> {
+        let attempt = self.find_attempt_mut(identity, attempt_number)?;
+        *attempt = attempt.clone().complete(result);
+        Some(attempt.clone())
+    }
+}
+
 pub fn strategy_order_fill_delivery_candidate(
     running_alert_id: impl Into<String>,
     config: &RunningAlertConfig,
@@ -478,6 +584,78 @@ mod tests {
         assert!(DeliveryAttemptStatus::from(delivered.status).is_terminal());
         assert!(DeliveryAttemptStatus::from(transient.status).is_retryable_failure());
         assert!(DeliveryAttemptStatus::from(permanent.status).is_terminal());
+    }
+
+    #[test]
+    fn in_memory_attempt_store_reserves_attempts_by_adapter_and_dedupe_key() {
+        let mut store = InMemoryDeliveryAttemptStore::new();
+        let key = candidate("message").dedupe_key();
+
+        let first = store.reserve(key.clone(), "webhook-main".to_owned(), 1_000);
+        let second = store.reserve(key, "webhook-main".to_owned(), 2_000);
+        let identity = first.external_identity();
+
+        assert_eq!(first.attempt_number, 1);
+        assert_eq!(second.attempt_number, 2);
+        assert_eq!(first.status, DeliveryAttemptStatus::Pending);
+        assert_eq!(second.status, DeliveryAttemptStatus::Pending);
+        assert_eq!(store.identity_count(), 1);
+        assert_eq!(store.attempts(&identity), &[first, second]);
+    }
+
+    #[test]
+    fn in_memory_attempt_store_keeps_adapters_as_distinct_identities() {
+        let mut store = InMemoryDeliveryAttemptStore::new();
+        let key = candidate("message").dedupe_key();
+
+        let webhook = store.reserve(key.clone(), "webhook-main".to_owned(), 1_000);
+        let log = store.reserve(key, "local-log".to_owned(), 1_000);
+
+        assert_eq!(webhook.attempt_number, 1);
+        assert_eq!(log.attempt_number, 1);
+        assert_ne!(webhook.external_identity(), log.external_identity());
+        assert_eq!(store.identity_count(), 2);
+    }
+
+    #[test]
+    fn in_memory_attempt_store_starts_and_completes_existing_attempt() {
+        let mut store = InMemoryDeliveryAttemptStore::new();
+        let record = store.reserve(
+            candidate("message").dedupe_key(),
+            "webhook-main".to_owned(),
+            1_000,
+        );
+        let identity = record.external_identity();
+
+        let started = store
+            .start(&identity, record.attempt_number, 1_010)
+            .expect("attempt starts");
+        let completed = store
+            .complete(
+                &identity,
+                record.attempt_number,
+                &ExternalDeliveryResult::delivered(1_020).with_provider_status_code("200"),
+            )
+            .expect("attempt completes");
+
+        assert_eq!(started.status, DeliveryAttemptStatus::InFlight);
+        assert_eq!(started.started_at, Some(1_010));
+        assert_eq!(completed.status, DeliveryAttemptStatus::Delivered);
+        assert_eq!(completed.completed_at, Some(1_020));
+        assert_eq!(store.latest_attempt(&identity), Some(&completed));
+    }
+
+    #[test]
+    fn in_memory_attempt_store_ignores_unknown_attempt_updates() {
+        let mut store = InMemoryDeliveryAttemptStore::new();
+        let identity =
+            ExternalDeliveryIdentity::new("webhook-main", candidate("message").dedupe_key());
+
+        assert_eq!(store.start(&identity, 1, 1_010), None);
+        assert_eq!(
+            store.complete(&identity, 1, &ExternalDeliveryResult::delivered(1_020)),
+            None
+        );
     }
 
     #[test]
