@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed the public schema design for strategy order-fill alerts. A future
+  schema slice will expose broker-owned order-fill payloads as
+  `strategy.alerts` with CLI/Python/WASM parity, while leaving top-level
+  `alerts[]`, placeholder template rendering, and external alert delivery
+  unchanged.
 - Added an internal broker-owned strategy order-fill alert event model for
   supported `strategy.entry`, `strategy.exit`, `strategy.close`, and
   `strategy.close_all` fills. The broker now records fill-time alert payloads,

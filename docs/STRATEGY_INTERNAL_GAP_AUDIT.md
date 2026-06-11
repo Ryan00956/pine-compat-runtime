@@ -522,10 +522,11 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best next slice: design the public schema for exposing broker-owned
-order-fill alert events, including CLI/Python/WASM host parity. External alert
-delivery remains out of scope until public schema and placeholder rendering are
-closed.
+Best next slice: implement `strategy.alerts` from
+`docs/STRATEGY_ORDER_FILL_ALERTS_PUBLIC_SCHEMA_PLAN.md`, including a runtime
+schema bump, CLI/Python/WASM host parity, non-empty strategy alert fixtures, and
+disable-alert suppression coverage. External alert delivery and placeholder
+template rendering remain out of scope.
 
 ## Recommended Internal Roadmap
 

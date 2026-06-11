@@ -110,9 +110,9 @@ are broker events with order ids, fill prices, quantities, and optional entry or
 exit ids. Reusing the same public shape would lose type information and make
 host consumers infer strategy fills from a generic source string.
 
-The preferred public design is a future schema-versioned `strategy.alerts`
-array, or an explicit top-level typed alert union. That choice must be made in
-a later public-schema slice with CLI, Python, and WASM parity tests.
+The public schema plan chooses a future schema-versioned `strategy.alerts`
+array over an explicit top-level typed alert union. That public-output slice
+must include CLI, Python, and WASM parity tests.
 
 ## Host And Schema Implications
 
@@ -145,6 +145,8 @@ unchanged.
 ## Next Public Schema Slice
 
 Only after the internal event model stays stable should a separate schema slice
-expose strategy order-fill alerts to hosts. That slice must decide between a
-schema-versioned `strategy.alerts` array and a top-level typed alert union, then
-update CLI, Python, and WASM host parity together.
+expose strategy order-fill alerts to hosts.
+`docs/STRATEGY_ORDER_FILL_ALERTS_PUBLIC_SCHEMA_PLAN.md` chooses a
+schema-versioned `strategy.alerts` array over a top-level typed alert union.
+The implementation slice must update CLI, Python, and WASM host parity
+together.
