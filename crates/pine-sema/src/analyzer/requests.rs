@@ -246,6 +246,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.rma"
             | "ta.rsi"
             | "ta.tsi"
+            | "ta.cmo"
             | "ta.tr"
             | "ta.atr"
             | "ta.highest"

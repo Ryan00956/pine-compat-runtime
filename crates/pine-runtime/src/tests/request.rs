@@ -1377,6 +1377,46 @@ fn request_security_evaluates_provider_tsi_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_cmo_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request cmo\")\nprovider_cmo = request.security(\"NYSE:IBM\", timeframe.period, ta.cmo(close, 3))\nchart_cmo = ta.cmo(close, 3)\nplot(provider_cmo)\nplot(chart_cmo)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 10.0),
+            timed_bar(60_000, 11.0),
+            timed_bar(120_000, 12.0),
+            timed_bar(180_000, 10.0),
+            timed_bar(240_000, 13.0),
+            timed_bar(300_000, 12.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 11.0),
+            timed_bar(180_000, 17.0),
+            timed_bar(240_000, 25.0),
+            timed_bar(300_000, 26.0),
+        ])
+        .expect("provider ta.cmo expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
+    assert_values_close(
+        &result.plots[0].values[3..],
+        &[0.0, 33.333333333333336, 0.0],
+    );
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_eq!(result.plots[1].values[2], PineValue::Na);
+    assert_values_close(&result.plots[1].values[3..], &[100.0, 100.0, 100.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_linreg_in_requested_context() {
     let program = compile_program(
         "indicator(\"request linreg\")\nprovider_linreg = request.security(\"NYSE:IBM\", timeframe.period, ta.linreg(close, 3, 0))\nchart_linreg = ta.linreg(close, 3, 0)\nplot(provider_linreg)\nplot(chart_linreg)\n",
