@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added pure host-side external delivery identity, attempt record/status, and
+  result/status models for future alert delivery adapters. The slice adds tests
+  for serialization, retry classification, and adapter+dedupe identity without
+  adding network delivery or changing public runtime JSON.
 - Added `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` as the closed
   host-owned external alert delivery adapter design gate. It defines adapter,
   durable attempt state, retry, authentication, payload, and failure-reporting

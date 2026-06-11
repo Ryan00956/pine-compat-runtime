@@ -19,8 +19,10 @@ pub use bar::{Bar, BarUpdate, BarUpdateKind};
 pub use error::RuntimeError;
 pub use output::alerts::AlertEvent;
 pub use output::delivery::{
-    DeliveryCandidate, DeliveryDedupeKey, DeliveryEventKind, DeliveryOutcome, DeliverySink,
-    InMemoryDeliverySink, strategy_order_fill_delivery_candidate,
+    DeliveryAttemptRecord, DeliveryAttemptStatus, DeliveryCandidate, DeliveryDedupeKey,
+    DeliveryEventKind, DeliveryOutcome, DeliverySink, ExternalDeliveryIdentity,
+    ExternalDeliveryResult, ExternalDeliveryStatus, InMemoryDeliverySink,
+    strategy_order_fill_delivery_candidate,
 };
 pub use output::drawings::{
     BoxOutput, BoxSnapshot, LabelOutput, LabelSnapshot, LineOutput, LineSnapshot,

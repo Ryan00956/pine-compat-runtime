@@ -35,12 +35,14 @@ Already supported:
 - an in-memory `DeliverySink` for tests;
 - a strategy order-fill candidate builder over `RunningAlertConfig` and public
   `strategy.alerts` events;
-- a design-only shared host event envelope for future `both` selection.
+- a design-only shared host event envelope for future `both` selection;
+- pure host-side external delivery identity, attempt status, attempt record,
+  result status, and result types without external delivery side effects.
 
 Still unsupported:
 
 - concrete external delivery adapters;
-- durable delivery state across host restarts;
+- durable delivery store behavior across host restarts;
 - retry scheduling, backoff, and dead-letter behavior;
 - authentication, secret storage, URL validation, TLS configuration, and rate
   limiting;
@@ -205,14 +207,15 @@ headers.
   Python dictionaries, or WASM runtime JSON.
 - Do not claim live strategy alert delivery before realtime strategy execution
   itself is fixture-backed.
-- Do not claim restart-safe delivery until durable attempt state is implemented
-  and tested.
+- Do not claim restart-safe delivery until durable attempt-store behavior is
+  implemented and tested.
 
 ## Implementation Slices
 
 1. Closed on 2026-06-11: this design gate for adapter ownership, durable state,
    retry, authentication, payload, and failure-reporting boundaries.
-2. Add pure host-side attempt/result types and tests without external delivery.
+2. Closed on 2026-06-11: add pure host-side attempt/result types and tests
+   without external delivery.
 3. Add a durable-attempt-store trait plus an in-memory implementation for tests.
 4. Add a local-log or test-collector adapter that exercises attempt recording
    without network delivery.

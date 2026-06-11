@@ -85,6 +85,173 @@ impl From<&DeliveryCandidate> for DeliveryDedupeKey {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExternalDeliveryIdentity {
+    pub adapter_id: String,
+    pub dedupe_key: DeliveryDedupeKey,
+}
+
+impl ExternalDeliveryIdentity {
+    pub fn new(adapter_id: impl Into<String>, dedupe_key: DeliveryDedupeKey) -> Self {
+        Self {
+            adapter_id: adapter_id.into(),
+            dedupe_key,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum DeliveryAttemptStatus {
+    Pending,
+    InFlight,
+    Delivered,
+    TransientFailure,
+    PermanentFailure,
+}
+
+impl DeliveryAttemptStatus {
+    pub fn is_terminal(&self) -> bool {
+        matches!(self, Self::Delivered | Self::PermanentFailure)
+    }
+
+    pub fn is_retryable_failure(&self) -> bool {
+        matches!(self, Self::TransientFailure)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeliveryAttemptRecord {
+    pub dedupe_key: DeliveryDedupeKey,
+    pub adapter_id: String,
+    pub attempt_number: u32,
+    pub status: DeliveryAttemptStatus,
+    pub scheduled_at: i64,
+    pub started_at: Option<i64>,
+    pub completed_at: Option<i64>,
+    pub next_retry_at: Option<i64>,
+    pub failure_code: Option<String>,
+}
+
+impl DeliveryAttemptRecord {
+    pub fn new(
+        dedupe_key: DeliveryDedupeKey,
+        adapter_id: impl Into<String>,
+        attempt_number: u32,
+        scheduled_at: i64,
+    ) -> Self {
+        Self {
+            dedupe_key,
+            adapter_id: adapter_id.into(),
+            attempt_number,
+            status: DeliveryAttemptStatus::Pending,
+            scheduled_at,
+            started_at: None,
+            completed_at: None,
+            next_retry_at: None,
+            failure_code: None,
+        }
+    }
+
+    pub fn external_identity(&self) -> ExternalDeliveryIdentity {
+        ExternalDeliveryIdentity::new(self.adapter_id.clone(), self.dedupe_key.clone())
+    }
+
+    pub fn start(mut self, started_at: i64) -> Self {
+        self.status = DeliveryAttemptStatus::InFlight;
+        self.started_at = Some(started_at);
+        self
+    }
+
+    pub fn complete(mut self, result: &ExternalDeliveryResult) -> Self {
+        self.status = result.status.into();
+        self.completed_at = Some(result.completed_at);
+        self.failure_code = result.failure_code.clone();
+        self
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ExternalDeliveryStatus {
+    Delivered,
+    TransientFailure,
+    PermanentFailure,
+}
+
+impl ExternalDeliveryStatus {
+    pub fn is_retryable_failure(&self) -> bool {
+        matches!(self, Self::TransientFailure)
+    }
+}
+
+impl From<ExternalDeliveryStatus> for DeliveryAttemptStatus {
+    fn from(status: ExternalDeliveryStatus) -> Self {
+        match status {
+            ExternalDeliveryStatus::Delivered => Self::Delivered,
+            ExternalDeliveryStatus::TransientFailure => Self::TransientFailure,
+            ExternalDeliveryStatus::PermanentFailure => Self::PermanentFailure,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExternalDeliveryResult {
+    pub status: ExternalDeliveryStatus,
+    pub provider_status_code: Option<String>,
+    pub failure_code: Option<String>,
+    pub failure_message: Option<String>,
+    pub completed_at: i64,
+}
+
+impl ExternalDeliveryResult {
+    pub fn delivered(completed_at: i64) -> Self {
+        Self {
+            status: ExternalDeliveryStatus::Delivered,
+            provider_status_code: None,
+            failure_code: None,
+            failure_message: None,
+            completed_at,
+        }
+    }
+
+    pub fn transient_failure(
+        completed_at: i64,
+        failure_code: impl Into<String>,
+        failure_message: impl Into<String>,
+    ) -> Self {
+        Self {
+            status: ExternalDeliveryStatus::TransientFailure,
+            provider_status_code: None,
+            failure_code: Some(failure_code.into()),
+            failure_message: Some(failure_message.into()),
+            completed_at,
+        }
+    }
+
+    pub fn permanent_failure(
+        completed_at: i64,
+        failure_code: impl Into<String>,
+        failure_message: impl Into<String>,
+    ) -> Self {
+        Self {
+            status: ExternalDeliveryStatus::PermanentFailure,
+            provider_status_code: None,
+            failure_code: Some(failure_code.into()),
+            failure_message: Some(failure_message.into()),
+            completed_at,
+        }
+    }
+
+    pub fn with_provider_status_code(mut self, status_code: impl Into<String>) -> Self {
+        self.provider_status_code = Some(status_code.into());
+        self
+    }
+}
+
 pub fn strategy_order_fill_delivery_candidate(
     running_alert_id: impl Into<String>,
     config: &RunningAlertConfig,
@@ -238,6 +405,79 @@ mod tests {
 
         assert_eq!(sink.delivered_keys().len(), 2);
         assert_eq!(sink.delivered().len(), 2);
+    }
+
+    #[test]
+    fn external_delivery_identity_combines_adapter_and_dedupe_key() {
+        let key = candidate("message").dedupe_key();
+        let identity = ExternalDeliveryIdentity::new("webhook-main", key.clone());
+
+        assert_eq!(identity.adapter_id, "webhook-main");
+        assert_eq!(identity.dedupe_key, key);
+    }
+
+    #[test]
+    fn delivery_attempt_record_serializes_host_owned_shape() {
+        let record =
+            DeliveryAttemptRecord::new(candidate("message").dedupe_key(), "webhook-main", 1, 1_000)
+                .start(1_010)
+                .complete(
+                    &ExternalDeliveryResult::transient_failure(
+                        1_020,
+                        "timeout",
+                        "adapter timed out",
+                    )
+                    .with_provider_status_code("504"),
+                );
+
+        let value = serde_json::to_value(record).expect("attempt record serializes");
+
+        assert_eq!(
+            value,
+            serde_json::json!({
+                "dedupeKey": {
+                    "runningAlertId": "alert-1",
+                    "scriptSnapshotId": "snapshot-1",
+                    "eventKind": "strategyOrderFill",
+                    "barIndex": 2,
+                    "time": 300,
+                    "eventId": "XL",
+                },
+                "adapterId": "webhook-main",
+                "attemptNumber": 1,
+                "status": "transientFailure",
+                "scheduledAt": 1000,
+                "startedAt": 1010,
+                "completedAt": 1020,
+                "nextRetryAt": null,
+                "failureCode": "timeout",
+            })
+        );
+    }
+
+    #[test]
+    fn delivery_attempt_record_keeps_external_identity_stable_across_attempts() {
+        let key = candidate("message").dedupe_key();
+        let first = DeliveryAttemptRecord::new(key.clone(), "webhook-main", 1, 1_000);
+        let second = DeliveryAttemptRecord::new(key, "webhook-main", 2, 2_000);
+
+        assert_ne!(first.attempt_number, second.attempt_number);
+        assert_eq!(first.external_identity(), second.external_identity());
+    }
+
+    #[test]
+    fn external_delivery_result_classifies_retryable_status() {
+        let delivered = ExternalDeliveryResult::delivered(1_000);
+        let transient = ExternalDeliveryResult::transient_failure(1_001, "timeout", "timeout");
+        let permanent =
+            ExternalDeliveryResult::permanent_failure(1_002, "badRequest", "bad request");
+
+        assert!(!delivered.status.is_retryable_failure());
+        assert!(transient.status.is_retryable_failure());
+        assert!(!permanent.status.is_retryable_failure());
+        assert!(DeliveryAttemptStatus::from(delivered.status).is_terminal());
+        assert!(DeliveryAttemptStatus::from(transient.status).is_retryable_failure());
+        assert!(DeliveryAttemptStatus::from(permanent.status).is_terminal());
     }
 
     #[test]
