@@ -1,5 +1,4 @@
 //@version=5
 indicator("Unsupported request math calls")
 plot(request.security("NYSE:IBM", timeframe.period, math.random(0, 1, 7)))
-plot(request.security("NYSE:IBM", timeframe.period, math.sum(close, 2)))
 plot(request.security("NYSE:IBM", timeframe.period, math.round_to_mintick(close)))

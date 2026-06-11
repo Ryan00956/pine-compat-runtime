@@ -271,9 +271,10 @@ Request data:
   `request.security(syminfo.tickerid, timeframe, expression)` for host-provided
   same-or-higher-timeframe bars. The provider expression subset includes direct
   OHLCV/time sources, pure arithmetic and ternaries, history references, `na`,
-  `nz`, selected stateless `math.*` calls, `ta.sma`, and `ta.ema`; local
-  variable aliases and stateful/contextual math calls such as `math.random`,
-  `math.sum`, and `math.round_to_mintick` are not part of this subset.
+  `nz`, selected stateless `math.*` calls, `math.sum`, `ta.sma`, and `ta.ema`;
+  local variable aliases and stateful/contextual math calls such as
+  `math.random` and `math.round_to_mintick` are not part of this subset.
+  Requested-context rolling callsite state is isolated from chart state.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
   the last confirmed value.

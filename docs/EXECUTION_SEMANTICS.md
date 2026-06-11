@@ -826,9 +826,10 @@ the two contexts.
 
 The supported requested expression subset includes direct OHLCV/time sources,
 pure arithmetic and ternaries, history references, `na`, `nz`, selected
-stateless `math.*` calls, `ta.sma`, and `ta.ema`. Stateful or symbol-contextual
-math calls such as `math.random`, `math.sum`, and `math.round_to_mintick`
-remain outside the requested-expression subset.
+stateless `math.*` calls, `math.sum`, `ta.sma`, and `ta.ema`. Rolling callsite
+state for `math.sum` and `ta.*` calls is owned by the isolated requested
+context. Stateful or symbol-contextual math calls such as `math.random` and
+`math.round_to_mintick` remain outside the requested-expression subset.
 
 Requested-context results are cached deterministically by callsite, requested
 symbol, requested timeframe, and expression identity for the duration of one

@@ -304,6 +304,33 @@ fn request_security_evaluates_provider_stateless_math_calls() {
 }
 
 #[test]
+fn request_security_isolates_provider_math_sum_state() {
+    let program = compile_program(
+        "indicator(\"request math sum\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, math.sum(close, 2))\nchart = math.sum(close, 2)\nplot(provider)\nplot(chart)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 22.0),
+            timed_bar(120_000, 24.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 9.0),
+        ])
+        .expect("provider math.sum expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[42.0, 46.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_values_close(&result.plots[1].values[1..], &[12.0, 16.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_history_references() {
     let program = compile_program(
         "indicator(\"request history\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close[1]))\n",
