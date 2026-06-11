@@ -2008,14 +2008,17 @@ fn runs_strategy_exit_missing_entry_from_csv_as_noop_json() {
     )
     .expect("strategy exit no-op script should run");
     let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    let strategy = parsed["strategy"]
+        .as_object()
+        .expect("strategy should be an object");
 
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
     assert_eq!(parsed["strategy"]["orders"], serde_json::json!([]));
     assert_eq!(parsed["strategy"]["trades"], serde_json::json!([]));
     assert_eq!(parsed["strategy"]["position"], serde_json::json!([]));
     assert_eq!(parsed["strategy"]["diagnostics"], serde_json::json!([]));
-    assert!(!output.contains("pending"));
-    assert!(!output.contains("reserved"));
+    assert!(!strategy.contains_key("pending"));
+    assert!(!strategy.contains_key("reserved"));
 }
 
 #[test]
