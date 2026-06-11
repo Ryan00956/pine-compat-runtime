@@ -2,7 +2,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
-use super::{DeliveryAttemptRecord, DeliveryCandidate, ExternalDeliveryResult};
+use super::{
+    DeliveryAdapterRun, DeliveryAttemptRecord, DeliveryAttemptStore, DeliveryCandidate,
+    ExternalDeliveryResult,
+};
 
 mod request;
 mod transport;
@@ -304,6 +307,18 @@ pub enum WebhookRetryPolicyError {
     },
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WebhookRetryRecordError {
+    Policy(WebhookRetryPolicyError),
+    MissingAttempt,
+}
+
+impl From<WebhookRetryPolicyError> for WebhookRetryRecordError {
+    fn from(error: WebhookRetryPolicyError) -> Self {
+        Self::Policy(error)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum WebhookRetryDecision {
@@ -334,6 +349,28 @@ pub fn plan_webhook_retry(
         delay_ms,
         next_retry_at: result.completed_at.saturating_add(delay_ms),
     })
+}
+
+pub fn plan_and_record_webhook_retry<S>(
+    policy: &WebhookRetryPolicy,
+    store: &mut S,
+    run: &DeliveryAdapterRun,
+) -> Result<WebhookRetryDecision, WebhookRetryRecordError>
+where
+    S: DeliveryAttemptStore,
+{
+    let decision = plan_webhook_retry(policy, &run.completed_attempt, &run.result)?;
+    if let WebhookRetryDecision::RetryAt { next_retry_at, .. } = decision {
+        let identity = run.completed_attempt.external_identity();
+        store
+            .schedule_retry(
+                &identity,
+                run.completed_attempt.attempt_number,
+                next_retry_at,
+            )
+            .ok_or(WebhookRetryRecordError::MissingAttempt)?;
+    }
+    Ok(decision)
 }
 
 fn webhook_retry_delay_ms(policy: &WebhookRetryPolicy, attempt_number: u32) -> i64 {
@@ -457,7 +494,9 @@ fn header_value_looks_secret(value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::output::delivery::{DeliveryEventKind, ExternalDeliveryStatus};
+    use crate::output::delivery::{
+        DeliveryAdapterRun, DeliveryEventKind, ExternalDeliveryStatus, InMemoryDeliveryAttemptStore,
+    };
 
     fn candidate(message: &str) -> DeliveryCandidate {
         DeliveryCandidate::new(
@@ -824,6 +863,109 @@ mod tests {
                 next_retry_at: 11_000,
             })
         );
+    }
+
+    #[test]
+    fn webhook_retry_plan_records_next_retry_timestamp_on_existing_attempt() {
+        let mut store = InMemoryDeliveryAttemptStore::new();
+        let reserved = store.reserve(
+            candidate("message").dedupe_key(),
+            "webhook-main".to_owned(),
+            1_000,
+        );
+        let identity = reserved.external_identity();
+        let result =
+            classify_webhook_delivery_failure(WebhookDeliveryFailure::TransportTimeout, 10_000);
+        let completed = store
+            .complete(&identity, reserved.attempt_number, &result)
+            .expect("attempt completes");
+        let run = DeliveryAdapterRun {
+            result,
+            completed_attempt: completed,
+            diagnostic: None,
+        };
+
+        assert_eq!(
+            plan_and_record_webhook_retry(
+                &WebhookRetryPolicy::new(3, 1_000, 8_000),
+                &mut store,
+                &run,
+            ),
+            Ok(WebhookRetryDecision::RetryAt {
+                next_attempt_number: 2,
+                delay_ms: 1_000,
+                next_retry_at: 11_000,
+            })
+        );
+
+        assert_eq!(
+            store
+                .latest_attempt(&identity)
+                .and_then(|attempt| attempt.next_retry_at),
+            Some(11_000)
+        );
+    }
+
+    #[test]
+    fn webhook_retry_plan_leaves_not_retryable_attempt_without_next_retry() {
+        let mut store = InMemoryDeliveryAttemptStore::new();
+        let reserved = store.reserve(
+            candidate("message").dedupe_key(),
+            "webhook-main".to_owned(),
+            1_000,
+        );
+        let identity = reserved.external_identity();
+        let result = ExternalDeliveryResult::delivered(10_000);
+        let completed = store
+            .complete(&identity, reserved.attempt_number, &result)
+            .expect("attempt completes");
+        let run = DeliveryAdapterRun {
+            result,
+            completed_attempt: completed,
+            diagnostic: None,
+        };
+
+        assert_eq!(
+            plan_and_record_webhook_retry(
+                &WebhookRetryPolicy::new(3, 1_000, 8_000),
+                &mut store,
+                &run,
+            ),
+            Ok(WebhookRetryDecision::NotRetryable)
+        );
+
+        assert_eq!(
+            store
+                .latest_attempt(&identity)
+                .and_then(|attempt| attempt.next_retry_at),
+            None
+        );
+    }
+
+    #[test]
+    fn webhook_retry_plan_reports_missing_attempt_without_creating_retry_state() {
+        let mut store = InMemoryDeliveryAttemptStore::new();
+        let result =
+            classify_webhook_delivery_failure(WebhookDeliveryFailure::TransportTimeout, 10_000);
+        let run = DeliveryAdapterRun {
+            result,
+            completed_attempt: attempt(1).complete(&ExternalDeliveryResult::transient_failure(
+                10_000,
+                "webhookTransportTimeout",
+                "timeout",
+            )),
+            diagnostic: None,
+        };
+
+        assert_eq!(
+            plan_and_record_webhook_retry(
+                &WebhookRetryPolicy::new(3, 1_000, 8_000),
+                &mut store,
+                &run,
+            ),
+            Err(WebhookRetryRecordError::MissingAttempt)
+        );
+        assert_eq!(store.identity_count(), 0);
     }
 
     #[test]

@@ -27,11 +27,12 @@ pub use output::delivery::{
     TestCollectorDeliveryRecord, WebhookAdapterConfig, WebhookAdapterConfigError, WebhookBodyMode,
     WebhookDeliveryAdapter, WebhookDeliveryFailure, WebhookPayload, WebhookPayloadError,
     WebhookRequest, WebhookRequestError, WebhookResolvedHeaders, WebhookResolvedHeadersError,
-    WebhookRetryDecision, WebhookRetryPolicy, WebhookRetryPolicyError, WebhookSecretResolver,
-    WebhookSecretResolverError, WebhookTransport, WebhookTransportOutcome, build_webhook_request,
-    classify_webhook_delivery_failure, classify_webhook_http_status,
-    deliver_candidate_with_attempt_store, host_delivery_diagnostic_from_result, plan_webhook_retry,
-    render_webhook_payload, resolve_webhook_headers, strategy_order_fill_delivery_candidate,
+    WebhookRetryDecision, WebhookRetryPolicy, WebhookRetryPolicyError, WebhookRetryRecordError,
+    WebhookSecretResolver, WebhookSecretResolverError, WebhookTransport, WebhookTransportOutcome,
+    build_webhook_request, classify_webhook_delivery_failure, classify_webhook_http_status,
+    deliver_candidate_with_attempt_store, host_delivery_diagnostic_from_result,
+    plan_and_record_webhook_retry, plan_webhook_retry, render_webhook_payload,
+    resolve_webhook_headers, strategy_order_fill_delivery_candidate,
 };
 pub use output::drawings::{
     BoxOutput, BoxSnapshot, LabelOutput, LabelSnapshot, LineOutput, LineSnapshot,

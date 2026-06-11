@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added pure webhook retry-plan recording for future host-owned alert delivery.
+  Host code can now combine a completed adapter run, bounded webhook retry
+  policy, and attempt store to record `nextRetryAt` on the existing attempt
+  when the decision is retryable, without creating a retry scheduler, jitter,
+  dead-letter queue, durable restart recovery, network I/O, user-visible
+  reporting, or runtime JSON changes.
 - Added pure in-memory retry timestamp recording for future host-owned alert
   delivery. Delivery attempt stores can now record a host-planned
   `nextRetryAt` value on an existing attempt without creating a retry

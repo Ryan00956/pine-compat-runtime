@@ -69,6 +69,9 @@ Already supported:
 - pure in-memory attempt-store recording of host-planned `nextRetryAt`
   timestamps for completed attempts, without executing retry scheduling,
   jitter, dead-lettering, or durable restart recovery.
+- pure webhook retry-plan recording that combines the bounded retry decision
+  with existing attempt-store `nextRetryAt` metadata, without creating the next
+  attempt, sleeping, scheduling jobs, adding jitter, or performing network I/O.
 
 Still unsupported:
 
@@ -355,7 +358,13 @@ headers.
     host-planned `nextRetryAt` timestamps on existing attempts. This records
     retry metadata only and does not create a scheduler, jitter, dead-letter
     queue, durable restart recovery, network I/O, or user-visible reporting.
-16. Add a concrete webhook HTTP transport only after URL validation, secret
+16. Closed on 2026-06-11: add pure webhook retry-plan recording over completed
+    adapter runs. The helper writes `nextRetryAt` only when the bounded retry
+    policy returns `RetryAt`, leaves delivered/permanent attempts unchanged,
+    reports missing attempts, and still does not create a scheduler, jitter,
+    dead-letter queue, durable restart recovery, network I/O, or user-visible
+    reporting.
+17. Add a concrete webhook HTTP transport only after URL validation, secret
     handling, timeout behavior, retry classification, diagnostic redaction, and
     host transport execution boundaries are fixture-backed.
 
