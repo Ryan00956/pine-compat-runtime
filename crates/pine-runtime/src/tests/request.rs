@@ -776,6 +776,47 @@ fn request_security_evaluates_provider_wma_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_swma_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request swma\")\nprovider_swma = request.security(\"NYSE:IBM\", timeframe.period, ta.swma(close))\nchart_swma = ta.swma(close)\nplot(provider_swma)\nplot(chart_swma)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 21.0),
+            timed_bar(120_000, 22.0),
+            timed_bar(180_000, 24.0),
+            timed_bar(240_000, 27.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 11.0),
+            timed_bar(180_000, 17.0),
+            timed_bar(240_000, 25.0),
+        ])
+        .expect("provider ta.swma expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
+    assert_values_close(
+        &result.plots[0].values[3..],
+        &[21.666666666666668, 23.333333333333332],
+    );
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_eq!(result.plots[1].values[2], PineValue::Na);
+    assert_values_close(
+        &result.plots[1].values[3..],
+        &[9.666666666666666, 14.666666666666666],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_trend_flags_in_requested_context() {
     let program = compile_program(
         "indicator(\"request trend flags\")\nprovider_rising = request.security(\"NYSE:IBM\", timeframe.period, ta.rising(close, 2) ? 1 : 0)\nprovider_falling = request.security(\"NYSE:IBM\", timeframe.period, ta.falling(close, 2) ? 1 : 0)\nchart_rising = ta.rising(close, 2) ? 1 : 0\nchart_falling = ta.falling(close, 2) ? 1 : 0\nplot(provider_rising)\nplot(provider_falling)\nplot(chart_rising)\nplot(chart_falling)\n",

@@ -230,7 +230,7 @@ fn accepts_provider_backed_same_timeframe_request_security_expression() {
 #[test]
 fn accepts_provider_backed_same_timeframe_request_security_ta() {
     let analysis = analyze(
-        "plot(request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2) + ta.cum(close) + ta.rsi(close, 3) + ta.tr() + nz(ta.tr(false)) + ta.atr(3) + ta.highest(high, 3) - ta.lowest(low, 3) + ta.change(close) + ta.mom(close, 2) + ta.roc(close, 2) + ta.range(close, 3) + ta.dev(close, 3) + ta.stdev(close, 3) + ta.stdev(close, 3, false) + ta.variance(close, 3) + ta.variance(close, 3, false) + ta.wma(close, 3) + (ta.rising(close, 2) ? 1 : 0) - (ta.falling(close, 2) ? 1 : 0) + (ta.cross(close, 20.5) ? 1 : 0) + (ta.crossover(close, 20.5) ? 1 : 0) - (ta.crossunder(close - time / 60000.0, 19.5) ? 1 : 0)))\n",
+        "plot(request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2) + ta.cum(close) + ta.rsi(close, 3) + ta.tr() + nz(ta.tr(false)) + ta.atr(3) + ta.highest(high, 3) - ta.lowest(low, 3) + ta.change(close) + ta.mom(close, 2) + ta.roc(close, 2) + ta.range(close, 3) + ta.dev(close, 3) + ta.stdev(close, 3) + ta.stdev(close, 3, false) + ta.variance(close, 3) + ta.variance(close, 3, false) + ta.wma(close, 3) + ta.swma(close) + (ta.rising(close, 2) ? 1 : 0) - (ta.falling(close, 2) ? 1 : 0) + (ta.cross(close, 20.5) ? 1 : 0) + (ta.crossover(close, 20.5) ? 1 : 0) - (ta.crossunder(close - time / 60000.0, 19.5) ? 1 : 0)))\n",
     );
 
     assert!(
