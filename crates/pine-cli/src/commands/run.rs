@@ -2,7 +2,7 @@ use std::{fs, sync::Arc};
 
 use pine_runtime::{
     ChartContext, InMemoryRequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe,
-    public_runtime_profiled_result_json, public_runtime_result_json,
+    RuntimeResult, public_runtime_profiled_result_json, public_runtime_result_json,
     run_historical_profiled_with_request_environment, run_historical_with_request_environment,
 };
 use pine_sema::analyze_input;
@@ -25,6 +25,13 @@ struct RunOptions {
     profile: bool,
     request_bars: Vec<RequestBarsSpec>,
     library_sources: Vec<LibrarySourceSpec>,
+    strategy_alert_template: Option<StrategyAlertTemplateOptions>,
+}
+
+#[derive(Debug)]
+struct StrategyAlertTemplateOptions {
+    template: String,
+    index: usize,
 }
 
 #[derive(Debug)]
@@ -34,11 +41,32 @@ struct RequestBarsSpec {
 }
 
 fn run_with_options(options: &RunOptions) -> Result<(), String> {
-    println!("{}", run_json_with_options(options)?);
+    println!("{}", run_output_with_options(options)?);
     Ok(())
 }
 
+fn run_output_with_options(options: &RunOptions) -> Result<String, String> {
+    if options.strategy_alert_template.is_some() && options.profile {
+        return Err(
+            "--render-strategy-order-alert-template cannot be combined with --profile".to_owned(),
+        );
+    }
+    if let Some(template) = &options.strategy_alert_template {
+        let result = run_result_with_options(options)?;
+        return render_strategy_alert_template(&result, template);
+    }
+    run_json_with_options(options)
+}
+
 fn run_json_with_options(options: &RunOptions) -> Result<String, String> {
+    if options.profile {
+        return run_profiled_json_with_options(options);
+    }
+    let result = run_result_with_options(options)?;
+    Ok(public_runtime_result_json(&result))
+}
+
+fn run_profiled_json_with_options(options: &RunOptions) -> Result<String, String> {
     let input = analysis_input_from_paths(&options.path, &options.library_sources)?;
     let source = input.root().clone();
     let analysis = analyze_input(&input);
@@ -64,19 +92,61 @@ fn run_json_with_options(options: &RunOptions) -> Result<String, String> {
         .map_err(|err| format!("failed to read {}: {err}", options.bars_path))?;
     let bars = parse_bars_csv(&bars_text)?;
     let request_environment = request_environment_from_specs(&options.request_bars)?;
-    if options.profile {
-        let result =
-            run_historical_profiled_with_request_environment(&hir, &bars, request_environment)
-                .map_err(|err| format!("runtime failed: {}", err.message))?;
-        Ok(public_runtime_profiled_result_json(
-            &result.result,
-            &result.profile,
-        ))
-    } else {
-        let result = run_historical_with_request_environment(&hir, &bars, request_environment)
-            .map_err(|err| format!("runtime failed: {}", err.message))?;
-        Ok(public_runtime_result_json(&result))
+    let result = run_historical_profiled_with_request_environment(&hir, &bars, request_environment)
+        .map_err(|err| format!("runtime failed: {}", err.message))?;
+    Ok(public_runtime_profiled_result_json(
+        &result.result,
+        &result.profile,
+    ))
+}
+
+fn run_result_with_options(options: &RunOptions) -> Result<RuntimeResult, String> {
+    let input = analysis_input_from_paths(&options.path, &options.library_sources)?;
+    let source = input.root().clone();
+    let analysis = analyze_input(&input);
+    if !analysis.diagnostics.is_empty() {
+        for diagnostic in analysis.diagnostics {
+            let line_col = source.line_col(diagnostic.span.start);
+            eprintln!(
+                "{}:{:?}:{}:{}: {}",
+                diagnostic.code,
+                diagnostic.severity,
+                line_col.line,
+                line_col.column,
+                diagnostic.message
+            );
+        }
+        return Err("analysis failed".to_owned());
     }
+    let Some(hir) = analysis.hir else {
+        return Err("analysis did not produce executable HIR".to_owned());
+    };
+
+    let bars_text = fs::read_to_string(&options.bars_path)
+        .map_err(|err| format!("failed to read {}: {err}", options.bars_path))?;
+    let bars = parse_bars_csv(&bars_text)?;
+    let request_environment = request_environment_from_specs(&options.request_bars)?;
+    run_historical_with_request_environment(&hir, &bars, request_environment)
+        .map_err(|err| format!("runtime failed: {}", err.message))
+}
+
+fn render_strategy_alert_template(
+    result: &RuntimeResult,
+    template: &StrategyAlertTemplateOptions,
+) -> Result<String, String> {
+    let strategy = result
+        .strategy
+        .as_ref()
+        .ok_or_else(|| "runtime result does not contain strategy alerts".to_owned())?;
+    let alert = strategy.alerts.get(template.index).ok_or_else(|| {
+        format!(
+            "strategy alert index {} is out of range for {} alert(s)",
+            template.index,
+            strategy.alerts.len()
+        )
+    })?;
+    pine_runtime::render_strategy_order_fill_alert_template(&template.template, alert)
+        .map_err(|err| err.to_string())
 }
 
 fn parse_options(args: &[String]) -> Result<RunOptions, String> {
@@ -89,7 +159,10 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
         profile: false,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
+        strategy_alert_template: None,
     };
+    let mut strategy_alert_template = None;
+    let mut strategy_alert_index = None;
     let mut index = 1;
     while index < args.len() {
         match args[index].as_str() {
@@ -102,6 +175,20 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
             }
             "--profile" => {
                 options.profile = true;
+            }
+            "--render-strategy-order-alert-template" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                strategy_alert_template = Some(value.clone());
+            }
+            "--strategy-alert-index" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                strategy_alert_index = Some(parse_strategy_alert_index(value)?);
             }
             "--request-bars" => {
                 index += 1;
@@ -126,7 +213,18 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
     if options.bars_path.is_empty() {
         return Err(usage());
     }
+    options.strategy_alert_template = match (strategy_alert_template, strategy_alert_index) {
+        (None, None) => None,
+        (Some(template), Some(index)) => Some(StrategyAlertTemplateOptions { template, index }),
+        _ => return Err(usage()),
+    };
     Ok(options)
+}
+
+fn parse_strategy_alert_index(value: &str) -> Result<usize, String> {
+    value
+        .parse()
+        .map_err(|_| "strategy alert index must be a non-negative integer".to_owned())
 }
 
 fn parse_request_bars_spec(spec: &str) -> Result<RequestBarsSpec, String> {
@@ -207,6 +305,42 @@ mod tests {
         assert_eq!(options.library_sources.len(), 1);
         assert_eq!(options.library_sources[0].key, "user/lib/1");
         assert_eq!(options.library_sources[0].path, "lib.pine");
+        assert!(options.strategy_alert_template.is_none());
+    }
+
+    #[test]
+    fn parses_run_options_with_strategy_alert_template() {
+        let options = parse_options(&[
+            "script.pine".to_owned(),
+            "--bars".to_owned(),
+            "bars.csv".to_owned(),
+            "--render-strategy-order-alert-template".to_owned(),
+            "Order: {{strategy.order.alert_message}}".to_owned(),
+            "--strategy-alert-index".to_owned(),
+            "1".to_owned(),
+        ])
+        .expect("run options");
+        let template = options
+            .strategy_alert_template
+            .as_ref()
+            .expect("strategy alert template");
+
+        assert_eq!(template.template, "Order: {{strategy.order.alert_message}}");
+        assert_eq!(template.index, 1);
+    }
+
+    #[test]
+    fn rejects_partial_strategy_alert_template_options() {
+        let error = parse_options(&[
+            "script.pine".to_owned(),
+            "--bars".to_owned(),
+            "bars.csv".to_owned(),
+            "--render-strategy-order-alert-template".to_owned(),
+            "{{strategy.order.alert_message}}".to_owned(),
+        ])
+        .expect_err("strategy alert index is required");
+
+        assert!(error.contains("usage: pine-compat"));
     }
 
     #[test]
@@ -273,6 +407,7 @@ mod tests {
                 ))
                 .expect("higher timeframe request bars"),
             ],
+            strategy_alert_template: None,
         };
 
         let output = run_json_with_options(&options).expect("request integration fixture");
@@ -292,6 +427,7 @@ mod tests {
                 key: "user/lib/1".to_owned(),
                 path: workspace_path("tests/fixtures/libraries/import_lib.pine"),
             }],
+            strategy_alert_template: None,
         };
 
         let output = run_json_with_options(&options).expect("import integration fixture");
@@ -321,6 +457,7 @@ mod tests {
             profile: false,
             request_bars: Vec::new(),
             library_sources: Vec::new(),
+            strategy_alert_template: None,
         };
         let output = run_json_with_options(&options).expect("strategy no-op output");
 
@@ -334,5 +471,60 @@ mod tests {
         assert!(!output.contains("pending"));
         assert!(!output.contains("reserved"));
         let _ = fs::remove_file(bars_path);
+    }
+
+    #[test]
+    fn run_output_renders_strategy_order_alert_template() {
+        let options = RunOptions {
+            path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
+            bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+            profile: false,
+            request_bars: Vec::new(),
+            library_sources: Vec::new(),
+            strategy_alert_template: Some(StrategyAlertTemplateOptions {
+                template: "Order: {{strategy.order.alert_message}}".to_owned(),
+                index: 1,
+            }),
+        };
+
+        let output = run_output_with_options(&options).expect("rendered alert template");
+
+        assert_eq!(output, "Order: loss alert");
+    }
+
+    #[test]
+    fn run_output_rejects_unknown_strategy_order_alert_placeholder() {
+        let options = RunOptions {
+            path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
+            bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+            profile: false,
+            request_bars: Vec::new(),
+            library_sources: Vec::new(),
+            strategy_alert_template: Some(StrategyAlertTemplateOptions {
+                template: "{{close}}".to_owned(),
+                index: 1,
+            }),
+        };
+
+        let error = run_output_with_options(&options).expect_err("unknown placeholder fails");
+
+        assert!(error.contains("unsupported strategy order-fill alert placeholder `{{close}}`"));
+    }
+
+    #[test]
+    fn run_json_keeps_strategy_alert_template_output_out_of_default_json() {
+        let options = RunOptions {
+            path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
+            bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+            profile: false,
+            request_bars: Vec::new(),
+            library_sources: Vec::new(),
+            strategy_alert_template: None,
+        };
+
+        let output = run_json_with_options(&options).expect("default strategy alert JSON");
+
+        assert!(output.contains("\"message\":\"loss alert\""));
+        assert!(!output.contains("renderedMessage"));
     }
 }

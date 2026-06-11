@@ -523,7 +523,7 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best next slice: add an explicit CLI or WASM wrapper around the pure
+Best next slice: add an explicit WASM wrapper around the pure
 `{{strategy.order.alert_message}}` renderer from
 `docs/STRATEGY_ORDER_FILL_ALERT_TEMPLATE_PLAN.md`, while keeping default
 runtime JSON, Python dictionaries, WASM JSON, Pine-source alert placeholder

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added an explicit CLI helper path for rendering
+  `{{strategy.order.alert_message}}` against a selected public strategy
+  order-fill alert event from `pine-compat run`. The default runtime JSON,
+  Python dictionaries, WASM JSON, and external alert delivery remain unchanged.
 - Added an explicit Python helper for rendering a host alert template against a
   public strategy order-fill alert event. The helper does not change
   `run_script` output, runtime JSON, WASM JSON, or external alert delivery.

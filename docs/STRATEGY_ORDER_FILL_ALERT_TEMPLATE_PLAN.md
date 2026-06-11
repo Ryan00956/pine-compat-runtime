@@ -1,6 +1,7 @@
 # Strategy Order-Fill Alert Template Plan
 
-Status: pure renderer slice closed on 2026-06-11.
+Status: pure renderer, Python wrapper, and CLI wrapper slices closed on
+2026-06-11.
 
 This document defines the next boundary after public `strategy.alerts`
 exposure. It decides how to model the
@@ -121,10 +122,10 @@ message/title strings.
    `{{strategy.order.alert_message}}` token, with unit tests for replacement,
    empty message replacement, multiple occurrences, unknown placeholder
    diagnostics, and no recursive rendering.
-2. Closed on 2026-06-11 for Python: add host wrappers only after the pure
+2. Closed on 2026-06-11 for Python and CLI: add host wrappers only after the pure
    renderer is stable. Keep default runtime JSON and Python dictionaries
    unchanged.
-3. Add optional CLI/WASM tests for explicit rendering helpers.
+3. Add optional WASM tests for explicit rendering helpers.
 4. Defer external alert delivery until a running-alert configuration model
    exists.
 
@@ -136,4 +137,5 @@ The design is closed when:
 - Pine-source alert placeholder support remains unchanged;
 - the pure renderer has a narrow implementation contract;
 - the Python wrapper is explicit and leaves `run_script` output unchanged;
+- the CLI wrapper is explicit and leaves default `run` JSON unchanged;
 - release notes and the strategy gap audit point to this plan.
