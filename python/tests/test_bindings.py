@@ -7516,34 +7516,36 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][4]["values"] == [None, 41.0, 43.0, 45.0, 47.0]
     assert result["plots"][5]["values"] == [20.01, 21.01, 22.01, 23.01, 24.01]
     assert result["plots"][6]["values"] == [None, 100.0, 100.0, 100.0, 100.0]
-    assert result["plots"][7]["values"] == [
+    assert result["plots"][7]["values"] == [2.0, 10.0, 10.0, 10.0, 10.0]
+    assert result["plots"][8]["values"] == [None, 10.0, 10.0, 10.0, 10.0]
+    assert result["plots"][9]["values"] == [
         2.0,
         4.666666666666667,
         6.4444444444444455,
         7.629629629629631,
         8.419753086419753,
     ]
-    assert result["plots"][8]["values"] == [None, None, 13.0, 14.0, 15.0]
-    assert result["plots"][9]["values"] == [None, None, 9.0, 10.0, 11.0]
-    assert result["plots"][10]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
-    assert result["plots"][11]["values"] == [None, None, 2.0, 2.0, 2.0]
-    assert result["plots"][12]["values"] == [
+    assert result["plots"][10]["values"] == [None, None, 13.0, 14.0, 15.0]
+    assert result["plots"][11]["values"] == [None, None, 9.0, 10.0, 11.0]
+    assert result["plots"][12]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
+    assert result["plots"][13]["values"] == [None, None, 2.0, 2.0, 2.0]
+    assert result["plots"][14]["values"] == [
         None,
         None,
         10.0,
         9.523809523809524,
         9.090909090909092,
     ]
-    assert result["plots"][13]["values"] == [None, None, 2.0, 2.0, 2.0]
-    assert result["plots"][14]["values"] == [
+    assert result["plots"][15]["values"] == [None, None, 2.0, 2.0, 2.0]
+    assert result["plots"][16]["values"] == [
         None,
         None,
         0.6666666666666666,
         0.6666666666666666,
         0.6666666666666666,
     ]
-    assert result["plots"][15]["values"] == [0.0, 0.0, 1.0, 1.0, 1.0]
-    assert result["plots"][16]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
+    assert result["plots"][17]["values"] == [0.0, 0.0, 1.0, 1.0, 1.0]
+    assert result["plots"][18]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
 
 
 def test_run_script_reports_missing_request_bars():

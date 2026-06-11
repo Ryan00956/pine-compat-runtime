@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported `ta.tr()` and `ta.tr(false)` calls in same-context and
+  provider-backed scalar expressions, while keeping the `ta.tr` variable form
+  outside the requested-expression subset.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported `ta.rising` and `ta.falling` calls in same-context and
   provider-backed scalar expressions, with requested-context rolling trend state
   isolated from chart state.

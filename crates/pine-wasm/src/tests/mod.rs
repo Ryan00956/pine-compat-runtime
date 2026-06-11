@@ -5630,6 +5630,14 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][7]["values"],
+        serde_json::json!([2, 10, 10, 10, 10])
+    );
+    assert_eq!(
+        parsed["plots"][8]["values"],
+        serde_json::json!([null, 10, 10, 10, 10])
+    );
+    assert_eq!(
+        parsed["plots"][9]["values"],
         serde_json::json!([
             2,
             4.666666666666667,
@@ -5639,24 +5647,16 @@ fn request_host_data_runs_through_direct_wasm_api() {
         ])
     );
     assert_eq!(
-        parsed["plots"][8]["values"],
+        parsed["plots"][10]["values"],
         serde_json::json!([null, null, 13, 14, 15])
     );
     assert_eq!(
-        parsed["plots"][9]["values"],
+        parsed["plots"][11]["values"],
         serde_json::json!([null, null, 9, 10, 11])
     );
     assert_eq!(
-        parsed["plots"][10]["values"],
-        serde_json::json!([null, 1, 1, 1, 1])
-    );
-    assert_eq!(
-        parsed["plots"][11]["values"],
-        serde_json::json!([null, null, 2, 2, 2])
-    );
-    assert_eq!(
         parsed["plots"][12]["values"],
-        serde_json::json!([null, null, 10, 9.523809523809524, 9.090909090909092])
+        serde_json::json!([null, 1, 1, 1, 1])
     );
     assert_eq!(
         parsed["plots"][13]["values"],
@@ -5664,6 +5664,14 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][14]["values"],
+        serde_json::json!([null, null, 10, 9.523809523809524, 9.090909090909092])
+    );
+    assert_eq!(
+        parsed["plots"][15]["values"],
+        serde_json::json!([null, null, 2, 2, 2])
+    );
+    assert_eq!(
+        parsed["plots"][16]["values"],
         serde_json::json!([
             null,
             null,
@@ -5673,11 +5681,11 @@ fn request_host_data_runs_through_direct_wasm_api() {
         ])
     );
     assert_eq!(
-        parsed["plots"][15]["values"],
+        parsed["plots"][17]["values"],
         serde_json::json!([0, 0, 1, 1, 1])
     );
     assert_eq!(
-        parsed["plots"][16]["values"],
+        parsed["plots"][18]["values"],
         serde_json::json!([0, 0, 0, 0, 0])
     );
 }
