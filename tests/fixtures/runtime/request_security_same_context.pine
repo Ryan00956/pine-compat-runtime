@@ -38,6 +38,7 @@ bbw_value = request.security(syminfo.tickerid, timeframe.period, ta.bbw(close, 3
 correlation_value = request.security(syminfo.tickerid, timeframe.period, ta.correlation(close, high, 3))
 covariance_value = request.security(syminfo.tickerid, timeframe.period, ta.covariance(close, high, 3))
 median_value = request.security(syminfo.tickerid, timeframe.period, ta.median(close, 3))
+mode_value = request.security(syminfo.tickerid, timeframe.period, ta.mode(close, 3))
 
 plot(identity)
 plot(history)
@@ -77,3 +78,4 @@ plot(bbw_value)
 plot(correlation_value)
 plot(covariance_value)
 plot(median_value)
+plot(mode_value)
