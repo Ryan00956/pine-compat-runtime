@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added serializable host-side running-alert configuration types for the
+  strategy order-fill alert path without applying them to runtime JSON or
+  external delivery.
 - Added `docs/STRATEGY_RUNNING_ALERT_CONFIGURATION_PLAN.md` as the closed
   host-owned design gate before any external strategy alert delivery work.
 - Refreshed the long-term and next-capability planning docs after the strategy

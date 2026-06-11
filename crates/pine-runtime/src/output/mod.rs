@@ -4,5 +4,6 @@ pub(crate) mod collect;
 pub mod drawings;
 pub mod json;
 pub mod model;
+pub mod running_alerts;
 pub mod strategy;
 pub mod strategy_alert_templates;

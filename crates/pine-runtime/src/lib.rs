@@ -29,6 +29,9 @@ pub use output::model::{
     PlotArrowSeries, PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries,
     RuntimeDiagnostic, RuntimeResult,
 };
+pub use output::running_alerts::{
+    RunningAlertConfig, RunningAlertEventSelection, RunningAlertRealtimePolicy,
+};
 pub use output::strategy::{
     StrategyEquitySnapshot, StrategyOrderEvent, StrategyOrderFillAlertOutput,
     StrategyPositionSnapshot, StrategyResult, StrategyTrade,

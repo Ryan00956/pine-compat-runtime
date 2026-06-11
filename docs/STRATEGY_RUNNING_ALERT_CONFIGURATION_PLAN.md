@@ -124,9 +124,9 @@ leaving room for a realtime host loop later.
 
 1. Closed on 2026-06-11: design only, with this document plus cross-references
    from the strategy alert template and gap-audit docs.
-2. Host data model only: add serializable Rust structs for
-   `RunningAlertConfig` and `RunningAlertEventSelection` without applying them to
-   runtime output or delivery.
+2. Closed on 2026-06-11: add serializable Rust structs for
+   `RunningAlertConfig`, `RunningAlertEventSelection`, and the realtime-only
+   policy without applying them to runtime output or delivery.
 3. Strategy order-fill evaluation helper: given one config and one public
    `StrategyOrderFillAlertOutput`, either return a rendered host message or a
    host diagnostic. Keep default JSON unchanged.
