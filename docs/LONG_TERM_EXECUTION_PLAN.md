@@ -443,10 +443,14 @@ Delivered scope:
 
 Maintenance tails:
 
-- Placeholder interpolation needs a dedicated design before support is claimed.
+- Pine-source and broader alert placeholder interpolation need a dedicated
+  design before support is claimed.
 - Host-side alert delivery APIs are not part of the current runtime host
   surfaces.
-- Strategy alerts remain blocked on Phase G strategy runtime semantics.
+- Strategy order-fill alert payloads are now part of the strategy runtime
+  surface under `strategy.alerts`, with explicit host helpers for
+  `{{strategy.order.alert_message}}`; broader running-alert configuration and
+  external delivery remain deferred to a separate design.
 
 Acceptance criteria:
 

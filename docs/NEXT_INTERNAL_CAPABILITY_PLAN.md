@@ -1,7 +1,7 @@
 # Next Internal Capability Plan
 
-Status: planning document, refreshed after Strategy Internal Stage 13 on
-2026-06-06.
+Status: planning document, refreshed after the strategy alert-template host
+helper closeout on 2026-06-11.
 
 This document groups the next interpreter-internal work into seven large task
 directions. It does not claim new compatibility. A task becomes supported only
@@ -40,9 +40,10 @@ Good next slices:
 - More fixture-backed strategy state variables or count helpers.
 - Narrow order/trade accounting improvements that keep the current public output
   shape.
-- Narrow strategy order metadata work, such as internal `comment` or
-  `alert_message` storage, only after a script-visible versus public-output
-  contract is explicit.
+- Small host-neutral strategy metadata/accounting checks that preserve the
+  current public output shape. Strategy order metadata, public `strategy.alerts`,
+  and explicit `{{strategy.order.alert_message}}` host rendering are already
+  closed for the fixture-backed subset.
 
 Keep out of scope until separately designed:
 
@@ -54,6 +55,8 @@ Keep out of scope until separately designed:
 - Arbitrary future binding for unmatched `from_entry` ids.
 - Public pending-order, reservation, remaining-quantity, or exit-reason records.
 - Realtime strategy handoff and intrabar path reconstruction.
+- External strategy alert delivery before a running-alert configuration model is
+  designed.
 
 Recommended first slice: do not reopen broad broker foundations immediately
 after Stage 13. Prefer either a narrow no-op/diagnostics/accounting slice that
@@ -213,6 +216,8 @@ Good next slices:
 - More branch, loop, and realtime rollback fixtures beyond the current alert
   policy and frequency rollback coverage.
 - Better parity tests for alert output through CLI, Python, and WASM.
+- Running-alert configuration design before any external strategy alert
+  delivery work.
 
 Keep out of scope until separately designed:
 

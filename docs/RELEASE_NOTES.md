@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Refreshed the long-term and next-capability planning docs after the strategy
+  alert-template host-helper closeout, keeping external delivery gated on a
+  future running-alert configuration design.
 - Aligned user-facing conformance and built-in strategy docs with the explicit
   host-side `{{strategy.order.alert_message}}` rendering helpers while keeping
   Pine-source alert placeholders and external alert delivery unsupported.
