@@ -294,6 +294,34 @@ Diagnostics should be redacted by default. They may mention adapter kind,
 attempt count, and failure class, but not secret values or full sensitive
 headers.
 
+## Concrete HTTP Transport Gate
+
+The first concrete webhook HTTP transport is now allowed to start only after
+this gate remains true in the implementation slice:
+
+- HTTP client dependency must be explicit in `Cargo.toml` and reviewed as a
+  host transport dependency, not an interpreter dependency.
+- The transport must live behind the existing `WebhookTransport` trait and be
+  constructed explicitly by host code.
+- The transport must accept only an already built `WebhookRequest`; it must not
+  receive runtime state, broker state, `RuntimeResult`, or script internals.
+- The transport must enforce `WebhookRequest.timeout_ms()` as the request
+  timeout and map timeout failures to `WebhookDeliveryFailure::TransportTimeout`.
+- Provider HTTP status handling must continue to flow through
+  `classify_webhook_http_status`, preserving redacted status classes.
+- Network, TLS roots, proxy settings, DNS behavior, and rate limits must remain
+  host transport concerns. The runtime cannot infer or expose them.
+- Unit tests must use a local fake/server or transport shim. They must not call
+  internet endpoints.
+- Default CLI, Python, WASM, and runtime outputs must remain unchanged. A host
+  must opt in before any network side effect can occur.
+- Secret values must not appear in debug output, payloads, attempt records,
+  diagnostics, release notes, or snapshots.
+
+If any of these choices require a dependency or policy decision that cannot be
+made from the repository alone, stop and make the decision explicit before
+adding network I/O.
+
 ## Non-Goals
 
 - Do not implement network delivery in this design slice.
@@ -364,7 +392,12 @@ headers.
     reports missing attempts, and still does not create a scheduler, jitter,
     dead-letter queue, durable restart recovery, network I/O, or user-visible
     reporting.
-17. Add a concrete webhook HTTP transport only after URL validation, secret
+17. Closed on 2026-06-11: lock the concrete HTTP transport implementation gate.
+    The gate requires an explicit host transport dependency, opt-in
+    construction, `WebhookTransport` isolation, request timeout enforcement,
+    local-only tests, redacted diagnostics, unchanged runtime JSON, and no
+    internet endpoint tests.
+18. Add a concrete webhook HTTP transport only after URL validation, secret
     handling, timeout behavior, retry classification, diagnostic redaction, and
     host transport execution boundaries are fixture-backed.
 

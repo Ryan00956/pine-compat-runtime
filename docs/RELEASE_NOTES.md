@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Locked the concrete webhook HTTP transport implementation gate for future
+  host-owned alert delivery. The gate requires any real transport to stay
+  behind `WebhookTransport`, use explicit host construction, enforce request
+  timeouts, test only against local/fake endpoints, preserve redacted
+  diagnostics, leave CLI/Python/WASM/runtime JSON unchanged, and avoid network
+  side effects unless a host opts in.
 - Added pure webhook retry-plan recording for future host-owned alert delivery.
   Host code can now combine a completed adapter run, bounded webhook retry
   policy, and attempt store to record `nextRetryAt` on the existing attempt
