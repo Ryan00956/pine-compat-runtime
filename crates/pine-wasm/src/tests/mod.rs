@@ -21,22 +21,23 @@ fn runs_script_from_csv_to_json() {
         "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
     )
     .expect("script should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
-    assert!(output.contains(&format!(
-        "\"schemaVersion\":{}",
-        PUBLIC_RUNTIME_SCHEMA_VERSION
-    )));
-    assert!(output.contains("\"values\":[1,2]"));
-    assert!(output.contains("\"plotChars\":[]"));
-    assert!(output.contains("\"plotShapes\":[]"));
-    assert!(output.contains("\"plotArrows\":[]"));
-    assert!(output.contains("\"plotBars\":[]"));
-    assert!(output.contains("\"plotCandles\":[]"));
-    assert!(output.contains("\"labels\":[]"));
-    assert!(output.contains("\"lines\":[]"));
-    assert!(output.contains("\"boxes\":[]"));
-    assert!(output.contains("\"tables\":[]"));
-    assert!(output.contains("\"alerts\":[]"));
+    assert_eq!(
+        parsed["schemaVersion"],
+        serde_json::json!(PUBLIC_RUNTIME_SCHEMA_VERSION)
+    );
+    assert_eq!(parsed["plots"][0]["values"], serde_json::json!([1, 2]));
+    assert_eq!(parsed["plotChars"], serde_json::json!([]));
+    assert_eq!(parsed["plotShapes"], serde_json::json!([]));
+    assert_eq!(parsed["plotArrows"], serde_json::json!([]));
+    assert_eq!(parsed["plotBars"], serde_json::json!([]));
+    assert_eq!(parsed["plotCandles"], serde_json::json!([]));
+    assert_eq!(parsed["labels"], serde_json::json!([]));
+    assert_eq!(parsed["lines"], serde_json::json!([]));
+    assert_eq!(parsed["boxes"], serde_json::json!([]));
+    assert_eq!(parsed["tables"], serde_json::json!([]));
+    assert_eq!(parsed["alerts"], serde_json::json!([]));
 }
 
 #[test]
