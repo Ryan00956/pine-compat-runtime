@@ -604,6 +604,9 @@ mod tests {
         assert!(output.contains("\"values\":[null,41,43,45,47]"));
         assert!(output.contains("\"values\":[20.01,21.01,22.01,23.01,24.01]"));
         assert!(output.contains("\"values\":[null,100,100,100,100]"));
+        assert!(output.contains(
+            "\"values\":[2,4.666666666666667,6.4444444444444455,7.629629629629631,8.419753086419753]"
+        ));
     }
 
     #[test]

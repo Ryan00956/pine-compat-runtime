@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported `ta.atr` calls in same-context and provider-backed
+  scalar expressions, with requested-context OHLC/history and ATR callsite state
+  isolated from chart state.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported `ta.rsi` calls in same-context and provider-backed
   scalar expressions, with requested-context RSI callsite state isolated from
   chart state.

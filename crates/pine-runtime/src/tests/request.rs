@@ -441,6 +441,37 @@ fn request_security_isolates_provider_rsi_state_from_chart_state() {
 }
 
 #[test]
+fn request_security_isolates_provider_atr_state_from_chart_state() {
+    let program = compile_program(
+        "indicator(\"request atr\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, ta.atr(3))\nchart = ta.atr(3)\nplot(provider)\nplot(chart)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 9.0, 10.0, 8.0, 9.0, 100.0),
+            timed_ohlcv(60_000, 11.0, 12.0, 11.0, 11.0, 100.0),
+            timed_ohlcv(120_000, 7.0, 8.0, 6.0, 7.0, 100.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 5.0, 5.5, 4.5, 5.0, 100.0),
+            timed_ohlcv(60_000, 6.0, 6.5, 5.5, 6.0, 100.0),
+            timed_ohlcv(120_000, 7.0, 7.5, 6.5, 7.0, 100.0),
+        ])
+        .expect("provider ta.atr expression should run");
+
+    assert_values_close(
+        &result.plots[0].values,
+        &[2.0, 2.3333333333333335, 3.2222222222222223],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[1.0, 1.1666666666666667, 1.277777777777778],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_ema_in_requested_context() {
     let program = compile_program(
         "indicator(\"request ema\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, ta.ema(close, 2)))\n",

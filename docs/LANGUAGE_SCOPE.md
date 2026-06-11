@@ -272,10 +272,10 @@ Request data:
   same-or-higher-timeframe bars. The provider expression subset includes direct
   OHLCV/time sources, pure arithmetic and ternaries, history references, `na`,
   `nz`, selected stateless `math.*` calls, fixed-mintick
-  `math.round_to_mintick`, `math.sum`, `ta.sma`, `ta.ema`, and `ta.rsi`; local
-  variable aliases and stateful math calls such as `math.random` are not part
-  of this subset. Requested-context rolling callsite state is isolated from
-  chart state.
+  `math.round_to_mintick`, `math.sum`, `ta.sma`, `ta.ema`, `ta.rsi`, and
+  `ta.atr`; local variable aliases and stateful math calls such as
+  `math.random` are not part of this subset. Requested-context rolling callsite
+  state is isolated from chart state.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
   the last confirmed value.
