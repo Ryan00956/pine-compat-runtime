@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported `ta.linreg` calls in same-context and provider-backed
+  scalar expressions.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported `ta.hma` calls in same-context and provider-backed
   scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to

@@ -829,8 +829,8 @@ pure arithmetic and ternaries, history references, `na`, `nz`, selected
 stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
 `ta.cum`, `ta.sma`, `ta.ema`, `ta.rsi`, `ta.tr` function calls, `ta.atr`,
 `ta.highest`, `ta.lowest`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`,
-`ta.stdev`, `ta.variance`, `ta.wma`, `ta.swma`, `ta.hma`, `ta.rising`,
-`ta.falling`, `ta.cross`, `ta.crossover`, and `ta.crossunder`.
+`ta.stdev`, `ta.variance`, `ta.wma`, `ta.swma`, `ta.hma`, `ta.linreg`,
+`ta.rising`, `ta.falling`, `ta.cross`, `ta.crossover`, and `ta.crossunder`.
 Rolling callsite state for `math.sum` and `ta.*` calls is owned by the isolated
 requested context. Stateful math calls such as
 `math.random`, the `ta.tr` variable form, and extrema offset helpers such as

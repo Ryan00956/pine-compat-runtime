@@ -32,6 +32,7 @@ variance_sample = request.security(syminfo.tickerid, timeframe.period, ta.varian
 wma_value = request.security(syminfo.tickerid, timeframe.period, ta.wma(close, 3))
 swma_value = request.security(syminfo.tickerid, timeframe.period, ta.swma(close))
 hma_value = request.security(syminfo.tickerid, timeframe.period, ta.hma(close, 4))
+linreg_value = request.security(syminfo.tickerid, timeframe.period, ta.linreg(close, 3, 0))
 
 plot(identity)
 plot(history)
@@ -65,3 +66,4 @@ plot(variance_sample)
 plot(wma_value)
 plot(swma_value)
 plot(hma_value)
+plot(linreg_value)

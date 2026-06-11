@@ -256,6 +256,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.wma"
             | "ta.swma"
             | "ta.hma"
+            | "ta.linreg"
             | "ta.rising"
             | "ta.falling"
             | "ta.cross"
