@@ -35,6 +35,7 @@ hma_value = request.security(syminfo.tickerid, timeframe.period, ta.hma(close, 4
 alma_value = request.security(syminfo.tickerid, timeframe.period, ta.alma(close, 4, 0.85, 6))
 linreg_value = request.security(syminfo.tickerid, timeframe.period, ta.linreg(close, 3, 0))
 bbw_value = request.security(syminfo.tickerid, timeframe.period, ta.bbw(close, 3, 2))
+correlation_value = request.security(syminfo.tickerid, timeframe.period, ta.correlation(close, high, 3))
 
 plot(identity)
 plot(history)
@@ -71,3 +72,4 @@ plot(hma_value)
 plot(alma_value)
 plot(linreg_value)
 plot(bbw_value)
+plot(correlation_value)
