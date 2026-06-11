@@ -5543,9 +5543,16 @@ fn library_source_json_combines_with_request_bars() {
         REQUEST_HOST_BARS_JSON,
     )
     .expect("import plus request fixture should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
-    assert!(output.contains("\"values\":[60,64,68,72,76]"));
-    assert!(output.contains("\"values\":[null,null,102,102,202]"));
+    assert_eq!(
+        parsed["plots"][0]["values"],
+        serde_json::json!([60, 64, 68, 72, 76])
+    );
+    assert_eq!(
+        parsed["plots"][1]["values"],
+        serde_json::json!([null, null, 102, 102, 202])
+    );
 }
 
 #[test]
