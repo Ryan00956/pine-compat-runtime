@@ -5415,13 +5415,20 @@ fn request_host_data_runs_through_direct_wasm_api() {
         REQUEST_HOST_BARS_JSON,
     )
     .expect("request fixture should run through direct WASM API");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
-    assert!(output.contains(&format!(
-        "\"schemaVersion\":{}",
-        PUBLIC_RUNTIME_SCHEMA_VERSION
-    )));
-    assert!(output.contains("\"values\":[30,32,34,36,38]"));
-    assert!(output.contains("\"values\":[null,null,100,100,200]"));
+    assert_eq!(
+        parsed["schemaVersion"],
+        serde_json::json!(PUBLIC_RUNTIME_SCHEMA_VERSION)
+    );
+    assert_eq!(
+        parsed["plots"][0]["values"],
+        serde_json::json!([30, 32, 34, 36, 38])
+    );
+    assert_eq!(
+        parsed["plots"][1]["values"],
+        serde_json::json!([null, null, 100, 100, 200])
+    );
 }
 
 #[test]
