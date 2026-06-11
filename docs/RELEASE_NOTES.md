@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Clarified strategy conformance metadata to distinguish explicit host-side
+  `{{strategy.order.alert_message}}` rendering helpers from unsupported
+  external alert delivery.
 - Added an explicit WASM helper for rendering
   `{{strategy.order.alert_message}}` against a public strategy order-fill
   alert JSON object. The helper leaves default WASM runtime JSON, CLI runtime
