@@ -1017,11 +1017,23 @@ fn analyze_script_reports_unsupported_user_type_field_mutation_fixture() {
     let output = analyze_script(include_str!(
         "../../../../tests/fixtures/sema/unsupported_user_type_field_mutation.pine"
     ));
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
-    assert!(output.contains("\"executable\":false"));
-    assert!(output.contains("\"code\":\"E_UNSUPPORTED_FEATURE\""));
-    assert!(output.contains("\"feature\":\"function_side_effect\""));
-    assert!(output.contains("mutating user-defined type fields"));
+    assert_eq!(parsed["executable"], serde_json::json!(false));
+    assert_eq!(
+        parsed["diagnostics"][0]["code"],
+        serde_json::json!("E_UNSUPPORTED_FEATURE")
+    );
+    assert_eq!(
+        parsed["compatibility"]["unsupported"][0]["feature"],
+        serde_json::json!("function_side_effect")
+    );
+    assert!(
+        parsed["compatibility"]["unsupported"][0]["reason"]
+            .as_str()
+            .expect("unsupported reason should be a string")
+            .contains("mutating user-defined type fields")
+    );
 }
 
 #[test]
