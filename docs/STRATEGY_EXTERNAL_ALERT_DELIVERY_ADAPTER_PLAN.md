@@ -45,6 +45,8 @@ Already supported:
 - pure webhook adapter configuration and validation types covering URL,
   headers, secret header references, body mode, and timeout without network
   delivery.
+- pure webhook payload rendering for `renderedMessage` and `jsonEnvelope`
+  modes without network delivery.
 
 Still unsupported:
 
@@ -52,7 +54,8 @@ Still unsupported:
 - durable delivery store behavior across host restarts;
 - retry scheduling, backoff, and dead-letter behavior;
 - executable webhook HTTP transport, authentication secret lookup, TLS
-  configuration, timeout execution, and rate limiting;
+  configuration, timeout execution, retry scheduling, diagnostic redaction, and
+  rate limiting;
 - user-visible delivery failure reporting;
 - live realtime strategy broker execution.
 
@@ -295,8 +298,8 @@ headers.
 6. Closed on 2026-06-11: add pure webhook adapter configuration and validation
    types with tests for URL, header, secret-reference, body-mode, and timeout
    boundaries, still without network delivery.
-7. Add webhook payload rendering tests for `renderedMessage` and `jsonEnvelope`,
-   still without network delivery.
+7. Closed on 2026-06-11: add webhook payload rendering for `renderedMessage`
+   and `jsonEnvelope`, still without network delivery.
 8. Add a concrete webhook transport only after URL validation, secret handling,
    timeout behavior, retry classification, and diagnostic redaction are
    fixture-backed.

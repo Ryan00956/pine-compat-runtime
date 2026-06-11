@@ -450,6 +450,63 @@ pub enum WebhookAdapterConfigError {
     EmptySecretReference { header_name: String },
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WebhookPayload {
+    pub content_type: String,
+    pub body: String,
+}
+
+impl WebhookPayload {
+    pub fn new(content_type: impl Into<String>, body: impl Into<String>) -> Self {
+        Self {
+            content_type: content_type.into(),
+            body: body.into(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WebhookPayloadError {
+    InvalidConfig(WebhookAdapterConfigError),
+    JsonSerializationFailed(String),
+}
+
+impl From<WebhookAdapterConfigError> for WebhookPayloadError {
+    fn from(error: WebhookAdapterConfigError) -> Self {
+        Self::InvalidConfig(error)
+    }
+}
+
+pub fn render_webhook_payload(
+    config: &WebhookAdapterConfig,
+    candidate: &DeliveryCandidate,
+) -> Result<WebhookPayload, WebhookPayloadError> {
+    config.validate()?;
+    match config.body_mode {
+        WebhookBodyMode::RenderedMessage => Ok(WebhookPayload::new(
+            "text/plain; charset=utf-8",
+            candidate.rendered_message.clone(),
+        )),
+        WebhookBodyMode::JsonEnvelope => render_webhook_json_envelope(config, candidate),
+    }
+}
+
+fn render_webhook_json_envelope(
+    config: &WebhookAdapterConfig,
+    candidate: &DeliveryCandidate,
+) -> Result<WebhookPayload, WebhookPayloadError> {
+    let value = serde_json::json!({
+        "schemaVersion": 1,
+        "adapterId": config.adapter_id,
+        "bodyMode": config.body_mode,
+        "candidate": candidate,
+    });
+    let body = serde_json::to_string(&value)
+        .map_err(|error| WebhookPayloadError::JsonSerializationFailed(error.to_string()))?;
+    Ok(WebhookPayload::new("application/json", body))
+}
+
 fn validate_webhook_url(url: &str) -> Result<(), WebhookAdapterConfigError> {
     let trimmed = url.trim();
     if trimmed.is_empty() {
@@ -1156,6 +1213,95 @@ mod tests {
             Err(WebhookAdapterConfigError::EmptySecretReference {
                 header_name: "X-Signature".to_owned(),
             })
+        );
+    }
+
+    #[test]
+    fn webhook_payload_renders_message_body_without_json_wrapping() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "https://example.com/hook",
+            WebhookBodyMode::RenderedMessage,
+            1_000,
+        );
+
+        let payload =
+            render_webhook_payload(&config, &candidate("Price crossed")).expect("payload renders");
+
+        assert_eq!(payload.content_type, "text/plain; charset=utf-8");
+        assert_eq!(payload.body, "Price crossed");
+    }
+
+    #[test]
+    fn webhook_payload_renders_host_versioned_json_envelope() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "https://example.com/hook",
+            WebhookBodyMode::JsonEnvelope,
+            1_000,
+        )
+        .with_header("Content-Type", "application/json")
+        .with_secret_header_ref("X-Signature", "secret://signature");
+
+        let payload =
+            render_webhook_payload(&config, &candidate("Price crossed")).expect("payload renders");
+        let value: serde_json::Value =
+            serde_json::from_str(&payload.body).expect("payload body is json");
+
+        assert_eq!(payload.content_type, "application/json");
+        assert_eq!(
+            value,
+            serde_json::json!({
+                "schemaVersion": 1,
+                "adapterId": "webhook-main",
+                "bodyMode": "jsonEnvelope",
+                "candidate": {
+                    "runningAlertId": "alert-1",
+                    "scriptSnapshotId": "snapshot-1",
+                    "eventKind": "strategyOrderFill",
+                    "barIndex": 2,
+                    "time": 300,
+                    "eventId": "XL",
+                    "renderedMessage": "Price crossed",
+                },
+            })
+        );
+    }
+
+    #[test]
+    fn webhook_payload_does_not_include_url_headers_or_secret_refs() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "https://example.com/hook",
+            WebhookBodyMode::JsonEnvelope,
+            1_000,
+        )
+        .with_header("Content-Type", "application/json")
+        .with_secret_header_ref("X-Signature", "secret://signature");
+
+        let payload =
+            render_webhook_payload(&config, &candidate("Price crossed")).expect("payload renders");
+
+        assert!(!payload.body.contains("example.com"));
+        assert!(!payload.body.contains("headers"));
+        assert!(!payload.body.contains("secret"));
+        assert!(!payload.body.contains("X-Signature"));
+    }
+
+    #[test]
+    fn webhook_payload_reuses_config_validation() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "file:///tmp/hook",
+            WebhookBodyMode::RenderedMessage,
+            1_000,
+        );
+
+        assert_eq!(
+            render_webhook_payload(&config, &candidate("message")),
+            Err(WebhookPayloadError::InvalidConfig(
+                WebhookAdapterConfigError::UnsupportedUrlScheme
+            ))
         );
     }
 

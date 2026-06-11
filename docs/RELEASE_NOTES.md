@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added pure webhook payload rendering for future host-owned alert delivery.
+  `renderedMessage` now produces a plain-text body, and `jsonEnvelope` produces
+  a host-versioned JSON envelope over `DeliveryCandidate` without including URL,
+  headers, secret references, network delivery, or public runtime JSON fields.
 - Added pure host-side `WebhookAdapterConfig` validation for future webhook
   alert delivery. The slice covers URL scheme/host/port/credential checks,
   timeout bounds, duplicate header detection, static secret-header rejection,
