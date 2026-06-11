@@ -5,9 +5,11 @@ history = request.security(syminfo.tickerid, timeframe.period, na(close[1]) ? cl
 sma = request.security(syminfo.tickerid, timeframe.period, ta.sma(close, 2))
 ema = request.security(syminfo.tickerid, timeframe.period, ta.ema(close, 2))
 max_offset = request.security(syminfo.tickerid, timeframe.period, math.max(close + 1, close - 1) - close)
+stateless_math = request.security(syminfo.tickerid, timeframe.period, math.abs(close - 2) + math.floor(math.avg(close, close + 2)) + math.pow(2, 2))
 
 plot(identity)
 plot(history)
 plot(sma)
 plot(ema)
 plot(max_offset)
+plot(stateless_math)

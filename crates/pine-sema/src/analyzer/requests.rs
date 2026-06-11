@@ -211,6 +211,32 @@ fn is_request_provider_source_name(name: &str) -> bool {
 fn request_scalar_call_is_supported(name: &str) -> bool {
     matches!(
         name,
-        "na" | "nz" | "math.max" | "math.min" | "ta.sma" | "ta.ema"
+        "na" | "nz"
+            | "math.abs"
+            | "math.max"
+            | "math.min"
+            | "math.avg"
+            | "math.floor"
+            | "math.ceil"
+            | "math.trunc"
+            | "math.sqrt"
+            | "math.cbrt"
+            | "math.log"
+            | "math.log10"
+            | "math.exp"
+            | "math.acos"
+            | "math.asin"
+            | "math.atan"
+            | "math.sign"
+            | "math.todegrees"
+            | "math.toradians"
+            | "math.sin"
+            | "math.cos"
+            | "math.tan"
+            | "math.pow"
+            | "math.hypot"
+            | "math.round"
+            | "ta.sma"
+            | "ta.ema"
     )
 }

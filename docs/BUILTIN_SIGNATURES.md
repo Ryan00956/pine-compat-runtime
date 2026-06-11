@@ -199,15 +199,16 @@ The current executable subset has two forms:
   `request.security(syminfo.tickerid, timeframe, expression)` evaluate scalar
   side-effect-free expressions over host-provided same-or-higher-timeframe bars.
   The supported provider expression subset includes direct OHLCV/time sources,
-  pure arithmetic and ternaries, history references, `na`, `nz`, `math.max`,
-  `math.min`, `ta.sma`, and `ta.ema`. Higher-timeframe alignment uses default
-  `gaps_off` and `lookahead_off`: only confirmed requested bars are visible,
-  and missing requested bars forward-fill the last confirmed value.
+  pure arithmetic and ternaries, history references, `na`, `nz`, selected
+  stateless `math.*` calls, `ta.sma`, and `ta.ema`. Higher-timeframe alignment
+  uses default `gaps_off` and `lookahead_off`: only confirmed requested bars
+  are visible, and missing requested bars forward-fill the last confirmed value.
 
 Lower timeframe requests, provider expression local variable aliases, UDF calls,
-output/drawing side effects, input declarations, array mutation, optional
-parameters, non-default barmerge behavior, explicit gaps, and lookahead remain
-unsupported.
+stateful/contextual math calls such as `math.random`, `math.sum`, and
+`math.round_to_mintick`, output/drawing side effects, input declarations, array
+mutation, optional parameters, non-default barmerge behavior, explicit gaps,
+and lookahead remain unsupported.
 `request.security_lower_tf` is unsupported; it returns arrays in Pine and is not
 claimed until typed array return semantics and host output shapes are designed.
 `timeframe.in_seconds()` returns `60`.

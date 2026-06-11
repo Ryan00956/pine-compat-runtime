@@ -3,11 +3,12 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
-  accept already-supported pure `math.max` and `math.min` calls in same-context
-  and provider-backed scalar expressions. The slice keeps provider data
+  accept already-supported stateless `math.*` calls in same-context and
+  provider-backed scalar expressions. The slice keeps provider data
   host-injected, preserves default higher-timeframe alignment and public JSON
-  shapes, and keeps broader `math.*`, UDF calls, aliases, side effects,
-  optional request parameters, and lower-timeframe requests unsupported.
+  shapes, and keeps stateful/contextual `math.random`, `math.sum`,
+  `math.round_to_mintick`, UDF calls, aliases, side effects, optional request
+  parameters, and lower-timeframe requests unsupported.
 - Tightened the pure webhook transport boundary so host-provided transports
   receive only the already built `WebhookRequest`. Attempt-store records remain
   owned by the adapter flow, preserving the future HTTP transport gate without

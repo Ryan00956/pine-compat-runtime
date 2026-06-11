@@ -285,6 +285,25 @@ fn request_security_evaluates_provider_math_extremes_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_stateless_math_calls() {
+    let program = compile_program(
+        "indicator(\"request stateless math\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, math.abs(open - close) + math.floor(math.avg(open, close)) + math.pow(2, 2) + math.hypot(3, 4)))\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 100.0, 101.0, 99.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 21.0, 111.0, 19.0, 110.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 5.0), timed_bar(60_000, 6.0)])
+        .expect("provider stateless math should run");
+
+    assert_values_close(&result.plots[0].values, &[149.0, 163.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_history_references() {
     let program = compile_program(
         "indicator(\"request history\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close[1]))\n",
