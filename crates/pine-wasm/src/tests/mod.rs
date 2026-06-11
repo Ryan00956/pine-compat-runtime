@@ -2291,14 +2291,7 @@ fn runs_strategy_entry_stop_from_csv_to_strategy_json() {
     )
     .expect("strategy stop entry script should run");
 
-    assert!(output.contains("\"values\":[0,0,2,2]"));
-    assert!(output.contains("\"values\":[null,null,3,3]"));
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.long\",\"qty\":2,\"price\":3}]"
-    ));
-    assert!(output.contains("\"position\":[{\"barIndex\":2,\"size\":2,\"avgPrice\":3}]"));
-    assert!(!output.contains("pending"));
-    assert!(!output.contains("stop"));
+    assert_snapshot("runtime_strategy_entry_stop.json", &output);
 }
 
 #[test]
