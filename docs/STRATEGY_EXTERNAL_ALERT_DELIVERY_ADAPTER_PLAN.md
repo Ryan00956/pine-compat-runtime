@@ -52,6 +52,8 @@ Already supported:
   provider status classes.
 - pure webhook retry decision calculation for transient failures with bounded
   deterministic backoff and attempt-budget checks.
+- pure host delivery diagnostic records and redacted diagnostic construction
+  from delivery attempts plus external delivery results.
 
 Still unsupported:
 
@@ -312,7 +314,11 @@ headers.
    calculation for transient failures, still without executable retry
    scheduling, durable restart recovery, jitter, dead-lettering, or network
    delivery.
-10. Add a concrete webhook transport only after URL validation, secret handling,
+10. Closed on 2026-06-11: add pure host delivery diagnostic records and
+    redacted diagnostic construction from attempt/result pairs, still without
+    runtime JSON changes, Pine semantic diagnostics, user-visible reporting, or
+    network delivery.
+11. Add a concrete webhook transport only after URL validation, secret handling,
    timeout behavior, retry classification, and diagnostic redaction are
    fixture-backed.
 

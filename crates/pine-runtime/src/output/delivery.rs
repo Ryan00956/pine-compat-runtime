@@ -7,8 +7,12 @@ use super::running_alerts::{
 };
 use super::strategy::StrategyOrderFillAlertOutput;
 
+mod diagnostics;
 mod webhook;
 
+pub use diagnostics::{
+    HostDeliveryDiagnostic, HostDeliveryDiagnosticSeverity, host_delivery_diagnostic_from_result,
+};
 pub use webhook::{
     WebhookAdapterConfig, WebhookAdapterConfigError, WebhookBodyMode, WebhookDeliveryFailure,
     WebhookPayload, WebhookPayloadError, WebhookRetryDecision, WebhookRetryPolicy,

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added pure host delivery diagnostics for future external alert delivery.
+  Failed delivery attempts can now produce redacted host diagnostic records from
+  attempt/result pairs without adding Pine semantic diagnostics, public runtime
+  JSON fields, user-visible reporting, or network delivery.
 - Added pure webhook retry decision calculation for future host-owned alert
   delivery. Transient failures can now produce bounded deterministic backoff
   decisions with attempt-budget checks, without adding executable retry
