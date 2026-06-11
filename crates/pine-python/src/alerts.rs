@@ -1,4 +1,7 @@
-use pine_runtime::StrategyOrderFillAlertOutput;
+use pine_runtime::{
+    RunningAlertConfig, RunningAlertEventSelection, RunningAlertRealtimePolicy,
+    StrategyOrderFillAlertOutput,
+};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
@@ -11,6 +14,31 @@ pub(crate) fn render_strategy_order_fill_alert_template(
     let alert = parse_strategy_order_fill_alert(alert)?;
     pine_runtime::render_strategy_order_fill_alert_template(template, &alert)
         .map_err(|err| PyValueError::new_err(err.to_string()))
+}
+
+#[pyfunction]
+pub(crate) fn render_strategy_order_fill_running_alert(
+    config: &Bound<'_, PyAny>,
+    alert: &Bound<'_, PyAny>,
+) -> PyResult<String> {
+    let config = parse_running_alert_config(config)?;
+    let alert = parse_strategy_order_fill_alert(alert)?;
+    pine_runtime::render_strategy_order_fill_running_alert(&config, &alert)
+        .map_err(|err| PyValueError::new_err(err.to_string()))
+}
+
+fn parse_running_alert_config(item: &Bound<'_, PyAny>) -> PyResult<RunningAlertConfig> {
+    let dict = item
+        .cast::<PyDict>()
+        .map_err(|_| PyValueError::new_err("running alert config must be a dictionary"))?;
+    Ok(RunningAlertConfig {
+        script_snapshot_id: config_string(dict, "scriptSnapshotId")?,
+        symbol: config_string(dict, "symbol")?,
+        timeframe: config_string(dict, "timeframe")?,
+        event_selection: parse_event_selection(&config_string(dict, "eventSelection")?)?,
+        message_template: config_string(dict, "messageTemplate")?,
+        realtime_policy: parse_realtime_policy(&config_string(dict, "realtimePolicy")?)?,
+    })
 }
 
 fn parse_strategy_order_fill_alert(
@@ -30,6 +58,35 @@ fn parse_strategy_order_fill_alert(
         exit_id: dict_optional_string(dict, "exitId")?,
         message: dict_string(dict, "message")?,
     })
+}
+
+fn config_string(dict: &Bound<'_, PyDict>, name: &str) -> PyResult<String> {
+    dict.get_item(name)?
+        .ok_or_else(|| PyValueError::new_err(format!("running alert config is missing `{name}`")))?
+        .extract()
+        .map_err(|_| {
+            PyValueError::new_err(format!("running alert config `{name}` must be a string"))
+        })
+}
+
+fn parse_event_selection(value: &str) -> PyResult<RunningAlertEventSelection> {
+    match value {
+        "indicatorAlertCalls" => Ok(RunningAlertEventSelection::IndicatorAlertCalls),
+        "strategyOrderFills" => Ok(RunningAlertEventSelection::StrategyOrderFills),
+        "both" => Ok(RunningAlertEventSelection::Both),
+        _ => Err(PyValueError::new_err(format!(
+            "running alert config `eventSelection` has unsupported value `{value}`"
+        ))),
+    }
+}
+
+fn parse_realtime_policy(value: &str) -> PyResult<RunningAlertRealtimePolicy> {
+    match value {
+        "realtimeOnly" => Ok(RunningAlertRealtimePolicy::RealtimeOnly),
+        _ => Err(PyValueError::new_err(format!(
+            "running alert config `realtimePolicy` has unsupported value `{value}`"
+        ))),
+    }
 }
 
 fn dict_string(dict: &Bound<'_, PyDict>, name: &str) -> PyResult<String> {

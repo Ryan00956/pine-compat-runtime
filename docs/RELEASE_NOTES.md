@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added an explicit Python helper for rendering a strategy order-fill
+  running-alert message from a host config and public `strategy.alerts` event.
+  Default `run_script` output and external delivery remain unchanged.
 - Added a pure strategy order-fill running-alert evaluation helper over the
   host-side config model and public `strategy.alerts` events. It leaves default
   runtime JSON and external delivery unchanged.

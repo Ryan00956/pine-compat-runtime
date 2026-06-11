@@ -14,7 +14,7 @@ mod diagnostics;
 mod tables;
 #[cfg(test)]
 mod tests;
-use alerts::render_strategy_order_fill_alert_template;
+use alerts::{render_strategy_order_fill_alert_template, render_strategy_order_fill_running_alert};
 use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
 use tables::tables_to_py;
 
@@ -90,6 +90,10 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(run_script, module)?)?;
     module.add_function(wrap_pyfunction!(
         render_strategy_order_fill_alert_template,
+        module
+    )?)?;
+    module.add_function(wrap_pyfunction!(
+        render_strategy_order_fill_running_alert,
         module
     )?)?;
     Ok(())
