@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported `ta.cross`, `ta.crossover`, and `ta.crossunder`
+  calls in same-context and provider-backed scalar expressions.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported `ta.tr()` and `ta.tr(false)` calls in same-context and
   provider-backed scalar expressions, while keeping the `ta.tr` variable form
   outside the requested-expression subset.

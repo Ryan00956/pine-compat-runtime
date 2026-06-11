@@ -653,6 +653,39 @@ fn request_security_evaluates_provider_trend_flags_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_cross_flags_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request cross\")\nprovider_cross = request.security(\"NYSE:IBM\", timeframe.period, ta.cross(close, 2.0) ? 1 : 0)\nprovider_over = request.security(\"NYSE:IBM\", timeframe.period, ta.crossover(close, 2.0) ? 1 : 0)\nprovider_under = request.security(\"NYSE:IBM\", timeframe.period, ta.crossunder(close, 2.0) ? 1 : 0)\nchart_cross = ta.cross(close, 3.0) ? 1 : 0\nchart_over = ta.crossover(close, 3.0) ? 1 : 0\nchart_under = ta.crossunder(close, 3.0) ? 1 : 0\nplot(provider_cross)\nplot(provider_over)\nplot(provider_under)\nplot(chart_cross)\nplot(chart_over)\nplot(chart_under)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 3.0),
+            timed_bar(120_000, 1.0),
+            timed_bar(180_000, 2.0),
+            timed_bar(240_000, 4.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 1.0),
+            timed_bar(120_000, 5.0),
+            timed_bar(180_000, 1.0),
+            timed_bar(240_000, 5.0),
+        ])
+        .expect("provider cross expressions should run");
+
+    assert_values_close(&result.plots[0].values, &[0.0, 1.0, 1.0, 0.0, 1.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 1.0, 0.0, 0.0, 1.0]);
+    assert_values_close(&result.plots[2].values, &[0.0, 0.0, 1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[3].values, &[0.0, 1.0, 1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[4].values, &[0.0, 0.0, 1.0, 0.0, 1.0]);
+    assert_values_close(&result.plots[5].values, &[0.0, 1.0, 0.0, 1.0, 0.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_ema_in_requested_context() {
     let program = compile_program(
         "indicator(\"request ema\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, ta.ema(close, 2)))\n",

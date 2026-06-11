@@ -620,6 +620,9 @@ mod tests {
         ));
         assert!(output.contains("\"values\":[0,0,1,1,1]"));
         assert!(output.contains("\"values\":[0,0,0,0,0]"));
+        assert!(output.contains("\"values\":[0,1,0,0,0]"));
+        assert!(output.contains("\"values\":[0,1,0,0,0]"));
+        assert!(output.contains("\"values\":[0,0,1,0,0]"));
     }
 
     #[test]
