@@ -978,6 +978,45 @@ fn request_security_evaluates_provider_correlation_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_covariance_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request covariance\")\nprovider_cov = request.security(\"NYSE:IBM\", timeframe.period, ta.covariance(close, high, 3))\nchart_cov = ta.covariance(close, high, 3)\nplot(provider_cov)\nplot(chart_cov)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 20.0, 25.0, 19.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 21.0, 23.0, 20.0, 21.0, 1.0),
+            timed_ohlcv(120_000, 22.0, 26.0, 21.0, 22.0, 1.0),
+            timed_ohlcv(180_000, 24.0, 28.0, 23.0, 24.0, 1.0),
+            timed_ohlcv(240_000, 27.0, 31.0, 26.0, 27.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 5.0, 6.0, 4.0, 5.0, 1.0),
+            timed_ohlcv(60_000, 7.0, 9.0, 6.0, 7.0, 1.0),
+            timed_ohlcv(120_000, 11.0, 13.0, 10.0, 11.0, 1.0),
+            timed_ohlcv(180_000, 17.0, 20.0, 16.0, 17.0, 1.0),
+            timed_ohlcv(240_000, 25.0, 30.0, 24.0, 25.0, 1.0),
+        ])
+        .expect("provider ta.covariance expression should run");
+
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+    }
+    assert_values_close(
+        &result.plots[0].values[2..],
+        &[0.3333333333333333, 2.4444444444444446, 4.222222222222222],
+    );
+    assert_values_close(
+        &result.plots[1].values[2..],
+        &[7.111111111111112, 18.666666666666664, 40.0],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_linreg_in_requested_context() {
     let program = compile_program(
         "indicator(\"request linreg\")\nprovider_linreg = request.security(\"NYSE:IBM\", timeframe.period, ta.linreg(close, 3, 0))\nchart_linreg = ta.linreg(close, 3, 0)\nplot(provider_linreg)\nplot(chart_linreg)\n",

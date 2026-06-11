@@ -253,6 +253,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.dev"
             | "ta.bbw"
             | "ta.correlation"
+            | "ta.covariance"
             | "ta.stdev"
             | "ta.variance"
             | "ta.wma"
