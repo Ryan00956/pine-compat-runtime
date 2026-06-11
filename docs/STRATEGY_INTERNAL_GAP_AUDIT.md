@@ -519,8 +519,10 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best first slice: store order `alert_message` metadata internally for supported
-orders but keep external delivery out of scope.
+Best first slice: use `docs/STRATEGY_INTERNAL_ORDER_METADATA_PLAN.md` as the
+design gate before accepting order metadata syntax. The first implementation
+slice should store supported order metadata internally for supported orders but
+keep external delivery and public JSON expansion out of scope.
 
 ## Recommended Internal Roadmap
 

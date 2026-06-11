@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added a Strategy Internal Order Metadata design gate for future
+  `comment`/`alert_message`/`disable_alert` work on supported strategy order
+  commands. Runtime behavior, public JSON, conformance claims, and host output
+  are unchanged until later fixture-backed slices implement the internal
+  metadata plumbing.
 - Added fixture-backed UDT passthrough through UDF parameters, UDF returns, and
   pure receiver methods. Local UDT values can now be passed to a pure UDF that
   directly returns the same parameter, or a block-local alias chain that starts
