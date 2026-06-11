@@ -1,4 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
@@ -84,6 +85,87 @@ pub enum WebhookAdapterConfigError {
     DuplicateHeaderName { header_name: String },
     StaticHeaderMayContainSecret { header_name: String },
     EmptySecretReference { header_name: String },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WebhookSecretResolverError {
+    Unauthorized,
+    Unavailable,
+}
+
+pub trait WebhookSecretResolver {
+    fn resolve_webhook_secret(
+        &self,
+        secret_ref: &str,
+    ) -> Result<Option<String>, WebhookSecretResolverError>;
+}
+
+#[derive(Clone, PartialEq, Eq)]
+pub struct WebhookResolvedHeaders {
+    headers: BTreeMap<String, String>,
+}
+
+impl WebhookResolvedHeaders {
+    pub fn headers(&self) -> &BTreeMap<String, String> {
+        &self.headers
+    }
+}
+
+impl fmt::Debug for WebhookResolvedHeaders {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("WebhookResolvedHeaders")
+            .field("header_count", &self.headers.len())
+            .field("values", &"<redacted>")
+            .finish()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WebhookResolvedHeadersError {
+    InvalidConfig(WebhookAdapterConfigError),
+    MissingSecretReference { header_name: String },
+    UnauthorizedSecretLookup { header_name: String },
+    SecretResolverUnavailable { header_name: String },
+}
+
+impl From<WebhookAdapterConfigError> for WebhookResolvedHeadersError {
+    fn from(error: WebhookAdapterConfigError) -> Self {
+        Self::InvalidConfig(error)
+    }
+}
+
+pub fn resolve_webhook_headers<R>(
+    config: &WebhookAdapterConfig,
+    resolver: &R,
+) -> Result<WebhookResolvedHeaders, WebhookResolvedHeadersError>
+where
+    R: WebhookSecretResolver,
+{
+    config.validate()?;
+    let mut headers = config.headers.clone();
+    for (header_name, secret_ref) in &config.secret_header_refs {
+        let value = resolver
+            .resolve_webhook_secret(secret_ref)
+            .map_err(|error| match error {
+                WebhookSecretResolverError::Unauthorized => {
+                    WebhookResolvedHeadersError::UnauthorizedSecretLookup {
+                        header_name: header_name.clone(),
+                    }
+                }
+                WebhookSecretResolverError::Unavailable => {
+                    WebhookResolvedHeadersError::SecretResolverUnavailable {
+                        header_name: header_name.clone(),
+                    }
+                }
+            })?
+            .filter(|value| !value.trim().is_empty())
+            .ok_or_else(|| WebhookResolvedHeadersError::MissingSecretReference {
+                header_name: header_name.clone(),
+            })?;
+        headers.insert(header_name.clone(), value);
+    }
+    Ok(WebhookResolvedHeaders { headers })
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -466,6 +548,38 @@ mod tests {
         )
     }
 
+    #[derive(Default)]
+    struct TestSecretResolver {
+        secrets: BTreeMap<String, Result<Option<String>, WebhookSecretResolverError>>,
+    }
+
+    impl TestSecretResolver {
+        fn with_secret(mut self, secret_ref: &str, value: &str) -> Self {
+            self.secrets
+                .insert(secret_ref.to_owned(), Ok(Some(value.to_owned())));
+            self
+        }
+
+        fn with_missing(mut self, secret_ref: &str) -> Self {
+            self.secrets.insert(secret_ref.to_owned(), Ok(None));
+            self
+        }
+
+        fn with_error(mut self, secret_ref: &str, error: WebhookSecretResolverError) -> Self {
+            self.secrets.insert(secret_ref.to_owned(), Err(error));
+            self
+        }
+    }
+
+    impl WebhookSecretResolver for TestSecretResolver {
+        fn resolve_webhook_secret(
+            &self,
+            secret_ref: &str,
+        ) -> Result<Option<String>, WebhookSecretResolverError> {
+            self.secrets.get(secret_ref).cloned().unwrap_or(Ok(None))
+        }
+    }
+
     #[test]
     fn webhook_adapter_config_accepts_host_owned_safe_shape() {
         let config = WebhookAdapterConfig::new(
@@ -620,6 +734,113 @@ mod tests {
             Err(WebhookAdapterConfigError::EmptySecretReference {
                 header_name: "X-Signature".to_owned(),
             })
+        );
+    }
+
+    #[test]
+    fn webhook_headers_resolve_static_and_secret_headers_for_host_transport() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "https://example.com/hook",
+            WebhookBodyMode::RenderedMessage,
+            1_000,
+        )
+        .with_header("Content-Type", "text/plain")
+        .with_secret_header_ref("X-Signature", "secret://signature");
+        let resolver = TestSecretResolver::default()
+            .with_secret("secret://signature", "resolved-secret-value");
+
+        let resolved = resolve_webhook_headers(&config, &resolver).expect("headers resolve");
+
+        assert_eq!(
+            resolved.headers().get("Content-Type"),
+            Some(&"text/plain".to_owned())
+        );
+        assert_eq!(
+            resolved.headers().get("X-Signature"),
+            Some(&"resolved-secret-value".to_owned())
+        );
+    }
+
+    #[test]
+    fn webhook_resolved_headers_debug_redacts_secret_values() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "https://example.com/hook",
+            WebhookBodyMode::RenderedMessage,
+            1_000,
+        )
+        .with_secret_header_ref("X-Signature", "secret://signature");
+        let resolver = TestSecretResolver::default()
+            .with_secret("secret://signature", "resolved-secret-value");
+
+        let resolved = resolve_webhook_headers(&config, &resolver).expect("headers resolve");
+        let debug = format!("{resolved:?}");
+
+        assert!(debug.contains("<redacted>"));
+        assert!(!debug.contains("resolved-secret-value"));
+        assert!(!debug.contains("secret://signature"));
+    }
+
+    #[test]
+    fn webhook_headers_report_missing_secret_refs_without_secret_values() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "https://example.com/hook",
+            WebhookBodyMode::RenderedMessage,
+            1_000,
+        )
+        .with_secret_header_ref("X-Signature", "secret://missing");
+        let resolver = TestSecretResolver::default().with_missing("secret://missing");
+
+        assert_eq!(
+            resolve_webhook_headers(&config, &resolver),
+            Err(WebhookResolvedHeadersError::MissingSecretReference {
+                header_name: "X-Signature".to_owned(),
+            })
+        );
+    }
+
+    #[test]
+    fn webhook_headers_report_unauthorized_secret_lookup_by_header_name() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "https://example.com/hook",
+            WebhookBodyMode::RenderedMessage,
+            1_000,
+        )
+        .with_secret_header_ref("X-Signature", "secret://signature");
+        let resolver = TestSecretResolver::default().with_error(
+            "secret://signature",
+            WebhookSecretResolverError::Unauthorized,
+        );
+
+        assert_eq!(
+            resolve_webhook_headers(&config, &resolver),
+            Err(WebhookResolvedHeadersError::UnauthorizedSecretLookup {
+                header_name: "X-Signature".to_owned(),
+            })
+        );
+    }
+
+    #[test]
+    fn webhook_headers_reuse_config_validation() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "https://example.com/hook",
+            WebhookBodyMode::RenderedMessage,
+            1_000,
+        )
+        .with_header("Authorization", "Bearer abc123");
+        let resolver = TestSecretResolver::default();
+
+        assert_eq!(
+            resolve_webhook_headers(&config, &resolver),
+            Err(WebhookResolvedHeadersError::InvalidConfig(
+                WebhookAdapterConfigError::StaticHeaderMayContainSecret {
+                    header_name: "Authorization".to_owned(),
+                }
+            ))
         );
     }
 

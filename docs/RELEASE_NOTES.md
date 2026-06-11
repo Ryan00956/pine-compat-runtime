@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added a pure webhook secret-resolver interface and resolved-header builder
+  for future host-owned alert delivery. Static headers and secret header
+  references can now be combined for host transport code without serializing
+  resolved secret values, adding a concrete secret store, or sending network
+  requests.
 - Added pure host delivery diagnostics for future external alert delivery.
   Failed delivery attempts can now produce redacted host diagnostic records from
   attempt/result pairs without adding Pine semantic diagnostics, public runtime

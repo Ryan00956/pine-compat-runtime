@@ -54,15 +54,17 @@ Already supported:
   deterministic backoff and attempt-budget checks.
 - pure host delivery diagnostic records and redacted diagnostic construction
   from delivery attempts plus external delivery results.
+- pure webhook secret-resolver interface and resolved-header construction for
+  host transport code, without storing or serializing resolved secret values.
 
 Still unsupported:
 
 - concrete external delivery adapters;
 - durable delivery store behavior across host restarts;
 - executable retry scheduling, jitter, and dead-letter behavior;
-- executable webhook HTTP transport, authentication secret lookup, TLS
-  configuration, timeout execution, retry scheduling, host diagnostic emission,
-  and rate limiting;
+- executable webhook HTTP transport, concrete authentication secret stores,
+  secret lookup audit logging, TLS configuration, timeout execution, retry
+  scheduling, host diagnostic emission, and rate limiting;
 - user-visible delivery failure reporting;
 - live realtime strategy broker execution.
 
@@ -318,7 +320,11 @@ headers.
     redacted diagnostic construction from attempt/result pairs, still without
     runtime JSON changes, Pine semantic diagnostics, user-visible reporting, or
     network delivery.
-11. Add a concrete webhook transport only after URL validation, secret handling,
+11. Closed on 2026-06-11: add a pure webhook secret-resolver interface and
+    resolved-header construction for host transport code, still without
+    concrete secret stores, audit logging, user-visible reporting, or network
+    delivery.
+12. Add a concrete webhook transport only after URL validation, secret handling,
    timeout behavior, retry classification, and diagnostic redaction are
    fixture-backed.
 

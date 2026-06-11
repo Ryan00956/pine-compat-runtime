@@ -532,7 +532,7 @@ Best next slice: use `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md`
 for the host-owned adapter boundary. Keep default runtime JSON, Python
 dictionaries, WASM JSON, Pine-source alert placeholder support, and external
 network delivery unchanged until restart-safe durable attempt-store behavior,
-executable retry scheduling, authentication secret lookup, diagnostic
+executable retry scheduling, concrete authentication secret stores, diagnostic
 emission, and failure reporting are implemented through explicit host APIs.
 
 ## Recommended Internal Roadmap
