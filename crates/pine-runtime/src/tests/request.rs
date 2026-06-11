@@ -1268,6 +1268,38 @@ fn request_security_evaluates_provider_rma_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_dema_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request dema\")\nprovider_dema = request.security(\"NYSE:IBM\", timeframe.period, ta.dema(close, 3))\nchart_dema = ta.dema(close, 3)\nplot(provider_dema)\nplot(chart_dema)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 21.0),
+            timed_bar(120_000, 22.0),
+            timed_bar(180_000, 24.0),
+            timed_bar(240_000, 27.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 11.0),
+            timed_bar(180_000, 17.0),
+            timed_bar(240_000, 25.0),
+        ])
+        .expect("provider ta.dema expression should run");
+
+    assert_values_close(
+        &result.plots[0].values,
+        &[20.0, 20.75, 21.75, 23.5625, 26.375],
+    );
+    assert_values_close(&result.plots[1].values, &[5.0, 6.5, 10.0, 15.625, 23.375]);
+}
+
+#[test]
 fn request_security_evaluates_provider_linreg_in_requested_context() {
     let program = compile_program(
         "indicator(\"request linreg\")\nprovider_linreg = request.security(\"NYSE:IBM\", timeframe.period, ta.linreg(close, 3, 0))\nchart_linreg = ta.linreg(close, 3, 0)\nplot(provider_linreg)\nplot(chart_linreg)\n",

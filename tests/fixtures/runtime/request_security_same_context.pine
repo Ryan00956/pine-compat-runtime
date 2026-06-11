@@ -44,6 +44,7 @@ percentile_nearest_rank_value = request.security(syminfo.tickerid, timeframe.per
 percentile_linear_interpolation_value = request.security(syminfo.tickerid, timeframe.period, ta.percentile_linear_interpolation(close, 3, 50))
 percentrank_value = request.security(syminfo.tickerid, timeframe.period, ta.percentrank(close, 3))
 rma_value = request.security(syminfo.tickerid, timeframe.period, ta.rma(close, 3))
+dema_value = request.security(syminfo.tickerid, timeframe.period, ta.dema(close, 3))
 
 plot(identity)
 plot(history)
@@ -89,3 +90,4 @@ plot(percentile_nearest_rank_value)
 plot(percentile_linear_interpolation_value)
 plot(percentrank_value)
 plot(rma_value)
+plot(dema_value)

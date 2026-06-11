@@ -55,7 +55,7 @@ truth for request claims.
   direct OHLCV/time sources, pure arithmetic and ternaries, history references,
   `na`, `nz`, selected stateless `math.*` calls, fixed-mintick
   `math.round_to_mintick`, `math.sum`, `ta.cum`, `ta.sma`, `ta.ema`,
-  `ta.rma`, `ta.rsi`, `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`,
+  `ta.dema`, `ta.rma`, `ta.rsi`, `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`,
   `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.rising`,
   `ta.bbw`, `ta.correlation`, `ta.covariance`, `ta.median`, `ta.mode`,
   `ta.percentile_nearest_rank`, `ta.percentile_linear_interpolation`,
