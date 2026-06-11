@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added a pure host-side `DeliveryCandidate` model, dedupe key, and in-memory
+  delivery sink for future realtime alert delivery tests without adding network
+  delivery or changing public runtime JSON.
 - Added `docs/STRATEGY_REALTIME_ALERT_DELIVERY_PLAN.md` as the closed
   host-owned realtime alert delivery design gate. It defines snapshot,
   dedupe, delivery-candidate, and sink boundaries without adding network

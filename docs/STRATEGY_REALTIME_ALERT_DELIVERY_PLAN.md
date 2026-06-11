@@ -181,8 +181,8 @@ separate implementation plan before support is claimed.
 ## Implementation Slices
 
 1. Closed on 2026-06-11: this design gate.
-2. Add a pure `DeliveryCandidate` model and in-memory test sink without network
-   delivery or public runtime JSON changes.
+2. Closed on 2026-06-11: add a pure `DeliveryCandidate` model, dedupe key, and
+   in-memory test sink without network delivery or public runtime JSON changes.
 3. Add a host-only strategy order-fill candidate builder over
    `RunningAlertConfig` plus public `strategy.alerts` events. This remains a
    test/debug replay helper unless wired to a realtime event source.

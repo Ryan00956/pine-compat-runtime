@@ -18,6 +18,10 @@ mod value;
 pub use bar::{Bar, BarUpdate, BarUpdateKind};
 pub use error::RuntimeError;
 pub use output::alerts::AlertEvent;
+pub use output::delivery::{
+    DeliveryCandidate, DeliveryDedupeKey, DeliveryEventKind, DeliveryOutcome, DeliverySink,
+    InMemoryDeliverySink,
+};
 pub use output::drawings::{
     BoxOutput, BoxSnapshot, LabelOutput, LabelSnapshot, LineOutput, LineSnapshot,
     TableCellSnapshot, TableMergedCellSnapshot, TableOutput, TableSnapshot,
