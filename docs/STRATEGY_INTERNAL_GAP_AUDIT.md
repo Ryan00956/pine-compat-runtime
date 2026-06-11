@@ -507,7 +507,10 @@ book, and account model.
 ### 14. Strategy Alerts And Order Metadata
 
 Current state: indicator-style alert events are supported in a narrow runtime
-event model. Strategy order-fill alert metadata is not modeled.
+event model. Strategy order-fill alert metadata is stored internally on
+supported strategy order paths, and
+`docs/STRATEGY_ORDER_FILL_ALERTS_DESIGN.md` defines the order-fill alert event
+boundary. Strategy order-fill alerts are still not emitted.
 
 Missing internal behavior:
 
@@ -517,10 +520,10 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best next slice: continue with
-`docs/STRATEGY_INTERNAL_ORDER_METADATA_PLAN.md` Slice OM5 as an order-fill
-alert emission design gate. External delivery and public JSON expansion remain
-out of scope until that design closes.
+Best next slice: add an internal-only broker-owned order-fill alert event model
+from `docs/STRATEGY_ORDER_FILL_ALERTS_DESIGN.md`, with broker tests and a
+public JSON stability fixture. External delivery and public JSON expansion
+remain out of scope until a later schema slice.
 
 ## Recommended Internal Roadmap
 
@@ -530,8 +533,8 @@ out of scope until that design closes.
    that preserve the current public runtime schema.
 3. Use `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` before widening
    margin/account behavior.
-4. Design strategy order-fill alert metadata separately before accepting
-   `alert_message`, `comment`, or `disable_alert` on strategy order commands.
+4. Implement strategy order-fill alert metadata internally before exposing it
+   through public host output.
 5. Defer short exposure, reversals, generic `strategy.order()`, custom OCA
    behavior, public pending-order records, and richer close-entry ordering until
    a new broker-model design explicitly covers their state transitions.

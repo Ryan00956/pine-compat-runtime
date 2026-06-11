@@ -175,7 +175,10 @@ Tests:
 
 ### Slice OM5: Alert Emission Design Gate
 
-Before exposing order-fill alerts, write a separate design note for:
+Closed on 2026-06-11. See
+`docs/STRATEGY_ORDER_FILL_ALERTS_DESIGN.md`.
+
+Before exposing order-fill alerts, a separate design note defines:
 
 - output shape;
 - placeholder interpolation;
@@ -183,7 +186,8 @@ Before exposing order-fill alerts, write a separate design note for:
 - interaction with existing `alerts[]` output;
 - CLI/Python/WASM schema implications.
 
-Do not emit order-fill alert events before OM5 closes.
+OM5 does not emit order-fill alert events. Later implementation slices must
+follow the design note before widening runtime behavior or public output.
 
 ## Closeout Criteria
 

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Closed the Strategy Order-Fill Alerts design gate. Future strategy
+  order-fill alert work now has an internal broker event boundary for
+  fill-time message selection, `disable_alert` suppression, placeholder
+  handling, and host schema review. Runtime behavior, public JSON, and host
+  output remain unchanged.
 - Stored supported `strategy.close` and `strategy.close_all` order metadata
   internally on closed-trade metrics. Public strategy JSON, host output,
   unsupported `immediately` timing, and external order-fill alert delivery
