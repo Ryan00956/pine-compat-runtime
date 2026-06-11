@@ -48,6 +48,7 @@ dema_value = request.security(syminfo.tickerid, timeframe.period, ta.dema(close,
 tema_value = request.security(syminfo.tickerid, timeframe.period, ta.tema(close, 3))
 tsi_value = request.security(syminfo.tickerid, timeframe.period, ta.tsi(close, 2, 3))
 cmo_value = request.security(syminfo.tickerid, timeframe.period, ta.cmo(close, 3))
+mfi_value = request.security(syminfo.tickerid, timeframe.period, ta.mfi(close, 3))
 
 plot(identity)
 plot(history)
@@ -97,3 +98,4 @@ plot(dema_value)
 plot(tema_value)
 plot(tsi_value)
 plot(cmo_value)
+plot(mfi_value)
