@@ -242,5 +242,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.ema"
             | "ta.rsi"
             | "ta.atr"
+            | "ta.highest"
+            | "ta.lowest"
     )
 }

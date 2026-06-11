@@ -201,15 +201,17 @@ The current executable subset has two forms:
   The supported provider expression subset includes direct OHLCV/time sources,
   pure arithmetic and ternaries, history references, `na`, `nz`, selected
   stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
-  `ta.sma`, `ta.ema`, `ta.rsi`, and `ta.atr`. Requested-context rolling
-  callsite state is isolated from the chart context. Higher-timeframe alignment
-  uses default `gaps_off` and `lookahead_off`: only confirmed requested bars are
-  visible, and missing requested bars forward-fill the last confirmed value.
+  `ta.sma`, `ta.ema`, `ta.rsi`, `ta.atr`, `ta.highest`, and `ta.lowest`.
+  Requested-context rolling callsite state is isolated from the chart context.
+  Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
+  confirmed requested bars are visible, and missing requested bars forward-fill
+  the last confirmed value.
 
 Lower timeframe requests, provider expression local variable aliases, UDF calls,
-stateful math calls such as `math.random`, output/drawing side effects, input
-declarations, array mutation, optional parameters, non-default barmerge
-behavior, explicit gaps, and lookahead remain unsupported.
+stateful math calls such as `math.random`, `ta.highestbars`/`ta.lowestbars`,
+output/drawing side effects, input declarations, array mutation, optional
+parameters, non-default barmerge behavior, explicit gaps, and lookahead remain
+unsupported.
 `request.security_lower_tf` is unsupported; it returns arrays in Pine and is not
 claimed until typed array return semantics and host output shapes are designed.
 `timeframe.in_seconds()` returns `60`.

@@ -472,6 +472,43 @@ fn request_security_isolates_provider_atr_state_from_chart_state() {
 }
 
 #[test]
+fn request_security_isolates_provider_extrema_state_from_chart_state() {
+    let program = compile_program(
+        "indicator(\"request extrema\")\nprovider_hi = request.security(\"NYSE:IBM\", timeframe.period, ta.highest(3))\nprovider_lo = request.security(\"NYSE:IBM\", timeframe.period, ta.lowest(3))\nchart_hi = ta.highest(3)\nchart_lo = ta.lowest(3)\nplot(provider_hi)\nplot(provider_lo)\nplot(chart_hi)\nplot(chart_lo)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 1.0, 5.0, 1.0, 4.0, 100.0),
+            timed_ohlcv(60_000, 1.0, 7.0, 2.0, 6.0, 100.0),
+            timed_ohlcv(120_000, 1.0, 6.0, 3.0, 5.0, 100.0),
+            timed_ohlcv(180_000, 1.0, 8.0, 0.0, 7.0, 100.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 3.0, 2.0, 2.0, 100.0),
+            timed_ohlcv(60_000, 1.0, 4.0, 1.0, 3.0, 100.0),
+            timed_ohlcv(120_000, 1.0, 5.0, 2.0, 4.0, 100.0),
+            timed_ohlcv(180_000, 1.0, 6.0, 3.0, 5.0, 100.0),
+        ])
+        .expect("provider ta.highest/ta.lowest expressions should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&result.plots[0].values[2..], &[7.0, 8.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_values_close(&result.plots[1].values[2..], &[1.0, 0.0]);
+    assert_eq!(result.plots[2].values[0], PineValue::Na);
+    assert_eq!(result.plots[2].values[1], PineValue::Na);
+    assert_values_close(&result.plots[2].values[2..], &[5.0, 6.0]);
+    assert_eq!(result.plots[3].values[0], PineValue::Na);
+    assert_eq!(result.plots[3].values[1], PineValue::Na);
+    assert_values_close(&result.plots[3].values[2..], &[1.0, 1.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_ema_in_requested_context() {
     let program = compile_program(
         "indicator(\"request ema\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, ta.ema(close, 2)))\n",
