@@ -6756,6 +6756,13 @@ def test_run_script_returns_omitted_stop_limit_bracket_persistent_fixture_contra
         ROOT
         / "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_stop_limit_bracket_persistent_from_entries.pine"
     ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_pyramiding_exit_omitted_stop_limit_bracket_persistent_from_entries.json"
+        ).read_text()
+    )
+
     result = pine_compat.run_script(
         source,
         fixture_bars(
@@ -6763,94 +6770,7 @@ def test_run_script_returns_omitted_stop_limit_bracket_persistent_fixture_contra
         ),
     )
 
-    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
-    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
-    assert result["strategy"]["orders"] == [
-        {
-            "id": "L1",
-            "barIndex": 1,
-            "time": 2,
-            "direction": "strategy.long",
-            "qty": 1.0,
-            "price": 8.0,
-        },
-        {
-            "id": "L2",
-            "barIndex": 3,
-            "time": 4,
-            "direction": "strategy.long",
-            "qty": 3.0,
-            "price": 6.0,
-        },
-        {
-            "id": "XB",
-            "barIndex": 4,
-            "time": 5,
-            "direction": "strategy.exit",
-            "qty": 1.0,
-            "price": 9.0,
-        },
-        {
-            "id": "XB",
-            "barIndex": 4,
-            "time": 5,
-            "direction": "strategy.exit",
-            "qty": 3.0,
-            "price": 9.0,
-        },
-    ]
-    assert [order["direction"] for order in result["strategy"]["orders"]].count(
-        "strategy.exit"
-    ) == 2
-    assert result["strategy"]["trades"] == [
-        {
-            "id": "L1",
-            "entryBarIndex": 1,
-            "exitBarIndex": 4,
-            "entryTime": 2,
-            "exitTime": 5,
-            "entryPrice": 8.0,
-            "exitPrice": 9.0,
-            "qty": 1.0,
-            "profit": 1.0,
-        },
-        {
-            "id": "L2",
-            "entryBarIndex": 3,
-            "exitBarIndex": 4,
-            "entryTime": 4,
-            "exitTime": 5,
-            "entryPrice": 6.0,
-            "exitPrice": 9.0,
-            "qty": 3.0,
-            "profit": 9.0,
-        },
-    ]
-    assert result["strategy"]["position"] == [
-        {"barIndex": 1, "size": 1.0, "avgPrice": 8.0},
-        {"barIndex": 3, "size": 4.0, "avgPrice": 6.5},
-        {"barIndex": 4, "size": 0.0, "avgPrice": None},
-    ]
-    assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 1.0, 1.0, 2.0, 2.0, 0.0],
-        [0.0, 1.0, 1.0, 4.0, 4.0, 0.0],
-        [0.0, 0.0, 0.0, 0.0, 0.0, 2.0],
-    ]
-    assert result["diagnostics"] == []
-    assert result["strategy"]["diagnostics"] == []
-    strategy_json = json.dumps(result["strategy"])
-    assert "pending" not in strategy_json
-    assert "reservedQuantity" not in strategy_json
-    assert "reserved_quantity" not in strategy_json
-    assert "remainingQty" not in strategy_json
-    assert "remaining_quantity" not in strategy_json
-    assert "qtyPercent" not in strategy_json
-    assert "qty_percent" not in strategy_json
-    assert "profitTarget" not in strategy_json
-    assert "stopLoss" not in strategy_json
-    assert "stop_price" not in strategy_json
-    assert "exitReason" not in strategy_json
+    assert result == expected
 
 
 def test_run_script_returns_omitted_trail_price_persistent_fixture_contract():

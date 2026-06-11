@@ -5769,36 +5769,10 @@ fn runs_strategy_omitted_stop_limit_bracket_persistent_fixture_from_csv_to_publi
     )
     .expect("strategy omitted stop-limit bracket persistent fixture should run");
 
-    assert!(output.contains(&format!(
-        "\"schemaVersion\":{}",
-        PUBLIC_RUNTIME_SCHEMA_VERSION
-    )));
-    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 2);
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L1\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":1,\"price\":8},{\"id\":\"L2\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.long\",\"qty\":3,\"price\":6},{\"id\":\"XB\",\"barIndex\":4,\"time\":5,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":9},{\"id\":\"XB\",\"barIndex\":4,\"time\":5,\"direction\":\"strategy.exit\",\"qty\":3,\"price\":9}]"
-    ));
-    assert!(output.contains(
-        "\"trades\":[{\"id\":\"L1\",\"entryBarIndex\":1,\"exitBarIndex\":4,\"entryTime\":2,\"exitTime\":5,\"entryPrice\":8,\"exitPrice\":9,\"qty\":1,\"profit\":1},{\"id\":\"L2\",\"entryBarIndex\":3,\"exitBarIndex\":4,\"entryTime\":4,\"exitTime\":5,\"entryPrice\":6,\"exitPrice\":9,\"qty\":3,\"profit\":9}]"
-    ));
-    assert!(output.contains(
-        "\"position\":[{\"barIndex\":1,\"size\":1,\"avgPrice\":8},{\"barIndex\":3,\"size\":4,\"avgPrice\":6.5},{\"barIndex\":4,\"size\":0,\"avgPrice\":null}]"
-    ));
-    assert!(output.contains("\"values\":[0,1,1,2,2,0]"));
-    assert!(output.contains("\"values\":[0,1,1,4,4,0]"));
-    assert!(output.contains("\"strategy\":{\"orders\":"));
-    assert!(output.contains("\"equity\":["));
-    assert!(output.contains("\"diagnostics\":[]}"));
-    assert!(!output.contains("pending"));
-    assert!(!output.contains("reservedQuantity"));
-    assert!(!output.contains("reserved_quantity"));
-    assert!(!output.contains("remainingQty"));
-    assert!(!output.contains("remaining_quantity"));
-    assert!(!output.contains("qtyPercent"));
-    assert!(!output.contains("qty_percent"));
-    assert!(!output.contains("profitTarget"));
-    assert!(!output.contains("stopLoss"));
-    assert!(!output.contains("stop_price"));
-    assert!(!output.contains("exitReason"));
+    assert_snapshot(
+        "runtime_strategy_pyramiding_exit_omitted_stop_limit_bracket_persistent_from_entries.json",
+        &output,
+    );
 }
 
 #[test]
