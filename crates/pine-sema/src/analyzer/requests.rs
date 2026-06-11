@@ -251,6 +251,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.cog"
             | "ta.bop"
             | "ta.ao"
+            | "ta.max"
             | "ta.mfi"
             | "ta.stoch"
             | "ta.wpr"

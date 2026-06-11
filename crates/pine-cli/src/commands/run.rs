@@ -672,6 +672,7 @@ mod tests {
         ));
         assert!(output.contains("\"values\":[5,5,5,5,5]"));
         assert!(output.contains("\"values\":[null,null,null,null,null]"));
+        assert!(output.contains("\"values\":[20,21,22,23,24]"));
         assert!(output.matches("\"values\":[null,null,21,22,23]").count() >= 4);
     }
 

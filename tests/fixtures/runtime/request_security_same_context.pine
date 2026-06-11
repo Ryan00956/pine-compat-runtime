@@ -56,6 +56,7 @@ cci_value = request.security(syminfo.tickerid, timeframe.period, ta.cci(close, 3
 cog_value = request.security(syminfo.tickerid, timeframe.period, ta.cog(close, 3))
 bop_value = request.security(syminfo.tickerid, timeframe.period, ta.bop())
 ao_value = request.security(syminfo.tickerid, timeframe.period, ta.ao())
+max_value = request.security(syminfo.tickerid, timeframe.period, ta.max(close))
 
 plot(identity)
 plot(history)
@@ -113,3 +114,4 @@ plot(cci_value)
 plot(cog_value)
 plot(bop_value)
 plot(ao_value)
+plot(max_value)
