@@ -241,6 +241,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.cum"
             | "ta.sma"
             | "ta.ema"
+            | "ta.rma"
             | "ta.rsi"
             | "ta.tr"
             | "ta.atr"

@@ -1221,6 +1221,53 @@ fn request_security_evaluates_provider_vwma_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_rma_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request rma\")\nprovider_rma = request.security(\"NYSE:IBM\", timeframe.period, ta.rma(close, 3))\nchart_rma = ta.rma(close, 3)\nplot(provider_rma)\nplot(chart_rma)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 21.0),
+            timed_bar(120_000, 22.0),
+            timed_bar(180_000, 24.0),
+            timed_bar(240_000, 27.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 11.0),
+            timed_bar(180_000, 17.0),
+            timed_bar(240_000, 25.0),
+        ])
+        .expect("provider ta.rma expression should run");
+
+    assert_values_close(
+        &result.plots[0].values,
+        &[
+            20.0,
+            20.333333333333332,
+            20.88888888888889,
+            21.925925925925927,
+            23.617283950617285,
+        ],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[
+            5.0,
+            5.666666666666667,
+            7.444444444444445,
+            10.62962962962963,
+            15.419753086419753,
+        ],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_linreg_in_requested_context() {
     let program = compile_program(
         "indicator(\"request linreg\")\nprovider_linreg = request.security(\"NYSE:IBM\", timeframe.period, ta.linreg(close, 3, 0))\nchart_linreg = ta.linreg(close, 3, 0)\nplot(provider_linreg)\nplot(chart_linreg)\n",
