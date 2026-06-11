@@ -248,6 +248,48 @@ fn accepts_provider_backed_same_timeframe_request_security_ta() {
 }
 
 #[test]
+fn accepts_provider_backed_request_security_math_extremes() {
+    let analysis = analyze(
+        "plot(request.security(\"NYSE:IBM\", timeframe.period, math.max(close, open) - math.min(close, open)))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
+fn accepts_same_context_request_security_math_extremes() {
+    let analysis = analyze(
+        "plot(request.security(syminfo.tickerid, timeframe.period, math.max(close, open) - math.min(close, open)))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_higher_timeframe_request_security() {
     let analysis = analyze("plot(request.security(\"NYSE:IBM\", \"5\", ta.sma(close, 2)))\n");
 
@@ -286,7 +328,7 @@ fn rejects_invalid_timeframe_request_security() {
 #[test]
 fn rejects_provider_request_security_unsupported_call() {
     let analysis =
-        analyze("x = request.security(\"NYSE:IBM\", timeframe.period, math.max(close, open))\n");
+        analyze("x = request.security(\"NYSE:IBM\", timeframe.period, math.avg(close, open))\n");
 
     assert_eq!(analysis.compatibility.unsupported.len(), 1);
     assert_eq!(

@@ -266,6 +266,25 @@ fn request_security_evaluates_provider_arithmetic_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_math_extremes_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request math extremes\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, math.max(close, open) - math.min(close, open)))\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 100.0, 101.0, 99.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 21.0, 111.0, 19.0, 110.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[timed_bar(0, 5.0), timed_bar(60_000, 6.0)])
+        .expect("provider math extremes should run");
+
+    assert_values_close(&result.plots[0].values, &[80.0, 89.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_history_references() {
     let program = compile_program(
         "indicator(\"request history\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close[1]))\n",

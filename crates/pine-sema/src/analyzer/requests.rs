@@ -136,7 +136,7 @@ fn request_expression_is_pure_scalar(expr: &Expr) -> bool {
             let Some(name) = expr_name(callee) else {
                 return false;
             };
-            matches!(name.as_str(), "na" | "nz" | "ta.sma" | "ta.ema")
+            request_scalar_call_is_supported(name.as_str())
                 && args
                     .iter()
                     .all(|arg| arg.name.is_none() && request_expression_is_pure_scalar(&arg.value))
@@ -184,7 +184,7 @@ fn request_expression_is_provider_scalar(expr: &Expr) -> bool {
             let Some(name) = expr_name(callee) else {
                 return false;
             };
-            matches!(name.as_str(), "na" | "nz" | "ta.sma" | "ta.ema")
+            request_scalar_call_is_supported(name.as_str())
                 && args.iter().all(|arg| {
                     arg.name.is_none() && request_expression_is_provider_scalar(&arg.value)
                 })
@@ -206,4 +206,11 @@ fn request_expression_is_provider_scalar(expr: &Expr) -> bool {
 
 fn is_request_provider_source_name(name: &str) -> bool {
     matches!(name, "open" | "high" | "low" | "close" | "volume" | "time")
+}
+
+fn request_scalar_call_is_supported(name: &str) -> bool {
+    matches!(
+        name,
+        "na" | "nz" | "math.max" | "math.min" | "ta.sma" | "ta.ema"
+    )
 }

@@ -1,5 +1,7 @@
 indicator("request host contract")
 same = request.security("NYSE:IBM", timeframe.period, open + close)
 higher = request.security("NYSE:IBM", "5", close)
+spread = request.security("NYSE:IBM", timeframe.period, math.max(close, open) - math.min(close, open))
 plot(same)
 plot(higher)
+plot(spread)

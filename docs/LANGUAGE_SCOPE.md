@@ -271,10 +271,11 @@ Request data:
   `request.security(syminfo.tickerid, timeframe, expression)` for host-provided
   same-or-higher-timeframe bars. The provider expression subset includes direct
   OHLCV/time sources, pure arithmetic and ternaries, history references, `na`,
-  `nz`, `ta.sma`, and `ta.ema`; local variable aliases inside provider
-  expressions are not part of this subset. Higher-timeframe alignment uses
-  default `gaps_off` and `lookahead_off`: only confirmed requested bars are
-  visible, and missing requested bars forward-fill the last confirmed value.
+  `nz`, `math.max`, `math.min`, `ta.sma`, and `ta.ema`; local variable aliases
+  inside provider expressions are not part of this subset. Higher-timeframe
+  alignment uses default `gaps_off` and `lookahead_off`: only confirmed
+  requested bars are visible, and missing requested bars forward-fill the last
+  confirmed value.
   CLI hosts pass these bars with
   `--request-bars SYMBOL:TIMEFRAME=bars.csv`; Python hosts pass
   `request_bars={"SYMBOL:TIMEFRAME": bars}`. WASM request dataset injection is a

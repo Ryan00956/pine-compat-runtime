@@ -824,6 +824,10 @@ state is separate from chart-context state: history buffers, `ta.*` callsite
 state, `var` storage, arrays, drawing objects, and outputs do not leak between
 the two contexts.
 
+The supported requested expression subset includes direct OHLCV/time sources,
+pure arithmetic and ternaries, history references, `na`, `nz`, `math.max`,
+`math.min`, `ta.sma`, and `ta.ema`.
+
 Requested-context results are cached deterministically by callsite, requested
 symbol, requested timeframe, and expression identity for the duration of one
 runtime execution. Repeated identical calls reuse that cache instead of
