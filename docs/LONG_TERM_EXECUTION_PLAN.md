@@ -450,7 +450,8 @@ Maintenance tails:
 - Strategy order-fill alert payloads are now part of the strategy runtime
   surface under `strategy.alerts`, with explicit host helpers for
   `{{strategy.order.alert_message}}`; broader running-alert configuration and
-  external delivery remain deferred to a separate design.
+  external delivery are tracked in
+  `docs/STRATEGY_RUNNING_ALERT_CONFIGURATION_PLAN.md`.
 
 Acceptance criteria:
 

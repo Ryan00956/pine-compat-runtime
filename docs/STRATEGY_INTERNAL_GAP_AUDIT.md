@@ -526,10 +526,11 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best next slice: defer external alert delivery until a running-alert
-configuration model exists. Keep default runtime JSON, Python dictionaries,
-WASM JSON, Pine-source alert placeholder support, and external delivery
-unchanged until that model is designed.
+Best next slice: use `docs/STRATEGY_RUNNING_ALERT_CONFIGURATION_PLAN.md` as the
+host-owned model for any future external alert delivery. Keep default runtime
+JSON, Python dictionaries, WASM JSON, Pine-source alert placeholder support, and
+external delivery unchanged until that model is implemented through explicit
+host helpers.
 
 ## Recommended Internal Roadmap
 

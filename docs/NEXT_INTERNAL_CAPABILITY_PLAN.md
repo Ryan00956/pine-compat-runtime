@@ -216,8 +216,8 @@ Good next slices:
 - More branch, loop, and realtime rollback fixtures beyond the current alert
   policy and frequency rollback coverage.
 - Better parity tests for alert output through CLI, Python, and WASM.
-- Running-alert configuration design before any external strategy alert
-  delivery work.
+- Use `docs/STRATEGY_RUNNING_ALERT_CONFIGURATION_PLAN.md` before any external
+  strategy alert delivery work.
 
 Keep out of scope until separately designed:
 

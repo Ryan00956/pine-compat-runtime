@@ -127,8 +127,8 @@ message/title strings.
    and WASM JSON unchanged.
 3. Closed on 2026-06-11: add host tests for explicit Python, CLI, and WASM
    rendering helpers.
-4. Defer external alert delivery until a running-alert configuration model
-   exists.
+4. Defer external alert delivery to the host-owned model in
+   `docs/STRATEGY_RUNNING_ALERT_CONFIGURATION_PLAN.md`.
 
 ## Completion Gate
 
