@@ -6075,6 +6075,12 @@ def test_run_script_returns_omitted_current_all_entry_exit_fixture_contract():
         ROOT
         / "tests/fixtures/runtime/strategy_pyramiding_exit_omitted_from_entry_current.pine"
     ).read_text()
+    expected = json.loads(
+        (
+            ROOT
+            / "tests/snapshots/runtime_strategy_pyramiding_exit_omitted_from_entry_current.json"
+        ).read_text()
+    )
     result = pine_compat.run_script(
         source,
         fixture_bars(
@@ -6082,91 +6088,7 @@ def test_run_script_returns_omitted_current_all_entry_exit_fixture_contract():
         ),
     )
 
-    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
-    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
-    assert result["strategy"]["orders"] == [
-        {
-            "id": "L1",
-            "barIndex": 1,
-            "time": 2,
-            "direction": "strategy.long",
-            "qty": 1.0,
-            "price": 2.0,
-        },
-        {
-            "id": "L2",
-            "barIndex": 2,
-            "time": 3,
-            "direction": "strategy.long",
-            "qty": 3.0,
-            "price": 4.0,
-        },
-        {
-            "id": "XL",
-            "barIndex": 3,
-            "time": 4,
-            "direction": "strategy.exit",
-            "qty": 1.0,
-            "price": 5.0,
-        },
-        {
-            "id": "XL",
-            "barIndex": 3,
-            "time": 4,
-            "direction": "strategy.exit",
-            "qty": 3.0,
-            "price": 5.0,
-        },
-    ]
-    assert [order["direction"] for order in result["strategy"]["orders"]].count(
-        "strategy.exit"
-    ) == 2
-    assert result["strategy"]["trades"] == [
-        {
-            "id": "L1",
-            "entryBarIndex": 1,
-            "exitBarIndex": 3,
-            "entryTime": 2,
-            "exitTime": 4,
-            "entryPrice": 2.0,
-            "exitPrice": 5.0,
-            "qty": 1.0,
-            "profit": 3.0,
-        },
-        {
-            "id": "L2",
-            "entryBarIndex": 2,
-            "exitBarIndex": 3,
-            "entryTime": 3,
-            "exitTime": 4,
-            "entryPrice": 4.0,
-            "exitPrice": 5.0,
-            "qty": 3.0,
-            "profit": 3.0,
-        },
-    ]
-    assert result["strategy"]["position"] == [
-        {"barIndex": 1, "size": 1.0, "avgPrice": 2.0},
-        {"barIndex": 2, "size": 4.0, "avgPrice": 3.5},
-        {"barIndex": 3, "size": 0.0, "avgPrice": None},
-    ]
-    assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 1.0, 2.0, 2.0, 0.0],
-        [0.0, 1.0, 4.0, 4.0, 0.0],
-        [0.0, 0.0, 0.0, 0.0, 2.0],
-    ]
-    assert result["diagnostics"] == []
-    assert result["strategy"]["diagnostics"] == []
-    strategy_json = json.dumps(result["strategy"])
-    assert "pending" not in strategy_json
-    assert "reservedQuantity" not in strategy_json
-    assert "reserved_quantity" not in strategy_json
-    assert "remainingQty" not in strategy_json
-    assert "remaining_quantity" not in strategy_json
-    assert "qtyPercent" not in strategy_json
-    assert "qty_percent" not in strategy_json
-    assert "exitReason" not in strategy_json
+    assert result == expected
 
 
 def test_run_script_returns_omitted_persistent_all_entry_exit_fixture_contract():
