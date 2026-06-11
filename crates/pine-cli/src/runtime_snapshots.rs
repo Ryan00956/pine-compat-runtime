@@ -527,6 +527,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_close.pine",
     ),
     (
+        "runtime_strategy_close_metadata.json",
+        "tests/fixtures/runtime/strategy_close_metadata.pine",
+    ),
+    (
         "runtime_strategy_close_qty_partial.json",
         "tests/fixtures/runtime/strategy_close_qty_partial.pine",
     ),

@@ -162,14 +162,16 @@ Tests:
 
 ### Slice OM4: Close Metadata Storage
 
+Closed on 2026-06-11.
+
 Thread metadata through `strategy.close` and `strategy.close_all` fill paths
 without implementing `immediately`.
 
 Tests:
 
-- broker tests proving metadata is available at close fill recording time;
-- runtime fixture proving public JSON remains unchanged;
-- negative fixture keeping unsupported immediate-close timing outside the claim.
+- broker tests prove metadata is available at close fill recording time;
+- runtime fixture proves public JSON remains unchanged;
+- negative fixture keeps unsupported immediate-close timing outside the claim.
 
 ### Slice OM5: Alert Emission Design Gate
 

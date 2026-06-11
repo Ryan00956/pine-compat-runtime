@@ -70,6 +70,7 @@ pub struct BrokerState {
     cash: f64,
     position_size: f64,
     avg_price: f64,
+    next_close_metadata: StrategyOrderMetadata,
     next_exit_metadata: StrategyExitMetadata,
     entry_id: Option<String>,
     entry_bar_index: Option<usize>,
@@ -206,6 +207,7 @@ impl BrokerState {
             cash: initial_capital,
             position_size: 0.0,
             avg_price: 0.0,
+            next_close_metadata: StrategyOrderMetadata::default(),
             next_exit_metadata: StrategyExitMetadata::default(),
             entry_id: None,
             entry_bar_index: None,
@@ -263,6 +265,21 @@ impl BrokerState {
 
     pub(super) fn take_next_exit_metadata(&mut self) -> StrategyExitMetadata {
         std::mem::take(&mut self.next_exit_metadata)
+    }
+
+    pub(crate) fn with_next_close_metadata<T>(
+        &mut self,
+        metadata: StrategyOrderMetadata,
+        f: impl FnOnce(&mut Self) -> T,
+    ) -> T {
+        let previous = std::mem::replace(&mut self.next_close_metadata, metadata);
+        let result = f(self);
+        self.next_close_metadata = previous;
+        result
+    }
+
+    pub(super) fn take_next_close_metadata(&mut self) -> StrategyOrderMetadata {
+        std::mem::take(&mut self.next_close_metadata)
     }
 
     fn entry_commission_for_closed_quantity(&self, qty: f64) -> f64 {
@@ -1128,6 +1145,7 @@ struct ClosedTradeMetrics {
     profit_percent: f64,
     max_runup: f64,
     max_drawdown: f64,
+    close_metadata: StrategyOrderMetadata,
 }
 
 #[cfg(test)]

@@ -1,5 +1,5 @@
 use super::{
-    BrokerState, ClosedTradeMetrics,
+    BrokerState, ClosedTradeMetrics, StrategyOrderMetadata,
     ledger::{OpenTrade, TradeAllocation},
     pending_exits::PendingExit,
 };
@@ -65,6 +65,7 @@ struct ClosedTradeFill {
     qty: f64,
     profit: f64,
     commission: f64,
+    close_metadata: StrategyOrderMetadata,
 }
 
 impl BrokerState {
@@ -147,6 +148,7 @@ impl BrokerState {
             ),
             max_runup: self.current_open_trade_max_runup_for_quantity(fill.qty),
             max_drawdown: self.current_open_trade_max_drawdown_for_quantity(fill.qty),
+            close_metadata: fill.close_metadata,
         });
     }
 
@@ -211,6 +213,7 @@ impl BrokerState {
             qty,
             profit,
             commission,
+            close_metadata: StrategyOrderMetadata::default(),
         });
 
         self.cash += qty * current_price - exit_commission;
@@ -260,6 +263,7 @@ impl BrokerState {
         }
 
         let exit_commission = self.exit_commission_for_fill(qty, price);
+        let metadata = self.take_next_close_metadata();
         for allocation in &allocations {
             let allocated_exit_commission = exit_commission * (allocation.quantity / qty);
             let commission = allocation.entry_commission + allocated_exit_commission;
@@ -279,6 +283,7 @@ impl BrokerState {
                 qty: allocation.quantity,
                 profit,
                 commission,
+                close_metadata: metadata.clone(),
             });
         }
 
@@ -389,6 +394,7 @@ impl BrokerState {
         let exit_commission = self.exit_commission_for_fill(qty, price);
         let commission = entry_fill.entry_commission + exit_commission;
         let profit = (price - entry_fill.entry_price) * qty - commission;
+        let metadata = self.take_next_close_metadata();
         self.record_closed_trade_fill(ClosedTradeFill {
             entry_id: id.clone(),
             exit_id: id.clone(),
@@ -399,6 +405,7 @@ impl BrokerState {
             qty,
             profit,
             commission,
+            close_metadata: metadata,
         });
 
         self.cash += qty * price - exit_commission;
@@ -487,6 +494,7 @@ impl BrokerState {
                 qty,
                 profit,
                 commission,
+                close_metadata: StrategyOrderMetadata::default(),
             });
             entry_commission
         } else {
@@ -521,6 +529,7 @@ impl BrokerState {
                     qty: allocation.quantity,
                     profit,
                     commission,
+                    close_metadata: StrategyOrderMetadata::default(),
                 });
                 closed_entry_commission += allocation.entry_commission;
             }

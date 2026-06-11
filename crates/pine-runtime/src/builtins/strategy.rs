@@ -55,7 +55,7 @@ impl<'a> HistoricalRuntime<'a> {
         Some(match callee {
             "strategy.entry" => self.eval_strategy_entry(args),
             "strategy.close" => self.eval_strategy_close(args),
-            "strategy.close_all" => self.eval_strategy_close_all(),
+            "strategy.close_all" => self.eval_strategy_close_all(args),
             "strategy.cancel" => self.eval_strategy_cancel(args),
             "strategy.cancel_all" => self.eval_strategy_cancel_all(),
             "strategy.exit" => self.eval_strategy_exit(args),
@@ -327,39 +327,60 @@ impl<'a> HistoricalRuntime<'a> {
             .iter()
             .find(|arg| arg.name.as_deref() == Some("qty_percent"))
             .map(|arg| &arg.value);
+        let metadata = self.eval_strategy_close_metadata(args, 3)?;
 
         if let Some(qty_expr) = qty_expr {
             let qty = self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker
-                .close_long_qty(id, self.bars, bar.time, bar.close, qty);
+                .with_next_close_metadata(metadata, |broker| {
+                    broker.close_long_qty(id, self.bars, bar.time, bar.close, qty)
+                });
         } else if let Some(qty_percent_expr) = qty_percent_expr {
             let qty_percent = self
                 .eval_expr(qty_percent_expr)?
                 .as_f64()
                 .unwrap_or(f64::NAN);
-            self.strategy_broker.close_long_qty_percent(
-                id,
-                self.bars,
-                bar.time,
-                bar.close,
-                qty_percent,
-            );
+            self.strategy_broker
+                .with_next_close_metadata(metadata, |broker| {
+                    broker.close_long_qty_percent(id, self.bars, bar.time, bar.close, qty_percent)
+                });
         } else {
             self.strategy_broker
-                .close_long(id, self.bars, bar.time, bar.close);
+                .with_next_close_metadata(metadata, |broker| {
+                    broker.close_long(id, self.bars, bar.time, bar.close)
+                });
         }
         Ok(PineValue::Void)
     }
 
-    fn eval_strategy_close_all(&mut self) -> Result<PineValue, RuntimeError> {
+    fn eval_strategy_close_metadata(
+        &mut self,
+        args: &[HirCallArg],
+        comment_index: usize,
+    ) -> Result<StrategyOrderMetadata, RuntimeError> {
+        Ok(StrategyOrderMetadata {
+            comment: self.eval_optional_string_arg(args, comment_index, "comment")?,
+            alert_message: self.eval_optional_string_arg(
+                args,
+                comment_index + 1,
+                "alert_message",
+            )?,
+            disable_alert: self.eval_optional_bool_arg(args, comment_index + 2, "disable_alert")?,
+        })
+    }
+
+    fn eval_strategy_close_all(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
         let Some(bar) = self.current_bar else {
             return Err(RuntimeError {
                 message: "`strategy.close_all` requires an active bar".to_owned(),
             });
         };
+        let metadata = self.eval_strategy_close_metadata(args, 0)?;
 
         self.strategy_broker
-            .close_all_long(self.bars, bar.time, bar.close);
+            .with_next_close_metadata(metadata, |broker| {
+                broker.close_all_long(self.bars, bar.time, bar.close)
+            });
         Ok(PineValue::Void)
     }
 

@@ -46,6 +46,14 @@ fn exit_metadata(label: &str) -> StrategyExitMetadata {
     }
 }
 
+fn close_metadata(label: &str) -> StrategyOrderMetadata {
+    StrategyOrderMetadata {
+        comment: Some(format!("{label} comment")),
+        alert_message: Some(format!("{label} alert")),
+        disable_alert: true,
+    }
+}
+
 fn margin_broker(initial_capital: f64, margin_long: f64) -> BrokerState {
     BrokerState::new_with_account_settings(
         initial_capital,
@@ -3457,6 +3465,58 @@ fn close_long_cancels_matching_pending_exit() {
 
     assert_eq!(pending_exit_count(&broker), 0);
     assert_eq!(broker.trades.len(), 1);
+}
+
+#[test]
+fn close_long_metadata_is_recorded_in_internal_closed_trade_metrics() {
+    let mut broker = broker_with_long_entry();
+    let metadata = close_metadata("close");
+
+    broker.with_next_close_metadata(metadata.clone(), |broker| {
+        broker.close_long("L".to_owned(), 1, 20, 110.0);
+    });
+
+    assert_eq!(broker.trades.len(), 1);
+    assert_eq!(
+        broker
+            .closed_trade_metrics
+            .first()
+            .map(|metrics| &metrics.close_metadata),
+        Some(&metadata)
+    );
+    assert_eq!(broker.result().trades.len(), 1);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn close_all_metadata_is_recorded_for_each_internal_closed_trade_metric() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    );
+    assert!(broker.entry_long("L1".to_owned(), 0, 10, 100.0, 1.0));
+    assert!(broker.entry_long("L2".to_owned(), 1, 20, 110.0, 2.0));
+    let metadata = close_metadata("close all");
+
+    broker.with_next_close_metadata(metadata.clone(), |broker| {
+        broker.close_all_long(2, 30, 120.0);
+    });
+
+    assert_eq!(broker.trades.len(), 2);
+    assert_eq!(broker.closed_trade_metrics.len(), 2);
+    assert!(
+        broker
+            .closed_trade_metrics
+            .iter()
+            .all(|metrics| metrics.close_metadata == metadata)
+    );
+    assert_eq!(broker.result().trades.len(), 2);
+    assert!(broker.diagnostics.is_empty());
 }
 
 #[test]

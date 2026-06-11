@@ -438,12 +438,12 @@ bar close. Fixed `qty` and `qty_percent` must be finite and positive;
 the current matching position size, remaining long position state stays open at
 the same average price, and matching pending exits are cancelled only when the
 close fully flattens the entry. `comment`, `alert_message`, and
-`disable_alert` arguments are accepted by the semantic boundary but have no
-external alert-delivery or public JSON effect yet. `immediately`, partial
+`disable_alert` arguments are stored internally on closed-trade metrics without
+external alert-delivery or public JSON effect. `immediately`, partial
 `strategy.close_all()`, and multi-entry close allocation remain unsupported.
 `strategy.close_all()` closes the current supported long position at the current
 bar close and is a no-op while flat; its `comment`, `alert_message`, and
-`disable_alert` arguments have the same no-output metadata boundary.
+`disable_alert` arguments have the same internal-only metadata boundary.
 `strategy.cancel(id)` cancels matching internal pending entry ids and matching
 internal pending exit ids in the current supported order subset. Unknown,
 already-filled, and already-cancelled ids are no-op. Cancellation emits no
@@ -465,9 +465,9 @@ stored internally on pending and filled entries without public JSON fields or
 external order-fill alert delivery. Supported `strategy.exit` metadata
 arguments are stored internally on pending and deferred exits without public
 JSON fields or external order-fill alert delivery. Supported `strategy.close`
-and `strategy.close_all` metadata arguments are accepted by the semantic
-boundary only until their storage slices land. Richer strategy order options
-remain unsupported.
+and `strategy.close_all` metadata arguments are stored internally on
+closed-trade metrics without public JSON fields or external order-fill alert
+delivery. Richer strategy order options remain unsupported.
 `strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
 `strategy.closedtrades.entry_id`, `strategy.closedtrades.exit_id`,
 `strategy.closedtrades.entry_bar_index`, and
