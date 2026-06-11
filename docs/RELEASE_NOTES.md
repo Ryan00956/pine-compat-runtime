@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Aligned user-facing conformance and built-in strategy docs with the explicit
+  host-side `{{strategy.order.alert_message}}` rendering helpers while keeping
+  Pine-source alert placeholders and external alert delivery unsupported.
 - Clarified strategy conformance metadata to distinguish explicit host-side
   `{{strategy.order.alert_message}}` rendering helpers from unsupported
   external alert delivery.

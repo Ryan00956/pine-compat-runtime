@@ -463,8 +463,9 @@ active pending entry for same-calculation absolute `stop`, `limit`, and
 `trail_points` attachment. Supported `strategy.entry`, `strategy.exit`,
 `strategy.close`, and `strategy.close_all` metadata arguments are retained on
 broker-owned fill events and exposed as raw order-fill payloads in
-`strategy.alerts` for supported fills. External alert delivery and
-alert-template placeholder rendering remain unsupported. Richer strategy order
+`strategy.alerts` for supported fills. Explicit Python, CLI, and WASM host
+helpers can render `{{strategy.order.alert_message}}` for selected public fill
+events; external alert delivery remains unsupported. Richer strategy order
 options remain unsupported.
 `strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
 `strategy.closedtrades.entry_id`, `strategy.closedtrades.exit_id`,
