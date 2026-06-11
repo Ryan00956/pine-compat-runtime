@@ -249,5 +249,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.roc"
             | "ta.range"
             | "ta.dev"
+            | "ta.rising"
+            | "ta.falling"
     )
 }

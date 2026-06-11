@@ -593,6 +593,37 @@ fn request_security_evaluates_provider_dispersion_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_trend_flags_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request trend flags\")\nprovider_rising = request.security(\"NYSE:IBM\", timeframe.period, ta.rising(close, 2) ? 1 : 0)\nprovider_falling = request.security(\"NYSE:IBM\", timeframe.period, ta.falling(close, 2) ? 1 : 0)\nchart_rising = ta.rising(close, 2) ? 1 : 0\nchart_falling = ta.falling(close, 2) ? 1 : 0\nplot(provider_rising)\nplot(provider_falling)\nplot(chart_rising)\nplot(chart_falling)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 22.0),
+            timed_bar(120_000, 21.0),
+            timed_bar(180_000, 19.0),
+            timed_bar(240_000, 18.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 6.0),
+            timed_bar(120_000, 8.0),
+            timed_bar(180_000, 7.0),
+            timed_bar(240_000, 10.0),
+        ])
+        .expect("provider ta.rising/ta.falling expressions should run");
+
+    assert_values_close(&result.plots[0].values, &[0.0, 0.0, 0.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[2].values, &[0.0, 0.0, 1.0, 0.0, 1.0]);
+    assert_values_close(&result.plots[3].values, &[0.0; 5]);
+}
+
+#[test]
 fn request_security_evaluates_provider_ema_in_requested_context() {
     let program = compile_program(
         "indicator(\"request ema\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, ta.ema(close, 2)))\n",
