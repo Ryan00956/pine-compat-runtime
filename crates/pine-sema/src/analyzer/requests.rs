@@ -247,5 +247,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.change"
             | "ta.mom"
             | "ta.roc"
+            | "ta.range"
+            | "ta.dev"
     )
 }

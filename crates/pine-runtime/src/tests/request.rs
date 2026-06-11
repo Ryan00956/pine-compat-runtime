@@ -550,6 +550,49 @@ fn request_security_evaluates_provider_momentum_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_dispersion_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request dispersion\")\nprovider_range = request.security(\"NYSE:IBM\", timeframe.period, ta.range(close, 3))\nprovider_dev = request.security(\"NYSE:IBM\", timeframe.period, ta.dev(close, 3))\nchart_range = ta.range(close, 3)\nchart_dev = ta.dev(close, 3)\nplot(provider_range)\nplot(provider_dev)\nplot(chart_range)\nplot(chart_dev)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 22.0),
+            timed_bar(120_000, 21.0),
+            timed_bar(180_000, 25.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 6.0),
+            timed_bar(120_000, 8.0),
+            timed_bar(180_000, 11.0),
+        ])
+        .expect("provider ta.range/ta.dev expressions should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&result.plots[0].values[2..], &[2.0, 4.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_values_close(
+        &result.plots[1].values[2..],
+        &[0.6666666666666666, 1.5555555555555554],
+    );
+    assert_eq!(result.plots[2].values[0], PineValue::Na);
+    assert_eq!(result.plots[2].values[1], PineValue::Na);
+    assert_values_close(&result.plots[2].values[2..], &[3.0, 5.0]);
+    assert_eq!(result.plots[3].values[0], PineValue::Na);
+    assert_eq!(result.plots[3].values[1], PineValue::Na);
+    assert_values_close(
+        &result.plots[3].values[2..],
+        &[1.1111111111111112, 1.7777777777777777],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_ema_in_requested_context() {
     let program = compile_program(
         "indicator(\"request ema\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, ta.ema(close, 2)))\n",

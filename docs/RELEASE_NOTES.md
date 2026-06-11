@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported `ta.range` and `ta.dev` calls in same-context and
+  provider-backed scalar expressions, with requested-context rolling dispersion
+  state isolated from chart state.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported `ta.change`, `ta.mom`, and `ta.roc` calls in
   same-context and provider-backed scalar expressions, with requested-context
   history buffers isolated from chart state.

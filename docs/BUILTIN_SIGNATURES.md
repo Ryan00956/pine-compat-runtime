@@ -202,10 +202,11 @@ The current executable subset has two forms:
   pure arithmetic and ternaries, history references, `na`, `nz`, selected
   stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
   `ta.sma`, `ta.ema`, `ta.rsi`, `ta.atr`, `ta.highest`, `ta.lowest`,
-  `ta.change`, `ta.mom`, and `ta.roc`. Requested-context rolling callsite state
-  is isolated from the chart context. Higher-timeframe alignment uses default
-  `gaps_off` and `lookahead_off`: only confirmed requested bars are visible, and
-  missing requested bars forward-fill the last confirmed value.
+  `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, and `ta.dev`.
+  Requested-context rolling callsite state is isolated from the chart context.
+  Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
+  confirmed requested bars are visible, and missing requested bars forward-fill
+  the last confirmed value.
 
 Lower timeframe requests, provider expression local variable aliases, UDF calls,
 stateful math calls such as `math.random`, `ta.highestbars`/`ta.lowestbars`,
