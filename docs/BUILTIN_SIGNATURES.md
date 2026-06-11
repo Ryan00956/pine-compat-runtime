@@ -206,8 +206,8 @@ The current executable subset has two forms:
   `ta.dev`, `ta.bbw`, `ta.correlation`, `ta.covariance`, `ta.median`,
   `ta.mode`, `ta.percentile_nearest_rank`,
   `ta.percentile_linear_interpolation`, `ta.percentrank`, `ta.stdev`,
-  `ta.variance`, `ta.wma`, `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`,
-  `ta.rising`, `ta.falling`, `ta.cross`, `ta.crossover`, and
+  `ta.variance`, `ta.wma`, `ta.vwma`, `ta.swma`, `ta.hma`, `ta.alma`,
+  `ta.linreg`, `ta.rising`, `ta.falling`, `ta.cross`, `ta.crossover`, and
   `ta.crossunder`.
   Requested-context rolling callsite state is isolated from the chart context.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only

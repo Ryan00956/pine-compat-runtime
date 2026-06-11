@@ -5744,22 +5744,26 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][28]["values"],
-        serde_json::json!([null, null, null, 21.5, 22.5])
+        serde_json::json!([null, null, 21, 22, 23])
     );
     assert_eq!(
         parsed["plots"][29]["values"],
-        serde_json::json!([null, null, null, null, 24])
+        serde_json::json!([null, null, null, 21.5, 22.5])
     );
     assert_eq!(
         parsed["plots"][30]["values"],
-        serde_json::json!([null, null, null, 22.462027683060324, 23.462027683060324])
+        serde_json::json!([null, null, null, null, 24])
     );
     assert_eq!(
         parsed["plots"][31]["values"],
-        serde_json::json!([null, null, 22, 23, 24])
+        serde_json::json!([null, null, null, 22.462027683060324, 23.462027683060324])
     );
     assert_eq!(
         parsed["plots"][32]["values"],
+        serde_json::json!([null, null, 22, 23, 24])
+    );
+    assert_eq!(
+        parsed["plots"][33]["values"],
         serde_json::json!([
             null,
             null,
@@ -5769,7 +5773,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         ])
     );
     assert_eq!(
-        parsed["plots"][33]["values"],
+        parsed["plots"][34]["values"],
         serde_json::json!([
             null,
             null,
@@ -5779,7 +5783,7 @@ fn request_host_data_runs_through_direct_wasm_api() {
         ])
     );
     assert_eq!(
-        parsed["plots"][34]["values"],
+        parsed["plots"][35]["values"],
         serde_json::json!([
             null,
             null,
@@ -5789,16 +5793,12 @@ fn request_host_data_runs_through_direct_wasm_api() {
         ])
     );
     assert_eq!(
-        parsed["plots"][35]["values"],
-        serde_json::json!([null, null, 21, 22, 23])
-    );
-    assert_eq!(
         parsed["plots"][36]["values"],
-        serde_json::json!([null, null, 20, 21, 22])
+        serde_json::json!([null, null, 21, 22, 23])
     );
     assert_eq!(
         parsed["plots"][37]["values"],
-        serde_json::json!([null, null, 21, 22, 23])
+        serde_json::json!([null, null, 20, 21, 22])
     );
     assert_eq!(
         parsed["plots"][38]["values"],
@@ -5806,6 +5806,10 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_eq!(
         parsed["plots"][39]["values"],
+        serde_json::json!([null, null, 21, 22, 23])
+    );
+    assert_eq!(
+        parsed["plots"][40]["values"],
         serde_json::json!([null, null, 100, 100, 100])
     );
 }

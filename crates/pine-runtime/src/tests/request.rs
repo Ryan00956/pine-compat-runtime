@@ -1182,6 +1182,45 @@ fn request_security_evaluates_provider_percentrank_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_vwma_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request vwma\")\nprovider_vwma = request.security(\"NYSE:IBM\", timeframe.period, ta.vwma(close, 3))\nchart_vwma = ta.vwma(close, 3)\nplot(provider_vwma)\nplot(chart_vwma)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 20.0, 20.0, 20.0, 20.0, 10.0),
+            timed_ohlcv(60_000, 21.0, 21.0, 21.0, 21.0, 20.0),
+            timed_ohlcv(120_000, 22.0, 22.0, 22.0, 22.0, 30.0),
+            timed_ohlcv(180_000, 24.0, 24.0, 24.0, 24.0, 40.0),
+            timed_ohlcv(240_000, 27.0, 27.0, 27.0, 27.0, 50.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 5.0, 5.0, 5.0, 5.0, 100.0),
+            timed_ohlcv(60_000, 7.0, 7.0, 7.0, 7.0, 80.0),
+            timed_ohlcv(120_000, 11.0, 11.0, 11.0, 11.0, 60.0),
+            timed_ohlcv(180_000, 17.0, 17.0, 17.0, 17.0, 40.0),
+            timed_ohlcv(240_000, 25.0, 25.0, 25.0, 25.0, 20.0),
+        ])
+        .expect("provider ta.vwma expression should run");
+
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+    }
+    assert_values_close(
+        &result.plots[0].values[2..],
+        &[21.333333333333332, 22.666666666666668, 24.75],
+    );
+    assert_values_close(
+        &result.plots[1].values[2..],
+        &[7.166666666666667, 10.555555555555555, 15.333333333333334],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_linreg_in_requested_context() {
     let program = compile_program(
         "indicator(\"request linreg\")\nprovider_linreg = request.security(\"NYSE:IBM\", timeframe.period, ta.linreg(close, 3, 0))\nchart_linreg = ta.linreg(close, 3, 0)\nplot(provider_linreg)\nplot(chart_linreg)\n",

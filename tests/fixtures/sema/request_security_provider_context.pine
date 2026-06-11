@@ -30,6 +30,7 @@ stdev_sample = request.security("NYSE:IBM", timeframe.period, ta.stdev(close, 3,
 variance_value = request.security("NYSE:IBM", timeframe.period, ta.variance(close, 3))
 variance_sample = request.security("NYSE:IBM", timeframe.period, ta.variance(close, 3, false))
 wma_value = request.security("NYSE:IBM", timeframe.period, ta.wma(close, 3))
+vwma_value = request.security("NYSE:IBM", timeframe.period, ta.vwma(close, 3))
 swma_value = request.security("NYSE:IBM", timeframe.period, ta.swma(close))
 hma_value = request.security("NYSE:IBM", timeframe.period, ta.hma(close, 4))
 alma_value = request.security("NYSE:IBM", timeframe.period, ta.alma(close, 4, 0.85, 6))
@@ -43,4 +44,4 @@ percentile_nearest_rank_value = request.security("NYSE:IBM", timeframe.period, t
 percentile_linear_interpolation_value = request.security("NYSE:IBM", timeframe.period, ta.percentile_linear_interpolation(close, 3, 50))
 percentrank_value = request.security("NYSE:IBM", timeframe.period, ta.percentrank(close, 3))
 higher = request.security("NYSE:IBM", "5", close + open)
-plot(arithmetic + nz(history) + nz(sma) + ema + math_extremes + stateless_math + nz(sum_value) + mintick_round + nz(rsi_value) + tr_value + nz(tr_strict) + atr_value + nz(highest_value) - nz(lowest_value) + nz(change_value) + nz(mom_value) + nz(roc_value) + nz(range_value) + nz(dev_value) + nz(bbw_value) + nz(correlation_value) + nz(covariance_value) + nz(median_value) + nz(mode_value) + nz(percentile_nearest_rank_value) + nz(percentile_linear_interpolation_value) + nz(percentrank_value) + rising_value - falling_value + cross_value + crossover_value - crossunder_value + cum_value + nz(stdev_value) + nz(stdev_sample) + nz(variance_value) + nz(variance_sample) + nz(wma_value) + nz(swma_value) + nz(hma_value) + nz(alma_value) + nz(linreg_value) + higher)
+plot(arithmetic + nz(history) + nz(sma) + ema + math_extremes + stateless_math + nz(sum_value) + mintick_round + nz(rsi_value) + tr_value + nz(tr_strict) + atr_value + nz(highest_value) - nz(lowest_value) + nz(change_value) + nz(mom_value) + nz(roc_value) + nz(range_value) + nz(dev_value) + nz(bbw_value) + nz(correlation_value) + nz(covariance_value) + nz(median_value) + nz(mode_value) + nz(percentile_nearest_rank_value) + nz(percentile_linear_interpolation_value) + nz(percentrank_value) + rising_value - falling_value + cross_value + crossover_value - crossunder_value + cum_value + nz(stdev_value) + nz(stdev_sample) + nz(variance_value) + nz(variance_sample) + nz(wma_value) + nz(vwma_value) + nz(swma_value) + nz(hma_value) + nz(alma_value) + nz(linreg_value) + higher)
