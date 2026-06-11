@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Tightened the pure webhook transport boundary so host-provided transports
+  receive only the already built `WebhookRequest`. Attempt-store records remain
+  owned by the adapter flow, preserving the future HTTP transport gate without
+  adding network I/O or changing runtime JSON.
 - Locked the concrete webhook HTTP transport implementation gate for future
   host-owned alert delivery. The gate requires any real transport to stay
   behind `WebhookTransport`, use explicit host construction, enforce request

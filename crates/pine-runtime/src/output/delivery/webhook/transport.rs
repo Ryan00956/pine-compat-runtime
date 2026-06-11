@@ -21,11 +21,7 @@ pub enum WebhookTransportOutcome {
 }
 
 pub trait WebhookTransport {
-    fn send_webhook_request(
-        &mut self,
-        request: &WebhookRequest,
-        attempt: &DeliveryAttemptRecord,
-    ) -> WebhookTransportOutcome;
+    fn send_webhook_request(&mut self, request: &WebhookRequest) -> WebhookTransportOutcome;
 }
 
 pub struct WebhookDeliveryAdapter<R, T> {
@@ -75,7 +71,7 @@ where
     fn deliver(
         &mut self,
         candidate: &DeliveryCandidate,
-        attempt: &DeliveryAttemptRecord,
+        _attempt: &DeliveryAttemptRecord,
     ) -> ExternalDeliveryResult {
         let request = match build_webhook_request(&self.config, candidate, &self.resolver) {
             Ok(request) => request,
@@ -86,7 +82,7 @@ where
                 );
             }
         };
-        match self.transport.send_webhook_request(&request, attempt) {
+        match self.transport.send_webhook_request(&request) {
             WebhookTransportOutcome::HttpStatus {
                 status_code,
                 completed_at,
@@ -201,7 +197,7 @@ mod tests {
     #[derive(Debug, Clone)]
     struct TestTransport {
         outcome: WebhookTransportOutcome,
-        sent: Vec<(WebhookRequest, DeliveryAttemptRecord)>,
+        sent: Vec<WebhookRequest>,
     }
 
     impl TestTransport {
@@ -212,18 +208,14 @@ mod tests {
             }
         }
 
-        fn sent(&self) -> &[(WebhookRequest, DeliveryAttemptRecord)] {
+        fn sent(&self) -> &[WebhookRequest] {
             &self.sent
         }
     }
 
     impl WebhookTransport for TestTransport {
-        fn send_webhook_request(
-            &mut self,
-            request: &WebhookRequest,
-            attempt: &DeliveryAttemptRecord,
-        ) -> WebhookTransportOutcome {
-            self.sent.push((request.clone(), attempt.clone()));
+        fn send_webhook_request(&mut self, request: &WebhookRequest) -> WebhookTransportOutcome {
+            self.sent.push(request.clone());
             self.outcome.clone()
         }
     }
@@ -251,14 +243,11 @@ mod tests {
         assert_eq!(result.provider_status_code, Some("2xx".to_owned()));
         assert_eq!(adapter.transport().sent().len(), 1);
         assert_eq!(
-            adapter.transport().sent()[0].0.headers().get("X-Signature"),
+            adapter.transport().sent()[0].headers().get("X-Signature"),
             Some(&"resolved-secret-value".to_owned())
         );
-        assert_eq!(adapter.transport().sent()[0].0.body(), "Price crossed");
-        assert_eq!(
-            adapter.transport().sent()[0].1.status,
-            DeliveryAttemptStatus::InFlight
-        );
+        assert_eq!(adapter.transport().sent()[0].body(), "Price crossed");
+        assert_eq!(adapter.transport().sent()[0].timeout_ms(), 1_000);
     }
 
     #[test]
@@ -374,7 +363,6 @@ mod tests {
         assert_eq!(adapter.transport().sent().len(), 1);
         assert!(
             adapter.transport().sent()[0]
-                .0
                 .body()
                 .contains("\"renderedMessage\":\"Price crossed\"")
         );

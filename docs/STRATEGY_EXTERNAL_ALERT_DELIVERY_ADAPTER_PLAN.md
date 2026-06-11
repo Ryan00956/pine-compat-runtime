@@ -62,7 +62,8 @@ Already supported:
 - a pure webhook delivery adapter over a host-provided transport trait. The
   adapter connects request construction, fake/host transport outcomes,
   HTTP-status classification, and attempt-store flow without creating an HTTP
-  client or performing network I/O.
+  client or performing network I/O. The transport receives only the already
+  built `WebhookRequest`, not attempt-store or runtime state.
 - pure host delivery diagnostic emission from the adapter run helper. Failed
   delivery runs now carry a redacted `HostDeliveryDiagnostic` next to the
   attempt/result pair without mutating runtime JSON or Pine diagnostics.
@@ -397,7 +398,12 @@ adding network I/O.
     construction, `WebhookTransport` isolation, request timeout enforcement,
     local-only tests, redacted diagnostics, unchanged runtime JSON, and no
     internet endpoint tests.
-18. Add a concrete webhook HTTP transport only after URL validation, secret
+18. Closed on 2026-06-11: tighten the `WebhookTransport` trait so concrete
+    host transports receive only an already built `WebhookRequest`. The
+    adapter still owns attempt-store flow, while future transport code cannot
+    inspect attempt records, runtime state, broker state, `RuntimeResult`, or
+    script internals.
+19. Add a concrete webhook HTTP transport only after URL validation, secret
     handling, timeout behavior, retry classification, diagnostic redaction, and
     host transport execution boundaries are fixture-backed.
 
