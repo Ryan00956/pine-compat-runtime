@@ -127,9 +127,12 @@ leaving room for a realtime host loop later.
 2. Closed on 2026-06-11: add serializable Rust structs for
    `RunningAlertConfig`, `RunningAlertEventSelection`, and the realtime-only
    policy without applying them to runtime output or delivery.
-3. Strategy order-fill evaluation helper: given one config and one public
-   `StrategyOrderFillAlertOutput`, either return a rendered host message or a
-   host diagnostic. Keep default JSON unchanged.
+3. Closed on 2026-06-11: add a strategy order-fill evaluation helper that takes
+   one config and one public `StrategyOrderFillAlertOutput`, returning either a
+   rendered host message or a host diagnostic. The helper accepts
+   `strategyOrderFills` only; `both` remains design-only until indicator alert
+   calls and strategy order fills share one deterministic host event envelope.
+   Default JSON remains unchanged.
 4. Optional host wrappers: expose the helper explicitly through Python, CLI, and
    WASM with tests that default runtime output stays unchanged.
 5. Realtime delivery design: only after the host evaluation helper is stable,

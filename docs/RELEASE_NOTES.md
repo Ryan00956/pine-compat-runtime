@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added a pure strategy order-fill running-alert evaluation helper over the
+  host-side config model and public `strategy.alerts` events. It leaves default
+  runtime JSON and external delivery unchanged.
 - Added serializable host-side running-alert configuration types for the
   strategy order-fill alert path without applying them to runtime JSON or
   external delivery.

@@ -30,7 +30,8 @@ pub use output::model::{
     RuntimeDiagnostic, RuntimeResult,
 };
 pub use output::running_alerts::{
-    RunningAlertConfig, RunningAlertEventSelection, RunningAlertRealtimePolicy,
+    RunningAlertConfig, RunningAlertEvaluationError, RunningAlertEventSelection,
+    RunningAlertRealtimePolicy, render_strategy_order_fill_running_alert,
 };
 pub use output::strategy::{
     StrategyEquitySnapshot, StrategyOrderEvent, StrategyOrderFillAlertOutput,
