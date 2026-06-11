@@ -5503,8 +5503,9 @@ fn library_source_json_runs_imported_function_subset() {
         IMPORT_LIBRARY_JSON,
     )
     .expect("imported function subset should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
-    assert!(output.contains("\"values\":[4,6]"));
+    assert_eq!(parsed["plots"][0]["values"], serde_json::json!([4, 6]));
 }
 
 #[test]
