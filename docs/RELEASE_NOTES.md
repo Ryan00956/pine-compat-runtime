@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added pure host-side `WebhookAdapterConfig` validation for future webhook
+  alert delivery. The slice covers URL scheme/host/port/credential checks,
+  timeout bounds, duplicate header detection, static secret-header rejection,
+  secret-reference checks, and body-mode serialization without network
+  delivery.
 - Locked the webhook alert delivery adapter design boundary for future host
   delivery work. The plan now spells out URL validation, secret-reference,
   payload-mode, timeout, failure-classification, and diagnostic-redaction gates

@@ -23,8 +23,9 @@ pub use output::delivery::{
     DeliveryCandidate, DeliveryDedupeKey, DeliveryEventKind, DeliveryOutcome, DeliverySink,
     ExternalDeliveryAdapter, ExternalDeliveryIdentity, ExternalDeliveryResult,
     ExternalDeliveryStatus, InMemoryDeliveryAttemptStore, InMemoryDeliverySink,
-    TestCollectorDeliveryAdapter, TestCollectorDeliveryRecord,
-    deliver_candidate_with_attempt_store, strategy_order_fill_delivery_candidate,
+    TestCollectorDeliveryAdapter, TestCollectorDeliveryRecord, WebhookAdapterConfig,
+    WebhookAdapterConfigError, WebhookBodyMode, deliver_candidate_with_attempt_store,
+    strategy_order_fill_delivery_candidate,
 };
 pub use output::drawings::{
     BoxOutput, BoxSnapshot, LabelOutput, LabelSnapshot, LineOutput, LineSnapshot,

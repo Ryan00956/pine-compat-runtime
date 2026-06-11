@@ -42,15 +42,17 @@ Already supported:
   tests, covering reserve, start, and complete flows;
 - a pure test-collector delivery adapter and host helper that exercise the
   reserve, start, deliver, and complete flow without network delivery.
+- pure webhook adapter configuration and validation types covering URL,
+  headers, secret header references, body mode, and timeout without network
+  delivery.
 
 Still unsupported:
 
 - concrete external delivery adapters;
 - durable delivery store behavior across host restarts;
 - retry scheduling, backoff, and dead-letter behavior;
-- executable webhook adapter configuration, URL validation, HTTP transport,
-  authentication, secret storage, TLS configuration, timeout handling, and rate
-  limiting;
+- executable webhook HTTP transport, authentication secret lookup, TLS
+  configuration, timeout execution, and rate limiting;
 - user-visible delivery failure reporting;
 - live realtime strategy broker execution.
 
@@ -290,8 +292,9 @@ headers.
 5. Closed on 2026-06-11: lock the webhook adapter design boundary for URL
    validation, secret references, payload mode, timeout behavior, failure
    classification, and diagnostic redaction without network delivery.
-6. Add pure webhook adapter configuration and validation types with fixtures,
-   still without network delivery.
+6. Closed on 2026-06-11: add pure webhook adapter configuration and validation
+   types with tests for URL, header, secret-reference, body-mode, and timeout
+   boundaries, still without network delivery.
 7. Add webhook payload rendering tests for `renderedMessage` and `jsonEnvelope`,
    still without network delivery.
 8. Add a concrete webhook transport only after URL validation, secret handling,

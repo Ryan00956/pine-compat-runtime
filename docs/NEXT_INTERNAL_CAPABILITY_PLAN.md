@@ -56,8 +56,8 @@ Keep out of scope until separately designed:
 - Public pending-order, reservation, remaining-quantity, or exit-reason records.
 - Realtime strategy handoff and intrabar path reconstruction.
 - External strategy alert delivery before the host-owned restart-safe durable
-  attempt-store, webhook configuration validation, payload rendering, retry,
-  authentication, and
+  attempt-store, webhook payload rendering, retry, authentication secret lookup,
+  and
   failure-reporting model from
   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` is implemented.
 
