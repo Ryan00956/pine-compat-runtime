@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added a pure strategy order-fill alert template renderer for the exact
+  `{{strategy.order.alert_message}}` host template token. It leaves runtime
+  JSON, Python dictionaries, WASM JSON, Pine-source alert placeholder support,
+  and external alert delivery unchanged.
 - Closed the strategy order-fill alert template design gate. Future
   `{{strategy.order.alert_message}}` work should use a host-layer renderer over
   public `strategy.alerts` events, leaving runtime schema, Pine-source

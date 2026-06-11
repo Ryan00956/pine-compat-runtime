@@ -1,6 +1,6 @@
 # Strategy Order-Fill Alert Template Plan
 
-Status: design gate closed on 2026-06-11.
+Status: pure renderer slice closed on 2026-06-11.
 
 This document defines the next boundary after public `strategy.alerts`
 exposure. It decides how to model the
@@ -41,7 +41,7 @@ settings, webhook delivery, or host-side alert message templates.
 Add placeholder rendering as a host-layer helper, not as broker accounting and
 not as a new field in `RuntimeResult`.
 
-The first implementation slice should add a pure renderer that takes:
+The first implementation slice adds a pure renderer that takes:
 
 - a host-provided alert message template string;
 - one public `StrategyOrderFillAlertOutput` event.
@@ -117,7 +117,7 @@ message/title strings.
 
 ## Implementation Slices
 
-1. Add a runtime-adjacent pure renderer for the exact
+1. Closed on 2026-06-11: add a runtime-adjacent pure renderer for the exact
    `{{strategy.order.alert_message}}` token, with unit tests for replacement,
    empty message replacement, multiple occurrences, unknown placeholder
    diagnostics, and no recursive rendering.
@@ -133,5 +133,5 @@ The design is closed when:
 
 - `strategy.alerts[].message` remains the raw broker-owned payload;
 - Pine-source alert placeholder support remains unchanged;
-- the next implementation slice has a narrow renderer contract;
+- the pure renderer has a narrow implementation contract;
 - release notes and the strategy gap audit point to this plan.

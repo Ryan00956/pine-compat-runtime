@@ -33,6 +33,10 @@ pub use output::strategy::{
     StrategyEquitySnapshot, StrategyOrderEvent, StrategyOrderFillAlertOutput,
     StrategyPositionSnapshot, StrategyResult, StrategyTrade,
 };
+pub use output::strategy_alert_templates::{
+    STRATEGY_ORDER_ALERT_MESSAGE_PLACEHOLDER, StrategyOrderFillAlertTemplateError,
+    render_strategy_order_fill_alert_template,
+};
 pub use profile::{RuntimeProfile, RuntimeProfiledResult};
 pub(crate) use request::RequestCacheKey;
 pub use request::{

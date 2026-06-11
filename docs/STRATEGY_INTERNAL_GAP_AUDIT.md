@@ -523,10 +523,11 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best next slice: implement the pure host-layer renderer from
-`docs/STRATEGY_ORDER_FILL_ALERT_TEMPLATE_PLAN.md` for the exact
-`{{strategy.order.alert_message}}` token, without changing runtime JSON,
-Pine-source alert placeholder support, or external alert delivery.
+Best next slice: add an explicit host wrapper around the pure
+`{{strategy.order.alert_message}}` renderer from
+`docs/STRATEGY_ORDER_FILL_ALERT_TEMPLATE_PLAN.md`, while keeping default
+runtime JSON, Python dictionaries, WASM JSON, Pine-source alert placeholder
+support, and external alert delivery unchanged.
 
 ## Recommended Internal Roadmap
 

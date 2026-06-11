@@ -5,3 +5,4 @@ pub mod drawings;
 pub mod json;
 pub mod model;
 pub mod strategy;
+pub mod strategy_alert_templates;
