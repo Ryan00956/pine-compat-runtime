@@ -40,6 +40,7 @@ covariance_value = request.security(syminfo.tickerid, timeframe.period, ta.covar
 median_value = request.security(syminfo.tickerid, timeframe.period, ta.median(close, 3))
 mode_value = request.security(syminfo.tickerid, timeframe.period, ta.mode(close, 3))
 percentile_nearest_rank_value = request.security(syminfo.tickerid, timeframe.period, ta.percentile_nearest_rank(close, 3, 50))
+percentile_linear_interpolation_value = request.security(syminfo.tickerid, timeframe.period, ta.percentile_linear_interpolation(close, 3, 50))
 
 plot(identity)
 plot(history)
@@ -81,3 +82,4 @@ plot(covariance_value)
 plot(median_value)
 plot(mode_value)
 plot(percentile_nearest_rank_value)
+plot(percentile_linear_interpolation_value)

@@ -58,9 +58,10 @@ truth for request claims.
   `ta.rsi`, `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`,
   `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.rising`,
   `ta.bbw`, `ta.correlation`, `ta.covariance`, `ta.median`, `ta.mode`,
-  `ta.percentile_nearest_rank`, `ta.stdev`, `ta.variance`, `ta.wma`,
-  `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`, `ta.cross`,
-  `ta.crossover`, and `ta.crossunder`.
+  `ta.percentile_nearest_rank`, `ta.percentile_linear_interpolation`,
+  `ta.stdev`, `ta.variance`, `ta.wma`, `ta.swma`, `ta.hma`, `ta.alma`,
+  `ta.linreg`, `ta.falling`, `ta.cross`, `ta.crossover`, and
+  `ta.crossunder`.
 - Provider-backed requested expressions run in an isolated requested context.
   Chart-runtime history, `ta.*` callsite state, `var` storage, arrays, drawing
   objects, and outputs are not shared with requested-context evaluation.

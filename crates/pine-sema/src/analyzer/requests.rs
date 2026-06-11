@@ -256,6 +256,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.covariance"
             | "ta.median"
             | "ta.mode"
+            | "ta.percentile_linear_interpolation"
             | "ta.percentile_nearest_rank"
             | "ta.stdev"
             | "ta.variance"

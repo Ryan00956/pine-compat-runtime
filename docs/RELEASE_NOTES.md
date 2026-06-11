@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported `ta.percentile_linear_interpolation` calls in
+  same-context and provider-backed scalar expressions.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported `ta.percentile_nearest_rank` calls in same-context
   and provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to
