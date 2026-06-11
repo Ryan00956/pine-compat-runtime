@@ -29,6 +29,7 @@ stdev_value = request.security(syminfo.tickerid, timeframe.period, ta.stdev(clos
 stdev_sample = request.security(syminfo.tickerid, timeframe.period, ta.stdev(close, 3, false))
 variance_value = request.security(syminfo.tickerid, timeframe.period, ta.variance(close, 3))
 variance_sample = request.security(syminfo.tickerid, timeframe.period, ta.variance(close, 3, false))
+wma_value = request.security(syminfo.tickerid, timeframe.period, ta.wma(close, 3))
 
 plot(identity)
 plot(history)
@@ -59,3 +60,4 @@ plot(stdev_value)
 plot(stdev_sample)
 plot(variance_value)
 plot(variance_sample)
+plot(wma_value)
