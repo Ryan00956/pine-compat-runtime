@@ -201,7 +201,7 @@ The current executable subset has two forms:
   The supported provider expression subset includes direct OHLCV/time sources,
   pure arithmetic and ternaries, history references, `na`, `nz`, selected
   stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
-  `ta.sma`, `ta.ema`, `ta.rsi`, `ta.tr` function calls, `ta.atr`,
+  `ta.cum`, `ta.sma`, `ta.ema`, `ta.rsi`, `ta.tr` function calls, `ta.atr`,
   `ta.highest`, `ta.lowest`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`,
   `ta.dev`, `ta.rising`, `ta.falling`, `ta.cross`, `ta.crossover`, and
   `ta.crossunder`.

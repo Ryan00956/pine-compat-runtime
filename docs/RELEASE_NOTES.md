@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported `ta.cum` calls in same-context and provider-backed
+  scalar expressions with requested-context callsite state.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported `ta.cross`, `ta.crossover`, and `ta.crossunder`
   calls in same-context and provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to

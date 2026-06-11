@@ -238,6 +238,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "math.round"
             | "math.round_to_mintick"
             | "math.sum"
+            | "ta.cum"
             | "ta.sma"
             | "ta.ema"
             | "ta.rsi"

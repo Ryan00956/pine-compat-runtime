@@ -331,6 +331,31 @@ fn request_security_isolates_provider_math_sum_state() {
 }
 
 #[test]
+fn request_security_isolates_provider_cum_state() {
+    let program = compile_program(
+        "indicator(\"request cum\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, ta.cum(close))\nchart = ta.cum(close)\nplot(provider)\nplot(chart)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 22.0),
+            timed_bar(120_000, 24.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 9.0),
+        ])
+        .expect("provider ta.cum expression should run");
+
+    assert_values_close(&result.plots[0].values, &[20.0, 42.0, 66.0]);
+    assert_values_close(&result.plots[1].values, &[5.0, 12.0, 21.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_round_to_mintick() {
     let program = compile_program(
         "indicator(\"request mintick\")\nrounded = request.security(\"NYSE:IBM\", timeframe.period, math.round_to_mintick(close + 0.006))\nplot(rounded)\n",

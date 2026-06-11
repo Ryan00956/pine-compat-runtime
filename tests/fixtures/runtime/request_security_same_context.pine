@@ -24,6 +24,7 @@ falling_value = request.security(syminfo.tickerid, timeframe.period, ta.falling(
 cross_value = request.security(syminfo.tickerid, timeframe.period, ta.cross(close, 2.5) ? 1 : 0)
 crossover_value = request.security(syminfo.tickerid, timeframe.period, ta.crossover(close, 2.5) ? 1 : 0)
 crossunder_value = request.security(syminfo.tickerid, timeframe.period, ta.crossunder(close - time / 60000.0, 0.5) ? 1 : 0)
+cum_value = request.security(syminfo.tickerid, timeframe.period, ta.cum(close))
 
 plot(identity)
 plot(history)
@@ -49,3 +50,4 @@ plot(falling_value)
 plot(cross_value)
 plot(crossover_value)
 plot(crossunder_value)
+plot(cum_value)

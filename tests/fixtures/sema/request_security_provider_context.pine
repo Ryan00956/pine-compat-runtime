@@ -24,5 +24,6 @@ falling_value = request.security("NYSE:IBM", timeframe.period, ta.falling(close,
 cross_value = request.security("NYSE:IBM", timeframe.period, ta.cross(close, 20.5) ? 1 : 0)
 crossover_value = request.security("NYSE:IBM", timeframe.period, ta.crossover(close, 20.5) ? 1 : 0)
 crossunder_value = request.security("NYSE:IBM", timeframe.period, ta.crossunder(close - time / 60000.0, 19.5) ? 1 : 0)
+cum_value = request.security("NYSE:IBM", timeframe.period, ta.cum(close))
 higher = request.security("NYSE:IBM", "5", close + open)
-plot(arithmetic + nz(history) + nz(sma) + ema + math_extremes + stateless_math + nz(sum_value) + mintick_round + nz(rsi_value) + tr_value + nz(tr_strict) + atr_value + nz(highest_value) - nz(lowest_value) + nz(change_value) + nz(mom_value) + nz(roc_value) + nz(range_value) + nz(dev_value) + rising_value - falling_value + cross_value + crossover_value - crossunder_value + higher)
+plot(arithmetic + nz(history) + nz(sma) + ema + math_extremes + stateless_math + nz(sum_value) + mintick_round + nz(rsi_value) + tr_value + nz(tr_strict) + atr_value + nz(highest_value) - nz(lowest_value) + nz(change_value) + nz(mom_value) + nz(roc_value) + nz(range_value) + nz(dev_value) + rising_value - falling_value + cross_value + crossover_value - crossunder_value + cum_value + higher)
