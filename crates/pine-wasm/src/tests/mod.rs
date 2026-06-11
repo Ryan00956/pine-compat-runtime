@@ -2302,15 +2302,7 @@ fn runs_strategy_entry_stop_limit_from_csv_to_strategy_json() {
     )
     .expect("strategy stop-limit entry script should run");
 
-    assert!(output.contains("\"values\":[0,0,0,2]"));
-    assert!(output.contains("\"values\":[null,null,null,4]"));
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.long\",\"qty\":2,\"price\":4}]"
-    ));
-    assert!(output.contains("\"position\":[{\"barIndex\":3,\"size\":2,\"avgPrice\":4}]"));
-    assert!(!output.contains("pending"));
-    assert!(!output.contains("stop"));
-    assert!(!output.contains("limit"));
+    assert_snapshot("runtime_strategy_entry_stop_limit.json", &output);
 }
 
 #[test]
