@@ -2,6 +2,11 @@ use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
 
+use super::running_alerts::{
+    RunningAlertConfig, RunningAlertEvaluationError, render_strategy_order_fill_running_alert,
+};
+use super::strategy::StrategyOrderFillAlertOutput;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum DeliveryEventKind {
@@ -80,6 +85,23 @@ impl From<&DeliveryCandidate> for DeliveryDedupeKey {
     }
 }
 
+pub fn strategy_order_fill_delivery_candidate(
+    running_alert_id: impl Into<String>,
+    config: &RunningAlertConfig,
+    alert: &StrategyOrderFillAlertOutput,
+) -> Result<DeliveryCandidate, RunningAlertEvaluationError> {
+    let rendered_message = render_strategy_order_fill_running_alert(config, alert)?;
+    Ok(DeliveryCandidate::new(
+        running_alert_id,
+        config.script_snapshot_id.clone(),
+        DeliveryEventKind::StrategyOrderFill,
+        alert.bar_index,
+        alert.time,
+        alert.id.clone(),
+        rendered_message,
+    ))
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DeliveryOutcome {
     Delivered,
@@ -127,6 +149,7 @@ impl DeliverySink for InMemoryDeliverySink {
 
 #[cfg(test)]
 mod tests {
+    use super::super::running_alerts::{RunningAlertConfig, RunningAlertEventSelection};
     use super::*;
 
     fn candidate(message: &str) -> DeliveryCandidate {
@@ -139,6 +162,20 @@ mod tests {
             "XL",
             message,
         )
+    }
+
+    fn alert(message: &str) -> StrategyOrderFillAlertOutput {
+        StrategyOrderFillAlertOutput {
+            id: "XL".to_owned(),
+            bar_index: 2,
+            time: 300,
+            direction: "strategy.exit".to_owned(),
+            qty: 1.0,
+            price: 99.0,
+            entry_id: Some("L".to_owned()),
+            exit_id: Some("XL".to_owned()),
+            message: message.to_owned(),
+        }
     }
 
     #[test]
@@ -201,5 +238,74 @@ mod tests {
 
         assert_eq!(sink.delivered_keys().len(), 2);
         assert_eq!(sink.delivered().len(), 2);
+    }
+
+    #[test]
+    fn strategy_order_fill_builder_renders_delivery_candidate() {
+        let config = RunningAlertConfig::new_strategy_order_fills(
+            "snapshot-1",
+            "NYSE:IBM",
+            "1",
+            "Running: {{strategy.order.alert_message}}",
+        );
+
+        let candidate =
+            strategy_order_fill_delivery_candidate("alert-1", &config, &alert("loss alert"))
+                .expect("delivery candidate");
+
+        assert_eq!(candidate.running_alert_id, "alert-1");
+        assert_eq!(candidate.script_snapshot_id, "snapshot-1");
+        assert_eq!(candidate.event_kind, DeliveryEventKind::StrategyOrderFill);
+        assert_eq!(candidate.bar_index, 2);
+        assert_eq!(candidate.time, 300);
+        assert_eq!(candidate.event_id, "XL");
+        assert_eq!(candidate.rendered_message, "Running: loss alert");
+    }
+
+    #[test]
+    fn strategy_order_fill_builder_uses_candidate_dedupe_key() {
+        let config = RunningAlertConfig::new_strategy_order_fills(
+            "snapshot-1",
+            "NYSE:IBM",
+            "1",
+            "{{strategy.order.alert_message}}",
+        );
+        let candidate =
+            strategy_order_fill_delivery_candidate("alert-1", &config, &alert("loss alert"))
+                .expect("delivery candidate");
+
+        assert_eq!(
+            candidate.dedupe_key(),
+            DeliveryDedupeKey {
+                running_alert_id: "alert-1".to_owned(),
+                script_snapshot_id: "snapshot-1".to_owned(),
+                event_kind: DeliveryEventKind::StrategyOrderFill,
+                bar_index: 2,
+                time: 300,
+                event_id: "XL".to_owned(),
+            }
+        );
+    }
+
+    #[test]
+    fn strategy_order_fill_builder_keeps_both_selection_design_only() {
+        let mut config = RunningAlertConfig::new_strategy_order_fills(
+            "snapshot-1",
+            "NYSE:IBM",
+            "1",
+            "{{strategy.order.alert_message}}",
+        );
+        config.event_selection = RunningAlertEventSelection::Both;
+
+        let error =
+            strategy_order_fill_delivery_candidate("alert-1", &config, &alert("loss alert"))
+                .expect_err("both should not build strategy-only candidate");
+
+        assert_eq!(
+            error,
+            RunningAlertEvaluationError::UnsupportedEventSelection {
+                selection: RunningAlertEventSelection::Both,
+            }
+        );
     }
 }

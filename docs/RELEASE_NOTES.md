@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added a host-only strategy order-fill delivery-candidate builder over
+  `RunningAlertConfig` and public `strategy.alerts` events. It remains a
+  test/debug helper and does not add realtime source wiring, network delivery,
+  or public runtime JSON fields.
 - Added a pure host-side `DeliveryCandidate` model, dedupe key, and in-memory
   delivery sink for future realtime alert delivery tests without adding network
   delivery or changing public runtime JSON.

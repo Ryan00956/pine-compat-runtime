@@ -20,7 +20,7 @@ pub use error::RuntimeError;
 pub use output::alerts::AlertEvent;
 pub use output::delivery::{
     DeliveryCandidate, DeliveryDedupeKey, DeliveryEventKind, DeliveryOutcome, DeliverySink,
-    InMemoryDeliverySink,
+    InMemoryDeliverySink, strategy_order_fill_delivery_candidate,
 };
 pub use output::drawings::{
     BoxOutput, BoxSnapshot, LabelOutput, LabelSnapshot, LineOutput, LineSnapshot,
