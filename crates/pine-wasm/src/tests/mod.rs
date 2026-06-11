@@ -3499,17 +3499,7 @@ fn runs_strategy_exit_trailing_fixture_from_csv_to_trade_json() {
     )
     .expect("strategy exit trailing fixture should run");
 
-    assert!(output.contains(&format!(
-        "\"schemaVersion\":{}",
-        PUBLIC_RUNTIME_SCHEMA_VERSION
-    )));
-    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XT\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":2,\"price\":3.5}]"
-    ));
-    assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":2,\"exitPrice\":3.5,\"qty\":2,\"profit\":3}]"
-    ));
+    assert_snapshot("runtime_strategy_exit_trail_price_fill.json", &output);
 }
 
 #[test]

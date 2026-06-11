@@ -4119,49 +4119,16 @@ def test_run_script_returns_strategy_exit_bracket_stop_limit_stop_fill_fixture_c
 
 def test_run_script_returns_strategy_exit_trailing_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/strategy_exit_trail_price_fill.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_strategy_exit_trail_price_fill.json").read_text()
+    )
+
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/strategy_exit_trailing_bars.csv"),
     )
 
-    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
-    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
-    assert result["strategy"]["orders"] == [
-        {
-            "id": "L",
-            "barIndex": 1,
-            "time": 2,
-            "direction": "strategy.long",
-            "qty": 2.0,
-            "price": 2.0,
-        },
-        {
-            "id": "XT",
-            "barIndex": 3,
-            "time": 4,
-            "direction": "strategy.exit",
-            "qty": 2.0,
-            "price": 3.5,
-        },
-    ]
-    assert [order["direction"] for order in result["strategy"]["orders"]].count(
-        "strategy.exit"
-    ) == 1
-    assert result["strategy"]["trades"] == [
-        {
-            "id": "L",
-            "entryBarIndex": 1,
-            "exitBarIndex": 3,
-            "entryTime": 2,
-            "exitTime": 4,
-            "entryPrice": 2.0,
-            "exitPrice": 3.5,
-            "qty": 2.0,
-            "profit": 3.0,
-        }
-    ]
-    assert result["strategy"]["diagnostics"] == []
+    assert result == expected
 
 
 def test_run_script_returns_strategy_exit_trail_points_fill_fixture_contract():
