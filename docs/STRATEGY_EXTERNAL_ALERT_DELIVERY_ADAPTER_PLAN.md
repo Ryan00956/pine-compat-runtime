@@ -63,6 +63,9 @@ Already supported:
   adapter connects request construction, fake/host transport outcomes,
   HTTP-status classification, and attempt-store flow without creating an HTTP
   client or performing network I/O.
+- pure host delivery diagnostic emission from the adapter run helper. Failed
+  delivery runs now carry a redacted `HostDeliveryDiagnostic` next to the
+  attempt/result pair without mutating runtime JSON or Pine diagnostics.
 
 Still unsupported:
 
@@ -71,8 +74,7 @@ Still unsupported:
 - executable retry scheduling, jitter, and dead-letter behavior;
 - executable webhook HTTP transport, concrete authentication secret stores,
   secret lookup audit logging, TLS configuration, timeout execution, built-in
-  network request execution, retry scheduling, host diagnostic emission, and
-  rate limiting;
+  network request execution, retry scheduling, and rate limiting;
 - user-visible delivery failure reporting;
 - live realtime strategy broker execution.
 
@@ -341,7 +343,12 @@ headers.
     `ExternalDeliveryResult` and integrates with the attempt-store helper,
     still without an HTTP client, built-in network I/O, executable retry
     scheduling, or user-visible reporting.
-14. Add a concrete webhook HTTP transport only after URL validation, secret
+14. Closed on 2026-06-11: emit redacted host delivery diagnostics from the
+    adapter run helper for failed delivery attempts. Delivered attempts carry
+    no diagnostic; transient and permanent failures carry host-only diagnostics
+    without Pine semantic diagnostics, public runtime JSON changes, or
+    user-visible reporting.
+15. Add a concrete webhook HTTP transport only after URL validation, secret
     handling, timeout behavior, retry classification, diagnostic redaction, and
     host transport execution boundaries are fixture-backed.
 

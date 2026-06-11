@@ -434,6 +434,7 @@ impl ExternalDeliveryAdapter for TestCollectorDeliveryAdapter {
 pub struct DeliveryAdapterRun {
     pub result: ExternalDeliveryResult,
     pub completed_attempt: DeliveryAttemptRecord,
+    pub diagnostic: Option<HostDeliveryDiagnostic>,
 }
 
 pub fn deliver_candidate_with_attempt_store<S, A>(
@@ -460,10 +461,12 @@ where
     let completed_attempt = store
         .complete(&identity, started.attempt_number, &result)
         .expect("started delivery attempt can be completed");
+    let diagnostic = host_delivery_diagnostic_from_result(&completed_attempt, &result);
 
     DeliveryAdapterRun {
         result,
         completed_attempt,
+        diagnostic,
     }
 }
 
@@ -786,6 +789,34 @@ mod tests {
         assert_eq!(adapter.collected()[0].attempt, attempt);
     }
 
+    struct FailingDeliveryAdapter {
+        adapter_id: String,
+        result: ExternalDeliveryResult,
+    }
+
+    impl FailingDeliveryAdapter {
+        fn new(adapter_id: impl Into<String>, result: ExternalDeliveryResult) -> Self {
+            Self {
+                adapter_id: adapter_id.into(),
+                result,
+            }
+        }
+    }
+
+    impl ExternalDeliveryAdapter for FailingDeliveryAdapter {
+        fn adapter_id(&self) -> &str {
+            &self.adapter_id
+        }
+
+        fn deliver(
+            &mut self,
+            _candidate: &DeliveryCandidate,
+            _attempt: &DeliveryAttemptRecord,
+        ) -> ExternalDeliveryResult {
+            self.result.clone()
+        }
+    }
+
     #[test]
     fn deliver_candidate_with_attempt_store_records_full_local_flow() {
         let mut store = InMemoryDeliveryAttemptStore::new();
@@ -817,6 +848,7 @@ mod tests {
             adapter.collected()[0].attempt.status,
             DeliveryAttemptStatus::InFlight
         );
+        assert_eq!(run.diagnostic, None);
     }
 
     #[test]
@@ -841,6 +873,43 @@ mod tests {
         assert_eq!(first.completed_attempt.attempt_number, 1);
         assert_eq!(second.completed_attempt.attempt_number, 2);
         assert_eq!(adapter.collected().len(), 2);
+    }
+
+    #[test]
+    fn deliver_candidate_with_attempt_store_emits_redacted_host_diagnostic_for_failure() {
+        let mut store = InMemoryDeliveryAttemptStore::new();
+        let result = ExternalDeliveryResult::transient_failure(
+            1_020,
+            "webhookTransportTimeout",
+            "Authorization: Bearer secret",
+        )
+        .with_provider_status_code("503");
+        let mut adapter = FailingDeliveryAdapter::new("webhook-main", result);
+
+        let run = deliver_candidate_with_attempt_store(
+            &mut store,
+            &mut adapter,
+            candidate("message"),
+            1_000,
+            1_010,
+        );
+        let diagnostic = run.diagnostic.expect("failure emits host diagnostic");
+
+        assert_eq!(
+            run.completed_attempt.status,
+            DeliveryAttemptStatus::TransientFailure
+        );
+        assert_eq!(diagnostic.severity, HostDeliveryDiagnosticSeverity::Warning);
+        assert_eq!(diagnostic.code, "webhookTransportTimeout");
+        assert_eq!(diagnostic.running_alert_id, "alert-1");
+        assert_eq!(diagnostic.script_snapshot_id, "snapshot-1");
+        assert_eq!(diagnostic.adapter_id, "webhook-main");
+        assert_eq!(
+            diagnostic.message,
+            "external delivery transientFailure for adapter webhook-main attempt 1 with provider status class 5xx"
+        );
+        assert!(!diagnostic.message.contains("Bearer"));
+        assert!(!diagnostic.message.contains("secret"));
     }
 
     #[test]

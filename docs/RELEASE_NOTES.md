@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added pure host delivery diagnostic emission from adapter runs for future
+  host-owned alert delivery. `deliver_candidate_with_attempt_store` now returns
+  a redacted `HostDeliveryDiagnostic` for transient or permanent failures and
+  no diagnostic for delivered attempts, without adding Pine semantic
+  diagnostics, public runtime JSON fields, user-visible reporting, or network
+  delivery.
 - Added a pure webhook delivery adapter over a host-provided transport trait
   for future host-owned alert delivery. The adapter now connects request
   construction, secret resolution, fake/host transport outcomes, HTTP-status
