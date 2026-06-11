@@ -11,8 +11,9 @@ mod webhook;
 
 pub use webhook::{
     WebhookAdapterConfig, WebhookAdapterConfigError, WebhookBodyMode, WebhookDeliveryFailure,
-    WebhookPayload, WebhookPayloadError, classify_webhook_delivery_failure,
-    classify_webhook_http_status, render_webhook_payload,
+    WebhookPayload, WebhookPayloadError, WebhookRetryDecision, WebhookRetryPolicy,
+    WebhookRetryPolicyError, classify_webhook_delivery_failure, classify_webhook_http_status,
+    plan_webhook_retry, render_webhook_payload,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]

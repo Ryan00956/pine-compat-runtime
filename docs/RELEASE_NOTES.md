@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added pure webhook retry decision calculation for future host-owned alert
+  delivery. Transient failures can now produce bounded deterministic backoff
+  decisions with attempt-budget checks, without adding executable retry
+  scheduling, durable restart recovery, dead-lettering, or network delivery.
 - Added pure webhook delivery failure classification for future host-owned
   alert delivery. Transport and temporary provider failures now map to
   retryable external delivery results, configuration/secret/payload/provider

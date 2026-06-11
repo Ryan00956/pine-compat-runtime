@@ -50,12 +50,14 @@ Already supported:
 - pure webhook delivery failure classification for transport, configuration,
   payload, secret-reference, and provider-status failures, including redacted
   provider status classes.
+- pure webhook retry decision calculation for transient failures with bounded
+  deterministic backoff and attempt-budget checks.
 
 Still unsupported:
 
 - concrete external delivery adapters;
 - durable delivery store behavior across host restarts;
-- retry scheduling, backoff, and dead-letter behavior;
+- executable retry scheduling, jitter, and dead-letter behavior;
 - executable webhook HTTP transport, authentication secret lookup, TLS
   configuration, timeout execution, retry scheduling, host diagnostic emission,
   and rate limiting;
@@ -306,7 +308,11 @@ headers.
 8. Closed on 2026-06-11: add pure webhook delivery failure classification and
    redacted HTTP status classes, still without network delivery, retry
    scheduling, secret lookup, or host diagnostic emission.
-9. Add a concrete webhook transport only after URL validation, secret handling,
+9. Closed on 2026-06-11: add pure webhook retry decision and bounded backoff
+   calculation for transient failures, still without executable retry
+   scheduling, durable restart recovery, jitter, dead-lettering, or network
+   delivery.
+10. Add a concrete webhook transport only after URL validation, secret handling,
    timeout behavior, retry classification, and diagnostic redaction are
    fixture-backed.
 

@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
-use super::{DeliveryCandidate, ExternalDeliveryResult};
+use super::{DeliveryAttemptRecord, DeliveryCandidate, ExternalDeliveryResult};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -242,6 +242,96 @@ pub fn classify_webhook_http_status(status_code: u16, completed_at: i64) -> Exte
     result
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WebhookRetryPolicy {
+    pub max_attempts: u32,
+    pub initial_delay_ms: i64,
+    pub max_delay_ms: i64,
+}
+
+impl WebhookRetryPolicy {
+    pub fn new(max_attempts: u32, initial_delay_ms: i64, max_delay_ms: i64) -> Self {
+        Self {
+            max_attempts,
+            initial_delay_ms,
+            max_delay_ms,
+        }
+    }
+
+    pub fn validate(&self) -> Result<(), WebhookRetryPolicyError> {
+        if self.max_attempts == 0 {
+            return Err(WebhookRetryPolicyError::EmptyAttemptBudget);
+        }
+        if self.initial_delay_ms <= 0 {
+            return Err(WebhookRetryPolicyError::InvalidInitialDelay {
+                initial_delay_ms: self.initial_delay_ms,
+            });
+        }
+        if self.max_delay_ms < self.initial_delay_ms {
+            return Err(WebhookRetryPolicyError::InvalidMaxDelay {
+                initial_delay_ms: self.initial_delay_ms,
+                max_delay_ms: self.max_delay_ms,
+            });
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WebhookRetryPolicyError {
+    EmptyAttemptBudget,
+    InvalidInitialDelay {
+        initial_delay_ms: i64,
+    },
+    InvalidMaxDelay {
+        initial_delay_ms: i64,
+        max_delay_ms: i64,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum WebhookRetryDecision {
+    NotRetryable,
+    AttemptsExhausted,
+    RetryAt {
+        next_attempt_number: u32,
+        delay_ms: i64,
+        next_retry_at: i64,
+    },
+}
+
+pub fn plan_webhook_retry(
+    policy: &WebhookRetryPolicy,
+    attempt: &DeliveryAttemptRecord,
+    result: &ExternalDeliveryResult,
+) -> Result<WebhookRetryDecision, WebhookRetryPolicyError> {
+    policy.validate()?;
+    if !result.status.is_retryable_failure() {
+        return Ok(WebhookRetryDecision::NotRetryable);
+    }
+    if attempt.attempt_number >= policy.max_attempts {
+        return Ok(WebhookRetryDecision::AttemptsExhausted);
+    }
+    let delay_ms = webhook_retry_delay_ms(policy, attempt.attempt_number);
+    Ok(WebhookRetryDecision::RetryAt {
+        next_attempt_number: attempt.attempt_number.saturating_add(1),
+        delay_ms,
+        next_retry_at: result.completed_at.saturating_add(delay_ms),
+    })
+}
+
+fn webhook_retry_delay_ms(policy: &WebhookRetryPolicy, attempt_number: u32) -> i64 {
+    let completed_retry_count = attempt_number.saturating_sub(1);
+    let shift = completed_retry_count.min(62);
+    let multiplier = 1_i64.checked_shl(shift).unwrap_or(i64::MAX);
+    policy
+        .initial_delay_ms
+        .saturating_mul(multiplier)
+        .min(policy.max_delay_ms)
+}
+
 fn is_retryable_http_status(status_code: u16) -> bool {
     matches!(status_code, 408 | 409 | 425 | 429) || (500..=599).contains(&status_code)
 }
@@ -364,6 +454,15 @@ mod tests {
             300,
             "XL",
             message,
+        )
+    }
+
+    fn attempt(attempt_number: u32) -> DeliveryAttemptRecord {
+        DeliveryAttemptRecord::new(
+            candidate("message").dedupe_key(),
+            "webhook-main",
+            attempt_number,
+            1_000,
         )
     }
 
@@ -694,6 +793,97 @@ mod tests {
                 .as_deref()
                 .expect("failure message")
                 .contains("401")
+        );
+    }
+
+    #[test]
+    fn webhook_retry_policy_schedules_transient_failures_with_first_backoff() {
+        let policy = WebhookRetryPolicy::new(3, 1_000, 8_000);
+        let result =
+            classify_webhook_delivery_failure(WebhookDeliveryFailure::TransportTimeout, 10_000);
+
+        assert_eq!(
+            plan_webhook_retry(&policy, &attempt(1), &result),
+            Ok(WebhookRetryDecision::RetryAt {
+                next_attempt_number: 2,
+                delay_ms: 1_000,
+                next_retry_at: 11_000,
+            })
+        );
+    }
+
+    #[test]
+    fn webhook_retry_policy_caps_exponential_backoff() {
+        let policy = WebhookRetryPolicy::new(5, 1_000, 2_500);
+        let result =
+            classify_webhook_delivery_failure(WebhookDeliveryFailure::ConnectionReset, 10_000);
+
+        assert_eq!(
+            plan_webhook_retry(&policy, &attempt(4), &result),
+            Ok(WebhookRetryDecision::RetryAt {
+                next_attempt_number: 5,
+                delay_ms: 2_500,
+                next_retry_at: 12_500,
+            })
+        );
+    }
+
+    #[test]
+    fn webhook_retry_policy_does_not_retry_terminal_or_delivered_results() {
+        let policy = WebhookRetryPolicy::new(3, 1_000, 8_000);
+        let delivered = ExternalDeliveryResult::delivered(10_000);
+        let permanent =
+            classify_webhook_delivery_failure(WebhookDeliveryFailure::ProviderRejected, 10_000);
+
+        assert_eq!(
+            plan_webhook_retry(&policy, &attempt(1), &delivered),
+            Ok(WebhookRetryDecision::NotRetryable)
+        );
+        assert_eq!(
+            plan_webhook_retry(&policy, &attempt(1), &permanent),
+            Ok(WebhookRetryDecision::NotRetryable)
+        );
+    }
+
+    #[test]
+    fn webhook_retry_policy_stops_at_attempt_budget() {
+        let policy = WebhookRetryPolicy::new(3, 1_000, 8_000);
+        let result = classify_webhook_delivery_failure(WebhookDeliveryFailure::RateLimited, 10_000);
+
+        assert_eq!(
+            plan_webhook_retry(&policy, &attempt(3), &result),
+            Ok(WebhookRetryDecision::AttemptsExhausted)
+        );
+    }
+
+    #[test]
+    fn webhook_retry_policy_rejects_invalid_bounds() {
+        let result = classify_webhook_delivery_failure(WebhookDeliveryFailure::DnsFailure, 10_000);
+
+        assert_eq!(
+            plan_webhook_retry(
+                &WebhookRetryPolicy::new(0, 1_000, 8_000),
+                &attempt(1),
+                &result
+            ),
+            Err(WebhookRetryPolicyError::EmptyAttemptBudget)
+        );
+        assert_eq!(
+            plan_webhook_retry(&WebhookRetryPolicy::new(3, 0, 8_000), &attempt(1), &result),
+            Err(WebhookRetryPolicyError::InvalidInitialDelay {
+                initial_delay_ms: 0,
+            })
+        );
+        assert_eq!(
+            plan_webhook_retry(
+                &WebhookRetryPolicy::new(3, 9_000, 8_000),
+                &attempt(1),
+                &result
+            ),
+            Err(WebhookRetryPolicyError::InvalidMaxDelay {
+                initial_delay_ms: 9_000,
+                max_delay_ms: 8_000,
+            })
         );
     }
 }

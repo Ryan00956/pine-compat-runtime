@@ -25,8 +25,9 @@ pub use output::delivery::{
     ExternalDeliveryStatus, InMemoryDeliveryAttemptStore, InMemoryDeliverySink,
     TestCollectorDeliveryAdapter, TestCollectorDeliveryRecord, WebhookAdapterConfig,
     WebhookAdapterConfigError, WebhookBodyMode, WebhookDeliveryFailure, WebhookPayload,
-    WebhookPayloadError, classify_webhook_delivery_failure, classify_webhook_http_status,
-    deliver_candidate_with_attempt_store, render_webhook_payload,
+    WebhookPayloadError, WebhookRetryDecision, WebhookRetryPolicy, WebhookRetryPolicyError,
+    classify_webhook_delivery_failure, classify_webhook_http_status,
+    deliver_candidate_with_attempt_store, plan_webhook_retry, render_webhook_payload,
     strategy_order_fill_delivery_candidate,
 };
 pub use output::drawings::{
