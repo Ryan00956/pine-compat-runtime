@@ -522,15 +522,17 @@ Missing internal behavior:
 
 - richer strategy-specific placeholder data beyond
   `{{strategy.order.alert_message}}`;
-- running-alert configuration and external alert delivery for broker fills.
+- concrete realtime delivery implementation for broker fills, including
+  delivery sinks, persisted dedupe state, retry, authentication, and failure
+  reporting.
 
 Gap size: medium.
 
-Best next slice: use `docs/STRATEGY_RUNNING_ALERT_CONFIGURATION_PLAN.md` as the
-host-owned model for any future external alert delivery. Keep default runtime
-JSON, Python dictionaries, WASM JSON, Pine-source alert placeholder support, and
-external delivery unchanged until that model is implemented through explicit
-host helpers.
+Best next slice: use `docs/STRATEGY_REALTIME_ALERT_DELIVERY_PLAN.md` for the
+host-owned realtime delivery boundary. Keep default runtime JSON, Python
+dictionaries, WASM JSON, Pine-source alert placeholder support, and external
+network delivery unchanged until delivery candidates, sinks, and persisted
+dedupe are implemented through explicit host APIs.
 
 ## Recommended Internal Roadmap
 

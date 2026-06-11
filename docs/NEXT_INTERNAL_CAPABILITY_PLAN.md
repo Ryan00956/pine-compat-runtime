@@ -1,7 +1,7 @@
 # Next Internal Capability Plan
 
-Status: planning document, refreshed after the strategy alert-template host
-helper closeout on 2026-06-11.
+Status: planning document, refreshed after the strategy running-alert host
+helper and realtime delivery design closeout on 2026-06-11.
 
 This document groups the next interpreter-internal work into seven large task
 directions. It does not claim new compatibility. A task becomes supported only
@@ -55,8 +55,8 @@ Keep out of scope until separately designed:
 - Arbitrary future binding for unmatched `from_entry` ids.
 - Public pending-order, reservation, remaining-quantity, or exit-reason records.
 - Realtime strategy handoff and intrabar path reconstruction.
-- External strategy alert delivery before a running-alert configuration model is
-  designed.
+- External strategy alert delivery before the host-owned realtime delivery sink,
+  persistence, retry, authentication, and failure-reporting model is implemented.
 
 Recommended first slice: do not reopen broad broker foundations immediately
 after Stage 13. Prefer either a narrow no-op/diagnostics/accounting slice that

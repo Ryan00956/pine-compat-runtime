@@ -135,9 +135,9 @@ leaving room for a realtime host loop later.
    Default JSON remains unchanged.
 4. Closed on 2026-06-11: expose the helper explicitly through Python, CLI, and
    WASM host wrappers with tests that default runtime output stays unchanged.
-5. Realtime delivery design: only after the host evaluation helper is stable,
-   design a realtime loop and delivery sink boundary. External network delivery
-   remains out of scope until that design is closed.
+5. Closed on 2026-06-11: realtime loop and delivery-sink boundary design in
+   `docs/STRATEGY_REALTIME_ALERT_DELIVERY_PLAN.md`. External network delivery
+   remains out of scope.
 
 ## Completion Gate
 

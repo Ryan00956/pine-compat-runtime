@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `docs/STRATEGY_REALTIME_ALERT_DELIVERY_PLAN.md` as the closed
+  host-owned realtime alert delivery design gate. It defines snapshot,
+  dedupe, delivery-candidate, and sink boundaries without adding network
+  delivery or changing runtime JSON.
 - Added an explicit WASM helper for rendering a strategy order-fill
   running-alert message from host config JSON and a public `strategy.alerts`
   event JSON object. Default WASM runtime JSON and external delivery remain
@@ -22,8 +26,8 @@
 - Added `docs/STRATEGY_RUNNING_ALERT_CONFIGURATION_PLAN.md` as the closed
   host-owned design gate before any external strategy alert delivery work.
 - Refreshed the long-term and next-capability planning docs after the strategy
-  alert-template host-helper closeout, keeping external delivery gated on a
-  future running-alert configuration design.
+  alert-template host-helper closeout, keeping external delivery gated on
+  host-owned running-alert and realtime delivery designs.
 - Aligned user-facing conformance and built-in strategy docs with the explicit
   host-side `{{strategy.order.alert_message}}` rendering helpers while keeping
   Pine-source alert placeholders and external alert delivery unsupported.
