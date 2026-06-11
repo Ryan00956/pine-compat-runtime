@@ -5098,62 +5098,18 @@ def test_run_script_returns_strategy_exit_qty_percent_partial_fixture_contract()
     source = (
         ROOT / "tests/fixtures/runtime/strategy_exit_qty_percent_stop_partial.pine"
     ).read_text()
+    expected = json.loads(
+        (
+            ROOT / "tests/snapshots/runtime_strategy_exit_qty_percent_stop_partial.json"
+        ).read_text()
+    )
+
     result = pine_compat.run_script(
         source,
         fixture_bars("tests/fixtures/runtime/bars.csv"),
     )
 
-    assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
-    assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
-    assert result["strategy"]["orders"] == [
-        {
-            "id": "L",
-            "barIndex": 1,
-            "time": 2,
-            "direction": "strategy.long",
-            "qty": 2.0,
-            "price": 2.0,
-        },
-        {
-            "id": "XP",
-            "barIndex": 1,
-            "time": 2,
-            "direction": "strategy.exit",
-            "qty": 1.0,
-            "price": 2.5,
-        },
-    ]
-    assert [order["direction"] for order in result["strategy"]["orders"]].count(
-        "strategy.exit"
-    ) == 1
-    assert result["strategy"]["trades"] == [
-        {
-            "id": "L",
-            "entryBarIndex": 1,
-            "exitBarIndex": 1,
-            "entryTime": 2,
-            "exitTime": 2,
-            "entryPrice": 2.0,
-            "exitPrice": 2.5,
-            "qty": 1.0,
-            "profit": 0.5,
-        }
-    ]
-    assert result["strategy"]["position"] == [
-        {"barIndex": 1, "size": 2.0, "avgPrice": 2.0},
-        {"barIndex": 1, "size": 1.0, "avgPrice": 2.0},
-    ]
-    assert [plot["values"] for plot in result["plots"]] == [
-        [0.0, 2.0, 1.0, 1.0],
-        [0.0, 0.0, 0.5, 0.5],
-    ]
-    assert result["diagnostics"] == []
-    assert result["strategy"]["diagnostics"] == []
-    assert "pending" not in result["strategy"]
-    assert "remainingQty" not in result["strategy"]
-    assert "qtyPercent" not in result["strategy"]
-    assert "qty_percent" not in result["strategy"]
+    assert result == expected
 
 
 def test_run_script_returns_strategy_exit_qty_percent_limit_partial_fixture_contract():

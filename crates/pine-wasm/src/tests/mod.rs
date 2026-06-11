@@ -4283,26 +4283,10 @@ fn runs_strategy_exit_qty_percent_partial_fixture_from_csv_to_trade_json() {
     )
     .expect("strategy exit percent quantity fixture should run");
 
-    assert!(output.contains(&format!(
-        "\"schemaVersion\":{}",
-        PUBLIC_RUNTIME_SCHEMA_VERSION
-    )));
-    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 1);
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":2},{\"id\":\"XP\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":2.5}]"
-    ));
-    assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":1,\"entryTime\":2,\"exitTime\":2,\"entryPrice\":2,\"exitPrice\":2.5,\"qty\":1,\"profit\":0.5}]"
-    ));
-    assert!(output.contains(
-        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":2},{\"barIndex\":1,\"size\":1,\"avgPrice\":2}]"
-    ));
-    assert!(output.contains("\"values\":[0,2,1,1]"));
-    assert!(output.contains("\"values\":[0,0,0.5,0.5]"));
-    assert!(!output.contains("pending"));
-    assert!(!output.contains("remainingQty"));
-    assert!(!output.contains("qtyPercent"));
-    assert!(!output.contains("qty_percent"));
+    assert_snapshot(
+        "runtime_strategy_exit_qty_percent_stop_partial.json",
+        &output,
+    );
 }
 
 #[test]
