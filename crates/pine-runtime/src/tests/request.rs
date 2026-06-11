@@ -1546,6 +1546,49 @@ fn request_security_evaluates_provider_wpr_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_sar_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request sar\")\nprovider_sar = request.security(\"NYSE:IBM\", timeframe.period, ta.sar(0.02, 0.02, 0.2))\nchart_sar = ta.sar(0.02, 0.02, 0.2)\nplot(provider_sar)\nplot(chart_sar)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 10.0, 1.0),
+            timed_ohlcv(60_000, 10.0, 12.0, 10.0, 11.0, 1.0),
+            timed_ohlcv(120_000, 11.0, 13.0, 11.0, 12.0, 1.0),
+            timed_ohlcv(180_000, 12.0, 16.0, 12.0, 15.0, 1.0),
+            timed_ohlcv(240_000, 15.0, 17.0, 14.0, 16.0, 1.0),
+            timed_ohlcv(300_000, 16.0, 14.0, 8.0, 9.0, 1.0),
+            timed_ohlcv(360_000, 9.0, 10.0, 6.0, 7.0, 1.0),
+            timed_ohlcv(420_000, 7.0, 8.0, 4.0, 5.0, 1.0),
+            timed_ohlcv(480_000, 5.0, 7.0, 3.0, 6.0, 1.0),
+            timed_ohlcv(540_000, 6.0, 12.0, 5.0, 11.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 5.0, 5.0, 5.0, 5.0, 1.0),
+            timed_ohlcv(60_000, 7.0, 7.0, 7.0, 7.0, 1.0),
+            timed_ohlcv(120_000, 11.0, 11.0, 11.0, 11.0, 1.0),
+            timed_ohlcv(180_000, 17.0, 17.0, 17.0, 17.0, 1.0),
+            timed_ohlcv(240_000, 25.0, 25.0, 25.0, 25.0, 1.0),
+            timed_ohlcv(300_000, 26.0, 26.0, 26.0, 26.0, 1.0),
+        ])
+        .expect("provider ta.sar expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(
+        &result.plots[0].values[1..],
+        &[9.0, 9.0, 9.16, 9.5704, 17.0],
+    );
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_values_close(
+        &result.plots[1].values[1..],
+        &[5.0, 5.0, 5.24, 5.9456, 7.469952],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_linreg_in_requested_context() {
     let program = compile_program(
         "indicator(\"request linreg\")\nprovider_linreg = request.security(\"NYSE:IBM\", timeframe.period, ta.linreg(close, 3, 0))\nchart_linreg = ta.linreg(close, 3, 0)\nplot(provider_linreg)\nplot(chart_linreg)\n",

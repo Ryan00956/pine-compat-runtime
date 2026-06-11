@@ -250,6 +250,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.mfi"
             | "ta.stoch"
             | "ta.wpr"
+            | "ta.sar"
             | "ta.tr"
             | "ta.atr"
             | "ta.highest"
