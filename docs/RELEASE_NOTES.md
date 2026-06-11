@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Closed the strategy order-fill alert template design gate. Future
+  `{{strategy.order.alert_message}}` work should use a host-layer renderer over
+  public `strategy.alerts` events, leaving runtime schema, Pine-source
+  placeholder support, and external alert delivery unchanged.
 - Exposed broker-owned strategy order-fill alert payloads as
   `strategy.alerts` in public runtime output and moved the runtime contract to
   `schemaVersion: 4` with CLI/Python/WASM parity. Top-level `alerts[]`,

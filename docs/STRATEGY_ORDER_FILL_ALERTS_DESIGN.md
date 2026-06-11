@@ -101,6 +101,11 @@ decide whether to expose:
 This keeps the broker focused on fill-time facts and avoids mixing UI alert
 template rendering with order accounting.
 
+The follow-on host template boundary is defined in
+`docs/STRATEGY_ORDER_FILL_ALERT_TEMPLATE_PLAN.md`. It keeps
+`strategy.alerts[].message` as the raw fill payload and treats
+`{{strategy.order.alert_message}}` rendering as host-layer work.
+
 ## Interaction With `alerts[]`
 
 Do not append strategy order-fill events to the existing indicator-style

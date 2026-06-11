@@ -523,10 +523,10 @@ Missing internal behavior:
 
 Gap size: medium.
 
-Best next slice: design placeholder/template rendering boundaries for
-`{{strategy.order.alert_message}}` and decide whether it belongs in a host API
-separate from broker-owned `strategy.alerts`. External alert delivery remains
-out of scope until a host alert configuration model exists.
+Best next slice: implement the pure host-layer renderer from
+`docs/STRATEGY_ORDER_FILL_ALERT_TEMPLATE_PLAN.md` for the exact
+`{{strategy.order.alert_message}}` token, without changing runtime JSON,
+Pine-source alert placeholder support, or external alert delivery.
 
 ## Recommended Internal Roadmap
 

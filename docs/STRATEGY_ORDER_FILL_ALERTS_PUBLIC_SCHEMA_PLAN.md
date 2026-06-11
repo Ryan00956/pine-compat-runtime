@@ -81,7 +81,9 @@ alert configuration, so template rendering would require inventing host state
 that does not exist in the current API.
 
 Future placeholder work can add a separate host API for template rendering, but
-that should not block exposing the broker-owned fill payload.
+that should not block exposing the broker-owned fill payload. The follow-on
+template boundary is defined in
+`docs/STRATEGY_ORDER_FILL_ALERT_TEMPLATE_PLAN.md`.
 
 ## Host Parity Requirements
 
