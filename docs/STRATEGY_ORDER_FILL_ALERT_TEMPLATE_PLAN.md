@@ -121,9 +121,10 @@ message/title strings.
    `{{strategy.order.alert_message}}` token, with unit tests for replacement,
    empty message replacement, multiple occurrences, unknown placeholder
    diagnostics, and no recursive rendering.
-2. Add host wrappers only after the pure renderer is stable. Keep default
-   runtime JSON and Python dictionaries unchanged.
-3. Add optional CLI/Python/WASM tests for explicit rendering helpers.
+2. Closed on 2026-06-11 for Python: add host wrappers only after the pure
+   renderer is stable. Keep default runtime JSON and Python dictionaries
+   unchanged.
+3. Add optional CLI/WASM tests for explicit rendering helpers.
 4. Defer external alert delivery until a running-alert configuration model
    exists.
 
@@ -134,4 +135,5 @@ The design is closed when:
 - `strategy.alerts[].message` remains the raw broker-owned payload;
 - Pine-source alert placeholder support remains unchanged;
 - the pure renderer has a narrow implementation contract;
+- the Python wrapper is explicit and leaves `run_script` output unchanged;
 - release notes and the strategy gap audit point to this plan.

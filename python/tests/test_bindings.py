@@ -7370,6 +7370,32 @@ def test_run_script_returns_alert_frequency_events():
     ]
 
 
+def test_render_strategy_order_fill_alert_template_replaces_message():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_metadata.pine").read_text()
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    alert = result["strategy"]["alerts"][1]
+
+    rendered = pine_compat.render_strategy_order_fill_alert_template(
+        "Order: {{strategy.order.alert_message}}", alert
+    )
+
+    assert rendered == "Order: loss alert"
+    assert "renderedMessage" not in alert
+
+
+def test_render_strategy_order_fill_alert_template_rejects_unknown_placeholder():
+    source = (ROOT / "tests/fixtures/runtime/strategy_exit_metadata.pine").read_text()
+    result = pine_compat.run_script(source, fixture_bars("tests/fixtures/runtime/bars.csv"))
+    alert = result["strategy"]["alerts"][1]
+
+    try:
+        pine_compat.render_strategy_order_fill_alert_template("{{close}}", alert)
+    except ValueError as error:
+        assert "unsupported strategy order-fill alert placeholder `{{close}}`" in str(error)
+    else:
+        raise AssertionError("unknown host placeholder should fail")
+
+
 def test_run_script_accepts_request_bars():
     result = pine_compat.run_script(
         'indicator("request")\nplot(request.security("NYSE:IBM", timeframe.period, close))\n',

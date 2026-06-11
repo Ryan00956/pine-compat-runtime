@@ -9,10 +9,12 @@ use pine_syntax::{Diagnostic, SourceFile, Span};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PyModule, PySequence};
+mod alerts;
 mod diagnostics;
 mod tables;
 #[cfg(test)]
 mod tests;
+use alerts::render_strategy_order_fill_alert_template;
 use diagnostics::{diagnostics_have_errors, format_diagnostics, severity_name};
 use tables::tables_to_py;
 
@@ -86,6 +88,10 @@ fn pine_compat(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(compile_script, module)?)?;
     module.add_function(wrap_pyfunction!(analyze_script, module)?)?;
     module.add_function(wrap_pyfunction!(run_script, module)?)?;
+    module.add_function(wrap_pyfunction!(
+        render_strategy_order_fill_alert_template,
+        module
+    )?)?;
     Ok(())
 }
 

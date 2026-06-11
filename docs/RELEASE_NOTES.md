@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added an explicit Python helper for rendering a host alert template against a
+  public strategy order-fill alert event. The helper does not change
+  `run_script` output, runtime JSON, WASM JSON, or external alert delivery.
 - Added a pure strategy order-fill alert template renderer for the exact
   `{{strategy.order.alert_message}}` host template token. It leaves runtime
   JSON, Python dictionaries, WASM JSON, Pine-source alert placeholder support,
