@@ -1017,6 +1017,39 @@ fn request_security_evaluates_provider_covariance_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_median_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request median\")\nprovider_median = request.security(\"NYSE:IBM\", timeframe.period, ta.median(close, 3))\nchart_median = ta.median(close, 3)\nplot(provider_median)\nplot(chart_median)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 21.0),
+            timed_bar(120_000, 22.0),
+            timed_bar(180_000, 24.0),
+            timed_bar(240_000, 27.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 11.0),
+            timed_bar(180_000, 17.0),
+            timed_bar(240_000, 25.0),
+        ])
+        .expect("provider ta.median expression should run");
+
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+    }
+    assert_values_close(&result.plots[0].values[2..], &[21.0, 22.0, 24.0]);
+    assert_values_close(&result.plots[1].values[2..], &[7.0, 11.0, 17.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_linreg_in_requested_context() {
     let program = compile_program(
         "indicator(\"request linreg\")\nprovider_linreg = request.security(\"NYSE:IBM\", timeframe.period, ta.linreg(close, 3, 0))\nchart_linreg = ta.linreg(close, 3, 0)\nplot(provider_linreg)\nplot(chart_linreg)\n",

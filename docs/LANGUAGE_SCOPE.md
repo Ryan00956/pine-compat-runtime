@@ -275,7 +275,7 @@ Request data:
   `math.round_to_mintick`, `math.sum`, `ta.cum`, `ta.sma`, `ta.ema`,
   `ta.rsi`, `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`,
   `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.rising`,
-  `ta.bbw`, `ta.correlation`, `ta.covariance`, `ta.stdev`, `ta.variance`,
+  `ta.bbw`, `ta.correlation`, `ta.covariance`, `ta.median`, `ta.stdev`, `ta.variance`,
   `ta.wma`, `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`,
   `ta.cross`, `ta.crossover`, and `ta.crossunder`; local variable aliases, the
   `ta.tr` variable form, extrema
