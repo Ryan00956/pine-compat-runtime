@@ -205,7 +205,7 @@ The current executable subset has two forms:
   `ta.highest`, `ta.lowest`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`,
   `ta.dev`, `ta.bbw`, `ta.correlation`, `ta.covariance`, `ta.median`,
   `ta.mode`, `ta.percentile_nearest_rank`,
-  `ta.percentile_linear_interpolation`, `ta.stdev`,
+  `ta.percentile_linear_interpolation`, `ta.percentrank`, `ta.stdev`,
   `ta.variance`, `ta.wma`, `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`,
   `ta.rising`, `ta.falling`, `ta.cross`, `ta.crossover`, and
   `ta.crossunder`.

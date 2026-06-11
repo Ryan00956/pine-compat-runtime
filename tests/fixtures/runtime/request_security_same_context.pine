@@ -41,6 +41,7 @@ median_value = request.security(syminfo.tickerid, timeframe.period, ta.median(cl
 mode_value = request.security(syminfo.tickerid, timeframe.period, ta.mode(close, 3))
 percentile_nearest_rank_value = request.security(syminfo.tickerid, timeframe.period, ta.percentile_nearest_rank(close, 3, 50))
 percentile_linear_interpolation_value = request.security(syminfo.tickerid, timeframe.period, ta.percentile_linear_interpolation(close, 3, 50))
+percentrank_value = request.security(syminfo.tickerid, timeframe.period, ta.percentrank(close, 3))
 
 plot(identity)
 plot(history)
@@ -83,3 +84,4 @@ plot(median_value)
 plot(mode_value)
 plot(percentile_nearest_rank_value)
 plot(percentile_linear_interpolation_value)
+plot(percentrank_value)

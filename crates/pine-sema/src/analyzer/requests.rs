@@ -258,6 +258,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.mode"
             | "ta.percentile_linear_interpolation"
             | "ta.percentile_nearest_rank"
+            | "ta.percentrank"
             | "ta.stdev"
             | "ta.variance"
             | "ta.wma"
