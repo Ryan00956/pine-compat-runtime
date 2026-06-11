@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added pure in-memory retry timestamp recording for future host-owned alert
+  delivery. Delivery attempt stores can now record a host-planned
+  `nextRetryAt` value on an existing attempt without creating a retry
+  scheduler, jitter, dead-letter queue, durable restart recovery, network I/O,
+  user-visible reporting, or runtime JSON changes.
 - Added pure host delivery diagnostic emission from adapter runs for future
   host-owned alert delivery. `deliver_candidate_with_attempt_store` now returns
   a redacted `HostDeliveryDiagnostic` for transient or permanent failures and

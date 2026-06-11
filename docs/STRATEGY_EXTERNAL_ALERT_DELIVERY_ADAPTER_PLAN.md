@@ -66,6 +66,9 @@ Already supported:
 - pure host delivery diagnostic emission from the adapter run helper. Failed
   delivery runs now carry a redacted `HostDeliveryDiagnostic` next to the
   attempt/result pair without mutating runtime JSON or Pine diagnostics.
+- pure in-memory attempt-store recording of host-planned `nextRetryAt`
+  timestamps for completed attempts, without executing retry scheduling,
+  jitter, dead-lettering, or durable restart recovery.
 
 Still unsupported:
 
@@ -348,7 +351,11 @@ headers.
     no diagnostic; transient and permanent failures carry host-only diagnostics
     without Pine semantic diagnostics, public runtime JSON changes, or
     user-visible reporting.
-15. Add a concrete webhook HTTP transport only after URL validation, secret
+15. Closed on 2026-06-11: add pure in-memory attempt-store recording for
+    host-planned `nextRetryAt` timestamps on existing attempts. This records
+    retry metadata only and does not create a scheduler, jitter, dead-letter
+    queue, durable restart recovery, network I/O, or user-visible reporting.
+16. Add a concrete webhook HTTP transport only after URL validation, secret
     handling, timeout behavior, retry classification, diagnostic redaction, and
     host transport execution boundaries are fixture-backed.
 

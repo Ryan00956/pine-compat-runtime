@@ -187,6 +187,11 @@ impl DeliveryAttemptRecord {
         self.failure_code = result.failure_code.clone();
         self
     }
+
+    pub fn schedule_retry(mut self, next_retry_at: i64) -> Self {
+        self.next_retry_at = Some(next_retry_at);
+        self
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -289,6 +294,13 @@ pub trait DeliveryAttemptStore {
         attempt_number: u32,
         result: &ExternalDeliveryResult,
     ) -> Option<DeliveryAttemptRecord>;
+
+    fn schedule_retry(
+        &mut self,
+        identity: &ExternalDeliveryIdentity,
+        attempt_number: u32,
+        next_retry_at: i64,
+    ) -> Option<DeliveryAttemptRecord>;
 }
 
 #[derive(Debug, Clone, Default)]
@@ -370,6 +382,17 @@ impl DeliveryAttemptStore for InMemoryDeliveryAttemptStore {
     ) -> Option<DeliveryAttemptRecord> {
         let attempt = self.find_attempt_mut(identity, attempt_number)?;
         *attempt = attempt.clone().complete(result);
+        Some(attempt.clone())
+    }
+
+    fn schedule_retry(
+        &mut self,
+        identity: &ExternalDeliveryIdentity,
+        attempt_number: u32,
+        next_retry_at: i64,
+    ) -> Option<DeliveryAttemptRecord> {
+        let attempt = self.find_attempt_mut(identity, attempt_number)?;
+        *attempt = attempt.clone().schedule_retry(next_retry_at);
         Some(attempt.clone())
     }
 }
@@ -758,6 +781,31 @@ mod tests {
     }
 
     #[test]
+    fn in_memory_attempt_store_records_planned_retry_timestamp() {
+        let mut store = InMemoryDeliveryAttemptStore::new();
+        let record = store.reserve(
+            candidate("message").dedupe_key(),
+            "webhook-main".to_owned(),
+            1_000,
+        );
+        let identity = record.external_identity();
+        let result =
+            ExternalDeliveryResult::transient_failure(1_020, "webhookTransportTimeout", "timeout");
+        let completed = store
+            .complete(&identity, record.attempt_number, &result)
+            .expect("attempt completes");
+
+        let scheduled = store
+            .schedule_retry(&identity, completed.attempt_number, 2_020)
+            .expect("retry timestamp is recorded");
+
+        assert_eq!(scheduled.status, DeliveryAttemptStatus::TransientFailure);
+        assert_eq!(scheduled.completed_at, Some(1_020));
+        assert_eq!(scheduled.next_retry_at, Some(2_020));
+        assert_eq!(store.latest_attempt(&identity), Some(&scheduled));
+    }
+
+    #[test]
     fn in_memory_attempt_store_ignores_unknown_attempt_updates() {
         let mut store = InMemoryDeliveryAttemptStore::new();
         let identity =
@@ -768,6 +816,7 @@ mod tests {
             store.complete(&identity, 1, &ExternalDeliveryResult::delivered(1_020)),
             None
         );
+        assert_eq!(store.schedule_retry(&identity, 1, 2_020), None);
     }
 
     #[test]
