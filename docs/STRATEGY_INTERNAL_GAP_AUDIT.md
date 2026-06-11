@@ -514,20 +514,22 @@ boundary. The broker now records internal order-fill alert events for supported
 entry, exit, close, and close_all fills, including `disable_alert` suppression
 and exit leg-specific message selection. Public runtime `schemaVersion: 4`
 exposes those broker-owned payloads under `strategy.alerts` with CLI, Python,
-and WASM parity.
+and WASM parity. The host-layer `{{strategy.order.alert_message}}` renderer is
+available through explicit Python, CLI, and WASM helpers without changing
+default runtime output.
 
 Missing internal behavior:
 
-- strategy-specific placeholder data for order fills;
-- alert-template rendering and external alert delivery for broker fills.
+- richer strategy-specific placeholder data beyond
+  `{{strategy.order.alert_message}}`;
+- running-alert configuration and external alert delivery for broker fills.
 
 Gap size: medium.
 
-Best next slice: add an explicit WASM wrapper around the pure
-`{{strategy.order.alert_message}}` renderer from
-`docs/STRATEGY_ORDER_FILL_ALERT_TEMPLATE_PLAN.md`, while keeping default
-runtime JSON, Python dictionaries, WASM JSON, Pine-source alert placeholder
-support, and external alert delivery unchanged.
+Best next slice: defer external alert delivery until a running-alert
+configuration model exists. Keep default runtime JSON, Python dictionaries,
+WASM JSON, Pine-source alert placeholder support, and external delivery
+unchanged until that model is designed.
 
 ## Recommended Internal Roadmap
 

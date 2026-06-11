@@ -2001,6 +2001,49 @@ fn runs_strategy_script_from_csv_to_empty_strategy_json() {
 }
 
 #[test]
+fn renders_strategy_order_fill_alert_template_from_public_alert_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_metadata.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy metadata fixture should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    let alert_json = parsed["strategy"]["alerts"][1].to_string();
+
+    let rendered = render_strategy_order_fill_alert_template(
+        "Order: {{strategy.order.alert_message}}",
+        &alert_json,
+    )
+    .expect("strategy order-fill alert template should render");
+
+    assert_eq!(rendered, "Order: loss alert");
+    assert_eq!(parsed["strategy"]["alerts"][1]["message"], "loss alert");
+    assert!(
+        !parsed["strategy"]["alerts"][1]
+            .as_object()
+            .expect("strategy alert should be an object")
+            .contains_key("renderedMessage")
+    );
+}
+
+#[test]
+fn render_strategy_order_fill_alert_template_rejects_unknown_placeholder() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_metadata.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy metadata fixture should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    let alert_json = parsed["strategy"]["alerts"][1].to_string();
+
+    let message =
+        strategy_alerts::render_strategy_order_fill_alert_template("{{close}}", &alert_json)
+            .expect_err("unknown placeholder should fail");
+
+    assert!(message.contains("unsupported strategy order-fill alert placeholder `{{close}}`"));
+}
+
+#[test]
 fn runs_strategy_exit_missing_entry_from_csv_as_noop_json() {
     let output = run_script_csv(
         "strategy(\"exit\")\nif bar_index == 0\n    strategy.exit(\"XL\", \"L\", stop=low)\n",

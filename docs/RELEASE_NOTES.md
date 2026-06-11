@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added an explicit WASM helper for rendering
+  `{{strategy.order.alert_message}}` against a public strategy order-fill
+  alert JSON object. The helper leaves default WASM runtime JSON, CLI runtime
+  JSON, Python dictionaries, and external alert delivery unchanged.
 - Added an explicit CLI helper path for rendering
   `{{strategy.order.alert_message}}` against a selected public strategy
   order-fill alert event from `pine-compat run`. The default runtime JSON,

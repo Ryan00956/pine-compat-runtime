@@ -9,6 +9,7 @@ use wasm_bindgen::prelude::*;
 mod analysis_json;
 mod library_sources;
 mod request_bars;
+mod strategy_alerts;
 #[cfg(test)]
 use analysis_json::json_escape;
 use analysis_json::{analysis_error_json, analyze_input_json, format_diagnostics};
@@ -60,6 +61,15 @@ pub fn analyze_script_with_libraries(source: &str, library_sources_json: &str) -
         Ok(input) => analyze_input_json(input),
         Err(message) => analysis_error_json(&message),
     }
+}
+
+#[wasm_bindgen(js_name = renderStrategyOrderFillAlertTemplate)]
+pub fn render_strategy_order_fill_alert_template(
+    template: &str,
+    alert_json: &str,
+) -> Result<String, JsValue> {
+    strategy_alerts::render_strategy_order_fill_alert_template(template, alert_json)
+        .map_err(|err| JsValue::from_str(&err))
 }
 
 #[wasm_bindgen(js_name = runScriptCsv)]
