@@ -4594,31 +4594,10 @@ fn runs_strategy_omitted_loss_same_id_fixture_from_csv_to_public_strategy_json()
     )
     .expect("strategy omitted loss same-id fixture should run");
 
-    assert!(output.contains(&format!(
-        "\"schemaVersion\":{}",
-        PUBLIC_RUNTIME_SCHEMA_VERSION
-    )));
-    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 2);
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":1,\"price\":8},{\"id\":\"L\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.long\",\"qty\":3,\"price\":6},{\"id\":\"XL\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":1,\"price\":6},{\"id\":\"XL\",\"barIndex\":4,\"time\":5,\"direction\":\"strategy.exit\",\"qty\":3,\"price\":4}]"
-    ));
-    assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":8,\"exitPrice\":6,\"qty\":1,\"profit\":-2},{\"id\":\"L\",\"entryBarIndex\":2,\"exitBarIndex\":4,\"entryTime\":3,\"exitTime\":5,\"entryPrice\":6,\"exitPrice\":4,\"qty\":3,\"profit\":-6}]"
-    ));
-    assert!(output.contains(
-        "\"position\":[{\"barIndex\":1,\"size\":1,\"avgPrice\":8},{\"barIndex\":2,\"size\":4,\"avgPrice\":6.5},{\"barIndex\":3,\"size\":3,\"avgPrice\":6},{\"barIndex\":4,\"size\":0,\"avgPrice\":null}]"
-    ));
-    assert!(output.contains("\"values\":[0,1,2,2,1,0]"));
-    assert!(output.contains("\"values\":[0,1,4,4,3,0]"));
-    assert!(output.contains("\"values\":[0,0,0,0,1,2]"));
-    assert!(output.contains("\"strategy\":{\"orders\":"));
-    assert!(output.contains("\"equity\":["));
-    assert!(output.contains("\"diagnostics\":[]}"));
-    assert!(!output.contains("pending"));
-    assert!(!output.contains("reservation"));
-    assert!(!output.contains("targetTradeKey"));
-    assert!(!output.contains("target_trade_key"));
-    assert!(!output.contains("closedTrades"));
+    assert_snapshot(
+        "runtime_strategy_pyramiding_exit_omitted_loss_same_id.json",
+        &output,
+    );
 }
 
 #[test]
