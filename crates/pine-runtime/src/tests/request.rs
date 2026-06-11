@@ -331,6 +331,30 @@ fn request_security_isolates_provider_math_sum_state() {
 }
 
 #[test]
+fn request_security_evaluates_provider_round_to_mintick() {
+    let program = compile_program(
+        "indicator(\"request mintick\")\nrounded = request.security(\"NYSE:IBM\", timeframe.period, math.round_to_mintick(close + 0.006))\nplot(rounded)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 21.0),
+            timed_bar(120_000, 22.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 9.0),
+        ])
+        .expect("provider math.round_to_mintick expression should run");
+
+    assert_values_close(&result.plots[0].values, &[20.01, 21.01, 22.01]);
+}
+
+#[test]
 fn request_security_evaluates_provider_history_references() {
     let program = compile_program(
         "indicator(\"request history\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, close[1]))\n",

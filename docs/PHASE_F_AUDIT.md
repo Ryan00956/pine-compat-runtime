@@ -53,8 +53,8 @@ truth for request claims.
   `syminfo.tickerid`.
 - Supported requested expressions are side-effect-free scalar expressions over
   direct OHLCV/time sources, pure arithmetic and ternaries, history references,
-  `na`, `nz`, selected stateless `math.*` calls, `math.sum`, `ta.sma`, and
-  `ta.ema`.
+  `na`, `nz`, selected stateless `math.*` calls, fixed-mintick
+  `math.round_to_mintick`, `math.sum`, `ta.sma`, and `ta.ema`.
 - Provider-backed requested expressions run in an isolated requested context.
   Chart-runtime history, `ta.*` callsite state, `var` storage, arrays, drawing
   objects, and outputs are not shared with requested-context evaluation.

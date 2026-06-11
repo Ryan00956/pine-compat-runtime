@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported fixed-mintick `math.round_to_mintick` calls in
+  same-context and provider-backed scalar expressions. Provider-specific symbol
+  metadata remains outside this fixed default `syminfo.mintick` subset.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported `math.sum` calls in same-context and provider-backed
   scalar expressions, with requested-context rolling state isolated from chart
   state.
@@ -10,9 +14,8 @@
   accept already-supported stateless `math.*` calls in same-context and
   provider-backed scalar expressions. The slice keeps provider data
   host-injected, preserves default higher-timeframe alignment and public JSON
-  shapes, and keeps stateful/contextual `math.random`, `math.round_to_mintick`,
-  UDF calls, aliases, side effects, optional request parameters, and
-  lower-timeframe requests unsupported.
+  shapes, and keeps stateful `math.random`, UDF calls, aliases, side effects,
+  optional request parameters, and lower-timeframe requests unsupported.
 - Tightened the pure webhook transport boundary so host-provided transports
   receive only the already built `WebhookRequest`. Attempt-store records remain
   owned by the adapter flow, preserving the future HTTP transport gate without

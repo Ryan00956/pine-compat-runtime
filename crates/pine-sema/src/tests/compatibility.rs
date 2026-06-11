@@ -271,7 +271,7 @@ fn accepts_provider_backed_request_security_math_extremes() {
 #[test]
 fn accepts_provider_backed_request_security_supported_math_calls() {
     let analysis = analyze(
-        "plot(request.security(\"NYSE:IBM\", timeframe.period, math.abs(open - close) + math.avg(open, close) + math.floor(close) + math.ceil(open) + math.trunc(high) + math.sqrt(close) + math.cbrt(close) + math.log(close) + math.log10(close) + math.exp(1) + math.acos(0.5) + math.asin(0.5) + math.atan(close) + math.sign(close - open) + math.todegrees(close) + math.toradians(open) + math.sin(close) + math.cos(open) + math.tan(0) + math.pow(close, 2) + math.hypot(close, open) + math.round(close / 3, 2) + nz(math.sum(close, 2))))\n",
+        "plot(request.security(\"NYSE:IBM\", timeframe.period, math.abs(open - close) + math.avg(open, close) + math.floor(close) + math.ceil(open) + math.trunc(high) + math.sqrt(close) + math.cbrt(close) + math.log(close) + math.log10(close) + math.exp(1) + math.acos(0.5) + math.asin(0.5) + math.atan(close) + math.sign(close - open) + math.todegrees(close) + math.toradians(open) + math.sin(close) + math.cos(open) + math.tan(0) + math.pow(close, 2) + math.hypot(close, open) + math.round(close / 3, 2) + math.round_to_mintick(close + 0.006) + nz(math.sum(close, 2))))\n",
     );
 
     assert!(
@@ -350,19 +350,6 @@ fn rejects_invalid_timeframe_request_security() {
 fn rejects_provider_request_security_unsupported_call() {
     let analysis =
         analyze("x = request.security(\"NYSE:IBM\", timeframe.period, math.random(0, 1, 7))\n");
-
-    assert_eq!(analysis.compatibility.unsupported.len(), 1);
-    assert_eq!(
-        analysis.compatibility.unsupported[0].feature,
-        "request.security"
-    );
-}
-
-#[test]
-fn rejects_provider_request_security_contextual_math_call() {
-    let analysis = analyze(
-        "x = request.security(\"NYSE:IBM\", timeframe.period, math.round_to_mintick(close))\n",
-    );
 
     assert_eq!(analysis.compatibility.unsupported.len(), 1);
     assert_eq!(

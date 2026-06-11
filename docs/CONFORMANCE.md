@@ -981,7 +981,7 @@ input.int            supported
 ta.sma               supported
 ta.ema               supported
 ta.rsi               supported    fixture-derived executable subset
-request.security     partial      same-context identity and same-or-higher-timeframe provider scalar-expression subset with direct sources, arithmetic, history, na/nz, selected stateless math.* calls, math.sum, ta.sma, and ta.ema only
+request.security     partial      same-context identity and same-or-higher-timeframe provider scalar-expression subset with direct sources, arithmetic, history, na/nz, selected stateless math.* calls, fixed-mintick math.round_to_mintick, math.sum, ta.sma, and ta.ema only
 alertcondition       partial      bool-compatible condition plus const-string title/message runtime events
 alert                partial      const-string message runtime events when execution reaches the call
 strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital, fixed, cash, and percent-of-equity default_qty subsets, supported cash-per-contract, cash-per-order, and percent commission modes, finite non-negative integer slippage ticks, and finite non-negative integer limit-verification ticks only
