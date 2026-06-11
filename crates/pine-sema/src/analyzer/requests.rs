@@ -249,6 +249,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.cmo"
             | "ta.cci"
             | "ta.cog"
+            | "ta.bop"
             | "ta.mfi"
             | "ta.stoch"
             | "ta.wpr"

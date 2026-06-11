@@ -1506,6 +1506,35 @@ fn request_security_evaluates_provider_cog_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_bop_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request bop\")\nprovider_bop = request.security(\"NYSE:IBM\", timeframe.period, ta.bop())\nchart_bop = ta.bop()\nplot(provider_bop)\nplot(chart_bop)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 15.0, 9.0, 13.0, 1.0),
+            timed_ohlcv(60_000, 11.0, 14.0, 10.0, 10.0, 1.0),
+            timed_ohlcv(120_000, 12.0, 18.0, 10.0, 16.0, 1.0),
+            timed_ohlcv(180_000, 13.0, 13.0, 13.0, 13.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 3.0, 0.0, 2.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 5.0, 1.0, 1.0, 1.0),
+            timed_ohlcv(120_000, 3.0, 6.0, 2.0, 6.0, 1.0),
+            timed_ohlcv(180_000, 4.0, 4.0, 4.0, 4.0, 1.0),
+        ])
+        .expect("provider ta.bop expression should run");
+
+    assert_values_close(&result.plots[0].values[..3], &[0.5, -0.25, 0.5]);
+    assert_eq!(result.plots[0].values[3], PineValue::Na);
+    assert_values_close(&result.plots[1].values[..3], &[1.0 / 3.0, -0.25, 0.75]);
+    assert_eq!(result.plots[1].values[3], PineValue::Na);
+}
+
+#[test]
 fn request_security_evaluates_provider_mfi_in_requested_context() {
     let program = compile_program(
         "indicator(\"request mfi\")\nprovider_mfi = request.security(\"NYSE:IBM\", timeframe.period, ta.mfi(close, 3))\nchart_mfi = ta.mfi(close, 3)\nplot(provider_mfi)\nplot(chart_mfi)\n",
