@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added an explicit CLI helper path for rendering a strategy order-fill
+  running-alert message from host config fields and a selected public
+  `strategy.alerts` event. Default runtime JSON and external delivery remain
+  unchanged.
 - Added an explicit Python helper for rendering a strategy order-fill
   running-alert message from a host config and public `strategy.alerts` event.
   Default `run_script` output and external delivery remain unchanged.

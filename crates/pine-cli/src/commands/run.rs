@@ -2,8 +2,9 @@ use std::{fs, sync::Arc};
 
 use pine_runtime::{
     ChartContext, InMemoryRequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe,
-    RuntimeResult, public_runtime_profiled_result_json, public_runtime_result_json,
-    run_historical_profiled_with_request_environment, run_historical_with_request_environment,
+    RunningAlertConfig, RuntimeResult, public_runtime_profiled_result_json,
+    public_runtime_result_json, run_historical_profiled_with_request_environment,
+    run_historical_with_request_environment,
 };
 use pine_sema::analyze_input;
 
@@ -26,11 +27,18 @@ struct RunOptions {
     request_bars: Vec<RequestBarsSpec>,
     library_sources: Vec<LibrarySourceSpec>,
     strategy_alert_template: Option<StrategyAlertTemplateOptions>,
+    strategy_running_alert: Option<StrategyRunningAlertOptions>,
 }
 
 #[derive(Debug)]
 struct StrategyAlertTemplateOptions {
     template: String,
+    index: usize,
+}
+
+#[derive(Debug)]
+struct StrategyRunningAlertOptions {
+    config: RunningAlertConfig,
     index: usize,
 }
 
@@ -46,14 +54,18 @@ fn run_with_options(options: &RunOptions) -> Result<(), String> {
 }
 
 fn run_output_with_options(options: &RunOptions) -> Result<String, String> {
-    if options.strategy_alert_template.is_some() && options.profile {
-        return Err(
-            "--render-strategy-order-alert-template cannot be combined with --profile".to_owned(),
-        );
+    if options.profile
+        && (options.strategy_alert_template.is_some() || options.strategy_running_alert.is_some())
+    {
+        return Err("strategy alert rendering cannot be combined with --profile".to_owned());
     }
     if let Some(template) = &options.strategy_alert_template {
         let result = run_result_with_options(options)?;
         return render_strategy_alert_template(&result, template);
+    }
+    if let Some(running_alert) = &options.strategy_running_alert {
+        let result = run_result_with_options(options)?;
+        return render_strategy_running_alert(&result, running_alert);
     }
     run_json_with_options(options)
 }
@@ -149,6 +161,25 @@ fn render_strategy_alert_template(
         .map_err(|err| err.to_string())
 }
 
+fn render_strategy_running_alert(
+    result: &RuntimeResult,
+    running_alert: &StrategyRunningAlertOptions,
+) -> Result<String, String> {
+    let strategy = result
+        .strategy
+        .as_ref()
+        .ok_or_else(|| "runtime result does not contain strategy alerts".to_owned())?;
+    let alert = strategy.alerts.get(running_alert.index).ok_or_else(|| {
+        format!(
+            "strategy alert index {} is out of range for {} alert(s)",
+            running_alert.index,
+            strategy.alerts.len()
+        )
+    })?;
+    pine_runtime::render_strategy_order_fill_running_alert(&running_alert.config, alert)
+        .map_err(|err| err.to_string())
+}
+
 fn parse_options(args: &[String]) -> Result<RunOptions, String> {
     let Some(path) = args.first() else {
         return Err(usage());
@@ -160,8 +191,13 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
         request_bars: Vec::new(),
         library_sources: Vec::new(),
         strategy_alert_template: None,
+        strategy_running_alert: None,
     };
     let mut strategy_alert_template = None;
+    let mut strategy_running_alert_template = None;
+    let mut running_alert_script_snapshot_id = None;
+    let mut running_alert_symbol = None;
+    let mut running_alert_timeframe = None;
     let mut strategy_alert_index = None;
     let mut index = 1;
     while index < args.len() {
@@ -182,6 +218,34 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                     return Err(usage());
                 };
                 strategy_alert_template = Some(value.clone());
+            }
+            "--render-strategy-running-alert" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                strategy_running_alert_template = Some(value.clone());
+            }
+            "--running-alert-script-snapshot-id" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                running_alert_script_snapshot_id = Some(value.clone());
+            }
+            "--running-alert-symbol" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                running_alert_symbol = Some(value.clone());
+            }
+            "--running-alert-timeframe" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                running_alert_timeframe = Some(value.clone());
             }
             "--strategy-alert-index" => {
                 index += 1;
@@ -213,10 +277,52 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
     if options.bars_path.is_empty() {
         return Err(usage());
     }
-    options.strategy_alert_template = match (strategy_alert_template, strategy_alert_index) {
-        (None, None) => None,
-        (Some(template), Some(index)) => Some(StrategyAlertTemplateOptions { template, index }),
-        _ => return Err(usage()),
+    if strategy_alert_template.is_some() && strategy_running_alert_template.is_some() {
+        return Err(usage());
+    }
+    options.strategy_alert_template = match (strategy_alert_template, &strategy_alert_index) {
+        (None, _) => None,
+        (Some(template), Some(index)) => Some(StrategyAlertTemplateOptions {
+            template,
+            index: *index,
+        }),
+        (Some(_), None) => return Err(usage()),
+    };
+    options.strategy_running_alert = if options.strategy_alert_template.is_some() {
+        if strategy_running_alert_template.is_some()
+            || running_alert_script_snapshot_id.is_some()
+            || running_alert_symbol.is_some()
+            || running_alert_timeframe.is_some()
+        {
+            return Err(usage());
+        }
+        None
+    } else {
+        match (
+            strategy_running_alert_template,
+            running_alert_script_snapshot_id,
+            running_alert_symbol,
+            running_alert_timeframe,
+            strategy_alert_index,
+        ) {
+            (None, None, None, None, None) => None,
+            (
+                Some(template),
+                Some(script_snapshot_id),
+                Some(symbol),
+                Some(timeframe),
+                Some(index),
+            ) => Some(StrategyRunningAlertOptions {
+                config: RunningAlertConfig::new_strategy_order_fills(
+                    script_snapshot_id,
+                    symbol,
+                    timeframe,
+                    template,
+                ),
+                index,
+            }),
+            _ => return Err(usage()),
+        }
     };
     Ok(options)
 }
@@ -306,6 +412,7 @@ mod tests {
         assert_eq!(options.library_sources[0].key, "user/lib/1");
         assert_eq!(options.library_sources[0].path, "lib.pine");
         assert!(options.strategy_alert_template.is_none());
+        assert!(options.strategy_running_alert.is_none());
     }
 
     #[test]
@@ -327,6 +434,41 @@ mod tests {
 
         assert_eq!(template.template, "Order: {{strategy.order.alert_message}}");
         assert_eq!(template.index, 1);
+        assert!(options.strategy_running_alert.is_none());
+    }
+
+    #[test]
+    fn parses_run_options_with_strategy_running_alert() {
+        let options = parse_options(&[
+            "script.pine".to_owned(),
+            "--bars".to_owned(),
+            "bars.csv".to_owned(),
+            "--render-strategy-running-alert".to_owned(),
+            "Running: {{strategy.order.alert_message}}".to_owned(),
+            "--strategy-alert-index".to_owned(),
+            "1".to_owned(),
+            "--running-alert-script-snapshot-id".to_owned(),
+            "snapshot-1".to_owned(),
+            "--running-alert-symbol".to_owned(),
+            "NASDAQ:AAPL".to_owned(),
+            "--running-alert-timeframe".to_owned(),
+            "60".to_owned(),
+        ])
+        .expect("run options");
+        let running_alert = options
+            .strategy_running_alert
+            .as_ref()
+            .expect("strategy running alert");
+
+        assert!(options.strategy_alert_template.is_none());
+        assert_eq!(running_alert.index, 1);
+        assert_eq!(running_alert.config.script_snapshot_id, "snapshot-1");
+        assert_eq!(running_alert.config.symbol, "NASDAQ:AAPL");
+        assert_eq!(running_alert.config.timeframe, "60");
+        assert_eq!(
+            running_alert.config.message_template,
+            "Running: {{strategy.order.alert_message}}"
+        );
     }
 
     #[test]
@@ -339,6 +481,48 @@ mod tests {
             "{{strategy.order.alert_message}}".to_owned(),
         ])
         .expect_err("strategy alert index is required");
+
+        assert!(error.contains("usage: pine-compat"));
+    }
+
+    #[test]
+    fn rejects_partial_strategy_running_alert_options() {
+        let error = parse_options(&[
+            "script.pine".to_owned(),
+            "--bars".to_owned(),
+            "bars.csv".to_owned(),
+            "--render-strategy-running-alert".to_owned(),
+            "{{strategy.order.alert_message}}".to_owned(),
+            "--strategy-alert-index".to_owned(),
+            "0".to_owned(),
+            "--running-alert-script-snapshot-id".to_owned(),
+            "snapshot-1".to_owned(),
+        ])
+        .expect_err("running alert symbol and timeframe are required");
+
+        assert!(error.contains("usage: pine-compat"));
+    }
+
+    #[test]
+    fn rejects_mixed_strategy_alert_rendering_options() {
+        let error = parse_options(&[
+            "script.pine".to_owned(),
+            "--bars".to_owned(),
+            "bars.csv".to_owned(),
+            "--render-strategy-order-alert-template".to_owned(),
+            "{{strategy.order.alert_message}}".to_owned(),
+            "--render-strategy-running-alert".to_owned(),
+            "{{strategy.order.alert_message}}".to_owned(),
+            "--strategy-alert-index".to_owned(),
+            "0".to_owned(),
+            "--running-alert-script-snapshot-id".to_owned(),
+            "snapshot-1".to_owned(),
+            "--running-alert-symbol".to_owned(),
+            "NASDAQ:AAPL".to_owned(),
+            "--running-alert-timeframe".to_owned(),
+            "60".to_owned(),
+        ])
+        .expect_err("only one alert rendering mode is allowed");
 
         assert!(error.contains("usage: pine-compat"));
     }
@@ -408,6 +592,7 @@ mod tests {
                 .expect("higher timeframe request bars"),
             ],
             strategy_alert_template: None,
+            strategy_running_alert: None,
         };
 
         let output = run_json_with_options(&options).expect("request integration fixture");
@@ -428,6 +613,7 @@ mod tests {
                 path: workspace_path("tests/fixtures/libraries/import_lib.pine"),
             }],
             strategy_alert_template: None,
+            strategy_running_alert: None,
         };
 
         let output = run_json_with_options(&options).expect("import integration fixture");
@@ -458,6 +644,7 @@ mod tests {
             request_bars: Vec::new(),
             library_sources: Vec::new(),
             strategy_alert_template: None,
+            strategy_running_alert: None,
         };
         let output = run_json_with_options(&options).expect("strategy no-op output");
 
@@ -485,6 +672,7 @@ mod tests {
                 template: "Order: {{strategy.order.alert_message}}".to_owned(),
                 index: 1,
             }),
+            strategy_running_alert: None,
         };
 
         let output = run_output_with_options(&options).expect("rendered alert template");
@@ -504,6 +692,57 @@ mod tests {
                 template: "{{close}}".to_owned(),
                 index: 1,
             }),
+            strategy_running_alert: None,
+        };
+
+        let error = run_output_with_options(&options).expect_err("unknown placeholder fails");
+
+        assert!(error.contains("unsupported strategy order-fill alert placeholder `{{close}}`"));
+    }
+
+    #[test]
+    fn run_output_renders_strategy_running_alert() {
+        let options = RunOptions {
+            path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
+            bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+            profile: false,
+            request_bars: Vec::new(),
+            library_sources: Vec::new(),
+            strategy_alert_template: None,
+            strategy_running_alert: Some(StrategyRunningAlertOptions {
+                config: RunningAlertConfig::new_strategy_order_fills(
+                    "snapshot-1",
+                    "NYSE:IBM",
+                    "1",
+                    "Running: {{strategy.order.alert_message}}",
+                ),
+                index: 1,
+            }),
+        };
+
+        let output = run_output_with_options(&options).expect("rendered running alert");
+
+        assert_eq!(output, "Running: loss alert");
+    }
+
+    #[test]
+    fn run_output_rejects_unknown_strategy_running_alert_placeholder() {
+        let options = RunOptions {
+            path: workspace_path("tests/fixtures/runtime/strategy_exit_metadata.pine"),
+            bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+            profile: false,
+            request_bars: Vec::new(),
+            library_sources: Vec::new(),
+            strategy_alert_template: None,
+            strategy_running_alert: Some(StrategyRunningAlertOptions {
+                config: RunningAlertConfig::new_strategy_order_fills(
+                    "snapshot-1",
+                    "NYSE:IBM",
+                    "1",
+                    "{{close}}",
+                ),
+                index: 1,
+            }),
         };
 
         let error = run_output_with_options(&options).expect_err("unknown placeholder fails");
@@ -520,6 +759,7 @@ mod tests {
             request_bars: Vec::new(),
             library_sources: Vec::new(),
             strategy_alert_template: None,
+            strategy_running_alert: None,
         };
 
         let output = run_json_with_options(&options).expect("default strategy alert JSON");
