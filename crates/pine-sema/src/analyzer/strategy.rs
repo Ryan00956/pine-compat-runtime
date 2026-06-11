@@ -77,6 +77,7 @@ enum StrategyExitArgFamily {
     TrailingOffset,
     Quantity,
     PercentQuantity,
+    Metadata,
     UnsupportedOption,
 }
 
@@ -91,7 +92,11 @@ fn strategy_exit_arg_family(name: &str) -> Option<StrategyExitArgFamily> {
         "trail_offset" => Some(StrategyExitArgFamily::TrailingOffset),
         "qty" => Some(StrategyExitArgFamily::Quantity),
         "qty_percent" => Some(StrategyExitArgFamily::PercentQuantity),
-        "oca_name" | "comment" | "alert_message" => Some(StrategyExitArgFamily::UnsupportedOption),
+        "comment" | "comment_profit" | "comment_loss" | "comment_trailing" | "alert_message"
+        | "alert_profit" | "alert_loss" | "alert_trailing" | "disable_alert" => {
+            Some(StrategyExitArgFamily::Metadata)
+        }
+        "oca_name" => Some(StrategyExitArgFamily::UnsupportedOption),
         _ => None,
     }
 }
@@ -610,6 +615,7 @@ impl Analyzer {
                 }
                 StrategyExitArgFamily::TrailingOffset => has_trail_offset = true,
                 StrategyExitArgFamily::Quantity | StrategyExitArgFamily::PercentQuantity => {}
+                StrategyExitArgFamily::Metadata => {}
                 StrategyExitArgFamily::UnsupportedOption => {
                     has_unsupported_arg = true;
                     self.diagnostics.push(Diagnostic::error(

@@ -1,0 +1,7 @@
+//@version=5
+strategy("Supported strategy order metadata")
+msg = close > open ? "up" : "down"
+strategy.entry("L", strategy.long, qty=1, comment="entry", alert_message=msg, disable_alert=false)
+strategy.exit("XL", "L", stop=low, comment="exit", comment_profit="profit", comment_loss="loss", comment_trailing="trail", alert_message=msg, alert_profit="profit alert", alert_loss="loss alert", alert_trailing="trail alert", disable_alert=bar_index == 0)
+strategy.close("L", comment="close", alert_message=msg, disable_alert=false)
+strategy.close_all(comment="close all", alert_message=msg, disable_alert=false)

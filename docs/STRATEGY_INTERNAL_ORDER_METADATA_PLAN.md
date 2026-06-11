@@ -104,6 +104,8 @@ Acceptance:
 
 ### Slice OM1: Signature And Diagnostic Boundary
 
+Closed on 2026-06-11.
+
 Accept metadata parameters in semantic analysis only for already-supported
 order commands and preserve unsupported forms.
 
@@ -118,17 +120,17 @@ Candidate parameter boundaries:
 - `strategy.close_all`: `comment`, `alert_message`, `immediately`,
   `disable_alert`
 
-For OM1, `immediately` should remain unsupported unless a separate execution
-timing design is opened. If accepting `strategy.close(..., immediately=...)`
-would imply same-tick fill behavior, stop and keep it diagnostic-only.
+For OM1, `immediately` remains unsupported because no separate execution timing
+design has been opened. `strategy.close(..., immediately=...)` and
+`strategy.close_all(..., immediately=...)` stay diagnostic-only.
 
 Tests:
 
-- sema fixture accepting string metadata on a supported order command when it
-  has no behavior effect yet;
-- sema fixture rejecting non-string metadata values;
-- negative fixture proving `immediately` remains unsupported if it is not
-  implemented in the same slice.
+- sema fixture accepts string-compatible metadata and bool-compatible
+  `disable_alert` on supported order commands with no behavior effect yet;
+- sema fixture rejects non-string metadata values and non-bool
+  `disable_alert`;
+- negative fixture proves `immediately` remains unsupported.
 
 ### Slice OM2: Entry Metadata Storage
 

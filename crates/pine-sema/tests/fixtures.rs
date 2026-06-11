@@ -515,6 +515,14 @@ fn reports_unsupported_strategy_exit_variant_fixtures() {
             "E_CALL_ARG_NAME",
         ),
         (
+            "tests/fixtures/sema/unsupported_strategy_order_metadata_types.pine",
+            "E_CALL_ARG_TYPE",
+        ),
+        (
+            "tests/fixtures/sema/unsupported_strategy_close_immediately.pine",
+            "E_CALL_ARG_NAME",
+        ),
+        (
             "tests/fixtures/sema/unsupported_strategy_exit_function_side_effect.pine",
             "E_UNSUPPORTED_FEATURE",
         ),
@@ -566,6 +574,7 @@ fn accepts_supported_strategy_exit_fixtures() {
         "tests/fixtures/sema/supported_strategy_exit_qty_and_qty_percent_stop.pine",
         "tests/fixtures/sema/supported_strategy_exit_qty_and_qty_percent_bracket.pine",
         "tests/fixtures/sema/supported_strategy_exit_qty_and_qty_percent_trailing.pine",
+        "tests/fixtures/sema/supported_strategy_order_metadata.pine",
     ] {
         let path = workspace_fixture(fixture);
         let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -735,18 +744,37 @@ fn reports_unsupported_strategy_close_partial_quantity_fixture() {
         path.display(),
         analysis.diagnostics
     );
-    for name in ["comment", "alert_message", "disable_alert", "immediately"] {
-        assert!(
-            analysis.diagnostics.iter().any(|diagnostic| {
-                diagnostic.code == "E_CALL_ARG_NAME" && diagnostic.message.contains(name)
-            }),
-            "{} diagnostics should reject strategy.close argument `{}`: {:?}",
-            path.display(),
-            name,
-            analysis.diagnostics
-        );
-    }
+    let name = "immediately";
+    assert!(
+        analysis.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "E_CALL_ARG_NAME" && diagnostic.message.contains(name)
+        }),
+        "{} diagnostics should reject strategy.close argument `{}`: {:?}",
+        path.display(),
+        name,
+        analysis.diagnostics
+    );
     assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn reports_strategy_order_metadata_type_guardrails() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_order_metadata_types.pine",
+        &[
+            "argument `comment` does not accept",
+            "argument `disable_alert` does not accept",
+            "argument `alert_message` does not accept",
+        ],
+    );
+}
+
+#[test]
+fn reports_strategy_close_immediately_remains_unsupported() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_close_immediately.pine",
+        &["immediately"],
+    );
 }
 
 #[test]

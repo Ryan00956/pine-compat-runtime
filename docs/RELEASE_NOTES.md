@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Accepted strategy order metadata parameters at the semantic boundary for
+  supported `strategy.entry`, `strategy.exit`, `strategy.close`, and
+  `strategy.close_all` calls. `comment`/alert-message fields must be
+  string-compatible and `disable_alert` must be bool-compatible; metadata has
+  no external alert-delivery or public JSON effect yet, and `immediately`
+  remains unsupported.
 - Added a Strategy Internal Order Metadata design gate for future
   `comment`/`alert_message`/`disable_alert` work on supported strategy order
   commands. Runtime behavior, public JSON, conformance claims, and host output

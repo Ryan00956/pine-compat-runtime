@@ -257,14 +257,14 @@ indicator(title: const string, shorttitle?: const string, overlay?: const bool, 
   -> void
 strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric)
   -> void
-strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric)
+strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
   -> void
-strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric)
+strategy.close(id: simple string, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
   -> void
-strategy.close_all() -> void
+strategy.close_all(comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible) -> void
 strategy.cancel(id: simple string) -> void
 strategy.cancel_all() -> void
-strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric)
+strategy.exit(id: simple string, from_entry: simple string, stop?: series/simple numeric, limit?: series/simple numeric, profit?: series/simple numeric, loss?: series/simple numeric, trail_price?: series/simple numeric, trail_points?: series/simple numeric, trail_offset?: series/simple numeric, qty?: series/simple numeric, qty_percent?: series/simple numeric, comment?: string-compatible, comment_profit?: string-compatible, comment_loss?: string-compatible, comment_trailing?: string-compatible, alert_message?: string-compatible, alert_profit?: string-compatible, alert_loss?: string-compatible, alert_trailing?: string-compatible, disable_alert?: bool-compatible)
   -> void
 strategy.netprofit_percent -> series float
 strategy.grossprofit -> series float
@@ -437,10 +437,13 @@ bar close. Fixed `qty` and `qty_percent` must be finite and positive;
 `qty` wins when both quantity forms are provided. Oversized quantities clamp to
 the current matching position size, remaining long position state stays open at
 the same average price, and matching pending exits are cancelled only when the
-close fully flattens the entry. Close comments, alert messages, alert
-suppression, `immediately`, partial `strategy.close_all()`, and multi-entry close
-allocation remain unsupported. `strategy.close_all()` closes the current
-supported long position at the current bar close and is a no-op while flat.
+close fully flattens the entry. `comment`, `alert_message`, and
+`disable_alert` arguments are accepted by the semantic boundary but have no
+external alert-delivery or public JSON effect yet. `immediately`, partial
+`strategy.close_all()`, and multi-entry close allocation remain unsupported.
+`strategy.close_all()` closes the current supported long position at the current
+bar close and is a no-op while flat; its `comment`, `alert_message`, and
+`disable_alert` arguments have the same no-output metadata boundary.
 `strategy.cancel(id)` cancels matching internal pending entry ids and matching
 internal pending exit ids in the current supported order subset. Unknown,
 already-filled, and already-cancelled ids are no-op. Cancellation emits no
@@ -457,7 +460,11 @@ those supported shapes can keep multiple reserved pending exits for different
 open pyramided long entry for fixture-backed absolute stop/limit exits, or the
 active pending entry for same-calculation absolute `stop`, `limit`, and
 `trail_price` attachment plus entry-relative `profit`, `loss`, and
-`trail_points` attachment. Richer strategy order options remain unsupported.
+`trail_points` attachment. Supported strategy order metadata arguments are
+accepted by the semantic boundary on `strategy.entry`, `strategy.exit`,
+`strategy.close`, and `strategy.close_all`, but metadata storage, external
+order-fill alert delivery, and public JSON fields remain future work. Richer
+strategy order options remain unsupported.
 `strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
 `strategy.closedtrades.entry_id`, `strategy.closedtrades.exit_id`,
 `strategy.closedtrades.entry_bar_index`, and

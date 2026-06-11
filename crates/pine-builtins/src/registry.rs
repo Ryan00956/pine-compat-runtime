@@ -126,6 +126,21 @@ mod tests {
         assert!(signature.params[3].optional);
         assert_eq!(signature.params[4].name, "stop");
         assert!(signature.params[4].optional);
+        assert_eq!(signature.params[5].name, "comment");
+        assert_eq!(
+            signature.params[5].accepts,
+            crate::Accepts::StringCompatible
+        );
+        assert!(signature.params[5].optional);
+        assert_eq!(signature.params[6].name, "alert_message");
+        assert_eq!(
+            signature.params[6].accepts,
+            crate::Accepts::StringCompatible
+        );
+        assert!(signature.params[6].optional);
+        assert_eq!(signature.params[7].name, "disable_alert");
+        assert_eq!(signature.params[7].accepts, crate::Accepts::BoolCompatible);
+        assert!(signature.params[7].optional);
         assert!(!signature.variadic);
     }
 
@@ -137,6 +152,21 @@ mod tests {
         assert!(signature.params[1].optional);
         assert_eq!(signature.params[2].name, "qty_percent");
         assert!(signature.params[2].optional);
+        assert_eq!(signature.params[3].name, "comment");
+        assert_eq!(
+            signature.params[3].accepts,
+            crate::Accepts::StringCompatible
+        );
+        assert!(signature.params[3].optional);
+        assert_eq!(signature.params[4].name, "alert_message");
+        assert_eq!(
+            signature.params[4].accepts,
+            crate::Accepts::StringCompatible
+        );
+        assert!(signature.params[4].optional);
+        assert_eq!(signature.params[5].name, "disable_alert");
+        assert_eq!(signature.params[5].accepts, crate::Accepts::BoolCompatible);
+        assert!(signature.params[5].optional);
         assert!(!signature.variadic);
     }
 
@@ -144,7 +174,21 @@ mod tests {
     fn registers_strategy_close_all_signature() {
         let signature =
             get_phase_1_builtin("strategy.close_all").expect("strategy.close_all signature");
-        assert!(signature.params.is_empty());
+        assert_eq!(signature.params[0].name, "comment");
+        assert_eq!(
+            signature.params[0].accepts,
+            crate::Accepts::StringCompatible
+        );
+        assert!(signature.params[0].optional);
+        assert_eq!(signature.params[1].name, "alert_message");
+        assert_eq!(
+            signature.params[1].accepts,
+            crate::Accepts::StringCompatible
+        );
+        assert!(signature.params[1].optional);
+        assert_eq!(signature.params[2].name, "disable_alert");
+        assert_eq!(signature.params[2].accepts, crate::Accepts::BoolCompatible);
+        assert!(signature.params[2].optional);
         assert!(!signature.variadic);
     }
 
@@ -166,7 +210,7 @@ mod tests {
     #[test]
     fn registers_strategy_exit_signature() {
         let signature = get_phase_1_builtin("strategy.exit").expect("strategy.exit signature");
-        assert_eq!(signature.params.len(), 11);
+        assert_eq!(signature.params.len(), 20);
         assert_eq!(signature.params[0].name, "id");
         assert_eq!(signature.params[1].name, "from_entry");
         assert_eq!(signature.params[2].name, "stop");
@@ -223,6 +267,27 @@ mod tests {
             signature.params[10].accepts,
             crate::Accepts::SeriesOrSimpleNumeric
         );
+        for (index, name) in [
+            "comment",
+            "comment_profit",
+            "comment_loss",
+            "comment_trailing",
+            "alert_message",
+            "alert_profit",
+            "alert_loss",
+            "alert_trailing",
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            let param = &signature.params[11 + index];
+            assert_eq!(param.name, name);
+            assert!(param.optional);
+            assert_eq!(param.accepts, crate::Accepts::StringCompatible);
+        }
+        assert_eq!(signature.params[19].name, "disable_alert");
+        assert!(signature.params[19].optional);
+        assert_eq!(signature.params[19].accepts, crate::Accepts::BoolCompatible);
         assert!(!signature.variadic);
     }
 

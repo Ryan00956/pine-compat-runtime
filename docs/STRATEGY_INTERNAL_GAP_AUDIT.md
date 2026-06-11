@@ -512,17 +512,17 @@ event model. Strategy order-fill alert metadata is not modeled.
 Missing internal behavior:
 
 - order-fill alert messages;
-- `alert_message` arguments on order commands;
-- `disable_alert`;
+- broker-owned storage for accepted order `comment`, alert-message, and
+  `disable_alert` metadata;
 - strategy-specific placeholder data for order fills;
 - alert events tied to broker fills rather than reached alert calls.
 
 Gap size: medium.
 
-Best first slice: use `docs/STRATEGY_INTERNAL_ORDER_METADATA_PLAN.md` as the
-design gate before accepting order metadata syntax. The first implementation
-slice should store supported order metadata internally for supported orders but
-keep external delivery and public JSON expansion out of scope.
+Best next slice: continue with
+`docs/STRATEGY_INTERNAL_ORDER_METADATA_PLAN.md` Slice OM2 by storing supported
+entry metadata internally. External delivery and public JSON expansion remain
+out of scope.
 
 ## Recommended Internal Roadmap
 

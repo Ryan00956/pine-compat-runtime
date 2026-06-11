@@ -28,6 +28,21 @@ const STRATEGY_ENTRY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SeriesOrSimpleNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "comment",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "alert_message",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "disable_alert",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
 ];
 
 const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[
@@ -46,15 +61,48 @@ const STRATEGY_CLOSE_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SeriesOrSimpleNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "comment",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "alert_message",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "disable_alert",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
 ];
 
-const STRATEGY_CLOSE_ALL_PARAMS: &[BuiltinParam] = &[];
+const STRATEGY_CLOSE_ALL_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "comment",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "alert_message",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "disable_alert",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+];
 
 const STRATEGY_CANCEL_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "id",
     accepts: Accepts::SimpleString,
     optional: false,
 }];
+
+const STRATEGY_CANCEL_ALL_PARAMS: &[BuiltinParam] = &[];
 
 const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
@@ -112,6 +160,51 @@ const STRATEGY_EXIT_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SeriesOrSimpleNumeric,
         optional: true,
     },
+    BuiltinParam {
+        name: "comment",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "comment_profit",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "comment_loss",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "comment_trailing",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "alert_message",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "alert_profit",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "alert_loss",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "alert_trailing",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "disable_alert",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
 ];
 
 const STRATEGY_TRADE_FIELD_PARAMS: &[BuiltinParam] = &[BuiltinParam {
@@ -152,7 +245,7 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "strategy.cancel_all",
         phase: BuiltinPhase::Phase1Core,
-        params: STRATEGY_CLOSE_ALL_PARAMS,
+        params: STRATEGY_CANCEL_ALL_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

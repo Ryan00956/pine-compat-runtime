@@ -1,0 +1,6 @@
+//@version=5
+strategy("Unsupported strategy order metadata types")
+strategy.entry("L", strategy.long, qty=1, comment=1, disable_alert="yes")
+strategy.exit("XL", "L", stop=low, alert_message=1)
+strategy.close("L", comment=1)
+strategy.close_all(alert_message=1)
