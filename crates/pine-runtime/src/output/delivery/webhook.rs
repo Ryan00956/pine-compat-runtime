@@ -168,6 +168,87 @@ where
     Ok(WebhookResolvedHeaders { headers })
 }
 
+#[derive(Clone, PartialEq, Eq)]
+pub struct WebhookRequest {
+    url: String,
+    timeout_ms: u32,
+    headers: WebhookResolvedHeaders,
+    content_type: String,
+    body: String,
+}
+
+impl WebhookRequest {
+    pub fn url(&self) -> &str {
+        &self.url
+    }
+
+    pub fn timeout_ms(&self) -> u32 {
+        self.timeout_ms
+    }
+
+    pub fn headers(&self) -> &BTreeMap<String, String> {
+        self.headers.headers()
+    }
+
+    pub fn content_type(&self) -> &str {
+        &self.content_type
+    }
+
+    pub fn body(&self) -> &str {
+        &self.body
+    }
+}
+
+impl fmt::Debug for WebhookRequest {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("WebhookRequest")
+            .field("url", &self.url)
+            .field("timeout_ms", &self.timeout_ms)
+            .field("headers", &self.headers)
+            .field("content_type", &self.content_type)
+            .field("body_len", &self.body.len())
+            .finish()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WebhookRequestError {
+    Payload(WebhookPayloadError),
+    Headers(WebhookResolvedHeadersError),
+}
+
+impl From<WebhookPayloadError> for WebhookRequestError {
+    fn from(error: WebhookPayloadError) -> Self {
+        Self::Payload(error)
+    }
+}
+
+impl From<WebhookResolvedHeadersError> for WebhookRequestError {
+    fn from(error: WebhookResolvedHeadersError) -> Self {
+        Self::Headers(error)
+    }
+}
+
+pub fn build_webhook_request<R>(
+    config: &WebhookAdapterConfig,
+    candidate: &DeliveryCandidate,
+    resolver: &R,
+) -> Result<WebhookRequest, WebhookRequestError>
+where
+    R: WebhookSecretResolver,
+{
+    let payload = render_webhook_payload(config, candidate)?;
+    let headers = resolve_webhook_headers(config, resolver)?;
+    Ok(WebhookRequest {
+        url: config.url.clone(),
+        timeout_ms: config.timeout_ms,
+        headers,
+        content_type: payload.content_type,
+        body: payload.body,
+    })
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WebhookPayload {
@@ -840,6 +921,94 @@ mod tests {
                 WebhookAdapterConfigError::StaticHeaderMayContainSecret {
                     header_name: "Authorization".to_owned(),
                 }
+            ))
+        );
+    }
+
+    #[test]
+    fn webhook_request_builder_combines_validated_config_headers_and_payload() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "https://example.com/hook",
+            WebhookBodyMode::RenderedMessage,
+            1_000,
+        )
+        .with_header("X-Trace", "public")
+        .with_secret_header_ref("X-Signature", "secret://signature");
+        let resolver = TestSecretResolver::default()
+            .with_secret("secret://signature", "resolved-secret-value");
+
+        let request = build_webhook_request(&config, &candidate("Price crossed"), &resolver)
+            .expect("request");
+
+        assert_eq!(request.url(), "https://example.com/hook");
+        assert_eq!(request.timeout_ms(), 1_000);
+        assert_eq!(request.content_type(), "text/plain; charset=utf-8");
+        assert_eq!(request.body(), "Price crossed");
+        assert_eq!(request.headers().get("X-Trace"), Some(&"public".to_owned()));
+        assert_eq!(
+            request.headers().get("X-Signature"),
+            Some(&"resolved-secret-value".to_owned())
+        );
+    }
+
+    #[test]
+    fn webhook_request_debug_redacts_headers_and_body() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "https://example.com/hook",
+            WebhookBodyMode::RenderedMessage,
+            1_000,
+        )
+        .with_secret_header_ref("X-Signature", "secret://signature");
+        let resolver = TestSecretResolver::default()
+            .with_secret("secret://signature", "resolved-secret-value");
+
+        let request = build_webhook_request(&config, &candidate("Sensitive message"), &resolver)
+            .expect("request");
+        let debug = format!("{request:?}");
+
+        assert!(debug.contains("body_len"));
+        assert!(!debug.contains("resolved-secret-value"));
+        assert!(!debug.contains("secret://signature"));
+        assert!(!debug.contains("Sensitive message"));
+    }
+
+    #[test]
+    fn webhook_request_builder_reports_header_resolution_errors() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "https://example.com/hook",
+            WebhookBodyMode::RenderedMessage,
+            1_000,
+        )
+        .with_secret_header_ref("X-Signature", "secret://missing");
+        let resolver = TestSecretResolver::default().with_missing("secret://missing");
+
+        assert_eq!(
+            build_webhook_request(&config, &candidate("message"), &resolver),
+            Err(WebhookRequestError::Headers(
+                WebhookResolvedHeadersError::MissingSecretReference {
+                    header_name: "X-Signature".to_owned(),
+                }
+            ))
+        );
+    }
+
+    #[test]
+    fn webhook_request_builder_reports_payload_config_errors() {
+        let config = WebhookAdapterConfig::new(
+            "webhook-main",
+            "file:///tmp/hook",
+            WebhookBodyMode::RenderedMessage,
+            1_000,
+        );
+        let resolver = TestSecretResolver::default();
+
+        assert_eq!(
+            build_webhook_request(&config, &candidate("message"), &resolver),
+            Err(WebhookRequestError::Payload(
+                WebhookPayloadError::InvalidConfig(WebhookAdapterConfigError::UnsupportedUrlScheme)
             ))
         );
     }

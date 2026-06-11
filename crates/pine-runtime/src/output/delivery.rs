@@ -15,9 +15,10 @@ pub use diagnostics::{
 };
 pub use webhook::{
     WebhookAdapterConfig, WebhookAdapterConfigError, WebhookBodyMode, WebhookDeliveryFailure,
-    WebhookPayload, WebhookPayloadError, WebhookResolvedHeaders, WebhookResolvedHeadersError,
-    WebhookRetryDecision, WebhookRetryPolicy, WebhookRetryPolicyError, WebhookSecretResolver,
-    WebhookSecretResolverError, classify_webhook_delivery_failure, classify_webhook_http_status,
+    WebhookPayload, WebhookPayloadError, WebhookRequest, WebhookRequestError,
+    WebhookResolvedHeaders, WebhookResolvedHeadersError, WebhookRetryDecision, WebhookRetryPolicy,
+    WebhookRetryPolicyError, WebhookSecretResolver, WebhookSecretResolverError,
+    build_webhook_request, classify_webhook_delivery_failure, classify_webhook_http_status,
     plan_webhook_retry, render_webhook_payload, resolve_webhook_headers,
 };
 

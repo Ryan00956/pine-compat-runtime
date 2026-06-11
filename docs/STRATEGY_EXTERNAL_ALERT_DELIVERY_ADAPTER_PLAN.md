@@ -56,6 +56,9 @@ Already supported:
   from delivery attempts plus external delivery results.
 - pure webhook secret-resolver interface and resolved-header construction for
   host transport code, without storing or serializing resolved secret values.
+- pure webhook request construction from validated configuration, resolved
+  headers, and rendered payloads, still without any HTTP client or network
+  side effects.
 
 Still unsupported:
 
@@ -63,8 +66,8 @@ Still unsupported:
 - durable delivery store behavior across host restarts;
 - executable retry scheduling, jitter, and dead-letter behavior;
 - executable webhook HTTP transport, concrete authentication secret stores,
-  secret lookup audit logging, TLS configuration, timeout execution, retry
-  scheduling, host diagnostic emission, and rate limiting;
+  secret lookup audit logging, TLS configuration, timeout execution, request
+  execution, retry scheduling, host diagnostic emission, and rate limiting;
 - user-visible delivery failure reporting;
 - live realtime strategy broker execution.
 
@@ -324,7 +327,10 @@ headers.
     resolved-header construction for host transport code, still without
     concrete secret stores, audit logging, user-visible reporting, or network
     delivery.
-12. Add a concrete webhook transport only after URL validation, secret handling,
+12. Closed on 2026-06-11: add pure webhook request construction from validated
+    config, resolved headers, and payloads, still without HTTP clients,
+    request execution, retry scheduling, or network delivery.
+13. Add a concrete webhook transport only after URL validation, secret handling,
    timeout behavior, retry classification, and diagnostic redaction are
    fixture-backed.
 

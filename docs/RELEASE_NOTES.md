@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added pure webhook request construction for future host-owned alert delivery.
+  Host code can now combine validated webhook configuration, resolved headers,
+  and rendered payloads into a transport request object without adding an HTTP
+  client, request execution, retry scheduling, or network delivery.
 - Added a pure webhook secret-resolver interface and resolved-header builder
   for future host-owned alert delivery. Static headers and secret header
   references can now be combined for host transport code without serializing
