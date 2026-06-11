@@ -2,8 +2,8 @@ use pine_ir::{CallSiteId, HirCallArg, HirExpr};
 
 use crate::builtins::args::call_arg_expr;
 use crate::strategy::{
-    LossLimitBracketSpec, LossProfitBracketSpec, StopProfitBracketSpec, StrategyOrderMetadata,
-    TrailPointsExitSpec, TrailPriceExitSpec,
+    LossLimitBracketSpec, LossProfitBracketSpec, StopProfitBracketSpec, StrategyExitMetadata,
+    StrategyOrderMetadata, TrailPointsExitSpec, TrailPriceExitSpec,
 };
 use crate::*;
 
@@ -12,6 +12,26 @@ enum StrategyExitQuantityArg {
     Full,
     Fixed(f64),
     Percent(f64),
+}
+
+struct RuntimeExitTicksPlacement {
+    id: String,
+    from_entry: String,
+    ticks: f64,
+    mintick: f64,
+    quantity: StrategyExitQuantityArg,
+    bar_index: usize,
+    metadata: StrategyExitMetadata,
+}
+
+struct RuntimeExitBracketPlacement {
+    id: String,
+    from_entry: String,
+    downside_price: f64,
+    upside_price: f64,
+    quantity: StrategyExitQuantityArg,
+    bar_index: usize,
+    metadata: StrategyExitMetadata,
 }
 
 fn optional_strategy_arg_expr<'a>(
@@ -424,6 +444,7 @@ impl<'a> HistoricalRuntime<'a> {
             .iter()
             .find(|arg| arg.name.as_deref() == Some("qty_percent"))
             .map(|arg| &arg.value);
+        let metadata = self.eval_strategy_exit_metadata(args)?;
 
         let id = match self.eval_expr(id_expr)? {
             PineValue::String(value) => value,
@@ -564,6 +585,7 @@ impl<'a> HistoricalRuntime<'a> {
                     },
                     quantity,
                     self.bars,
+                    metadata.clone(),
                 );
                 return Ok(PineValue::Void);
             }
@@ -580,13 +602,16 @@ impl<'a> HistoricalRuntime<'a> {
                     .as_f64()
                     .unwrap_or(f64::NAN);
                 if from_entry.is_empty() {
-                    self.strategy_broker.place_all_entry_exit_trail_points(
-                        id,
-                        activation_ticks,
-                        trail_offset_ticks,
-                        mintick,
-                        self.bars,
-                    );
+                    self.strategy_broker
+                        .with_next_exit_metadata(metadata.clone(), |broker| {
+                            broker.place_all_entry_exit_trail_points(
+                                id,
+                                activation_ticks,
+                                trail_offset_ticks,
+                                mintick,
+                                self.bars,
+                            )
+                        });
                     return Ok(PineValue::Void);
                 }
                 self.place_exit_trail_points_quantity(
@@ -599,6 +624,7 @@ impl<'a> HistoricalRuntime<'a> {
                     },
                     quantity,
                     self.bars,
+                    metadata.clone(),
                 );
                 return Ok(PineValue::Void);
             }
@@ -620,15 +646,17 @@ impl<'a> HistoricalRuntime<'a> {
                     pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
                 if from_entry.is_empty() {
                     self.strategy_broker
-                        .place_all_entry_exit_stop_profit_bracket(
-                            id,
-                            StopProfitBracketSpec {
-                                stop_price,
-                                profit_ticks,
-                                mintick,
-                            },
-                            self.bars,
-                        );
+                        .with_next_exit_metadata(metadata.clone(), |broker| {
+                            broker.place_all_entry_exit_stop_profit_bracket(
+                                id,
+                                StopProfitBracketSpec {
+                                    stop_price,
+                                    profit_ticks,
+                                    mintick,
+                                },
+                                self.bars,
+                            )
+                        });
                     return Ok(PineValue::Void);
                 }
                 self.place_exit_stop_profit_bracket_quantity(
@@ -641,6 +669,7 @@ impl<'a> HistoricalRuntime<'a> {
                     },
                     quantity,
                     self.bars,
+                    metadata.clone(),
                 );
                 return Ok(PineValue::Void);
             }
@@ -657,15 +686,17 @@ impl<'a> HistoricalRuntime<'a> {
                     pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
                 if from_entry.is_empty() {
                     self.strategy_broker
-                        .place_all_entry_exit_loss_limit_bracket(
-                            id,
-                            LossLimitBracketSpec {
-                                loss_ticks,
-                                limit_price,
-                                mintick,
-                            },
-                            self.bars,
-                        );
+                        .with_next_exit_metadata(metadata.clone(), |broker| {
+                            broker.place_all_entry_exit_loss_limit_bracket(
+                                id,
+                                LossLimitBracketSpec {
+                                    loss_ticks,
+                                    limit_price,
+                                    mintick,
+                                },
+                                self.bars,
+                            )
+                        });
                     return Ok(PineValue::Void);
                 }
                 self.place_exit_loss_limit_bracket_quantity(
@@ -678,6 +709,7 @@ impl<'a> HistoricalRuntime<'a> {
                     },
                     quantity,
                     self.bars,
+                    metadata.clone(),
                 );
                 return Ok(PineValue::Void);
             }
@@ -694,15 +726,17 @@ impl<'a> HistoricalRuntime<'a> {
                     pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
                 if from_entry.is_empty() {
                     self.strategy_broker
-                        .place_all_entry_exit_loss_profit_bracket(
-                            id,
-                            LossProfitBracketSpec {
-                                loss_ticks,
-                                profit_ticks,
-                                mintick,
-                            },
-                            self.bars,
-                        );
+                        .with_next_exit_metadata(metadata.clone(), |broker| {
+                            broker.place_all_entry_exit_loss_profit_bracket(
+                                id,
+                                LossProfitBracketSpec {
+                                    loss_ticks,
+                                    profit_ticks,
+                                    mintick,
+                                },
+                                self.bars,
+                            )
+                        });
                     return Ok(PineValue::Void);
                 }
                 self.place_exit_loss_profit_bracket_quantity(
@@ -715,6 +749,7 @@ impl<'a> HistoricalRuntime<'a> {
                     },
                     quantity,
                     self.bars,
+                    metadata.clone(),
                 );
                 return Ok(PineValue::Void);
             }
@@ -722,14 +757,15 @@ impl<'a> HistoricalRuntime<'a> {
             let downside_price = if let Some(stop_expr) = stop_expr {
                 let stop_price = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
                 if !stop_price.is_finite() {
-                    self.place_exit_bracket_quantity(
+                    self.place_exit_bracket_quantity(RuntimeExitBracketPlacement {
                         id,
                         from_entry,
-                        stop_price,
-                        f64::NAN,
+                        downside_price: stop_price,
+                        upside_price: f64::NAN,
                         quantity,
-                        self.bars,
-                    );
+                        bar_index: self.bars,
+                        metadata: metadata.clone(),
+                    });
                     return Ok(PineValue::Void);
                 }
                 stop_price
@@ -751,14 +787,15 @@ impl<'a> HistoricalRuntime<'a> {
             let upside_price = if let Some(limit_expr) = limit_expr {
                 let limit_price = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
                 if !limit_price.is_finite() {
-                    self.place_exit_bracket_quantity(
+                    self.place_exit_bracket_quantity(RuntimeExitBracketPlacement {
                         id,
                         from_entry,
                         downside_price,
-                        limit_price,
+                        upside_price: limit_price,
                         quantity,
-                        self.bars,
-                    );
+                        bar_index: self.bars,
+                        metadata: metadata.clone(),
+                    });
                     return Ok(PineValue::Void);
                 }
                 limit_price
@@ -777,53 +814,97 @@ impl<'a> HistoricalRuntime<'a> {
                 return Ok(PineValue::Void);
             };
 
-            self.place_exit_bracket_quantity(
+            self.place_exit_bracket_quantity(RuntimeExitBracketPlacement {
                 id,
                 from_entry,
                 downside_price,
                 upside_price,
                 quantity,
-                self.bars,
-            );
+                bar_index: self.bars,
+                metadata: metadata.clone(),
+            });
         } else if let Some(stop_expr) = stop_expr {
             let stop_price = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
-            self.place_exit_stop_quantity(id, from_entry, stop_price, quantity, self.bars);
+            self.place_exit_stop_quantity(
+                id,
+                from_entry,
+                stop_price,
+                quantity,
+                self.bars,
+                metadata.clone(),
+            );
         } else if let Some(limit_expr) = limit_expr {
             let limit_price = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
-            self.place_exit_limit_quantity(id, from_entry, limit_price, quantity, self.bars);
+            self.place_exit_limit_quantity(
+                id,
+                from_entry,
+                limit_price,
+                quantity,
+                self.bars,
+                metadata.clone(),
+            );
         } else if let Some(profit_expr) = profit_expr {
             let profit_ticks = self.eval_expr(profit_expr)?.as_f64().unwrap_or(f64::NAN);
             let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
             if from_entry.is_empty() {
-                self.strategy_broker.place_all_entry_exit_profit_ticks(
-                    id,
-                    profit_ticks,
-                    mintick,
-                    self.bars,
-                );
+                self.strategy_broker
+                    .with_next_exit_metadata(metadata.clone(), |broker| {
+                        broker.place_all_entry_exit_profit_ticks(
+                            id,
+                            profit_ticks,
+                            mintick,
+                            self.bars,
+                        )
+                    });
                 return Ok(PineValue::Void);
             }
-            self.place_exit_profit_ticks_quantity(
+            self.place_exit_profit_ticks_quantity(RuntimeExitTicksPlacement {
                 id,
                 from_entry,
-                profit_ticks,
+                ticks: profit_ticks,
                 mintick,
                 quantity,
-                self.bars,
-            );
+                bar_index: self.bars,
+                metadata: metadata.clone(),
+            });
         } else if let Some(loss_expr) = loss_expr {
             let loss_ticks = self.eval_expr(loss_expr)?.as_f64().unwrap_or(f64::NAN);
             let mintick = pine_builtins::named_float_constant("syminfo.mintick").unwrap_or(0.01);
             if from_entry.is_empty() {
                 self.strategy_broker
-                    .place_all_entry_exit_loss_ticks(id, loss_ticks, mintick, self.bars);
+                    .with_next_exit_metadata(metadata.clone(), |broker| {
+                        broker.place_all_entry_exit_loss_ticks(id, loss_ticks, mintick, self.bars)
+                    });
                 return Ok(PineValue::Void);
             }
-            self.place_exit_loss_ticks_quantity(
-                id, from_entry, loss_ticks, mintick, quantity, self.bars,
-            );
+            self.place_exit_loss_ticks_quantity(RuntimeExitTicksPlacement {
+                id,
+                from_entry,
+                ticks: loss_ticks,
+                mintick,
+                quantity,
+                bar_index: self.bars,
+                metadata: metadata.clone(),
+            });
         }
         Ok(PineValue::Void)
+    }
+
+    fn eval_strategy_exit_metadata(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<StrategyExitMetadata, RuntimeError> {
+        Ok(StrategyExitMetadata {
+            comment: self.eval_optional_string_arg(args, 11, "comment")?,
+            comment_profit: self.eval_optional_string_arg(args, 12, "comment_profit")?,
+            comment_loss: self.eval_optional_string_arg(args, 13, "comment_loss")?,
+            comment_trailing: self.eval_optional_string_arg(args, 14, "comment_trailing")?,
+            alert_message: self.eval_optional_string_arg(args, 15, "alert_message")?,
+            alert_profit: self.eval_optional_string_arg(args, 16, "alert_profit")?,
+            alert_loss: self.eval_optional_string_arg(args, 17, "alert_loss")?,
+            alert_trailing: self.eval_optional_string_arg(args, 18, "alert_trailing")?,
+            disable_alert: self.eval_optional_bool_arg(args, 19, "disable_alert")?,
+        })
     }
 
     fn place_exit_stop_quantity(
@@ -833,18 +914,25 @@ impl<'a> HistoricalRuntime<'a> {
         stop_price: f64,
         quantity: StrategyExitQuantityArg,
         bar_index: usize,
+        metadata: StrategyExitMetadata,
     ) {
-        match quantity {
-            StrategyExitQuantityArg::Full => self
-                .strategy_broker
-                .place_exit_stop(id, from_entry, stop_price, bar_index),
-            StrategyExitQuantityArg::Fixed(qty) => self
-                .strategy_broker
-                .place_exit_stop_qty(id, from_entry, stop_price, qty, bar_index),
-            StrategyExitQuantityArg::Percent(qty_percent) => self
-                .strategy_broker
-                .place_exit_stop_qty_percent(id, from_entry, stop_price, qty_percent, bar_index),
-        }
+        self.strategy_broker
+            .with_next_exit_metadata(metadata, |broker| match quantity {
+                StrategyExitQuantityArg::Full => {
+                    broker.place_exit_stop(id, from_entry, stop_price, bar_index)
+                }
+                StrategyExitQuantityArg::Fixed(qty) => {
+                    broker.place_exit_stop_qty(id, from_entry, stop_price, qty, bar_index)
+                }
+                StrategyExitQuantityArg::Percent(qty_percent) => broker
+                    .place_exit_stop_qty_percent(
+                        id,
+                        from_entry,
+                        stop_price,
+                        qty_percent,
+                        bar_index,
+                    ),
+            });
     }
 
     fn place_exit_limit_quantity(
@@ -854,119 +942,115 @@ impl<'a> HistoricalRuntime<'a> {
         limit_price: f64,
         quantity: StrategyExitQuantityArg,
         bar_index: usize,
+        metadata: StrategyExitMetadata,
     ) {
-        match quantity {
-            StrategyExitQuantityArg::Full => {
-                self.strategy_broker
-                    .place_exit_limit(id, from_entry, limit_price, bar_index)
-            }
-            StrategyExitQuantityArg::Fixed(qty) => self.strategy_broker.place_exit_limit_qty(
-                id,
-                from_entry,
-                limit_price,
-                qty,
-                bar_index,
-            ),
-            StrategyExitQuantityArg::Percent(qty_percent) => self
-                .strategy_broker
-                .place_exit_limit_qty_percent(id, from_entry, limit_price, qty_percent, bar_index),
-        }
+        self.strategy_broker
+            .with_next_exit_metadata(metadata, |broker| match quantity {
+                StrategyExitQuantityArg::Full => {
+                    broker.place_exit_limit(id, from_entry, limit_price, bar_index)
+                }
+                StrategyExitQuantityArg::Fixed(qty) => {
+                    broker.place_exit_limit_qty(id, from_entry, limit_price, qty, bar_index)
+                }
+                StrategyExitQuantityArg::Percent(qty_percent) => broker
+                    .place_exit_limit_qty_percent(
+                        id,
+                        from_entry,
+                        limit_price,
+                        qty_percent,
+                        bar_index,
+                    ),
+            });
     }
 
-    fn place_exit_profit_ticks_quantity(
-        &mut self,
-        id: String,
-        from_entry: String,
-        ticks: f64,
-        mintick: f64,
-        quantity: StrategyExitQuantityArg,
-        bar_index: usize,
-    ) {
-        match quantity {
-            StrategyExitQuantityArg::Full => self
-                .strategy_broker
-                .place_exit_profit_ticks(id, from_entry, ticks, mintick, bar_index),
-            StrategyExitQuantityArg::Fixed(qty) => self
-                .strategy_broker
-                .place_exit_profit_ticks_qty(id, from_entry, ticks, mintick, qty, bar_index),
-            StrategyExitQuantityArg::Percent(qty_percent) => {
-                self.strategy_broker.place_exit_profit_ticks_qty_percent(
-                    id,
-                    from_entry,
-                    ticks,
-                    mintick,
-                    qty_percent,
-                    bar_index,
-                )
-            }
-        }
+    fn place_exit_profit_ticks_quantity(&mut self, placement: RuntimeExitTicksPlacement) {
+        self.strategy_broker
+            .with_next_exit_metadata(placement.metadata, |broker| match placement.quantity {
+                StrategyExitQuantityArg::Full => broker.place_exit_profit_ticks(
+                    placement.id,
+                    placement.from_entry,
+                    placement.ticks,
+                    placement.mintick,
+                    placement.bar_index,
+                ),
+                StrategyExitQuantityArg::Fixed(qty) => broker.place_exit_profit_ticks_qty(
+                    placement.id,
+                    placement.from_entry,
+                    placement.ticks,
+                    placement.mintick,
+                    qty,
+                    placement.bar_index,
+                ),
+                StrategyExitQuantityArg::Percent(qty_percent) => broker
+                    .place_exit_profit_ticks_qty_percent(
+                        placement.id,
+                        placement.from_entry,
+                        placement.ticks,
+                        placement.mintick,
+                        qty_percent,
+                        placement.bar_index,
+                    ),
+            });
     }
 
-    fn place_exit_loss_ticks_quantity(
-        &mut self,
-        id: String,
-        from_entry: String,
-        ticks: f64,
-        mintick: f64,
-        quantity: StrategyExitQuantityArg,
-        bar_index: usize,
-    ) {
-        match quantity {
-            StrategyExitQuantityArg::Full => self
-                .strategy_broker
-                .place_exit_loss_ticks(id, from_entry, ticks, mintick, bar_index),
-            StrategyExitQuantityArg::Fixed(qty) => self
-                .strategy_broker
-                .place_exit_loss_ticks_qty(id, from_entry, ticks, mintick, qty, bar_index),
-            StrategyExitQuantityArg::Percent(qty_percent) => {
-                self.strategy_broker.place_exit_loss_ticks_qty_percent(
-                    id,
-                    from_entry,
-                    ticks,
-                    mintick,
-                    qty_percent,
-                    bar_index,
-                )
-            }
-        }
+    fn place_exit_loss_ticks_quantity(&mut self, placement: RuntimeExitTicksPlacement) {
+        self.strategy_broker
+            .with_next_exit_metadata(placement.metadata, |broker| match placement.quantity {
+                StrategyExitQuantityArg::Full => broker.place_exit_loss_ticks(
+                    placement.id,
+                    placement.from_entry,
+                    placement.ticks,
+                    placement.mintick,
+                    placement.bar_index,
+                ),
+                StrategyExitQuantityArg::Fixed(qty) => broker.place_exit_loss_ticks_qty(
+                    placement.id,
+                    placement.from_entry,
+                    placement.ticks,
+                    placement.mintick,
+                    qty,
+                    placement.bar_index,
+                ),
+                StrategyExitQuantityArg::Percent(qty_percent) => broker
+                    .place_exit_loss_ticks_qty_percent(
+                        placement.id,
+                        placement.from_entry,
+                        placement.ticks,
+                        placement.mintick,
+                        qty_percent,
+                        placement.bar_index,
+                    ),
+            });
     }
 
-    fn place_exit_bracket_quantity(
-        &mut self,
-        id: String,
-        from_entry: String,
-        downside_price: f64,
-        upside_price: f64,
-        quantity: StrategyExitQuantityArg,
-        bar_index: usize,
-    ) {
-        match quantity {
-            StrategyExitQuantityArg::Full => self.strategy_broker.place_exit_bracket(
-                id,
-                from_entry,
-                downside_price,
-                upside_price,
-                bar_index,
-            ),
-            StrategyExitQuantityArg::Fixed(qty) => self.strategy_broker.place_exit_bracket_qty(
-                id,
-                from_entry,
-                downside_price,
-                upside_price,
-                qty,
-                bar_index,
-            ),
-            StrategyExitQuantityArg::Percent(qty_percent) => {
-                self.strategy_broker.place_exit_bracket_qty_percent(
-                    id,
-                    from_entry,
-                    downside_price,
-                    upside_price,
-                    qty_percent,
-                    bar_index,
-                )
-            }
-        }
+    fn place_exit_bracket_quantity(&mut self, placement: RuntimeExitBracketPlacement) {
+        self.strategy_broker
+            .with_next_exit_metadata(placement.metadata, |broker| match placement.quantity {
+                StrategyExitQuantityArg::Full => broker.place_exit_bracket(
+                    placement.id,
+                    placement.from_entry,
+                    placement.downside_price,
+                    placement.upside_price,
+                    placement.bar_index,
+                ),
+                StrategyExitQuantityArg::Fixed(qty) => broker.place_exit_bracket_qty(
+                    placement.id,
+                    placement.from_entry,
+                    placement.downside_price,
+                    placement.upside_price,
+                    qty,
+                    placement.bar_index,
+                ),
+                StrategyExitQuantityArg::Percent(qty_percent) => broker
+                    .place_exit_bracket_qty_percent(
+                        placement.id,
+                        placement.from_entry,
+                        placement.downside_price,
+                        placement.upside_price,
+                        qty_percent,
+                        placement.bar_index,
+                    ),
+            });
     }
 
     fn place_exit_stop_profit_bracket_quantity(
@@ -976,24 +1060,24 @@ impl<'a> HistoricalRuntime<'a> {
         spec: StopProfitBracketSpec,
         quantity: StrategyExitQuantityArg,
         bar_index: usize,
+        metadata: StrategyExitMetadata,
     ) {
-        match quantity {
-            StrategyExitQuantityArg::Full => self
-                .strategy_broker
-                .place_exit_bracket_stop_profit_ticks(id, from_entry, spec, bar_index),
-            StrategyExitQuantityArg::Fixed(qty) => self
-                .strategy_broker
-                .place_exit_bracket_stop_profit_ticks_qty(id, from_entry, spec, qty, bar_index),
-            StrategyExitQuantityArg::Percent(qty_percent) => self
-                .strategy_broker
-                .place_exit_bracket_stop_profit_ticks_qty_percent(
-                    id,
-                    from_entry,
-                    spec,
-                    qty_percent,
-                    bar_index,
-                ),
-        }
+        self.strategy_broker
+            .with_next_exit_metadata(metadata, |broker| match quantity {
+                StrategyExitQuantityArg::Full => {
+                    broker.place_exit_bracket_stop_profit_ticks(id, from_entry, spec, bar_index)
+                }
+                StrategyExitQuantityArg::Fixed(qty) => broker
+                    .place_exit_bracket_stop_profit_ticks_qty(id, from_entry, spec, qty, bar_index),
+                StrategyExitQuantityArg::Percent(qty_percent) => broker
+                    .place_exit_bracket_stop_profit_ticks_qty_percent(
+                        id,
+                        from_entry,
+                        spec,
+                        qty_percent,
+                        bar_index,
+                    ),
+            });
     }
 
     fn place_exit_loss_limit_bracket_quantity(
@@ -1003,24 +1087,24 @@ impl<'a> HistoricalRuntime<'a> {
         spec: LossLimitBracketSpec,
         quantity: StrategyExitQuantityArg,
         bar_index: usize,
+        metadata: StrategyExitMetadata,
     ) {
-        match quantity {
-            StrategyExitQuantityArg::Full => self
-                .strategy_broker
-                .place_exit_bracket_loss_limit_ticks(id, from_entry, spec, bar_index),
-            StrategyExitQuantityArg::Fixed(qty) => self
-                .strategy_broker
-                .place_exit_bracket_loss_limit_ticks_qty(id, from_entry, spec, qty, bar_index),
-            StrategyExitQuantityArg::Percent(qty_percent) => self
-                .strategy_broker
-                .place_exit_bracket_loss_limit_ticks_qty_percent(
-                    id,
-                    from_entry,
-                    spec,
-                    qty_percent,
-                    bar_index,
-                ),
-        }
+        self.strategy_broker
+            .with_next_exit_metadata(metadata, |broker| match quantity {
+                StrategyExitQuantityArg::Full => {
+                    broker.place_exit_bracket_loss_limit_ticks(id, from_entry, spec, bar_index)
+                }
+                StrategyExitQuantityArg::Fixed(qty) => broker
+                    .place_exit_bracket_loss_limit_ticks_qty(id, from_entry, spec, qty, bar_index),
+                StrategyExitQuantityArg::Percent(qty_percent) => broker
+                    .place_exit_bracket_loss_limit_ticks_qty_percent(
+                        id,
+                        from_entry,
+                        spec,
+                        qty_percent,
+                        bar_index,
+                    ),
+            });
     }
 
     fn place_exit_loss_profit_bracket_quantity(
@@ -1030,24 +1114,24 @@ impl<'a> HistoricalRuntime<'a> {
         spec: LossProfitBracketSpec,
         quantity: StrategyExitQuantityArg,
         bar_index: usize,
+        metadata: StrategyExitMetadata,
     ) {
-        match quantity {
-            StrategyExitQuantityArg::Full => self
-                .strategy_broker
-                .place_exit_bracket_loss_profit_ticks(id, from_entry, spec, bar_index),
-            StrategyExitQuantityArg::Fixed(qty) => self
-                .strategy_broker
-                .place_exit_bracket_loss_profit_ticks_qty(id, from_entry, spec, qty, bar_index),
-            StrategyExitQuantityArg::Percent(qty_percent) => self
-                .strategy_broker
-                .place_exit_bracket_loss_profit_ticks_qty_percent(
-                    id,
-                    from_entry,
-                    spec,
-                    qty_percent,
-                    bar_index,
-                ),
-        }
+        self.strategy_broker
+            .with_next_exit_metadata(metadata, |broker| match quantity {
+                StrategyExitQuantityArg::Full => {
+                    broker.place_exit_bracket_loss_profit_ticks(id, from_entry, spec, bar_index)
+                }
+                StrategyExitQuantityArg::Fixed(qty) => broker
+                    .place_exit_bracket_loss_profit_ticks_qty(id, from_entry, spec, qty, bar_index),
+                StrategyExitQuantityArg::Percent(qty_percent) => broker
+                    .place_exit_bracket_loss_profit_ticks_qty_percent(
+                        id,
+                        from_entry,
+                        spec,
+                        qty_percent,
+                        bar_index,
+                    ),
+            });
     }
 
     fn place_exit_trail_price_quantity(
@@ -1057,23 +1141,30 @@ impl<'a> HistoricalRuntime<'a> {
         spec: TrailPriceExitSpec,
         quantity: StrategyExitQuantityArg,
         bar_index: usize,
+        metadata: StrategyExitMetadata,
     ) {
-        match quantity {
-            StrategyExitQuantityArg::Full => self.strategy_broker.place_exit_trail_price(
-                id,
-                from_entry,
-                spec.activation_price,
-                spec.offset_ticks,
-                spec.mintick,
-                bar_index,
-            ),
-            StrategyExitQuantityArg::Fixed(qty) => self
-                .strategy_broker
-                .place_exit_trail_price_qty(id, from_entry, spec, qty, bar_index),
-            StrategyExitQuantityArg::Percent(qty_percent) => self
-                .strategy_broker
-                .place_exit_trail_price_qty_percent(id, from_entry, spec, qty_percent, bar_index),
-        }
+        self.strategy_broker
+            .with_next_exit_metadata(metadata, |broker| match quantity {
+                StrategyExitQuantityArg::Full => broker.place_exit_trail_price(
+                    id,
+                    from_entry,
+                    spec.activation_price,
+                    spec.offset_ticks,
+                    spec.mintick,
+                    bar_index,
+                ),
+                StrategyExitQuantityArg::Fixed(qty) => {
+                    broker.place_exit_trail_price_qty(id, from_entry, spec, qty, bar_index)
+                }
+                StrategyExitQuantityArg::Percent(qty_percent) => broker
+                    .place_exit_trail_price_qty_percent(
+                        id,
+                        from_entry,
+                        spec,
+                        qty_percent,
+                        bar_index,
+                    ),
+            });
     }
 
     fn place_exit_trail_points_quantity(
@@ -1083,22 +1174,29 @@ impl<'a> HistoricalRuntime<'a> {
         spec: TrailPointsExitSpec,
         quantity: StrategyExitQuantityArg,
         bar_index: usize,
+        metadata: StrategyExitMetadata,
     ) {
-        match quantity {
-            StrategyExitQuantityArg::Full => self.strategy_broker.place_exit_trail_points(
-                id,
-                from_entry,
-                spec.activation_ticks,
-                spec.offset_ticks,
-                spec.mintick,
-                bar_index,
-            ),
-            StrategyExitQuantityArg::Fixed(qty) => self
-                .strategy_broker
-                .place_exit_trail_points_qty(id, from_entry, spec, qty, bar_index),
-            StrategyExitQuantityArg::Percent(qty_percent) => self
-                .strategy_broker
-                .place_exit_trail_points_qty_percent(id, from_entry, spec, qty_percent, bar_index),
-        }
+        self.strategy_broker
+            .with_next_exit_metadata(metadata, |broker| match quantity {
+                StrategyExitQuantityArg::Full => broker.place_exit_trail_points(
+                    id,
+                    from_entry,
+                    spec.activation_ticks,
+                    spec.offset_ticks,
+                    spec.mintick,
+                    bar_index,
+                ),
+                StrategyExitQuantityArg::Fixed(qty) => {
+                    broker.place_exit_trail_points_qty(id, from_entry, spec, qty, bar_index)
+                }
+                StrategyExitQuantityArg::Percent(qty_percent) => broker
+                    .place_exit_trail_points_qty_percent(
+                        id,
+                        from_entry,
+                        spec,
+                        qty_percent,
+                        bar_index,
+                    ),
+            });
     }
 }

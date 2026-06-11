@@ -1,5 +1,5 @@
 use super::{
-    BrokerState,
+    BrokerState, StrategyExitMetadata,
     active_entry_brackets::DeferredLossProfitBracketSpec,
     pending_exits::{
         DeferredBracketLeg, DeferredRelativeExit, DeferredRelativeExitTrigger, ExitQuantityRequest,
@@ -9,6 +9,16 @@ use super::{
     },
 };
 use crate::RuntimeDiagnostic;
+
+struct PendingTrailingPlacement {
+    id: String,
+    from_entry: String,
+    activation: PendingTrailingActivation,
+    offset_price_distance: f64,
+    quantity: ExitQuantityRequest,
+    bar_index: usize,
+    metadata: StrategyExitMetadata,
+}
 
 impl BrokerState {
     pub(crate) fn place_exit_stop(
@@ -69,12 +79,14 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
+        let metadata = self.take_next_exit_metadata();
         self.place_exit(
             id,
             from_entry,
             PendingExitTrigger::Stop(stop_price),
             quantity,
             bar_index,
+            metadata,
         );
     }
 
@@ -136,12 +148,14 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
+        let metadata = self.take_next_exit_metadata();
         self.place_exit(
             id,
             from_entry,
             PendingExitTrigger::Limit(limit_price),
             quantity,
             bar_index,
+            metadata,
         );
     }
 
@@ -211,6 +225,7 @@ impl BrokerState {
         let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
             return;
         };
+        let metadata = self.take_next_exit_metadata();
         let mut pending_exits = Vec::new();
         for index in 0..self.trade_ledger.open_count() {
             let Some(open_trade) = self.trade_ledger.open_at(index) else {
@@ -225,6 +240,7 @@ impl BrokerState {
                 reserved_quantity: open_trade.quantity,
                 multiple_reservation: false,
                 last_update_bar_index: bar_index,
+                metadata: metadata.clone(),
             });
         }
         self.order_book
@@ -235,6 +251,7 @@ impl BrokerState {
                 trigger: DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick },
                 quantity: ExitQuantityRequest::Full,
                 last_update_bar_index: bar_index,
+                metadata,
             });
         if pending_exits.is_empty() {
             return;
@@ -265,12 +282,14 @@ impl BrokerState {
         else {
             return;
         };
+        let metadata = self.take_next_exit_metadata();
         self.place_exit(
             id,
             from_entry,
             PendingExitTrigger::Limit(limit_price),
             quantity,
             bar_index,
+            metadata,
         );
     }
 
@@ -301,6 +320,7 @@ impl BrokerState {
             return;
         }
 
+        let metadata = self.take_next_exit_metadata();
         self.order_book
             .exits_mut()
             .replace_or_append_deferred_relative(DeferredRelativeExit {
@@ -309,6 +329,7 @@ impl BrokerState {
                 trigger: DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick },
                 quantity,
                 last_update_bar_index: bar_index,
+                metadata,
             });
     }
 
@@ -328,6 +349,7 @@ impl BrokerState {
                 trigger,
                 quantity,
                 last_update_bar_index,
+                metadata,
             } = deferred_exit;
             match trigger {
                 DeferredRelativeExitTrigger::ProfitTicks { ticks, mintick } => {
@@ -342,6 +364,7 @@ impl BrokerState {
                         PendingExitTrigger::Limit(limit_price),
                         quantity,
                         last_update_bar_index,
+                        metadata,
                     );
                 }
                 DeferredRelativeExitTrigger::LossTicks { ticks, mintick } => {
@@ -356,6 +379,7 @@ impl BrokerState {
                         PendingExitTrigger::Stop(stop_price),
                         quantity,
                         last_update_bar_index,
+                        metadata,
                     );
                 }
                 DeferredRelativeExitTrigger::TrailPoints {
@@ -375,17 +399,18 @@ impl BrokerState {
                     else {
                         continue;
                     };
-                    self.place_exit_trailing(
+                    self.place_exit_trailing(PendingTrailingPlacement {
                         id,
                         from_entry,
-                        PendingTrailingActivation::Points {
+                        activation: PendingTrailingActivation::Points {
                             ticks: activation_ticks,
                             price: activation_price,
                         },
                         offset_price_distance,
                         quantity,
-                        last_update_bar_index,
-                    );
+                        bar_index: last_update_bar_index,
+                        metadata,
+                    });
                 }
                 DeferredRelativeExitTrigger::Bracket {
                     downside: DeferredBracketLeg::Absolute(downside),
@@ -402,6 +427,7 @@ impl BrokerState {
                         PendingExitTrigger::Bracket { downside, upside },
                         quantity,
                         last_update_bar_index,
+                        metadata,
                     );
                 }
                 DeferredRelativeExitTrigger::Bracket {
@@ -419,6 +445,7 @@ impl BrokerState {
                         PendingExitTrigger::Bracket { downside, upside },
                         quantity,
                         last_update_bar_index,
+                        metadata,
                     );
                 }
                 DeferredRelativeExitTrigger::Bracket {
@@ -444,6 +471,7 @@ impl BrokerState {
                         },
                         quantity,
                         last_update_bar_index,
+                        metadata,
                     );
                 }
                 DeferredRelativeExitTrigger::Bracket { .. } => continue,
@@ -526,6 +554,7 @@ impl BrokerState {
         let Some(price_offset) = self.exit_tick_price_offset(ticks, mintick) else {
             return;
         };
+        let metadata = self.take_next_exit_metadata();
         let mut pending_exits = Vec::new();
         for index in 0..self.trade_ledger.open_count() {
             let Some(open_trade) = self.trade_ledger.open_at(index) else {
@@ -540,6 +569,7 @@ impl BrokerState {
                 reserved_quantity: open_trade.quantity,
                 multiple_reservation: false,
                 last_update_bar_index: bar_index,
+                metadata: metadata.clone(),
             });
         }
         if pending_exits.is_empty() {
@@ -553,6 +583,7 @@ impl BrokerState {
                 trigger: DeferredRelativeExitTrigger::LossTicks { ticks, mintick },
                 quantity: ExitQuantityRequest::Full,
                 last_update_bar_index: bar_index,
+                metadata,
             });
         self.order_book.exits_mut().replace_all_many(pending_exits);
     }
@@ -580,12 +611,14 @@ impl BrokerState {
         else {
             return;
         };
+        let metadata = self.take_next_exit_metadata();
         self.place_exit(
             id,
             from_entry,
             PendingExitTrigger::Stop(stop_price),
             quantity,
             bar_index,
+            metadata,
         );
     }
 
@@ -616,6 +649,7 @@ impl BrokerState {
             return;
         }
 
+        let metadata = self.take_next_exit_metadata();
         self.order_book
             .exits_mut()
             .replace_or_append_deferred_relative(DeferredRelativeExit {
@@ -624,6 +658,7 @@ impl BrokerState {
                 trigger: DeferredRelativeExitTrigger::LossTicks { ticks, mintick },
                 quantity,
                 last_update_bar_index: bar_index,
+                metadata,
             });
     }
 
@@ -692,6 +727,7 @@ impl BrokerState {
         quantity: ExitQuantityRequest,
         bar_index: usize,
     ) {
+        let metadata = self.take_next_exit_metadata();
         self.place_exit(
             id,
             from_entry,
@@ -701,6 +737,7 @@ impl BrokerState {
             },
             quantity,
             bar_index,
+            metadata,
         );
     }
 
@@ -773,14 +810,16 @@ impl BrokerState {
         else {
             return;
         };
-        self.place_exit_trailing(
+        let metadata = self.take_next_exit_metadata();
+        self.place_exit_trailing(PendingTrailingPlacement {
             id,
             from_entry,
-            PendingTrailingActivation::Price(spec.activation_price),
+            activation: PendingTrailingActivation::Price(spec.activation_price),
             offset_price_distance,
             quantity,
             bar_index,
-        );
+            metadata,
+        });
     }
 
     pub(crate) fn place_exit_trail_points(
@@ -820,6 +859,7 @@ impl BrokerState {
         let Some(offset_price_distance) = self.exit_tick_price_offset(offset_ticks, mintick) else {
             return;
         };
+        let metadata = self.take_next_exit_metadata();
         let mut pending_exits = Vec::new();
         for index in 0..self.trade_ledger.open_count() {
             let Some(open_trade) = self.trade_ledger.open_at(index) else {
@@ -843,6 +883,7 @@ impl BrokerState {
                 reserved_quantity: open_trade.quantity,
                 multiple_reservation: false,
                 last_update_bar_index: bar_index,
+                metadata: metadata.clone(),
             });
         }
         if pending_exits.is_empty() {
@@ -860,6 +901,7 @@ impl BrokerState {
                 },
                 quantity: ExitQuantityRequest::Full,
                 last_update_bar_index: bar_index,
+                metadata,
             });
         self.order_book.exits_mut().replace_all_many(pending_exits);
     }
@@ -927,17 +969,19 @@ impl BrokerState {
         else {
             return;
         };
-        self.place_exit_trailing(
+        let metadata = self.take_next_exit_metadata();
+        self.place_exit_trailing(PendingTrailingPlacement {
             id,
             from_entry,
-            PendingTrailingActivation::Points {
+            activation: PendingTrailingActivation::Points {
                 ticks: spec.activation_ticks,
                 price: activation_price,
             },
             offset_price_distance,
             quantity,
             bar_index,
-        );
+            metadata,
+        });
     }
 
     fn place_deferred_relative_trail_points_exit(
@@ -975,6 +1019,7 @@ impl BrokerState {
             return;
         }
 
+        let metadata = self.take_next_exit_metadata();
         self.order_book
             .exits_mut()
             .replace_or_append_deferred_relative(DeferredRelativeExit {
@@ -987,30 +1032,24 @@ impl BrokerState {
                 },
                 quantity,
                 last_update_bar_index: bar_index,
+                metadata,
             });
     }
 
-    fn place_exit_trailing(
-        &mut self,
-        id: String,
-        from_entry: String,
-        activation: PendingTrailingActivation,
-        offset_price_distance: f64,
-        quantity: ExitQuantityRequest,
-        bar_index: usize,
-    ) {
+    fn place_exit_trailing(&mut self, placement: PendingTrailingPlacement) {
         self.place_exit(
-            id,
-            from_entry,
+            placement.id,
+            placement.from_entry,
             PendingExitTrigger::Trailing(PendingTrailingExit {
                 spec: PendingTrailingSpec {
-                    activation,
-                    offset_price_distance,
+                    activation: placement.activation,
+                    offset_price_distance: placement.offset_price_distance,
                 },
                 state: PendingTrailingState::Inactive,
             }),
-            quantity,
-            bar_index,
+            placement.quantity,
+            placement.bar_index,
+            placement.metadata,
         );
     }
 
@@ -1088,6 +1127,7 @@ impl BrokerState {
         trigger: PendingExitTrigger,
         quantity: ExitQuantityRequest,
         bar_index: usize,
+        metadata: StrategyExitMetadata,
     ) {
         if !trigger.prices_are_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
@@ -1153,7 +1193,6 @@ impl BrokerState {
         ) else {
             return;
         };
-
         if self
             .order_book
             .exits()
@@ -1164,6 +1203,7 @@ impl BrokerState {
                     && pending_exit.trigger.placement_equivalent(&trigger)
                     && pending_exit.quantity == quantity
                     && pending_exit.reserved_quantity == reserved_quantity
+                    && pending_exit.metadata == metadata
             })
         {
             return;
@@ -1178,6 +1218,7 @@ impl BrokerState {
             reserved_quantity,
             multiple_reservation: multiple_reservation_family.is_some(),
             last_update_bar_index: bar_index,
+            metadata,
         };
         if multiple_reservation_family.is_some() && other_exits_are_supported_reservations {
             self.order_book.exits_mut().replace_or_append(pending_exit);

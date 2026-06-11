@@ -462,7 +462,9 @@ active pending entry for same-calculation absolute `stop`, `limit`, and
 `trail_price` attachment plus entry-relative `profit`, `loss`, and
 `trail_points` attachment. Supported `strategy.entry` metadata arguments are
 stored internally on pending and filled entries without public JSON fields or
-external order-fill alert delivery. Supported `strategy.exit`, `strategy.close`,
+external order-fill alert delivery. Supported `strategy.exit` metadata
+arguments are stored internally on pending and deferred exits without public
+JSON fields or external order-fill alert delivery. Supported `strategy.close`
 and `strategy.close_all` metadata arguments are accepted by the semantic
 boundary only until their storage slices land. Richer strategy order options
 remain unsupported.

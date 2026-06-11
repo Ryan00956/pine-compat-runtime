@@ -1,3 +1,5 @@
+use super::StrategyExitMetadata;
+
 #[derive(Debug, Clone, PartialEq)]
 pub(super) enum PendingExitTrigger {
     Stop(f64),
@@ -268,6 +270,7 @@ pub(super) struct PendingExit {
     pub(super) reserved_quantity: f64,
     pub(super) multiple_reservation: bool,
     pub(super) last_update_bar_index: usize,
+    pub(super) metadata: StrategyExitMetadata,
 }
 
 #[allow(dead_code)]
@@ -278,6 +281,7 @@ pub(super) struct DeferredRelativeExit {
     pub(super) trigger: DeferredRelativeExitTrigger,
     pub(super) quantity: ExitQuantityRequest,
     pub(super) last_update_bar_index: usize,
+    pub(super) metadata: StrategyExitMetadata,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]

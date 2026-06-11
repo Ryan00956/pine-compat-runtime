@@ -35,6 +35,19 @@ pub(crate) struct StrategyOrderMetadata {
     pub(crate) disable_alert: bool,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub(crate) struct StrategyExitMetadata {
+    pub(crate) comment: Option<String>,
+    pub(crate) comment_profit: Option<String>,
+    pub(crate) comment_loss: Option<String>,
+    pub(crate) comment_trailing: Option<String>,
+    pub(crate) alert_message: Option<String>,
+    pub(crate) alert_profit: Option<String>,
+    pub(crate) alert_loss: Option<String>,
+    pub(crate) alert_trailing: Option<String>,
+    pub(crate) disable_alert: bool,
+}
+
 struct EntryFill {
     id: String,
     bar_index: usize,
@@ -57,6 +70,7 @@ pub struct BrokerState {
     cash: f64,
     position_size: f64,
     avg_price: f64,
+    next_exit_metadata: StrategyExitMetadata,
     entry_id: Option<String>,
     entry_bar_index: Option<usize>,
     entry_time: Option<i64>,
@@ -192,6 +206,7 @@ impl BrokerState {
             cash: initial_capital,
             position_size: 0.0,
             avg_price: 0.0,
+            next_exit_metadata: StrategyExitMetadata::default(),
             entry_id: None,
             entry_bar_index: None,
             entry_time: None,
@@ -233,6 +248,21 @@ impl BrokerState {
 
     fn exit_commission_for_fill(&self, qty: f64, price: f64) -> f64 {
         self.commission_for_fill(qty, price)
+    }
+
+    pub(crate) fn with_next_exit_metadata<T>(
+        &mut self,
+        metadata: StrategyExitMetadata,
+        f: impl FnOnce(&mut Self) -> T,
+    ) -> T {
+        let previous = std::mem::replace(&mut self.next_exit_metadata, metadata);
+        let result = f(self);
+        self.next_exit_metadata = previous;
+        result
+    }
+
+    pub(super) fn take_next_exit_metadata(&mut self) -> StrategyExitMetadata {
+        std::mem::take(&mut self.next_exit_metadata)
     }
 
     fn entry_commission_for_closed_quantity(&self, qty: f64) -> f64 {

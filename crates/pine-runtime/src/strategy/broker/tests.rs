@@ -32,6 +32,20 @@ fn broker_with_long_entry() -> BrokerState {
     broker
 }
 
+fn exit_metadata(label: &str) -> StrategyExitMetadata {
+    StrategyExitMetadata {
+        comment: Some(format!("{label} comment")),
+        comment_profit: Some(format!("{label} profit comment")),
+        comment_loss: Some(format!("{label} loss comment")),
+        comment_trailing: Some(format!("{label} trailing comment")),
+        alert_message: Some(format!("{label} alert")),
+        alert_profit: Some(format!("{label} profit alert")),
+        alert_loss: Some(format!("{label} loss alert")),
+        alert_trailing: Some(format!("{label} trailing alert")),
+        disable_alert: true,
+    }
+}
+
 fn margin_broker(initial_capital: f64, margin_long: f64) -> BrokerState {
     BrokerState::new_with_account_settings(
         initial_capital,
@@ -340,6 +354,7 @@ fn keyed_pending_exit_closes_only_target_same_id_trade() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
         });
 
     broker.evaluate_pending_exits(2, 30, 111.0, 100.0);
@@ -573,6 +588,7 @@ fn pending_exit_book_stores_deferred_relative_exit_attachments() {
         },
         quantity: ExitQuantityRequest::Full,
         last_update_bar_index: 1,
+        metadata: StrategyExitMetadata::default(),
     });
     book.replace_or_append_deferred_relative(DeferredRelativeExit {
         id: "XL".to_owned(),
@@ -583,6 +599,7 @@ fn pending_exit_book_stores_deferred_relative_exit_attachments() {
         },
         quantity: ExitQuantityRequest::Fixed(0.75),
         last_update_bar_index: 2,
+        metadata: StrategyExitMetadata::default(),
     });
     book.replace_or_append_deferred_relative(DeferredRelativeExit {
         id: "XT".to_owned(),
@@ -594,6 +611,7 @@ fn pending_exit_book_stores_deferred_relative_exit_attachments() {
         },
         quantity: ExitQuantityRequest::Percent(50.0),
         last_update_bar_index: 3,
+        metadata: StrategyExitMetadata::default(),
     });
 
     assert_eq!(book.count(), 0);
@@ -634,6 +652,7 @@ fn pending_exit_book_replaces_and_clears_deferred_relative_exit_attachments() {
         },
         quantity: ExitQuantityRequest::Full,
         last_update_bar_index: 1,
+        metadata: StrategyExitMetadata::default(),
     });
     book.replace_or_append_deferred_relative(DeferredRelativeExit {
         id: "XP".to_owned(),
@@ -644,6 +663,7 @@ fn pending_exit_book_replaces_and_clears_deferred_relative_exit_attachments() {
         },
         quantity: ExitQuantityRequest::Fixed(1.0),
         last_update_bar_index: 2,
+        metadata: StrategyExitMetadata::default(),
     });
     book.replace_or_append_deferred_relative(DeferredRelativeExit {
         id: "XP".to_owned(),
@@ -654,6 +674,7 @@ fn pending_exit_book_replaces_and_clears_deferred_relative_exit_attachments() {
         },
         quantity: ExitQuantityRequest::Full,
         last_update_bar_index: 3,
+        metadata: StrategyExitMetadata::default(),
     });
 
     assert_eq!(book.deferred_relative_count(), 2);
@@ -689,6 +710,7 @@ fn pending_exit_book_replaces_and_clears_deferred_relative_exit_attachments() {
         },
         quantity: ExitQuantityRequest::Percent(50.0),
         last_update_bar_index: 4,
+        metadata: StrategyExitMetadata::default(),
     });
     book.clear_all();
     assert_eq!(book.deferred_relative_count(), 0);
@@ -710,6 +732,7 @@ fn pending_exit_book_stores_and_takes_deferred_relative_bracket_attachments() {
         },
         quantity: ExitQuantityRequest::Fixed(1.0),
         last_update_bar_index: 1,
+        metadata: StrategyExitMetadata::default(),
     });
     book.replace_or_append_deferred_relative(DeferredRelativeExit {
         id: "XB".to_owned(),
@@ -723,6 +746,7 @@ fn pending_exit_book_stores_and_takes_deferred_relative_bracket_attachments() {
         },
         quantity: ExitQuantityRequest::Percent(50.0),
         last_update_bar_index: 2,
+        metadata: StrategyExitMetadata::default(),
     });
     book.replace_or_append_deferred_relative(DeferredRelativeExit {
         id: "XB".to_owned(),
@@ -739,6 +763,7 @@ fn pending_exit_book_stores_and_takes_deferred_relative_bracket_attachments() {
         },
         quantity: ExitQuantityRequest::Full,
         last_update_bar_index: 3,
+        metadata: StrategyExitMetadata::default(),
     });
 
     assert_eq!(book.deferred_relative_count(), 2);
@@ -782,6 +807,7 @@ fn pending_exit_book_stores_and_takes_deferred_relative_bracket_attachments() {
         },
         quantity: ExitQuantityRequest::Full,
         last_update_bar_index: 4,
+        metadata: StrategyExitMetadata::default(),
     });
     book.clear_for_entry("L");
     assert_eq!(book.deferred_relative_count(), 0);
@@ -798,6 +824,7 @@ fn pending_exit_book_stores_and_takes_deferred_relative_bracket_attachments() {
         },
         quantity: ExitQuantityRequest::Full,
         last_update_bar_index: 4,
+        metadata: StrategyExitMetadata::default(),
     });
     book.clear_all();
     assert_eq!(book.deferred_relative_count(), 0);
@@ -1057,6 +1084,78 @@ fn pending_market_entry_metadata_survives_until_fill_without_public_output() {
     assert_eq!(broker.orders[0].id, "L");
     assert_eq!(broker.orders[0].direction, "strategy.long");
     assert_eq!(broker.result().orders.len(), 1);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_exit_metadata_replaces_same_identity_without_public_output() {
+    let mut broker = broker_with_long_entry();
+    let first = exit_metadata("first");
+    let second = exit_metadata("second");
+
+    broker.with_next_exit_metadata(first.clone(), |broker| {
+        broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 95.0, 1.0, 0);
+    });
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert_eq!(
+        broker
+            .pending_exit()
+            .map(|pending_exit| &pending_exit.metadata),
+        Some(&first)
+    );
+    assert!(broker.orders.len() == 1);
+
+    broker.with_next_exit_metadata(second.clone(), |broker| {
+        broker.place_exit_stop_qty("XS".to_owned(), "L".to_owned(), 95.0, 1.0, 0);
+    });
+
+    assert_eq!(pending_exit_count(&broker), 1);
+    assert_eq!(
+        broker
+            .pending_exit()
+            .map(|pending_exit| &pending_exit.metadata),
+        Some(&second)
+    );
+    assert_eq!(broker.result().orders.len(), 1);
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn all_entry_exit_metadata_fans_out_to_same_entry_id_pending_exits() {
+    let mut broker = BrokerState::new_with_account_settings_and_pyramiding(
+        100_000.0,
+        None,
+        0.0,
+        0.0,
+        StrategyMarginSetting::default(),
+        StrategyMarginSetting::default(),
+        2,
+    );
+    assert!(broker.entry_long("L".to_owned(), 0, 10, 100.0, 1.0));
+    assert!(broker.entry_long("L".to_owned(), 1, 20, 110.0, 2.0));
+    let metadata = exit_metadata("all");
+
+    broker.with_next_exit_metadata(metadata.clone(), |broker| {
+        broker.place_all_entry_exit_profit_ticks("XP".to_owned(), 10.0, 0.5, 1);
+    });
+
+    assert_eq!(pending_exit_count(&broker), 2);
+    assert!(
+        broker
+            .pending_exits_in_placement_order()
+            .all(|pending_exit| pending_exit.metadata == metadata)
+    );
+    assert_eq!(
+        broker
+            .order_book
+            .exits()
+            .all_entry_deferred_relative_exits()
+            .first()
+            .map(|deferred_exit| &deferred_exit.metadata),
+        Some(&metadata)
+    );
+    assert_eq!(broker.result().orders.len(), 2);
     assert!(broker.diagnostics.is_empty());
 }
 
@@ -1602,6 +1701,7 @@ fn pending_market_entry_allows_attached_stop_exit_without_public_fill() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.orders.is_empty());
@@ -1901,6 +2001,7 @@ fn pending_market_entry_resolves_stop_profit_bracket_attachment_after_fill() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -1953,6 +2054,7 @@ fn pending_market_entry_resolves_loss_limit_bracket_attachment_after_fill() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2005,6 +2107,7 @@ fn pending_market_entry_resolves_loss_profit_bracket_attachment_after_fill() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2071,6 +2174,7 @@ fn pending_market_entry_resolves_profit_attachment_after_fill() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2109,6 +2213,7 @@ fn pending_market_entry_resolves_loss_attachment_after_fill() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2147,6 +2252,7 @@ fn pending_market_entry_resolves_trail_points_attachment_after_fill() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2201,6 +2307,7 @@ fn pending_limit_entry_resolves_profit_attachment_fixed_quantity_after_fill() {
             reserved_quantity: 0.75,
             multiple_reservation: true,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2227,6 +2334,7 @@ fn pending_limit_entry_resolves_loss_attachment_fixed_quantity_after_fill() {
             reserved_quantity: 0.75,
             multiple_reservation: true,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2263,6 +2371,7 @@ fn pending_limit_entry_resolves_trail_points_attachment_fixed_quantity_after_fil
             reserved_quantity: 0.75,
             multiple_reservation: true,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2289,6 +2398,7 @@ fn pending_stop_entry_resolves_profit_attachment_percent_quantity_after_fill() {
             reserved_quantity: 1.0,
             multiple_reservation: true,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2315,6 +2425,7 @@ fn pending_stop_entry_resolves_loss_attachment_percent_quantity_after_fill() {
             reserved_quantity: 1.0,
             multiple_reservation: true,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2351,6 +2462,7 @@ fn pending_stop_entry_resolves_trail_points_attachment_percent_quantity_after_fi
             reserved_quantity: 1.0,
             multiple_reservation: true,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2550,6 +2662,7 @@ fn place_exit_while_long_records_pending_stop() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -2577,6 +2690,7 @@ fn place_exit_replaces_existing_pending_stop() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 }
@@ -2602,6 +2716,7 @@ fn omitted_quantity_single_trigger_with_new_identity_replaces_instead_of_appendi
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -3033,6 +3148,7 @@ fn omitted_quantity_exit_replaces_explicit_reservation_pool() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -3267,6 +3383,7 @@ fn changed_repeated_quantity_replaces_pending_exit() {
             reserved_quantity: 0.5,
             multiple_reservation: true,
             last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 }
@@ -3462,6 +3579,7 @@ fn limit_with_mismatched_entry_is_noop_without_changing_pending_exit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -3486,6 +3604,7 @@ fn repeated_entry_noop_leaves_pending_exit_untouched() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 }
@@ -3676,6 +3795,7 @@ fn profit_ticks_create_limit_from_average_entry_price() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 }
@@ -3697,6 +3817,7 @@ fn loss_ticks_create_stop_from_average_entry_price() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 }
@@ -3722,6 +3843,7 @@ fn place_exit_bracket_records_pending_bracket() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -3753,6 +3875,7 @@ fn bracket_tick_helpers_resolve_prices_from_average_entry_price() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -3775,6 +3898,7 @@ fn place_exit_trail_price_records_pending_trailing_exit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -3797,6 +3921,7 @@ fn place_exit_trail_points_records_entry_relative_activation() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -3830,6 +3955,7 @@ fn trailing_with_mismatched_entry_is_noop_without_changing_pending_exit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -3853,6 +3979,7 @@ fn invalid_trailing_activation_price_records_diagnostic_without_changing_pending
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert_eq!(broker.diagnostics.len(), 1);
@@ -3877,6 +4004,7 @@ fn invalid_trailing_offset_ticks_record_diagnostic_without_changing_pending_exit
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert_eq!(broker.diagnostics.len(), 1);
@@ -3921,6 +4049,7 @@ fn unchanged_repeated_trailing_preserves_active_state() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 }
@@ -3942,6 +4071,7 @@ fn changed_repeated_trailing_replaces_spec_and_delays_eligibility() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 }
@@ -3967,6 +4097,7 @@ fn omitted_quantity_trailing_with_new_identity_replaces_and_resets_eligibility()
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 
@@ -4628,6 +4759,7 @@ fn invalid_bracket_downside_price_records_diagnostic_without_changing_pending_ex
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert_eq!(broker.diagnostics.len(), 1);
@@ -4652,6 +4784,7 @@ fn invalid_bracket_upside_price_records_diagnostic_without_changing_pending_exit
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert_eq!(broker.diagnostics.len(), 1);
@@ -4677,6 +4810,7 @@ fn invalid_bracket_ticks_record_diagnostic_without_changing_pending_exit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert_eq!(broker.diagnostics.len(), 1);
@@ -4702,6 +4836,7 @@ fn invalid_bracket_mintick_records_diagnostic_without_changing_pending_exit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert_eq!(broker.diagnostics.len(), 1);
@@ -4793,6 +4928,7 @@ fn bracket_with_mismatched_entry_is_noop_without_changing_pending_exit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -4825,6 +4961,7 @@ fn stop_profit_bracket_with_mismatched_entry_is_noop_without_changing_pending_ex
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -4857,6 +4994,7 @@ fn loss_limit_bracket_with_mismatched_entry_is_noop_without_changing_pending_exi
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -4889,6 +5027,7 @@ fn loss_profit_bracket_with_mismatched_entry_is_noop_without_changing_pending_ex
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -4923,6 +5062,7 @@ fn changed_repeated_bracket_replaces_price_and_delays_eligibility() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 }
@@ -4951,6 +5091,7 @@ fn omitted_quantity_bracket_with_new_identity_replaces_instead_of_appending() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -4977,6 +5118,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 
@@ -4993,6 +5135,7 @@ fn single_trigger_and_bracket_replace_each_other_and_reset_eligibility() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 2,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 }
@@ -5215,6 +5358,7 @@ fn invalid_fixed_qty_bracket_replacement_preserves_existing_pending_bracket() {
             reserved_quantity: 1.0,
             multiple_reservation: true,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert_eq!(broker.diagnostics.len(), 1);
@@ -5675,6 +5819,7 @@ fn invalid_percent_bracket_replacement_preserves_existing_pending_bracket() {
             reserved_quantity: 0.5,
             multiple_reservation: true,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert_eq!(broker.diagnostics.len(), 1);
@@ -5699,6 +5844,7 @@ fn pending_trailing_is_not_eligible_on_creation_bar() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.trades.is_empty());
@@ -5786,6 +5932,7 @@ fn invalid_profit_ticks_record_diagnostic_without_changing_pending_exit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert_eq!(broker.diagnostics.len(), 1);
@@ -5810,6 +5957,7 @@ fn invalid_exit_mintick_records_diagnostic_without_changing_pending_exit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert_eq!(broker.diagnostics.len(), 1);
@@ -5844,6 +5992,7 @@ fn profit_ticks_with_mismatched_entry_is_noop_without_changing_pending_exit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -5867,6 +6016,7 @@ fn loss_ticks_with_mismatched_entry_is_noop_without_changing_pending_exit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 0,
+            metadata: StrategyExitMetadata::default(),
         })
     );
     assert!(broker.diagnostics.is_empty());
@@ -5921,6 +6071,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 1,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 
@@ -5937,6 +6088,7 @@ fn profit_ticks_replace_stop_and_loss_ticks_replace_limit() {
             reserved_quantity: 2.0,
             multiple_reservation: false,
             last_update_bar_index: 2,
+            metadata: StrategyExitMetadata::default(),
         })
     );
 }

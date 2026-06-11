@@ -148,15 +148,17 @@ Tests:
 
 ### Slice OM3: Exit Metadata Storage
 
+Closed on 2026-06-11.
+
 Thread metadata through supported `strategy.exit` pending exit paths, including
 single-trigger, bracket, trailing, quantity reservation, active-entry
 attachment, and omitted-`from_entry` all-entry paths.
 
 Tests:
 
-- broker tests for metadata replacement on same pending-exit identity;
-- broker tests for metadata fan-out across all-entry and same-entry-id exits;
-- runtime fixture proving public JSON remains unchanged.
+- broker tests prove metadata replacement on same pending-exit identity;
+- broker tests prove metadata fan-out across all-entry and same-entry-id exits;
+- runtime fixture proves public JSON remains unchanged.
 
 ### Slice OM4: Close Metadata Storage
 

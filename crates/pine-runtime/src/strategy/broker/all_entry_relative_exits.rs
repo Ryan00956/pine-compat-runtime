@@ -1,5 +1,5 @@
 use super::{
-    BrokerState,
+    BrokerState, StrategyExitMetadata,
     active_entry_brackets::DeferredLossProfitBracketSpec,
     pending_exits::{
         DeferredBracketLeg, DeferredRelativeExit, DeferredRelativeExitTrigger, ExitQuantityRequest,
@@ -8,6 +8,14 @@ use super::{
     },
 };
 use crate::RuntimeDiagnostic;
+
+struct AllEntryResolvedExitPlacement {
+    id: String,
+    from_entry: String,
+    target_trade_key: u64,
+    bar_index: usize,
+    metadata: StrategyExitMetadata,
+}
 
 impl BrokerState {
     pub(super) fn resolve_all_entry_deferred_relative_exit_for_entry(
@@ -20,6 +28,7 @@ impl BrokerState {
             id,
             trigger,
             quantity,
+            metadata,
             ..
         } = deferred_exit;
         match trigger {
@@ -41,6 +50,7 @@ impl BrokerState {
                     target_trade_key,
                     entry_price + price_offset,
                     bar_index,
+                    metadata,
                 );
             }
             DeferredRelativeExitTrigger::LossTicks { ticks, mintick } => {
@@ -61,6 +71,7 @@ impl BrokerState {
                     target_trade_key,
                     entry_price - price_offset,
                     bar_index,
+                    metadata,
                 );
             }
             DeferredRelativeExitTrigger::TrailPoints {
@@ -99,6 +110,7 @@ impl BrokerState {
                         offset_price_distance,
                     },
                     bar_index,
+                    metadata,
                 );
             }
             DeferredRelativeExitTrigger::Bracket {
@@ -117,12 +129,15 @@ impl BrokerState {
                     return;
                 };
                 self.place_all_entry_resolved_bracket(
-                    id,
-                    entry_id.to_owned(),
-                    target_trade_key,
+                    AllEntryResolvedExitPlacement {
+                        id,
+                        from_entry: entry_id.to_owned(),
+                        target_trade_key,
+                        bar_index,
+                        metadata,
+                    },
                     downside,
                     entry_price + price_offset,
-                    bar_index,
                 );
             }
             DeferredRelativeExitTrigger::Bracket {
@@ -141,12 +156,15 @@ impl BrokerState {
                     return;
                 };
                 self.place_all_entry_resolved_bracket(
-                    id,
-                    entry_id.to_owned(),
-                    target_trade_key,
+                    AllEntryResolvedExitPlacement {
+                        id,
+                        from_entry: entry_id.to_owned(),
+                        target_trade_key,
+                        bar_index,
+                        metadata,
+                    },
                     entry_price - price_offset,
                     upside,
-                    bar_index,
                 );
             }
             DeferredRelativeExitTrigger::Bracket {
@@ -170,9 +188,13 @@ impl BrokerState {
                     return;
                 };
                 self.place_all_entry_resolved_loss_profit_bracket(
-                    id,
-                    entry_id.to_owned(),
-                    target_trade_key,
+                    AllEntryResolvedExitPlacement {
+                        id,
+                        from_entry: entry_id.to_owned(),
+                        target_trade_key,
+                        bar_index,
+                        metadata,
+                    },
                     entry_price,
                     DeferredLossProfitBracketSpec {
                         loss_ticks,
@@ -180,7 +202,6 @@ impl BrokerState {
                         profit_ticks,
                         profit_mintick,
                     },
-                    bar_index,
                 );
             }
             _ => {}
@@ -194,6 +215,7 @@ impl BrokerState {
         target_trade_key: u64,
         limit_price: f64,
         bar_index: usize,
+        metadata: StrategyExitMetadata,
     ) {
         if !limit_price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
@@ -215,6 +237,7 @@ impl BrokerState {
             reserved_quantity,
             multiple_reservation: false,
             last_update_bar_index: bar_index,
+            metadata,
         });
     }
 
@@ -225,6 +248,7 @@ impl BrokerState {
         target_trade_key: u64,
         stop_price: f64,
         bar_index: usize,
+        metadata: StrategyExitMetadata,
     ) {
         if !stop_price.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
@@ -246,6 +270,7 @@ impl BrokerState {
             reserved_quantity,
             multiple_reservation: false,
             last_update_bar_index: bar_index,
+            metadata,
         });
     }
 
@@ -256,6 +281,7 @@ impl BrokerState {
         target_trade_key: u64,
         spec: PendingTrailingSpec,
         bar_index: usize,
+        metadata: StrategyExitMetadata,
     ) {
         if !spec.activation.price().is_finite() || !spec.offset_price_distance.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
@@ -280,17 +306,15 @@ impl BrokerState {
             reserved_quantity,
             multiple_reservation: false,
             last_update_bar_index: bar_index,
+            metadata,
         });
     }
 
     fn place_all_entry_resolved_loss_profit_bracket(
         &mut self,
-        id: String,
-        from_entry: String,
-        target_trade_key: u64,
+        placement: AllEntryResolvedExitPlacement,
         entry_price: f64,
         spec: DeferredLossProfitBracketSpec,
-        bar_index: usize,
     ) {
         let Some(loss_offset) = self.exit_tick_price_offset(spec.loss_ticks, spec.loss_mintick)
         else {
@@ -302,23 +326,17 @@ impl BrokerState {
             return;
         };
         self.place_all_entry_resolved_bracket(
-            id,
-            from_entry,
-            target_trade_key,
+            placement,
             entry_price - loss_offset,
             entry_price + profit_offset,
-            bar_index,
         );
     }
 
     fn place_all_entry_resolved_bracket(
         &mut self,
-        id: String,
-        from_entry: String,
-        target_trade_key: u64,
+        placement: AllEntryResolvedExitPlacement,
         downside: f64,
         upside: f64,
-        bar_index: usize,
     ) {
         if !downside.is_finite() || !upside.is_finite() {
             self.diagnostics.push(RuntimeDiagnostic {
@@ -327,19 +345,22 @@ impl BrokerState {
             });
             return;
         }
-        let reserved_quantity = self.trade_ledger.open_quantity_for_key(target_trade_key);
+        let reserved_quantity = self
+            .trade_ledger
+            .open_quantity_for_key(placement.target_trade_key);
         if !reserved_quantity.is_finite() || reserved_quantity <= 0.0 {
             return;
         }
         self.order_book.exits_mut().replace_or_append(PendingExit {
-            id,
-            from_entry,
-            target_trade_key: Some(target_trade_key),
+            id: placement.id,
+            from_entry: placement.from_entry,
+            target_trade_key: Some(placement.target_trade_key),
             trigger: PendingExitTrigger::Bracket { downside, upside },
             quantity: PendingExitQuantity::Full,
             reserved_quantity,
             multiple_reservation: false,
-            last_update_bar_index: bar_index,
+            last_update_bar_index: placement.bar_index,
+            metadata: placement.metadata,
         });
     }
 }

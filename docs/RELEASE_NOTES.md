@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Stored supported `strategy.exit` order metadata internally on pending and
+  deferred exits, including same-identity replacement and omitted-`from_entry`
+  fan-out paths. Public strategy JSON, host output, and external order-fill
+  alert delivery remain unchanged.
 - Stored supported `strategy.entry` order metadata internally on pending and
   filled entries. Public strategy JSON, host output, and external order-fill
   alert delivery remain unchanged.
