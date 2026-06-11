@@ -5632,11 +5632,32 @@ fn library_source_json_combined_api_reports_request_input_errors() {
 #[test]
 fn library_source_json_reports_missing_library() {
     let output = analyze_script("import user/lib/1\nindicator(\"root\")\n");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    let diagnostic_codes = parsed["diagnostics"]
+        .as_array()
+        .expect("diagnostics should be an array")
+        .iter()
+        .map(|diagnostic| {
+            diagnostic["code"]
+                .as_str()
+                .expect("diagnostic code should be a string")
+        })
+        .collect::<Vec<_>>();
+    let supported_features = parsed["compatibility"]["supported"]
+        .as_array()
+        .expect("supported features should be an array")
+        .iter()
+        .map(|feature| {
+            feature["feature"]
+                .as_str()
+                .expect("supported feature should be a string")
+        })
+        .collect::<Vec<_>>();
 
-    assert!(output.contains("\"executable\":false"));
-    assert!(output.contains("\"feature\":\"import\""));
-    assert!(output.contains("\"code\":\"E_IMPORT_MISSING_LIBRARY\""));
-    assert!(output.contains("\"code\":\"E_IMPORT_ALIAS_REQUIRED\""));
+    assert_eq!(parsed["executable"], serde_json::json!(false));
+    assert!(supported_features.contains(&"import"));
+    assert!(diagnostic_codes.contains(&"E_IMPORT_MISSING_LIBRARY"));
+    assert!(diagnostic_codes.contains(&"E_IMPORT_ALIAS_REQUIRED"));
 }
 
 #[test]
