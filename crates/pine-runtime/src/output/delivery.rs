@@ -14,12 +14,13 @@ pub use diagnostics::{
     HostDeliveryDiagnostic, HostDeliveryDiagnosticSeverity, host_delivery_diagnostic_from_result,
 };
 pub use webhook::{
-    WebhookAdapterConfig, WebhookAdapterConfigError, WebhookBodyMode, WebhookDeliveryFailure,
-    WebhookPayload, WebhookPayloadError, WebhookRequest, WebhookRequestError,
-    WebhookResolvedHeaders, WebhookResolvedHeadersError, WebhookRetryDecision, WebhookRetryPolicy,
-    WebhookRetryPolicyError, WebhookSecretResolver, WebhookSecretResolverError,
-    build_webhook_request, classify_webhook_delivery_failure, classify_webhook_http_status,
-    plan_webhook_retry, render_webhook_payload, resolve_webhook_headers,
+    WebhookAdapterConfig, WebhookAdapterConfigError, WebhookBodyMode, WebhookDeliveryAdapter,
+    WebhookDeliveryFailure, WebhookPayload, WebhookPayloadError, WebhookRequest,
+    WebhookRequestError, WebhookResolvedHeaders, WebhookResolvedHeadersError, WebhookRetryDecision,
+    WebhookRetryPolicy, WebhookRetryPolicyError, WebhookSecretResolver, WebhookSecretResolverError,
+    WebhookTransport, WebhookTransportOutcome, build_webhook_request,
+    classify_webhook_delivery_failure, classify_webhook_http_status, plan_webhook_retry,
+    render_webhook_payload, resolve_webhook_headers,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]

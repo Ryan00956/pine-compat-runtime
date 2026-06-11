@@ -5,12 +5,14 @@ use serde::{Deserialize, Serialize};
 use super::{DeliveryAttemptRecord, DeliveryCandidate, ExternalDeliveryResult};
 
 mod request;
+mod transport;
 
 pub use request::{
     WebhookRequest, WebhookRequestError, WebhookResolvedHeaders, WebhookResolvedHeadersError,
     WebhookSecretResolver, WebhookSecretResolverError, build_webhook_request,
     resolve_webhook_headers,
 };
+pub use transport::{WebhookDeliveryAdapter, WebhookTransport, WebhookTransportOutcome};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -162,6 +164,7 @@ pub enum WebhookDeliveryFailure {
     RejectedUrl,
     MissingSecretReference,
     UnauthorizedSecretLookup,
+    SecretResolverUnavailable,
     InvalidPayloadConstruction,
     ProviderRejected,
 }
@@ -175,6 +178,7 @@ impl WebhookDeliveryFailure {
                 | Self::DnsFailure
                 | Self::RateLimited
                 | Self::TemporaryServerFailure
+                | Self::SecretResolverUnavailable
         )
     }
 
@@ -189,6 +193,7 @@ impl WebhookDeliveryFailure {
             Self::RejectedUrl => "webhookRejectedUrl",
             Self::MissingSecretReference => "webhookMissingSecretReference",
             Self::UnauthorizedSecretLookup => "webhookUnauthorizedSecretLookup",
+            Self::SecretResolverUnavailable => "webhookSecretResolverUnavailable",
             Self::InvalidPayloadConstruction => "webhookInvalidPayloadConstruction",
             Self::ProviderRejected => "webhookProviderRejected",
         }
@@ -209,6 +214,7 @@ impl WebhookDeliveryFailure {
                 "webhook delivery secret reference could not be resolved"
             }
             Self::UnauthorizedSecretLookup => "webhook delivery secret lookup was not authorized",
+            Self::SecretResolverUnavailable => "webhook delivery secret resolver was unavailable",
             Self::InvalidPayloadConstruction => "webhook delivery payload could not be built",
             Self::ProviderRejected => "webhook delivery was rejected by the provider",
         }

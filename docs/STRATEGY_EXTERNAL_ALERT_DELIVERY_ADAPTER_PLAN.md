@@ -59,6 +59,10 @@ Already supported:
 - pure webhook request construction from validated configuration, resolved
   headers, and rendered payloads, still without any HTTP client or network
   side effects.
+- a pure webhook delivery adapter over a host-provided transport trait. The
+  adapter connects request construction, fake/host transport outcomes,
+  HTTP-status classification, and attempt-store flow without creating an HTTP
+  client or performing network I/O.
 
 Still unsupported:
 
@@ -66,8 +70,9 @@ Still unsupported:
 - durable delivery store behavior across host restarts;
 - executable retry scheduling, jitter, and dead-letter behavior;
 - executable webhook HTTP transport, concrete authentication secret stores,
-  secret lookup audit logging, TLS configuration, timeout execution, request
-  execution, retry scheduling, host diagnostic emission, and rate limiting;
+  secret lookup audit logging, TLS configuration, timeout execution, built-in
+  network request execution, retry scheduling, host diagnostic emission, and
+  rate limiting;
 - user-visible delivery failure reporting;
 - live realtime strategy broker execution.
 
@@ -330,9 +335,15 @@ headers.
 12. Closed on 2026-06-11: add pure webhook request construction from validated
     config, resolved headers, and payloads, still without HTTP clients,
     request execution, retry scheduling, or network delivery.
-13. Add a concrete webhook transport only after URL validation, secret handling,
-   timeout behavior, retry classification, and diagnostic redaction are
-   fixture-backed.
+13. Closed on 2026-06-11: add a pure webhook delivery adapter over a
+    host-provided transport trait. The adapter maps request construction errors,
+    fake transport failures, and HTTP status outcomes into
+    `ExternalDeliveryResult` and integrates with the attempt-store helper,
+    still without an HTTP client, built-in network I/O, executable retry
+    scheduling, or user-visible reporting.
+14. Add a concrete webhook HTTP transport only after URL validation, secret
+    handling, timeout behavior, retry classification, diagnostic redaction, and
+    host transport execution boundaries are fixture-backed.
 
 ## Completion Gate
 

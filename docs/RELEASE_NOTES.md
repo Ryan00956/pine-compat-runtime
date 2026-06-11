@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added a pure webhook delivery adapter over a host-provided transport trait
+  for future host-owned alert delivery. The adapter now connects request
+  construction, secret resolution, fake/host transport outcomes, HTTP-status
+  classification, and attempt-store recording without adding an HTTP client,
+  built-in network I/O, retry scheduling, user-visible reporting, or runtime
+  JSON changes.
 - Added pure webhook request construction for future host-owned alert delivery.
   Host code can now combine validated webhook configuration, resolved headers,
   and rendered payloads into a transport request object without adding an HTTP
