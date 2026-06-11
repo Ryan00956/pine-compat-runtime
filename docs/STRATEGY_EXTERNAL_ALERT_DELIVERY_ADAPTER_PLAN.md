@@ -48,7 +48,8 @@ Still unsupported:
 - concrete external delivery adapters;
 - durable delivery store behavior across host restarts;
 - retry scheduling, backoff, and dead-letter behavior;
-- authentication, secret storage, URL validation, TLS configuration, and rate
+- executable webhook adapter configuration, URL validation, HTTP transport,
+  authentication, secret storage, TLS configuration, timeout handling, and rate
   limiting;
 - user-visible delivery failure reporting;
 - live realtime strategy broker execution.
@@ -165,6 +166,67 @@ Host implementations are responsible for URL validation, TLS policy, header
 redaction, secret lookup, audit logging, and preventing credentials from
 appearing in diagnostics.
 
+## Webhook Adapter Design Lock
+
+Webhook delivery is a concrete host adapter, not a runtime feature. A future
+implementation must keep HTTP clients, URL parsing, DNS, TLS, headers, secrets,
+timeouts, and provider status handling outside the interpreter and core runtime
+execution path.
+
+The first webhook slice should introduce configuration and validation before any
+network transport:
+
+```text
+WebhookAdapterConfig
+  adapterId: string
+  url: string
+  headers: map string string
+  secretHeaderRefs: map string secretRef
+  bodyMode: renderedMessage | jsonEnvelope
+  timeoutMs: u32
+```
+
+Validation rules:
+
+- accept only host-approved HTTP(S) URL schemes and ports;
+- reject empty URLs, relative URLs, local file paths, and URLs with embedded
+  credentials;
+- require a bounded positive timeout;
+- reject duplicate header names after case normalization;
+- reject static headers that contain credential-like material when a
+  `secretHeaderRefs` entry should be used instead;
+- keep URL allowlists, DNS policy, TLS roots, proxy policy, and rate limits
+  host-owned.
+
+Payload rules:
+
+- `renderedMessage` sends only `DeliveryCandidate.renderedMessage`;
+- `jsonEnvelope` sends a host-versioned object containing adapter metadata and
+  candidate fields;
+- webhook payload schemas must be versioned separately from `RuntimeResult`;
+- secrets must never be copied into payload bodies, stored attempts, public
+  snapshots, runtime JSON, or semantic diagnostics.
+
+Content-type rules are adapter-owned. The host may choose `application/json`
+when the payload is valid JSON and a plain text content type otherwise, but that
+choice must not affect Pine evaluation.
+
+Failure classification:
+
+- transport timeout, connection reset, DNS failure, rate limiting, and
+  temporary server failures map to `transientFailure`;
+- invalid configuration, rejected URL, missing secret reference, unauthorized
+  secret lookup, and invalid payload construction map to `permanentFailure`;
+- a successful HTTP exchange maps to `delivered` only when the adapter contract
+  says the provider accepted the request;
+- provider status codes and failure messages must be redacted before becoming
+  host diagnostics.
+
+The first executable webhook work should therefore be a pure configuration and
+validation slice. It must not send network requests until URL validation, secret
+reference handling, timeout behavior, payload selection, failure
+classification, and diagnostic redaction are fixture-backed.
+
 ## Payload Boundary
 
 The adapter receives a `DeliveryCandidate`; it does not receive interpreter
@@ -225,8 +287,15 @@ headers.
    durability.
 4. Closed on 2026-06-11: add a test-collector adapter that exercises attempt
    recording without network delivery.
-5. Design and implement a webhook adapter only after URL validation, secret
-   handling, retry policy, timeout behavior, and diagnostic redaction are
+5. Closed on 2026-06-11: lock the webhook adapter design boundary for URL
+   validation, secret references, payload mode, timeout behavior, failure
+   classification, and diagnostic redaction without network delivery.
+6. Add pure webhook adapter configuration and validation types with fixtures,
+   still without network delivery.
+7. Add webhook payload rendering tests for `renderedMessage` and `jsonEnvelope`,
+   still without network delivery.
+8. Add a concrete webhook transport only after URL validation, secret handling,
+   timeout behavior, retry classification, and diagnostic redaction are
    fixture-backed.
 
 ## Completion Gate

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Locked the webhook alert delivery adapter design boundary for future host
+  delivery work. The plan now spells out URL validation, secret-reference,
+  payload-mode, timeout, failure-classification, and diagnostic-redaction gates
+  before any network delivery implementation.
 - Added a pure host-side `TestCollectorDeliveryAdapter` and
   `deliver_candidate_with_attempt_store` helper for future alert delivery
   adapters. The slice exercises reserve/start/deliver/complete attempt
