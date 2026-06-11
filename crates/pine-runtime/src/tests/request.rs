@@ -1335,6 +1335,48 @@ fn request_security_evaluates_provider_tema_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_tsi_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request tsi\")\nprovider_tsi = request.security(\"NYSE:IBM\", timeframe.period, ta.tsi(close, 2, 3))\nchart_tsi = ta.tsi(close, 2, 3)\nplot(provider_tsi)\nplot(chart_tsi)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 10.0),
+            timed_bar(60_000, 11.0),
+            timed_bar(120_000, 12.0),
+            timed_bar(180_000, 10.0),
+            timed_bar(240_000, 13.0),
+            timed_bar(300_000, 12.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 11.0),
+            timed_bar(180_000, 17.0),
+            timed_bar(240_000, 25.0),
+            timed_bar(300_000, 26.0),
+        ])
+        .expect("provider ta.tsi expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(
+        &result.plots[0].values[1..],
+        &[
+            1.0,
+            1.0,
+            4.163336342344337e-17,
+            0.42857142857142866,
+            0.2085561497326204,
+        ],
+    );
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_values_close(&result.plots[1].values[1..], &[1.0, 1.0, 1.0, 1.0, 1.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_linreg_in_requested_context() {
     let program = compile_program(
         "indicator(\"request linreg\")\nprovider_linreg = request.security(\"NYSE:IBM\", timeframe.period, ta.linreg(close, 3, 0))\nchart_linreg = ta.linreg(close, 3, 0)\nplot(provider_linreg)\nplot(chart_linreg)\n",
