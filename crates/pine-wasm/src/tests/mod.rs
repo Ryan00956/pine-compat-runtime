@@ -2335,18 +2335,7 @@ fn runs_strategy_pyramiding_from_csv_to_public_strategy_json() {
     )
     .expect("strategy pyramiding fixture should run");
 
-    assert!(output.contains("\"values\":[0,1,2,2]"));
-    assert!(output.contains("\"values\":[0,1,4,4]"));
-    assert!(output.contains("\"values\":[null,2,2.75,2.75]"));
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L1\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":1,\"price\":2},{\"id\":\"L2\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.long\",\"qty\":3,\"price\":3}]"
-    ));
-    assert!(output.contains(
-        "\"position\":[{\"barIndex\":1,\"size\":1,\"avgPrice\":2},{\"barIndex\":2,\"size\":4,\"avgPrice\":2.75}]"
-    ));
-    assert!(output.contains("\"trades\":[]"));
-    assert!(output.contains("\"diagnostics\":[]"));
-    assert!(!output.contains("pending"));
+    assert_snapshot("runtime_strategy_pyramiding.json", &output);
 }
 
 #[test]
