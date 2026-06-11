@@ -5,13 +5,21 @@ use std::{env, fs, path::PathBuf};
 #[test]
 fn analyzes_script_to_json() {
     let output = analyze_script("indicator(\"demo\")\nplot(close)\n");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
-    assert!(output.contains(&format!(
-        "\"schemaVersion\":{}",
-        PUBLIC_ANALYSIS_SCHEMA_VERSION
-    )));
-    assert!(output.contains("\"executable\":true"));
-    assert!(output.contains("\"feature\":\"plot\""));
+    assert_eq!(
+        parsed["schemaVersion"],
+        serde_json::json!(PUBLIC_ANALYSIS_SCHEMA_VERSION)
+    );
+    assert_eq!(parsed["executable"], serde_json::json!(true));
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert!(
+        parsed["compatibility"]["supported"]
+            .as_array()
+            .expect("supported features should be an array")
+            .iter()
+            .any(|feature| feature["feature"] == serde_json::json!("plot"))
+    );
 }
 
 #[test]
