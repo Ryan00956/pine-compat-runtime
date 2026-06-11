@@ -72,6 +72,15 @@ pub fn render_strategy_order_fill_alert_template(
         .map_err(|err| JsValue::from_str(&err))
 }
 
+#[wasm_bindgen(js_name = renderStrategyOrderFillRunningAlert)]
+pub fn render_strategy_order_fill_running_alert(
+    config_json: &str,
+    alert_json: &str,
+) -> Result<String, JsValue> {
+    strategy_alerts::render_strategy_order_fill_running_alert(config_json, alert_json)
+        .map_err(|err| JsValue::from_str(&err))
+}
+
 #[wasm_bindgen(js_name = runScriptCsv)]
 pub fn run_script_csv(source: &str, bars_csv: &str) -> Result<String, JsValue> {
     run_script_csv_internal(source, bars_csv).map_err(|err| JsValue::from_str(&err))

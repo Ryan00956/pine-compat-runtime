@@ -133,9 +133,8 @@ leaving room for a realtime host loop later.
    `strategyOrderFills` only; `both` remains design-only until indicator alert
    calls and strategy order fills share one deterministic host event envelope.
    Default JSON remains unchanged.
-4. Python and CLI closed on 2026-06-11; WASM remains pending: expose the helper
-   explicitly through host wrappers with tests that default runtime output stays
-   unchanged.
+4. Closed on 2026-06-11: expose the helper explicitly through Python, CLI, and
+   WASM host wrappers with tests that default runtime output stays unchanged.
 5. Realtime delivery design: only after the host evaluation helper is stable,
    design a realtime loop and delivery sink boundary. External network delivery
    remains out of scope until that design is closed.

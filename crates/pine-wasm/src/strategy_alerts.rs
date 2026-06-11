@@ -1,4 +1,7 @@
-use pine_runtime::StrategyOrderFillAlertOutput;
+use pine_runtime::{
+    RunningAlertConfig, RunningAlertEventSelection, RunningAlertRealtimePolicy,
+    StrategyOrderFillAlertOutput,
+};
 use serde_json::Value;
 
 pub(crate) fn render_strategy_order_fill_alert_template(
@@ -8,6 +11,32 @@ pub(crate) fn render_strategy_order_fill_alert_template(
     let alert = strategy_order_fill_alert_from_json(alert_json)?;
     pine_runtime::render_strategy_order_fill_alert_template(template, &alert)
         .map_err(|err| err.to_string())
+}
+
+pub(crate) fn render_strategy_order_fill_running_alert(
+    config_json: &str,
+    alert_json: &str,
+) -> Result<String, String> {
+    let config = running_alert_config_from_json(config_json)?;
+    let alert = strategy_order_fill_alert_from_json(alert_json)?;
+    pine_runtime::render_strategy_order_fill_running_alert(&config, &alert)
+        .map_err(|err| err.to_string())
+}
+
+fn running_alert_config_from_json(config_json: &str) -> Result<RunningAlertConfig, String> {
+    let value: Value = serde_json::from_str(config_json)
+        .map_err(|err| format!("running alert config must be a JSON object: {err}"))?;
+    let object = value
+        .as_object()
+        .ok_or_else(|| "running alert config must be a JSON object".to_owned())?;
+    Ok(RunningAlertConfig {
+        script_snapshot_id: config_string(object, "scriptSnapshotId")?,
+        symbol: config_string(object, "symbol")?,
+        timeframe: config_string(object, "timeframe")?,
+        event_selection: event_selection_from_str(&config_string(object, "eventSelection")?)?,
+        message_template: config_string(object, "messageTemplate")?,
+        realtime_policy: realtime_policy_from_str(&config_string(object, "realtimePolicy")?)?,
+    })
 }
 
 fn strategy_order_fill_alert_from_json(
@@ -29,6 +58,35 @@ fn strategy_order_fill_alert_from_json(
         exit_id: object_optional_string(object, "exitId")?,
         message: object_string(object, "message")?,
     })
+}
+
+fn event_selection_from_str(value: &str) -> Result<RunningAlertEventSelection, String> {
+    match value {
+        "indicatorAlertCalls" => Ok(RunningAlertEventSelection::IndicatorAlertCalls),
+        "strategyOrderFills" => Ok(RunningAlertEventSelection::StrategyOrderFills),
+        "both" => Ok(RunningAlertEventSelection::Both),
+        _ => Err(format!(
+            "running alert config `eventSelection` has unsupported value `{value}`"
+        )),
+    }
+}
+
+fn realtime_policy_from_str(value: &str) -> Result<RunningAlertRealtimePolicy, String> {
+    match value {
+        "realtimeOnly" => Ok(RunningAlertRealtimePolicy::RealtimeOnly),
+        _ => Err(format!(
+            "running alert config `realtimePolicy` has unsupported value `{value}`"
+        )),
+    }
+}
+
+fn config_string(object: &serde_json::Map<String, Value>, field: &str) -> Result<String, String> {
+    object
+        .get(field)
+        .ok_or_else(|| format!("running alert config is missing `{field}`"))?
+        .as_str()
+        .map(str::to_owned)
+        .ok_or_else(|| format!("running alert config `{field}` must be a string"))
 }
 
 fn object_string(object: &serde_json::Map<String, Value>, field: &str) -> Result<String, String> {

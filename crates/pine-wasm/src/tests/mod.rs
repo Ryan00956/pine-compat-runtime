@@ -2044,6 +2044,91 @@ fn render_strategy_order_fill_alert_template_rejects_unknown_placeholder() {
 }
 
 #[test]
+fn renders_strategy_order_fill_running_alert_from_config_json() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_metadata.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy metadata fixture should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    let alert_json = parsed["strategy"]["alerts"][1].to_string();
+    let config_json = serde_json::json!({
+        "scriptSnapshotId": "snapshot-1",
+        "symbol": "NYSE:IBM",
+        "timeframe": "1",
+        "eventSelection": "strategyOrderFills",
+        "messageTemplate": "Running: {{strategy.order.alert_message}}",
+        "realtimePolicy": "realtimeOnly",
+    })
+    .to_string();
+
+    let rendered = render_strategy_order_fill_running_alert(&config_json, &alert_json)
+        .expect("strategy order-fill running alert should render");
+
+    assert_eq!(rendered, "Running: loss alert");
+    assert!(
+        !parsed["strategy"]["alerts"][1]
+            .as_object()
+            .expect("strategy alert should be an object")
+            .contains_key("renderedMessage")
+    );
+}
+
+#[test]
+fn render_strategy_order_fill_running_alert_keeps_both_selection_design_only() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_metadata.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy metadata fixture should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    let alert_json = parsed["strategy"]["alerts"][1].to_string();
+    let config_json = serde_json::json!({
+        "scriptSnapshotId": "snapshot-1",
+        "symbol": "NYSE:IBM",
+        "timeframe": "1",
+        "eventSelection": "both",
+        "messageTemplate": "{{strategy.order.alert_message}}",
+        "realtimePolicy": "realtimeOnly",
+    })
+    .to_string();
+
+    let message =
+        strategy_alerts::render_strategy_order_fill_running_alert(&config_json, &alert_json)
+            .expect_err("both remains design-only");
+
+    assert!(message.contains(
+        "running alert event selection `both` cannot evaluate a strategy order-fill event"
+    ));
+}
+
+#[test]
+fn render_strategy_order_fill_running_alert_rejects_unknown_placeholder() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_exit_metadata.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy metadata fixture should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+    let alert_json = parsed["strategy"]["alerts"][1].to_string();
+    let config_json = serde_json::json!({
+        "scriptSnapshotId": "snapshot-1",
+        "symbol": "NYSE:IBM",
+        "timeframe": "1",
+        "eventSelection": "strategyOrderFills",
+        "messageTemplate": "{{close}}",
+        "realtimePolicy": "realtimeOnly",
+    })
+    .to_string();
+
+    let message =
+        strategy_alerts::render_strategy_order_fill_running_alert(&config_json, &alert_json)
+            .expect_err("unknown placeholder should fail");
+
+    assert!(message.contains("unsupported strategy order-fill alert placeholder `{{close}}`"));
+}
+
+#[test]
 fn runs_strategy_exit_missing_entry_from_csv_as_noop_json() {
     let output = run_script_csv(
         "strategy(\"exit\")\nif bar_index == 0\n    strategy.exit(\"XL\", \"L\", stop=low)\n",

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added an explicit WASM helper for rendering a strategy order-fill
+  running-alert message from host config JSON and a public `strategy.alerts`
+  event JSON object. Default WASM runtime JSON and external delivery remain
+  unchanged.
 - Added an explicit CLI helper path for rendering a strategy order-fill
   running-alert message from host config fields and a selected public
   `strategy.alerts` event. Default runtime JSON and external delivery remain
