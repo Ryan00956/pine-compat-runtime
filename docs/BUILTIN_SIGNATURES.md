@@ -201,10 +201,10 @@ The current executable subset has two forms:
   The supported provider expression subset includes direct OHLCV/time sources,
   pure arithmetic and ternaries, history references, `na`, `nz`, selected
   stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
-  `ta.sma`, and `ta.ema`. Requested-context rolling callsite state is isolated
-  from the chart context. Higher-timeframe alignment uses default `gaps_off`
-  and `lookahead_off`: only confirmed requested bars are visible, and missing
-  requested bars forward-fill the last confirmed value.
+  `ta.sma`, `ta.ema`, and `ta.rsi`. Requested-context rolling callsite state is
+  isolated from the chart context. Higher-timeframe alignment uses default
+  `gaps_off` and `lookahead_off`: only confirmed requested bars are visible,
+  and missing requested bars forward-fill the last confirmed value.
 
 Lower timeframe requests, provider expression local variable aliases, UDF calls,
 stateful math calls such as `math.random`, output/drawing side effects, input

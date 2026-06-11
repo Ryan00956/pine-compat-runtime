@@ -407,6 +407,40 @@ fn request_security_isolates_provider_ta_state_from_chart_state() {
 }
 
 #[test]
+fn request_security_isolates_provider_rsi_state_from_chart_state() {
+    let program = compile_program(
+        "indicator(\"request rsi\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, ta.rsi(close, 3))\nchart = ta.rsi(close, 3)\nplot(provider)\nplot(chart)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 22.0),
+            timed_bar(120_000, 24.0),
+            timed_bar(180_000, 22.0),
+            timed_bar(240_000, 26.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 9.0),
+            timed_bar(180_000, 11.0),
+            timed_bar(240_000, 13.0),
+        ])
+        .expect("provider ta.rsi expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(
+        &result.plots[0].values[1..],
+        &[100.0, 100.0, 66.66666666666666, 83.33333333333333],
+    );
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_values_close(&result.plots[1].values[1..], &[100.0, 100.0, 100.0, 100.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_ema_in_requested_context() {
     let program = compile_program(
         "indicator(\"request ema\")\nplot(request.security(\"NYSE:IBM\", timeframe.period, ta.ema(close, 2)))\n",

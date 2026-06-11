@@ -240,5 +240,6 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "math.sum"
             | "ta.sma"
             | "ta.ema"
+            | "ta.rsi"
     )
 }

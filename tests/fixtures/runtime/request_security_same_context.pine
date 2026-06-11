@@ -8,6 +8,7 @@ max_offset = request.security(syminfo.tickerid, timeframe.period, math.max(close
 stateless_math = request.security(syminfo.tickerid, timeframe.period, math.abs(close - 2) + math.floor(math.avg(close, close + 2)) + math.pow(2, 2))
 sum_value = request.security(syminfo.tickerid, timeframe.period, math.sum(close, 2))
 mintick_round = request.security(syminfo.tickerid, timeframe.period, math.round_to_mintick(close + 0.006))
+rsi_value = request.security(syminfo.tickerid, timeframe.period, ta.rsi(close, 3))
 
 plot(identity)
 plot(history)
@@ -17,3 +18,4 @@ plot(max_offset)
 plot(stateless_math)
 plot(sum_value)
 plot(mintick_round)
+plot(rsi_value)

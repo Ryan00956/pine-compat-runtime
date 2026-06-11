@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported `ta.rsi` calls in same-context and provider-backed
+  scalar expressions, with requested-context RSI callsite state isolated from
+  chart state.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported fixed-mintick `math.round_to_mintick` calls in
   same-context and provider-backed scalar expressions. Provider-specific symbol
   metadata remains outside this fixed default `syminfo.mintick` subset.

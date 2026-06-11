@@ -8,5 +8,6 @@ math_extremes = request.security("NYSE:IBM", timeframe.period, math.max(close, o
 stateless_math = request.security("NYSE:IBM", timeframe.period, math.abs(open - close) + math.floor(math.avg(open, close)) + math.pow(2, 2))
 sum_value = request.security("NYSE:IBM", timeframe.period, math.sum(close, 2))
 mintick_round = request.security("NYSE:IBM", timeframe.period, math.round_to_mintick(close + 0.006))
+rsi_value = request.security("NYSE:IBM", timeframe.period, ta.rsi(close, 3))
 higher = request.security("NYSE:IBM", "5", close + open)
-plot(arithmetic + nz(history) + nz(sma) + ema + math_extremes + stateless_math + nz(sum_value) + mintick_round + higher)
+plot(arithmetic + nz(history) + nz(sma) + ema + math_extremes + stateless_math + nz(sum_value) + mintick_round + nz(rsi_value) + higher)

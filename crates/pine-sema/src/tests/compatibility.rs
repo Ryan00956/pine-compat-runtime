@@ -229,8 +229,9 @@ fn accepts_provider_backed_same_timeframe_request_security_expression() {
 
 #[test]
 fn accepts_provider_backed_same_timeframe_request_security_ta() {
-    let analysis =
-        analyze("plot(request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2)))\n");
+    let analysis = analyze(
+        "plot(request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2) + ta.rsi(close, 3)))\n",
+    );
 
     assert!(
         analysis.diagnostics.is_empty(),
