@@ -5663,10 +5663,24 @@ fn library_source_json_reports_missing_library() {
 #[test]
 fn library_source_json_reports_malformed_host_input() {
     let output = analyze_script_with_libraries(IMPORT_SOURCE, "[]");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
 
-    assert!(output.contains("\"executable\":false"));
-    assert!(output.contains("\"code\":\"E_HOST_INPUT\""));
-    assert!(output.contains("library sources must be a JSON object"));
+    assert_eq!(parsed["executable"], serde_json::json!(false));
+    assert_eq!(
+        parsed["diagnostics"][0]["code"],
+        serde_json::json!("E_HOST_INPUT")
+    );
+    assert!(
+        parsed["diagnostics"][0]["message"]
+            .as_str()
+            .expect("diagnostic message should be a string")
+            .contains("library sources must be a JSON object")
+    );
+    assert_eq!(parsed["compatibility"]["supported"], serde_json::json!([]));
+    assert_eq!(
+        parsed["compatibility"]["unsupported"],
+        serde_json::json!([])
+    );
 }
 
 #[test]
