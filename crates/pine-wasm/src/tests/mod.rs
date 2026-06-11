@@ -2346,22 +2346,7 @@ fn runs_strategy_pyramiding_close_from_csv_to_public_strategy_json() {
     )
     .expect("strategy pyramiding close fixture should run");
 
-    assert!(output.contains("\"values\":[0,1,1,0]"));
-    assert!(output.contains("\"values\":[0,1,3,0]"));
-    assert!(output.contains("\"values\":[0,0,1,2]"));
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L1\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":1,\"price\":2},{\"id\":\"L2\",\"barIndex\":2,\"time\":3,\"direction\":\"strategy.long\",\"qty\":3,\"price\":3}]"
-    ));
-    assert!(output.contains(
-        "\"trades\":[{\"id\":\"L1\",\"entryBarIndex\":1,\"exitBarIndex\":2,\"entryTime\":2,\"exitTime\":3,\"entryPrice\":2,\"exitPrice\":3,\"qty\":1,\"profit\":1},{\"id\":\"L2\",\"entryBarIndex\":2,\"exitBarIndex\":3,\"entryTime\":3,\"exitTime\":4,\"entryPrice\":3,\"exitPrice\":4,\"qty\":3,\"profit\":3}]"
-    ));
-    assert!(output.contains(
-        "\"position\":[{\"barIndex\":1,\"size\":1,\"avgPrice\":2},{\"barIndex\":2,\"size\":4,\"avgPrice\":2.75},{\"barIndex\":2,\"size\":3,\"avgPrice\":3},{\"barIndex\":3,\"size\":0,\"avgPrice\":null}]"
-    ));
-    assert!(output.contains("\"diagnostics\":[]"));
-    assert!(!output.contains("pending"));
-    assert!(!output.contains("closeTrades"));
-    assert!(!output.contains("closedTrades"));
+    assert_snapshot("runtime_strategy_pyramiding_close.json", &output);
 }
 
 #[test]
