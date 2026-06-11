@@ -5162,36 +5162,10 @@ fn runs_strategy_exit_trailing_reservation_fixture_from_csv_to_public_strategy_j
     )
     .expect("strategy exit trailing reservation fixture should run");
 
-    assert!(output.contains(&format!(
-        "\"schemaVersion\":{}",
-        PUBLIC_RUNTIME_SCHEMA_VERSION
-    )));
-    assert_eq!(output.matches("\"direction\":\"strategy.exit\"").count(), 2);
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":2,\"price\":3},{\"id\":\"XT1\",\"barIndex\":3,\"time\":4,\"direction\":\"strategy.exit\",\"qty\":0.75,\"price\":3.5},{\"id\":\"XT2\",\"barIndex\":4,\"time\":5,\"direction\":\"strategy.exit\",\"qty\":1.25,\"price\":3.3}]"
-    ));
-    assert!(output.contains(
-        "\"trades\":[{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":3,\"entryTime\":2,\"exitTime\":4,\"entryPrice\":3,\"exitPrice\":3.5,\"qty\":0.75,\"profit\":0.375},{\"id\":\"L\",\"entryBarIndex\":1,\"exitBarIndex\":4,\"entryTime\":2,\"exitTime\":5,\"entryPrice\":3,\"exitPrice\":3.3,\"qty\":1.25,\"profit\":0.3749999999999998}]"
-    ));
-    assert!(output.contains(
-        "\"position\":[{\"barIndex\":1,\"size\":2,\"avgPrice\":3},{\"barIndex\":3,\"size\":1.25,\"avgPrice\":3},{\"barIndex\":4,\"size\":0,\"avgPrice\":null}]"
-    ));
-    assert!(output.contains("\"values\":[0,2,2,2,1.25]"));
-    assert!(output.contains("\"values\":[0,0,0,0,0.375]"));
-    assert!(output.contains("\"strategy\":{\"orders\":"));
-    assert!(output.contains("\"equity\":["));
-    assert!(output.contains("\"diagnostics\":[]}"));
-    assert!(!output.contains("pending"));
-    assert!(!output.contains("reservedQuantity"));
-    assert!(!output.contains("reserved_quantity"));
-    assert!(!output.contains("remainingQty"));
-    assert!(!output.contains("remaining_quantity"));
-    assert!(!output.contains("qtyPercent"));
-    assert!(!output.contains("qty_percent"));
-    assert!(!output.contains("trailing"));
-    assert!(!output.contains("stop_price"));
-    assert!(!output.contains("activation"));
-    assert!(!output.contains("exitReason"));
+    assert_snapshot(
+        "runtime_strategy_exit_reservation_trailing_host_parity.json",
+        &output,
+    );
 }
 
 #[test]
