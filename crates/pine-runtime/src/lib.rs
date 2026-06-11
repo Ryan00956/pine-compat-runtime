@@ -19,10 +19,12 @@ pub use bar::{Bar, BarUpdate, BarUpdateKind};
 pub use error::RuntimeError;
 pub use output::alerts::AlertEvent;
 pub use output::delivery::{
-    DeliveryAttemptRecord, DeliveryAttemptStatus, DeliveryAttemptStore, DeliveryCandidate,
-    DeliveryDedupeKey, DeliveryEventKind, DeliveryOutcome, DeliverySink, ExternalDeliveryIdentity,
-    ExternalDeliveryResult, ExternalDeliveryStatus, InMemoryDeliveryAttemptStore,
-    InMemoryDeliverySink, strategy_order_fill_delivery_candidate,
+    DeliveryAdapterRun, DeliveryAttemptRecord, DeliveryAttemptStatus, DeliveryAttemptStore,
+    DeliveryCandidate, DeliveryDedupeKey, DeliveryEventKind, DeliveryOutcome, DeliverySink,
+    ExternalDeliveryAdapter, ExternalDeliveryIdentity, ExternalDeliveryResult,
+    ExternalDeliveryStatus, InMemoryDeliveryAttemptStore, InMemoryDeliverySink,
+    TestCollectorDeliveryAdapter, TestCollectorDeliveryRecord,
+    deliver_candidate_with_attempt_store, strategy_order_fill_delivery_candidate,
 };
 pub use output::drawings::{
     BoxOutput, BoxSnapshot, LabelOutput, LabelSnapshot, LineOutput, LineSnapshot,

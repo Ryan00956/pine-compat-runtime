@@ -524,7 +524,7 @@ Missing internal behavior:
   `{{strategy.order.alert_message}}`;
 - concrete realtime delivery implementation for broker fills, including
   durable attempt-store behavior across host restarts, external delivery
-  adapters, retry, authentication, and failure reporting.
+  adapters such as webhook, retry, authentication, and failure reporting.
 
 Gap size: medium.
 
@@ -532,8 +532,8 @@ Best next slice: use `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md`
 for the host-owned adapter boundary. Keep default runtime JSON, Python
 dictionaries, WASM JSON, Pine-source alert placeholder support, and external
 network delivery unchanged until restart-safe durable attempt-store behavior,
-retry policy, authentication, and failure reporting are implemented through
-explicit host APIs.
+webhook URL validation, retry policy, authentication, and failure reporting are
+implemented through explicit host APIs.
 
 ## Recommended Internal Roadmap
 

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added a pure host-side `TestCollectorDeliveryAdapter` and
+  `deliver_candidate_with_attempt_store` helper for future alert delivery
+  adapters. The slice exercises reserve/start/deliver/complete attempt
+  recording without adding network delivery, restart-safe persistence, or
+  public runtime JSON fields.
 - Added a host-side `DeliveryAttemptStore` trait and
   `InMemoryDeliveryAttemptStore` test implementation for future alert delivery
   adapters. The slice covers reserve/start/complete attempt recording without

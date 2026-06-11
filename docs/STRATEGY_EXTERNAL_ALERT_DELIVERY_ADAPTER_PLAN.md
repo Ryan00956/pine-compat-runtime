@@ -39,7 +39,9 @@ Already supported:
 - pure host-side external delivery identity, attempt status, attempt record,
   result status, and result types without external delivery side effects;
 - a host-side `DeliveryAttemptStore` trait plus in-memory implementation for
-  tests, covering reserve, start, and complete flows.
+  tests, covering reserve, start, and complete flows;
+- a pure test-collector delivery adapter and host helper that exercise the
+  reserve, start, deliver, and complete flow without network delivery.
 
 Still unsupported:
 
@@ -221,8 +223,8 @@ headers.
 3. Closed on 2026-06-11: add a delivery-attempt-store trait plus an in-memory
    implementation for tests. The in-memory store does not claim restart-safe
    durability.
-4. Add a local-log or test-collector adapter that exercises attempt recording
-   without network delivery.
+4. Closed on 2026-06-11: add a test-collector adapter that exercises attempt
+   recording without network delivery.
 5. Design and implement a webhook adapter only after URL validation, secret
    handling, retry policy, timeout behavior, and diagnostic redaction are
    fixture-backed.

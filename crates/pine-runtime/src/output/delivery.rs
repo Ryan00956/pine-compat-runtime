@@ -358,6 +358,99 @@ impl DeliveryAttemptStore for InMemoryDeliveryAttemptStore {
     }
 }
 
+pub trait ExternalDeliveryAdapter {
+    fn adapter_id(&self) -> &str;
+
+    fn deliver(
+        &mut self,
+        candidate: &DeliveryCandidate,
+        attempt: &DeliveryAttemptRecord,
+    ) -> ExternalDeliveryResult;
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TestCollectorDeliveryRecord {
+    pub candidate: DeliveryCandidate,
+    pub attempt: DeliveryAttemptRecord,
+}
+
+#[derive(Debug, Clone)]
+pub struct TestCollectorDeliveryAdapter {
+    adapter_id: String,
+    completed_at: i64,
+    collected: Vec<TestCollectorDeliveryRecord>,
+}
+
+impl TestCollectorDeliveryAdapter {
+    pub fn new(adapter_id: impl Into<String>, completed_at: i64) -> Self {
+        Self {
+            adapter_id: adapter_id.into(),
+            completed_at,
+            collected: Vec::new(),
+        }
+    }
+
+    pub fn collected(&self) -> &[TestCollectorDeliveryRecord] {
+        &self.collected
+    }
+}
+
+impl ExternalDeliveryAdapter for TestCollectorDeliveryAdapter {
+    fn adapter_id(&self) -> &str {
+        &self.adapter_id
+    }
+
+    fn deliver(
+        &mut self,
+        candidate: &DeliveryCandidate,
+        attempt: &DeliveryAttemptRecord,
+    ) -> ExternalDeliveryResult {
+        self.collected.push(TestCollectorDeliveryRecord {
+            candidate: candidate.clone(),
+            attempt: attempt.clone(),
+        });
+        ExternalDeliveryResult::delivered(self.completed_at)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DeliveryAdapterRun {
+    pub result: ExternalDeliveryResult,
+    pub completed_attempt: DeliveryAttemptRecord,
+}
+
+pub fn deliver_candidate_with_attempt_store<S, A>(
+    store: &mut S,
+    adapter: &mut A,
+    candidate: DeliveryCandidate,
+    scheduled_at: i64,
+    started_at: i64,
+) -> DeliveryAdapterRun
+where
+    S: DeliveryAttemptStore,
+    A: ExternalDeliveryAdapter,
+{
+    let reserved = store.reserve(
+        candidate.dedupe_key(),
+        adapter.adapter_id().to_owned(),
+        scheduled_at,
+    );
+    let identity = reserved.external_identity();
+    let started = store
+        .start(&identity, reserved.attempt_number, started_at)
+        .expect("reserved delivery attempt can be started");
+    let result = adapter.deliver(&candidate, &started);
+    let completed_attempt = store
+        .complete(&identity, started.attempt_number, &result)
+        .expect("started delivery attempt can be completed");
+
+    DeliveryAdapterRun {
+        result,
+        completed_attempt,
+    }
+}
+
 pub fn strategy_order_fill_delivery_candidate(
     running_alert_id: impl Into<String>,
     config: &RunningAlertConfig,
@@ -656,6 +749,82 @@ mod tests {
             store.complete(&identity, 1, &ExternalDeliveryResult::delivered(1_020)),
             None
         );
+    }
+
+    #[test]
+    fn test_collector_adapter_collects_candidate_with_started_attempt() {
+        let mut adapter = TestCollectorDeliveryAdapter::new("test-collector", 1_020);
+        let attempt = DeliveryAttemptRecord::new(
+            candidate("message").dedupe_key(),
+            "test-collector",
+            1,
+            1_000,
+        )
+        .start(1_010);
+        let result = adapter.deliver(&candidate("message"), &attempt);
+
+        assert_eq!(result, ExternalDeliveryResult::delivered(1_020));
+        assert_eq!(adapter.adapter_id(), "test-collector");
+        assert_eq!(adapter.collected().len(), 1);
+        assert_eq!(adapter.collected()[0].candidate.rendered_message, "message");
+        assert_eq!(adapter.collected()[0].attempt, attempt);
+    }
+
+    #[test]
+    fn deliver_candidate_with_attempt_store_records_full_local_flow() {
+        let mut store = InMemoryDeliveryAttemptStore::new();
+        let mut adapter = TestCollectorDeliveryAdapter::new("test-collector", 1_020);
+
+        let run = deliver_candidate_with_attempt_store(
+            &mut store,
+            &mut adapter,
+            candidate("message"),
+            1_000,
+            1_010,
+        );
+        let identity = run.completed_attempt.external_identity();
+
+        assert_eq!(run.result, ExternalDeliveryResult::delivered(1_020));
+        assert_eq!(
+            run.completed_attempt.status,
+            DeliveryAttemptStatus::Delivered
+        );
+        assert_eq!(run.completed_attempt.scheduled_at, 1_000);
+        assert_eq!(run.completed_attempt.started_at, Some(1_010));
+        assert_eq!(run.completed_attempt.completed_at, Some(1_020));
+        assert_eq!(
+            store.latest_attempt(&identity),
+            Some(&run.completed_attempt)
+        );
+        assert_eq!(adapter.collected().len(), 1);
+        assert_eq!(
+            adapter.collected()[0].attempt.status,
+            DeliveryAttemptStatus::InFlight
+        );
+    }
+
+    #[test]
+    fn deliver_candidate_with_attempt_store_increments_retry_attempts() {
+        let mut store = InMemoryDeliveryAttemptStore::new();
+        let mut adapter = TestCollectorDeliveryAdapter::new("test-collector", 1_020);
+        let first = deliver_candidate_with_attempt_store(
+            &mut store,
+            &mut adapter,
+            candidate("message"),
+            1_000,
+            1_010,
+        );
+        let second = deliver_candidate_with_attempt_store(
+            &mut store,
+            &mut adapter,
+            candidate("message"),
+            2_000,
+            2_010,
+        );
+
+        assert_eq!(first.completed_attempt.attempt_number, 1);
+        assert_eq!(second.completed_attempt.attempt_number, 2);
+        assert_eq!(adapter.collected().len(), 2);
     }
 
     #[test]
