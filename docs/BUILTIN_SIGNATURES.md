@@ -203,8 +203,8 @@ The current executable subset has two forms:
   stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
   `ta.cum`, `ta.sma`, `ta.ema`, `ta.rsi`, `ta.tr` function calls, `ta.atr`,
   `ta.highest`, `ta.lowest`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`,
-  `ta.dev`, `ta.rising`, `ta.falling`, `ta.cross`, `ta.crossover`, and
-  `ta.crossunder`.
+  `ta.dev`, `ta.stdev`, `ta.rising`, `ta.falling`, `ta.cross`,
+  `ta.crossover`, and `ta.crossunder`.
   Requested-context rolling callsite state is isolated from the chart context.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
@@ -212,7 +212,7 @@ The current executable subset has two forms:
 
 Lower timeframe requests, provider expression local variable aliases, UDF calls,
 stateful math calls such as `math.random`, `ta.tr` variable form,
-`ta.highestbars`/`ta.lowestbars`, output/drawing side effects, input
+`ta.highestbars`/`ta.lowestbars`, `ta.variance`, output/drawing side effects, input
 declarations, array mutation, optional parameters, non-default barmerge
 behavior, explicit gaps, and lookahead remain unsupported.
 `request.security_lower_tf` is unsupported; it returns arrays in Pine and is not

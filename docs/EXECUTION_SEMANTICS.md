@@ -829,11 +829,13 @@ pure arithmetic and ternaries, history references, `na`, `nz`, selected
 stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
 `ta.cum`, `ta.sma`, `ta.ema`, `ta.rsi`, `ta.tr` function calls, `ta.atr`,
 `ta.highest`, `ta.lowest`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`,
-`ta.rising`, `ta.falling`, `ta.cross`, `ta.crossover`, and `ta.crossunder`.
+`ta.stdev`, `ta.rising`, `ta.falling`, `ta.cross`, `ta.crossover`, and
+`ta.crossunder`.
 Rolling callsite state for `math.sum` and `ta.*` calls is owned by the isolated
 requested context. Stateful math calls such as
 `math.random`, the `ta.tr` variable form, and extrema offset helpers such as
-`ta.highestbars`/`ta.lowestbars` remain outside the requested-expression subset.
+`ta.highestbars`/`ta.lowestbars`, plus `ta.variance`, remain outside the
+requested-expression subset.
 
 Requested-context results are cached deterministically by callsite, requested
 symbol, requested timeframe, and expression identity for the duration of one

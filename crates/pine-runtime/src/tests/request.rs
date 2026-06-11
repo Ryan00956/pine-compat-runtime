@@ -647,6 +647,52 @@ fn request_security_evaluates_provider_dispersion_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_stdev_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request stdev\")\nprovider_biased = request.security(\"NYSE:IBM\", timeframe.period, ta.stdev(close, 3))\nprovider_sample = request.security(\"NYSE:IBM\", timeframe.period, ta.stdev(close, 3, false))\nchart_biased = ta.stdev(close, 3)\nchart_sample = ta.stdev(close, 3, false)\nplot(provider_biased)\nplot(provider_sample)\nplot(chart_biased)\nplot(chart_sample)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 21.0),
+            timed_bar(120_000, 22.0),
+            timed_bar(180_000, 24.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 11.0),
+            timed_bar(180_000, 17.0),
+        ])
+        .expect("provider ta.stdev expressions should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(
+        &result.plots[0].values[2..],
+        &[0.816496580927726, 1.247219128924647],
+    );
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_values_close(&result.plots[1].values[2..], &[1.0, 1.5275252316519468]);
+    assert_eq!(result.plots[2].values[0], PineValue::Na);
+    assert_eq!(result.plots[2].values[1], PineValue::Na);
+    assert_values_close(
+        &result.plots[2].values[2..],
+        &[2.494438257849294, 4.109609335312651],
+    );
+    assert_eq!(result.plots[3].values[0], PineValue::Na);
+    assert_eq!(result.plots[3].values[1], PineValue::Na);
+    assert_values_close(
+        &result.plots[3].values[2..],
+        &[3.0550504633038935, 5.033222956847166],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_trend_flags_in_requested_context() {
     let program = compile_program(
         "indicator(\"request trend flags\")\nprovider_rising = request.security(\"NYSE:IBM\", timeframe.period, ta.rising(close, 2) ? 1 : 0)\nprovider_falling = request.security(\"NYSE:IBM\", timeframe.period, ta.falling(close, 2) ? 1 : 0)\nchart_rising = ta.rising(close, 2) ? 1 : 0\nchart_falling = ta.falling(close, 2) ? 1 : 0\nplot(provider_rising)\nplot(provider_falling)\nplot(chart_rising)\nplot(chart_falling)\n",

@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported `ta.stdev` calls in same-context and provider-backed
+  scalar expressions, while keeping `ta.variance` outside the subset.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported `ta.cum` calls in same-context and provider-backed
   scalar expressions with requested-context callsite state.
 - Widened the fixture-backed `request.security` requested-expression subset to

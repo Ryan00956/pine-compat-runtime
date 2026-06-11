@@ -275,9 +275,9 @@ Request data:
   `math.round_to_mintick`, `math.sum`, `ta.cum`, `ta.sma`, `ta.ema`,
   `ta.rsi`, `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`,
   `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.rising`,
-  `ta.falling`, `ta.cross`, `ta.crossover`, and `ta.crossunder`; local
-  variable aliases, the `ta.tr` variable form, extrema offset helpers such as
-  `ta.highestbars`/`ta.lowestbars`, and stateful math calls such as
+  `ta.stdev`, `ta.falling`, `ta.cross`, `ta.crossover`, and `ta.crossunder`;
+  local variable aliases, the `ta.tr` variable form, extrema offset helpers such
+  as `ta.highestbars`/`ta.lowestbars`, `ta.variance`, and stateful math calls such as
   `math.random` are not part of this subset.
   Requested-context rolling callsite state is isolated from chart state.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
