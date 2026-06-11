@@ -680,11 +680,12 @@ fn alerts_json(alerts: &[AlertEvent]) -> String {
 
 fn strategy_json(strategy: &StrategyResult) -> String {
     format!(
-        "{{\"orders\":{},\"trades\":{},\"position\":{},\"equity\":{},\"diagnostics\":{}}}",
+        "{{\"orders\":{},\"trades\":{},\"position\":{},\"equity\":{},\"alerts\":{},\"diagnostics\":{}}}",
         strategy_orders_json(&strategy.orders),
         strategy_trades_json(&strategy.trades),
         strategy_position_json(&strategy.position),
         strategy_equity_json(&strategy.equity),
+        strategy_order_fill_alerts_json(&strategy.alerts),
         runtime_diagnostics_json(&strategy.diagnostics)
     )
 }
@@ -703,6 +704,29 @@ fn strategy_orders_json(orders: &[crate::StrategyOrderEvent]) -> String {
             json_escape(&order.direction),
             f64_json(order.qty),
             f64_json(order.price)
+        ));
+    }
+    output.push(']');
+    output
+}
+
+fn strategy_order_fill_alerts_json(alerts: &[crate::StrategyOrderFillAlertOutput]) -> String {
+    let mut output = String::from("[");
+    for (index, alert) in alerts.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"id\":\"{}\",\"barIndex\":{},\"time\":{},\"direction\":\"{}\",\"qty\":{},\"price\":{},\"entryId\":{},\"exitId\":{},\"message\":\"{}\"}}",
+            json_escape(&alert.id),
+            alert.bar_index,
+            alert.time,
+            json_escape(&alert.direction),
+            f64_json(alert.qty),
+            f64_json(alert.price),
+            option_string_json(alert.entry_id.as_deref()),
+            option_string_json(alert.exit_id.as_deref()),
+            json_escape(&alert.message)
         ));
     }
     output.push(']');
@@ -770,6 +794,13 @@ fn strategy_equity_json(equity: &[crate::StrategyEquitySnapshot]) -> String {
 
 fn option_f64_json(value: Option<f64>) -> String {
     value.map_or_else(|| "null".to_owned(), f64_json)
+}
+
+fn option_string_json(value: Option<&str>) -> String {
+    value.map_or_else(
+        || "null".to_owned(),
+        |value| format!("\"{}\"", json_escape(value)),
+    )
 }
 
 fn f64_json(value: f64) -> String {
@@ -848,8 +879,8 @@ fn json_escape(value: &str) -> String {
 mod tests {
     use super::*;
     use crate::{
-        RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent, StrategyPositionSnapshot,
-        StrategyTrade,
+        RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent,
+        StrategyOrderFillAlertOutput, StrategyPositionSnapshot, StrategyTrade,
     };
 
     fn empty_result() -> RuntimeResult {
@@ -947,6 +978,17 @@ mod tests {
                 equity: f64::NEG_INFINITY,
                 net_profit: 2.0,
             }],
+            alerts: vec![StrategyOrderFillAlertOutput {
+                id: "A".to_owned(),
+                bar_index: 0,
+                time: 10,
+                direction: "strategy.exit".to_owned(),
+                qty: f64::INFINITY,
+                price: f64::NAN,
+                entry_id: Some("T".to_owned()),
+                exit_id: None,
+                message: "message".to_owned(),
+            }],
             diagnostics: Vec::new(),
         });
 
@@ -956,6 +998,7 @@ mod tests {
         assert!(output.contains(r#""entryPrice":null,"exitPrice":null,"qty":1,"profit":null"#));
         assert!(output.contains(r#""size":null,"avgPrice":null"#));
         assert!(output.contains(r#""cash":null,"marketValue":null,"equity":null,"netProfit":2"#));
+        assert!(output.contains(r#""qty":null,"price":null,"entryId":"T","exitId":null"#));
         assert!(!output.contains("NaN"));
         assert!(!output.contains("inf"));
     }

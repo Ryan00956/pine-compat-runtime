@@ -460,14 +460,12 @@ those supported shapes can keep multiple reserved pending exits for different
 open pyramided long entry for fixture-backed absolute stop/limit exits, or the
 active pending entry for same-calculation absolute `stop`, `limit`, and
 `trail_price` attachment plus entry-relative `profit`, `loss`, and
-`trail_points` attachment. Supported `strategy.entry` metadata arguments are
-stored internally on pending and filled entries without public JSON fields or
-external order-fill alert delivery. Supported `strategy.exit` metadata
-arguments are stored internally on pending and deferred exits without public
-JSON fields or external order-fill alert delivery. Supported `strategy.close`
-and `strategy.close_all` metadata arguments are stored internally on
-closed-trade metrics without public JSON fields or external order-fill alert
-delivery. Richer strategy order options remain unsupported.
+`trail_points` attachment. Supported `strategy.entry`, `strategy.exit`,
+`strategy.close`, and `strategy.close_all` metadata arguments are retained on
+broker-owned fill events and exposed as raw order-fill payloads in
+`strategy.alerts` for supported fills. External alert delivery and
+alert-template placeholder rendering remain unsupported. Richer strategy order
+options remain unsupported.
 `strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
 `strategy.closedtrades.entry_id`, `strategy.closedtrades.exit_id`,
 `strategy.closedtrades.entry_bar_index`, and

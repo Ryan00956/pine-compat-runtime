@@ -37,6 +37,7 @@ EMPTY_STRATEGY_RESULT = {
     "trades": [],
     "position": [],
     "equity": [],
+    "alerts": [],
     "diagnostics": [],
 }
 
@@ -101,7 +102,7 @@ def test_compile_script_returns_program_with_run_method():
     program = pine_compat.compile_script('indicator("demo")\nplot(close)\n')
     result = program.run(BARS)
 
-    assert result["schemaVersion"] == 3
+    assert result["schemaVersion"] == 4
     assert set(result) == RUNTIME_RESULT_KEYS
     assert result["labels"] == []
     assert result["lines"] == []
@@ -5355,7 +5356,7 @@ def test_run_script_returns_strategy_exit_active_entry_attachment_contract():
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
+    assert result["schemaVersion"] == 4
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5437,7 +5438,7 @@ def test_run_script_returns_strategy_exit_active_entry_profit_attachment_contrac
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
+    assert result["schemaVersion"] == 4
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5501,7 +5502,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_attachment_contract(
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
+    assert result["schemaVersion"] == 4
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5566,7 +5567,7 @@ def test_run_script_returns_strategy_exit_active_entry_trail_points_attachment_c
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
+    assert result["schemaVersion"] == 4
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5630,7 +5631,7 @@ def test_run_script_returns_strategy_exit_active_entry_stop_profit_bracket_contr
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
+    assert result["schemaVersion"] == 4
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5694,7 +5695,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_limit_bracket_contra
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
+    assert result["schemaVersion"] == 4
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5758,7 +5759,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_profit_bracket_contr
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
+    assert result["schemaVersion"] == 4
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5822,7 +5823,7 @@ def test_run_script_returns_strategy_exit_bracket_reservation_fixture_contract()
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
+    assert result["schemaVersion"] == 4
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5990,7 +5991,7 @@ def test_run_script_returns_strategy_exit_trailing_reservation_fixture_contract(
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 3
+    assert result["schemaVersion"] == 4
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -7271,7 +7272,7 @@ def test_run_script_compiles_and_executes():
         BARS,
     )
 
-    assert result["schemaVersion"] == 3
+    assert result["schemaVersion"] == 4
     assert result["plots"][0]["values"] == [2, 2, 3]
 
 

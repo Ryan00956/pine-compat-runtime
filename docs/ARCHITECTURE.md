@@ -392,9 +392,11 @@ top-level drawing-object fields, and `schemaVersion: 3` reserves the top-level
 `alerts` event array. Phase H's initial event shape is `{id, barIndex, time,
 message, source}` for the narrow `alertcondition` and `alert` subsets. For
 `alertcondition`, `source` is the const title; for `alert`, `source` is
-`alert`. Host integrations can adapt this model into their charting or API
-format, but should preserve the runtime schema version when they forward
-machine-readable runtime results.
+`alert`. `schemaVersion: 4` adds broker-owned strategy order-fill alert
+payloads under `strategy.alerts` without changing the top-level `alerts[]`
+callsite event shape. Host integrations can adapt this model into their
+charting or API format, but should preserve the runtime schema version when
+they forward machine-readable runtime results.
 
 Machine-readable analysis and matrix outputs use separate schema ownership:
 `PUBLIC_ANALYSIS_SCHEMA_VERSION` for WASM/Python analysis reports and

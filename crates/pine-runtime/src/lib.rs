@@ -30,8 +30,8 @@ pub use output::model::{
     RuntimeDiagnostic, RuntimeResult,
 };
 pub use output::strategy::{
-    StrategyEquitySnapshot, StrategyOrderEvent, StrategyPositionSnapshot, StrategyResult,
-    StrategyTrade,
+    StrategyEquitySnapshot, StrategyOrderEvent, StrategyOrderFillAlertOutput,
+    StrategyPositionSnapshot, StrategyResult, StrategyTrade,
 };
 pub use profile::{RuntimeProfile, RuntimeProfiledResult};
 pub(crate) use request::RequestCacheKey;

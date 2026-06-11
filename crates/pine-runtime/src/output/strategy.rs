@@ -6,6 +6,7 @@ pub struct StrategyResult {
     pub trades: Vec<StrategyTrade>,
     pub position: Vec<StrategyPositionSnapshot>,
     pub equity: Vec<StrategyEquitySnapshot>,
+    pub alerts: Vec<StrategyOrderFillAlertOutput>,
     pub diagnostics: Vec<RuntimeDiagnostic>,
 }
 
@@ -17,6 +18,19 @@ pub struct StrategyOrderEvent {
     pub direction: String,
     pub qty: f64,
     pub price: f64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct StrategyOrderFillAlertOutput {
+    pub id: String,
+    pub bar_index: usize,
+    pub time: i64,
+    pub direction: String,
+    pub qty: f64,
+    pub price: f64,
+    pub entry_id: Option<String>,
+    pub exit_id: Option<String>,
+    pub message: String,
 }
 
 #[derive(Debug, Clone, PartialEq)]

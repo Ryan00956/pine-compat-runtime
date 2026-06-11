@@ -512,21 +512,21 @@ supported strategy order paths, and
 `docs/STRATEGY_ORDER_FILL_ALERTS_DESIGN.md` defines the order-fill alert event
 boundary. The broker now records internal order-fill alert events for supported
 entry, exit, close, and close_all fills, including `disable_alert` suppression
-and exit leg-specific message selection. Strategy order-fill alerts are still
-not exposed through public host output.
+and exit leg-specific message selection. Public runtime `schemaVersion: 4`
+exposes those broker-owned payloads under `strategy.alerts` with CLI, Python,
+and WASM parity.
 
 Missing internal behavior:
 
 - strategy-specific placeholder data for order fills;
-- public alert events tied to broker fills rather than reached alert calls.
+- alert-template rendering and external alert delivery for broker fills.
 
 Gap size: medium.
 
-Best next slice: implement `strategy.alerts` from
-`docs/STRATEGY_ORDER_FILL_ALERTS_PUBLIC_SCHEMA_PLAN.md`, including a runtime
-schema bump, CLI/Python/WASM host parity, non-empty strategy alert fixtures, and
-disable-alert suppression coverage. External alert delivery and placeholder
-template rendering remain out of scope.
+Best next slice: design placeholder/template rendering boundaries for
+`{{strategy.order.alert_message}}` and decide whether it belongs in a host API
+separate from broker-owned `strategy.alerts`. External alert delivery remains
+out of scope until a host alert configuration model exists.
 
 ## Recommended Internal Roadmap
 
@@ -536,8 +536,8 @@ template rendering remain out of scope.
    that preserve the current public runtime schema.
 3. Use `docs/STRATEGY_INTERNAL_MARGIN_ACCOUNT_MODEL_PLAN.md` before widening
    margin/account behavior.
-4. Implement strategy order-fill alert metadata internally before exposing it
-   through public host output.
+4. Keep strategy order-fill alert metadata and public `strategy.alerts` stable
+   before adding placeholder rendering or external delivery.
 5. Defer short exposure, reversals, generic `strategy.order()`, custom OCA
    behavior, public pending-order records, and richer close-entry ordering until
    a new broker-model design explicitly covers their state transitions.

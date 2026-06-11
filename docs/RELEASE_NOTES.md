@@ -2,33 +2,33 @@
 
 ## Unreleased
 
-- Closed the public schema design for strategy order-fill alerts. A future
-  schema slice will expose broker-owned order-fill payloads as
-  `strategy.alerts` with CLI/Python/WASM parity, while leaving top-level
-  `alerts[]`, placeholder template rendering, and external alert delivery
+- Exposed broker-owned strategy order-fill alert payloads as
+  `strategy.alerts` in public runtime output and moved the runtime contract to
+  `schemaVersion: 4` with CLI/Python/WASM parity. Top-level `alerts[]`,
+  alert-template placeholder rendering, and external alert delivery remain
   unchanged.
 - Added an internal broker-owned strategy order-fill alert event model for
   supported `strategy.entry`, `strategy.exit`, `strategy.close`, and
   `strategy.close_all` fills. The broker now records fill-time alert payloads,
   honors `disable_alert`, and selects `strategy.exit` profit/loss messages by
-  filled leg. Public JSON, host output, placeholder rendering, and external
-  alert delivery remain unchanged.
+  filled leg. These broker-owned payloads now feed public `strategy.alerts`;
+  placeholder rendering and external alert delivery remain unsupported.
 - Closed the Strategy Order-Fill Alerts design gate. Future strategy
   order-fill alert work now has an internal broker event boundary for
   fill-time message selection, `disable_alert` suppression, placeholder
-  handling, and host schema review. Runtime behavior, public JSON, and host
-  output remain unchanged.
+  handling, and host schema review. The follow-on public schema slice exposes
+  the broker-owned payloads without changing top-level `alerts[]`.
 - Stored supported `strategy.close` and `strategy.close_all` order metadata
-  internally on closed-trade metrics. Public strategy JSON, host output,
-  unsupported `immediately` timing, and external order-fill alert delivery
-  remain unchanged.
+  internally on closed-trade metrics. Supported close fill payloads now feed
+  public `strategy.alerts`; unsupported `immediately` timing, placeholder
+  rendering, and external order-fill alert delivery remain unchanged.
 - Stored supported `strategy.exit` order metadata internally on pending and
   deferred exits, including same-identity replacement and omitted-`from_entry`
-  fan-out paths. Public strategy JSON, host output, and external order-fill
-  alert delivery remain unchanged.
+  fan-out paths. Supported exit fill payloads now feed public
+  `strategy.alerts`; external order-fill alert delivery remains unsupported.
 - Stored supported `strategy.entry` order metadata internally on pending and
-  filled entries. Public strategy JSON, host output, and external order-fill
-  alert delivery remain unchanged.
+  filled entries. Supported entry fill payloads now feed public
+  `strategy.alerts`; external order-fill alert delivery remains unsupported.
 - Accepted strategy order metadata parameters at the semantic boundary for
   supported `strategy.entry`, `strategy.exit`, `strategy.close`, and
   `strategy.close_all` calls. `comment`/alert-message fields must be
@@ -1411,10 +1411,11 @@ feature-level matrix and its fixture paths.
 Machine-readable public outputs use top-level `schemaVersion`. Runtime,
 analysis, and matrix outputs now have separate schema constants:
 `PUBLIC_RUNTIME_SCHEMA_VERSION`, `PUBLIC_ANALYSIS_SCHEMA_VERSION`, and
-`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is now `schemaVersion: 3` with a
-reserved top-level `alerts` array. Analysis and matrix outputs remain
-`schemaVersion: 2`; increment only the affected contract when an intentional
-consumer-visible output change is documented with snapshot updates.
+`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is now `schemaVersion: 4` with a
+reserved top-level `alerts` array and strategy order-fill payloads under
+`strategy.alerts`. Analysis and matrix outputs remain `schemaVersion: 2`;
+increment only the affected contract when an intentional consumer-visible
+output change is documented with snapshot updates.
 
 ### Runtime Surfaces
 

@@ -24,8 +24,8 @@ use pending_exits::{
 pub(crate) use pending_exits::{TrailPointsExitSpec, TrailPriceExitSpec};
 
 use crate::{
-    RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent, StrategyPositionSnapshot,
-    StrategyResult, StrategyTrade,
+    RuntimeDiagnostic, StrategyEquitySnapshot, StrategyOrderEvent, StrategyOrderFillAlertOutput,
+    StrategyPositionSnapshot, StrategyResult, StrategyTrade,
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -1166,6 +1166,21 @@ impl BrokerState {
             trades: self.trades.clone(),
             position: self.position.clone(),
             equity: self.equity.clone(),
+            alerts: self
+                .order_fill_alerts
+                .iter()
+                .map(|event| StrategyOrderFillAlertOutput {
+                    id: event.id.clone(),
+                    bar_index: event.bar_index,
+                    time: event.time,
+                    direction: event.direction.clone(),
+                    qty: event.qty,
+                    price: event.price,
+                    entry_id: event.entry_id.clone(),
+                    exit_id: event.exit_id.clone(),
+                    message: event.message.clone(),
+                })
+                .collect(),
             diagnostics: self.diagnostics.clone(),
         }
     }

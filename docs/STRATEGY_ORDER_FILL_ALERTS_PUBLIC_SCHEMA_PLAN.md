@@ -1,11 +1,11 @@
 # Strategy Order-Fill Alerts Public Schema Plan
 
-Status: design gate closed on 2026-06-11.
+Status: implementation slice closed on 2026-06-11.
 
 This document closes the public-schema design slice after
 `docs/STRATEGY_ORDER_FILL_ALERTS_DESIGN.md`. It chooses the host output shape
-for exposing broker-owned strategy order-fill alert events, but does not
-implement the public output change.
+for exposing broker-owned strategy order-fill alert events. The implementation
+slice now exposes this shape as public runtime `schemaVersion: 4` output.
 
 ## Decision
 
@@ -22,8 +22,8 @@ generic source string.
 
 ## Public JSON Shape
 
-The next public-output slice should increment `PUBLIC_RUNTIME_SCHEMA_VERSION`
-from `3` to `4` and add this field to `strategy`:
+The public-output slice increments `PUBLIC_RUNTIME_SCHEMA_VERSION` from `3` to
+`4` and adds this field to `strategy`:
 
 ```json
 {
@@ -85,7 +85,7 @@ that should not block exposing the broker-owned fill payload.
 
 ## Host Parity Requirements
 
-The implementation slice that exposes `strategy.alerts` must update all public
+The implementation slice that exposes `strategy.alerts` updates all public
 hosts in one commit:
 
 - Rust runtime model: add `alerts: Vec<StrategyOrderFillAlertOutput>` to

@@ -57,6 +57,13 @@ mod tests {
         path::{Path, PathBuf},
     };
 
+    fn strategy_orders_segment(output: &str) -> &str {
+        let start = output.find(r#""orders":["#).expect("strategy orders start");
+        let tail = &output[start..];
+        let end = tail.find(r#","trades":"#).expect("strategy trades start");
+        &tail[..end]
+    }
+
     #[test]
     fn matrix_includes_supported_builtins_and_unsupported_features() {
         let entries = conformance_entries();
@@ -411,7 +418,7 @@ mod tests {
         let output = public_runtime_result_json(&result);
 
         assert!(output.contains(
-            r#""strategy":{"orders":[],"trades":[],"position":[],"equity":[],"diagnostics":[]}"#
+            r#""strategy":{"orders":[],"trades":[],"position":[],"equity":[],"alerts":[],"diagnostics":[]}"#
         ));
     }
 
@@ -568,7 +575,12 @@ mod tests {
         let output =
             runtime_fixture_json("tests/fixtures/runtime/strategy_exit_bracket_both_hit.pine");
 
-        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
+        assert_eq!(
+            strategy_orders_segment(&output)
+                .matches(r#""direction":"strategy.exit""#)
+                .count(),
+            1
+        );
         assert_eq!(output.matches(r#""trades":[{"#).count(), 1);
         assert!(output.contains(
             r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":100},{"id":"XB","barIndex":1,"time":2,"direction":"strategy.exit","qty":2,"price":95}]"#
@@ -587,7 +599,12 @@ mod tests {
             r#"{{"schemaVersion":{},"#,
             PUBLIC_RUNTIME_SCHEMA_VERSION
         )));
-        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
+        assert_eq!(
+            strategy_orders_segment(&output)
+                .matches(r#""direction":"strategy.exit""#)
+                .count(),
+            1
+        );
         assert_eq!(output.matches(r#""trades":[{"#).count(), 1);
         assert!(output.contains(
             r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XT","barIndex":3,"time":4,"direction":"strategy.exit","qty":2,"price":3.5}]"#
@@ -606,7 +623,12 @@ mod tests {
             r#"{{"schemaVersion":{},"#,
             PUBLIC_RUNTIME_SCHEMA_VERSION
         )));
-        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
+        assert_eq!(
+            strategy_orders_segment(&output)
+                .matches(r#""direction":"strategy.exit""#)
+                .count(),
+            1
+        );
         assert!(output.contains(
             r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XQ","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.75,"price":2.5}]"#
         ));
@@ -630,7 +652,12 @@ mod tests {
             r#"{{"schemaVersion":{},"#,
             PUBLIC_RUNTIME_SCHEMA_VERSION
         )));
-        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
+        assert_eq!(
+            strategy_orders_segment(&output)
+                .matches(r#""direction":"strategy.exit""#)
+                .count(),
+            1
+        );
         assert!(output.contains(
             r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XP","barIndex":1,"time":2,"direction":"strategy.exit","qty":1,"price":2.5}]"#
         ));
@@ -657,7 +684,12 @@ mod tests {
             r#"{{"schemaVersion":{},"#,
             PUBLIC_RUNTIME_SCHEMA_VERSION
         )));
-        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 2);
+        assert_eq!(
+            strategy_orders_segment(&output)
+                .matches(r#""direction":"strategy.exit""#)
+                .count(),
+            2
+        );
         assert!(output.contains(
             r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XS","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.5,"price":2.5},{"id":"XL","barIndex":2,"time":3,"direction":"strategy.exit","qty":1.5,"price":1.5}]"#
         ));
@@ -686,7 +718,12 @@ mod tests {
             r#"{{"schemaVersion":{},"#,
             PUBLIC_RUNTIME_SCHEMA_VERSION
         )));
-        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 1);
+        assert_eq!(
+            strategy_orders_segment(&output)
+                .matches(r#""direction":"strategy.exit""#)
+                .count(),
+            1
+        );
         assert!(output.contains(
             r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XFULL","barIndex":2,"time":3,"direction":"strategy.exit","qty":2,"price":2.5}]"#
         ));
@@ -725,7 +762,12 @@ mod tests {
             r#"{{"schemaVersion":{},"#,
             PUBLIC_RUNTIME_SCHEMA_VERSION
         )));
-        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 2);
+        assert_eq!(
+            strategy_orders_segment(&output)
+                .matches(r#""direction":"strategy.exit""#)
+                .count(),
+            2
+        );
         assert!(output.contains(
             r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":2},{"id":"XB1","barIndex":1,"time":2,"direction":"strategy.exit","qty":0.5,"price":2},{"id":"XB2","barIndex":2,"time":3,"direction":"strategy.exit","qty":1,"price":3}]"#
         ));
@@ -759,7 +801,12 @@ mod tests {
             r#"{{"schemaVersion":{},"#,
             PUBLIC_RUNTIME_SCHEMA_VERSION
         )));
-        assert_eq!(output.matches(r#""direction":"strategy.exit""#).count(), 2);
+        assert_eq!(
+            strategy_orders_segment(&output)
+                .matches(r#""direction":"strategy.exit""#)
+                .count(),
+            2
+        );
         assert!(output.contains(
             r#""orders":[{"id":"L","barIndex":1,"time":2,"direction":"strategy.long","qty":2,"price":3},{"id":"XT1","barIndex":3,"time":4,"direction":"strategy.exit","qty":0.75,"price":3.5},{"id":"XT2","barIndex":4,"time":5,"direction":"strategy.exit","qty":1.25,"price":3.3}]"#
         ));

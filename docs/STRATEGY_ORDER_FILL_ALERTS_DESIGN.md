@@ -110,9 +110,9 @@ are broker events with order ids, fill prices, quantities, and optional entry or
 exit ids. Reusing the same public shape would lose type information and make
 host consumers infer strategy fills from a generic source string.
 
-The public schema plan chooses a future schema-versioned `strategy.alerts`
-array over an explicit top-level typed alert union. That public-output slice
-must include CLI, Python, and WASM parity tests.
+The public schema plan chooses a schema-versioned `strategy.alerts` array over
+an explicit top-level typed alert union. The public-output slice exposes that
+shape with CLI, Python, and WASM parity.
 
 ## Host And Schema Implications
 

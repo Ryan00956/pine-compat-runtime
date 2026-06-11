@@ -326,9 +326,40 @@ fn strategy_result_to_py(
     output.set_item("position", strategy_position_to_py(py, &strategy.position)?)?;
     output.set_item("equity", strategy_equity_to_py(py, &strategy.equity)?)?;
     output.set_item(
+        "alerts",
+        strategy_order_fill_alerts_to_py(py, &strategy.alerts)?,
+    )?;
+    output.set_item(
         "diagnostics",
         strategy_diagnostics_to_py(py, &strategy.diagnostics)?,
     )?;
+    Ok(output.into_any().unbind())
+}
+
+fn strategy_order_fill_alerts_to_py(
+    py: Python<'_>,
+    alerts: &[pine_runtime::StrategyOrderFillAlertOutput],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for alert in alerts {
+        let item = PyDict::new(py);
+        item.set_item("id", &alert.id)?;
+        item.set_item("barIndex", alert.bar_index)?;
+        item.set_item("time", alert.time)?;
+        item.set_item("direction", &alert.direction)?;
+        set_finite_f64(py, &item, "qty", alert.qty)?;
+        set_finite_f64(py, &item, "price", alert.price)?;
+        match &alert.entry_id {
+            Some(entry_id) => item.set_item("entryId", entry_id)?,
+            None => item.set_item("entryId", py.None())?,
+        }
+        match &alert.exit_id {
+            Some(exit_id) => item.set_item("exitId", exit_id)?,
+            None => item.set_item("exitId", py.None())?,
+        }
+        item.set_item("message", &alert.message)?;
+        output.append(item)?;
+    }
     Ok(output.into_any().unbind())
 }
 
