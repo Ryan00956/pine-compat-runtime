@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md` as the closed
+  host-owned external alert delivery adapter design gate. It defines adapter,
+  durable attempt state, retry, authentication, payload, and failure-reporting
+  boundaries without adding network delivery or changing public runtime JSON.
 - Designed the shared host alert event envelope for future `both` running-alert
   selection across top-level `alerts[]` and `strategy.alerts[]`. This does not
   enable `both`, add envelope builders, or change public runtime JSON.

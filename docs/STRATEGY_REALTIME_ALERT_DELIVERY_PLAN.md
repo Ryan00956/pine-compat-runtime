@@ -236,8 +236,10 @@ separate implementation plan before support is claimed.
    `indicatorAlertCalls` and `strategyOrderFills`. `both` remains
    implementation-pending until executable envelope builders and host tests
    exist.
-5. Design concrete external delivery adapters separately, including
-   persistence, retries, authentication, and failure reporting.
+5. Closed on 2026-06-11: design concrete external delivery adapters in
+   `docs/STRATEGY_EXTERNAL_ALERT_DELIVERY_ADAPTER_PLAN.md`, including
+   persistence, retries, authentication, payload boundaries, and failure
+   reporting. Concrete adapters remain implementation-pending.
 
 ## Completion Gate
 
