@@ -134,13 +134,15 @@ Tests:
 
 ### Slice OM2: Entry Metadata Storage
 
+Closed on 2026-06-11.
+
 Thread `StrategyOrderMetadata` through supported `strategy.entry` placement and
 fill paths without exposing it publicly.
 
 Tests:
 
-- broker unit test proving pending entry metadata survives until fill;
-- runtime fixture proving public orders/trades/position/equity JSON is unchanged
+- broker unit test proves pending entry metadata survives until fill;
+- runtime fixture proves public orders/trades/position/equity JSON is unchanged
   when metadata is present;
 - CLI/Python/WASM parity only if public host output is touched.
 

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Stored supported `strategy.entry` order metadata internally on pending and
+  filled entries. Public strategy JSON, host output, and external order-fill
+  alert delivery remain unchanged.
 - Accepted strategy order metadata parameters at the semantic boundary for
   supported `strategy.entry`, `strategy.exit`, `strategy.close`, and
   `strategy.close_all` calls. `comment`/alert-message fields must be

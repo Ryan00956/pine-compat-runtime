@@ -134,6 +134,7 @@ fn ledger_open_trade(id: &str, quantity: f64, entry_price: f64, commission: f64)
         equity_on_entry: Some(100_000.0),
         min_equity_before_entry: Some(100_000.0),
         max_equity_before_entry: Some(100_000.0),
+        entry_metadata: StrategyOrderMetadata::default(),
     }
 }
 
@@ -985,6 +986,7 @@ fn pending_market_entry_records_internal_order_without_public_fill() {
             kind: PendingEntryKind::Market,
             quantity: 2.0,
             created_bar_index: 0,
+            metadata: StrategyOrderMetadata::default(),
         })
     );
     assert!(broker.orders.is_empty());
@@ -1011,10 +1013,50 @@ fn pending_market_entry_replaces_same_id_without_public_fill() {
             kind: PendingEntryKind::Market,
             quantity: 3.0,
             created_bar_index: 1,
+            metadata: StrategyOrderMetadata::default(),
         })
     );
     assert!(broker.orders.is_empty());
     assert!(broker.position.is_empty());
+    assert!(broker.diagnostics.is_empty());
+}
+
+#[test]
+fn pending_market_entry_metadata_survives_until_fill_without_public_output() {
+    let mut broker = BrokerState::new(100_000.0);
+    let metadata = StrategyOrderMetadata {
+        comment: Some("entry comment".to_owned()),
+        alert_message: Some("entry alert".to_owned()),
+        disable_alert: true,
+    };
+
+    broker.place_pending_market_long_entry_with_metadata("L".to_owned(), 2.0, 0, metadata.clone());
+
+    assert_eq!(pending_entry_count(&broker), 1);
+    assert_eq!(
+        broker
+            .order_book
+            .entries()
+            .current()
+            .map(|pending_entry| &pending_entry.metadata),
+        Some(&metadata)
+    );
+    assert!(broker.orders.is_empty());
+
+    broker.fill_pending_market_long_entries(1, 20, 101.0);
+
+    assert_eq!(pending_entry_count(&broker), 0);
+    assert_eq!(
+        broker
+            .trade_ledger
+            .open_at(0)
+            .map(|open_trade| &open_trade.entry_metadata),
+        Some(&metadata)
+    );
+    assert_eq!(broker.orders.len(), 1);
+    assert_eq!(broker.orders[0].id, "L");
+    assert_eq!(broker.orders[0].direction, "strategy.long");
+    assert_eq!(broker.result().orders.len(), 1);
     assert!(broker.diagnostics.is_empty());
 }
 

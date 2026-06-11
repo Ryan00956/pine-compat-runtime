@@ -463,6 +463,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/strategy_entry.pine",
     ),
     (
+        "runtime_strategy_entry_metadata.json",
+        "tests/fixtures/runtime/strategy_entry_metadata.pine",
+    ),
+    (
         "runtime_strategy_entry_limit.json",
         "tests/fixtures/runtime/strategy_entry_limit.pine",
     ),

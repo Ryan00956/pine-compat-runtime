@@ -1,3 +1,5 @@
+use super::StrategyOrderMetadata;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum TradeDirection {
     Long,
@@ -18,6 +20,7 @@ pub(super) struct OpenTrade {
     pub(super) equity_on_entry: Option<f64>,
     pub(super) min_equity_before_entry: Option<f64>,
     pub(super) max_equity_before_entry: Option<f64>,
+    pub(super) entry_metadata: StrategyOrderMetadata,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

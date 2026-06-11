@@ -1,9 +1,9 @@
-use pine_ir::{CallSiteId, HirCallArg};
+use pine_ir::{CallSiteId, HirCallArg, HirExpr};
 
 use crate::builtins::args::call_arg_expr;
 use crate::strategy::{
-    LossLimitBracketSpec, LossProfitBracketSpec, StopProfitBracketSpec, TrailPointsExitSpec,
-    TrailPriceExitSpec,
+    LossLimitBracketSpec, LossProfitBracketSpec, StopProfitBracketSpec, StrategyOrderMetadata,
+    TrailPointsExitSpec, TrailPriceExitSpec,
 };
 use crate::*;
 
@@ -12,6 +12,17 @@ enum StrategyExitQuantityArg {
     Full,
     Fixed(f64),
     Percent(f64),
+}
+
+fn optional_strategy_arg_expr<'a>(
+    args: &'a [HirCallArg],
+    index: usize,
+    name: &str,
+) -> Option<&'a HirExpr> {
+    args.iter()
+        .find(|arg| arg.name.as_deref() == Some(name))
+        .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
+        .map(|arg| &arg.value)
 }
 
 impl<'a> HistoricalRuntime<'a> {
@@ -199,6 +210,7 @@ impl<'a> HistoricalRuntime<'a> {
             .find(|arg| arg.name.as_deref() == Some("stop"))
             .or_else(|| args.get(4).filter(|arg| arg.name.is_none()))
             .map(|arg| &arg.value);
+        let metadata = self.eval_strategy_entry_metadata(args)?;
 
         let qty = if let Some(qty_expr) = qty_expr {
             self.eval_expr(qty_expr)?.as_f64().unwrap_or(f64::NAN)
@@ -213,25 +225,65 @@ impl<'a> HistoricalRuntime<'a> {
             let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
             let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker
-                .place_pending_stop_limit_long_entry(id, qty, stop, limit, self.bars);
+                .place_pending_stop_limit_long_entry_with_metadata(
+                    id, qty, stop, limit, self.bars, metadata,
+                );
             return Ok(PineValue::Void);
         }
         if let Some(limit_expr) = limit_expr {
             let limit = self.eval_expr(limit_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker
-                .place_pending_limit_long_entry(id, qty, limit, self.bars);
+                .place_pending_limit_long_entry_with_metadata(id, qty, limit, self.bars, metadata);
             return Ok(PineValue::Void);
         }
         if let Some(stop_expr) = stop_expr {
             let stop = self.eval_expr(stop_expr)?.as_f64().unwrap_or(f64::NAN);
             self.strategy_broker
-                .place_pending_stop_long_entry(id, qty, stop, self.bars);
+                .place_pending_stop_long_entry_with_metadata(id, qty, stop, self.bars, metadata);
             return Ok(PineValue::Void);
         }
 
         self.strategy_broker
-            .place_pending_market_long_entry(id, qty, self.bars);
+            .place_pending_market_long_entry_with_metadata(id, qty, self.bars, metadata);
         Ok(PineValue::Void)
+    }
+
+    fn eval_strategy_entry_metadata(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<StrategyOrderMetadata, RuntimeError> {
+        Ok(StrategyOrderMetadata {
+            comment: self.eval_optional_string_arg(args, 5, "comment")?,
+            alert_message: self.eval_optional_string_arg(args, 6, "alert_message")?,
+            disable_alert: self.eval_optional_bool_arg(args, 7, "disable_alert")?,
+        })
+    }
+
+    fn eval_optional_string_arg(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+    ) -> Result<Option<String>, RuntimeError> {
+        let Some(expr) = optional_strategy_arg_expr(args, index, name) else {
+            return Ok(None);
+        };
+        Ok(match self.eval_expr(expr)? {
+            PineValue::String(value) => Some(value),
+            _ => None,
+        })
+    }
+
+    fn eval_optional_bool_arg(
+        &mut self,
+        args: &[HirCallArg],
+        index: usize,
+        name: &str,
+    ) -> Result<bool, RuntimeError> {
+        let Some(expr) = optional_strategy_arg_expr(args, index, name) else {
+            return Ok(false);
+        };
+        Ok(matches!(self.eval_expr(expr)?, PineValue::Bool(true)))
     }
 
     fn eval_strategy_close(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {

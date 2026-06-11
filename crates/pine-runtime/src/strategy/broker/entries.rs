@@ -1,3 +1,4 @@
+use super::StrategyOrderMetadata;
 use crate::RuntimeDiagnostic;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -28,6 +29,16 @@ pub(super) struct PendingEntry {
     pub(super) kind: PendingEntryKind,
     pub(super) quantity: f64,
     pub(super) created_bar_index: usize,
+    pub(super) metadata: StrategyOrderMetadata,
+}
+
+pub(super) struct StopLimitEntryPlacement {
+    pub(super) id: String,
+    pub(super) quantity: f64,
+    pub(super) stop_price: f64,
+    pub(super) limit_price: f64,
+    pub(super) created_bar_index: usize,
+    pub(super) metadata: StrategyOrderMetadata,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -218,21 +229,40 @@ impl PendingEntryBook {
         created_bar_index: usize,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
     ) {
+        self.place_market_long_with_metadata(
+            id,
+            quantity,
+            created_bar_index,
+            StrategyOrderMetadata::default(),
+            diagnostics,
+        );
+    }
+
+    pub(super) fn place_market_long_with_metadata(
+        &mut self,
+        id: String,
+        quantity: f64,
+        created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
+        diagnostics: &mut Vec<RuntimeDiagnostic>,
+    ) {
         self.place_long(
             id,
             PendingEntryKind::Market,
             quantity,
             created_bar_index,
+            metadata,
             diagnostics,
         );
     }
 
-    pub(super) fn place_limit_long(
+    pub(super) fn place_limit_long_with_metadata(
         &mut self,
         id: String,
         quantity: f64,
         price: f64,
         created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
     ) {
         if !price.is_finite() || price <= 0.0 {
@@ -247,16 +277,18 @@ impl PendingEntryBook {
             PendingEntryKind::Limit { price },
             quantity,
             created_bar_index,
+            metadata,
             diagnostics,
         );
     }
 
-    pub(super) fn place_stop_long(
+    pub(super) fn place_stop_long_with_metadata(
         &mut self,
         id: String,
         quantity: f64,
         price: f64,
         created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
     ) {
         if !price.is_finite() || price <= 0.0 {
@@ -271,23 +303,20 @@ impl PendingEntryBook {
             PendingEntryKind::Stop { price },
             quantity,
             created_bar_index,
+            metadata,
             diagnostics,
         );
     }
 
-    pub(super) fn place_stop_limit_long(
+    pub(super) fn place_stop_limit_long_with_metadata(
         &mut self,
-        id: String,
-        quantity: f64,
-        stop_price: f64,
-        limit_price: f64,
-        created_bar_index: usize,
+        placement: StopLimitEntryPlacement,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
     ) {
-        if !stop_price.is_finite()
-            || stop_price <= 0.0
-            || !limit_price.is_finite()
-            || limit_price <= 0.0
+        if !placement.stop_price.is_finite()
+            || placement.stop_price <= 0.0
+            || !placement.limit_price.is_finite()
+            || placement.limit_price <= 0.0
         {
             diagnostics.push(RuntimeDiagnostic {
                 code: "E_STRATEGY_PRICE".to_owned(),
@@ -296,14 +325,15 @@ impl PendingEntryBook {
             return;
         }
         self.place_long(
-            id,
+            placement.id,
             PendingEntryKind::StopLimit {
-                stop_price,
-                limit_price,
+                stop_price: placement.stop_price,
+                limit_price: placement.limit_price,
                 activated_bar_index: None,
             },
-            quantity,
-            created_bar_index,
+            placement.quantity,
+            placement.created_bar_index,
+            placement.metadata,
             diagnostics,
         );
     }
@@ -314,6 +344,7 @@ impl PendingEntryBook {
         kind: PendingEntryKind,
         quantity: f64,
         created_bar_index: usize,
+        metadata: StrategyOrderMetadata,
         diagnostics: &mut Vec<RuntimeDiagnostic>,
     ) {
         if !quantity.is_finite() || quantity <= 0.0 {
@@ -329,6 +360,7 @@ impl PendingEntryBook {
             kind,
             quantity,
             created_bar_index,
+            metadata,
         };
         if let Some(existing) = self
             .entries
