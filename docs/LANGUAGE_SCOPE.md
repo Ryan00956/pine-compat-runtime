@@ -273,7 +273,8 @@ Request data:
   OHLCV/time sources, pure arithmetic and ternaries, history references, `na`,
   `nz`, selected stateless `math.*` calls, fixed-mintick
   `math.round_to_mintick`, `math.sum`, `ta.cum`, `ta.sma`, `ta.ema`,
-  `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`, `ta.tsi`, `ta.cmo`, `ta.cci`, `ta.mfi`,
+  `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`, `ta.tsi`, `ta.cmo`, `ta.cci`,
+  `ta.cog`, `ta.mfi`,
   `ta.stoch`, `ta.wpr`, `ta.sar`,
   `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`,
   `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.rising`,

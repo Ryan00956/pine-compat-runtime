@@ -53,6 +53,7 @@ stoch_value = request.security(syminfo.tickerid, timeframe.period, ta.stoch(clos
 wpr_value = request.security(syminfo.tickerid, timeframe.period, ta.wpr(3))
 sar_value = request.security(syminfo.tickerid, timeframe.period, ta.sar(0.02, 0.02, 0.2))
 cci_value = request.security(syminfo.tickerid, timeframe.period, ta.cci(close, 3))
+cog_value = request.security(syminfo.tickerid, timeframe.period, ta.cog(close, 3))
 
 plot(identity)
 plot(history)
@@ -107,3 +108,4 @@ plot(stoch_value)
 plot(wpr_value)
 plot(sar_value)
 plot(cci_value)
+plot(cog_value)

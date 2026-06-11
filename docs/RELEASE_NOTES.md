@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported two-argument `ta.cog` calls in same-context and
+  provider-backed scalar expressions.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported two-argument `ta.cci` calls in same-context and
   provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to

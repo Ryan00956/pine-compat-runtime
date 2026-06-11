@@ -1455,6 +1455,57 @@ fn request_security_evaluates_provider_cci_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_cog_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request cog\")\nprovider_cog = request.security(\"NYSE:IBM\", timeframe.period, ta.cog(close, 3))\nchart_cog = ta.cog(close, 3)\nplot(provider_cog)\nplot(chart_cog)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 10.0),
+            timed_bar(60_000, 11.0),
+            timed_bar(120_000, 12.0),
+            timed_bar(180_000, 10.0),
+            timed_bar(240_000, 13.0),
+            timed_bar(300_000, 12.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 11.0),
+            timed_bar(180_000, 17.0),
+            timed_bar(240_000, 25.0),
+            timed_bar(300_000, 26.0),
+        ])
+        .expect("provider ta.cog expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(
+        &result.plots[0].values[2..],
+        &[
+            -1.9393939393939394,
+            -2.0303030303030303,
+            -1.9714285714285715,
+            -1.9428571428571428,
+        ],
+    );
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_values_close(
+        &result.plots[1].values[2..],
+        &[
+            -1.7391304347826086,
+            -1.7142857142857142,
+            -1.7358490566037736,
+            -1.8676470588235294,
+        ],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_mfi_in_requested_context() {
     let program = compile_program(
         "indicator(\"request mfi\")\nprovider_mfi = request.security(\"NYSE:IBM\", timeframe.period, ta.mfi(close, 3))\nchart_mfi = ta.mfi(close, 3)\nplot(provider_mfi)\nplot(chart_mfi)\n",
