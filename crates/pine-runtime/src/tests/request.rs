@@ -860,6 +860,46 @@ fn request_security_evaluates_provider_hma_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_alma_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request alma\")\nprovider_alma = request.security(\"NYSE:IBM\", timeframe.period, ta.alma(close, 4, 0.85, 6))\nchart_alma = ta.alma(close, 4, 0.85, 6)\nplot(provider_alma)\nplot(chart_alma)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 21.0),
+            timed_bar(120_000, 22.0),
+            timed_bar(180_000, 24.0),
+            timed_bar(240_000, 27.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 11.0),
+            timed_bar(180_000, 17.0),
+            timed_bar(240_000, 25.0),
+        ])
+        .expect("provider ta.alma expression should run");
+
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+        assert_eq!(plot.values[2], PineValue::Na);
+    }
+    assert_values_close(
+        &result.plots[0].values[3..],
+        &[22.96743661472369, 25.429886558589775],
+    );
+    assert_values_close(
+        &result.plots[1].values[3..],
+        &[13.859773117179548, 20.783828483300205],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_linreg_in_requested_context() {
     let program = compile_program(
         "indicator(\"request linreg\")\nprovider_linreg = request.security(\"NYSE:IBM\", timeframe.period, ta.linreg(close, 3, 0))\nchart_linreg = ta.linreg(close, 3, 0)\nplot(provider_linreg)\nplot(chart_linreg)\n",

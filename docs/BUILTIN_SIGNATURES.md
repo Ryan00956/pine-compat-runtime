@@ -204,8 +204,8 @@ The current executable subset has two forms:
   `ta.cum`, `ta.sma`, `ta.ema`, `ta.rsi`, `ta.tr` function calls, `ta.atr`,
   `ta.highest`, `ta.lowest`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`,
   `ta.dev`, `ta.stdev`, `ta.variance`, `ta.wma`, `ta.swma`, `ta.hma`,
-  `ta.linreg`, `ta.rising`, `ta.falling`, `ta.cross`, `ta.crossover`, and
-  `ta.crossunder`.
+  `ta.alma`, `ta.linreg`, `ta.rising`, `ta.falling`, `ta.cross`,
+  `ta.crossover`, and `ta.crossunder`.
   Requested-context rolling callsite state is isolated from the chart context.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
