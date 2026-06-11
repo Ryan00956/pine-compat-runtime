@@ -661,6 +661,7 @@ mod tests {
         assert!(output.contains("\"values\":[null,1,1,1,1]"));
         assert!(output.contains("\"values\":[null,null,null,100,100]"));
         assert!(output.contains("\"values\":[null,null,100,100,100]"));
+        assert!(output.contains("\"values\":[null,null,325,325,325]"));
         assert!(output.matches("\"values\":[null,null,21,22,23]").count() >= 4);
     }
 

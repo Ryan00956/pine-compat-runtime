@@ -1460,6 +1460,49 @@ fn request_security_evaluates_provider_mfi_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_stoch_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request stoch\")\nprovider_stoch = request.security(\"NYSE:IBM\", timeframe.period, ta.stoch(close, high, low, 3))\nchart_stoch = ta.stoch(close, high, low, 3)\nplot(provider_stoch)\nplot(chart_stoch)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 10.0, 1.0),
+            timed_ohlcv(60_000, 10.0, 12.0, 10.0, 11.0, 1.0),
+            timed_ohlcv(120_000, 11.0, 13.0, 11.0, 12.0, 1.0),
+            timed_ohlcv(180_000, 12.0, 16.0, 12.0, 15.0, 1.0),
+            timed_ohlcv(240_000, 15.0, 17.0, 14.0, 16.0, 1.0),
+            timed_ohlcv(300_000, 16.0, 14.0, 8.0, 9.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 5.0, 5.0, 5.0, 5.0, 1.0),
+            timed_ohlcv(60_000, 7.0, 7.0, 7.0, 7.0, 1.0),
+            timed_ohlcv(120_000, 11.0, 11.0, 11.0, 11.0, 1.0),
+            timed_ohlcv(180_000, 17.0, 17.0, 17.0, 17.0, 1.0),
+            timed_ohlcv(240_000, 25.0, 25.0, 25.0, 25.0, 1.0),
+            timed_ohlcv(300_000, 26.0, 26.0, 26.0, 26.0, 1.0),
+        ])
+        .expect("provider ta.stoch expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(
+        &result.plots[0].values[2..],
+        &[
+            75.0,
+            83.33333333333333,
+            83.33333333333333,
+            11.11111111111111,
+        ],
+    );
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_values_close(&result.plots[1].values[2..], &[100.0, 100.0, 100.0, 100.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_linreg_in_requested_context() {
     let program = compile_program(
         "indicator(\"request linreg\")\nprovider_linreg = request.security(\"NYSE:IBM\", timeframe.period, ta.linreg(close, 3, 0))\nchart_linreg = ta.linreg(close, 3, 0)\nplot(provider_linreg)\nplot(chart_linreg)\n",
