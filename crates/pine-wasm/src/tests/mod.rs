@@ -1935,15 +1935,12 @@ fn run_script_csv_rejects_unsorted_bar_times() {
 #[test]
 fn runs_strategy_script_from_csv_to_empty_strategy_json() {
     let output = run_script_csv(
-        "strategy(\"demo\")\nplot(close)\n",
-        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n",
+        include_str!("../../../../tests/fixtures/runtime/strategy_no_order.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
     )
     .expect("strategy script should run");
 
-    assert!(output.contains("\"values\":[1,2]"));
-    assert!(output.contains(
-        "\"strategy\":{\"orders\":[],\"trades\":[],\"position\":[],\"equity\":[{\"barIndex\":0,\"cash\":100000,\"marketValue\":0,\"equity\":100000,\"netProfit\":0},{\"barIndex\":1,\"cash\":100000,\"marketValue\":0,\"equity\":100000,\"netProfit\":0}],\"diagnostics\":[]}"
-    ));
+    assert_snapshot("runtime_strategy_empty.json", &output);
 }
 
 #[test]
