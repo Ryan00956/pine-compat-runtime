@@ -2459,31 +2459,6 @@ fn runs_strategy_same_tick_limit_entries_fixture_contract() {
 }
 
 #[test]
-fn runs_strategy_same_tick_stop_entries_from_csv_to_public_strategy_json() {
-    let output = run_script_csv(
-        include_str!(
-            "../../../../tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_entries.pine"
-        ),
-        include_str!(
-            "../../../../tests/fixtures/runtime/strategy_pyramiding_limit_same_tick_stop_entries_bars.csv"
-        ),
-    )
-    .expect("strategy same-tick stop entries script should run");
-
-    assert!(output.contains("\"values\":[0,2,2]"));
-    assert!(output.contains("\"values\":[0,4,4]"));
-    assert!(output.contains("\"values\":[null,11,11]"));
-    assert!(output.contains(
-        "\"orders\":[{\"id\":\"L1\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":1,\"price\":11},{\"id\":\"L2\",\"barIndex\":1,\"time\":2,\"direction\":\"strategy.long\",\"qty\":3,\"price\":11}]"
-    ));
-    assert!(output.contains(
-        "\"position\":[{\"barIndex\":1,\"size\":1,\"avgPrice\":11},{\"barIndex\":1,\"size\":4,\"avgPrice\":11}]"
-    ));
-    assert!(output.contains("\"diagnostics\":[]"));
-    assert!(!output.contains("pending"));
-}
-
-#[test]
 fn runs_strategy_same_tick_stop_entries_fixture_contract() {
     let output = run_script_csv(
         include_str!(
