@@ -10,8 +10,9 @@ use super::strategy::StrategyOrderFillAlertOutput;
 mod webhook;
 
 pub use webhook::{
-    WebhookAdapterConfig, WebhookAdapterConfigError, WebhookBodyMode, WebhookPayload,
-    WebhookPayloadError, render_webhook_payload,
+    WebhookAdapterConfig, WebhookAdapterConfigError, WebhookBodyMode, WebhookDeliveryFailure,
+    WebhookPayload, WebhookPayloadError, classify_webhook_delivery_failure,
+    classify_webhook_http_status, render_webhook_payload,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]

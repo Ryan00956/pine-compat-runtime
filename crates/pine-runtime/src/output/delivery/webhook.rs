@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
 
-use super::DeliveryCandidate;
+use super::{DeliveryCandidate, ExternalDeliveryResult};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -143,6 +143,120 @@ fn render_webhook_json_envelope(
     Ok(WebhookPayload::new("application/json", body))
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WebhookDeliveryFailure {
+    TransportTimeout,
+    ConnectionReset,
+    DnsFailure,
+    RateLimited,
+    TemporaryServerFailure,
+    InvalidConfiguration,
+    RejectedUrl,
+    MissingSecretReference,
+    UnauthorizedSecretLookup,
+    InvalidPayloadConstruction,
+    ProviderRejected,
+}
+
+impl WebhookDeliveryFailure {
+    fn is_retryable(self) -> bool {
+        matches!(
+            self,
+            Self::TransportTimeout
+                | Self::ConnectionReset
+                | Self::DnsFailure
+                | Self::RateLimited
+                | Self::TemporaryServerFailure
+        )
+    }
+
+    fn failure_code(self) -> &'static str {
+        match self {
+            Self::TransportTimeout => "webhookTransportTimeout",
+            Self::ConnectionReset => "webhookConnectionReset",
+            Self::DnsFailure => "webhookDnsFailure",
+            Self::RateLimited => "webhookRateLimited",
+            Self::TemporaryServerFailure => "webhookTemporaryServerFailure",
+            Self::InvalidConfiguration => "webhookInvalidConfiguration",
+            Self::RejectedUrl => "webhookRejectedUrl",
+            Self::MissingSecretReference => "webhookMissingSecretReference",
+            Self::UnauthorizedSecretLookup => "webhookUnauthorizedSecretLookup",
+            Self::InvalidPayloadConstruction => "webhookInvalidPayloadConstruction",
+            Self::ProviderRejected => "webhookProviderRejected",
+        }
+    }
+
+    fn redacted_message(self) -> &'static str {
+        match self {
+            Self::TransportTimeout => "webhook delivery timed out before provider acceptance",
+            Self::ConnectionReset => "webhook delivery connection reset before provider acceptance",
+            Self::DnsFailure => "webhook delivery host resolution failed",
+            Self::RateLimited => "webhook delivery was rate limited by the provider",
+            Self::TemporaryServerFailure => {
+                "webhook delivery failed with a temporary provider error"
+            }
+            Self::InvalidConfiguration => "webhook delivery configuration is invalid",
+            Self::RejectedUrl => "webhook delivery URL was rejected by host policy",
+            Self::MissingSecretReference => {
+                "webhook delivery secret reference could not be resolved"
+            }
+            Self::UnauthorizedSecretLookup => "webhook delivery secret lookup was not authorized",
+            Self::InvalidPayloadConstruction => "webhook delivery payload could not be built",
+            Self::ProviderRejected => "webhook delivery was rejected by the provider",
+        }
+    }
+}
+
+pub fn classify_webhook_delivery_failure(
+    failure: WebhookDeliveryFailure,
+    completed_at: i64,
+) -> ExternalDeliveryResult {
+    if failure.is_retryable() {
+        ExternalDeliveryResult::transient_failure(
+            completed_at,
+            failure.failure_code(),
+            failure.redacted_message(),
+        )
+    } else {
+        ExternalDeliveryResult::permanent_failure(
+            completed_at,
+            failure.failure_code(),
+            failure.redacted_message(),
+        )
+    }
+}
+
+pub fn classify_webhook_http_status(status_code: u16, completed_at: i64) -> ExternalDeliveryResult {
+    let redacted_status_class = redact_http_status_code(status_code);
+    let mut result = if (200..=299).contains(&status_code) {
+        ExternalDeliveryResult::delivered(completed_at)
+    } else if is_retryable_http_status(status_code) {
+        classify_webhook_delivery_failure(
+            WebhookDeliveryFailure::TemporaryServerFailure,
+            completed_at,
+        )
+    } else {
+        classify_webhook_delivery_failure(WebhookDeliveryFailure::ProviderRejected, completed_at)
+    };
+    result.provider_status_code = Some(redacted_status_class.to_owned());
+    result
+}
+
+fn is_retryable_http_status(status_code: u16) -> bool {
+    matches!(status_code, 408 | 409 | 425 | 429) || (500..=599).contains(&status_code)
+}
+
+fn redact_http_status_code(status_code: u16) -> &'static str {
+    match status_code {
+        100..=199 => "1xx",
+        200..=299 => "2xx",
+        300..=399 => "3xx",
+        400..=499 => "4xx",
+        500..=599 => "5xx",
+        _ => "unknown",
+    }
+}
+
 fn validate_webhook_url(url: &str) -> Result<(), WebhookAdapterConfigError> {
     let trimmed = url.trim();
     if trimmed.is_empty() {
@@ -239,7 +353,7 @@ fn header_value_looks_secret(value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::output::delivery::DeliveryEventKind;
+    use crate::output::delivery::{DeliveryEventKind, ExternalDeliveryStatus};
 
     fn candidate(message: &str) -> DeliveryCandidate {
         DeliveryCandidate::new(
@@ -496,6 +610,90 @@ mod tests {
             Err(WebhookPayloadError::InvalidConfig(
                 WebhookAdapterConfigError::UnsupportedUrlScheme
             ))
+        );
+    }
+
+    #[test]
+    fn webhook_failure_classifier_maps_transport_failures_to_retryable_results() {
+        let result =
+            classify_webhook_delivery_failure(WebhookDeliveryFailure::TransportTimeout, 1_000);
+
+        assert_eq!(result.status, ExternalDeliveryStatus::TransientFailure);
+        assert!(result.status.is_retryable_failure());
+        assert_eq!(
+            result.failure_code,
+            Some("webhookTransportTimeout".to_owned())
+        );
+        assert_eq!(
+            result.failure_message,
+            Some("webhook delivery timed out before provider acceptance".to_owned())
+        );
+    }
+
+    #[test]
+    fn webhook_failure_classifier_maps_configuration_failures_to_permanent_results() {
+        let result = classify_webhook_delivery_failure(
+            WebhookDeliveryFailure::MissingSecretReference,
+            1_000,
+        );
+
+        assert_eq!(result.status, ExternalDeliveryStatus::PermanentFailure);
+        assert!(!result.status.is_retryable_failure());
+        assert_eq!(
+            result.failure_code,
+            Some("webhookMissingSecretReference".to_owned())
+        );
+        assert_eq!(
+            result.failure_message,
+            Some("webhook delivery secret reference could not be resolved".to_owned())
+        );
+    }
+
+    #[test]
+    fn webhook_http_status_classifier_marks_accepted_status_as_delivered() {
+        let result = classify_webhook_http_status(202, 1_000);
+
+        assert_eq!(result.status, ExternalDeliveryStatus::Delivered);
+        assert_eq!(result.provider_status_code, Some("2xx".to_owned()));
+        assert_eq!(result.failure_code, None);
+        assert_eq!(result.failure_message, None);
+    }
+
+    #[test]
+    fn webhook_http_status_classifier_redacts_retryable_provider_status() {
+        let result = classify_webhook_http_status(503, 1_000);
+
+        assert_eq!(result.status, ExternalDeliveryStatus::TransientFailure);
+        assert_eq!(result.provider_status_code, Some("5xx".to_owned()));
+        assert_eq!(
+            result.failure_code,
+            Some("webhookTemporaryServerFailure".to_owned())
+        );
+        assert!(
+            !result
+                .failure_message
+                .as_deref()
+                .expect("failure message")
+                .contains("503")
+        );
+    }
+
+    #[test]
+    fn webhook_http_status_classifier_redacts_permanent_provider_status() {
+        let result = classify_webhook_http_status(401, 1_000);
+
+        assert_eq!(result.status, ExternalDeliveryStatus::PermanentFailure);
+        assert_eq!(result.provider_status_code, Some("4xx".to_owned()));
+        assert_eq!(
+            result.failure_code,
+            Some("webhookProviderRejected".to_owned())
+        );
+        assert!(
+            !result
+                .failure_message
+                .as_deref()
+                .expect("failure message")
+                .contains("401")
         );
     }
 }

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added pure webhook delivery failure classification for future host-owned
+  alert delivery. Transport and temporary provider failures now map to
+  retryable external delivery results, configuration/secret/payload/provider
+  rejection failures map to permanent results, and HTTP provider status codes
+  are reduced to redacted status classes without adding network delivery.
 - Added pure webhook payload rendering for future host-owned alert delivery.
   `renderedMessage` now produces a plain-text body, and `jsonEnvelope` produces
   a host-versioned JSON envelope over `DeliveryCandidate` without including URL,

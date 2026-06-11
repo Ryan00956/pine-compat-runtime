@@ -47,6 +47,9 @@ Already supported:
   delivery.
 - pure webhook payload rendering for `renderedMessage` and `jsonEnvelope`
   modes without network delivery.
+- pure webhook delivery failure classification for transport, configuration,
+  payload, secret-reference, and provider-status failures, including redacted
+  provider status classes.
 
 Still unsupported:
 
@@ -54,8 +57,8 @@ Still unsupported:
 - durable delivery store behavior across host restarts;
 - retry scheduling, backoff, and dead-letter behavior;
 - executable webhook HTTP transport, authentication secret lookup, TLS
-  configuration, timeout execution, retry scheduling, diagnostic redaction, and
-  rate limiting;
+  configuration, timeout execution, retry scheduling, host diagnostic emission,
+  and rate limiting;
 - user-visible delivery failure reporting;
 - live realtime strategy broker execution.
 
@@ -300,7 +303,10 @@ headers.
    boundaries, still without network delivery.
 7. Closed on 2026-06-11: add webhook payload rendering for `renderedMessage`
    and `jsonEnvelope`, still without network delivery.
-8. Add a concrete webhook transport only after URL validation, secret handling,
+8. Closed on 2026-06-11: add pure webhook delivery failure classification and
+   redacted HTTP status classes, still without network delivery, retry
+   scheduling, secret lookup, or host diagnostic emission.
+9. Add a concrete webhook transport only after URL validation, secret handling,
    timeout behavior, retry classification, and diagnostic redaction are
    fixture-backed.
 

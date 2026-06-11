@@ -24,7 +24,8 @@ pub use output::delivery::{
     ExternalDeliveryAdapter, ExternalDeliveryIdentity, ExternalDeliveryResult,
     ExternalDeliveryStatus, InMemoryDeliveryAttemptStore, InMemoryDeliverySink,
     TestCollectorDeliveryAdapter, TestCollectorDeliveryRecord, WebhookAdapterConfig,
-    WebhookAdapterConfigError, WebhookBodyMode, WebhookPayload, WebhookPayloadError,
+    WebhookAdapterConfigError, WebhookBodyMode, WebhookDeliveryFailure, WebhookPayload,
+    WebhookPayloadError, classify_webhook_delivery_failure, classify_webhook_http_status,
     deliver_candidate_with_attempt_store, render_webhook_payload,
     strategy_order_fill_delivery_candidate,
 };
