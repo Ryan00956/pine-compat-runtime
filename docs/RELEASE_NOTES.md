@@ -216,6 +216,8 @@
   `math.todegrees`, and `math.toradians` scalar elements.
 - Added provider-backed `request.security` tuple literal fixture coverage for
   same-timeframe `ta.tr()` and `ta.atr()` scalar elements.
+- Added provider-backed `request.security` tuple literal fixture coverage for
+  same-timeframe `ta.highest()` and `ta.lowest()` scalar elements.
 - Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal history and `nz` scalar elements while
   preserving default confirmation alignment.
