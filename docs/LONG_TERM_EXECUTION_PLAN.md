@@ -44,9 +44,9 @@ Implemented or partially implemented:
   public `alerts` runtime output. The Phase H alert subset is closed in
   `docs/PHASE_H_AUDIT.md`; `alert.freq_once_per_bar`, `alert.freq_all`, and
   `alert.freq_once_per_bar_close` are supported for const-string `alert()`
-  frequency, and `alertcondition` messages support fixture-backed OHLCV
-  placeholders, while broader placeholders, host delivery, and strategy alerts
-  remain out of scope.
+  frequency, and `alertcondition` messages support fixture-backed OHLCV plus
+  ticker/interval placeholders, while broader placeholders, host delivery, and
+  strategy alerts remain out of scope.
 - Phase J libraries/user types are closed for the fixture-backed claimed
   subset in `docs/PHASE_J_AUDIT.md`: host-provided exact-key imports expose
   exported const expressions and pure exported functions, local scalar-field
@@ -433,7 +433,7 @@ Execution playbook: `docs/PHASE_H_EXECUTION_PLAN.md`.
 Delivered scope:
 
 - `alertcondition(condition, title, message)` with bool-compatible conditions,
-  const-string title/message values, and OHLCV message placeholders.
+  const-string title/message values, and supported message placeholders.
 - `alert(message, freq?)` with const-string messages plus
   `alert.freq_once_per_bar`, `alert.freq_all`, and
   `alert.freq_once_per_bar_close`.

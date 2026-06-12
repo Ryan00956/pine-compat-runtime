@@ -2,6 +2,7 @@
 indicator("Alertcondition fixture")
 alertcondition(close > 2, "Above two", "Close is above two")
 alertcondition(close > 2, "OHLCV", "O={{open}} H={{high}} L={{low}} C={{close}} V={{volume}}")
+alertcondition(close > 2, "Chart", "{{ticker}} {{interval}}")
 alertcondition(close < 0, "Never", "Never fires")
 if bar_index == 1
     alertcondition(true, "Branch", "Branch alert")

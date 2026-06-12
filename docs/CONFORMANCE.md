@@ -791,9 +791,9 @@ Phase H reserves `alerts` as a top-level runtime key in `schemaVersion: 3`.
 The first supported alert subsets are `alertcondition(condition, title,
 message)` with bool-compatible conditions, const-string titles, and
 const-string messages, plus fixture-backed OHLCV placeholder interpolation for
-`{{open}}`, `{{high}}`, `{{low}}`, `{{close}}`, and `{{volume}}` in the
-`alertcondition` message only. `alert(message, freq?)` supports const-string
-messages and the fixture-backed
+`{{open}}`, `{{high}}`, `{{low}}`, `{{close}}`, and `{{volume}}`, plus
+`{{ticker}}` and `{{interval}}`, in the `alertcondition` message only.
+`alert(message, freq?)` supports const-string messages and the fixture-backed
 `alert.freq_once_per_bar`/`alert.freq_all`/`alert.freq_once_per_bar_close`
 frequency subset. Reached true alert conditions and reached alert calls emit
 `{id, barIndex, time, message, source}` events in program order, subject to
@@ -805,9 +805,9 @@ bar-close execution. Repeated forming updates recompute alert events from the
 confirmed snapshot, so abandoned forming events are neither retained nor
 duplicated, and a confirmed update matches the equivalent historical execution
 where the same final bar data is available. TradingView-style `{{...}}` alert
-placeholder interpolation outside the supported `alertcondition` OHLCV message
-subset remains unsupported; supported `alert()` messages are serialized
-literally.
+placeholder interpolation outside the supported `alertcondition` message
+placeholder subset remains unsupported; supported `alert()` messages are
+serialized literally.
 
 Runtime `schemaVersion: 4` adds strategy order-fill alert payloads under
 `strategy.alerts` for supported strategy fills. The top-level `alerts[]` array
@@ -987,7 +987,7 @@ ta.sma               supported
 ta.ema               supported
 ta.rsi               supported    fixture-derived executable subset
 request.security     partial      same-context identity scalar-expression subset plus same-context tuple literals made from side-effect-free elements and selected same-context tuple-returning calls destructured directly from the request, currently ta.macd, ta.bb, ta.kc, ta.supertrend, ta.dmi, and ta.vwap(source, anchor, stdev_mult), and same-or-higher-timeframe provider scalar-expression subset with direct sources, arithmetic, history, na/nz, selected stateless math.* calls, fixed-mintick math.round_to_mintick, math.sum, ta.cum, ta.sma, ta.ema, ta.dema, ta.tema, ta.rma, ta.rsi, ta.accdist, ta.iii, ta.nvi, ta.obv, ta.pvi, ta.pvt, ta.wvad, ta.tsi, ta.cmo, ta.cci, ta.cog, ta.bop, ta.ao, ta.max, ta.min, ta.mfi, ta.stoch, ta.wpr, ta.sar, ta.tr function calls, ta.atr, ta.highest, ta.lowest, ta.highestbars, ta.lowestbars, ta.change, ta.mom, ta.roc, ta.range, ta.dev, ta.vwap source-call, ta.bbw, ta.kcw, ta.pivothigh, ta.pivotlow, ta.correlation, ta.covariance, ta.median, ta.mode, ta.percentile_nearest_rank, ta.percentile_linear_interpolation, ta.percentrank, ta.stdev, ta.variance, ta.wma, ta.vwma, ta.swma, ta.hma, ta.alma, ta.linreg, ta.rising, ta.falling, ta.barssince, ta.valuewhen, ta.cross, ta.crossover, and ta.crossunder only, plus provider-backed tuple literals made from supported scalar elements and provider-backed ta.macd, ta.bb, ta.kc, ta.supertrend, ta.dmi, and ta.vwap(source, anchor, stdev_mult) tuple expressions destructured directly from the request; other provider-backed tuple expressions remain unsupported
-alertcondition       partial      bool-compatible condition plus const-string title/message runtime events, with OHLCV placeholders in alertcondition messages only
+alertcondition       partial      bool-compatible condition plus const-string title/message runtime events, with OHLCV plus ticker/interval placeholders in alertcondition messages only
 alert                partial      const-string message runtime events when execution reaches the call
 strategy             partial      declaration plus strategy-mode runtime result; positive const numeric initial_capital, fixed, cash, and percent-of-equity default_qty subsets, supported cash-per-contract, cash-per-order, and percent commission modes, finite non-negative integer slippage ticks, and finite non-negative integer limit-verification ticks only
 strategy.entry       partial      long market entry filled at next historical bar open plus long limit entry filled at limit price on a later historical bar when low <= limit or below the configured verified limit threshold, long stop entry filled at stop price on a later historical bar when high >= stop, and long stop-limit entry activated on a later historical bar when high >= stop then filled at limit price on a subsequent historical bar when low <= limit or below the configured verified limit threshold; configured slippage worsens long entry fill prices after trigger selection; explicit positive qty, fixed default qty, cash default qty resolved as cash/current close, or percent-of-equity default qty resolved at placement time from current supported equity and close; explicit active margin_long rejects fills whose required margin exceeds simulated equity at the actual fill price; same-direction long market entries honor the configured positive integer pyramiding limit, while multiple long limit, stop, or stop-limit entries triggered on the same historical fill pass can exceed that limit when they are all eligible in that pass; comment, alert_message, and disable_alert metadata syntax is semantically accepted and stored internally on pending and filled entries; supported fill payloads are exposed in `strategy.alerts`; explicit Python, CLI, and WASM host helpers can render `{{strategy.order.alert_message}}` for selected public fill events, while external alert delivery remains unsupported; same-tick exceptions beyond the fixture-backed long price-based entry subset remain unsupported; no public pending-order output

@@ -54,7 +54,15 @@ impl Analyzer {
             if matches!(param_name, "message" | "title") {
                 let supported_placeholders =
                     if signature.name == "alertcondition" && param_name == "message" {
-                        &["{{open}}", "{{high}}", "{{low}}", "{{close}}", "{{volume}}"][..]
+                        &[
+                            "{{open}}",
+                            "{{high}}",
+                            "{{low}}",
+                            "{{close}}",
+                            "{{volume}}",
+                            "{{ticker}}",
+                            "{{interval}}",
+                        ][..]
                     } else {
                         &[][..]
                     };

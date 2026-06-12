@@ -108,12 +108,13 @@ Phase 1 executable subset:
   `bgcolor`, `barcolor`, `hline`, and `fill`
 - `alertcondition(condition, title, message)` with bool-compatible conditions
   and const-string title/message values, including `{{open}}`, `{{high}}`,
-  `{{low}}`, `{{close}}`, and `{{volume}}` placeholders in the message only
+  `{{low}}`, `{{close}}`, `{{volume}}`, `{{ticker}}`, and `{{interval}}`
+  placeholders in the message only
 - `alert(message, freq?)` with const-string messages and a const-string
   frequency subset limited to `alert.freq_once_per_bar`, `alert.freq_all`, and
   `alert.freq_once_per_bar_close`; TradingView-style `{{...}}` placeholder
-  interpolation remains unsupported outside the `alertcondition` OHLCV message
-  subset
+  interpolation remains unsupported outside the supported `alertcondition`
+  message subset
 - `na`, `nz`
 - common `ta.*` helpers listed in
   [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md), including moving averages,
@@ -327,7 +328,7 @@ The analyzer should reject these with clear diagnostics:
   typed array return semantics and host output shapes before support is claimed
 - unsupported alert frequency values outside the claimed const-string
   frequency subset and alert placeholder interpolation outside the
-  `alertcondition` OHLCV message subset
+  supported `alertcondition` message subset
 - `library` and root `export` declarations; `import` is partial for
   host-provided exact-key aliases that expose exported const expressions and
   pure exported functions, while unaliased imports, missing host sources,

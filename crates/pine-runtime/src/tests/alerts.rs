@@ -60,6 +60,20 @@ alertcondition(true, "OHLCV", "O={{open}} H={{high}} L={{low}} C={{close}} V={{v
 }
 
 #[test]
+fn alertcondition_message_renders_chart_placeholders() {
+    let result = run_alert_script(
+        r#"indicator("alerts")
+alertcondition(true, "Chart", "{{ticker}} {{interval}} {{close}}")
+"#,
+        &timed_bars(&[12.0]),
+    );
+
+    assert_eq!(result.alerts.len(), 1);
+    assert_eq!(result.alerts[0].source, "Chart");
+    assert_eq!(result.alerts[0].message, "AAPL 1 12");
+}
+
+#[test]
 fn alertcondition_events_follow_branch_execution_and_program_order() {
     let result = run_alert_script(
         r#"indicator("alerts")

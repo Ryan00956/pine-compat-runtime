@@ -14,8 +14,8 @@ runtime output model.
 - Runtime alert event shape is `{id, barIndex, time, message, source}`.
 - `alertcondition(condition, title, message)` accepts bool-compatible
   conditions plus const-string title/message values, with `{{open}}`,
-  `{{high}}`, `{{low}}`, `{{close}}`, and `{{volume}}` interpolation in the
-  message only.
+  `{{high}}`, `{{low}}`, `{{close}}`, `{{volume}}`, `{{ticker}}`, and
+  `{{interval}}` interpolation in the message only.
 - `alert(message, freq?)` accepts const-string messages and a narrow
   const-string frequency subset.
 - Reached true alert conditions and reached `alert()` calls emit events in
@@ -28,7 +28,7 @@ runtime output model.
 - `alert` and `alertcondition` are classified as output side effects and remain
   rejected in UDFs and requested-context expressions.
 - Dynamic alert strings, `{{...}}` placeholder interpolation outside the
-  `alertcondition` OHLCV message subset, host delivery, strategy alerts, and
+  supported `alertcondition` message subset, host delivery, strategy alerts, and
   other alert variants remain unsupported.
 
 ## Schema And Host Surface
@@ -58,7 +58,7 @@ Compatibility matrix rows:
 - `alert`: `partial`
 - `alert frequency`: `partial`
 - `alert placeholders`: `unsupported` outside the supported `alertcondition`
-  OHLCV message subset
+  message subset
 - `function side effects`: `unsupported`
 - `realtime forming rollback`: `partial`
 
@@ -148,7 +148,7 @@ and `python3 -m pytest python/tests`.
 ## Maintenance Tails
 
 - TradingView-style alert placeholder interpolation remains unsupported outside
-  `alertcondition` message OHLCV placeholders.
+  the supported `alertcondition` message placeholders.
 - Dynamic/simple/input/series message strings remain unsupported for alert
   messages and alertcondition titles/messages.
 - Host-side alert delivery, subscriptions, throttling, and UI/API notification

@@ -140,5 +140,21 @@ impl<'a> HistoricalRuntime<'a> {
             .replace("{{low}}", &format_number(bar.low, ""))
             .replace("{{close}}", &format_number(bar.close, ""))
             .replace("{{volume}}", &format_number(bar.volume, ""))
+            .replace("{{ticker}}", self.alert_ticker_placeholder())
+            .replace(
+                "{{interval}}",
+                self.request_environment.chart().timeframe().value(),
+            )
+    }
+
+    fn alert_ticker_placeholder(&self) -> &str {
+        self.request_environment
+            .chart()
+            .symbol()
+            .rsplit_once(':')
+            .map_or_else(
+                || self.request_environment.chart().symbol(),
+                |(_, ticker)| ticker,
+            )
     }
 }
