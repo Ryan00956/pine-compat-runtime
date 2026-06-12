@@ -1008,6 +1008,44 @@ fn request_security_evaluates_provider_pivothigh_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_pivotlow_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request pivotlow\")\nprovider_pl = request.security(\"NYSE:IBM\", timeframe.period, ta.pivotlow(low, 1, 1))\nchart_pl = ta.pivotlow(low, 1, 1)\nplot(provider_pl)\nplot(chart_pl)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 10.0, 8.0, 9.0, 1.0),
+            timed_ohlcv(60_000, 12.0, 12.0, 6.0, 11.0, 1.0),
+            timed_ohlcv(120_000, 11.0, 11.0, 7.0, 10.0, 1.0),
+            timed_ohlcv(180_000, 15.0, 15.0, 5.0, 14.0, 1.0),
+            timed_ohlcv(240_000, 14.0, 14.0, 7.0, 13.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 5.0, 5.0, 3.0, 4.0, 1.0),
+            timed_ohlcv(60_000, 6.0, 6.0, 1.0, 5.0, 1.0),
+            timed_ohlcv(120_000, 4.0, 4.0, 2.0, 3.0, 1.0),
+            timed_ohlcv(180_000, 8.0, 8.0, 0.0, 7.0, 1.0),
+            timed_ohlcv(240_000, 7.0, 7.0, 2.0, 6.0, 1.0),
+        ])
+        .expect("provider ta.pivotlow expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_eq!(result.plots[0].values[3], PineValue::Na);
+    assert_values_close(&result.plots[0].values[2..3], &[6.0]);
+    assert_values_close(&result.plots[0].values[4..], &[5.0]);
+
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_eq!(result.plots[1].values[3], PineValue::Na);
+    assert_values_close(&result.plots[1].values[2..3], &[1.0]);
+    assert_values_close(&result.plots[1].values[4..], &[0.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_correlation_in_requested_context() {
     let program = compile_program(
         "indicator(\"request correlation\")\nprovider_corr = request.security(\"NYSE:IBM\", timeframe.period, ta.correlation(close, high, 3))\nchart_corr = ta.correlation(close, high, 3)\nplot(provider_corr)\nplot(chart_corr)\n",

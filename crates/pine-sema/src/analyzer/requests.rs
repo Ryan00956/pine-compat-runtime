@@ -269,6 +269,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.bbw"
             | "ta.kcw"
             | "ta.pivothigh"
+            | "ta.pivotlow"
             | "ta.correlation"
             | "ta.covariance"
             | "ta.median"

@@ -680,7 +680,7 @@ mod tests {
             output
                 .matches("\"values\":[null,null,null,null,null]")
                 .count()
-                >= 2
+                >= 3
         );
         assert!(output.matches("\"values\":[null,null,21,22,23]").count() >= 4);
     }

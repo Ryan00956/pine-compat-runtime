@@ -829,8 +829,9 @@ pure arithmetic and ternaries, history references, `na`, `nz`, selected
 stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
 `ta.cum`, `ta.sma`, `ta.ema`, `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`,
 `ta.tsi`, `ta.cmo`, `ta.cci`, `ta.cog`, `ta.bop`, `ta.ao`, `ta.max`, `ta.min`, `ta.mfi`, `ta.stoch`, `ta.wpr`, `ta.sar`, `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`,
-`ta.bbw`, `ta.kcw`, `ta.pivothigh`, `ta.correlation`, `ta.covariance`, `ta.median`, `ta.mode`,
-`ta.percentile_nearest_rank`, `ta.percentile_linear_interpolation`,
+`ta.bbw`, `ta.kcw`, `ta.pivothigh`, `ta.pivotlow`, `ta.correlation`,
+`ta.covariance`, `ta.median`, `ta.mode`, `ta.percentile_nearest_rank`,
+`ta.percentile_linear_interpolation`,
 `ta.percentrank`, `ta.stdev`, `ta.variance`, `ta.wma`, `ta.vwma`, `ta.swma`,
 `ta.hma`, `ta.alma`, `ta.linreg`, `ta.rising`, `ta.falling`, `ta.cross`,
 `ta.crossover`, and `ta.crossunder`.
