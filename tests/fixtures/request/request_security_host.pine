@@ -389,3 +389,7 @@ plot(higher_tuple_ta_min)
 [higher_tuple_ta_accdist, higher_tuple_ta_iii] = request.security("NYSE:IBM", "5", [ta.accdist, ta.iii])
 plot(higher_tuple_ta_accdist)
 plot(higher_tuple_ta_iii)
+
+[higher_tuple_ta_nvi, higher_tuple_ta_obv] = request.security("NYSE:IBM", "5", [ta.nvi, ta.obv])
+plot(higher_tuple_ta_nvi)
+plot(higher_tuple_ta_obv)
