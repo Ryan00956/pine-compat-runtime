@@ -445,3 +445,7 @@ plot(higher_tuple_ta_atr)
 [higher_tuple_ta_highest, higher_tuple_ta_lowest] = request.security("NYSE:IBM", "5", [ta.highest(high, 2), ta.lowest(low, 2)])
 plot(higher_tuple_ta_highest)
 plot(higher_tuple_ta_lowest)
+
+[higher_tuple_ta_mom, higher_tuple_ta_roc] = request.security("NYSE:IBM", "5", [ta.mom(close, 1), ta.roc(close, 1)])
+plot(higher_tuple_ta_mom)
+plot(higher_tuple_ta_roc)
