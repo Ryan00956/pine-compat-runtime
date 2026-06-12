@@ -1228,6 +1228,39 @@ fn request_security_evaluates_provider_tuple_literal_root_log_math_in_requested_
 }
 
 #[test]
+fn request_security_evaluates_provider_tuple_literal_trig_math_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider tuple literal trig math\")\n[sin_value, cos_value, tan_value] = request.security(\"NYSE:IBM\", timeframe.period, [math.sin(close / 100), math.cos(open / 100), math.tan((close - open) / 100)])\nplot(sin_value)\nplot(cos_value)\nplot(tan_value)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 11.0, 12.0, 10.0, 21.0, 1.0),
+            timed_ohlcv(120_000, 12.0, 13.0, 11.0, 22.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 2.0, 0.0, 4.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 3.0, 1.0, 5.0, 1.0),
+            timed_ohlcv(120_000, 3.0, 4.0, 2.0, 6.0, 1.0),
+        ])
+        .expect("provider tuple literal trig math request.security expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(
+        &result.plots[0].values,
+        &[0.2_f64.sin(), 0.21_f64.sin(), 0.22_f64.sin()],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[0.1_f64.cos(), 0.11_f64.cos(), 0.12_f64.cos()],
+    );
+    assert_values_close(&result.plots[2].values, &[0.1_f64.tan(); 3]);
+}
+
+#[test]
 fn request_security_evaluates_provider_tuple_literal_ta_in_requested_context() {
     let program = compile_program(
         "indicator(\"request provider tuple literal ta\")\n[avg, delta, total] = request.security(\"NYSE:IBM\", timeframe.period, [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(avg)\nplot(delta)\nplot(total)\n",

@@ -515,3 +515,8 @@ plot(tuple_math_round)
 plot(tuple_math_sqrt)
 plot(tuple_math_cbrt)
 plot(tuple_math_log10)
+
+[tuple_math_sin, tuple_math_cos, tuple_math_tan] = request.security("NYSE:IBM", timeframe.period, [math.sin(close / 100), math.cos(open / 100), math.tan((close - open) / 100)])
+plot(tuple_math_sin)
+plot(tuple_math_cos)
+plot(tuple_math_tan)

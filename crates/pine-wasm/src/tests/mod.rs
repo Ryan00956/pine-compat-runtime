@@ -7021,6 +7021,27 @@ fn request_host_data_runs_through_direct_wasm_api() {
             Some(24.0_f64.log10()),
         ],
     );
+    assert_plot_values_close(
+        277,
+        &[
+            Some(0.2_f64.sin()),
+            Some(0.21_f64.sin()),
+            Some(0.22_f64.sin()),
+            Some(0.23_f64.sin()),
+            Some(0.24_f64.sin()),
+        ],
+    );
+    assert_plot_values_close(
+        278,
+        &[
+            Some(0.1_f64.cos()),
+            Some(0.11_f64.cos()),
+            Some(0.12_f64.cos()),
+            Some(0.13_f64.cos()),
+            Some(0.14_f64.cos()),
+        ],
+    );
+    assert_plot_values_close(279, &[Some(0.1_f64.tan()); 5]);
 }
 
 #[test]
