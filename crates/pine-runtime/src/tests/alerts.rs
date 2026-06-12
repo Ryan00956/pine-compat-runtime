@@ -129,7 +129,7 @@ alertcondition(bar_index == 1, "Second", "second")
 fn collects_alert_events_when_execution_reaches_call() {
     let result = run_alert_script(
         r#"indicator("alerts")
-alert("Every")
+alert(str.tostring(close))
 if bar_index == 1
     alert("Branch")
 if bar_index == 2
@@ -141,13 +141,13 @@ if bar_index == 2
 
     assert_eq!(result.alerts.len(), 5);
     assert_eq!(result.alerts[0].source, "alert");
-    assert_eq!(result.alerts[0].message, "Every");
+    assert_eq!(result.alerts[0].message, "1");
     assert_eq!(result.alerts[0].bar_index, 0);
-    assert_eq!(result.alerts[1].message, "Every");
+    assert_eq!(result.alerts[1].message, "2");
     assert_eq!(result.alerts[1].bar_index, 1);
     assert_eq!(result.alerts[2].message, "Branch");
     assert_eq!(result.alerts[2].bar_index, 1);
-    assert_eq!(result.alerts[3].message, "Every");
+    assert_eq!(result.alerts[3].message, "3");
     assert_eq!(result.alerts[3].bar_index, 2);
     assert_eq!(result.alerts[4].message, "Loop");
     assert_eq!(result.alerts[4].bar_index, 2);

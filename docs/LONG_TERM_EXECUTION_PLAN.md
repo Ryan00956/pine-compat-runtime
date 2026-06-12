@@ -434,7 +434,7 @@ Delivered scope:
 
 - `alertcondition(condition, title, message)` with bool-compatible conditions,
   const-string title/message values, and supported message placeholders.
-- `alert(message, freq?)` with const-string messages plus
+- `alert(message, freq?)` with string-compatible dynamic messages plus
   `alert.freq_once_per_bar`, `alert.freq_all`, and
   `alert.freq_once_per_bar_close`.
 - Deterministic public runtime alert events in `schemaVersion: 3`.

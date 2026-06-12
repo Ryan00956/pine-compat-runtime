@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added support for dynamic string-compatible `alert()` messages while keeping
+  `freq` limited to the existing const-string frequency subset and keeping
+  Pine-source `alert()` placeholder interpolation unsupported.
 - Added fixture-backed `alertcondition` message interpolation for
   `{{open}}`, `{{high}}`, `{{low}}`, `{{close}}`, `{{volume}}`,
   `{{ticker}}`, `{{interval}}`, `{{exchange}}`, and UTC-formatted

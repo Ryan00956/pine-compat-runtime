@@ -17,8 +17,8 @@ runtime output model.
   `{{high}}`, `{{low}}`, `{{close}}`, `{{volume}}`, `{{ticker}}`,
   `{{interval}}`, `{{exchange}}`, and UTC-formatted triggering-bar `{{time}}`
   interpolation in the message only.
-- `alert(message, freq?)` accepts const-string messages and a narrow
-  const-string frequency subset.
+- `alert(message, freq?)` accepts string-compatible dynamic messages and a
+  narrow const-string frequency subset.
 - Reached true alert conditions and reached `alert()` calls emit events in
   program order, subject to supported `alert()` frequency filtering. False and
   `na` alert conditions emit nothing.

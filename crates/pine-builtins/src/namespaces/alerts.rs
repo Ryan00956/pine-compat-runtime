@@ -5,7 +5,7 @@ use super::types::*;
 const ALERT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "message",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCompatible,
         optional: false,
     },
     BuiltinParam {

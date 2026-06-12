@@ -564,7 +564,7 @@ Rules:
 alertcondition(condition: bool-compatible, title: const string, message: const string)
   -> void
 
-alert(message: const string, freq?: const string)
+alert(message: string-compatible, freq?: const string)
   -> void
 
 plot(series: series/simple numeric, title?: const string, color?: color-compatible, linewidth?: simple int, style?: const string, trackprice?: const bool, histbase?: numeric, offset?: simple int, join?: const bool, editable?: const bool, show_last?: simple int, display?: const string, format?: const string, precision?: simple int, force_overlay?: const bool)
@@ -601,16 +601,16 @@ serialized as event `message` after replacing `{{open}}`, `{{high}}`,
 `{{low}}`, `{{close}}`, and `{{volume}}` with triggering-bar values, plus
 `{{ticker}}`, `{{interval}}`, and `{{exchange}}` with current chart metadata,
 and `{{time}}` with the triggering bar timestamp using the UTC
-`str.format_time` default format. `alert`
-serializes `source` as `alert` and supports a narrow const-string frequency
-subset: the default
+`str.format_time` default format. `alert` serializes `source` as `alert`,
+evaluates its string-compatible `message` at runtime, and supports a narrow
+const-string frequency subset: the default
 `alert.freq_once_per_bar` emits at most one event per callsite per bar, while
 `alert.freq_all` emits every reached call. `alert.freq_once_per_bar_close`
 emits at most one event per callsite only during historical or confirmed
-realtime bar-close execution. Dynamic message/title strings, `alert()`
-placeholders, `alertcondition` title placeholders, unknown `alertcondition`
-message placeholders, and alert side effects inside UDF or requested-context
-expressions are not part of the current subset.
+realtime bar-close execution. Dynamic `alertcondition` title/message strings,
+`alert()` placeholders, `alertcondition` title placeholders, unknown
+`alertcondition` message placeholders, and alert side effects inside UDF or
+requested-context expressions are not part of the current subset.
 
 `color-compatible` should initially accept:
 

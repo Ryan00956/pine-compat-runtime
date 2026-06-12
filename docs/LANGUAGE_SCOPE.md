@@ -111,11 +111,11 @@ Phase 1 executable subset:
   `{{low}}`, `{{close}}`, `{{volume}}`, `{{ticker}}`, `{{interval}}`, and
   `{{exchange}}` placeholders plus UTC-formatted triggering-bar `{{time}}` in
   the message only
-- `alert(message, freq?)` with const-string messages and a const-string
-  frequency subset limited to `alert.freq_once_per_bar`, `alert.freq_all`, and
-  `alert.freq_once_per_bar_close`; TradingView-style `{{...}}` placeholder
-  interpolation remains unsupported outside the supported `alertcondition`
-  message subset
+- `alert(message, freq?)` with string-compatible dynamic messages and a
+  const-string frequency subset limited to `alert.freq_once_per_bar`,
+  `alert.freq_all`, and `alert.freq_once_per_bar_close`; TradingView-style
+  `{{...}}` placeholder interpolation remains unsupported outside the
+  supported `alertcondition` message subset
 - `na`, `nz`
 - common `ta.*` helpers listed in
   [`BUILTIN_SIGNATURES.md`](BUILTIN_SIGNATURES.md), including moving averages,

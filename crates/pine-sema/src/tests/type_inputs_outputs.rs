@@ -205,19 +205,36 @@ alert("Close", freq=alert.freq_once_per_bar_close)
 }
 
 #[test]
-fn rejects_alert_dynamic_message_and_unsupported_frequency() {
+fn accepts_alert_dynamic_message_subset() {
     let analysis = analyze(
         r#"message = input.string("Reached", "Message")
 alert(message)
-alert("Reached", freq="once")
+alert(str.tostring(close))
 "#,
     );
 
-    assert!(analysis.diagnostics.iter().any(|diagnostic| {
-        diagnostic.code == "E_CALL_ARG_TYPE"
-            && diagnostic.message.contains("argument `message`")
-            && diagnostic.message.contains("Input String")
-    }));
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "alert")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_alert_unsupported_frequency() {
+    let analysis = analyze(
+        r#"alert("Reached", freq="once")
+"#,
+    );
+
     assert!(
         analysis
             .compatibility

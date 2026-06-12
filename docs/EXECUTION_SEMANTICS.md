@@ -388,7 +388,7 @@ strings. Runtime output serializes `title` as the alert event `source` and
 and `{{time}}` with the triggering bar timestamp using the UTC
 `str.format_time` default format.
 
-`alert(message, freq?)` is supported for const-string messages only. It
+`alert(message, freq?)` is supported for string-compatible dynamic messages. It
 serializes `source` as `alert`. The default frequency is
 `alert.freq_once_per_bar`, which emits at most one event per alert callsite per
 bar even if a loop reaches the same callsite multiple times. `alert.freq_all`

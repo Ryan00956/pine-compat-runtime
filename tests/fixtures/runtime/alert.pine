@@ -1,6 +1,7 @@
 //@version=5
 indicator("Alert fixture")
 alert("Every bar")
+alert(str.tostring(close))
 if bar_index == 1
     alert("Branch alert")
 if bar_index == 2
