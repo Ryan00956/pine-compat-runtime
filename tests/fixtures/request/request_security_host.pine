@@ -510,3 +510,8 @@ plot(higher_tuple_math_radians)
 plot(tuple_math_floor)
 plot(tuple_math_ceil)
 plot(tuple_math_round)
+
+[tuple_math_sqrt, tuple_math_cbrt, tuple_math_log10] = request.security("NYSE:IBM", timeframe.period, [math.sqrt(close), math.cbrt(close), math.log10(close)])
+plot(tuple_math_sqrt)
+plot(tuple_math_cbrt)
+plot(tuple_math_log10)

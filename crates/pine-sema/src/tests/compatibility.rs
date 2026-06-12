@@ -753,6 +753,27 @@ fn accepts_provider_backed_request_security_tuple_literal_stateless_math_express
 }
 
 #[test]
+fn accepts_provider_backed_request_security_tuple_literal_root_log_math_expression() {
+    let analysis = analyze(
+        "[sqrt_value, cbrt_value, log10_value] = request.security(\"NYSE:IBM\", timeframe.period, [math.sqrt(close), math.cbrt(close), math.log10(close)])\nplot(sqrt_value + cbrt_value + log10_value)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_request_security_tuple_literal_ta_expression() {
     let analysis = analyze(
         "[avg, delta, total] = request.security(\"NYSE:IBM\", timeframe.period, [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(nz(avg) + nz(delta) + total)\n",

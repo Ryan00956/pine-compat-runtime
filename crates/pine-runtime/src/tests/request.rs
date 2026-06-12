@@ -1192,6 +1192,42 @@ fn request_security_evaluates_provider_tuple_literal_stateless_math_in_requested
 }
 
 #[test]
+fn request_security_evaluates_provider_tuple_literal_root_log_math_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider tuple literal root log math\")\n[sqrt_value, cbrt_value, log10_value] = request.security(\"NYSE:IBM\", timeframe.period, [math.sqrt(close), math.cbrt(close), math.log10(close)])\nplot(sqrt_value)\nplot(cbrt_value)\nplot(log10_value)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 11.0, 12.0, 10.0, 21.0, 1.0),
+            timed_ohlcv(120_000, 12.0, 13.0, 11.0, 22.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 2.0, 0.0, 4.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 3.0, 1.0, 5.0, 1.0),
+            timed_ohlcv(120_000, 3.0, 4.0, 2.0, 6.0, 1.0),
+        ])
+        .expect("provider tuple literal root/log math request.security expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(
+        &result.plots[0].values,
+        &[20.0_f64.sqrt(), 21.0_f64.sqrt(), 22.0_f64.sqrt()],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[20.0_f64.cbrt(), 21.0_f64.cbrt(), 22.0_f64.cbrt()],
+    );
+    assert_values_close(
+        &result.plots[2].values,
+        &[20.0_f64.log10(), 21.0_f64.log10(), 22.0_f64.log10()],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_tuple_literal_ta_in_requested_context() {
     let program = compile_program(
         "indicator(\"request provider tuple literal ta\")\n[avg, delta, total] = request.security(\"NYSE:IBM\", timeframe.period, [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(avg)\nplot(delta)\nplot(total)\n",
