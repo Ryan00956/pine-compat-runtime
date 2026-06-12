@@ -207,7 +207,7 @@ fn request_expression_is_provider_scalar(expr: &Expr) -> bool {
 fn is_request_provider_scalar_name(name: &str) -> bool {
     matches!(
         name,
-        "open" | "high" | "low" | "close" | "volume" | "time" | "ta.obv" | "ta.pvt"
+        "open" | "high" | "low" | "close" | "volume" | "time" | "ta.obv" | "ta.pvt" | "ta.wvad"
     )
 }
 

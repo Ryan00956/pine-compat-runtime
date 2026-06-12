@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept the already-supported scalar `ta.wvad` built-in variable in
+  provider-backed scalar expressions.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept the already-supported scalar `ta.pvt` built-in variable in
   provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to

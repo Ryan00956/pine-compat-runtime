@@ -1281,6 +1281,33 @@ fn request_security_evaluates_provider_pvt_variable_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_wvad_variable_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request wvad\")\nprovider_wvad = request.security(\"NYSE:IBM\", timeframe.period, ta.wvad)\nchart_wvad = ta.wvad\nplot(provider_wvad)\nplot(chart_wvad)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 15.0, 5.0, 12.0, 100.0),
+            timed_ohlcv(60_000, 20.0, 30.0, 10.0, 25.0, 40.0),
+            timed_ohlcv(120_000, 10.0, 10.0, 10.0, 10.0, 30.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 4.0, 0.0, 3.0, 8.0),
+            timed_ohlcv(60_000, 2.0, 6.0, 2.0, 5.0, 6.0),
+            timed_ohlcv(120_000, 3.0, 3.0, 3.0, 3.0, 7.0),
+        ])
+        .expect("provider ta.wvad variable expression should run");
+
+    assert_values_close(&result.plots[0].values[..2], &[20.0, 10.0]);
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
+    assert_values_close(&result.plots[1].values[..2], &[4.0, 4.5]);
+    assert_eq!(result.plots[1].values[2], PineValue::Na);
+}
+
+#[test]
 fn request_security_evaluates_provider_correlation_in_requested_context() {
     let program = compile_program(
         "indicator(\"request correlation\")\nprovider_corr = request.security(\"NYSE:IBM\", timeframe.period, ta.correlation(close, high, 3))\nchart_corr = ta.correlation(close, high, 3)\nplot(provider_corr)\nplot(chart_corr)\n",
