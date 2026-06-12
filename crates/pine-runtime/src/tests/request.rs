@@ -206,6 +206,29 @@ fn request_security_same_context_returns_expression_series() {
 }
 
 #[test]
+fn request_security_same_context_returns_tuple_expression() {
+    let program = compile_program(
+        "indicator(\"request tuple\")\n[macd, signal, hist] = request.security(syminfo.tickerid, timeframe.period, ta.macd(close, 2, 3, 2))\nplot(macd)\nplot(signal)\nplot(hist)\n",
+    );
+    let result = run_historical(&program, &[bar(1.0), bar(2.0), bar(3.0)])
+        .expect("same-context tuple request.security expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(
+        &result.plots[0].values,
+        &[0.0, 0.16666666666666674, 0.30555555555555536],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[0.0, 0.11111111111111116, 0.24074074074074063],
+    );
+    assert_values_close(
+        &result.plots[2].values,
+        &[0.0, 0.05555555555555558, 0.06481481481481474],
+    );
+}
+
+#[test]
 fn request_security_same_context_supports_history_and_na_helpers() {
     let program = compile_program(
         "indicator(\"request history\")\nvalue = request.security(syminfo.tickerid, timeframe.period, na(close[1]) ? close : close[1])\nplot(value)\n",

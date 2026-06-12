@@ -824,7 +824,10 @@ state is separate from chart-context state: history buffers, `ta.*` callsite
 state, `var` storage, arrays, drawing objects, and outputs do not leak between
 the two contexts.
 
-The supported requested expression subset includes direct OHLCV/time sources,
+The same-context identity form also supports selected tuple expressions when
+destructured directly, currently including `ta.macd`.
+
+The supported provider requested expression subset includes direct OHLCV/time sources,
 pure arithmetic and ternaries, history references, `na`, `nz`, selected
 stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
 `ta.cum`, `ta.sma`, `ta.ema`, `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`,

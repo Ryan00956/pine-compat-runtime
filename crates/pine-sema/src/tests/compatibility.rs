@@ -229,6 +229,27 @@ fn accepts_provider_backed_same_timeframe_request_security_ta_variable() {
 }
 
 #[test]
+fn accepts_same_context_request_security_tuple_ta_call() {
+    let analysis = analyze(
+        "[macd, signal, hist] = request.security(syminfo.tickerid, timeframe.period, ta.macd(close, 2, 3, 2))\nplot(macd + signal + hist)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_same_timeframe_request_security_expression() {
     let analysis =
         analyze("plot(request.security(\"NYSE:IBM\", timeframe.period, close + open))\n");

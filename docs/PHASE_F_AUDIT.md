@@ -48,10 +48,11 @@ The compatibility matrix in `tests/fixtures/conformance.tsv` is the source of
 truth for request claims.
 
 - `request.security` is partial. Supported forms include same-context identity
-  requests for `syminfo.tickerid`/`timeframe.period` and host-provided
-  same-or-higher-timeframe scalar expressions for explicit symbols or
-  `syminfo.tickerid`.
-- Supported requested expressions are side-effect-free scalar expressions over
+  requests for `syminfo.tickerid`/`timeframe.period`, including selected tuple
+  expressions destructured directly from the request such as `ta.macd`, and
+  host-provided same-or-higher-timeframe scalar expressions for explicit symbols
+  or `syminfo.tickerid`.
+- Supported provider requested expressions are side-effect-free scalar expressions over
   direct OHLCV/time sources, pure arithmetic and ternaries, history references,
   `na`, `nz`, selected stateless `math.*` calls, fixed-mintick
   `math.round_to_mintick`, `math.sum`, `ta.cum`, `ta.sma`, `ta.ema`,

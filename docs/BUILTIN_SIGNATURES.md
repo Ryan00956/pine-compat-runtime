@@ -194,7 +194,9 @@ request.security(symbol: simple string, timeframe: simple string, expression: an
 The current executable subset has two forms:
 
 - `request.security(syminfo.tickerid, timeframe.period, expression)` evaluates a
-  scalar side-effect-free expression in the chart context.
+  scalar side-effect-free expression in the chart context. Selected same-context
+  tuple expressions are also supported when destructured directly, currently
+  including `ta.macd`.
 - `request.security("SYMBOL", timeframe, expression)` and
   `request.security(syminfo.tickerid, timeframe, expression)` evaluate scalar
   side-effect-free expressions over host-provided same-or-higher-timeframe bars.

@@ -843,6 +843,9 @@ impl Analyzer {
                 .collect::<Option<_>>(),
             ExprKind::Call { callee, args } => {
                 let name = expr_name(callee)?;
+                if name == "request.security" && args.len() == 3 {
+                    return self.tuple_element_types(&args[2].value);
+                }
                 if is_ta_vwap_bands_call(&name, args) {
                     let series_float = PineType::new(Qualifier::Series, ValueKind::Float);
                     return Some(vec![series_float, series_float, series_float]);

@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) and provider-backed same-or-higher-timeframe scalar expressions are supported; optional parameters, lower-timeframe requests, and side-effecting requested expressions are not implemented";
+const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions, are supported; optional parameters, lower-timeframe requests, and side-effecting requested expressions are not implemented";
 
 impl Analyzer {
     pub(crate) fn analyze_request_call(
@@ -68,14 +68,21 @@ impl Analyzer {
         }
 
         let expression_type = arg_types.get(2).copied().flatten();
-        if expression_type.is_none_or(|pine_type| !is_request_scalar_type(pine_type)) {
+        let same_context_request = same_context_symbol && same_chart_timeframe;
+        if expression_type.is_none_or(|pine_type| {
+            if same_context_request {
+                !is_request_same_context_type(pine_type)
+            } else {
+                !is_request_scalar_type(pine_type)
+            }
+        }) {
             unsupported = true;
         }
         let supported_expression = args.get(2).is_some_and(|arg| {
             if provider_symbol || literal_timeframe {
                 request_expression_is_provider_scalar(&arg.value)
             } else {
-                request_expression_is_pure_scalar(&arg.value)
+                request_expression_is_same_context_value(&arg.value)
             }
         });
         if !supported_expression {
@@ -110,6 +117,17 @@ fn is_request_scalar_type(pine_type: PineType) -> bool {
     )
 }
 
+fn is_request_same_context_type(pine_type: PineType) -> bool {
+    is_request_scalar_type(pine_type) || pine_type.kind == ValueKind::Tuple
+}
+
+fn request_expression_is_same_context_value(expr: &Expr) -> bool {
+    match &expr.kind {
+        ExprKind::Tuple(items) => items.iter().all(request_expression_is_same_context_value),
+        _ => request_expression_is_pure_scalar(expr),
+    }
+}
+
 fn request_expression_is_pure_scalar(expr: &Expr) -> bool {
     match &expr.kind {
         ExprKind::Literal(_) | ExprKind::Identifier(_) => true,
@@ -136,24 +154,29 @@ fn request_expression_is_pure_scalar(expr: &Expr) -> bool {
             let Some(name) = expr_name(callee) else {
                 return false;
             };
-            request_scalar_call_is_supported(name.as_str())
-                && args
-                    .iter()
-                    .all(|arg| arg.name.is_none() && request_expression_is_pure_scalar(&arg.value))
+            (request_scalar_call_is_supported(name.as_str())
+                || request_tuple_call_is_supported(name.as_str()))
+                && args.iter().all(|arg| {
+                    arg.name.is_none() && request_expression_is_same_context_value(&arg.value)
+                })
         }
         ExprKind::Switch { selector, arms } => {
             selector
                 .as_deref()
-                .is_none_or(request_expression_is_pure_scalar)
+                .is_none_or(request_expression_is_same_context_value)
                 && arms.iter().all(|arm| {
                     arm.condition
                         .as_ref()
-                        .is_none_or(request_expression_is_pure_scalar)
-                        && request_expression_is_pure_scalar(&arm.result)
+                        .is_none_or(request_expression_is_same_context_value)
+                        && request_expression_is_same_context_value(&arm.result)
                 })
         }
         ExprKind::Tuple(_) | ExprKind::For { .. } => false,
     }
+}
+
+fn request_tuple_call_is_supported(name: &str) -> bool {
+    matches!(name, "ta.macd")
 }
 
 fn request_expression_is_provider_scalar(expr: &Expr) -> bool {
