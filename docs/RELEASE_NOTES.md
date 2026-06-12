@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added provider-backed `request.security` tuple literal fixture coverage for
+  same-timeframe source-less `ta.highestbars` and `ta.lowestbars` scalar
+  elements.
+- Added provider-backed `request.security` tuple literal fixture coverage for
   same-timeframe source-less `ta.highest` and `ta.lowest` scalar elements.
 - Added provider-backed `request.security` tuple literal fixture coverage for
   same-timeframe `ta.bbw` scalar elements.
