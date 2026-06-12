@@ -257,3 +257,7 @@ plot(higher_tuple_ta_open_falling)
 [tuple_ta_barssince, tuple_ta_valuewhen] = request.security("NYSE:IBM", timeframe.period, [ta.barssince(close > open), ta.valuewhen(close > 21, close, 1)])
 plot(tuple_ta_barssince)
 plot(tuple_ta_valuewhen)
+
+[higher_tuple_ta_barssince, higher_tuple_ta_valuewhen] = request.security("NYSE:IBM", "5", [ta.barssince(close > open), ta.valuewhen(close > 90, close, 1)])
+plot(higher_tuple_ta_barssince)
+plot(higher_tuple_ta_valuewhen)
