@@ -786,6 +786,12 @@ mod tests {
         assert!(output.matches("\"values\":[null,null,null,null,1]").count() >= 2);
         assert!(
             output
+                .matches("\"values\":[null,null,null,null,100]")
+                .count()
+                >= 2
+        );
+        assert!(
+            output
                 .matches("\"values\":[1000,2000,3000,4000,5000]")
                 .count()
                 >= 2

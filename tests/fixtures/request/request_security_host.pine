@@ -417,3 +417,7 @@ plot(higher_tuple_ta_dema)
 [higher_tuple_ta_tema, higher_tuple_ta_tsi] = request.security("NYSE:IBM", "5", [ta.tema(close, 3), ta.tsi(close, 2, 3)])
 plot(higher_tuple_ta_tema)
 plot(higher_tuple_ta_tsi)
+
+[higher_tuple_ta_cmo, higher_tuple_ta_mfi] = request.security("NYSE:IBM", "5", [ta.cmo(close, 1), ta.mfi(close, 2)])
+plot(higher_tuple_ta_cmo)
+plot(higher_tuple_ta_mfi)

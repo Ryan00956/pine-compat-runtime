@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal rolling `ta.cmo` and `ta.mfi` scalar
+  elements while preserving default confirmation alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal rolling `ta.tema` and `ta.tsi` scalar
   elements while preserving default confirmation alignment.
 - Added higher-timeframe fixture coverage for provider-backed
