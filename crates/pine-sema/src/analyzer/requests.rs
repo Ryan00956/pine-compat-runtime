@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions, are supported; optional parameters, lower-timeframe requests, and side-effecting requested expressions are not implemented";
+const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions and selected tuple expressions, are supported; optional parameters, lower-timeframe requests, and side-effecting requested expressions are not implemented";
 
 impl Analyzer {
     pub(crate) fn analyze_request_call(
@@ -73,16 +73,20 @@ impl Analyzer {
             if same_context_request {
                 !is_request_same_context_type(pine_type)
             } else {
-                !is_request_scalar_type(pine_type)
+                !is_request_provider_type(pine_type)
             }
         }) {
             unsupported = true;
         }
         let supported_expression = args.get(2).is_some_and(|arg| {
-            if provider_symbol || literal_timeframe {
+            if same_context_request {
+                request_expression_is_same_context_value(&arg.value)
+            } else if expression_type.is_some_and(|pine_type| pine_type.kind == ValueKind::Tuple) {
+                request_expression_is_provider_tuple_value(&arg.value)
+            } else if provider_symbol || literal_timeframe {
                 request_expression_is_provider_scalar(&arg.value)
             } else {
-                request_expression_is_same_context_value(&arg.value)
+                false
             }
         });
         if !supported_expression {
@@ -118,6 +122,10 @@ fn is_request_scalar_type(pine_type: PineType) -> bool {
 }
 
 fn is_request_same_context_type(pine_type: PineType) -> bool {
+    is_request_scalar_type(pine_type) || pine_type.kind == ValueKind::Tuple
+}
+
+fn is_request_provider_type(pine_type: PineType) -> bool {
     is_request_scalar_type(pine_type) || pine_type.kind == ValueKind::Tuple
 }
 
@@ -180,6 +188,23 @@ fn request_tuple_call_is_supported(name: &str) -> bool {
         name,
         "ta.macd" | "ta.bb" | "ta.kc" | "ta.supertrend" | "ta.dmi" | "ta.vwap"
     )
+}
+
+fn request_expression_is_provider_tuple_value(expr: &Expr) -> bool {
+    let ExprKind::Call { callee, args } = &expr.kind else {
+        return false;
+    };
+    let Some(name) = expr_name(callee) else {
+        return false;
+    };
+    request_provider_tuple_call_is_supported(name.as_str())
+        && args
+            .iter()
+            .all(|arg| arg.name.is_none() && request_expression_is_provider_scalar(&arg.value))
+}
+
+fn request_provider_tuple_call_is_supported(name: &str) -> bool {
+    matches!(name, "ta.macd")
 }
 
 fn request_expression_is_provider_scalar(expr: &Expr) -> bool {

@@ -818,7 +818,7 @@ validates duplicate keys plus sorted unique bar times before execution.
 
 Same-context requests whose symbol and timeframe match the chart metadata
 evaluate the requested expression in the chart context. Provider-backed
-same-or-higher-timeframe requests evaluate the supported scalar expression in an
+same-or-higher-timeframe requests evaluate the supported expression in an
 isolated requested-context runtime over the provider bars. Requested-context
 state is separate from chart-context state: history buffers, `ta.*` callsite
 state, `var` storage, arrays, drawing objects, and outputs do not leak between
@@ -843,8 +843,11 @@ stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
 Rolling callsite state for `math.sum` and `ta.*` calls is owned by the isolated
 requested context. Stateful math calls such as `math.random` and the `ta.tr`
 variable form remain outside the requested-expression subset.
+Selected provider-backed tuple expressions are supported when destructured
+directly from the request, currently `ta.macd`.
 Provider-backed `ta.vwap` requested-expression support is limited to scalar
-source-call expressions; provider-backed tuple expressions remain unsupported.
+source-call expressions; other provider-backed tuple expressions remain
+unsupported.
 
 Requested-context results are cached deterministically by callsite, requested
 symbol, requested timeframe, and expression identity for the duration of one

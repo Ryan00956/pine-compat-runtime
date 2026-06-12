@@ -3,21 +3,25 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept provider-backed tuple-returning `ta.macd` expressions destructured
+  directly from the request while keeping other provider-backed tuple
+  expressions unsupported.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept same-context tuple-returning `ta.dmi` expressions destructured directly
-  from the request while keeping provider-backed requested expressions
-  scalar-only.
+  from the request while keeping other provider-backed tuple expressions
+  unsupported.
 - Widened the fixture-backed `request.security` requested-expression subset to
   accept same-context tuple-returning `ta.supertrend` expressions destructured
-  directly from the request while keeping provider-backed requested expressions
-  scalar-only.
+  directly from the request while keeping other provider-backed tuple
+  expressions unsupported.
 - Widened the fixture-backed `request.security` requested-expression subset to
   accept same-context tuple-returning `ta.kc` expressions destructured directly
-  from the request while keeping provider-backed requested expressions
-  scalar-only.
+  from the request while keeping other provider-backed tuple expressions
+  unsupported.
 - Widened the fixture-backed `request.security` requested-expression subset to
   accept same-context tuple-returning `ta.vwap(source, anchor, stdev_mult)`
-  expressions destructured directly from the request while keeping
-  provider-backed requested expressions scalar-only.
+  expressions destructured directly from the request while keeping other
+  provider-backed tuple expressions unsupported.
 - Widened the fixture-backed `request.security` requested-expression subset to
   accept the already-supported scalar `ta.pvi` built-in variable in
   provider-backed scalar expressions.
@@ -69,7 +73,7 @@
   provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to
   accept same-context `ta.bb` tuple expressions destructured directly from the
-  request while keeping provider-backed requested expressions scalar-only.
+  request while keeping other provider-backed tuple expressions unsupported.
 - Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported one-argument `ta.max` calls in same-context and
   provider-backed scalar expressions.
@@ -81,7 +85,7 @@
   provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to
   accept same-context `ta.macd` tuple expressions destructured directly from the
-  request while keeping provider-backed requested expressions scalar-only.
+  request while keeping other provider-backed tuple expressions unsupported.
 - Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported two-argument `ta.cog` calls in same-context and
   provider-backed scalar expressions.

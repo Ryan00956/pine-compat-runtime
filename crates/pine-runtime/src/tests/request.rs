@@ -584,6 +584,64 @@ fn request_security_evaluates_provider_history_references() {
 }
 
 #[test]
+fn request_security_evaluates_provider_macd_tuple_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider macd tuple\")\n[macd, signal, hist] = request.security(\"NYSE:IBM\", timeframe.period, ta.macd(close, 2, 3, 2))\nplot(macd)\nplot(signal)\nplot(hist)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 21.0),
+            timed_bar(120_000, 22.0),
+            timed_bar(180_000, 23.0),
+            timed_bar(240_000, 24.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 6.0),
+            timed_bar(120_000, 7.0),
+            timed_bar(180_000, 8.0),
+            timed_bar(240_000, 9.0),
+        ])
+        .expect("provider ta.macd tuple expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(
+        &result.plots[0].values,
+        &[
+            0.0,
+            0.16666666666666785,
+            0.30555555555555713,
+            0.39351851851851904,
+            0.4436728395061713,
+        ],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[
+            0.0,
+            0.1111111111111119,
+            0.24074074074074136,
+            0.3425925925925929,
+            0.409_979_423_868_311_8,
+        ],
+    );
+    assert_values_close(
+        &result.plots[2].values,
+        &[
+            0.0,
+            0.05555555555555595,
+            0.06481481481481577,
+            0.05092592592592615,
+            0.033_693_415_637_859_46,
+        ],
+    );
+}
+
+#[test]
 fn request_security_isolates_provider_ta_state_from_chart_state() {
     let program = compile_program(
         "indicator(\"request ta\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2))\nchart = ta.sma(close, 2)\nplot(provider)\nplot(chart)\n",

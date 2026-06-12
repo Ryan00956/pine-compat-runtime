@@ -199,7 +199,7 @@ The current executable subset has two forms:
   including `ta.macd`, `ta.bb`, `ta.kc`, `ta.supertrend`, `ta.dmi`, and
   `ta.vwap(source, anchor, stdev_mult)`.
 - `request.security("SYMBOL", timeframe, expression)` and
-  `request.security(syminfo.tickerid, timeframe, expression)` evaluate scalar
+  `request.security(syminfo.tickerid, timeframe, expression)` evaluate
   side-effect-free expressions over host-provided same-or-higher-timeframe bars.
   The supported provider expression subset includes direct OHLCV/time sources,
   pure arithmetic and ternaries, history references, `na`, `nz`, selected
@@ -214,8 +214,11 @@ The current executable subset has two forms:
   `ta.linreg`, `ta.rising`, `ta.falling`, `ta.barssince`, `ta.valuewhen`, `ta.cross`,
   `ta.crossover`, and `ta.crossunder`.
   Requested-context rolling callsite state is isolated from the chart context.
+  Selected provider-backed tuple expressions are also supported when
+  destructured directly from the request, currently `ta.macd`.
   Provider-backed `ta.vwap` requested-expression support is limited to scalar
-  source-call expressions; provider-backed tuple expressions remain unsupported.
+  source-call expressions; other provider-backed tuple expressions remain
+  unsupported.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
   the last confirmed value.

@@ -52,9 +52,9 @@ truth for request claims.
   expressions destructured directly from the request such as `ta.macd`,
   `ta.bb`, `ta.kc`, `ta.supertrend`, `ta.dmi`, and
   `ta.vwap(source, anchor, stdev_mult)`, and
-  host-provided same-or-higher-timeframe scalar expressions for explicit symbols
-  or `syminfo.tickerid`.
-- Supported provider requested expressions are side-effect-free scalar expressions over
+  host-provided same-or-higher-timeframe expressions for explicit symbols or
+  `syminfo.tickerid`.
+- Supported provider requested expressions are side-effect-free expressions over
   direct OHLCV/time sources, pure arithmetic and ternaries, history references,
   `na`, `nz`, selected stateless `math.*` calls, fixed-mintick
   `math.round_to_mintick`, `math.sum`, `ta.cum`, `ta.sma`, `ta.ema`,
@@ -69,9 +69,11 @@ truth for request claims.
   `ta.percentrank`, `ta.stdev`, `ta.variance`, `ta.wma`, `ta.vwma`,
   `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`, `ta.barssince`,
   `ta.valuewhen`, `ta.cross`, `ta.crossover`, and `ta.crossunder`.
+- Selected provider-backed tuple expressions are supported when destructured
+  directly from the request, currently `ta.macd`.
 - Provider-backed `ta.vwap` requested-expression support is limited to the
-  scalar source-call form; provider-backed tuple expressions remain outside
-  this subset.
+  scalar source-call form; other provider-backed tuple expressions remain
+  outside this subset.
 - Provider-backed requested expressions run in an isolated requested context.
   Chart-runtime history, `ta.*` callsite state, `var` storage, arrays, drawing
   objects, and outputs are not shared with requested-context evaluation.
