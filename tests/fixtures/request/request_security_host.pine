@@ -213,3 +213,8 @@ plot(tuple_delta)
 plot(higher_tuple_prior)
 plot(higher_tuple_fallback)
 plot(higher_tuple_delta)
+
+[tuple_math_max, tuple_math_min, tuple_math_abs] = request.security("NYSE:IBM", timeframe.period, [math.max(close, open), math.min(close, open), math.abs(open - close)])
+plot(tuple_math_max)
+plot(tuple_math_min)
+plot(tuple_math_abs)
