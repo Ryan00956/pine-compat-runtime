@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added provider-backed `request.security` tuple literal fixture coverage for
+  rolling `ta.sma`, `ta.change`, and `ta.cum` scalar elements with requested
+  context callsite state.
 - Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal stateless math scalar elements while
   preserving default confirmation alignment.
