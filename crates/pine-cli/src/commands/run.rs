@@ -790,6 +790,8 @@ mod tests {
                 .count()
                 >= 2
         );
+        assert!(output.contains("\"values\":[null,null,null,null,92.3076923076923]"));
+        assert!(output.contains("\"values\":[null,null,null,null,-7.6923076923076925]"));
         assert!(
             output
                 .matches("\"values\":[1000,2000,3000,4000,5000]")
