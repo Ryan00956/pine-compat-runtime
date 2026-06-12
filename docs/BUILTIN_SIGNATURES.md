@@ -203,7 +203,7 @@ The current executable subset has two forms:
   stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
   `ta.cum`, `ta.sma`, `ta.ema`, `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`,
   `ta.tsi`, `ta.cmo`, `ta.cci`, `ta.cog`, `ta.bop`, `ta.ao`, `ta.max`, `ta.min`, `ta.mfi`, `ta.stoch`, `ta.wpr`, `ta.sar`, `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`, `ta.highestbars`, `ta.lowestbars`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`,
-  `ta.dev`, `ta.bbw`, `ta.kcw`, `ta.pivothigh`, `ta.pivotlow`,
+  `ta.dev`, `ta.vwap`, `ta.bbw`, `ta.kcw`, `ta.pivothigh`, `ta.pivotlow`,
   `ta.correlation`, `ta.covariance`, `ta.median`,
   `ta.mode`, `ta.percentile_nearest_rank`,
   `ta.percentile_linear_interpolation`, `ta.percentrank`, `ta.stdev`,
@@ -211,6 +211,9 @@ The current executable subset has two forms:
   `ta.linreg`, `ta.rising`, `ta.falling`, `ta.barssince`, `ta.valuewhen`, `ta.cross`,
   `ta.crossover`, and `ta.crossunder`.
   Requested-context rolling callsite state is isolated from the chart context.
+  `ta.vwap` requested-expression support is limited to scalar source-call
+  expressions; the tuple-returning VWAP bands overload remains unsupported in
+  requested contexts.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
   the last confirmed value.

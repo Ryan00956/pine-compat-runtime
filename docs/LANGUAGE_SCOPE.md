@@ -277,7 +277,7 @@ Request data:
   `ta.cog`, `ta.bop`, `ta.ao`, `ta.max`, `ta.min`, `ta.mfi`,
   `ta.stoch`, `ta.wpr`, `ta.sar`,
   `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`,
-  `ta.highestbars`, `ta.lowestbars`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.rising`,
+  `ta.highestbars`, `ta.lowestbars`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.vwap`, `ta.rising`,
   `ta.bbw`, `ta.kcw`, `ta.pivothigh`, `ta.pivotlow`, `ta.correlation`,
   `ta.covariance`, `ta.median`, `ta.mode`, `ta.percentile_nearest_rank`,
   `ta.percentile_linear_interpolation`,
@@ -287,6 +287,8 @@ Request data:
   `ta.tr` variable form and stateful math
   calls such as `math.random` are not part of this subset.
   Requested-context rolling callsite state is isolated from chart state.
+  `ta.vwap` support is limited to scalar source-call expressions; the
+  tuple-returning VWAP bands overload remains outside this subset.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
   the last confirmed value.

@@ -1184,6 +1184,39 @@ fn request_security_evaluates_provider_valuewhen_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_vwap_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request vwap\")\nprovider_vwap = request.security(\"NYSE:IBM\", timeframe.period, ta.vwap(close))\nchart_vwap = ta.vwap(close)\nplot(provider_vwap)\nplot(chart_vwap)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 20.0, 100.0),
+            timed_ohlcv(60_000, 11.0, 12.0, 10.0, 21.0, 200.0),
+            timed_ohlcv(120_000, 12.0, 13.0, 11.0, 22.0, 300.0),
+            timed_ohlcv(180_000, 13.0, 14.0, 12.0, 23.0, 400.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 2.0, 0.0, 4.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 3.0, 1.0, 5.0, 2.0),
+            timed_ohlcv(120_000, 3.0, 4.0, 2.0, 6.0, 3.0),
+            timed_ohlcv(180_000, 4.0, 5.0, 3.0, 7.0, 4.0),
+        ])
+        .expect("provider ta.vwap expression should run");
+
+    assert_values_close(
+        &result.plots[0].values,
+        &[20.0, 20.666666666666668, 21.333333333333332, 22.0],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[4.0, 4.666666666666667, 5.333333333333333, 6.0],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_correlation_in_requested_context() {
     let program = compile_program(
         "indicator(\"request correlation\")\nprovider_corr = request.security(\"NYSE:IBM\", timeframe.period, ta.correlation(close, high, 3))\nchart_corr = ta.correlation(close, high, 3)\nplot(provider_corr)\nplot(chart_corr)\n",
