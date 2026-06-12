@@ -301,3 +301,7 @@ plot(tuple_ta_inverse_percentrank)
 [higher_tuple_ta_median, higher_tuple_ta_mode] = request.security("NYSE:IBM", "5", [ta.median(close, 2), ta.mode(close, 2)])
 plot(higher_tuple_ta_median)
 plot(higher_tuple_ta_mode)
+
+[higher_tuple_ta_percentile_nearest_rank, higher_tuple_ta_percentile_linear_interpolation] = request.security("NYSE:IBM", "5", [ta.percentile_nearest_rank(close, 2, 50), ta.percentile_linear_interpolation(close, 2, 50)])
+plot(higher_tuple_ta_percentile_nearest_rank)
+plot(higher_tuple_ta_percentile_linear_interpolation)
