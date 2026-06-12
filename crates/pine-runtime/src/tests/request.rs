@@ -717,6 +717,48 @@ fn request_security_evaluates_provider_kc_tuple_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_supertrend_tuple_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider supertrend tuple\")\n[line, direction] = request.security(\"NYSE:IBM\", timeframe.period, ta.supertrend(2, 3))\nplot(line)\nplot(direction)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 10.0, 1.0),
+            timed_ohlcv(60_000, 10.0, 12.0, 10.0, 11.0, 1.0),
+            timed_ohlcv(120_000, 11.0, 13.0, 11.0, 12.0, 1.0),
+            timed_ohlcv(180_000, 12.0, 16.0, 12.0, 15.0, 1.0),
+            timed_ohlcv(240_000, 15.0, 17.0, 14.0, 16.0, 1.0),
+            timed_ohlcv(300_000, 16.0, 14.0, 8.0, 9.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 20.0, 25.0, 19.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 21.0, 23.0, 20.0, 21.0, 1.0),
+            timed_ohlcv(120_000, 22.0, 26.0, 21.0, 22.0, 1.0),
+            timed_ohlcv(180_000, 24.0, 28.0, 23.0, 24.0, 1.0),
+            timed_ohlcv(240_000, 27.0, 31.0, 26.0, 27.0, 1.0),
+            timed_ohlcv(300_000, 28.0, 30.0, 24.0, 25.0, 1.0),
+        ])
+        .expect("provider ta.supertrend tuple expression should run");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(
+        &result.plots[0].values,
+        &[
+            14.0,
+            14.0,
+            14.0,
+            8.666666666666668,
+            9.944444444444445,
+            20.037037037037038,
+        ],
+    );
+    assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, -1.0, -1.0, 1.0]);
+}
+
+#[test]
 fn request_security_isolates_provider_ta_state_from_chart_state() {
     let program = compile_program(
         "indicator(\"request ta\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2))\nchart = ta.sma(close, 2)\nplot(provider)\nplot(chart)\n",

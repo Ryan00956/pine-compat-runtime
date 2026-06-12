@@ -70,7 +70,8 @@ truth for request claims.
   `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`, `ta.barssince`,
   `ta.valuewhen`, `ta.cross`, `ta.crossover`, and `ta.crossunder`.
 - Selected provider-backed tuple expressions are supported when destructured
-  directly from the request, currently `ta.macd`, `ta.bb`, and `ta.kc`.
+  directly from the request, currently `ta.macd`, `ta.bb`, `ta.kc`, and
+  `ta.supertrend`.
 - Provider-backed `ta.vwap` requested-expression support is limited to the
   scalar source-call form; other provider-backed tuple expressions remain
   outside this subset.

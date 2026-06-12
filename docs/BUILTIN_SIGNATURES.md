@@ -215,8 +215,8 @@ The current executable subset has two forms:
   `ta.crossover`, and `ta.crossunder`.
   Requested-context rolling callsite state is isolated from the chart context.
   Selected provider-backed tuple expressions are also supported when
-  destructured directly from the request, currently `ta.macd`, `ta.bb`, and
-  `ta.kc`.
+  destructured directly from the request, currently `ta.macd`, `ta.bb`,
+  `ta.kc`, and `ta.supertrend`.
   Provider-backed `ta.vwap` requested-expression support is limited to scalar
   source-call expressions; other provider-backed tuple expressions remain
   unsupported.

@@ -716,6 +716,8 @@ mod tests {
         assert!(output.contains("\"values\":[20,20.5,21.25,22.125,23.0625]"));
         assert!(output.contains("\"values\":[24,32.5,37.25,40.125,42.0625]"));
         assert!(output.contains("\"values\":[16,8.5,5.25,4.125,4.0625]"));
+        assert!(output.contains("\"values\":[14,6,6,6,6]"));
+        assert!(output.contains("\"values\":[1,-1,-1,-1,-1]"));
     }
 
     #[test]
