@@ -460,3 +460,7 @@ plot(higher_tuple_ta_rsi)
 
 [higher_tuple_ta_bbw] = request.security("NYSE:IBM", "5", [ta.bbw(close, 2, 2)])
 plot(higher_tuple_ta_bbw)
+
+[higher_tuple_ta_highest_default, higher_tuple_ta_lowest_default] = request.security("NYSE:IBM", "5", [ta.highest(2), ta.lowest(2)])
+plot(higher_tuple_ta_highest_default)
+plot(higher_tuple_ta_lowest_default)

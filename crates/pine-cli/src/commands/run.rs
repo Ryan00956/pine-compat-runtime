@@ -806,6 +806,18 @@ mod tests {
         assert!(output.contains("\"values\":[null,null,null,null,80]"));
         assert!(
             output
+                .matches("\"values\":[null,null,null,null,210]")
+                .count()
+                >= 2
+        );
+        assert!(
+            output
+                .matches("\"values\":[null,null,null,null,80]")
+                .count()
+                >= 2
+        );
+        assert!(
+            output
                 .matches("\"values\":[null,null,null,null,100]")
                 .count()
                 >= 4
