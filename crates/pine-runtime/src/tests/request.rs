@@ -3118,6 +3118,52 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_power_log_mat
 }
 
 #[test]
+fn request_security_aligns_provider_higher_timeframe_tuple_literal_inverse_trig_exp_math() {
+    let program = compile_program(
+        "indicator(\"request provider htf tuple literal inverse trig exp math\")\n[exp_value, acos_value, asin_value, atan_value] = request.security(\"NYSE:IBM\", \"5\", [math.exp(close / 100), math.acos(close / 200), math.asin(close / 200), math.atan(close / 100)])\nplot(exp_value)\nplot(acos_value)\nplot(asin_value)\nplot(atan_value)\n",
+    );
+    let environment = external_symbol_environment_with_timeframe(
+        "NYSE:IBM",
+        "5",
+        vec![
+            timed_ohlcv(0, 90.0, 110.0, 80.0, 100.0, 1000.0),
+            timed_ohlcv(300_000, 190.0, 210.0, 180.0, 200.0, 1000.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(240_000, 3.0),
+            timed_bar(300_000, 4.0),
+            timed_bar(540_000, 5.0),
+        ])
+        .expect("higher timeframe provider tuple literal inverse trig/exp math request should run");
+
+    assert_eq!(result.plots.len(), 4);
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+    }
+    assert_values_close(
+        &result.plots[0].values[2..],
+        &[1.0_f64.exp(), 1.0_f64.exp(), 2.0_f64.exp()],
+    );
+    assert_values_close(
+        &result.plots[1].values[2..],
+        &[(0.5_f64).acos(), (0.5_f64).acos(), 1.0_f64.acos()],
+    );
+    assert_values_close(
+        &result.plots[2].values[2..],
+        &[(0.5_f64).asin(), (0.5_f64).asin(), 1.0_f64.asin()],
+    );
+    assert_values_close(
+        &result.plots[3].values[2..],
+        &[1.0_f64.atan(), 1.0_f64.atan(), 2.0_f64.atan()],
+    );
+}
+
+#[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta() {
     let program = compile_program(
         "indicator(\"request provider htf tuple literal ta\")\n[avg, delta, total] = request.security(\"NYSE:IBM\", \"5\", [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(avg)\nplot(delta)\nplot(total)\n",

@@ -6888,6 +6888,65 @@ fn request_host_data_runs_through_direct_wasm_api() {
             5.298317366548036
         ])
     );
+
+    let assert_plot_values_close = |plot_index: usize, expected: &[Option<f64>]| {
+        let values = parsed["plots"][plot_index]["values"]
+            .as_array()
+            .expect("plot values should be an array");
+        assert_eq!(values.len(), expected.len());
+        for (actual, expected) in values.iter().zip(expected) {
+            match expected {
+                Some(expected) => {
+                    let actual = actual.as_f64().expect("plot value should be numeric");
+                    assert!(
+                        (actual - expected).abs() < 1e-12,
+                        "plot {plot_index} value {actual} != {expected}"
+                    );
+                }
+                None => assert!(actual.is_null(), "plot {plot_index} value should be null"),
+            }
+        }
+    };
+    assert_plot_values_close(
+        262,
+        &[
+            None,
+            None,
+            Some(1.0_f64.exp()),
+            Some(1.0_f64.exp()),
+            Some(2.0_f64.exp()),
+        ],
+    );
+    assert_plot_values_close(
+        263,
+        &[
+            None,
+            None,
+            Some((0.5_f64).acos()),
+            Some((0.5_f64).acos()),
+            Some(1.0_f64.acos()),
+        ],
+    );
+    assert_plot_values_close(
+        264,
+        &[
+            None,
+            None,
+            Some((0.5_f64).asin()),
+            Some((0.5_f64).asin()),
+            Some(1.0_f64.asin()),
+        ],
+    );
+    assert_plot_values_close(
+        265,
+        &[
+            None,
+            None,
+            Some(1.0_f64.atan()),
+            Some(1.0_f64.atan()),
+            Some(2.0_f64.atan()),
+        ],
+    );
 }
 
 #[test]
