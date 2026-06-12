@@ -1301,6 +1301,48 @@ fn request_security_evaluates_provider_tuple_literal_power_log_math_in_requested
 }
 
 #[test]
+fn request_security_evaluates_provider_tuple_literal_inverse_trig_exp_math_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider tuple literal inverse trig exp math\")\n[exp_value, acos_value, asin_value, atan_value] = request.security(\"NYSE:IBM\", timeframe.period, [math.exp(close / 100), math.acos(close / 200), math.asin(close / 200), math.atan(close / 100)])\nplot(exp_value)\nplot(acos_value)\nplot(asin_value)\nplot(atan_value)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 11.0, 12.0, 10.0, 21.0, 1.0),
+            timed_ohlcv(120_000, 12.0, 13.0, 11.0, 22.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 2.0, 0.0, 4.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 3.0, 1.0, 5.0, 1.0),
+            timed_ohlcv(120_000, 3.0, 4.0, 2.0, 6.0, 1.0),
+        ])
+        .expect(
+            "provider tuple literal inverse trig/exp math request.security expression should run",
+        );
+
+    assert_eq!(result.plots.len(), 4);
+    assert_values_close(
+        &result.plots[0].values,
+        &[0.2_f64.exp(), 0.21_f64.exp(), 0.22_f64.exp()],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[(0.1_f64).acos(), (0.105_f64).acos(), (0.11_f64).acos()],
+    );
+    assert_values_close(
+        &result.plots[2].values,
+        &[(0.1_f64).asin(), (0.105_f64).asin(), (0.11_f64).asin()],
+    );
+    assert_values_close(
+        &result.plots[3].values,
+        &[0.2_f64.atan(), 0.21_f64.atan(), 0.22_f64.atan()],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_tuple_literal_ta_in_requested_context() {
     let program = compile_program(
         "indicator(\"request provider tuple literal ta\")\n[avg, delta, total] = request.security(\"NYSE:IBM\", timeframe.period, [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(avg)\nplot(delta)\nplot(total)\n",
