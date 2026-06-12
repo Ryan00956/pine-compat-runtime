@@ -45,7 +45,7 @@ Implemented or partially implemented:
   `docs/PHASE_H_AUDIT.md`; `alert.freq_once_per_bar`, `alert.freq_all`, and
   `alert.freq_once_per_bar_close` are supported for const-string `alert()`
   frequency, and `alertcondition` messages support fixture-backed OHLCV plus
-  ticker/interval placeholders, while broader placeholders, host delivery, and
+  ticker/interval/exchange placeholders, while broader placeholders, host delivery, and
   strategy alerts remain out of scope.
 - Phase J libraries/user types are closed for the fixture-backed claimed
   subset in `docs/PHASE_J_AUDIT.md`: host-provided exact-key imports expose

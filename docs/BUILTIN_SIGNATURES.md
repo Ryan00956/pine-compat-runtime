@@ -599,7 +599,7 @@ barcolor(color: color-compatible, title?: const string, offset?: simple int, edi
 evaluates to `true`. `title` is serialized as event `source`; `message` is
 serialized as event `message` after replacing `{{open}}`, `{{high}}`,
 `{{low}}`, `{{close}}`, and `{{volume}}` with triggering-bar values, plus
-`{{ticker}}` and `{{interval}}` with current chart metadata. `alert`
+`{{ticker}}`, `{{interval}}`, and `{{exchange}}` with current chart metadata. `alert`
 serializes `source` as `alert` and supports a narrow const-string frequency
 subset: the default
 `alert.freq_once_per_bar` emits at most one event per callsite per bar, while

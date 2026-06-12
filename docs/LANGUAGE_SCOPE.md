@@ -108,8 +108,8 @@ Phase 1 executable subset:
   `bgcolor`, `barcolor`, `hline`, and `fill`
 - `alertcondition(condition, title, message)` with bool-compatible conditions
   and const-string title/message values, including `{{open}}`, `{{high}}`,
-  `{{low}}`, `{{close}}`, `{{volume}}`, `{{ticker}}`, and `{{interval}}`
-  placeholders in the message only
+  `{{low}}`, `{{close}}`, `{{volume}}`, `{{ticker}}`, `{{interval}}`, and
+  `{{exchange}}` placeholders in the message only
 - `alert(message, freq?)` with const-string messages and a const-string
   frequency subset limited to `alert.freq_once_per_bar`, `alert.freq_all`, and
   `alert.freq_once_per_bar_close`; TradingView-style `{{...}}` placeholder

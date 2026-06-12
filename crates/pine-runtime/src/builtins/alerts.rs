@@ -145,6 +145,7 @@ impl<'a> HistoricalRuntime<'a> {
                 "{{interval}}",
                 self.request_environment.chart().timeframe().value(),
             )
+            .replace("{{exchange}}", self.alert_exchange_placeholder())
     }
 
     fn alert_ticker_placeholder(&self) -> &str {
@@ -156,5 +157,13 @@ impl<'a> HistoricalRuntime<'a> {
                 || self.request_environment.chart().symbol(),
                 |(_, ticker)| ticker,
             )
+    }
+
+    fn alert_exchange_placeholder(&self) -> &str {
+        self.request_environment
+            .chart()
+            .symbol()
+            .rsplit_once(':')
+            .map_or("", |(exchange, _)| exchange)
     }
 }

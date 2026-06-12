@@ -1,5 +1,6 @@
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
+use std::sync::Arc;
 
 use super::*;
 
@@ -63,14 +64,36 @@ alertcondition(true, "OHLCV", "O={{open}} H={{high}} L={{low}} C={{close}} V={{v
 fn alertcondition_message_renders_chart_placeholders() {
     let result = run_alert_script(
         r#"indicator("alerts")
-alertcondition(true, "Chart", "{{ticker}} {{interval}} {{close}}")
+alertcondition(true, "Chart", "{{exchange}} {{ticker}} {{interval}} {{close}}")
 "#,
         &timed_bars(&[12.0]),
     );
 
     assert_eq!(result.alerts.len(), 1);
     assert_eq!(result.alerts[0].source, "Chart");
-    assert_eq!(result.alerts[0].message, "AAPL 1 12");
+    assert_eq!(result.alerts[0].message, "NASDAQ AAPL 1 12");
+}
+
+#[test]
+fn alertcondition_exchange_placeholder_is_empty_without_symbol_prefix() {
+    let environment = RequestEnvironment::new(
+        ChartContext::new(
+            "AAPL",
+            RequestTimeframe::parse("D").expect("daily timeframe"),
+        ),
+        Arc::new(NoRequestDataProvider),
+    );
+    let result = run_alert_script_with_environment(
+        r#"indicator("alerts")
+alertcondition(true, "Chart", "{{exchange}}/{{ticker}}/{{interval}}")
+"#,
+        &timed_bars(&[12.0]),
+        environment,
+    );
+
+    assert_eq!(result.alerts.len(), 1);
+    assert_eq!(result.alerts[0].source, "Chart");
+    assert_eq!(result.alerts[0].message, "/AAPL/D");
 }
 
 #[test]
@@ -146,6 +169,14 @@ if bar_index == 0
 }
 
 fn run_alert_script(source: &str, bars: &[Bar]) -> RuntimeResult {
+    run_alert_script_with_environment(source, bars, RequestEnvironment::default())
+}
+
+fn run_alert_script_with_environment(
+    source: &str,
+    bars: &[Bar],
+    environment: RequestEnvironment,
+) -> RuntimeResult {
     let source = SourceFile::new("alerts.pine", source);
     let analysis = analyze_source(&source);
     assert!(
@@ -153,7 +184,8 @@ fn run_alert_script(source: &str, bars: &[Bar]) -> RuntimeResult {
         "{:?}",
         analysis.diagnostics
     );
-    run_historical(&analysis.hir.expect("HIR"), bars).expect("runtime result")
+    run_historical_with_request_environment(&analysis.hir.expect("HIR"), bars, environment)
+        .expect("runtime result")
 }
 
 fn timed_bars(values: &[f64]) -> Vec<Bar> {

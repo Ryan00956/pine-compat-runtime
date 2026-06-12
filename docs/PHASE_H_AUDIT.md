@@ -14,8 +14,8 @@ runtime output model.
 - Runtime alert event shape is `{id, barIndex, time, message, source}`.
 - `alertcondition(condition, title, message)` accepts bool-compatible
   conditions plus const-string title/message values, with `{{open}}`,
-  `{{high}}`, `{{low}}`, `{{close}}`, `{{volume}}`, `{{ticker}}`, and
-  `{{interval}}` interpolation in the message only.
+  `{{high}}`, `{{low}}`, `{{close}}`, `{{volume}}`, `{{ticker}}`,
+  `{{interval}}`, and `{{exchange}}` interpolation in the message only.
 - `alert(message, freq?)` accepts const-string messages and a narrow
   const-string frequency subset.
 - Reached true alert conditions and reached `alert()` calls emit events in
