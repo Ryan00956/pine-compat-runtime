@@ -210,7 +210,7 @@ fn accepts_provider_backed_same_timeframe_request_security_source() {
 #[test]
 fn accepts_provider_backed_same_timeframe_request_security_ta_variable() {
     let analysis = analyze(
-        "plot(request.security(\"NYSE:IBM\", timeframe.period, ta.accdist + ta.obv + ta.pvt + ta.wvad))\n",
+        "plot(request.security(\"NYSE:IBM\", timeframe.period, ta.accdist + ta.iii + ta.obv + ta.pvt + ta.wvad))\n",
     );
 
     assert!(

@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept the already-supported scalar `ta.iii` built-in variable in
+  provider-backed scalar expressions.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept the already-supported scalar `ta.accdist` built-in variable in
   provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to

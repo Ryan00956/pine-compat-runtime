@@ -1248,6 +1248,37 @@ fn request_security_evaluates_provider_accdist_variable_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_iii_variable_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request iii\")\nprovider_iii = request.security(\"NYSE:IBM\", timeframe.period, ta.iii)\nchart_iii = ta.iii\nplot(provider_iii)\nplot(chart_iii)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 15.0, 5.0, 12.0, 100.0),
+            timed_ohlcv(60_000, 12.0, 20.0, 10.0, 5.0, 2.0),
+            timed_ohlcv(120_000, 10.0, 10.0, 10.0, 10.0, 10.0),
+            timed_ohlcv(180_000, 10.0, 20.0, 10.0, 15.0, 0.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 4.0, 0.0, 3.0, 8.0),
+            timed_ohlcv(60_000, 2.0, 6.0, 2.0, 5.0, 6.0),
+            timed_ohlcv(120_000, 3.0, 3.0, 3.0, 3.0, 7.0),
+            timed_ohlcv(180_000, 2.0, 5.0, 1.0, 2.0, 9.0),
+        ])
+        .expect("provider ta.iii variable expression should run");
+
+    assert_values_close(&result.plots[0].values[..2], &[0.004, -1.0]);
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
+    assert_eq!(result.plots[0].values[3], PineValue::Na);
+    assert_values_close(&result.plots[1].values[..2], &[0.0625, 0.08333333333333333]);
+    assert_eq!(result.plots[1].values[2], PineValue::Na);
+    assert_values_close(&result.plots[1].values[3..], &[-0.05555555555555555]);
+}
+
+#[test]
 fn request_security_evaluates_provider_obv_variable_in_requested_context() {
     let program = compile_program(
         "indicator(\"request obv\")\nprovider_obv = request.security(\"NYSE:IBM\", timeframe.period, ta.obv)\nchart_obv = ta.obv\nplot(provider_obv)\nplot(chart_obv)\n",

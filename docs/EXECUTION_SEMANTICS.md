@@ -828,7 +828,7 @@ The supported requested expression subset includes direct OHLCV/time sources,
 pure arithmetic and ternaries, history references, `na`, `nz`, selected
 stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
 `ta.cum`, `ta.sma`, `ta.ema`, `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`,
-`ta.accdist`, `ta.obv`, `ta.pvt`, `ta.wvad`,
+`ta.accdist`, `ta.iii`, `ta.obv`, `ta.pvt`, `ta.wvad`,
 `ta.tsi`, `ta.cmo`, `ta.cci`, `ta.cog`, `ta.bop`, `ta.ao`, `ta.max`, `ta.min`, `ta.mfi`, `ta.stoch`, `ta.wpr`, `ta.sar`, `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`, `ta.highestbars`, `ta.lowestbars`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.vwap`,
 `ta.bbw`, `ta.kcw`, `ta.pivothigh`, `ta.pivotlow`, `ta.correlation`,
 `ta.covariance`, `ta.median`, `ta.mode`, `ta.percentile_nearest_rank`,

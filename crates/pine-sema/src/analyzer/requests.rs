@@ -214,6 +214,7 @@ fn is_request_provider_scalar_name(name: &str) -> bool {
             | "volume"
             | "time"
             | "ta.accdist"
+            | "ta.iii"
             | "ta.obv"
             | "ta.pvt"
             | "ta.wvad"
