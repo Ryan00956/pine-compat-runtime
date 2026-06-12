@@ -229,6 +229,28 @@ fn request_security_same_context_returns_tuple_expression() {
 }
 
 #[test]
+fn request_security_same_context_returns_bb_tuple_expression() {
+    let program = compile_program(
+        "indicator(\"request bb tuple\")\n[basis, upper, lower] = request.security(syminfo.tickerid, timeframe.period, ta.bb(close, 3, 2))\nplot(basis)\nplot(upper)\nplot(lower)\n",
+    );
+    let result = run_historical(&program, &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)])
+        .expect("same-context ta.bb tuple request.security expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&result.plots[0].values[2..], &[2.0, 3.0]);
+    assert_values_close(
+        &result.plots[1].values[2..],
+        &[3.632993161855452, 4.6329931618554525],
+    );
+    assert_values_close(
+        &result.plots[2].values[2..],
+        &[0.36700683814454793, 1.367006838144548],
+    );
+}
+
+#[test]
 fn request_security_same_context_supports_history_and_na_helpers() {
     let program = compile_program(
         "indicator(\"request history\")\nvalue = request.security(syminfo.tickerid, timeframe.period, na(close[1]) ? close : close[1])\nplot(value)\n",

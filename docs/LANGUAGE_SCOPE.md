@@ -267,7 +267,7 @@ Request data:
 - `request.security(syminfo.tickerid, timeframe.period, expression)` for the
   current chart context only. The requested expression must be side-effect-free;
   scalar expressions and selected tuple expressions destructured directly from
-  the request are supported, currently including `ta.macd`.
+  the request are supported, currently including `ta.macd` and `ta.bb`.
 - `request.security("SYMBOL", timeframe, expression)` and
   `request.security(syminfo.tickerid, timeframe, expression)` for host-provided
   same-or-higher-timeframe bars. The provider expression subset includes direct

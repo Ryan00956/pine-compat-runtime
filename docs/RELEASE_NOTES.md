@@ -52,6 +52,9 @@
   accept already-supported one-argument `ta.min` calls in same-context and
   provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept same-context `ta.bb` tuple expressions destructured directly from the
+  request while keeping provider-backed requested expressions scalar-only.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported one-argument `ta.max` calls in same-context and
   provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to
