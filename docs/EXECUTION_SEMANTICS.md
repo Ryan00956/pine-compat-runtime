@@ -825,7 +825,8 @@ state, `var` storage, arrays, drawing objects, and outputs do not leak between
 the two contexts.
 
 The same-context identity form also supports selected tuple expressions when
-destructured directly, currently including `ta.macd` and `ta.bb`.
+destructured directly, currently including `ta.macd`, `ta.bb`, and
+`ta.vwap(source, anchor, stdev_mult)`.
 
 The supported provider requested expression subset includes direct OHLCV/time sources,
 pure arithmetic and ternaries, history references, `na`, `nz`, selected
@@ -842,9 +843,9 @@ stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
 Rolling callsite state for `math.sum` and `ta.*` calls is owned by the isolated
 requested context. Stateful math calls such as `math.random` and the `ta.tr`
 variable form remain outside the requested-expression subset.
-`ta.vwap` requested-expression support is limited to scalar source-call
-expressions; the tuple-returning VWAP bands overload remains unsupported in
-requested contexts.
+Provider-backed `ta.vwap` requested-expression support is limited to scalar
+source-call expressions; provider-backed tuple-returning VWAP bands remain
+unsupported.
 
 Requested-context results are cached deterministically by callsite, requested
 symbol, requested timeframe, and expression identity for the duration of one

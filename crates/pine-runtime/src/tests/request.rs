@@ -251,6 +251,37 @@ fn request_security_same_context_returns_bb_tuple_expression() {
 }
 
 #[test]
+fn request_security_same_context_returns_vwap_bands_tuple_expression() {
+    let program = compile_program(
+        "indicator(\"request vwap tuple\")\n[basis, upper, lower] = request.security(syminfo.tickerid, timeframe.period, ta.vwap(close, false, 2.0))\nplot(basis)\nplot(upper)\nplot(lower)\n",
+    );
+    let result = run_historical(
+        &program,
+        &[
+            timed_ohlcv(0, 1.0, 2.0, 0.0, 4.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 3.0, 1.0, 5.0, 2.0),
+            timed_ohlcv(120_000, 3.0, 4.0, 2.0, 6.0, 3.0),
+            timed_ohlcv(180_000, 4.0, 5.0, 3.0, 7.0, 4.0),
+        ],
+    )
+    .expect("same-context ta.vwap bands tuple request.security expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(
+        &result.plots[0].values,
+        &[4.0, 4.666666666666667, 5.333333333333333, 6.0],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[4.0, 5.60947570824873, 6.824045318333193, 8.0],
+    );
+    assert_values_close(
+        &result.plots[2].values,
+        &[4.0, 3.723857625084603, 3.842621348333472, 4.0],
+    );
+}
+
+#[test]
 fn request_security_same_context_supports_history_and_na_helpers() {
     let program = compile_program(
         "indicator(\"request history\")\nvalue = request.security(syminfo.tickerid, timeframe.period, na(close[1]) ? close : close[1])\nplot(value)\n",

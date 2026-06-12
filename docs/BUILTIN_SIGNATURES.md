@@ -196,7 +196,7 @@ The current executable subset has two forms:
 - `request.security(syminfo.tickerid, timeframe.period, expression)` evaluates a
   scalar side-effect-free expression in the chart context. Selected same-context
   tuple expressions are also supported when destructured directly, currently
-  including `ta.macd` and `ta.bb`.
+  including `ta.macd`, `ta.bb`, and `ta.vwap(source, anchor, stdev_mult)`.
 - `request.security("SYMBOL", timeframe, expression)` and
   `request.security(syminfo.tickerid, timeframe, expression)` evaluate scalar
   side-effect-free expressions over host-provided same-or-higher-timeframe bars.
@@ -213,9 +213,9 @@ The current executable subset has two forms:
   `ta.linreg`, `ta.rising`, `ta.falling`, `ta.barssince`, `ta.valuewhen`, `ta.cross`,
   `ta.crossover`, and `ta.crossunder`.
   Requested-context rolling callsite state is isolated from the chart context.
-  `ta.vwap` requested-expression support is limited to scalar source-call
-  expressions; the tuple-returning VWAP bands overload remains unsupported in
-  requested contexts.
+  Provider-backed `ta.vwap` requested-expression support is limited to scalar
+  source-call expressions; provider-backed tuple-returning VWAP bands remain
+  unsupported.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
   the last confirmed value.

@@ -267,7 +267,8 @@ Request data:
 - `request.security(syminfo.tickerid, timeframe.period, expression)` for the
   current chart context only. The requested expression must be side-effect-free;
   scalar expressions and selected tuple expressions destructured directly from
-  the request are supported, currently including `ta.macd` and `ta.bb`.
+  the request are supported, currently including `ta.macd`, `ta.bb`, and
+  `ta.vwap(source, anchor, stdev_mult)`.
 - `request.security("SYMBOL", timeframe, expression)` and
   `request.security(syminfo.tickerid, timeframe, expression)` for host-provided
   same-or-higher-timeframe bars. The provider expression subset includes direct
@@ -288,8 +289,9 @@ Request data:
   `ta.tr` variable form and stateful math
   calls such as `math.random` are not part of this subset.
   Requested-context rolling callsite state is isolated from chart state.
-  `ta.vwap` support is limited to scalar source-call expressions; the
-  tuple-returning VWAP bands overload remains outside this subset.
+  Provider-backed `ta.vwap` support is limited to scalar source-call
+  expressions; provider-backed tuple-returning VWAP bands remain outside this
+  subset.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
   the last confirmed value.
