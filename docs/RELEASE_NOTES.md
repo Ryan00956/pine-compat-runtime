@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal rolling `ta.swma` and `ta.hma` scalar
+  elements while preserving default confirmation alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal `ta.wvad` and `ta.ao` scalar elements
   while preserving default confirmation alignment.
 - Added higher-timeframe fixture coverage for provider-backed
