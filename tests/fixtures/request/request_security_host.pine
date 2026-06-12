@@ -425,3 +425,7 @@ plot(higher_tuple_ta_mfi)
 [higher_tuple_ta_stoch, higher_tuple_ta_wpr] = request.security("NYSE:IBM", "5", [ta.stoch(close, high, low, 2), ta.wpr(2)])
 plot(higher_tuple_ta_stoch)
 plot(higher_tuple_ta_wpr)
+
+[higher_tuple_ta_sar, higher_tuple_ta_cci] = request.security("NYSE:IBM", "5", [ta.sar(0.02, 0.02, 0.2), ta.cci(close, 2)])
+plot(higher_tuple_ta_sar)
+plot(higher_tuple_ta_cci)

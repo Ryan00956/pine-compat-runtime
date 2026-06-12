@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal rolling `ta.sar` and `ta.cci` scalar
+  elements while preserving default confirmation alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal rolling `ta.stoch` and `ta.wpr` scalar
   elements while preserving default confirmation alignment.
 - Added higher-timeframe fixture coverage for provider-backed
