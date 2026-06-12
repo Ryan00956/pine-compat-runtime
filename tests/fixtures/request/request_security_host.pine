@@ -538,3 +538,7 @@ plot(tuple_math_trunc)
 plot(tuple_math_sign)
 plot(tuple_math_degrees)
 plot(tuple_math_radians)
+
+[tuple_ta_tr, tuple_ta_atr] = request.security("NYSE:IBM", timeframe.period, [ta.tr(), ta.atr(2)])
+plot(tuple_ta_tr)
+plot(tuple_ta_atr)

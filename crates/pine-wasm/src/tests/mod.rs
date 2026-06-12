@@ -7141,6 +7141,14 @@ fn request_host_data_runs_through_direct_wasm_api() {
             Some(1.4_f64.to_radians()),
         ],
     );
+    assert_plot_values_close(
+        292,
+        &[Some(2.0), Some(10.0), Some(10.0), Some(10.0), Some(10.0)],
+    );
+    assert_plot_values_close(
+        293,
+        &[Some(2.0), Some(6.0), Some(8.0), Some(9.0), Some(9.5)],
+    );
 }
 
 #[test]
