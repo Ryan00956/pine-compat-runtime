@@ -228,3 +228,8 @@ plot(higher_tuple_math_abs)
 plot(tuple_ta_sma)
 plot(tuple_ta_change)
 plot(tuple_ta_cum)
+
+[higher_tuple_ta_sma, higher_tuple_ta_change, higher_tuple_ta_cum] = request.security("NYSE:IBM", "5", [ta.sma(close, 2), ta.change(close), ta.cum(close)])
+plot(higher_tuple_ta_sma)
+plot(higher_tuple_ta_change)
+plot(higher_tuple_ta_cum)
