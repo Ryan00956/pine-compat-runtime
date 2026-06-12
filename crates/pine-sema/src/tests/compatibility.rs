@@ -1867,6 +1867,27 @@ fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_root_
 }
 
 #[test]
+fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_trig_math_expression() {
+    let analysis = analyze(
+        "[sin_value, cos_value, tan_value] = request.security(\"NYSE:IBM\", \"5\", [math.sin(close / 100), math.cos(open / 100), math.tan((close - open) / 100)])\nplot(sin_value + cos_value + tan_value)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_stateful_math_expression()
  {
     let analysis = analyze(

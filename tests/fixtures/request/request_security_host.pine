@@ -482,3 +482,8 @@ plot(higher_tuple_math_round)
 plot(higher_tuple_math_sqrt)
 plot(higher_tuple_math_cbrt)
 plot(higher_tuple_math_log10)
+
+[higher_tuple_math_sin, higher_tuple_math_cos, higher_tuple_math_tan] = request.security("NYSE:IBM", "5", [math.sin(close / 100), math.cos(open / 100), math.tan((close - open) / 100)])
+plot(higher_tuple_math_sin)
+plot(higher_tuple_math_cos)
+plot(higher_tuple_math_tan)

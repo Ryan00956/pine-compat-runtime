@@ -119,6 +119,10 @@
   `math.log10` scalar elements while preserving default confirmation
   alignment.
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal trig `math.sin`, `math.cos`, and
+  `math.tan` scalar elements while preserving default confirmation
+  alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal rolling `ta.percentile_nearest_rank` and
   `ta.percentile_linear_interpolation` scalar elements while preserving
   default confirmation alignment.
