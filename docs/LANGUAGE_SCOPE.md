@@ -290,11 +290,9 @@ Request data:
   calls such as `math.random` are not part of this subset.
   Requested-context rolling callsite state is isolated from chart state.
   Selected provider-backed tuple expressions are supported when destructured
-  directly from the request, currently `ta.macd`, `ta.bb`, `ta.kc`, and
-  `ta.supertrend`, and `ta.dmi`.
-  Provider-backed `ta.vwap` support is limited to scalar source-call
-  expressions; other provider-backed tuple expressions remain outside this
-  subset.
+  directly from the request, currently `ta.macd`, `ta.bb`, `ta.kc`,
+  `ta.supertrend`, `ta.dmi`, and `ta.vwap(source, anchor, stdev_mult)`.
+  Other provider-backed tuple expressions remain outside this subset.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
   the last confirmed value.

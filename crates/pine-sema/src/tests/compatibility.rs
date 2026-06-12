@@ -501,6 +501,27 @@ fn accepts_provider_backed_request_security_dmi_tuple_call() {
 }
 
 #[test]
+fn accepts_provider_backed_request_security_vwap_bands_tuple_call() {
+    let analysis = analyze(
+        "[basis, upper, lower] = request.security(\"NYSE:IBM\", timeframe.period, ta.vwap(close, false, 2.0))\nplot(basis + upper + lower)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_request_security_math_extremes() {
     let analysis = analyze(
         "plot(request.security(\"NYSE:IBM\", timeframe.period, math.max(close, open) - math.min(close, open)))\n",
@@ -612,9 +633,9 @@ fn rejects_provider_request_security_unsupported_call() {
 }
 
 #[test]
-fn rejects_provider_request_security_tuple_ta_call() {
+fn rejects_provider_request_security_tuple_literal_expression() {
     let analysis = analyze(
-        "x = request.security(\"NYSE:IBM\", timeframe.period, ta.vwap(close, false, 2.0))\n",
+        "[first, second] = request.security(\"NYSE:IBM\", timeframe.period, [close, open])\n",
     );
 
     assert_eq!(analysis.compatibility.unsupported.len(), 1);

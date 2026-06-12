@@ -808,6 +808,44 @@ fn request_security_evaluates_provider_dmi_tuple_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_vwap_bands_tuple_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider vwap tuple\")\n[basis, upper, lower] = request.security(\"NYSE:IBM\", timeframe.period, ta.vwap(close, false, 2.0))\nplot(basis)\nplot(upper)\nplot(lower)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 1.0, 2.0, 0.0, 4.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 3.0, 1.0, 5.0, 2.0),
+            timed_ohlcv(120_000, 3.0, 4.0, 2.0, 6.0, 3.0),
+            timed_ohlcv(180_000, 4.0, 5.0, 3.0, 7.0, 4.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 10.0, 1.0),
+            timed_ohlcv(60_000, 10.0, 12.0, 10.0, 11.0, 1.0),
+            timed_ohlcv(120_000, 11.0, 13.0, 11.0, 12.0, 1.0),
+            timed_ohlcv(180_000, 12.0, 16.0, 12.0, 15.0, 1.0),
+        ])
+        .expect("provider ta.vwap bands tuple expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(
+        &result.plots[0].values,
+        &[4.0, 4.666666666666667, 5.333333333333333, 6.0],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[4.0, 5.60947570824873, 6.824045318333193, 8.0],
+    );
+    assert_values_close(
+        &result.plots[2].values,
+        &[4.0, 3.723857625084603, 3.842621348333472, 4.0],
+    );
+}
+
+#[test]
 fn request_security_isolates_provider_ta_state_from_chart_state() {
     let program = compile_program(
         "indicator(\"request ta\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2))\nchart = ta.sma(close, 2)\nplot(provider)\nplot(chart)\n",

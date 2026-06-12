@@ -70,11 +70,9 @@ truth for request claims.
   `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`, `ta.barssince`,
   `ta.valuewhen`, `ta.cross`, `ta.crossover`, and `ta.crossunder`.
 - Selected provider-backed tuple expressions are supported when destructured
-  directly from the request, currently `ta.macd`, `ta.bb`, `ta.kc`, and
-  `ta.supertrend`, and `ta.dmi`.
-- Provider-backed `ta.vwap` requested-expression support is limited to the
-  scalar source-call form; other provider-backed tuple expressions remain
-  outside this subset.
+  directly from the request, currently `ta.macd`, `ta.bb`, `ta.kc`,
+  `ta.supertrend`, `ta.dmi`, and `ta.vwap(source, anchor, stdev_mult)`.
+  Other provider-backed tuple expressions remain outside this subset.
 - Provider-backed requested expressions run in an isolated requested context.
   Chart-runtime history, `ta.*` callsite state, `var` storage, arrays, drawing
   objects, and outputs are not shared with requested-context evaluation.

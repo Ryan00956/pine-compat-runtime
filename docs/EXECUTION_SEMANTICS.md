@@ -844,11 +844,9 @@ Rolling callsite state for `math.sum` and `ta.*` calls is owned by the isolated
 requested context. Stateful math calls such as `math.random` and the `ta.tr`
 variable form remain outside the requested-expression subset.
 Selected provider-backed tuple expressions are supported when destructured
-directly from the request, currently `ta.macd`, `ta.bb`, `ta.kc`, and
-`ta.supertrend`, and `ta.dmi`.
-Provider-backed `ta.vwap` requested-expression support is limited to scalar
-source-call expressions; other provider-backed tuple expressions remain
-unsupported.
+directly from the request, currently `ta.macd`, `ta.bb`, `ta.kc`,
+`ta.supertrend`, `ta.dmi`, and `ta.vwap(source, anchor, stdev_mult)`.
+Other provider-backed tuple expressions remain unsupported.
 
 Requested-context results are cached deterministically by callsite, requested
 symbol, requested timeframe, and expression identity for the duration of one

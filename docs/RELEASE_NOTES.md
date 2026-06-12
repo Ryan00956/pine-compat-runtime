@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept provider-backed tuple-returning `ta.vwap(source, anchor, stdev_mult)`
+  expressions destructured directly from the request while keeping other
+  provider-backed tuple expressions unsupported.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept provider-backed tuple-returning `ta.dmi` expressions destructured
   directly from the request while keeping other provider-backed tuple
   expressions unsupported.
