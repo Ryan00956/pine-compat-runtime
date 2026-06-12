@@ -1823,6 +1823,28 @@ fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_math_
 }
 
 #[test]
+fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_stateful_math_expression()
+ {
+    let analysis = analyze(
+        "[sum_value, rounded] = request.security(\"NYSE:IBM\", \"5\", [math.sum(close, 2), math.round_to_mintick(close + 0.006)])\nplot(nz(sum_value) + rounded)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_ta_expression() {
     let analysis = analyze(
         "[avg, delta, total] = request.security(\"NYSE:IBM\", \"5\", [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(nz(avg) + nz(delta) + total)\n",

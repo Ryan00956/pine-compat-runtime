@@ -224,6 +224,10 @@ plot(higher_tuple_math_max)
 plot(higher_tuple_math_min)
 plot(higher_tuple_math_abs)
 
+[higher_tuple_math_sum, higher_tuple_math_mintick] = request.security("NYSE:IBM", "5", [math.sum(close, 2), math.round_to_mintick(close + 0.006)])
+plot(higher_tuple_math_sum)
+plot(higher_tuple_math_mintick)
+
 [tuple_ta_sma, tuple_ta_change, tuple_ta_cum] = request.security("NYSE:IBM", timeframe.period, [ta.sma(close, 2), ta.change(close), ta.cum(close)])
 plot(tuple_ta_sma)
 plot(tuple_ta_change)

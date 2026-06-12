@@ -2918,7 +2918,7 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_history_and_n
 #[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal_math() {
     let program = compile_program(
-        "indicator(\"request provider htf tuple literal math\")\n[maxv, minv, spread] = request.security(\"NYSE:IBM\", \"5\", [math.max(close, open), math.min(close, open), math.abs(open - close)])\nplot(maxv)\nplot(minv)\nplot(spread)\n",
+        "indicator(\"request provider htf tuple literal math\")\n[maxv, minv, spread, sum_value, rounded] = request.security(\"NYSE:IBM\", \"5\", [math.max(close, open), math.min(close, open), math.abs(open - close), math.sum(close, 2), math.round_to_mintick(close + 0.006)])\nplot(maxv)\nplot(minv)\nplot(spread)\nplot(sum_value)\nplot(rounded)\n",
     );
     let environment = external_symbol_environment_with_timeframe(
         "NYSE:IBM",
@@ -2938,7 +2938,7 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_math() {
         ])
         .expect("higher timeframe provider tuple literal math request should run");
 
-    assert_eq!(result.plots.len(), 3);
+    assert_eq!(result.plots.len(), 5);
     assert_eq!(result.plots[0].values[0], PineValue::Na);
     assert_eq!(result.plots[0].values[1], PineValue::Na);
     assert_values_close(&result.plots[0].values[2..], &[100.0, 100.0, 200.0]);
@@ -2948,6 +2948,13 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_math() {
     assert_eq!(result.plots[2].values[0], PineValue::Na);
     assert_eq!(result.plots[2].values[1], PineValue::Na);
     assert_values_close(&result.plots[2].values[2..], &[10.0, 10.0, 10.0]);
+    for value in &result.plots[3].values[..4] {
+        assert_eq!(*value, PineValue::Na);
+    }
+    assert_values_close(&result.plots[3].values[4..], &[300.0]);
+    assert_eq!(result.plots[4].values[0], PineValue::Na);
+    assert_eq!(result.plots[4].values[1], PineValue::Na);
+    assert_values_close(&result.plots[4].values[2..], &[100.01, 100.01, 200.01]);
 }
 
 #[test]

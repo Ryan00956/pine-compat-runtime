@@ -122,6 +122,10 @@
 - Added provider-backed `request.security` tuple literal fixture coverage for
   rolling `ta.percentile_nearest_rank` and
   `ta.percentile_linear_interpolation` scalar elements.
+- Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal rolling `math.sum` and fixed-mintick
+  `math.round_to_mintick` scalar elements while preserving default
+  confirmation alignment.
 - Added provider-backed `request.security` tuple literal fixture coverage for
   rolling `ta.median` and `ta.mode` scalar elements.
 - Added higher-timeframe fixture coverage for provider-backed

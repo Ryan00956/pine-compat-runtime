@@ -7812,275 +7812,277 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][120]["values"] == [None, None, 100.0, 100.0, 200.0]
     assert result["plots"][121]["values"] == [None, None, 90.0, 90.0, 190.0]
     assert result["plots"][122]["values"] == [None, None, 10.0, 10.0, 10.0]
-    assert result["plots"][123]["values"] == [None, 20.5, 21.5, 22.5, 23.5]
-    assert result["plots"][124]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
-    assert result["plots"][125]["values"] == [20.0, 41.0, 63.0, 86.0, 110.0]
-    assert result["plots"][126]["values"] == [None, None, None, None, 150.0]
-    assert result["plots"][127]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][128]["values"] == [None, None, 100.0, 100.0, 300.0]
-    assert result["plots"][129]["values"] == [0.0, 1.0, 0.0, 0.0, 0.0]
-    assert result["plots"][130]["values"] == [0.0, 1.0, 0.0, 0.0, 0.0]
-    assert result["plots"][131]["values"] == [0.0, 0.0, 1.0, 0.0, 0.0]
-    assert result["plots"][132]["values"] == [None, None, 0.0, 0.0, 1.0]
-    assert result["plots"][133]["values"] == [None, None, 0.0, 0.0, 1.0]
+    assert result["plots"][125]["values"] == [None, 20.5, 21.5, 22.5, 23.5]
+    assert result["plots"][126]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
+    assert result["plots"][127]["values"] == [20.0, 41.0, 63.0, 86.0, 110.0]
+    assert result["plots"][128]["values"] == [None, None, None, None, 150.0]
+    assert result["plots"][129]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][130]["values"] == [None, None, 100.0, 100.0, 300.0]
+    assert result["plots"][131]["values"] == [0.0, 1.0, 0.0, 0.0, 0.0]
+    assert result["plots"][132]["values"] == [0.0, 1.0, 0.0, 0.0, 0.0]
+    assert result["plots"][133]["values"] == [0.0, 0.0, 1.0, 0.0, 0.0]
     assert result["plots"][134]["values"] == [None, None, 0.0, 0.0, 1.0]
-    assert result["plots"][135]["values"] == [0.0, 0.0, 1.0, 1.0, 1.0]
-    assert result["plots"][136]["values"] == [0.0, 0.0, 1.0, 1.0, 1.0]
-    assert result["plots"][137]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
-    assert result["plots"][138]["values"] == [None, None, 0.0, 0.0, 1.0]
-    assert result["plots"][139]["values"] == [None, None, 0.0, 0.0, 1.0]
-    assert result["plots"][140]["values"] == [None, None, 0.0, 0.0, 0.0]
-    assert result["plots"][141]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
-    assert result["plots"][142]["values"] == [None, None, None, 22.0, 23.0]
-    assert result["plots"][143]["values"] == [None, None, 0.0, 0.0, 0.0]
-    assert result["plots"][144]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][135]["values"] == [None, None, 0.0, 0.0, 1.0]
+    assert result["plots"][136]["values"] == [None, None, 0.0, 0.0, 1.0]
+    assert result["plots"][137]["values"] == [0.0, 0.0, 1.0, 1.0, 1.0]
+    assert result["plots"][138]["values"] == [0.0, 0.0, 1.0, 1.0, 1.0]
+    assert result["plots"][139]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
+    assert result["plots"][140]["values"] == [None, None, 0.0, 0.0, 1.0]
+    assert result["plots"][141]["values"] == [None, None, 0.0, 0.0, 1.0]
+    assert result["plots"][142]["values"] == [None, None, 0.0, 0.0, 0.0]
+    assert result["plots"][143]["values"] == [0.0, 0.0, 0.0, 0.0, 0.0]
+    assert result["plots"][144]["values"] == [None, None, None, 22.0, 23.0]
     assert result["plots"][145]["values"] == [None, None, 0.0, 0.0, 0.0]
-    assert result["plots"][146]["values"] == [None, None, 2.0, 2.0, 2.0]
-    assert result["plots"][147]["values"] == [None, None, None, None, 0.0]
-    assert result["plots"][148]["values"] == [None, None, None, None, 1.0]
-    assert result["plots"][149]["values"] == [None, None, None, 0.0, None]
-    assert result["plots"][150]["values"] == [None, None, None, 0.0, None]
-    assert result["plots"][151]["values"] == [None, None, None, None, 200.0]
-    assert result["plots"][152]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][153]["values"] == [
+    assert result["plots"][146]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][147]["values"] == [None, None, 0.0, 0.0, 0.0]
+    assert result["plots"][148]["values"] == [None, None, 2.0, 2.0, 2.0]
+    assert result["plots"][149]["values"] == [None, None, None, None, 0.0]
+    assert result["plots"][150]["values"] == [None, None, None, None, 1.0]
+    assert result["plots"][151]["values"] == [None, None, None, 0.0, None]
+    assert result["plots"][152]["values"] == [None, None, None, 0.0, None]
+    assert result["plots"][153]["values"] == [None, None, None, None, 200.0]
+    assert result["plots"][154]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][155]["values"] == [
         None,
         None,
         0.9999999999999858,
         1.0000000000000284,
         1.0000000000000284,
     ]
-    assert result["plots"][154]["values"] == [
+    assert result["plots"][156]["values"] == [
         None,
         None,
         0.6666666666666572,
         0.6666666666666856,
         0.6666666666666856,
     ]
-    assert result["plots"][155]["values"] == [None, None, None, None, 1.0]
-    assert result["plots"][156]["values"] == [None, None, None, None, 2500.0]
-    assert result["plots"][157]["values"] == [None, None, 21.0, 22.0, 23.0]
-    assert result["plots"][158]["values"] == [None, None, 20.0, 21.0, 22.0]
+    assert result["plots"][157]["values"] == [None, None, None, None, 1.0]
+    assert result["plots"][158]["values"] == [None, None, None, None, 2500.0]
     assert result["plots"][159]["values"] == [None, None, 21.0, 22.0, 23.0]
-    assert result["plots"][160]["values"] == [None, None, 21.0, 22.0, 23.0]
-    assert result["plots"][161]["values"] == [None, None, 100.0, 100.0, 100.0]
-    assert result["plots"][162]["values"] == [
+    assert result["plots"][160]["values"] == [None, None, 20.0, 21.0, 22.0]
+    assert result["plots"][161]["values"] == [None, None, 21.0, 22.0, 23.0]
+    assert result["plots"][162]["values"] == [None, None, 21.0, 22.0, 23.0]
+    assert result["plots"][163]["values"] == [None, None, 100.0, 100.0, 100.0]
+    assert result["plots"][164]["values"] == [
         None,
         None,
         33.33333333333333,
         33.33333333333333,
         33.33333333333333,
     ]
-    assert result["plots"][163]["values"] == [None, None, None, None, 150.0]
-    assert result["plots"][164]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][165]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][166]["values"] == [None, None, None, None, 150.0]
+    assert result["plots"][165]["values"] == [None, None, None, None, 150.0]
+    assert result["plots"][166]["values"] == [None, None, None, None, 100.0]
     assert result["plots"][167]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][168]["values"] == [None, None, None, None, 50.0]
-    assert result["plots"][169]["values"] == [
+    assert result["plots"][168]["values"] == [None, None, None, None, 150.0]
+    assert result["plots"][169]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][170]["values"] == [None, None, None, None, 50.0]
+    assert result["plots"][171]["values"] == [
         None,
         None,
         0.816496580927726,
         0.816496580927726,
         0.816496580927726,
     ]
-    assert result["plots"][170]["values"] == [
+    assert result["plots"][172]["values"] == [
         None,
         None,
         0.6666666666666666,
         0.6666666666666666,
         0.6666666666666666,
     ]
-    assert result["plots"][171]["values"] == [None, None, None, None, 50.0]
-    assert result["plots"][172]["values"] == [None, None, None, None, 2500.0]
-    assert result["plots"][173]["values"] == [
+    assert result["plots"][173]["values"] == [None, None, None, None, 50.0]
+    assert result["plots"][174]["values"] == [None, None, None, None, 2500.0]
+    assert result["plots"][175]["values"] == [
         None,
         None,
         21.333333333333332,
         22.333333333333332,
         23.333333333333332,
     ]
-    assert result["plots"][174]["values"] == [None, None, 21.0, 22.0, 23.0]
-    assert result["plots"][175]["values"] == [
+    assert result["plots"][176]["values"] == [None, None, 21.0, 22.0, 23.0]
+    assert result["plots"][177]["values"] == [
         None,
         None,
         None,
         None,
         166.66666666666666,
     ]
-    assert result["plots"][176]["values"] == [None, None, None, None, 150.0]
-    assert result["plots"][177]["values"] == [None, None, None, 21.5, 22.5]
-    assert result["plots"][178]["values"] == [None, None, None, None, 24.0]
-    assert result["plots"][179]["values"] == [
+    assert result["plots"][178]["values"] == [None, None, None, None, 150.0]
+    assert result["plots"][179]["values"] == [None, None, None, 21.5, 22.5]
+    assert result["plots"][180]["values"] == [None, None, None, None, 24.0]
+    assert result["plots"][181]["values"] == [
         None,
         None,
         None,
         22.462027683060324,
         23.462027683060324,
     ]
-    assert result["plots"][180]["values"] == [None, None, 22.0, 23.0, 24.0]
-    assert result["plots"][181]["values"] == [
+    assert result["plots"][182]["values"] == [None, None, 22.0, 23.0, 24.0]
+    assert result["plots"][183]["values"] == [
         20.0,
         20.333333333333332,
         20.88888888888889,
         21.59259259259259,
         22.395061728395063,
     ]
-    assert result["plots"][182]["values"] == [20.0, 20.75, 21.75, 22.8125, 23.875]
-    assert result["plots"][183]["values"] == [20.0, 20.875, 21.9375, 23.0, 24.03125]
-    assert result["plots"][184]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
-    assert result["plots"][185]["values"] == [None, None, None, 100.0, 100.0]
-    assert result["plots"][186]["values"] == [None, None, 100.0, 100.0, 100.0]
-    assert result["plots"][187]["values"] == [None, None, 325.0, 325.0, 325.0]
-    assert result["plots"][188]["values"] == [None, None, 225.0, 225.0, 225.0]
-    assert result["plots"][189]["values"] == [None, 9.0, 9.0, 9.16, 9.4504]
-    assert result["plots"][190]["values"] == [
+    assert result["plots"][184]["values"] == [20.0, 20.75, 21.75, 22.8125, 23.875]
+    assert result["plots"][185]["values"] == [20.0, 20.875, 21.9375, 23.0, 24.03125]
+    assert result["plots"][186]["values"] == [None, 1.0, 1.0, 1.0, 1.0]
+    assert result["plots"][187]["values"] == [None, None, None, 100.0, 100.0]
+    assert result["plots"][188]["values"] == [None, None, 100.0, 100.0, 100.0]
+    assert result["plots"][189]["values"] == [None, None, 325.0, 325.0, 325.0]
+    assert result["plots"][190]["values"] == [None, None, 225.0, 225.0, 225.0]
+    assert result["plots"][191]["values"] == [None, 9.0, 9.0, 9.16, 9.4504]
+    assert result["plots"][192]["values"] == [
         None,
         None,
         100.00000000000001,
         100.00000000000001,
         100.00000000000001,
     ]
-    assert result["plots"][191]["values"] == [
+    assert result["plots"][193]["values"] == [
         None,
         None,
         -1.9682539682539681,
         -1.9696969696969697,
         -1.9710144927536233,
     ]
-    assert result["plots"][192]["values"] == [5.0, 5.0, 5.0, 5.0, 5.0]
-    assert result["plots"][193]["values"] == [20.0, 21.0, 22.0, 23.0, 24.0]
-    assert result["plots"][194]["values"] == [10.0, 10.0, 10.0, 10.0, 10.0]
-    assert result["plots"][195]["values"] == [
+    assert result["plots"][194]["values"] == [5.0, 5.0, 5.0, 5.0, 5.0]
+    assert result["plots"][195]["values"] == [20.0, 21.0, 22.0, 23.0, 24.0]
+    assert result["plots"][196]["values"] == [10.0, 10.0, 10.0, 10.0, 10.0]
+    assert result["plots"][197]["values"] == [
         0.4,
         1.170731707317073,
         1.5058823529411764,
         1.6271186440677967,
         1.6476964769647697,
     ]
-    assert result["plots"][196]["values"] == [20.0, 20.5, 21.0, 21.5, 22.0]
-    assert result["plots"][197]["values"] == [
+    assert result["plots"][198]["values"] == [20.0, 20.5, 21.0, 21.5, 22.0]
+    assert result["plots"][199]["values"] == [
         1000.0,
         2000.0,
         3000.0,
         4000.0,
         5000.0,
     ]
-    assert result["plots"][198]["values"] == [0.1, 0.1, 0.1, 0.1, 0.1]
-    assert result["plots"][199]["values"] == [1.0, 1.0, 1.0, 1.0, 1.0]
-    assert result["plots"][200]["values"] == [None, 100.0, 200.0, 300.0, 400.0]
+    assert result["plots"][200]["values"] == [0.1, 0.1, 0.1, 0.1, 0.1]
     assert result["plots"][201]["values"] == [1.0, 1.0, 1.0, 1.0, 1.0]
-    assert result["plots"][202]["values"] == [
+    assert result["plots"][202]["values"] == [None, 100.0, 200.0, 300.0, 400.0]
+    assert result["plots"][203]["values"] == [1.0, 1.0, 1.0, 1.0, 1.0]
+    assert result["plots"][204]["values"] == [
         None,
         5.0,
         9.761904761904763,
         14.30735930735931,
         18.65518539431583,
     ]
-    assert result["plots"][203]["values"] == [500.0, 500.0, 500.0, 500.0, 500.0]
-    assert result["plots"][204]["values"] == [None, None, None, None, None]
-    assert result["plots"][205]["values"] == [None, None, 100.0, 100.0, 200.0]
-    assert result["plots"][206]["values"] == [None, None, 90.0, 90.0, 90.0]
-    assert result["plots"][207]["values"] == [
+    assert result["plots"][205]["values"] == [500.0, 500.0, 500.0, 500.0, 500.0]
+    assert result["plots"][206]["values"] == [None, None, None, None, None]
+    assert result["plots"][207]["values"] == [None, None, 100.0, 100.0, 200.0]
+    assert result["plots"][208]["values"] == [None, None, 90.0, 90.0, 90.0]
+    assert result["plots"][209]["values"] == [
         None,
         None,
         333.3333333333333,
         333.3333333333333,
         666.6666666666666,
     ]
-    assert result["plots"][208]["values"] == [
+    assert result["plots"][210]["values"] == [
         None,
         None,
         0.0003333333333333333,
         0.0003333333333333333,
         0.0003333333333333333,
     ]
-    assert result["plots"][209]["values"] == [None, None, 1.0, 1.0, 1.0]
-    assert result["plots"][210]["values"] == [None, None, None, None, 1000.0]
     assert result["plots"][211]["values"] == [None, None, 1.0, 1.0, 1.0]
     assert result["plots"][212]["values"] == [None, None, None, None, 1000.0]
-    assert result["plots"][213]["values"] == [
+    assert result["plots"][213]["values"] == [None, None, 1.0, 1.0, 1.0]
+    assert result["plots"][214]["values"] == [None, None, None, None, 1000.0]
+    assert result["plots"][215]["values"] == [
         None,
         None,
         333.3333333333333,
         333.3333333333333,
         333.3333333333333,
     ]
-    assert result["plots"][214]["values"] == [None, None, None, None, None]
-    assert result["plots"][215]["values"] == [None, None, None, None, None]
     assert result["plots"][216]["values"] == [None, None, None, None, None]
     assert result["plots"][217]["values"] == [None, None, None, None, None]
     assert result["plots"][218]["values"] == [None, None, None, None, None]
-    assert result["plots"][219]["values"] == [None, None, 100.0, 100.0, 133.33333333333334]
-    assert result["plots"][220]["values"] == [None, None, 100.0, 100.0, 175.0]
-    assert result["plots"][221]["values"] == [None, None, 100.0, 100.0, 187.5]
-    assert result["plots"][222]["values"] == [None, None, None, None, 1.0]
-    assert result["plots"][223]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][224]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][225]["values"] == [
+    assert result["plots"][219]["values"] == [None, None, None, None, None]
+    assert result["plots"][220]["values"] == [None, None, None, None, None]
+    assert result["plots"][221]["values"] == [None, None, 100.0, 100.0, 133.33333333333334]
+    assert result["plots"][222]["values"] == [None, None, 100.0, 100.0, 175.0]
+    assert result["plots"][223]["values"] == [None, None, 100.0, 100.0, 187.5]
+    assert result["plots"][224]["values"] == [None, None, None, None, 1.0]
+    assert result["plots"][225]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][226]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][227]["values"] == [
         None,
         None,
         None,
         None,
         92.3076923076923,
     ]
-    assert result["plots"][226]["values"] == [
+    assert result["plots"][228]["values"] == [
         None,
         None,
         None,
         None,
         -7.6923076923076925,
     ]
-    assert result["plots"][227]["values"] == [None, None, None, None, 80.0]
-    assert result["plots"][228]["values"] == [
+    assert result["plots"][229]["values"] == [None, None, None, None, 80.0]
+    assert result["plots"][230]["values"] == [
         None,
         None,
         None,
         None,
         66.66666666666667,
     ]
-    assert result["plots"][229]["values"] == [
+    assert result["plots"][231]["values"] == [
         None,
         None,
         None,
         None,
         -1.3333333333333333,
     ]
-    assert result["plots"][230]["values"] == [
+    assert result["plots"][232]["values"] == [
         None,
         None,
         0.3333333333333333,
         0.3333333333333333,
         0.3333333333333333,
     ]
-    assert result["plots"][231]["values"] == [None, None, 1.2, 1.2, 2.0]
-    assert result["plots"][232]["values"] == [None, None, 100.0, 100.0, 150.0]
-    assert result["plots"][233]["values"] == [None, None, 30.0, 30.0, 110.0]
-    assert result["plots"][234]["values"] == [None, None, 30.0, 30.0, 70.0]
-    assert result["plots"][235]["values"] == [None, None, None, None, 210.0]
-    assert result["plots"][236]["values"] == [None, None, None, None, 80.0]
-    assert result["plots"][237]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][238]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][233]["values"] == [None, None, 1.2, 1.2, 2.0]
+    assert result["plots"][234]["values"] == [None, None, 100.0, 100.0, 150.0]
+    assert result["plots"][235]["values"] == [None, None, 30.0, 30.0, 110.0]
+    assert result["plots"][236]["values"] == [None, None, 30.0, 30.0, 70.0]
+    assert result["plots"][237]["values"] == [None, None, None, None, 210.0]
+    assert result["plots"][238]["values"] == [None, None, None, None, 80.0]
     assert result["plots"][239]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][240]["values"] == [None, None, None, None, 50.0]
-    assert result["plots"][241]["values"] == [
+    assert result["plots"][240]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][241]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][242]["values"] == [None, None, None, None, 50.0]
+    assert result["plots"][243]["values"] == [
         None,
         None,
         100.0,
         100.0,
         166.66666666666666,
     ]
-    assert result["plots"][242]["values"] == [None, None, None, None, 100.0]
-    assert result["plots"][243]["values"] == [
+    assert result["plots"][244]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][245]["values"] == [
         None,
         None,
         None,
         None,
         1.3333333333333333,
     ]
-    assert result["plots"][244]["values"] == [None, None, None, None, 210.0]
-    assert result["plots"][245]["values"] == [None, None, None, None, 80.0]
-    assert result["plots"][246]["values"] == [None, None, None, None, 0.0]
-    assert result["plots"][247]["values"] == [None, None, None, None, 1.0]
+    assert result["plots"][246]["values"] == [None, None, None, None, 210.0]
+    assert result["plots"][247]["values"] == [None, None, None, None, 80.0]
+    assert result["plots"][248]["values"] == [None, None, None, None, 0.0]
+    assert result["plots"][249]["values"] == [None, None, None, None, 1.0]
+    assert result["plots"][123]["values"] == [None, None, None, None, 300.0]
+    assert result["plots"][124]["values"] == [None, None, 100.01, 100.01, 200.01]
 
 
 def test_run_script_reports_missing_request_bars():
