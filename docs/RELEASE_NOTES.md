@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added provider-backed `request.security` tuple literal fixture coverage for
+  rolling `ta.tema` and `ta.tsi` scalar elements.
+- Added provider-backed `request.security` tuple literal fixture coverage for
   rolling `ta.rma` and `ta.dema` scalar elements.
 - Added provider-backed `request.security` tuple literal fixture coverage for
   rolling `ta.alma` and `ta.linreg` scalar elements.

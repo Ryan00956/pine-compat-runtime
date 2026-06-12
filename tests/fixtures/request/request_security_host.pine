@@ -337,3 +337,7 @@ plot(tuple_ta_linreg)
 [tuple_ta_rma, tuple_ta_dema] = request.security("NYSE:IBM", timeframe.period, [ta.rma(close, 3), ta.dema(close, 3)])
 plot(tuple_ta_rma)
 plot(tuple_ta_dema)
+
+[tuple_ta_tema, tuple_ta_tsi] = request.security("NYSE:IBM", timeframe.period, [ta.tema(close, 3), ta.tsi(close, 2, 3)])
+plot(tuple_ta_tema)
+plot(tuple_ta_tsi)
