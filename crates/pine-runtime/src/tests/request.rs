@@ -1335,6 +1335,33 @@ fn request_security_evaluates_provider_obv_variable_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_pvi_variable_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request pvi\")\nprovider_pvi = request.security(\"NYSE:IBM\", timeframe.period, ta.pvi)\nchart_pvi = ta.pvi\nplot(provider_pvi)\nplot(chart_pvi)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 10.0, 100.0),
+            timed_ohlcv(60_000, 12.0, 13.0, 11.0, 12.0, 90.0),
+            timed_ohlcv(120_000, 6.0, 7.0, 5.0, 6.0, 120.0),
+            timed_ohlcv(180_000, 9.0, 10.0, 8.0, 9.0, 80.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 20.0, 21.0, 19.0, 20.0, 50.0),
+            timed_ohlcv(60_000, 10.0, 11.0, 9.0, 10.0, 40.0),
+            timed_ohlcv(120_000, 15.0, 16.0, 14.0, 15.0, 60.0),
+            timed_ohlcv(180_000, 30.0, 31.0, 29.0, 30.0, 30.0),
+        ])
+        .expect("provider ta.pvi variable expression should run");
+
+    assert_values_close(&result.plots[0].values, &[1.0, 1.0, 0.5, 0.5]);
+    assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.5, 1.5]);
+}
+
+#[test]
 fn request_security_evaluates_provider_pvt_variable_in_requested_context() {
     let program = compile_program(
         "indicator(\"request pvt\")\nprovider_pvt = request.security(\"NYSE:IBM\", timeframe.period, ta.pvt)\nchart_pvt = ta.pvt\nplot(provider_pvt)\nplot(chart_pvt)\n",

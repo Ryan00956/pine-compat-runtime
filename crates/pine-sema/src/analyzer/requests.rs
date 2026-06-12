@@ -217,6 +217,7 @@ fn is_request_provider_scalar_name(name: &str) -> bool {
             | "ta.iii"
             | "ta.nvi"
             | "ta.obv"
+            | "ta.pvi"
             | "ta.pvt"
             | "ta.wvad"
     )
