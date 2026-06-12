@@ -554,3 +554,7 @@ plot(tuple_ta_roc)
 [tuple_ta_range, tuple_ta_dev] = request.security("NYSE:IBM", timeframe.period, [ta.range(close, 2), ta.dev(close, 2)])
 plot(tuple_ta_range)
 plot(tuple_ta_dev)
+
+[tuple_ta_ema, tuple_ta_rsi] = request.security("NYSE:IBM", timeframe.period, [ta.ema(close, 2), ta.rsi(close, 1)])
+plot(tuple_ta_ema)
+plot(tuple_ta_rsi)

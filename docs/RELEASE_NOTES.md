@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added provider-backed `request.security` tuple literal fixture coverage for
+  same-timeframe `ta.ema` and `ta.rsi` scalar elements.
 - Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal source-less `ta.highestbars` and
   `ta.lowestbars` scalar elements while preserving default confirmation

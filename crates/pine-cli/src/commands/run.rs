@@ -1065,6 +1065,10 @@ mod tests {
                 .count()
                 >= 2
         );
+        assert!(output.contains(
+            "\"values\":[20,20.666666666666668,21.555555555555557,22.51851851851852,23.506172839506174]"
+        ));
+        assert!(output.matches("\"values\":[null,100,100,100,100]").count() >= 2);
     }
 
     #[test]

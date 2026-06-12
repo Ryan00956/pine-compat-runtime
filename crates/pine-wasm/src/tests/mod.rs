@@ -7164,6 +7164,20 @@ fn request_host_data_runs_through_direct_wasm_api() {
     );
     assert_plot_values_close(298, &[None, Some(1.0), Some(1.0), Some(1.0), Some(1.0)]);
     assert_plot_values_close(299, &[None, Some(0.5), Some(0.5), Some(0.5), Some(0.5)]);
+    assert_plot_values_close(
+        300,
+        &[
+            Some(20.0),
+            Some(20.666_666_666_666_668),
+            Some(21.555_555_555_555_557),
+            Some(22.518_518_518_518_52),
+            Some(23.506_172_839_506_174),
+        ],
+    );
+    assert_plot_values_close(
+        301,
+        &[None, Some(100.0), Some(100.0), Some(100.0), Some(100.0)],
+    );
 }
 
 #[test]
