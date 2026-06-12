@@ -472,3 +472,8 @@ plot(higher_tuple_ta_lowest_default)
 [higher_tuple_ta_highestbars_default, higher_tuple_ta_lowestbars_default] = request.security("NYSE:IBM", "5", [ta.highestbars(2), ta.lowestbars(2)])
 plot(higher_tuple_ta_highestbars_default)
 plot(higher_tuple_ta_lowestbars_default)
+
+[higher_tuple_math_floor, higher_tuple_math_ceil, higher_tuple_math_round] = request.security("NYSE:IBM", "5", [math.floor(close / 3), math.ceil(open / 80), math.round(close / 3, 2)])
+plot(higher_tuple_math_floor)
+plot(higher_tuple_math_ceil)
+plot(higher_tuple_math_round)

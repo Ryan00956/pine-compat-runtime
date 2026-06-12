@@ -111,6 +111,10 @@
   `request.security` tuple literal rolling `ta.percentrank` scalar elements
   while preserving default confirmation alignment.
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal stateless `math.floor`, `math.ceil`, and
+  `math.round` scalar elements while preserving default confirmation
+  alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal rolling `ta.percentile_nearest_rank` and
   `ta.percentile_linear_interpolation` scalar elements while preserving
   default confirmation alignment.

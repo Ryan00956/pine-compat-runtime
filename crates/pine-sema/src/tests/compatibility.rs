@@ -1823,6 +1823,28 @@ fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_math_
 }
 
 #[test]
+fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_stateless_math_expression()
+ {
+    let analysis = analyze(
+        "[floored, ceiled, rounded] = request.security(\"NYSE:IBM\", \"5\", [math.floor(close / 3), math.ceil(open / 80), math.round(close / 3, 2)])\nplot(floored + ceiled + rounded)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_stateful_math_expression()
  {
     let analysis = analyze(

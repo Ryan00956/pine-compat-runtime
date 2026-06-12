@@ -2958,6 +2958,39 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_math() {
 }
 
 #[test]
+fn request_security_aligns_provider_higher_timeframe_tuple_literal_stateless_math() {
+    let program = compile_program(
+        "indicator(\"request provider htf tuple literal stateless math\")\n[floored, ceiled, rounded] = request.security(\"NYSE:IBM\", \"5\", [math.floor(close / 3), math.ceil(open / 80), math.round(close / 3, 2)])\nplot(floored)\nplot(ceiled)\nplot(rounded)\n",
+    );
+    let environment = external_symbol_environment_with_timeframe(
+        "NYSE:IBM",
+        "5",
+        vec![
+            timed_ohlcv(0, 90.0, 110.0, 80.0, 100.0, 1000.0),
+            timed_ohlcv(300_000, 190.0, 210.0, 180.0, 200.0, 1000.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(240_000, 3.0),
+            timed_bar(300_000, 4.0),
+            timed_bar(540_000, 5.0),
+        ])
+        .expect("higher timeframe provider tuple literal stateless math request should run");
+
+    assert_eq!(result.plots.len(), 3);
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+    }
+    assert_values_close(&result.plots[0].values[2..], &[33.0, 33.0, 66.0]);
+    assert_values_close(&result.plots[1].values[2..], &[2.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[2].values[2..], &[33.33, 33.33, 66.67]);
+}
+
+#[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta() {
     let program = compile_program(
         "indicator(\"request provider htf tuple literal ta\")\n[avg, delta, total] = request.security(\"NYSE:IBM\", \"5\", [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(avg)\nplot(delta)\nplot(total)\n",
