@@ -1165,6 +1165,33 @@ fn request_security_evaluates_provider_tuple_literal_math_in_requested_context()
 }
 
 #[test]
+fn request_security_evaluates_provider_tuple_literal_stateful_math_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider tuple literal stateful math\")\n[sum_value, rounded] = request.security(\"NYSE:IBM\", timeframe.period, [math.sum(close, 2), math.round_to_mintick(close + 0.006)])\nplot(sum_value)\nplot(rounded)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 21.0),
+            timed_bar(120_000, 22.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 7.0),
+            timed_bar(120_000, 9.0),
+        ])
+        .expect("provider tuple literal stateful math request.security expression should run");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[41.0, 43.0]);
+    assert_values_close(&result.plots[1].values, &[20.01, 21.01, 22.01]);
+}
+
+#[test]
 fn request_security_evaluates_provider_tuple_literal_stateless_math_in_requested_context() {
     let program = compile_program(
         "indicator(\"request provider tuple literal stateless math\")\n[floored, ceiled, rounded] = request.security(\"NYSE:IBM\", timeframe.period, [math.floor(close / 3), math.ceil(open / 6), math.round(close / 7, 2)])\nplot(floored)\nplot(ceiled)\nplot(rounded)\n",

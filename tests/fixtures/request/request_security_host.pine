@@ -569,3 +569,7 @@ plot(tuple_ta_lowest_default)
 [tuple_ta_highestbars_default, tuple_ta_lowestbars_default] = request.security("NYSE:IBM", timeframe.period, [ta.highestbars(2), ta.lowestbars(2)])
 plot(tuple_ta_highestbars_default)
 plot(tuple_ta_lowestbars_default)
+
+[tuple_math_sum, tuple_math_mintick] = request.security("NYSE:IBM", timeframe.period, [math.sum(close, 2), math.round_to_mintick(close + 0.006)])
+plot(tuple_math_sum)
+plot(tuple_math_mintick)

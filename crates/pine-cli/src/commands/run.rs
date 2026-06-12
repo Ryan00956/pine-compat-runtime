@@ -1076,6 +1076,13 @@ mod tests {
         assert!(output.matches("\"values\":[null,9,10,11,12]").count() >= 2);
         assert!(output.contains("\"values\":[null,0,0,0,0]"));
         assert!(output.contains("\"values\":[null,1,1,1,1]"));
+        assert!(output.matches("\"values\":[null,41,43,45,47]").count() >= 2);
+        assert!(
+            output
+                .matches("\"values\":[20.01,21.01,22.01,23.01,24.01]")
+                .count()
+                >= 2
+        );
     }
 
     #[test]

@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added provider-backed `request.security` tuple literal fixture coverage for
+  same-timeframe `math.sum` and `math.round_to_mintick` scalar elements.
+- Added provider-backed `request.security` tuple literal fixture coverage for
   same-timeframe source-less `ta.highestbars` and `ta.lowestbars` scalar
   elements.
 - Added provider-backed `request.security` tuple literal fixture coverage for
