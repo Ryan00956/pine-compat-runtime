@@ -477,3 +477,8 @@ plot(higher_tuple_ta_lowestbars_default)
 plot(higher_tuple_math_floor)
 plot(higher_tuple_math_ceil)
 plot(higher_tuple_math_round)
+
+[higher_tuple_math_sqrt, higher_tuple_math_cbrt, higher_tuple_math_log10] = request.security("NYSE:IBM", "5", [math.sqrt(close), math.cbrt(close), math.log10(close)])
+plot(higher_tuple_math_sqrt)
+plot(higher_tuple_math_cbrt)
+plot(higher_tuple_math_log10)

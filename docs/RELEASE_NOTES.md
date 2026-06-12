@@ -115,6 +115,10 @@
   `math.round` scalar elements while preserving default confirmation
   alignment.
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal root/log `math.sqrt`, `math.cbrt`, and
+  `math.log10` scalar elements while preserving default confirmation
+  alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal rolling `ta.percentile_nearest_rank` and
   `ta.percentile_linear_interpolation` scalar elements while preserving
   default confirmation alignment.

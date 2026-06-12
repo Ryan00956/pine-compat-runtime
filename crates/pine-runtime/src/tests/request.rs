@@ -2991,6 +2991,48 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_stateless_mat
 }
 
 #[test]
+fn request_security_aligns_provider_higher_timeframe_tuple_literal_root_log_math() {
+    let program = compile_program(
+        "indicator(\"request provider htf tuple literal root log math\")\n[sqrt_value, cbrt_value, log10_value] = request.security(\"NYSE:IBM\", \"5\", [math.sqrt(close), math.cbrt(close), math.log10(close)])\nplot(sqrt_value)\nplot(cbrt_value)\nplot(log10_value)\n",
+    );
+    let environment = external_symbol_environment_with_timeframe(
+        "NYSE:IBM",
+        "5",
+        vec![
+            timed_ohlcv(0, 90.0, 110.0, 80.0, 100.0, 1000.0),
+            timed_ohlcv(300_000, 190.0, 210.0, 180.0, 200.0, 1000.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(240_000, 3.0),
+            timed_bar(300_000, 4.0),
+            timed_bar(540_000, 5.0),
+        ])
+        .expect("higher timeframe provider tuple literal root/log math request should run");
+
+    assert_eq!(result.plots.len(), 3);
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+    }
+    assert_values_close(
+        &result.plots[0].values[2..],
+        &[10.0, 10.0, 14.142135623730951],
+    );
+    assert_values_close(
+        &result.plots[1].values[2..],
+        &[4.641588833612779, 4.641588833612779, 5.848035476425732],
+    );
+    assert_values_close(
+        &result.plots[2].values[2..],
+        &[2.0, 2.0, 2.3010299956639813],
+    );
+}
+
+#[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta() {
     let program = compile_program(
         "indicator(\"request provider htf tuple literal ta\")\n[avg, delta, total] = request.security(\"NYSE:IBM\", \"5\", [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(avg)\nplot(delta)\nplot(total)\n",
