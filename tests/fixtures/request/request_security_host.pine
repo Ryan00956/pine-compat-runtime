@@ -365,3 +365,7 @@ plot(tuple_ta_min)
 [tuple_ta_kcw, tuple_ta_vwap] = request.security("NYSE:IBM", timeframe.period, [ta.kcw(close, 3, 2), ta.vwap(close)])
 plot(tuple_ta_kcw)
 plot(tuple_ta_vwap)
+
+[tuple_ta_accdist, tuple_ta_iii] = request.security("NYSE:IBM", timeframe.period, [ta.accdist, ta.iii])
+plot(tuple_ta_accdist)
+plot(tuple_ta_iii)
