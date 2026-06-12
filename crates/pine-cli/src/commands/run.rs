@@ -652,8 +652,18 @@ mod tests {
                 .count()
                 >= 2
         );
-        assert!(output.contains("\"values\":[null,null,null,21.5,22.5]"));
-        assert!(output.contains("\"values\":[null,null,null,null,24]"));
+        assert!(
+            output
+                .matches("\"values\":[null,null,null,21.5,22.5]")
+                .count()
+                >= 2
+        );
+        assert!(
+            output
+                .matches("\"values\":[null,null,null,null,24]")
+                .count()
+                >= 2
+        );
         assert!(
             output.contains("\"values\":[null,null,null,22.462027683060324,23.462027683060324]")
         );

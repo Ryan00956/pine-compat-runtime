@@ -325,3 +325,7 @@ plot(tuple_ta_vwma)
 [higher_tuple_ta_wma, higher_tuple_ta_vwma] = request.security("NYSE:IBM", "5", [ta.wma(close, 2), ta.vwma(close, 2)])
 plot(higher_tuple_ta_wma)
 plot(higher_tuple_ta_vwma)
+
+[tuple_ta_swma, tuple_ta_hma] = request.security("NYSE:IBM", timeframe.period, [ta.swma(close), ta.hma(close, 4)])
+plot(tuple_ta_swma)
+plot(tuple_ta_hma)

@@ -1571,6 +1571,44 @@ fn request_security_evaluates_provider_tuple_literal_ta_weighted_averages_in_req
 }
 
 #[test]
+fn request_security_evaluates_provider_tuple_literal_ta_smoothing_averages_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider tuple literal ta smoothing averages\")\n[swma_value, hma_value] = request.security(\"NYSE:IBM\", timeframe.period, [ta.swma(close), ta.hma(close, 4)])\nplot(swma_value)\nplot(hma_value)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 11.0, 12.0, 10.0, 21.0, 1.0),
+            timed_ohlcv(120_000, 12.0, 13.0, 11.0, 22.0, 1.0),
+            timed_ohlcv(180_000, 13.0, 14.0, 12.0, 23.0, 1.0),
+            timed_ohlcv(240_000, 14.0, 15.0, 13.0, 24.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 1.0),
+            timed_bar(120_000, 5.0),
+            timed_bar(180_000, 1.0),
+            timed_bar(240_000, 5.0),
+        ])
+        .expect(
+            "provider tuple literal ta smoothing average request.security expression should run",
+        );
+
+    assert_eq!(result.plots.len(), 2);
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+        assert_eq!(plot.values[2], PineValue::Na);
+    }
+    assert_values_close(&result.plots[0].values[3..], &[21.5, 22.5]);
+    assert_eq!(result.plots[1].values[3], PineValue::Na);
+    assert_values_close(&result.plots[1].values[4..], &[24.0]);
+}
+
+#[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal() {
     let program = compile_program(
         "indicator(\"request provider htf tuple literal\")\n[last, shifted, above] = request.security(\"NYSE:IBM\", \"5\", [close, close + 1, close > open ? 1 : 0])\nplot(last)\nplot(shifted)\nplot(above)\n",
