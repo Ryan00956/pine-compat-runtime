@@ -353,3 +353,7 @@ plot(tuple_ta_wpr)
 [tuple_ta_sar, tuple_ta_cci] = request.security("NYSE:IBM", timeframe.period, [ta.sar(0.02, 0.02, 0.2), ta.cci(close, 3)])
 plot(tuple_ta_sar)
 plot(tuple_ta_cci)
+
+[tuple_ta_cog, tuple_ta_bop] = request.security("NYSE:IBM", timeframe.period, [ta.cog(close, 3), ta.bop()])
+plot(tuple_ta_cog)
+plot(tuple_ta_bop)

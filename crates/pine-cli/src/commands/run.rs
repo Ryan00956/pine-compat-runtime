@@ -728,10 +728,15 @@ mod tests {
                 .count()
                 >= 2
         );
-        assert!(output.contains(
-            "\"values\":[null,null,-1.9682539682539681,-1.9696969696969697,-1.9710144927536233]"
-        ));
-        assert!(output.contains("\"values\":[5,5,5,5,5]"));
+        assert!(
+            output
+                .matches(
+                    "\"values\":[null,null,-1.9682539682539681,-1.9696969696969697,-1.9710144927536233]"
+                )
+                .count()
+                >= 2
+        );
+        assert!(output.matches("\"values\":[5,5,5,5,5]").count() >= 2);
         assert!(output.contains("\"values\":[20,21,22,23,24]"));
         assert!(output.contains("\"values\":[10,10,10,10,10]"));
         assert!(output.contains(
