@@ -826,7 +826,7 @@ the two contexts.
 
 The same-context identity form also supports selected tuple expressions when
 destructured directly, currently including `ta.macd`, `ta.bb`, and
-`ta.vwap(source, anchor, stdev_mult)`.
+`ta.kc`, and `ta.vwap(source, anchor, stdev_mult)`.
 
 The supported provider requested expression subset includes direct OHLCV/time sources,
 pure arithmetic and ternaries, history references, `na`, `nz`, selected
@@ -844,8 +844,7 @@ Rolling callsite state for `math.sum` and `ta.*` calls is owned by the isolated
 requested context. Stateful math calls such as `math.random` and the `ta.tr`
 variable form remain outside the requested-expression subset.
 Provider-backed `ta.vwap` requested-expression support is limited to scalar
-source-call expressions; provider-backed tuple-returning VWAP bands remain
-unsupported.
+source-call expressions; provider-backed tuple expressions remain unsupported.
 
 Requested-context results are cached deterministically by callsite, requested
 symbol, requested timeframe, and expression identity for the duration of one

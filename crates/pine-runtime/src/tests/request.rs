@@ -251,6 +251,36 @@ fn request_security_same_context_returns_bb_tuple_expression() {
 }
 
 #[test]
+fn request_security_same_context_returns_kc_tuple_expression() {
+    let program = compile_program(
+        "indicator(\"request kc tuple\")\n[middle, upper, lower] = request.security(syminfo.tickerid, timeframe.period, ta.kc(close, 2, 2))\nplot(middle)\nplot(upper)\nplot(lower)\n",
+    );
+    let result = run_historical(
+        &program,
+        &[
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 10.0, 1.0),
+            timed_ohlcv(60_000, 12.0, 15.0, 14.0, 12.0, 1.0),
+            timed_ohlcv(120_000, 9.0, 10.0, 8.0, 9.0, 1.0),
+        ],
+    )
+    .expect("same-context ta.kc tuple request.security expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(
+        &result.plots[0].values,
+        &[10.0, 11.333333333333332, 9.777777777777779],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[14.0, 19.333333333333332, 17.77777777777778],
+    );
+    assert_values_close(
+        &result.plots[2].values,
+        &[6.0, 3.333333333333332, 1.7777777777777786],
+    );
+}
+
+#[test]
 fn request_security_same_context_returns_vwap_bands_tuple_expression() {
     let program = compile_program(
         "indicator(\"request vwap tuple\")\n[basis, upper, lower] = request.security(syminfo.tickerid, timeframe.period, ta.vwap(close, false, 2.0))\nplot(basis)\nplot(upper)\nplot(lower)\n",

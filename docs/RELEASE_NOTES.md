@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept same-context tuple-returning `ta.kc` expressions destructured directly
+  from the request while keeping provider-backed requested expressions
+  scalar-only.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept same-context tuple-returning `ta.vwap(source, anchor, stdev_mult)`
   expressions destructured directly from the request while keeping
   provider-backed requested expressions scalar-only.
@@ -29,8 +33,8 @@
   provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported scalar `ta.vwap(source)` calls in same-context and
-  provider-backed scalar expressions while keeping provider-backed
-  tuple-returning VWAP bands outside the subset.
+  provider-backed scalar expressions while keeping provider-backed tuple
+  expressions outside the subset.
 - Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported `ta.valuewhen` calls in same-context and
   provider-backed scalar expressions.

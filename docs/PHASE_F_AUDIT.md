@@ -50,7 +50,7 @@ truth for request claims.
 - `request.security` is partial. Supported forms include same-context identity
   requests for `syminfo.tickerid`/`timeframe.period`, including selected tuple
   expressions destructured directly from the request such as `ta.macd`,
-  `ta.bb`, and `ta.vwap(source, anchor, stdev_mult)`, and
+  `ta.bb`, `ta.kc`, and `ta.vwap(source, anchor, stdev_mult)`, and
   host-provided same-or-higher-timeframe scalar expressions for explicit symbols
   or `syminfo.tickerid`.
 - Supported provider requested expressions are side-effect-free scalar expressions over
@@ -69,8 +69,8 @@ truth for request claims.
   `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`, `ta.barssince`,
   `ta.valuewhen`, `ta.cross`, `ta.crossover`, and `ta.crossunder`.
 - Provider-backed `ta.vwap` requested-expression support is limited to the
-  scalar source-call form; provider-backed tuple-returning VWAP bands remain
-  outside this subset.
+  scalar source-call form; provider-backed tuple expressions remain outside
+  this subset.
 - Provider-backed requested expressions run in an isolated requested context.
   Chart-runtime history, `ta.*` callsite state, `var` storage, arrays, drawing
   objects, and outputs are not shared with requested-context evaluation.
