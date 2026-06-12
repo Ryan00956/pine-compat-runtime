@@ -901,6 +901,27 @@ fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_ta_cr
 }
 
 #[test]
+fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_ta_trend_expression() {
+    let analysis = analyze(
+        "[rising, falling, flat_falling] = request.security(\"NYSE:IBM\", \"5\", [ta.rising(close, 1) ? 1 : 0, ta.falling(300 - close, 1) ? 1 : 0, ta.falling(open, 1) ? 1 : 0])\nplot(rising + falling + flat_falling)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_request_security_math_extremes() {
     let analysis = analyze(
         "plot(request.security(\"NYSE:IBM\", timeframe.period, math.max(close, open) - math.min(close, open)))\n",

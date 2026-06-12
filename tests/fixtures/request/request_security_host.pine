@@ -248,3 +248,8 @@ plot(higher_tuple_ta_crossunder)
 plot(tuple_ta_rising)
 plot(tuple_ta_falling)
 plot(tuple_ta_open_falling)
+
+[higher_tuple_ta_rising, higher_tuple_ta_falling, higher_tuple_ta_open_falling] = request.security("NYSE:IBM", "5", [ta.rising(close, 1) ? 1 : 0, ta.falling(300 - close, 1) ? 1 : 0, ta.falling(open, 1) ? 1 : 0])
+plot(higher_tuple_ta_rising)
+plot(higher_tuple_ta_falling)
+plot(higher_tuple_ta_open_falling)
