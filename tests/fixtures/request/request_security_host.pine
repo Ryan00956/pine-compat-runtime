@@ -238,3 +238,8 @@ plot(higher_tuple_ta_cum)
 plot(tuple_ta_cross)
 plot(tuple_ta_crossover)
 plot(tuple_ta_crossunder)
+
+[higher_tuple_ta_cross, higher_tuple_ta_crossover, higher_tuple_ta_crossunder] = request.security("NYSE:IBM", "5", [ta.cross(close, 150) ? 1 : 0, ta.crossover(close, 150) ? 1 : 0, ta.crossunder(close - time / 2000.0, 75) ? 1 : 0])
+plot(higher_tuple_ta_cross)
+plot(higher_tuple_ta_crossover)
+plot(higher_tuple_ta_crossunder)
