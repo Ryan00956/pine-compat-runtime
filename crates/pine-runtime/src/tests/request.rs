@@ -1323,6 +1323,41 @@ fn request_security_evaluates_provider_tuple_literal_ta_bars_in_requested_contex
 }
 
 #[test]
+fn request_security_evaluates_provider_tuple_literal_ta_pivots_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider tuple literal ta pivots\")\n[pivot_high, pivot_low] = request.security(\"NYSE:IBM\", timeframe.period, [ta.pivothigh(0 - math.abs(close - 22), 1, 1), ta.pivotlow(math.abs(close - 22), 1, 1)])\nplot(pivot_high)\nplot(pivot_low)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 21.0),
+            timed_bar(240_000, 22.0),
+            timed_bar(300_000, 23.0),
+            timed_bar(540_000, 24.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 1.0),
+            timed_bar(240_000, 5.0),
+            timed_bar(300_000, 1.0),
+            timed_bar(540_000, 5.0),
+        ])
+        .expect("provider tuple literal ta pivot request.security expression should run");
+
+    assert_eq!(result.plots.len(), 2);
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+        assert_eq!(plot.values[2], PineValue::Na);
+        assert_values_close(&plot.values[3..4], &[0.0]);
+        assert_eq!(plot.values[4], PineValue::Na);
+    }
+}
+
+#[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal() {
     let program = compile_program(
         "indicator(\"request provider htf tuple literal\")\n[last, shifted, above] = request.security(\"NYSE:IBM\", \"5\", [close, close + 1, close > open ? 1 : 0])\nplot(last)\nplot(shifted)\nplot(above)\n",
