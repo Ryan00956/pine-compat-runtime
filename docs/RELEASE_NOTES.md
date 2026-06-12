@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added provider-backed `request.security` tuple literal fixture coverage for
+  rolling `ta.percentrank` scalar elements.
+- Added provider-backed `request.security` tuple literal fixture coverage for
   rolling `ta.percentile_nearest_rank` and
   `ta.percentile_linear_interpolation` scalar elements.
 - Added provider-backed `request.security` tuple literal fixture coverage for
