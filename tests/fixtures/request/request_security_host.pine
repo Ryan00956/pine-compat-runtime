@@ -558,3 +558,6 @@ plot(tuple_ta_dev)
 [tuple_ta_ema, tuple_ta_rsi] = request.security("NYSE:IBM", timeframe.period, [ta.ema(close, 2), ta.rsi(close, 1)])
 plot(tuple_ta_ema)
 plot(tuple_ta_rsi)
+
+[tuple_ta_bbw] = request.security("NYSE:IBM", timeframe.period, [ta.bbw(close, 2, 2)])
+plot(tuple_ta_bbw)
