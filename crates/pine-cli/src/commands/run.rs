@@ -808,9 +808,10 @@ mod tests {
             output
                 .matches("\"values\":[null,null,null,null,100]")
                 .count()
-                >= 2
+                >= 4
         );
         assert!(output.contains("\"values\":[null,null,null,null,50]"));
+        assert!(output.contains("\"values\":[null,null,100,100,166.66666666666666]"));
         assert!(
             output
                 .matches("\"values\":[1000,2000,3000,4000,5000]")
