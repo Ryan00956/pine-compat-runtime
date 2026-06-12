@@ -8008,6 +8008,8 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][214]["values"] == [None, None, None, None, None]
     assert result["plots"][215]["values"] == [None, None, None, None, None]
     assert result["plots"][216]["values"] == [None, None, None, None, None]
+    assert result["plots"][217]["values"] == [None, None, None, None, None]
+    assert result["plots"][218]["values"] == [None, None, None, None, None]
 
 
 def test_run_script_reports_missing_request_bars():

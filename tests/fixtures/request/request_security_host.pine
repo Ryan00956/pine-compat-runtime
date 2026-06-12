@@ -405,3 +405,7 @@ plot(higher_tuple_ta_ao)
 [higher_tuple_ta_swma, higher_tuple_ta_hma] = request.security("NYSE:IBM", "5", [ta.swma(close), ta.hma(close, 4)])
 plot(higher_tuple_ta_swma)
 plot(higher_tuple_ta_hma)
+
+[higher_tuple_ta_alma, higher_tuple_ta_linreg] = request.security("NYSE:IBM", "5", [ta.alma(close, 4, 0.85, 6), ta.linreg(close, 3, 0)])
+plot(higher_tuple_ta_alma)
+plot(higher_tuple_ta_linreg)

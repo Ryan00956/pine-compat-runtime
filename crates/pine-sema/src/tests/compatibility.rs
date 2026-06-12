@@ -1409,6 +1409,28 @@ fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_ta_sm
 }
 
 #[test]
+fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_ta_regression_average_expression()
+ {
+    let analysis = analyze(
+        "[alma_value, linreg_value] = request.security(\"NYSE:IBM\", \"5\", [ta.alma(close, 4, 0.85, 6), ta.linreg(close, 3, 0)])\nplot(nz(alma_value) + nz(linreg_value))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_expression() {
     let analysis = analyze(
         "[last, shifted, above] = request.security(\"NYSE:IBM\", \"5\", [close, close + 1, close > open ? 1 : 0])\nplot(last + shifted + above)\n",
