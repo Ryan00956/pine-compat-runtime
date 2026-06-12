@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` `ta.bb` tuple-returning calls while preserving the
+  existing default higher-timeframe confirmation behavior.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` `ta.macd` tuple-returning calls while keeping the
   supported provider tuple subset narrow and destructuring-only.
 - Added higher-timeframe fixture coverage for provider-backed

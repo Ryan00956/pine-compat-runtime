@@ -179,3 +179,8 @@ plot(higher_tuple_above)
 plot(higher_macd_value)
 plot(higher_signal_value)
 plot(higher_hist_value)
+
+[higher_bb_basis, higher_bb_upper, higher_bb_lower] = request.security("NYSE:IBM", "5", ta.bb(close, 2, 2))
+plot(higher_bb_basis)
+plot(higher_bb_upper)
+plot(higher_bb_lower)

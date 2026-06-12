@@ -740,6 +740,38 @@ fn request_security_evaluates_provider_bb_tuple_in_requested_context() {
 }
 
 #[test]
+fn request_security_aligns_provider_higher_timeframe_bb_tuple() {
+    let program = compile_program(
+        "indicator(\"request provider htf bb tuple\")\n[basis, upper, lower] = request.security(\"NYSE:IBM\", \"5\", ta.bb(close, 2, 2))\nplot(basis)\nplot(upper)\nplot(lower)\n",
+    );
+    let environment = external_symbol_environment_with_timeframe(
+        "NYSE:IBM",
+        "5",
+        vec![timed_bar(0, 100.0), timed_bar(300_000, 200.0)],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(240_000, 3.0),
+            timed_bar(300_000, 4.0),
+            timed_bar(540_000, 5.0),
+        ])
+        .expect("higher timeframe provider ta.bb tuple request should run");
+
+    assert_eq!(result.plots.len(), 3);
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+        assert_eq!(plot.values[2], PineValue::Na);
+        assert_eq!(plot.values[3], PineValue::Na);
+    }
+    assert_values_close(&result.plots[0].values[4..], &[150.0]);
+    assert_values_close(&result.plots[1].values[4..], &[250.0]);
+    assert_values_close(&result.plots[2].values[4..], &[50.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_kc_tuple_in_requested_context() {
     let program = compile_program(
         "indicator(\"request provider kc tuple\")\n[middle, upper, lower] = request.security(\"NYSE:IBM\", timeframe.period, ta.kc(close, 2, 2))\nplot(middle)\nplot(upper)\nplot(lower)\n",
