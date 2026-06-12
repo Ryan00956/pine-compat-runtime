@@ -313,3 +313,7 @@ plot(higher_tuple_ta_inverse_percentrank)
 [tuple_ta_stdev, tuple_ta_variance] = request.security("NYSE:IBM", timeframe.period, [ta.stdev(close, 3), ta.variance(close, 3)])
 plot(tuple_ta_stdev)
 plot(tuple_ta_variance)
+
+[higher_tuple_ta_stdev, higher_tuple_ta_variance] = request.security("NYSE:IBM", "5", [ta.stdev(close, 2), ta.variance(close, 2)])
+plot(higher_tuple_ta_stdev)
+plot(higher_tuple_ta_variance)
