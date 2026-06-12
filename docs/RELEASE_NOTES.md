@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added provider-backed `request.security` tuple literal fixture coverage for
+  stateful `ta.barssince` and `ta.valuewhen` scalar elements.
 - Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal boolean `ta.rising` and `ta.falling`
   scalar elements while preserving default confirmation alignment.
