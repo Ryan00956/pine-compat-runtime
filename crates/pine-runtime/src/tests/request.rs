@@ -2809,6 +2809,41 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_default_ex
 }
 
 #[test]
+fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_default_bar_offsets() {
+    let program = compile_program(
+        "indicator(\"request provider htf tuple literal ta default bar offsets\")\n[highest_offset, lowest_offset] = request.security(\"NYSE:IBM\", \"5\", [ta.highestbars(2), ta.lowestbars(2)])\nplot(highest_offset)\nplot(lowest_offset)\n",
+    );
+    let environment = external_symbol_environment_with_timeframe(
+        "NYSE:IBM",
+        "5",
+        vec![
+            timed_ohlcv(0, 90.0, 110.0, 80.0, 100.0, 1000.0),
+            timed_ohlcv(300_000, 190.0, 210.0, 180.0, 200.0, 1000.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(240_000, 3.0),
+            timed_bar(300_000, 4.0),
+            timed_bar(540_000, 5.0),
+        ])
+        .expect(
+            "higher timeframe provider tuple literal ta default bar offsets request should run",
+        );
+
+    assert_eq!(result.plots.len(), 2);
+    for plot in &result.plots {
+        for value in &plot.values[..4] {
+            assert_eq!(*value, PineValue::Na);
+        }
+    }
+    assert_values_close(&result.plots[0].values[4..], &[0.0]);
+    assert_values_close(&result.plots[1].values[4..], &[1.0]);
+}
+
+#[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal() {
     let program = compile_program(
         "indicator(\"request provider htf tuple literal\")\n[last, shifted, above] = request.security(\"NYSE:IBM\", \"5\", [close, close + 1, close > open ? 1 : 0])\nplot(last)\nplot(shifted)\nplot(above)\n",

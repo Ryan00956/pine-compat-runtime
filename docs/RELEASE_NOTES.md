@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal source-less `ta.highestbars` and
+  `ta.lowestbars` scalar elements while preserving default confirmation
+  alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal source-less `ta.highest` and `ta.lowest`
   scalar elements while preserving default confirmation alignment.
 - Added higher-timeframe fixture coverage for provider-backed

@@ -1737,6 +1737,28 @@ fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_ta_de
 }
 
 #[test]
+fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_ta_default_bar_offset_expression()
+ {
+    let analysis = analyze(
+        "[highest_offset, lowest_offset] = request.security(\"NYSE:IBM\", \"5\", [ta.highestbars(2), ta.lowestbars(2)])\nplot(nz(highest_offset) + nz(lowest_offset))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_expression() {
     let analysis = analyze(
         "[last, shifted, above] = request.security(\"NYSE:IBM\", \"5\", [close, close + 1, close > open ? 1 : 0])\nplot(last + shifted + above)\n",
