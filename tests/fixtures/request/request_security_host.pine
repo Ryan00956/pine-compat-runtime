@@ -457,3 +457,6 @@ plot(higher_tuple_ta_dev)
 [higher_tuple_ta_ema, higher_tuple_ta_rsi] = request.security("NYSE:IBM", "5", [ta.ema(close, 2), ta.rsi(close, 1)])
 plot(higher_tuple_ta_ema)
 plot(higher_tuple_ta_rsi)
+
+[higher_tuple_ta_bbw] = request.security("NYSE:IBM", "5", [ta.bbw(close, 2, 2)])
+plot(higher_tuple_ta_bbw)

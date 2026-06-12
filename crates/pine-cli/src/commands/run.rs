@@ -812,6 +812,7 @@ mod tests {
         );
         assert!(output.contains("\"values\":[null,null,null,null,50]"));
         assert!(output.contains("\"values\":[null,null,100,100,166.66666666666666]"));
+        assert!(output.contains("\"values\":[null,null,null,null,1.3333333333333333]"));
         assert!(
             output
                 .matches("\"values\":[1000,2000,3000,4000,5000]")
