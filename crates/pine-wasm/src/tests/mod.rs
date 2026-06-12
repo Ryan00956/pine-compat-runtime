@@ -6132,6 +6132,18 @@ fn request_host_data_runs_through_direct_wasm_api() {
         parsed["plots"][102]["values"],
         serde_json::json!([null, null, 40, 40, 0])
     );
+    assert_eq!(
+        parsed["plots"][103]["values"],
+        serde_json::json!([null, null, 100, 100, 150])
+    );
+    assert_eq!(
+        parsed["plots"][104]["values"],
+        serde_json::json!([null, null, 100, 100, 250])
+    );
+    assert_eq!(
+        parsed["plots"][105]["values"],
+        serde_json::json!([null, null, 100, 100, 50])
+    );
 }
 
 #[test]

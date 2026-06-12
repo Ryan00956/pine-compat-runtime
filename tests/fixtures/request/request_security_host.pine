@@ -189,3 +189,8 @@ plot(higher_bb_lower)
 plot(higher_kc_middle)
 plot(higher_kc_upper)
 plot(higher_kc_lower)
+
+[higher_vwap_basis, higher_vwap_upper, higher_vwap_lower] = request.security("NYSE:IBM", "5", ta.vwap(close, false, 2.0))
+plot(higher_vwap_basis)
+plot(higher_vwap_upper)
+plot(higher_vwap_lower)

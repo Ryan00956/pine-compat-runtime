@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` `ta.vwap(source, anchor, stdev_mult)` tuple-returning
+  calls, including aligned VWAP band outputs.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` `ta.kc` tuple-returning calls, including true-range based
   channel values over host-provided OHLC request bars.
 - Added higher-timeframe fixture coverage for provider-backed
