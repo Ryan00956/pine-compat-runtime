@@ -7803,6 +7803,9 @@ def test_run_script_request_fixture_matches_cli_contract():
     assert result["plots"][111]["values"] == [None, 20.0, 21.0, 22.0, 23.0]
     assert result["plots"][112]["values"] == [10.0, 20.0, 21.0, 22.0, 23.0]
     assert result["plots"][113]["values"] == [0.0, 1.0, 1.0, 1.0, 1.0]
+    assert result["plots"][114]["values"] == [None, None, None, None, 100.0]
+    assert result["plots"][115]["values"] == [None, None, 90.0, 90.0, 100.0]
+    assert result["plots"][116]["values"] == [None, None, 0.0, 0.0, 100.0]
 
 
 def test_run_script_reports_missing_request_bars():

@@ -208,3 +208,8 @@ plot(higher_dmi_adx)
 plot(tuple_prior)
 plot(tuple_fallback)
 plot(tuple_delta)
+
+[higher_tuple_prior, higher_tuple_fallback, higher_tuple_delta] = request.security("NYSE:IBM", "5", [close[1], nz(close[1], open), close - nz(close[1], close)])
+plot(higher_tuple_prior)
+plot(higher_tuple_fallback)
+plot(higher_tuple_delta)
