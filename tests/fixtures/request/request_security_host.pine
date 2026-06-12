@@ -273,3 +273,7 @@ plot(higher_tuple_ta_lowestbars)
 [tuple_ta_pivothigh, tuple_ta_pivotlow] = request.security("NYSE:IBM", timeframe.period, [ta.pivothigh(0 - math.abs(close - 22), 1, 1), ta.pivotlow(math.abs(close - 22), 1, 1)])
 plot(tuple_ta_pivothigh)
 plot(tuple_ta_pivotlow)
+
+[higher_tuple_ta_pivothigh, higher_tuple_ta_pivotlow] = request.security("NYSE:IBM", "5", [ta.pivothigh(300 - close, 0, 1), ta.pivotlow(close, 0, 1)])
+plot(higher_tuple_ta_pivothigh)
+plot(higher_tuple_ta_pivotlow)
