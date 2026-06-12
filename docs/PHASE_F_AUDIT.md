@@ -50,7 +50,8 @@ truth for request claims.
 - `request.security` is partial. Supported forms include same-context identity
   requests for `syminfo.tickerid`/`timeframe.period`, including selected tuple
   expressions destructured directly from the request such as `ta.macd`,
-  `ta.bb`, `ta.kc`, and `ta.vwap(source, anchor, stdev_mult)`, and
+  `ta.bb`, `ta.kc`, `ta.supertrend`, and
+  `ta.vwap(source, anchor, stdev_mult)`, and
   host-provided same-or-higher-timeframe scalar expressions for explicit symbols
   or `syminfo.tickerid`.
 - Supported provider requested expressions are side-effect-free scalar expressions over

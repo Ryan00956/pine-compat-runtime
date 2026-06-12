@@ -176,7 +176,10 @@ fn request_expression_is_pure_scalar(expr: &Expr) -> bool {
 }
 
 fn request_tuple_call_is_supported(name: &str) -> bool {
-    matches!(name, "ta.macd" | "ta.bb" | "ta.kc" | "ta.vwap")
+    matches!(
+        name,
+        "ta.macd" | "ta.bb" | "ta.kc" | "ta.supertrend" | "ta.vwap"
+    )
 }
 
 fn request_expression_is_provider_scalar(expr: &Expr) -> bool {

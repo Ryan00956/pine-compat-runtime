@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept same-context tuple-returning `ta.supertrend` expressions destructured
+  directly from the request while keeping provider-backed requested expressions
+  scalar-only.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept same-context tuple-returning `ta.kc` expressions destructured directly
   from the request while keeping provider-backed requested expressions
   scalar-only.

@@ -825,8 +825,8 @@ state, `var` storage, arrays, drawing objects, and outputs do not leak between
 the two contexts.
 
 The same-context identity form also supports selected tuple expressions when
-destructured directly, currently including `ta.macd`, `ta.bb`, and
-`ta.kc`, and `ta.vwap(source, anchor, stdev_mult)`.
+destructured directly, currently including `ta.macd`, `ta.bb`, `ta.kc`,
+`ta.supertrend`, and `ta.vwap(source, anchor, stdev_mult)`.
 
 The supported provider requested expression subset includes direct OHLCV/time sources,
 pure arithmetic and ternaries, history references, `na`, `nz`, selected

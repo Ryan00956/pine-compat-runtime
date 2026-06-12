@@ -281,6 +281,39 @@ fn request_security_same_context_returns_kc_tuple_expression() {
 }
 
 #[test]
+fn request_security_same_context_returns_supertrend_tuple_expression() {
+    let program = compile_program(
+        "indicator(\"request supertrend tuple\")\n[line, direction] = request.security(syminfo.tickerid, timeframe.period, ta.supertrend(2, 3))\nplot(line)\nplot(direction)\n",
+    );
+    let result = run_historical(
+        &program,
+        &[
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 10.0, 1.0),
+            timed_ohlcv(60_000, 10.0, 12.0, 10.0, 11.0, 1.0),
+            timed_ohlcv(120_000, 11.0, 13.0, 11.0, 12.0, 1.0),
+            timed_ohlcv(180_000, 12.0, 16.0, 12.0, 15.0, 1.0),
+            timed_ohlcv(240_000, 15.0, 17.0, 14.0, 16.0, 1.0),
+            timed_ohlcv(300_000, 16.0, 14.0, 8.0, 9.0, 1.0),
+        ],
+    )
+    .expect("same-context ta.supertrend tuple request.security expression should run");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(
+        &result.plots[0].values,
+        &[
+            14.0,
+            14.0,
+            14.0,
+            8.666666666666668,
+            9.944444444444445,
+            20.037037037037038,
+        ],
+    );
+    assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0, -1.0, -1.0, 1.0]);
+}
+
+#[test]
 fn request_security_same_context_returns_vwap_bands_tuple_expression() {
     let program = compile_program(
         "indicator(\"request vwap tuple\")\n[basis, upper, lower] = request.security(syminfo.tickerid, timeframe.period, ta.vwap(close, false, 2.0))\nplot(basis)\nplot(upper)\nplot(lower)\n",
