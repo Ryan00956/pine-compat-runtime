@@ -985,6 +985,27 @@ fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_ta_ev
 }
 
 #[test]
+fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_ta_bars_expression() {
+    let analysis = analyze(
+        "[highest_offset, lowest_offset] = request.security(\"NYSE:IBM\", \"5\", [ta.highestbars(close, 2), ta.lowestbars(close, 2)])\nplot(nz(highest_offset) + nz(lowest_offset))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_request_security_math_extremes() {
     let analysis = analyze(
         "plot(request.security(\"NYSE:IBM\", timeframe.period, math.max(close, open) - math.min(close, open)))\n",

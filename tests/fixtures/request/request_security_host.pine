@@ -265,3 +265,7 @@ plot(higher_tuple_ta_valuewhen)
 [tuple_ta_highestbars, tuple_ta_lowestbars] = request.security("NYSE:IBM", timeframe.period, [ta.highestbars(close, 3), ta.lowestbars(close, 3)])
 plot(tuple_ta_highestbars)
 plot(tuple_ta_lowestbars)
+
+[higher_tuple_ta_highestbars, higher_tuple_ta_lowestbars] = request.security("NYSE:IBM", "5", [ta.highestbars(close, 2), ta.lowestbars(close, 2)])
+plot(higher_tuple_ta_highestbars)
+plot(higher_tuple_ta_lowestbars)
