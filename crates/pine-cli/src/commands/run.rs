@@ -683,6 +683,7 @@ mod tests {
                 >= 3
         );
         assert!(output.matches("\"values\":[null,null,21,22,23]").count() >= 4);
+        assert!(output.contains("\"values\":[null,null,0,0,0]"));
     }
 
     #[test]

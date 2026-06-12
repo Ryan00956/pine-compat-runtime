@@ -277,15 +277,15 @@ Request data:
   `ta.cog`, `ta.bop`, `ta.ao`, `ta.max`, `ta.min`, `ta.mfi`,
   `ta.stoch`, `ta.wpr`, `ta.sar`,
   `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`,
-  `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.rising`,
+  `ta.highestbars`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.rising`,
   `ta.bbw`, `ta.kcw`, `ta.pivothigh`, `ta.pivotlow`, `ta.correlation`,
   `ta.covariance`, `ta.median`, `ta.mode`, `ta.percentile_nearest_rank`,
   `ta.percentile_linear_interpolation`,
   `ta.percentrank`, `ta.stdev`, `ta.variance`, `ta.wma`, `ta.vwma`,
   `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`, `ta.barssince`,
   `ta.cross`, `ta.crossover`, and `ta.crossunder`; local variable aliases, the
-  `ta.tr` variable form, extrema
-  offset helpers such as `ta.highestbars`/`ta.lowestbars`, and stateful math
+  `ta.tr` variable form, the remaining extrema offset helper `ta.lowestbars`,
+  and stateful math
   calls such as `math.random` are not part of this subset.
   Requested-context rolling callsite state is isolated from chart state.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only

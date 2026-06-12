@@ -62,6 +62,7 @@ kcw_value = request.security(syminfo.tickerid, timeframe.period, ta.kcw(close, 3
 pivothigh_value = request.security(syminfo.tickerid, timeframe.period, ta.pivothigh(high, 1, 1))
 pivotlow_value = request.security(syminfo.tickerid, timeframe.period, ta.pivotlow(low, 1, 1))
 barssince_value = request.security(syminfo.tickerid, timeframe.period, ta.barssince(close > open))
+highestbars_value = request.security(syminfo.tickerid, timeframe.period, ta.highestbars(close, 3))
 
 plot(identity)
 plot(history)
@@ -125,3 +126,4 @@ plot(kcw_value)
 plot(pivothigh_value)
 plot(pivotlow_value)
 plot(barssince_value)
+plot(highestbars_value)
