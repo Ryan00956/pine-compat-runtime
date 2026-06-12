@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal `ta.range` and `ta.dev` scalar elements
+  while preserving default confirmation alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal `ta.mom` and `ta.roc` scalar elements while
   preserving default confirmation alignment.
 - Added higher-timeframe fixture coverage for provider-backed
