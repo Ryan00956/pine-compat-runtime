@@ -1110,6 +1110,27 @@ fn accepts_provider_backed_request_security_tuple_literal_ta_oscillator_expressi
 }
 
 #[test]
+fn accepts_provider_backed_request_security_tuple_literal_ta_trend_oscillator_expression() {
+    let analysis = analyze(
+        "[sar_value, cci_value] = request.security(\"NYSE:IBM\", timeframe.period, [ta.sar(0.02, 0.02, 0.2), ta.cci(close, 3)])\nplot(nz(sar_value) + nz(cci_value))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_expression() {
     let analysis = analyze(
         "[last, shifted, above] = request.security(\"NYSE:IBM\", \"5\", [close, close + 1, close > open ? 1 : 0])\nplot(last + shifted + above)\n",

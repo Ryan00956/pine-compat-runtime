@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added provider-backed `request.security` tuple literal fixture coverage for
+  rolling `ta.sar` and `ta.cci` scalar elements.
+- Added provider-backed `request.security` tuple literal fixture coverage for
   rolling `ta.stoch` and `ta.wpr` scalar elements.
 - Added provider-backed `request.security` tuple literal fixture coverage for
   rolling `ta.cmo` and `ta.mfi` scalar elements.
