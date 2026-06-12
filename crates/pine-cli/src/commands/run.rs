@@ -737,8 +737,8 @@ mod tests {
                 >= 2
         );
         assert!(output.matches("\"values\":[5,5,5,5,5]").count() >= 2);
-        assert!(output.contains("\"values\":[20,21,22,23,24]"));
-        assert!(output.contains("\"values\":[10,10,10,10,10]"));
+        assert!(output.matches("\"values\":[20,21,22,23,24]").count() >= 2);
+        assert!(output.matches("\"values\":[10,10,10,10,10]").count() >= 2);
         assert!(output.contains(
             "\"values\":[0.4,1.170731707317073,1.5058823529411764,1.6271186440677967,1.6476964769647697]"
         ));
