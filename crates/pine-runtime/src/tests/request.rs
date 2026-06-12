@@ -1499,6 +1499,34 @@ fn request_security_evaluates_provider_tuple_literal_ta_momentum_in_requested_co
 }
 
 #[test]
+fn request_security_evaluates_provider_tuple_literal_ta_dispersion_window_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider tuple literal ta dispersion window\")\n[range_value, dev_value] = request.security(\"NYSE:IBM\", timeframe.period, [ta.range(close, 2), ta.dev(close, 2)])\nplot(range_value)\nplot(dev_value)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 11.0, 12.0, 10.0, 21.0, 1.0),
+            timed_ohlcv(120_000, 12.0, 13.0, 11.0, 22.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 2.0, 0.0, 4.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 3.0, 1.0, 5.0, 1.0),
+            timed_ohlcv(120_000, 3.0, 4.0, 2.0, 6.0, 1.0),
+        ])
+        .expect("provider tuple literal ta.range/ta.dev request.security expression should run");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[1.0, 1.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_values_close(&result.plots[1].values[1..], &[0.5, 0.5]);
+}
+
+#[test]
 fn request_security_evaluates_provider_tuple_literal_ta_cross_in_requested_context() {
     let program = compile_program(
         "indicator(\"request provider tuple literal ta cross\")\n[crossed, crossed_up, crossed_down] = request.security(\"NYSE:IBM\", timeframe.period, [ta.cross(close, 2.0) ? 1 : 0, ta.crossover(close, 2.0) ? 1 : 0, ta.crossunder(close, 2.0) ? 1 : 0])\nplot(crossed)\nplot(crossed_up)\nplot(crossed_down)\n",

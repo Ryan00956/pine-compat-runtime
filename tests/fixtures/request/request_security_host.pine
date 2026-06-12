@@ -550,3 +550,7 @@ plot(tuple_ta_lowest)
 [tuple_ta_mom, tuple_ta_roc] = request.security("NYSE:IBM", timeframe.period, [ta.mom(close, 1), ta.roc(close, 1)])
 plot(tuple_ta_mom)
 plot(tuple_ta_roc)
+
+[tuple_ta_range, tuple_ta_dev] = request.security("NYSE:IBM", timeframe.period, [ta.range(close, 2), ta.dev(close, 2)])
+plot(tuple_ta_range)
+plot(tuple_ta_dev)
