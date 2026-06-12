@@ -739,9 +739,14 @@ mod tests {
         assert!(output.matches("\"values\":[5,5,5,5,5]").count() >= 2);
         assert!(output.matches("\"values\":[20,21,22,23,24]").count() >= 2);
         assert!(output.matches("\"values\":[10,10,10,10,10]").count() >= 2);
-        assert!(output.contains(
-            "\"values\":[0.4,1.170731707317073,1.5058823529411764,1.6271186440677967,1.6476964769647697]"
-        ));
+        assert!(
+            output
+                .matches(
+                    "\"values\":[0.4,1.170731707317073,1.5058823529411764,1.6271186440677967,1.6476964769647697]"
+                )
+                .count()
+                >= 2
+        );
         assert!(
             output
                 .matches("\"values\":[null,null,null,null,null]")
@@ -756,7 +761,7 @@ mod tests {
         assert!(output.contains("\"values\":[null,null,null,null,1]"));
         assert!(output.matches("\"values\":[null,null,null,0,null]").count() >= 2);
         assert!(output.contains("\"values\":[null,null,null,null,200]"));
-        assert!(output.contains("\"values\":[20,20.5,21,21.5,22]"));
+        assert!(output.matches("\"values\":[20,20.5,21,21.5,22]").count() >= 2);
         assert!(output.contains("\"values\":[1000,2000,3000,4000,5000]"));
         assert!(output.contains("\"values\":[0.1,0.1,0.1,0.1,0.1]"));
         assert!(output.matches("\"values\":[1,1,1,1,1]").count() >= 2);

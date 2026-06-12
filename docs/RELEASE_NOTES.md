@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added provider-backed `request.security` tuple literal fixture coverage for
+  rolling `ta.kcw` and `ta.vwap` scalar elements.
+- Added provider-backed `request.security` tuple literal fixture coverage for
   rolling `ta.max` and `ta.min` scalar elements.
 - Added provider-backed `request.security` tuple literal fixture coverage for
   rolling `ta.cog` and `ta.bop` scalar elements.

@@ -361,3 +361,7 @@ plot(tuple_ta_bop)
 [tuple_ta_max, tuple_ta_min] = request.security("NYSE:IBM", timeframe.period, [ta.max(close), ta.min(open)])
 plot(tuple_ta_max)
 plot(tuple_ta_min)
+
+[tuple_ta_kcw, tuple_ta_vwap] = request.security("NYSE:IBM", timeframe.period, [ta.kcw(close, 3, 2), ta.vwap(close)])
+plot(tuple_ta_kcw)
+plot(tuple_ta_vwap)
