@@ -131,6 +131,10 @@
   `math.acos`, `math.asin`, and `math.atan` scalar elements while preserving
   default confirmation alignment.
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal scalar/angle `math.avg`, `math.trunc`,
+  `math.sign`, `math.todegrees`, and `math.toradians` scalar elements while
+  preserving default confirmation alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal rolling `ta.percentile_nearest_rank` and
   `ta.percentile_linear_interpolation` scalar elements while preserving
   default confirmation alignment.
