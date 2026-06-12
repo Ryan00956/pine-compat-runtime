@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions and selected tuple expressions, are supported; optional parameters, lower-timeframe requests, and side-effecting requested expressions are not implemented";
+const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions, pure tuple literals, and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions, pure tuple literals, and selected tuple expressions, are supported; optional parameters, lower-timeframe requests, provider local aliases, and side-effecting requested expressions are not implemented";
 
 impl Analyzer {
     pub(crate) fn analyze_request_call(
@@ -191,16 +191,19 @@ fn request_tuple_call_is_supported(name: &str) -> bool {
 }
 
 fn request_expression_is_provider_tuple_value(expr: &Expr) -> bool {
-    let ExprKind::Call { callee, args } = &expr.kind else {
-        return false;
-    };
-    let Some(name) = expr_name(callee) else {
-        return false;
-    };
-    request_provider_tuple_call_is_supported(name.as_str())
-        && args
-            .iter()
-            .all(|arg| arg.name.is_none() && request_expression_is_provider_scalar(&arg.value))
+    match &expr.kind {
+        ExprKind::Tuple(items) => items.iter().all(request_expression_is_provider_scalar),
+        ExprKind::Call { callee, args } => {
+            let Some(name) = expr_name(callee) else {
+                return false;
+            };
+            request_provider_tuple_call_is_supported(name.as_str())
+                && args.iter().all(|arg| {
+                    arg.name.is_none() && request_expression_is_provider_scalar(&arg.value)
+                })
+        }
+        _ => false,
+    }
 }
 
 fn request_provider_tuple_call_is_supported(name: &str) -> bool {

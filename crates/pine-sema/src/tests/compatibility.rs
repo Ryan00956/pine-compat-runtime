@@ -543,6 +543,27 @@ fn accepts_provider_backed_request_security_vwap_bands_tuple_call() {
 }
 
 #[test]
+fn accepts_provider_backed_request_security_tuple_literal_expression() {
+    let analysis = analyze(
+        "[last, shifted, above] = request.security(\"NYSE:IBM\", timeframe.period, [close, close + 1, close > open ? 1 : 0])\nplot(last + shifted + above)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_request_security_math_extremes() {
     let analysis = analyze(
         "plot(request.security(\"NYSE:IBM\", timeframe.period, math.max(close, open) - math.min(close, open)))\n",
@@ -654,9 +675,9 @@ fn rejects_provider_request_security_unsupported_call() {
 }
 
 #[test]
-fn rejects_provider_request_security_tuple_literal_expression() {
+fn rejects_provider_request_security_tuple_literal_with_local_alias_expression() {
     let analysis = analyze(
-        "[first, second] = request.security(\"NYSE:IBM\", timeframe.period, [close, open])\n",
+        "src = close\n[first, second] = request.security(\"NYSE:IBM\", timeframe.period, [src, open])\n",
     );
 
     assert_eq!(analysis.compatibility.unsupported.len(), 1);

@@ -216,11 +216,12 @@ The current executable subset has two forms:
   `ta.linreg`, `ta.rising`, `ta.falling`, `ta.barssince`, `ta.valuewhen`, `ta.cross`,
   `ta.crossover`, and `ta.crossunder`.
   Requested-context rolling callsite state is isolated from the chart context.
-  Selected provider-backed tuple expressions are also supported when
-  destructured directly from the request, currently `ta.macd`, `ta.bb`,
-  `ta.kc`, `ta.supertrend`, `ta.dmi`, and
-  `ta.vwap(source, anchor, stdev_mult)`.
-  Other provider-backed tuple expressions remain unsupported.
+  Provider-backed tuple literals whose elements are in that scalar subset are
+  supported when destructured directly from the request. Selected
+  provider-backed tuple-returning calls are also supported when destructured
+  directly, currently `ta.macd`, `ta.bb`, `ta.kc`, `ta.supertrend`, `ta.dmi`,
+  and `ta.vwap(source, anchor, stdev_mult)`. Other provider-backed tuple
+  expressions remain unsupported.
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
   the last confirmed value.
