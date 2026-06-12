@@ -2016,6 +2016,46 @@ fn request_security_evaluates_provider_tuple_literal_ta_volume_flow_variables_in
 }
 
 #[test]
+fn request_security_evaluates_provider_tuple_literal_ta_price_volume_variables_in_requested_context()
+ {
+    let program = compile_program(
+        "indicator(\"request provider tuple literal ta price volume variables\")\n[pvi_value, pvt_value] = request.security(\"NYSE:IBM\", timeframe.period, [ta.pvi, ta.pvt])\nplot(pvi_value)\nplot(pvt_value)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 20.0, 100.0),
+            timed_ohlcv(60_000, 11.0, 12.0, 10.0, 21.0, 100.0),
+            timed_ohlcv(120_000, 12.0, 13.0, 11.0, 22.0, 100.0),
+            timed_ohlcv(180_000, 13.0, 14.0, 12.0, 23.0, 100.0),
+            timed_ohlcv(240_000, 14.0, 15.0, 13.0, 24.0, 100.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 1.0),
+            timed_bar(120_000, 5.0),
+            timed_bar(180_000, 1.0),
+            timed_bar(240_000, 5.0),
+        ])
+        .expect("provider tuple literal ta price volume variable request.security expression should run");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0, 1.0, 1.0]);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_values_close(
+        &result.plots[1].values[1..],
+        &[
+            5.0,
+            9.761_904_761_904_763,
+            14.307_359_307_359_31,
+            18.655_185_394_315_83,
+        ],
+    );
+}
+
+#[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal() {
     let program = compile_program(
         "indicator(\"request provider htf tuple literal\")\n[last, shifted, above] = request.security(\"NYSE:IBM\", \"5\", [close, close + 1, close > open ? 1 : 0])\nplot(last)\nplot(shifted)\nplot(above)\n",

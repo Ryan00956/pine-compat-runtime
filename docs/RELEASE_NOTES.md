@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added provider-backed `request.security` tuple literal fixture coverage for
+  `ta.pvi` and `ta.pvt` scalar variable elements.
+- Added provider-backed `request.security` tuple literal fixture coverage for
   `ta.nvi` and `ta.obv` scalar variable elements.
 - Added provider-backed `request.security` tuple literal fixture coverage for
   `ta.accdist` and `ta.iii` scalar variable elements.

@@ -373,3 +373,7 @@ plot(tuple_ta_iii)
 [tuple_ta_nvi, tuple_ta_obv] = request.security("NYSE:IBM", timeframe.period, [ta.nvi, ta.obv])
 plot(tuple_ta_nvi)
 plot(tuple_ta_obv)
+
+[tuple_ta_pvi, tuple_ta_pvt] = request.security("NYSE:IBM", timeframe.period, [ta.pvi, ta.pvt])
+plot(tuple_ta_pvi)
+plot(tuple_ta_pvt)
