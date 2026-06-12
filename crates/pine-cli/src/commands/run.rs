@@ -718,6 +718,10 @@ mod tests {
         assert!(output.contains("\"values\":[16,8.5,5.25,4.125,4.0625]"));
         assert!(output.contains("\"values\":[14,6,6,6,6]"));
         assert!(output.contains("\"values\":[1,-1,-1,-1,-1]"));
+        assert!(output.contains(
+            "\"values\":[0,7.1428571428571415,8.620689655172411,9.223300970873785,9.530791788856305]"
+        ));
+        assert!(output.contains("\"values\":[0,50,75,87.5,93.75]"));
     }
 
     #[test]

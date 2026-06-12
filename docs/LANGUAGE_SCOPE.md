@@ -291,7 +291,7 @@ Request data:
   Requested-context rolling callsite state is isolated from chart state.
   Selected provider-backed tuple expressions are supported when destructured
   directly from the request, currently `ta.macd`, `ta.bb`, `ta.kc`, and
-  `ta.supertrend`.
+  `ta.supertrend`, and `ta.dmi`.
   Provider-backed `ta.vwap` support is limited to scalar source-call
   expressions; other provider-backed tuple expressions remain outside this
   subset.

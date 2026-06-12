@@ -759,6 +759,55 @@ fn request_security_evaluates_provider_supertrend_tuple_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_dmi_tuple_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider dmi tuple\")\n[plus, minus, adx] = request.security(\"NYSE:IBM\", timeframe.period, ta.dmi(3, 2))\nplot(plus)\nplot(minus)\nplot(adx)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 10.0, 1.0),
+            timed_ohlcv(60_000, 10.0, 12.0, 10.0, 11.0, 1.0),
+            timed_ohlcv(120_000, 11.0, 13.0, 11.0, 12.0, 1.0),
+            timed_ohlcv(180_000, 12.0, 16.0, 12.0, 15.0, 1.0),
+            timed_ohlcv(240_000, 15.0, 17.0, 14.0, 16.0, 1.0),
+            timed_ohlcv(300_000, 16.0, 14.0, 8.0, 9.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 20.0, 25.0, 19.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 21.0, 23.0, 20.0, 21.0, 1.0),
+            timed_ohlcv(120_000, 22.0, 26.0, 21.0, 22.0, 1.0),
+            timed_ohlcv(180_000, 24.0, 28.0, 23.0, 24.0, 1.0),
+            timed_ohlcv(240_000, 27.0, 31.0, 26.0, 27.0, 1.0),
+            timed_ohlcv(300_000, 28.0, 30.0, 24.0, 25.0, 1.0),
+        ])
+        .expect("provider ta.dmi tuple expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(
+        &result.plots[0].values,
+        &[
+            0.0,
+            16.666666666666664,
+            27.777777777777775,
+            51.38888888888888,
+            44.88888888888889,
+            18.397085610200364,
+        ],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[0.0, 0.0, 0.0, 0.0, 0.0, 44.26229508196722],
+    );
+    assert_values_close(
+        &result.plots[2].values,
+        &[0.0, 50.0, 75.0, 87.5, 93.75, 67.51453488372093],
+    );
+}
+
+#[test]
 fn request_security_isolates_provider_ta_state_from_chart_state() {
     let program = compile_program(
         "indicator(\"request ta\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2))\nchart = ta.sma(close, 2)\nplot(provider)\nplot(chart)\n",

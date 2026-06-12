@@ -204,7 +204,10 @@ fn request_expression_is_provider_tuple_value(expr: &Expr) -> bool {
 }
 
 fn request_provider_tuple_call_is_supported(name: &str) -> bool {
-    matches!(name, "ta.macd" | "ta.bb" | "ta.kc" | "ta.supertrend")
+    matches!(
+        name,
+        "ta.macd" | "ta.bb" | "ta.kc" | "ta.supertrend" | "ta.dmi"
+    )
 }
 
 fn request_expression_is_provider_scalar(expr: &Expr) -> bool {

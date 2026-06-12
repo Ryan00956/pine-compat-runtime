@@ -845,7 +845,7 @@ requested context. Stateful math calls such as `math.random` and the `ta.tr`
 variable form remain outside the requested-expression subset.
 Selected provider-backed tuple expressions are supported when destructured
 directly from the request, currently `ta.macd`, `ta.bb`, `ta.kc`, and
-`ta.supertrend`.
+`ta.supertrend`, and `ta.dmi`.
 Provider-backed `ta.vwap` requested-expression support is limited to scalar
 source-call expressions; other provider-backed tuple expressions remain
 unsupported.

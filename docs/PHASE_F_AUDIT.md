@@ -71,7 +71,7 @@ truth for request claims.
   `ta.valuewhen`, `ta.cross`, `ta.crossover`, and `ta.crossunder`.
 - Selected provider-backed tuple expressions are supported when destructured
   directly from the request, currently `ta.macd`, `ta.bb`, `ta.kc`, and
-  `ta.supertrend`.
+  `ta.supertrend`, and `ta.dmi`.
 - Provider-backed `ta.vwap` requested-expression support is limited to the
   scalar source-call form; other provider-backed tuple expressions remain
   outside this subset.

@@ -216,7 +216,7 @@ The current executable subset has two forms:
   Requested-context rolling callsite state is isolated from the chart context.
   Selected provider-backed tuple expressions are also supported when
   destructured directly from the request, currently `ta.macd`, `ta.bb`,
-  `ta.kc`, and `ta.supertrend`.
+  `ta.kc`, `ta.supertrend`, and `ta.dmi`.
   Provider-backed `ta.vwap` requested-expression support is limited to scalar
   source-call expressions; other provider-backed tuple expressions remain
   unsupported.
