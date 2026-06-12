@@ -397,3 +397,7 @@ plot(higher_tuple_ta_obv)
 [higher_tuple_ta_pvi, higher_tuple_ta_pvt] = request.security("NYSE:IBM", "5", [ta.pvi, ta.pvt])
 plot(higher_tuple_ta_pvi)
 plot(higher_tuple_ta_pvt)
+
+[higher_tuple_ta_wvad, higher_tuple_ta_ao] = request.security("NYSE:IBM", "5", [ta.wvad, ta.ao()])
+plot(higher_tuple_ta_wvad)
+plot(higher_tuple_ta_ao)
