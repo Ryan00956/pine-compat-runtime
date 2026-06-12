@@ -184,3 +184,8 @@ plot(higher_hist_value)
 plot(higher_bb_basis)
 plot(higher_bb_upper)
 plot(higher_bb_lower)
+
+[higher_kc_middle, higher_kc_upper, higher_kc_lower] = request.security("NYSE:IBM", "5", ta.kc(close, 2, 2))
+plot(higher_kc_middle)
+plot(higher_kc_upper)
+plot(higher_kc_lower)
