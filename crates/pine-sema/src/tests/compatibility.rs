@@ -1343,6 +1343,28 @@ fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_ta_vo
 }
 
 #[test]
+fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_ta_price_volume_variable_expression()
+ {
+    let analysis = analyze(
+        "[pvi_value, pvt_value] = request.security(\"NYSE:IBM\", \"5\", [ta.pvi, ta.pvt])\nplot(nz(pvi_value) + nz(pvt_value))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_expression() {
     let analysis = analyze(
         "[last, shifted, above] = request.security(\"NYSE:IBM\", \"5\", [close, close + 1, close > open ? 1 : 0])\nplot(last + shifted + above)\n",

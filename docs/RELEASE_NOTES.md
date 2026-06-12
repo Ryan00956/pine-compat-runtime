@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal `ta.pvi` and `ta.pvt` scalar variable
+  elements while preserving default confirmation alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal `ta.nvi` and `ta.obv` scalar variable
   elements while preserving default confirmation alignment.
 - Added higher-timeframe fixture coverage for provider-backed
