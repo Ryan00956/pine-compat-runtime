@@ -695,8 +695,9 @@ mutations with `table.set_position` and
 `table.cell_set_text`/`table.cell_set_bgcolor`/
 `table.cell_set_text_color`/`table.cell_set_width`/`table.cell_set_height`/
 `table.cell_set_text_size`/`table.cell_set_text_halign`/
-`table.cell_set_text_valign`/`table.cell_set_tooltip`/
-`table.cell_set_text_font_family`/`table.cell_set_text_formatting` mutations
+`table.cell_set_text_valign`/`table.cell_set_text_wrap`/
+`table.cell_set_tooltip`/`table.cell_set_text_font_family`/
+`table.cell_set_text_formatting` mutations
 of previously populated cells and
 `table.clear` inclusive rectangular cell-content removal snapshots,
 `table.merge_cells` inclusive merged-cell rectangle snapshots, plus
@@ -794,6 +795,9 @@ cell's other supported fields; actual text layout remains a host responsibility.
 `table.cell_set_text_valign` updates the target previously populated cell
 vertical text alignment in the host-neutral snapshot while preserving the cell's
 other supported fields; actual text layout remains a host responsibility.
+`table.cell_set_text_wrap` updates the target previously populated cell text
+wrap in the host-neutral snapshot while preserving the cell's other supported
+fields; actual wrapping and table layout remain a host responsibility.
 `table.cell_set_tooltip` updates the target previously populated cell tooltip
 in the host-neutral snapshot while preserving the cell's
 other supported fields; actual tooltip display remains a host responsibility.

@@ -116,6 +116,7 @@ pub struct TableCellSnapshot {
     pub text_size: PineValue,
     pub text_halign: PineValue,
     pub text_valign: PineValue,
+    pub text_wrap: PineValue,
     pub tooltip: PineValue,
     pub text_font_family: PineValue,
     pub text_formatting: PineValue,

@@ -159,6 +159,7 @@ impl<'a> HistoricalRuntime<'a> {
             text_size: PineValue::Na,
             text_halign: PineValue::Na,
             text_valign: PineValue::Na,
+            text_wrap: PineValue::String("text.wrap_none".to_owned()),
             tooltip,
             text_font_family,
             text_formatting,
@@ -449,6 +450,23 @@ impl<'a> HistoricalRuntime<'a> {
         };
         self.mutate_table_cell(id, column, row, false, |cell| {
             cell.text_valign = text_valign;
+        })?;
+        Ok(PineValue::Void)
+    }
+
+    pub(super) fn eval_table_cell_set_text_wrap(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_table_id_arg(args)?;
+        let column = self.eval_required_table_int_arg(args, 1, "column")?;
+        let row = self.eval_required_table_int_arg(args, 2, "row")?;
+        let text_wrap = self.eval_required_table_arg(args, 3, "text_wrap")?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        self.mutate_table_cell(id, column, row, false, |cell| {
+            cell.text_wrap = text_wrap;
         })?;
         Ok(PineValue::Void)
     }
@@ -792,6 +810,7 @@ impl<'a> HistoricalRuntime<'a> {
                     text_size: PineValue::Na,
                     text_halign: PineValue::Na,
                     text_valign: PineValue::Na,
+                    text_wrap: PineValue::String("text.wrap_none".to_owned()),
                     tooltip: PineValue::String(String::new()),
                     text_font_family: PineValue::String("font.family_default".to_owned()),
                     text_formatting: PineValue::Int(0),

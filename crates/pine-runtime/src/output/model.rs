@@ -4,7 +4,7 @@ use super::alerts::AlertEvent;
 use super::drawings::{BoxOutput, LabelOutput, LineOutput, TableOutput};
 use super::strategy::StrategyResult;
 
-pub const PUBLIC_RUNTIME_SCHEMA_VERSION: u32 = 4;
+pub const PUBLIC_RUNTIME_SCHEMA_VERSION: u32 = 5;
 pub const PUBLIC_ANALYSIS_SCHEMA_VERSION: u32 = 2;
 pub const PUBLIC_MATRIX_SCHEMA_VERSION: u32 = 2;
 pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = PUBLIC_RUNTIME_SCHEMA_VERSION;

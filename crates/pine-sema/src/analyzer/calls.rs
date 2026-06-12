@@ -757,6 +757,9 @@ impl Analyzer {
             "table.cell_set_text_valign" => {
                 self.validate_label_string_arg(signature, args, 3, "text_valign", TEXT_VALIGNS);
             }
+            "table.cell_set_text_wrap" => {
+                self.validate_label_string_arg(signature, args, 3, "text_wrap", TEXT_WRAPS);
+            }
             "table.cell" => {
                 self.validate_label_string_arg(
                     signature,

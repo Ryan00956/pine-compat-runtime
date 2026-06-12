@@ -100,6 +100,7 @@ impl<'a> HistoricalRuntime<'a> {
             "table.cell_set_text_size" => self.eval_table_cell_set_text_size(args),
             "table.cell_set_text_halign" => self.eval_table_cell_set_text_halign(args),
             "table.cell_set_text_valign" => self.eval_table_cell_set_text_valign(args),
+            "table.cell_set_text_wrap" => self.eval_table_cell_set_text_wrap(args),
             "table.cell_set_tooltip" => self.eval_table_cell_set_tooltip(args),
             "table.cell_set_text_font_family" => self.eval_table_cell_set_text_font_family(args),
             "table.cell_set_text_formatting" => self.eval_table_cell_set_text_formatting(args),

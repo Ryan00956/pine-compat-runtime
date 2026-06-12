@@ -32,7 +32,7 @@ Runtime snapshots should be normalized JSON:
 
 ```json
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "plots": [],
   "plotChars": [],
   "plotShapes": [],
@@ -57,11 +57,12 @@ The snapshot format should avoid host-specific charting details.
 Every machine-readable public output must include top-level `schemaVersion`.
 Runtime outputs use `PUBLIC_RUNTIME_SCHEMA_VERSION`; analysis outputs use
 `PUBLIC_ANALYSIS_SCHEMA_VERSION`; matrix JSON uses
-`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is currently `schemaVersion: 4`
-because the top-level `alerts` array is reserved and strategy order-fill alert
-payloads are exposed under `strategy.alerts`; analysis and matrix JSON remain
-`schemaVersion: 2`. The contracts are separate so runtime-only fields do not
-force analysis or matrix schema changes. The text-only CLI `analyze` output is
+`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is currently `schemaVersion: 5`
+because the top-level `alerts` array is reserved, strategy order-fill alert
+payloads are exposed under `strategy.alerts`, and table cell snapshots include
+host-neutral `textWrap`; analysis and matrix JSON remain `schemaVersion: 2`.
+The contracts are separate so runtime-only fields do not force analysis or
+matrix schema changes. The text-only CLI `analyze` output is
 diagnostic console output and is not part of the machine-readable schema until
 a JSON mode is added.
 
@@ -689,7 +690,8 @@ color mutations plus `table.cell_set_text_color` text-color mutations plus
 mutations plus `table.cell_set_text_size` text-size mutations for previously
 populated cells plus `table.cell_set_text_halign` horizontal text-alignment
 mutations plus `table.cell_set_text_valign` vertical text-alignment mutations
-plus `table.cell_set_tooltip` tooltip mutations plus
+plus `table.cell_set_text_wrap` text-wrap mutations plus
+`table.cell_set_tooltip` tooltip mutations plus
 `table.cell_set_text_font_family` font-family mutations plus
 `table.cell_set_text_formatting` text-formatting mutations for previously
 populated cells
@@ -771,6 +773,9 @@ remains host-specific; `table.cell_set_text_halign` updates only the target
 cell horizontal text-alignment snapshot after `table.cell` has populated that
 cell; `table.cell_set_text_valign` updates only the target cell vertical
 text-alignment snapshot after `table.cell` has populated that cell;
+`table.cell_set_text_wrap` updates only the target cell text-wrap snapshot
+after `table.cell` has populated that cell, while actual wrapping and table
+layout remain host-specific;
 `table.cell_set_tooltip` updates only the target cell tooltip snapshot after
 `table.cell` has populated that cell, while tooltip display and text layout
 remains host-specific; `table.cell_set_text_font_family` updates only the
@@ -778,7 +783,7 @@ target cell font-family snapshot after `table.cell` has populated that cell,
 while font rendering remains host-specific; `table.cell_set_text_formatting`
 updates only the target cell text-formatting mask snapshot after `table.cell`
 has populated that cell, while bold/italic rendering remains host-specific;
-other table cell text layout setters remain unsupported.
+other table cell text rendering remains host-specific.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state
 changes, and drawing side effects inside user-defined functions are rejected
 under the existing side-effect policy. Keep unsupported coordinate modes and advanced object
@@ -811,8 +816,9 @@ placeholder interpolation outside the supported `alertcondition` message
 placeholder subset remains unsupported; supported `alert()` messages are
 serialized literally.
 
-Runtime `schemaVersion: 4` adds strategy order-fill alert payloads under
-`strategy.alerts` for supported strategy fills. The top-level `alerts[]` array
+Runtime `schemaVersion: 4` added strategy order-fill alert payloads under
+`strategy.alerts` for supported strategy fills. Runtime `schemaVersion: 5` adds
+host-neutral `textWrap` to table cell snapshots. The top-level `alerts[]` array
 remains limited to reached `alert()` and `alertcondition()` callsites. Explicit
 Python, CLI, and WASM host helpers can render
 `{{strategy.order.alert_message}}` from selected public strategy fill events,

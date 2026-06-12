@@ -365,7 +365,7 @@ The core output must remain host-neutral:
 
 ```json
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "plots": [],
   "plotChars": [],
   "plotShapes": [],
@@ -394,13 +394,14 @@ message, source}` for the narrow `alertcondition` and `alert` subsets. For
 `alertcondition`, `source` is the const title; for `alert`, `source` is
 `alert`. `schemaVersion: 4` adds broker-owned strategy order-fill alert
 payloads under `strategy.alerts` without changing the top-level `alerts[]`
-callsite event shape. Host integrations can adapt this model into their
+callsite event shape. `schemaVersion: 5` adds host-neutral table cell
+`textWrap` snapshots. Host integrations can adapt this model into their
 charting or API format, but should preserve the runtime schema version when
 they forward machine-readable runtime results.
 
 Machine-readable analysis and matrix outputs use separate schema ownership:
 `PUBLIC_ANALYSIS_SCHEMA_VERSION` for WASM/Python analysis reports and
-`PUBLIC_MATRIX_SCHEMA_VERSION` for CLI matrix JSON. Runtime is currently `3`;
+`PUBLIC_MATRIX_SCHEMA_VERSION` for CLI matrix JSON. Runtime is currently `5`;
 analysis and matrix remain `2`. These contracts can evolve independently when a
 runtime-only output field does not affect analysis or matrix contracts.
 
@@ -440,8 +441,8 @@ carry `position`, `bgColor`, `frameColor`, `frameWidth`, `borderColor`,
 `borderWidth`, `columns`, `rows`, and sparse cell snapshots. Each table snapshot
 carries `exists`; existing table snapshots store cells whose entries carry
 `column`, `row`, `text`, `bgColor`, `textColor`, `width`, `height`, `textSize`,
-`textHalign`, and `textValign`, avoiding host-specific table layout
-assumptions;
+`textHalign`, `textValign`, `textWrap`, `tooltip`, `textFontFamily`, and
+`textFormatting`, avoiding host-specific table layout assumptions;
 `table.new` may initialize the final background color, frame color, frame
 width, border color, and border width through its optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` arguments;
@@ -454,9 +455,10 @@ frame width, `table.set_border_color` updates the table's final border color,
 `table.cell_set_bgcolor`, `table.cell_set_text_color`, and
 `table.cell_set_width`/`table.cell_set_height`/`table.cell_set_text_size`
 `table.cell_set_text_halign`/`table.cell_set_text_valign`/
-`table.cell_set_tooltip`/`table.cell_set_text_font_family`/
-`table.cell_set_text_formatting` mutate only the stored text/background/text
-color/width/height/text size/text alignment/tooltip/font-family/text-formatting
+`table.cell_set_text_wrap`/`table.cell_set_tooltip`/
+`table.cell_set_text_font_family`/`table.cell_set_text_formatting` mutate only
+the stored text/background/text
+color/width/height/text size/text alignment/text wrap/tooltip/font-family/text-formatting
 for cells already
 populated by `table.cell`, `table.clear` removes populated cells in an
 inclusive rectangular range and removes merged-cell records intersecting that

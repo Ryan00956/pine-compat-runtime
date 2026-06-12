@@ -102,7 +102,7 @@ def test_compile_script_returns_program_with_run_method():
     program = pine_compat.compile_script('indicator("demo")\nplot(close)\n')
     result = program.run(BARS)
 
-    assert result["schemaVersion"] == 4
+    assert result["schemaVersion"] == 5
     assert set(result) == RUNTIME_RESULT_KEYS
     assert result["labels"] == []
     assert result["lines"] == []
@@ -5356,7 +5356,7 @@ def test_run_script_returns_strategy_exit_active_entry_attachment_contract():
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 4
+    assert result["schemaVersion"] == 5
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5438,7 +5438,7 @@ def test_run_script_returns_strategy_exit_active_entry_profit_attachment_contrac
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 4
+    assert result["schemaVersion"] == 5
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5502,7 +5502,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_attachment_contract(
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 4
+    assert result["schemaVersion"] == 5
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5567,7 +5567,7 @@ def test_run_script_returns_strategy_exit_active_entry_trail_points_attachment_c
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 4
+    assert result["schemaVersion"] == 5
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5631,7 +5631,7 @@ def test_run_script_returns_strategy_exit_active_entry_stop_profit_bracket_contr
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 4
+    assert result["schemaVersion"] == 5
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5695,7 +5695,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_limit_bracket_contra
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 4
+    assert result["schemaVersion"] == 5
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5759,7 +5759,7 @@ def test_run_script_returns_strategy_exit_active_entry_loss_profit_bracket_contr
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 4
+    assert result["schemaVersion"] == 5
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5823,7 +5823,7 @@ def test_run_script_returns_strategy_exit_bracket_reservation_fixture_contract()
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 4
+    assert result["schemaVersion"] == 5
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -5991,7 +5991,7 @@ def test_run_script_returns_strategy_exit_trailing_reservation_fixture_contract(
     )
 
     assert set(result.keys()) == STRATEGY_RUNTIME_RESULT_KEYS
-    assert result["schemaVersion"] == 4
+    assert result["schemaVersion"] == 5
     assert set(result["strategy"].keys()) == set(EMPTY_STRATEGY_RESULT.keys())
     assert result["strategy"]["orders"] == [
         {
@@ -7272,7 +7272,7 @@ def test_run_script_compiles_and_executes():
         BARS,
     )
 
-    assert result["schemaVersion"] == 4
+    assert result["schemaVersion"] == 5
     assert result["plots"][0]["values"] == [2, 2, 3]
 
 
@@ -8767,6 +8767,8 @@ def table_snapshots_without_empty_merges(tables):
             if snapshot["exists"]:
                 assert snapshot.pop("mergedCells") == []
                 for cell in snapshot["cells"]:
+                    if cell.get("textWrap") == "text.wrap_none":
+                        cell.pop("textWrap")
                     assert cell.pop("tooltip") == ""
                     assert cell.pop("textFontFamily") == "font.family_default"
                     assert cell.pop("textFormatting") == 0
@@ -8775,7 +8777,7 @@ def table_snapshots_without_empty_merges(tables):
 
 def test_run_script_returns_table_outputs():
     result = pine_compat.run_script(
-        'indicator("tables")\nif bar_index == 1\n    table_id = table.new(position.top_right, 2, 2)\n    table.cell(table_id, 0, 0, "A", bgcolor=color.green, text_color=color.white)\n    table.cell_set_text(table_id, 0, 0, "B")\n    table.cell_set_bgcolor(table_id, 0, 0, color.red)\n    table.cell_set_text_color(table_id, 0, 0, color.blue)\n    table.cell_set_width(table_id, 0, 0, 25)\n    table.cell_set_height(table_id, 0, 0, 40)\n    table.cell_set_text_size(table_id, 0, 0, size.small)\n    table.cell_set_text_halign(table_id, 0, 0, text.align_left)\n    table.cell_set_text_valign(table_id, 0, 0, text.align_top)\n    table.set_position(table_id, position.bottom_right)\n    table.set_bgcolor(table_id, color.yellow)\n    table.set_frame_color(table_id, color.black)\n    table.set_frame_width(table_id, 3)\n    table.set_border_color(table_id, color.white)\n    table.set_border_width(table_id, 4)\nplot(close)\n',
+        'indicator("tables")\nif bar_index == 1\n    table_id = table.new(position.top_right, 2, 2)\n    table.cell(table_id, 0, 0, "A", bgcolor=color.green, text_color=color.white)\n    table.cell_set_text(table_id, 0, 0, "B")\n    table.cell_set_bgcolor(table_id, 0, 0, color.red)\n    table.cell_set_text_color(table_id, 0, 0, color.blue)\n    table.cell_set_width(table_id, 0, 0, 25)\n    table.cell_set_height(table_id, 0, 0, 40)\n    table.cell_set_text_size(table_id, 0, 0, size.small)\n    table.cell_set_text_halign(table_id, 0, 0, text.align_left)\n    table.cell_set_text_valign(table_id, 0, 0, text.align_top)\n    table.cell_set_text_wrap(table_id, 0, 0, text.wrap_auto)\n    table.set_position(table_id, position.bottom_right)\n    table.set_bgcolor(table_id, color.yellow)\n    table.set_frame_color(table_id, color.black)\n    table.set_frame_width(table_id, 3)\n    table.set_border_color(table_id, color.white)\n    table.set_border_width(table_id, 4)\nplot(close)\n',
         BARS,
     )
 
@@ -8955,6 +8957,25 @@ def test_run_script_returns_table_outputs():
                             "textSize": "size.small",
                             "textHalign": "text.align_left",
                             "textValign": "text.align_top",
+                        }
+                    ],
+                },
+                {
+                    "barIndex": 1,
+                    "exists": True,
+                    "cells": [
+                        {
+                            "column": 0,
+                            "row": 0,
+                            "text": "B",
+                            "bgColor": 0xFF0000,
+                            "textColor": 0x0000FF,
+                            "width": 25,
+                            "height": 40,
+                            "textSize": "size.small",
+                            "textHalign": "text.align_left",
+                            "textValign": "text.align_top",
+                            "textWrap": "text.wrap_auto",
                         }
                     ],
                 },

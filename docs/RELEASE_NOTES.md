@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added `table.cell_set_text_wrap()` support for populated table cells. Runtime
+  output is now `schemaVersion: 5`, and table cell snapshots include
+  host-neutral `textWrap`.
 - Added support for dynamic string-compatible `alert()` messages while keeping
   `freq` limited to the existing const-string frequency subset and keeping
   Pine-source `alert()` placeholder interpolation unsupported.
@@ -2067,9 +2070,10 @@ feature-level matrix and its fixture paths.
 Machine-readable public outputs use top-level `schemaVersion`. Runtime,
 analysis, and matrix outputs now have separate schema constants:
 `PUBLIC_RUNTIME_SCHEMA_VERSION`, `PUBLIC_ANALYSIS_SCHEMA_VERSION`, and
-`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is now `schemaVersion: 4` with a
-reserved top-level `alerts` array and strategy order-fill payloads under
-`strategy.alerts`. Analysis and matrix outputs remain `schemaVersion: 2`;
+`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is now `schemaVersion: 5` with a
+reserved top-level `alerts` array, strategy order-fill payloads under
+`strategy.alerts`, and host-neutral table cell `textWrap`. Analysis and matrix
+outputs remain `schemaVersion: 2`;
 increment only the affected contract when an intentional consumer-visible
 output change is documented with snapshot updates.
 

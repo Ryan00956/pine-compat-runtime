@@ -651,6 +651,7 @@ if bar_index == 2
     table.cell_set_text_size(id, 1, 0, size.small)
     table.cell_set_text_halign(id, 1, 0, text.align_left)
     table.cell_set_text_valign(id, 1, 0, text.align_top)
+    table.cell_set_text_wrap(id, 1, 0, text.wrap_auto)
     table.cell_set_tooltip(id, 1, 0, "updated")
     table.cell_set_text_font_family(id, 1, 0, font.family_default)
     table.cell_set_text_formatting(id, 1, 0, text.format_bold + text.format_italic)
@@ -675,6 +676,7 @@ table.cell_set_height(na, 0, 1, 40)
 table.cell_set_text_size(na, 0, 1, size.small)
 table.cell_set_text_halign(na, 0, 1, text.align_left)
 table.cell_set_text_valign(na, 0, 1, text.align_top)
+table.cell_set_text_wrap(na, 0, 1, text.wrap_none)
 table.cell_set_tooltip(na, 0, 1, "noop")
 table.cell_set_text_font_family(na, 0, 1, font.family_monospace)
 table.cell_set_text_formatting(na, 0, 1, text.format_italic)
@@ -704,7 +706,7 @@ plot(close)
     assert_eq!(table.border_width, PineValue::Int(4));
     assert_eq!(table.columns, 2);
     assert_eq!(table.rows, 2);
-    assert_eq!(table.snapshots.len(), 15);
+    assert_eq!(table.snapshots.len(), 16);
     assert!(table.snapshots.iter().all(|snapshot| snapshot.exists));
     assert!(table.snapshots[0].cells.is_empty());
     assert_eq!(table.snapshots[1].cells[0].column, 0);
@@ -734,6 +736,10 @@ plot(close)
     assert_eq!(
         table.snapshots[2].cells[1].text_formatting,
         PineValue::Int(1)
+    );
+    assert_eq!(
+        table.snapshots[2].cells[1].text_wrap,
+        PineValue::String("text.wrap_none".to_owned())
     );
     assert_eq!(
         table.snapshots[3].cells[0].text,
@@ -766,15 +772,19 @@ plot(close)
         PineValue::String("text.align_top".to_owned())
     );
     assert_eq!(
-        table.snapshots[12].cells[1].tooltip,
+        table.snapshots[12].cells[1].text_wrap,
+        PineValue::String("text.wrap_auto".to_owned())
+    );
+    assert_eq!(
+        table.snapshots[13].cells[1].tooltip,
         PineValue::String("updated".to_owned())
     );
     assert_eq!(
-        table.snapshots[13].cells[1].text_font_family,
+        table.snapshots[14].cells[1].text_font_family,
         PineValue::String("font.family_default".to_owned())
     );
     assert_eq!(
-        table.snapshots[14].cells[1].text_formatting,
+        table.snapshots[15].cells[1].text_formatting,
         PineValue::Int(3)
     );
 }

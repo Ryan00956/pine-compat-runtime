@@ -62,6 +62,7 @@ fn table_cells_to_py(
         item.set_item("textSize", value_to_py(py, &cell.text_size)?)?;
         item.set_item("textHalign", value_to_py(py, &cell.text_halign)?)?;
         item.set_item("textValign", value_to_py(py, &cell.text_valign)?)?;
+        item.set_item("textWrap", value_to_py(py, &cell.text_wrap)?)?;
         item.set_item("tooltip", value_to_py(py, &cell.tooltip)?)?;
         item.set_item("textFontFamily", value_to_py(py, &cell.text_font_family)?)?;
         item.set_item("textFormatting", value_to_py(py, &cell.text_formatting)?)?;
