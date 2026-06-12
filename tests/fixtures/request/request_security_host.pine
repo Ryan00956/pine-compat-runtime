@@ -429,3 +429,7 @@ plot(higher_tuple_ta_wpr)
 [higher_tuple_ta_sar, higher_tuple_ta_cci] = request.security("NYSE:IBM", "5", [ta.sar(0.02, 0.02, 0.2), ta.cci(close, 2)])
 plot(higher_tuple_ta_sar)
 plot(higher_tuple_ta_cci)
+
+[higher_tuple_ta_cog, higher_tuple_ta_bop] = request.security("NYSE:IBM", "5", [ta.cog(close, 2), ta.bop()])
+plot(higher_tuple_ta_cog)
+plot(higher_tuple_ta_bop)
