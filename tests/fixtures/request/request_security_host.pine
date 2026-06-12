@@ -174,3 +174,8 @@ plot(tuple_above)
 plot(higher_tuple_close)
 plot(higher_tuple_shifted)
 plot(higher_tuple_above)
+
+[higher_macd_value, higher_signal_value, higher_hist_value] = request.security("NYSE:IBM", "5", ta.macd(close, 2, 3, 2))
+plot(higher_macd_value)
+plot(higher_signal_value)
+plot(higher_hist_value)
