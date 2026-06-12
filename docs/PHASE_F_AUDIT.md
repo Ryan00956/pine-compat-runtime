@@ -48,10 +48,10 @@ The compatibility matrix in `tests/fixtures/conformance.tsv` is the source of
 truth for request claims.
 
 - `request.security` is partial. Supported forms include same-context identity
-  requests for `syminfo.tickerid`/`timeframe.period`, including selected tuple
-  expressions destructured directly from the request such as `ta.macd`,
-  `ta.bb`, `ta.kc`, `ta.supertrend`, `ta.dmi`, and
-  `ta.vwap(source, anchor, stdev_mult)`, and
+  requests for `syminfo.tickerid`/`timeframe.period`, including tuple literals
+  made from side-effect-free elements and selected tuple-returning calls
+  destructured directly from the request such as `ta.macd`, `ta.bb`, `ta.kc`,
+  `ta.supertrend`, `ta.dmi`, and `ta.vwap(source, anchor, stdev_mult)`, and
   host-provided same-or-higher-timeframe expressions for explicit symbols or
   `syminfo.tickerid`.
 - Supported provider requested expressions are side-effect-free expressions over

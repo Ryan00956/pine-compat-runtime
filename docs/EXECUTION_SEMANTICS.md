@@ -824,9 +824,11 @@ state is separate from chart-context state: history buffers, `ta.*` callsite
 state, `var` storage, arrays, drawing objects, and outputs do not leak between
 the two contexts.
 
-The same-context identity form also supports selected tuple expressions when
-destructured directly, currently including `ta.macd`, `ta.bb`, `ta.kc`,
-`ta.supertrend`, `ta.dmi`, and `ta.vwap(source, anchor, stdev_mult)`.
+The same-context identity form also supports tuple literals made from
+side-effect-free elements and selected tuple-returning calls when destructured
+directly. The selected tuple-returning calls currently include `ta.macd`,
+`ta.bb`, `ta.kc`, `ta.supertrend`, `ta.dmi`, and
+`ta.vwap(source, anchor, stdev_mult)`.
 
 The supported provider requested expression subset includes direct OHLCV/time sources,
 pure arithmetic and ternaries, history references, `na`, `nz`, selected

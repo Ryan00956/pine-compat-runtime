@@ -170,3 +170,8 @@ plot(dmi_adx)
 plot(vwap_basis)
 plot(vwap_upper)
 plot(vwap_lower)
+
+[tuple_close, tuple_shifted, tuple_above] = request.security(syminfo.tickerid, timeframe.period, [close, close + 1, close > 2 ? 1 : 0])
+plot(tuple_close)
+plot(tuple_shifted)
+plot(tuple_above)

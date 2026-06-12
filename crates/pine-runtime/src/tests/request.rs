@@ -206,6 +206,27 @@ fn request_security_same_context_returns_expression_series() {
 }
 
 #[test]
+fn request_security_same_context_returns_tuple_literal_expression() {
+    let program = compile_program(
+        "indicator(\"request tuple literal\")\n[last, spread, above] = request.security(syminfo.tickerid, timeframe.period, [close, high - low, close > open ? 1 : 0])\nplot(last)\nplot(spread)\nplot(above)\n",
+    );
+    let result = run_historical(
+        &program,
+        &[
+            bar_ohlc(1.0, 2.0, 0.5, 4.0),
+            bar_ohlc(5.0, 8.0, 3.0, 2.0),
+            bar_ohlc(3.0, 7.0, 1.0, 9.0),
+        ],
+    )
+    .expect("same-context tuple literal request.security expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(&result.plots[0].values, &[4.0, 2.0, 9.0]);
+    assert_values_close(&result.plots[1].values, &[1.5, 5.0, 6.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 0.0, 1.0]);
+}
+
+#[test]
 fn request_security_same_context_returns_tuple_expression() {
     let program = compile_program(
         "indicator(\"request tuple\")\n[macd, signal, hist] = request.security(syminfo.tickerid, timeframe.period, ta.macd(close, 2, 3, 2))\nplot(macd)\nplot(signal)\nplot(hist)\n",

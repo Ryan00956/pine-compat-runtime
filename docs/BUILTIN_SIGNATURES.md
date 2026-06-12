@@ -194,9 +194,11 @@ request.security(symbol: simple string, timeframe: simple string, expression: an
 The current executable subset has two forms:
 
 - `request.security(syminfo.tickerid, timeframe.period, expression)` evaluates a
-  scalar side-effect-free expression in the chart context. Selected same-context
-  tuple expressions are also supported when destructured directly, currently
-  including `ta.macd`, `ta.bb`, `ta.kc`, `ta.supertrend`, `ta.dmi`, and
+  scalar side-effect-free expression in the chart context. Same-context tuple
+  literals whose elements are side-effect-free expressions are supported when
+  destructured directly from the request. Selected same-context tuple-returning
+  calls are also supported when destructured directly, currently including
+  `ta.macd`, `ta.bb`, `ta.kc`, `ta.supertrend`, `ta.dmi`, and
   `ta.vwap(source, anchor, stdev_mult)`.
 - `request.security("SYMBOL", timeframe, expression)` and
   `request.security(syminfo.tickerid, timeframe, expression)` evaluate

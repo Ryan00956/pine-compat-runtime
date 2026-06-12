@@ -266,9 +266,11 @@ Request data:
 
 - `request.security(syminfo.tickerid, timeframe.period, expression)` for the
   current chart context only. The requested expression must be side-effect-free;
-  scalar expressions and selected tuple expressions destructured directly from
-  the request are supported, currently including `ta.macd`, `ta.bb`, `ta.kc`,
-  `ta.supertrend`, `ta.dmi`, and `ta.vwap(source, anchor, stdev_mult)`.
+  scalar expressions, tuple literals made from side-effect-free elements, and
+  selected tuple-returning calls destructured directly from the request are
+  supported. The selected tuple-returning calls currently include `ta.macd`,
+  `ta.bb`, `ta.kc`, `ta.supertrend`, `ta.dmi`, and
+  `ta.vwap(source, anchor, stdev_mult)`.
 - `request.security("SYMBOL", timeframe, expression)` and
   `request.security(syminfo.tickerid, timeframe, expression)` for host-provided
   same-or-higher-timeframe bars. The provider expression subset includes direct

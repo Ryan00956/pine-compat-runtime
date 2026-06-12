@@ -250,6 +250,27 @@ fn accepts_same_context_request_security_tuple_ta_call() {
 }
 
 #[test]
+fn accepts_same_context_request_security_tuple_literal_expression() {
+    let analysis = analyze(
+        "[last, spread, above] = request.security(syminfo.tickerid, timeframe.period, [close, high - low, close > open ? 1 : 0])\nplot(last + spread + above)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_same_context_request_security_bb_tuple_call() {
     let analysis = analyze(
         "[basis, upper, lower] = request.security(syminfo.tickerid, timeframe.period, ta.bb(close, 3, 2))\nplot(basis + upper + lower)\n",
