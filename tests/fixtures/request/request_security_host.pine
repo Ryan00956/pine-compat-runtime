@@ -285,3 +285,7 @@ plot(tuple_ta_covariance)
 [higher_tuple_ta_correlation, higher_tuple_ta_covariance] = request.security("NYSE:IBM", "5", [ta.correlation(close, high, 2), ta.covariance(close, high, 2)])
 plot(higher_tuple_ta_correlation)
 plot(higher_tuple_ta_covariance)
+
+[tuple_ta_median, tuple_ta_mode] = request.security("NYSE:IBM", timeframe.period, [ta.median(close, 3), ta.mode(close, 3)])
+plot(tuple_ta_median)
+plot(tuple_ta_mode)
