@@ -6979,6 +6979,18 @@ fn request_host_data_runs_through_direct_wasm_api() {
             Some(19.0_f64.to_radians()),
         ],
     );
+    assert_eq!(
+        parsed["plots"][271]["values"],
+        serde_json::json!([6, 7, 7, 7, 8])
+    );
+    assert_eq!(
+        parsed["plots"][272]["values"],
+        serde_json::json!([2, 2, 2, 3, 3])
+    );
+    assert_eq!(
+        parsed["plots"][273]["values"],
+        serde_json::json!([2.86, 3, 314.0 / 100.0, 3.29, 3.43])
+    );
 }
 
 #[test]

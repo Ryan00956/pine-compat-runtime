@@ -732,6 +732,27 @@ fn accepts_provider_backed_request_security_tuple_literal_math_expression() {
 }
 
 #[test]
+fn accepts_provider_backed_request_security_tuple_literal_stateless_math_expression() {
+    let analysis = analyze(
+        "[floored, ceiled, rounded] = request.security(\"NYSE:IBM\", timeframe.period, [math.floor(close / 3), math.ceil(open / 6), math.round(close / 7, 2)])\nplot(floored + ceiled + rounded)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_request_security_tuple_literal_ta_expression() {
     let analysis = analyze(
         "[avg, delta, total] = request.security(\"NYSE:IBM\", timeframe.period, [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(nz(avg) + nz(delta) + total)\n",

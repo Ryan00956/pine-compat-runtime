@@ -505,3 +505,8 @@ plot(higher_tuple_math_trunc)
 plot(higher_tuple_math_sign)
 plot(higher_tuple_math_degrees)
 plot(higher_tuple_math_radians)
+
+[tuple_math_floor, tuple_math_ceil, tuple_math_round] = request.security("NYSE:IBM", timeframe.period, [math.floor(close / 3), math.ceil(open / 6), math.round(close / 7, 2)])
+plot(tuple_math_floor)
+plot(tuple_math_ceil)
+plot(tuple_math_round)
