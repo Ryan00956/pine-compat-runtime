@@ -762,6 +762,7 @@ mod tests {
         assert!(output.matches("\"values\":[0,1,0,0,0]").count() >= 4);
         assert!(output.matches("\"values\":[0,0,1,0,0]").count() >= 2);
         assert!(output.matches("\"values\":[null,null,0,0,1]").count() >= 3);
+        assert!(output.matches("\"values\":[0,0,1,1,1]").count() >= 3);
     }
 
     #[test]

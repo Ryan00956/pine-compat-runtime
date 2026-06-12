@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added provider-backed `request.security` tuple literal fixture coverage for
+  boolean `ta.rising` and `ta.falling` scalar elements.
 - Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal boolean `ta.cross`, `ta.crossover`, and
   `ta.crossunder` scalar elements while preserving default confirmation

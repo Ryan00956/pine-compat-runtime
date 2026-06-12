@@ -1225,6 +1225,37 @@ fn request_security_evaluates_provider_tuple_literal_ta_cross_in_requested_conte
 }
 
 #[test]
+fn request_security_evaluates_provider_tuple_literal_ta_trend_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider tuple literal ta trend\")\n[rising, falling, open_falling] = request.security(\"NYSE:IBM\", timeframe.period, [ta.rising(close, 2) ? 1 : 0, ta.falling(10 - close, 2) ? 1 : 0, ta.falling(open, 2) ? 1 : 0])\nplot(rising)\nplot(falling)\nplot(open_falling)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 1.0, 2.0, 0.0, 1.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 3.0, 1.0, 2.0, 1.0),
+            timed_ohlcv(120_000, 3.0, 4.0, 2.0, 3.0, 1.0),
+            timed_ohlcv(180_000, 4.0, 5.0, 3.0, 4.0, 1.0),
+            timed_ohlcv(240_000, 5.0, 6.0, 4.0, 5.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 1.0),
+            timed_bar(120_000, 5.0),
+            timed_bar(180_000, 1.0),
+            timed_bar(240_000, 5.0),
+        ])
+        .expect("provider tuple literal ta trend request.security expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(&result.plots[0].values, &[0.0, 0.0, 1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 0.0, 1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[2].values, &[0.0; 5]);
+}
+
+#[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal() {
     let program = compile_program(
         "indicator(\"request provider htf tuple literal\")\n[last, shifted, above] = request.security(\"NYSE:IBM\", \"5\", [close, close + 1, close > open ? 1 : 0])\nplot(last)\nplot(shifted)\nplot(above)\n",
