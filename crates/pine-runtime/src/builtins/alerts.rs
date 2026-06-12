@@ -2,6 +2,7 @@ use pine_ir::{CallSiteId, HirCallArg};
 
 use crate::builtins::args::call_arg_expr;
 use crate::builtins::strings::format_number;
+use crate::builtins::time::{format_utc_datetime, utc_datetime_from_millis};
 use crate::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -146,6 +147,7 @@ impl<'a> HistoricalRuntime<'a> {
                 self.request_environment.chart().timeframe().value(),
             )
             .replace("{{exchange}}", self.alert_exchange_placeholder())
+            .replace("{{time}}", &self.alert_time_placeholder(bar.time))
     }
 
     fn alert_ticker_placeholder(&self) -> &str {
@@ -165,5 +167,11 @@ impl<'a> HistoricalRuntime<'a> {
             .symbol()
             .rsplit_once(':')
             .map_or("", |(exchange, _)| exchange)
+    }
+
+    fn alert_time_placeholder(&self, timestamp: i64) -> String {
+        utc_datetime_from_millis(timestamp)
+            .map(|datetime| format_utc_datetime(datetime, "yyyy-MM-dd'T'HH:mm:ssZ"))
+            .unwrap_or_else(|_| timestamp.to_string())
     }
 }

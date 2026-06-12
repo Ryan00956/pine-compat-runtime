@@ -384,7 +384,9 @@ for a narrow declarative subset. `condition` accepts bool-compatible values;
 strings. Runtime output serializes `title` as the alert event `source` and
 `message` as the alert event `message` after replacing `{{open}}`, `{{high}}`,
 `{{low}}`, `{{close}}`, and `{{volume}}` with triggering-bar values, plus
-`{{ticker}}`, `{{interval}}`, and `{{exchange}}` with current chart metadata.
+`{{ticker}}`, `{{interval}}`, and `{{exchange}}` with current chart metadata,
+and `{{time}}` with the triggering bar timestamp using the UTC
+`str.format_time` default format.
 
 `alert(message, freq?)` is supported for const-string messages only. It
 serializes `source` as `alert`. The default frequency is

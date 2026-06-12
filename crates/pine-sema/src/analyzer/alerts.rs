@@ -63,6 +63,7 @@ impl Analyzer {
                             "{{ticker}}",
                             "{{interval}}",
                             "{{exchange}}",
+                            "{{time}}",
                         ][..]
                     } else {
                         &[][..]

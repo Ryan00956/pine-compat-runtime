@@ -64,14 +64,24 @@ alertcondition(true, "OHLCV", "O={{open}} H={{high}} L={{low}} C={{close}} V={{v
 fn alertcondition_message_renders_chart_placeholders() {
     let result = run_alert_script(
         r#"indicator("alerts")
-alertcondition(true, "Chart", "{{exchange}} {{ticker}} {{interval}} {{close}}")
+alertcondition(true, "Chart", "{{exchange}} {{ticker}} {{interval}} {{time}} {{close}}")
 "#,
-        &timed_bars(&[12.0]),
+        &[Bar {
+            time: 1_609_459_200_000,
+            open: 12.0,
+            high: 12.0,
+            low: 12.0,
+            close: 12.0,
+            volume: 1.0,
+        }],
     );
 
     assert_eq!(result.alerts.len(), 1);
     assert_eq!(result.alerts[0].source, "Chart");
-    assert_eq!(result.alerts[0].message, "NASDAQ AAPL 1 12");
+    assert_eq!(
+        result.alerts[0].message,
+        "NASDAQ AAPL 1 2021-01-01T00:00:00+0000 12"
+    );
 }
 
 #[test]

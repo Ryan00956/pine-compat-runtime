@@ -233,7 +233,7 @@ fn rejects_alert_placeholders() {
     let analysis = analyze(
         r#"alert("{{close}}")
 alertcondition(true, "{{close}}", "Title placeholder")
-alertcondition(true, "Title", "{{time}}")
+alertcondition(true, "Title", "{{timenow}}")
 "#,
     );
 
@@ -250,12 +250,11 @@ alertcondition(true, "Title", "{{time}}")
             .iter()
             .any(|diagnostic| diagnostic.message.contains("alert placeholder `{{close}}`"))
     );
-    assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| { diagnostic.message.contains("alert placeholder `{{time}}`") })
-    );
+    assert!(analysis.diagnostics.iter().any(|diagnostic| {
+        diagnostic
+            .message
+            .contains("alert placeholder `{{timenow}}`")
+    }));
     assert!(analysis.hir.is_none());
 }
 

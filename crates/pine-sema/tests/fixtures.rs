@@ -1299,7 +1299,7 @@ fn reports_unsupported_alertcondition_placeholder_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_alertcondition_placeholder.pine",
         "alert_placeholders",
-        "alert placeholder `{{time}}`",
+        "alert placeholder `{{timenow}}`",
     );
 }
 
