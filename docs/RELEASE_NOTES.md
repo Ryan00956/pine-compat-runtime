@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal `ta.accdist` and `ta.iii` scalar variable
+  elements while preserving default confirmation alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal rolling `ta.max` and `ta.min` scalar
   elements while preserving default confirmation alignment.
 - Added provider-backed `request.security` tuple literal fixture coverage for
