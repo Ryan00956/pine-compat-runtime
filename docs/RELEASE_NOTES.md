@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal rolling `ta.max` and `ta.min` scalar
+  elements while preserving default confirmation alignment.
 - Added provider-backed `request.security` tuple literal fixture coverage for
   `ta.wvad` and `ta.ao` scalar elements.
 - Added provider-backed `request.security` tuple literal fixture coverage for
