@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added provider-backed `request.security` tuple literal fixture coverage for
+  boolean `ta.cross`, `ta.crossover`, and `ta.crossunder` scalar elements.
 - Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal rolling `ta.sma`, `ta.change`, and
   `ta.cum` scalar elements while preserving requested-context callsite state
