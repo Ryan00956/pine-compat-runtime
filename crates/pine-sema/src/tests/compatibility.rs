@@ -1005,6 +1005,27 @@ fn accepts_provider_backed_request_security_tuple_literal_ta_band_width_expressi
 }
 
 #[test]
+fn accepts_provider_backed_request_security_tuple_literal_ta_default_extrema_expression() {
+    let analysis = analyze(
+        "[highest_value, lowest_value] = request.security(\"NYSE:IBM\", timeframe.period, [ta.highest(2), ta.lowest(2)])\nplot(nz(highest_value) + nz(lowest_value))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_request_security_tuple_literal_ta_cross_expression() {
     let analysis = analyze(
         "[crossed, crossed_up, crossed_down] = request.security(\"NYSE:IBM\", timeframe.period, [ta.cross(close, 20.5) ? 1 : 0, ta.crossover(close, 20.5) ? 1 : 0, ta.crossunder(close - time / 60000.0, 19.5) ? 1 : 0])\nplot(crossed + crossed_up + crossed_down)\n",

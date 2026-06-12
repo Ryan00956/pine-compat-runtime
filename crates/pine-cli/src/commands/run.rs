@@ -1072,6 +1072,8 @@ mod tests {
         assert!(output.contains(
             "\"values\":[null,0.0975609756097561,0.09302325581395349,0.08888888888888889,0.0851063829787234]"
         ));
+        assert!(output.matches("\"values\":[null,12,13,14,15]").count() >= 2);
+        assert!(output.matches("\"values\":[null,9,10,11,12]").count() >= 2);
     }
 
     #[test]
