@@ -194,3 +194,7 @@ plot(higher_kc_lower)
 plot(higher_vwap_basis)
 plot(higher_vwap_upper)
 plot(higher_vwap_lower)
+
+[higher_supertrend_line, higher_supertrend_direction] = request.security("NYSE:IBM", "5", ta.supertrend(2, 3))
+plot(higher_supertrend_line)
+plot(higher_supertrend_direction)
