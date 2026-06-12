@@ -345,3 +345,7 @@ plot(tuple_ta_tsi)
 [tuple_ta_cmo, tuple_ta_mfi] = request.security("NYSE:IBM", timeframe.period, [ta.cmo(close, 3), ta.mfi(close, 3)])
 plot(tuple_ta_cmo)
 plot(tuple_ta_mfi)
+
+[tuple_ta_stoch, tuple_ta_wpr] = request.security("NYSE:IBM", timeframe.period, [ta.stoch(close, high, low, 3), ta.wpr(3)])
+plot(tuple_ta_stoch)
+plot(tuple_ta_wpr)
