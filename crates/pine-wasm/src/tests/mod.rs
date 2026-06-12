@@ -213,6 +213,43 @@ fn run_script_csv_returns_alert_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_dynamic_alert_message_events() {
+    let output = run_script_csv(
+        "indicator(\"alerts\")\nalert(str.tostring(close))\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n",
+    )
+    .expect("dynamic alert message script should run");
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(
+        parsed["alerts"],
+        serde_json::json!([
+            {
+                "id": 1,
+                "barIndex": 0,
+                "time": 0,
+                "message": "1",
+                "source": "alert"
+            },
+            {
+                "id": 1,
+                "barIndex": 1,
+                "time": 1,
+                "message": "2",
+                "source": "alert"
+            },
+            {
+                "id": 1,
+                "barIndex": 2,
+                "time": 2,
+                "message": "3",
+                "source": "alert"
+            }
+        ])
+    );
+}
+
+#[test]
 fn run_script_csv_returns_label_new_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/label_new.pine"),

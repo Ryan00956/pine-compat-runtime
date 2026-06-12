@@ -205,6 +205,9 @@ Closed slice:
 - The local const-string alert frequency subset is fixture-backed for
   `alert.freq_once_per_bar`, `alert.freq_all`, and
   `alert.freq_once_per_bar_close`.
+- Dynamic string-compatible `alert()` messages are fixture-backed through
+  runtime snapshots and direct Python/WASM host parity assertions, while
+  Pine-source `alert()` placeholder interpolation remains unsupported.
 - Alert diagnostic fixtures cover dynamic frequency expressions, unknown
   const-string frequency values, and alertcondition placeholder rejection.
 - Realtime alert-frequency rollback fixtures cover default once-per-bar

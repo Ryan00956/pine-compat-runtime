@@ -7327,6 +7327,37 @@ def test_run_script_returns_alert_events():
     ]
 
 
+def test_run_script_returns_dynamic_alert_message_events():
+    result = pine_compat.run_script(
+        'indicator("alerts")\nalert(str.tostring(close))\n',
+        BARS,
+    )
+
+    assert result["alerts"] == [
+        {
+            "id": 1,
+            "barIndex": 0,
+            "time": 0,
+            "message": "1",
+            "source": "alert",
+        },
+        {
+            "id": 1,
+            "barIndex": 1,
+            "time": 1,
+            "message": "2",
+            "source": "alert",
+        },
+        {
+            "id": 1,
+            "barIndex": 2,
+            "time": 2,
+            "message": "3",
+            "source": "alert",
+        },
+    ]
+
+
 def test_run_script_returns_alert_frequency_events():
     source = (ROOT / "tests/fixtures/runtime/alert_frequency.pine").read_text()
     result = pine_compat.run_script(source, BARS)
