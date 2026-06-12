@@ -546,3 +546,7 @@ plot(tuple_ta_atr)
 [tuple_ta_highest, tuple_ta_lowest] = request.security("NYSE:IBM", timeframe.period, [ta.highest(high, 2), ta.lowest(low, 2)])
 plot(tuple_ta_highest)
 plot(tuple_ta_lowest)
+
+[tuple_ta_mom, tuple_ta_roc] = request.security("NYSE:IBM", timeframe.period, [ta.mom(close, 1), ta.roc(close, 1)])
+plot(tuple_ta_mom)
+plot(tuple_ta_roc)
