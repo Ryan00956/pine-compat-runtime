@@ -619,7 +619,7 @@ mod tests {
             "\"values\":[null,null,0.6666666666666666,0.6666666666666666,0.6666666666666666]"
         ));
         assert!(output.contains("\"values\":[0,0,1,1,1]"));
-        assert!(output.contains("\"values\":[0,0,0,0,0]"));
+        assert!(output.matches("\"values\":[0,0,0,0,0]").count() >= 2);
         assert!(output.contains("\"values\":[0,1,0,0,0]"));
         assert!(output.contains("\"values\":[0,1,0,0,0]"));
         assert!(output.contains("\"values\":[0,0,1,0,0]"));

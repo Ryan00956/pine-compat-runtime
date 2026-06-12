@@ -287,6 +287,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.linreg"
             | "ta.rising"
             | "ta.falling"
+            | "ta.barssince"
             | "ta.cross"
             | "ta.crossover"
             | "ta.crossunder"

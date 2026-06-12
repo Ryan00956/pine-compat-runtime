@@ -282,8 +282,8 @@ Request data:
   `ta.covariance`, `ta.median`, `ta.mode`, `ta.percentile_nearest_rank`,
   `ta.percentile_linear_interpolation`,
   `ta.percentrank`, `ta.stdev`, `ta.variance`, `ta.wma`, `ta.vwma`,
-  `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`, `ta.cross`,
-  `ta.crossover`, and `ta.crossunder`; local variable aliases, the
+  `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`, `ta.barssince`,
+  `ta.cross`, `ta.crossover`, and `ta.crossunder`; local variable aliases, the
   `ta.tr` variable form, extrema
   offset helpers such as `ta.highestbars`/`ta.lowestbars`, and stateful math
   calls such as `math.random` are not part of this subset.

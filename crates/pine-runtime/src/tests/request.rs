@@ -1046,6 +1046,37 @@ fn request_security_evaluates_provider_pivotlow_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_barssince_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request barssince\")\nprovider_since = request.security(\"NYSE:IBM\", timeframe.period, ta.barssince(close > open))\nchart_since = ta.barssince(close > open)\nplot(provider_since)\nplot(chart_since)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 1.0, 1.0, 1.0, 1.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 2.0, 2.0, 2.0, 1.0),
+            timed_ohlcv(120_000, 2.0, 3.0, 2.0, 3.0, 1.0),
+            timed_ohlcv(180_000, 4.0, 4.0, 3.0, 3.0, 1.0),
+            timed_ohlcv(240_000, 4.0, 5.0, 4.0, 5.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 2.0, 1.0, 2.0, 1.0),
+            timed_ohlcv(60_000, 3.0, 3.0, 2.0, 2.0, 1.0),
+            timed_ohlcv(120_000, 4.0, 4.0, 3.0, 3.0, 1.0),
+            timed_ohlcv(180_000, 4.0, 5.0, 4.0, 5.0, 1.0),
+            timed_ohlcv(240_000, 6.0, 6.0, 5.0, 5.0, 1.0),
+        ])
+        .expect("provider ta.barssince expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&result.plots[0].values[2..], &[0.0, 1.0, 0.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 1.0, 2.0, 0.0, 1.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_correlation_in_requested_context() {
     let program = compile_program(
         "indicator(\"request correlation\")\nprovider_corr = request.security(\"NYSE:IBM\", timeframe.period, ta.correlation(close, high, 3))\nchart_corr = ta.correlation(close, high, 3)\nplot(provider_corr)\nplot(chart_corr)\n",
