@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept the already-supported scalar `ta.obv` built-in variable in
+  provider-backed scalar expressions.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported scalar `ta.vwap(source)` calls in same-context and
   provider-backed scalar expressions while keeping tuple-returning VWAP bands
   outside the subset.

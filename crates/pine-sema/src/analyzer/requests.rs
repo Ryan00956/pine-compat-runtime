@@ -161,7 +161,7 @@ fn request_expression_is_provider_scalar(expr: &Expr) -> bool {
         ExprKind::Literal(_) => true,
         ExprKind::Identifier(_) | ExprKind::QualifiedName(_) => expr_name(expr)
             .as_deref()
-            .is_some_and(is_request_provider_source_name),
+            .is_some_and(is_request_provider_scalar_name),
         ExprKind::Unary { expr, .. } => request_expression_is_provider_scalar(expr),
         ExprKind::Binary { left, right, .. } => {
             request_expression_is_provider_scalar(left)
@@ -204,8 +204,11 @@ fn request_expression_is_provider_scalar(expr: &Expr) -> bool {
     }
 }
 
-fn is_request_provider_source_name(name: &str) -> bool {
-    matches!(name, "open" | "high" | "low" | "close" | "volume" | "time")
+fn is_request_provider_scalar_name(name: &str) -> bool {
+    matches!(
+        name,
+        "open" | "high" | "low" | "close" | "volume" | "time" | "ta.obv"
+    )
 }
 
 fn request_scalar_call_is_supported(name: &str) -> bool {

@@ -208,6 +208,25 @@ fn accepts_provider_backed_same_timeframe_request_security_source() {
 }
 
 #[test]
+fn accepts_provider_backed_same_timeframe_request_security_ta_variable() {
+    let analysis = analyze("plot(request.security(\"NYSE:IBM\", timeframe.period, ta.obv))\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_same_timeframe_request_security_expression() {
     let analysis =
         analyze("plot(request.security(\"NYSE:IBM\", timeframe.period, close + open))\n");
