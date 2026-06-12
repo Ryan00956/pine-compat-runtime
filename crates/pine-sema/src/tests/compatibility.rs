@@ -1068,6 +1068,27 @@ fn accepts_provider_backed_request_security_tuple_literal_ta_momentum_average_ex
 }
 
 #[test]
+fn accepts_provider_backed_request_security_tuple_literal_ta_momentum_flow_expression() {
+    let analysis = analyze(
+        "[cmo_value, mfi_value] = request.security(\"NYSE:IBM\", timeframe.period, [ta.cmo(close, 3), ta.mfi(close, 3)])\nplot(nz(cmo_value) + nz(mfi_value))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_expression() {
     let analysis = analyze(
         "[last, shifted, above] = request.security(\"NYSE:IBM\", \"5\", [close, close + 1, close > open ? 1 : 0])\nplot(last + shifted + above)\n",
