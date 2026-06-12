@@ -624,15 +624,25 @@ mod tests {
         assert!(output.contains("\"values\":[0,1,0,0,0]"));
         assert!(output.contains("\"values\":[0,0,1,0,0]"));
         assert!(output.contains("\"values\":[20,41,63,86,110]"));
-        assert!(output.contains(
-            "\"values\":[null,null,0.816496580927726,0.816496580927726,0.816496580927726]"
-        ));
+        assert!(
+            output
+                .matches(
+                    "\"values\":[null,null,0.816496580927726,0.816496580927726,0.816496580927726]"
+                )
+                .count()
+                >= 2
+        );
         assert!(output.contains(
             "\"values\":[null,null,0.9999999999999858,1.0000000000000284,1.0000000000000284]"
         ));
-        assert!(output.contains(
-            "\"values\":[null,null,0.6666666666666666,0.6666666666666666,0.6666666666666666]"
-        ));
+        assert!(
+            output
+                .matches(
+                    "\"values\":[null,null,0.6666666666666666,0.6666666666666666,0.6666666666666666]"
+                )
+                .count()
+                >= 2
+        );
         assert!(output.contains("\"values\":[null,null,1,1,1]"));
         assert!(output.contains(
             "\"values\":[null,null,21.333333333333332,22.333333333333332,23.333333333333332]"
