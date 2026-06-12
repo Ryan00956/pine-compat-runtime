@@ -313,6 +313,27 @@ fn accepts_same_context_request_security_supertrend_tuple_call() {
 }
 
 #[test]
+fn accepts_same_context_request_security_dmi_tuple_call() {
+    let analysis = analyze(
+        "[plus, minus, adx] = request.security(syminfo.tickerid, timeframe.period, ta.dmi(3, 2))\nplot(plus + minus + adx)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_same_context_request_security_vwap_bands_tuple_call() {
     let analysis = analyze(
         "[basis, upper, lower] = request.security(syminfo.tickerid, timeframe.period, ta.vwap(close, false, 2.0))\nplot(basis + upper + lower)\n",
