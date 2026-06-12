@@ -681,6 +681,42 @@ fn request_security_evaluates_provider_bb_tuple_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_kc_tuple_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider kc tuple\")\n[middle, upper, lower] = request.security(\"NYSE:IBM\", timeframe.period, ta.kc(close, 2, 2))\nplot(middle)\nplot(upper)\nplot(lower)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 10.0, 1.0),
+            timed_ohlcv(60_000, 12.0, 15.0, 14.0, 12.0, 1.0),
+            timed_ohlcv(120_000, 9.0, 10.0, 8.0, 9.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 20.0, 25.0, 19.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 21.0, 23.0, 20.0, 21.0, 1.0),
+            timed_ohlcv(120_000, 22.0, 26.0, 21.0, 22.0, 1.0),
+        ])
+        .expect("provider ta.kc tuple expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_values_close(
+        &result.plots[0].values,
+        &[10.0, 11.333333333333332, 9.777777777777779],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[14.0, 19.333333333333332, 17.77777777777778],
+    );
+    assert_values_close(
+        &result.plots[2].values,
+        &[6.0, 3.333333333333332, 1.7777777777777786],
+    );
+}
+
+#[test]
 fn request_security_isolates_provider_ta_state_from_chart_state() {
     let program = compile_program(
         "indicator(\"request ta\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2))\nchart = ta.sma(close, 2)\nplot(provider)\nplot(chart)\n",
