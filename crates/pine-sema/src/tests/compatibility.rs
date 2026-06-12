@@ -837,6 +837,27 @@ fn accepts_provider_backed_request_security_tuple_literal_inverse_trig_exp_math_
 }
 
 #[test]
+fn accepts_provider_backed_request_security_tuple_literal_angle_scalar_math_expression() {
+    let analysis = analyze(
+        "[avg_value, trunc_value, sign_value, degrees_value, radians_value] = request.security(\"NYSE:IBM\", timeframe.period, [math.avg(open, high, low, close), math.trunc(close / 3), math.sign(close - open), math.todegrees(close / 100), math.toradians(open / 10)])\nplot(avg_value + trunc_value + sign_value + degrees_value + radians_value)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_request_security_tuple_literal_ta_expression() {
     let analysis = analyze(
         "[avg, delta, total] = request.security(\"NYSE:IBM\", timeframe.period, [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(nz(avg) + nz(delta) + total)\n",

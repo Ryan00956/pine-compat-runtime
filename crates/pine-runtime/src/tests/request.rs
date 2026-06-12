@@ -1343,6 +1343,49 @@ fn request_security_evaluates_provider_tuple_literal_inverse_trig_exp_math_in_re
 }
 
 #[test]
+fn request_security_evaluates_provider_tuple_literal_angle_scalar_math_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider tuple literal angle scalar math\")\n[avg_value, trunc_value, sign_value, degrees_value, radians_value] = request.security(\"NYSE:IBM\", timeframe.period, [math.avg(open, high, low, close), math.trunc(close / 3), math.sign(close - open), math.todegrees(close / 100), math.toradians(open / 10)])\nplot(avg_value)\nplot(trunc_value)\nplot(sign_value)\nplot(degrees_value)\nplot(radians_value)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 11.0, 12.0, 10.0, 21.0, 1.0),
+            timed_ohlcv(120_000, 12.0, 13.0, 11.0, 22.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 2.0, 0.0, 4.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 3.0, 1.0, 5.0, 1.0),
+            timed_ohlcv(120_000, 3.0, 4.0, 2.0, 6.0, 1.0),
+        ])
+        .expect("provider tuple literal angle/scalar math request.security expression should run");
+
+    assert_eq!(result.plots.len(), 5);
+    assert_values_close(&result.plots[0].values, &[12.5, 13.5, 14.5]);
+    assert_values_close(&result.plots[1].values, &[6.0, 7.0, 7.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(
+        &result.plots[3].values,
+        &[
+            0.2_f64.to_degrees(),
+            0.21_f64.to_degrees(),
+            0.22_f64.to_degrees(),
+        ],
+    );
+    assert_values_close(
+        &result.plots[4].values,
+        &[
+            1.0_f64.to_radians(),
+            1.1_f64.to_radians(),
+            1.2_f64.to_radians(),
+        ],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_tuple_literal_ta_in_requested_context() {
     let program = compile_program(
         "indicator(\"request provider tuple literal ta\")\n[avg, delta, total] = request.security(\"NYSE:IBM\", timeframe.period, [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(avg)\nplot(delta)\nplot(total)\n",
