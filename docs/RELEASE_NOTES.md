@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Widened the fixture-backed `request.security` requested-expression subset to
+  accept already-supported one-argument `ta.min` calls in same-context and
+  provider-backed scalar expressions.
+- Widened the fixture-backed `request.security` requested-expression subset to
   accept already-supported one-argument `ta.max` calls in same-context and
   provider-backed scalar expressions.
 - Widened the fixture-backed `request.security` requested-expression subset to

@@ -1596,6 +1596,35 @@ fn request_security_evaluates_provider_ta_max_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_ta_min_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request min\")\nprovider_min = request.security(\"NYSE:IBM\", timeframe.period, ta.min(close))\nchart_min = ta.min(close)\nplot(provider_min)\nplot(chart_min)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 10.0),
+            timed_bar(60_000, 8.0),
+            timed_bar(120_000, 12.0),
+            timed_bar(180_000, 7.0),
+            timed_bar(240_000, 9.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 6.0),
+            timed_bar(120_000, 4.0),
+            timed_bar(180_000, 9.0),
+            timed_bar(240_000, 3.0),
+        ])
+        .expect("provider ta.min expression should run");
+
+    assert_values_close(&result.plots[0].values, &[10.0, 8.0, 8.0, 7.0, 7.0]);
+    assert_values_close(&result.plots[1].values, &[5.0, 5.0, 4.0, 4.0, 3.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_mfi_in_requested_context() {
     let program = compile_program(
         "indicator(\"request mfi\")\nprovider_mfi = request.security(\"NYSE:IBM\", timeframe.period, ta.mfi(close, 3))\nchart_mfi = ta.mfi(close, 3)\nplot(provider_mfi)\nplot(chart_mfi)\n",
