@@ -277,3 +277,7 @@ plot(tuple_ta_pivotlow)
 [higher_tuple_ta_pivothigh, higher_tuple_ta_pivotlow] = request.security("NYSE:IBM", "5", [ta.pivothigh(300 - close, 0, 1), ta.pivotlow(close, 0, 1)])
 plot(higher_tuple_ta_pivothigh)
 plot(higher_tuple_ta_pivotlow)
+
+[tuple_ta_correlation, tuple_ta_covariance] = request.security("NYSE:IBM", timeframe.period, [ta.correlation(close, high, 3), ta.covariance(close, high, 3)])
+plot(tuple_ta_correlation)
+plot(tuple_ta_covariance)

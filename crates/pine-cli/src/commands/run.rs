@@ -772,6 +772,18 @@ mod tests {
         assert!(output.matches("\"values\":[0,0,1,0,0]").count() >= 2);
         assert!(output.matches("\"values\":[null,null,0,0,1]").count() >= 5);
         assert!(output.matches("\"values\":[0,0,1,1,1]").count() >= 3);
+        assert!(
+            output
+                .matches("\"values\":[null,null,0.9999999999999858,1.0000000000000284,1.0000000000000284]")
+                .count()
+                >= 2
+        );
+        assert!(
+            output
+                .matches("\"values\":[null,null,0.6666666666666572,0.6666666666666856,0.6666666666666856]")
+                .count()
+                >= 2
+        );
     }
 
     #[test]
