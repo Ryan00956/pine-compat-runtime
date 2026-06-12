@@ -67,6 +67,7 @@ lowestbars_value = request.security(syminfo.tickerid, timeframe.period, ta.lowes
 valuewhen_value = request.security(syminfo.tickerid, timeframe.period, ta.valuewhen(close > 2, close, 1))
 vwap_value = request.security(syminfo.tickerid, timeframe.period, ta.vwap(close))
 obv_value = request.security(syminfo.tickerid, timeframe.period, ta.obv)
+pvt_value = request.security(syminfo.tickerid, timeframe.period, ta.pvt)
 
 plot(identity)
 plot(history)
@@ -135,3 +136,4 @@ plot(lowestbars_value)
 plot(valuewhen_value)
 plot(vwap_value)
 plot(obv_value)
+plot(pvt_value)
