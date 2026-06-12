@@ -744,6 +744,8 @@ mod tests {
         assert!(output.contains("\"values\":[null,null,100,100,50]"));
         assert!(output.contains("\"values\":[null,null,155,155,81.66666666666667]"));
         assert!(output.contains("\"values\":[null,null,1,1,-1]"));
+        assert!(output.contains("\"values\":[null,null,0,0,71.42857142857143]"));
+        assert!(output.contains("\"values\":[null,null,0,0,50]"));
     }
 
     #[test]

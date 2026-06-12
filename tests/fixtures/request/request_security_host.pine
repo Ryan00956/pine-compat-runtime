@@ -198,3 +198,8 @@ plot(higher_vwap_lower)
 [higher_supertrend_line, higher_supertrend_direction] = request.security("NYSE:IBM", "5", ta.supertrend(2, 3))
 plot(higher_supertrend_line)
 plot(higher_supertrend_direction)
+
+[higher_dmi_plus, higher_dmi_minus, higher_dmi_adx] = request.security("NYSE:IBM", "5", ta.dmi(2, 2))
+plot(higher_dmi_plus)
+plot(higher_dmi_minus)
+plot(higher_dmi_adx)

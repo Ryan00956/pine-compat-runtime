@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` `ta.dmi` tuple-returning calls, including aligned
+  plus/minus/adx outputs.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` `ta.supertrend` tuple-returning calls while preserving
   default higher-timeframe confirmation alignment.
 - Added higher-timeframe fixture coverage for provider-backed
