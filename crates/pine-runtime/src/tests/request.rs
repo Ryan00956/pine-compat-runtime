@@ -1110,6 +1110,34 @@ fn request_security_evaluates_provider_tuple_literal_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_tuple_literal_history_and_nz_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider tuple literal history\")\n[prior, fallback, delta] = request.security(\"NYSE:IBM\", timeframe.period, [close[1], nz(close[1], open), close - nz(close[1], close)])\nplot(prior)\nplot(fallback)\nplot(delta)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 20.0, 1.0),
+            timed_ohlcv(60_000, 21.0, 23.0, 20.0, 19.0, 1.0),
+            timed_ohlcv(120_000, 22.0, 26.0, 21.0, 24.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 1.0, 2.0, 0.0, 4.0, 1.0),
+            timed_ohlcv(60_000, 2.0, 3.0, 1.0, 5.0, 1.0),
+            timed_ohlcv(120_000, 3.0, 4.0, 2.0, 6.0, 1.0),
+        ])
+        .expect("provider tuple literal history request.security expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[20.0, 19.0]);
+    assert_values_close(&result.plots[1].values, &[10.0, 20.0, 19.0]);
+    assert_values_close(&result.plots[2].values, &[0.0, -1.0, 5.0]);
+}
+
+#[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal() {
     let program = compile_program(
         "indicator(\"request provider htf tuple literal\")\n[last, shifted, above] = request.security(\"NYSE:IBM\", \"5\", [close, close + 1, close > open ? 1 : 0])\nplot(last)\nplot(shifted)\nplot(above)\n",

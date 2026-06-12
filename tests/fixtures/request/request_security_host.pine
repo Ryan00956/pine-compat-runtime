@@ -203,3 +203,8 @@ plot(higher_supertrend_direction)
 plot(higher_dmi_plus)
 plot(higher_dmi_minus)
 plot(higher_dmi_adx)
+
+[tuple_prior, tuple_fallback, tuple_delta] = request.security("NYSE:IBM", timeframe.period, [close[1], nz(close[1], open), close - nz(close[1], close)])
+plot(tuple_prior)
+plot(tuple_fallback)
+plot(tuple_delta)

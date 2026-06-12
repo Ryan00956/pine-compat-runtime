@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added provider-backed `request.security` tuple literal fixture coverage for
+  history and `nz` scalar elements while keeping provider local aliases
+  unsupported.
 - Added higher-timeframe fixture coverage for provider-backed
   `request.security` `ta.dmi` tuple-returning calls, including aligned
   plus/minus/adx outputs.
