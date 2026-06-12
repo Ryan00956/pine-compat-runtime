@@ -784,6 +784,8 @@ mod tests {
                 .count()
                 >= 2
         );
+        assert!(output.contains("\"values\":[null,null,null,null,1]"));
+        assert!(output.contains("\"values\":[null,null,null,null,2500]"));
     }
 
     #[test]
