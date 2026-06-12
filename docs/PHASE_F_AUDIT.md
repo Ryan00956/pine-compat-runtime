@@ -56,7 +56,7 @@ truth for request claims.
   `na`, `nz`, selected stateless `math.*` calls, fixed-mintick
   `math.round_to_mintick`, `math.sum`, `ta.cum`, `ta.sma`, `ta.ema`,
   `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`, `ta.tsi`, `ta.cmo`, `ta.cci`,
-  `ta.cog`, `ta.bop`, `ta.ao`, `ta.accdist`, `ta.iii`, `ta.obv`, `ta.pvt`, `ta.wvad`, `ta.max`, `ta.min`, `ta.mfi`,
+  `ta.cog`, `ta.bop`, `ta.ao`, `ta.accdist`, `ta.iii`, `ta.nvi`, `ta.obv`, `ta.pvt`, `ta.wvad`, `ta.max`, `ta.min`, `ta.mfi`,
   `ta.stoch`, `ta.wpr`, `ta.sar`,
   `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`,
   `ta.highestbars`, `ta.lowestbars`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.vwap`, `ta.rising`,
