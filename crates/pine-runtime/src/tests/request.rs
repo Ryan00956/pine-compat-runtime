@@ -3079,6 +3079,45 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_trig_math() {
 }
 
 #[test]
+fn request_security_aligns_provider_higher_timeframe_tuple_literal_power_log_math() {
+    let program = compile_program(
+        "indicator(\"request provider htf tuple literal power log math\")\n[pow_value, hypot_value, log_value] = request.security(\"NYSE:IBM\", \"5\", [math.pow(close / 100, 2), math.hypot(close / 100, open / 100), math.log(close)])\nplot(pow_value)\nplot(hypot_value)\nplot(log_value)\n",
+    );
+    let environment = external_symbol_environment_with_timeframe(
+        "NYSE:IBM",
+        "5",
+        vec![
+            timed_ohlcv(0, 90.0, 110.0, 80.0, 100.0, 1000.0),
+            timed_ohlcv(300_000, 190.0, 210.0, 180.0, 200.0, 1000.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(240_000, 3.0),
+            timed_bar(300_000, 4.0),
+            timed_bar(540_000, 5.0),
+        ])
+        .expect("higher timeframe provider tuple literal power/log math request should run");
+
+    assert_eq!(result.plots.len(), 3);
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+    }
+    assert_values_close(&result.plots[0].values[2..], &[1.0, 1.0, 4.0]);
+    assert_values_close(
+        &result.plots[1].values[2..],
+        &[1.3453624047073711, 1.3453624047073711, 2.7586228448267445],
+    );
+    assert_values_close(
+        &result.plots[2].values[2..],
+        &[4.605170185988092, 4.605170185988092, 5.298317366548036],
+    );
+}
+
+#[test]
 fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta() {
     let program = compile_program(
         "indicator(\"request provider htf tuple literal ta\")\n[avg, delta, total] = request.security(\"NYSE:IBM\", \"5\", [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(avg)\nplot(delta)\nplot(total)\n",

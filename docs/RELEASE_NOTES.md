@@ -123,6 +123,10 @@
   `math.tan` scalar elements while preserving default confirmation
   alignment.
 - Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal power/log `math.pow`, `math.hypot`, and
+  `math.log` scalar elements while preserving default confirmation
+  alignment.
+- Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal rolling `ta.percentile_nearest_rank` and
   `ta.percentile_linear_interpolation` scalar elements while preserving
   default confirmation alignment.

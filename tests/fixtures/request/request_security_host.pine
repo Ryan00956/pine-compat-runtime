@@ -487,3 +487,8 @@ plot(higher_tuple_math_log10)
 plot(higher_tuple_math_sin)
 plot(higher_tuple_math_cos)
 plot(higher_tuple_math_tan)
+
+[higher_tuple_math_pow, higher_tuple_math_hypot, higher_tuple_math_log] = request.security("NYSE:IBM", "5", [math.pow(close / 100, 2), math.hypot(close / 100, open / 100), math.log(close)])
+plot(higher_tuple_math_pow)
+plot(higher_tuple_math_hypot)
+plot(higher_tuple_math_log)

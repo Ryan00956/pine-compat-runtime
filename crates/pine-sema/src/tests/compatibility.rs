@@ -1888,6 +1888,28 @@ fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_trig_
 }
 
 #[test]
+fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_power_log_math_expression()
+ {
+    let analysis = analyze(
+        "[pow_value, hypot_value, log_value] = request.security(\"NYSE:IBM\", \"5\", [math.pow(close / 100, 2), math.hypot(close / 100, open / 100), math.log(close)])\nplot(pow_value + hypot_value + log_value)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_higher_timeframe_request_security_tuple_literal_stateful_math_expression()
  {
     let analysis = analyze(
