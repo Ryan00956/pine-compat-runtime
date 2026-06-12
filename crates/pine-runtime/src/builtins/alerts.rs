@@ -1,6 +1,7 @@
 use pine_ir::{CallSiteId, HirCallArg};
 
 use crate::builtins::args::call_arg_expr;
+use crate::builtins::strings::format_number;
 use crate::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -71,6 +72,7 @@ impl<'a> HistoricalRuntime<'a> {
 
         let source = self.alert_string_arg("alertcondition", args, 1, "title")?;
         let message = self.alert_string_arg("alertcondition", args, 2, "message")?;
+        let message = self.render_alertcondition_message(&message);
         self.push_alert_event(call_site_id, source, message);
         Ok(PineValue::Void)
     }
@@ -125,5 +127,18 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("alert freq evaluated to {value:?}"),
             }),
         }
+    }
+
+    fn render_alertcondition_message(&self, message: &str) -> String {
+        let Some(bar) = self.current_bar else {
+            return message.to_owned();
+        };
+
+        message
+            .replace("{{open}}", &format_number(bar.open, ""))
+            .replace("{{high}}", &format_number(bar.high, ""))
+            .replace("{{low}}", &format_number(bar.low, ""))
+            .replace("{{close}}", &format_number(bar.close, ""))
+            .replace("{{volume}}", &format_number(bar.volume, ""))
     }
 }

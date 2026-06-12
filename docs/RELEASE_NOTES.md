@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed `alertcondition` message interpolation for
+  `{{open}}`, `{{high}}`, `{{low}}`, `{{close}}`, and `{{volume}}` while
+  keeping other Pine-source alert placeholders unsupported.
 - Documented the current fixture-backed `request.security` tuple literal
   coverage boundary and host evidence in `docs/REQUEST_TUPLE_LITERAL_AUDIT.md`.
 - Added provider-backed `request.security` tuple literal fixture coverage for

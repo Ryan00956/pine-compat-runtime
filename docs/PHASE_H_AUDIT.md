@@ -13,7 +13,9 @@ runtime output model.
 - Public runtime output schema `3` includes a top-level `alerts` array.
 - Runtime alert event shape is `{id, barIndex, time, message, source}`.
 - `alertcondition(condition, title, message)` accepts bool-compatible
-  conditions plus const-string title/message values.
+  conditions plus const-string title/message values, with `{{open}}`,
+  `{{high}}`, `{{low}}`, `{{close}}`, and `{{volume}}` interpolation in the
+  message only.
 - `alert(message, freq?)` accepts const-string messages and a narrow
   const-string frequency subset.
 - Reached true alert conditions and reached `alert()` calls emit events in
@@ -25,8 +27,9 @@ runtime output model.
   not leak or duplicate.
 - `alert` and `alertcondition` are classified as output side effects and remain
   rejected in UDFs and requested-context expressions.
-- Dynamic alert strings, `{{...}}` placeholder interpolation, host delivery,
-  strategy alerts, and other alert variants remain unsupported.
+- Dynamic alert strings, `{{...}}` placeholder interpolation outside the
+  `alertcondition` OHLCV message subset, host delivery, strategy alerts, and
+  other alert variants remain unsupported.
 
 ## Schema And Host Surface
 
@@ -54,7 +57,8 @@ Compatibility matrix rows:
 - `alertcondition`: `partial`
 - `alert`: `partial`
 - `alert frequency`: `partial`
-- `alert placeholders`: `unsupported`
+- `alert placeholders`: `unsupported` outside the supported `alertcondition`
+  OHLCV message subset
 - `function side effects`: `unsupported`
 - `realtime forming rollback`: `partial`
 
@@ -79,6 +83,7 @@ Semantic fixtures:
 - `tests/fixtures/sema/unsupported_alert_unknown_frequency.pine`
 - `tests/fixtures/sema/unsupported_alert_placeholder.pine`
 - `tests/fixtures/sema/unsupported_alertcondition_placeholder.pine`
+  for unknown `alertcondition` message placeholders
 - `tests/fixtures/sema/unsupported_alert_function_side_effect.pine`
 - `tests/fixtures/sema/unsupported_imperative_alert_function_side_effect.pine`
 
@@ -142,7 +147,8 @@ and `python3 -m pytest python/tests`.
 
 ## Maintenance Tails
 
-- TradingView-style alert placeholder interpolation remains unsupported.
+- TradingView-style alert placeholder interpolation remains unsupported outside
+  `alertcondition` message OHLCV placeholders.
 - Dynamic/simple/input/series message strings remain unsupported for alert
   messages and alertcondition titles/messages.
 - Host-side alert delivery, subscriptions, throttling, and UI/API notification
@@ -179,8 +185,9 @@ focused.
   confirmed/historical parity.
 - Unsupported message, frequency, placeholder, UDF, requested-context, and
   strategy-alert variants have stable diagnostics or explicit maintenance
-  tails. Frequency diagnostics include literal, dynamic, and unknown
-  const-string fixture coverage.
+  tails. Placeholder diagnostics still cover `alert()` placeholders and unknown
+  `alertcondition` placeholders. Frequency diagnostics include literal,
+  dynamic, and unknown const-string fixture coverage.
 - CLI, Python, and WASM public outputs include the same alert keys and runtime
   schema version.
 - Matrix and snapshot tests catch accidental alert compatibility widening.

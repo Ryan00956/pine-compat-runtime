@@ -160,6 +160,7 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
 fn accepts_alertcondition_const_string_subset() {
     let analysis = analyze(
         r#"alertcondition(close > open, "Up", "Close is above open")
+alertcondition(close > open, "OHLCV", "O={{open}} H={{high}} L={{low}} C={{close}} V={{volume}}")
 "#,
     );
 
@@ -231,6 +232,7 @@ alert("Reached", freq="once")
 fn rejects_alert_placeholders() {
     let analysis = analyze(
         r#"alert("{{close}}")
+alertcondition(true, "{{close}}", "Title placeholder")
 alertcondition(true, "Title", "{{ticker}}")
 "#,
     );
@@ -246,8 +248,13 @@ alertcondition(true, "Title", "{{ticker}}")
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.message.contains("placeholder interpolation"))
+            .any(|diagnostic| diagnostic.message.contains("alert placeholder `{{close}}`"))
     );
+    assert!(analysis.diagnostics.iter().any(|diagnostic| {
+        diagnostic
+            .message
+            .contains("alert placeholder `{{ticker}}`")
+    }));
     assert!(analysis.hir.is_none());
 }
 

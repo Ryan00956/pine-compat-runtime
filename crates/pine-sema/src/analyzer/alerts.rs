@@ -1,7 +1,20 @@
 use crate::prelude::*;
 
-fn has_alert_placeholder(value: &str) -> bool {
-    value.contains("{{") && value.contains("}}")
+fn unsupported_alert_placeholder(value: &str, supported: &[&str]) -> Option<String> {
+    let mut remaining = value;
+    while let Some(start) = remaining.find("{{") {
+        let placeholder_tail = &remaining[start..];
+        let Some(relative_end) = placeholder_tail.find("}}") else {
+            return Some("{{".to_owned());
+        };
+        let end = relative_end + 2;
+        let placeholder = &placeholder_tail[..end];
+        if !supported.contains(&placeholder) {
+            return Some(placeholder.to_owned());
+        }
+        remaining = &placeholder_tail[end..];
+    }
+    None
 }
 
 fn is_supported_alert_frequency(value: &str) -> bool {
@@ -38,16 +51,26 @@ impl Analyzer {
                 }
             }
 
-            if matches!(param_name, "message" | "title")
-                && const_string_value(&arg.value)
+            if matches!(param_name, "message" | "title") {
+                let supported_placeholders =
+                    if signature.name == "alertcondition" && param_name == "message" {
+                        &["{{open}}", "{{high}}", "{{low}}", "{{close}}", "{{volume}}"][..]
+                    } else {
+                        &[][..]
+                    };
+
+                if let Some(placeholder) = const_string_value(&arg.value)
                     .as_deref()
-                    .is_some_and(has_alert_placeholder)
-            {
-                self.unsupported(
-                    "alert_placeholders",
-                    "alert placeholder interpolation is not supported in the current alert subset",
-                    arg.span,
-                );
+                    .and_then(|value| unsupported_alert_placeholder(value, supported_placeholders))
+                {
+                    self.unsupported(
+                        "alert_placeholders",
+                        &format!(
+                            "alert placeholder `{placeholder}` is not supported in the current alert subset"
+                        ),
+                        arg.span,
+                    );
+                }
             }
         }
     }

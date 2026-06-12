@@ -44,8 +44,9 @@ Implemented or partially implemented:
   public `alerts` runtime output. The Phase H alert subset is closed in
   `docs/PHASE_H_AUDIT.md`; `alert.freq_once_per_bar`, `alert.freq_all`, and
   `alert.freq_once_per_bar_close` are supported for const-string `alert()`
-  frequency, while placeholders, host delivery, and strategy alerts remain out
-  of scope.
+  frequency, and `alertcondition` messages support fixture-backed OHLCV
+  placeholders, while broader placeholders, host delivery, and strategy alerts
+  remain out of scope.
 - Phase J libraries/user types are closed for the fixture-backed claimed
   subset in `docs/PHASE_J_AUDIT.md`: host-provided exact-key imports expose
   exported const expressions and pure exported functions, local scalar-field
@@ -431,20 +432,20 @@ Execution playbook: `docs/PHASE_H_EXECUTION_PLAN.md`.
 
 Delivered scope:
 
-- `alertcondition(condition, title, message)` with bool-compatible conditions
-  and const-string title/message values.
+- `alertcondition(condition, title, message)` with bool-compatible conditions,
+  const-string title/message values, and OHLCV message placeholders.
 - `alert(message, freq?)` with const-string messages plus
   `alert.freq_once_per_bar`, `alert.freq_all`, and
   `alert.freq_once_per_bar_close`.
 - Deterministic public runtime alert events in `schemaVersion: 3`.
 - Historical, incremental, and realtime rollback fixture coverage.
-- Stable diagnostics for unsupported frequency modes, placeholders,
+- Stable diagnostics for unsupported frequency modes, unsupported placeholders,
   side-effect contexts, and requested-context alert side effects.
 
 Maintenance tails:
 
-- Pine-source and broader alert placeholder interpolation need a dedicated
-  design before support is claimed.
+- Broader Pine-source alert placeholder interpolation needs a dedicated design
+  before support is claimed.
 - Host-side alert delivery APIs are not part of the current runtime host
   surfaces.
 - Strategy order-fill alert payloads are now part of the strategy runtime

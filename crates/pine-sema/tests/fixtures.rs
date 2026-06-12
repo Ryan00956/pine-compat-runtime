@@ -1290,7 +1290,7 @@ fn reports_unsupported_alert_placeholder_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_alert_placeholder.pine",
         "alert_placeholders",
-        "placeholder interpolation",
+        "alert placeholder `{{close}}`",
     );
 }
 
@@ -1299,7 +1299,7 @@ fn reports_unsupported_alertcondition_placeholder_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_alertcondition_placeholder.pine",
         "alert_placeholders",
-        "placeholder interpolation",
+        "alert placeholder `{{ticker}}`",
     );
 }
 

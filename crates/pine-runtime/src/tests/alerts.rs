@@ -36,6 +36,30 @@ alertcondition(close > 1 ? na : false, "NA", "na")
 }
 
 #[test]
+fn alertcondition_message_renders_ohlcv_placeholders() {
+    let result = run_alert_script(
+        r#"indicator("alerts")
+alertcondition(true, "OHLCV", "O={{open}} H={{high}} L={{low}} C={{close}} V={{volume}}")
+"#,
+        &[Bar {
+            time: 42,
+            open: 10.5,
+            high: 12.25,
+            low: 9.75,
+            close: 11.125,
+            volume: 1500.0,
+        }],
+    );
+
+    assert_eq!(result.alerts.len(), 1);
+    assert_eq!(result.alerts[0].source, "OHLCV");
+    assert_eq!(
+        result.alerts[0].message,
+        "O=10.5 H=12.25 L=9.75 C=11.125 V=1500"
+    );
+}
+
+#[test]
 fn alertcondition_events_follow_branch_execution_and_program_order() {
     let result = run_alert_script(
         r#"indicator("alerts")

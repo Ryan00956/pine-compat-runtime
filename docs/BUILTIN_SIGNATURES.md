@@ -597,14 +597,17 @@ barcolor(color: color-compatible, title?: const string, offset?: simple int, edi
 
 `alertcondition` emits a runtime alert event when its reached condition
 evaluates to `true`. `title` is serialized as event `source`; `message` is
-serialized as event `message`. `alert` serializes `source` as `alert` and
-supports a narrow const-string frequency subset: the default
+serialized as event `message` after replacing `{{open}}`, `{{high}}`,
+`{{low}}`, `{{close}}`, and `{{volume}}` with triggering-bar values.
+`alert` serializes `source` as `alert` and supports a narrow const-string
+frequency subset: the default
 `alert.freq_once_per_bar` emits at most one event per callsite per bar, while
 `alert.freq_all` emits every reached call. `alert.freq_once_per_bar_close`
 emits at most one event per callsite only during historical or confirmed
-realtime bar-close execution. Dynamic message/title strings, TradingView-style
-`{{...}}` placeholder interpolation, and alert side effects inside UDF or
-requested-context expressions are not part of the current subset.
+realtime bar-close execution. Dynamic message/title strings, `alert()`
+placeholders, `alertcondition` title placeholders, unknown `alertcondition`
+message placeholders, and alert side effects inside UDF or requested-context
+expressions are not part of the current subset.
 
 `color-compatible` should initially accept:
 
