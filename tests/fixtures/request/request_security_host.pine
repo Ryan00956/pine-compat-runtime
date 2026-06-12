@@ -218,3 +218,8 @@ plot(higher_tuple_delta)
 plot(tuple_math_max)
 plot(tuple_math_min)
 plot(tuple_math_abs)
+
+[higher_tuple_math_max, higher_tuple_math_min, higher_tuple_math_abs] = request.security("NYSE:IBM", "5", [math.max(close, open), math.min(close, open), math.abs(open - close)])
+plot(higher_tuple_math_max)
+plot(higher_tuple_math_min)
+plot(higher_tuple_math_abs)
