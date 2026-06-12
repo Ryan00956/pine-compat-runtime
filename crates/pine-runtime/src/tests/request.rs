@@ -939,6 +939,37 @@ fn request_security_evaluates_provider_bbw_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_kcw_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request kcw\")\nprovider_kcw = request.security(\"NYSE:IBM\", timeframe.period, ta.kcw(close, 2, 2, false))\nchart_kcw = ta.kcw(close, 2, 2, false)\nplot(provider_kcw)\nplot(chart_kcw)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_ohlcv(0, 10.0, 11.0, 9.0, 10.0, 1.0),
+            timed_ohlcv(60_000, 12.0, 15.0, 14.0, 12.0, 1.0),
+            timed_ohlcv(120_000, 9.0, 10.0, 8.0, 9.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_ohlcv(0, 5.0, 5.5, 4.5, 5.0, 1.0),
+            timed_ohlcv(60_000, 6.0, 7.0, 5.0, 6.0, 1.0),
+            timed_ohlcv(120_000, 4.0, 4.5, 3.5, 4.0, 1.0),
+        ])
+        .expect("provider ta.kcw expression should run");
+
+    assert_values_close(
+        &result.plots[0].values,
+        &[0.8, 0.4705882352941177, 0.7272727272727272],
+    );
+    assert_values_close(
+        &result.plots[1].values,
+        &[0.8, 1.1764705882352942, 1.0731707317073171],
+    );
+}
+
+#[test]
 fn request_security_evaluates_provider_correlation_in_requested_context() {
     let program = compile_program(
         "indicator(\"request correlation\")\nprovider_corr = request.security(\"NYSE:IBM\", timeframe.period, ta.correlation(close, high, 3))\nchart_corr = ta.correlation(close, high, 3)\nplot(provider_corr)\nplot(chart_corr)\n",

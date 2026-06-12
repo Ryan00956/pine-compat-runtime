@@ -278,7 +278,7 @@ Request data:
   `ta.stoch`, `ta.wpr`, `ta.sar`,
   `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`,
   `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`, `ta.rising`,
-  `ta.bbw`, `ta.correlation`, `ta.covariance`, `ta.median`, `ta.mode`,
+  `ta.bbw`, `ta.kcw`, `ta.correlation`, `ta.covariance`, `ta.median`, `ta.mode`,
   `ta.percentile_nearest_rank`, `ta.percentile_linear_interpolation`,
   `ta.percentrank`, `ta.stdev`, `ta.variance`, `ta.wma`, `ta.vwma`,
   `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`, `ta.cross`,
