@@ -795,6 +795,27 @@ fn accepts_provider_backed_request_security_tuple_literal_trig_math_expression()
 }
 
 #[test]
+fn accepts_provider_backed_request_security_tuple_literal_power_log_math_expression() {
+    let analysis = analyze(
+        "[pow_value, hypot_value, log_value] = request.security(\"NYSE:IBM\", timeframe.period, [math.pow(close / 100, 2), math.hypot(close / 100, open / 100), math.log(close)])\nplot(pow_value + hypot_value + log_value)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_provider_backed_request_security_tuple_literal_ta_expression() {
     let analysis = analyze(
         "[avg, delta, total] = request.security(\"NYSE:IBM\", timeframe.period, [ta.sma(close, 2), ta.change(close), ta.cum(close)])\nplot(nz(avg) + nz(delta) + total)\n",

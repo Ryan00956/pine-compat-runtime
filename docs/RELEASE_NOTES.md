@@ -205,6 +205,9 @@
   elements.
 - Added provider-backed `request.security` tuple literal fixture coverage for
   same-timeframe trig `math.sin`, `math.cos`, and `math.tan` scalar elements.
+- Added provider-backed `request.security` tuple literal fixture coverage for
+  same-timeframe power/log `math.pow`, `math.hypot`, and `math.log` scalar
+  elements.
 - Added higher-timeframe fixture coverage for provider-backed
   `request.security` tuple literal history and `nz` scalar elements while
   preserving default confirmation alignment.

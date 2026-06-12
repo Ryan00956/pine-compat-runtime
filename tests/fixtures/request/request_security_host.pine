@@ -520,3 +520,8 @@ plot(tuple_math_log10)
 plot(tuple_math_sin)
 plot(tuple_math_cos)
 plot(tuple_math_tan)
+
+[tuple_math_pow, tuple_math_hypot, tuple_math_log] = request.security("NYSE:IBM", timeframe.period, [math.pow(close / 100, 2), math.hypot(close / 100, open / 100), math.log(close)])
+plot(tuple_math_pow)
+plot(tuple_math_hypot)
+plot(tuple_math_log)
