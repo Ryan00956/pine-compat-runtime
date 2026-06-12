@@ -800,8 +800,9 @@ mod tests {
             output
                 .matches("\"values\":[null,null,null,null,100]")
                 .count()
-                >= 6
+                >= 7
         );
+        assert!(output.contains("\"values\":[null,null,null,null,50]"));
     }
 
     #[test]

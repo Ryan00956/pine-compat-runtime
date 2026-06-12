@@ -1910,6 +1910,40 @@ fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_percentile
 }
 
 #[test]
+fn request_security_aligns_provider_higher_timeframe_tuple_literal_ta_percentranks() {
+    let program = compile_program(
+        "indicator(\"request provider htf tuple literal ta percentranks\")\n[rank, inverse_rank] = request.security(\"NYSE:IBM\", \"5\", [ta.percentrank(close, 2), ta.percentrank(300 - close, 2)])\nplot(rank)\nplot(inverse_rank)\n",
+    );
+    let environment = external_symbol_environment_with_timeframe(
+        "NYSE:IBM",
+        "5",
+        vec![
+            timed_ohlcv(0, 90.0, 110.0, 80.0, 100.0, 1.0),
+            timed_ohlcv(300_000, 190.0, 210.0, 180.0, 200.0, 1.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(240_000, 3.0),
+            timed_bar(300_000, 4.0),
+            timed_bar(540_000, 5.0),
+        ])
+        .expect("higher timeframe provider tuple literal ta percentrank request should run");
+
+    assert_eq!(result.plots.len(), 2);
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+        assert_eq!(plot.values[2], PineValue::Na);
+        assert_eq!(plot.values[3], PineValue::Na);
+    }
+    assert_values_close(&result.plots[0].values[4..], &[100.0]);
+    assert_values_close(&result.plots[1].values[4..], &[50.0]);
+}
+
+#[test]
 fn request_security_isolates_provider_ta_state_from_chart_state() {
     let program = compile_program(
         "indicator(\"request ta\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2))\nchart = ta.sma(close, 2)\nplot(provider)\nplot(chart)\n",
