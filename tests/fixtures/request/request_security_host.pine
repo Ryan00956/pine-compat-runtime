@@ -317,3 +317,7 @@ plot(tuple_ta_variance)
 [higher_tuple_ta_stdev, higher_tuple_ta_variance] = request.security("NYSE:IBM", "5", [ta.stdev(close, 2), ta.variance(close, 2)])
 plot(higher_tuple_ta_stdev)
 plot(higher_tuple_ta_variance)
+
+[tuple_ta_wma, tuple_ta_vwma] = request.security("NYSE:IBM", timeframe.period, [ta.wma(close, 3), ta.vwma(close, 3)])
+plot(tuple_ta_wma)
+plot(tuple_ta_vwma)

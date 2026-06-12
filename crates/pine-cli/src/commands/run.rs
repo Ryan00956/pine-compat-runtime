@@ -644,9 +644,14 @@ mod tests {
                 >= 2
         );
         assert!(output.contains("\"values\":[null,null,1,1,1]"));
-        assert!(output.contains(
-            "\"values\":[null,null,21.333333333333332,22.333333333333332,23.333333333333332]"
-        ));
+        assert!(
+            output
+                .matches(
+                    "\"values\":[null,null,21.333333333333332,22.333333333333332,23.333333333333332]"
+                )
+                .count()
+                >= 2
+        );
         assert!(output.contains("\"values\":[null,null,null,21.5,22.5]"));
         assert!(output.contains("\"values\":[null,null,null,null,24]"));
         assert!(
@@ -692,7 +697,7 @@ mod tests {
                 .count()
                 >= 3
         );
-        assert!(output.matches("\"values\":[null,null,21,22,23]").count() >= 7);
+        assert!(output.matches("\"values\":[null,null,21,22,23]").count() >= 8);
         assert!(output.matches("\"values\":[null,null,0,0,0]").count() >= 3);
         assert!(output.matches("\"values\":[null,null,2,2,2]").count() >= 4);
         assert!(output.matches("\"values\":[null,null,null,22,23]").count() >= 2);
