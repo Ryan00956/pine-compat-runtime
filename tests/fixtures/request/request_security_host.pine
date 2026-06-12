@@ -169,3 +169,8 @@ plot(vwap_lower)
 plot(tuple_close)
 plot(tuple_shifted)
 plot(tuple_above)
+
+[higher_tuple_close, higher_tuple_shifted, higher_tuple_above] = request.security("NYSE:IBM", "5", [close, close + 1, close > open ? 1 : 0])
+plot(higher_tuple_close)
+plot(higher_tuple_shifted)
+plot(higher_tuple_above)
