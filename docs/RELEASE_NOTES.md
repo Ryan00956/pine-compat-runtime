@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added higher-timeframe fixture coverage for provider-backed
+  `request.security` tuple literal rolling `ta.median` and `ta.mode` scalar
+  elements while preserving default confirmation alignment.
 - Added provider-backed `request.security` tuple literal fixture coverage for
   rolling `ta.percentrank` scalar elements.
 - Added provider-backed `request.security` tuple literal fixture coverage for
