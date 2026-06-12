@@ -1112,6 +1112,41 @@ fn request_security_evaluates_provider_highestbars_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_lowestbars_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request lowestbars\")\nprovider_lo = request.security(\"NYSE:IBM\", timeframe.period, ta.lowestbars(close, 3))\nchart_lo = ta.lowestbars(close, 3)\nplot(provider_lo)\nplot(chart_lo)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 4.0),
+            timed_bar(60_000, 2.0),
+            timed_bar(120_000, 3.0),
+            timed_bar(180_000, 1.0),
+            timed_bar(240_000, 5.0),
+            timed_bar(300_000, 4.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 3.0),
+            timed_bar(120_000, 2.0),
+            timed_bar(180_000, 5.0),
+            timed_bar(240_000, 5.0),
+            timed_bar(300_000, 4.0),
+        ])
+        .expect("provider ta.lowestbars expression should run");
+
+    for plot in &result.plots {
+        assert_eq!(plot.values[0], PineValue::Na);
+        assert_eq!(plot.values[1], PineValue::Na);
+    }
+    assert_values_close(&result.plots[0].values[2..], &[1.0, 0.0, 1.0, 2.0]);
+    assert_values_close(&result.plots[1].values[2..], &[2.0, 1.0, 2.0, 0.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_correlation_in_requested_context() {
     let program = compile_program(
         "indicator(\"request correlation\")\nprovider_corr = request.security(\"NYSE:IBM\", timeframe.period, ta.correlation(close, high, 3))\nchart_corr = ta.correlation(close, high, 3)\nplot(provider_corr)\nplot(chart_corr)\n",

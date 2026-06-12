@@ -262,6 +262,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.highest"
             | "ta.lowest"
             | "ta.highestbars"
+            | "ta.lowestbars"
             | "ta.change"
             | "ta.mom"
             | "ta.roc"

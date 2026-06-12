@@ -828,7 +828,7 @@ The supported requested expression subset includes direct OHLCV/time sources,
 pure arithmetic and ternaries, history references, `na`, `nz`, selected
 stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
 `ta.cum`, `ta.sma`, `ta.ema`, `ta.dema`, `ta.tema`, `ta.rma`, `ta.rsi`,
-`ta.tsi`, `ta.cmo`, `ta.cci`, `ta.cog`, `ta.bop`, `ta.ao`, `ta.max`, `ta.min`, `ta.mfi`, `ta.stoch`, `ta.wpr`, `ta.sar`, `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`, `ta.highestbars`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`,
+`ta.tsi`, `ta.cmo`, `ta.cci`, `ta.cog`, `ta.bop`, `ta.ao`, `ta.max`, `ta.min`, `ta.mfi`, `ta.stoch`, `ta.wpr`, `ta.sar`, `ta.tr` function calls, `ta.atr`, `ta.highest`, `ta.lowest`, `ta.highestbars`, `ta.lowestbars`, `ta.change`, `ta.mom`, `ta.roc`, `ta.range`, `ta.dev`,
 `ta.bbw`, `ta.kcw`, `ta.pivothigh`, `ta.pivotlow`, `ta.correlation`,
 `ta.covariance`, `ta.median`, `ta.mode`, `ta.percentile_nearest_rank`,
 `ta.percentile_linear_interpolation`,
@@ -836,9 +836,8 @@ stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
 `ta.hma`, `ta.alma`, `ta.linreg`, `ta.rising`, `ta.falling`, `ta.barssince`,
 `ta.cross`, `ta.crossover`, and `ta.crossunder`.
 Rolling callsite state for `math.sum` and `ta.*` calls is owned by the isolated
-requested context. Stateful math calls such as
-`math.random`, the `ta.tr` variable form, and the remaining extrema offset
-helper `ta.lowestbars` remain outside the requested-expression subset.
+requested context. Stateful math calls such as `math.random` and the `ta.tr`
+variable form remain outside the requested-expression subset.
 
 Requested-context results are cached deterministically by callsite, requested
 symbol, requested timeframe, and expression identity for the duration of one
