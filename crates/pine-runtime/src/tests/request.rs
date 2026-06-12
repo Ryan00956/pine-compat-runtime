@@ -1147,6 +1147,43 @@ fn request_security_evaluates_provider_lowestbars_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_valuewhen_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request valuewhen\")\nprovider_value = request.security(\"NYSE:IBM\", timeframe.period, ta.valuewhen(close > 2, close, 1))\nchart_value = ta.valuewhen(close > 3, close, 1)\nplot(provider_value)\nplot(chart_value)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 1.0),
+            timed_bar(60_000, 3.0),
+            timed_bar(120_000, 2.0),
+            timed_bar(180_000, 5.0),
+            timed_bar(240_000, 4.0),
+            timed_bar(300_000, 6.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 4.0),
+            timed_bar(60_000, 1.0),
+            timed_bar(120_000, 5.0),
+            timed_bar(180_000, 2.0),
+            timed_bar(240_000, 6.0),
+            timed_bar(300_000, 3.0),
+        ])
+        .expect("provider ta.valuewhen expression should run");
+
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_eq!(result.plots[0].values[2], PineValue::Na);
+    assert_values_close(&result.plots[0].values[3..], &[3.0, 5.0, 4.0]);
+
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[1], PineValue::Na);
+    assert_values_close(&result.plots[1].values[2..], &[4.0, 4.0, 5.0, 5.0]);
+}
+
+#[test]
 fn request_security_evaluates_provider_correlation_in_requested_context() {
     let program = compile_program(
         "indicator(\"request correlation\")\nprovider_corr = request.security(\"NYSE:IBM\", timeframe.period, ta.correlation(close, high, 3))\nchart_corr = ta.correlation(close, high, 3)\nplot(provider_corr)\nplot(chart_corr)\n",

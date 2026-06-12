@@ -833,7 +833,7 @@ stateless `math.*` calls, fixed-mintick `math.round_to_mintick`, `math.sum`,
 `ta.covariance`, `ta.median`, `ta.mode`, `ta.percentile_nearest_rank`,
 `ta.percentile_linear_interpolation`,
 `ta.percentrank`, `ta.stdev`, `ta.variance`, `ta.wma`, `ta.vwma`, `ta.swma`,
-`ta.hma`, `ta.alma`, `ta.linreg`, `ta.rising`, `ta.falling`, `ta.barssince`,
+`ta.hma`, `ta.alma`, `ta.linreg`, `ta.rising`, `ta.falling`, `ta.barssince`, `ta.valuewhen`,
 `ta.cross`, `ta.crossover`, and `ta.crossunder`.
 Rolling callsite state for `math.sum` and `ta.*` calls is owned by the isolated
 requested context. Stateful math calls such as `math.random` and the `ta.tr`

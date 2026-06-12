@@ -283,7 +283,7 @@ Request data:
   `ta.percentile_linear_interpolation`,
   `ta.percentrank`, `ta.stdev`, `ta.variance`, `ta.wma`, `ta.vwma`,
   `ta.swma`, `ta.hma`, `ta.alma`, `ta.linreg`, `ta.falling`, `ta.barssince`,
-  `ta.cross`, `ta.crossover`, and `ta.crossunder`; local variable aliases, the
+  `ta.valuewhen`, `ta.cross`, `ta.crossover`, and `ta.crossunder`; local variable aliases, the
   `ta.tr` variable form and stateful math
   calls such as `math.random` are not part of this subset.
   Requested-context rolling callsite state is isolated from chart state.

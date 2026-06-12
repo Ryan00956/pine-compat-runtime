@@ -64,6 +64,7 @@ pivotlow_value = request.security(syminfo.tickerid, timeframe.period, ta.pivotlo
 barssince_value = request.security(syminfo.tickerid, timeframe.period, ta.barssince(close > open))
 highestbars_value = request.security(syminfo.tickerid, timeframe.period, ta.highestbars(close, 3))
 lowestbars_value = request.security(syminfo.tickerid, timeframe.period, ta.lowestbars(close, 3))
+valuewhen_value = request.security(syminfo.tickerid, timeframe.period, ta.valuewhen(close > 2, close, 1))
 
 plot(identity)
 plot(history)
@@ -129,3 +130,4 @@ plot(pivotlow_value)
 plot(barssince_value)
 plot(highestbars_value)
 plot(lowestbars_value)
+plot(valuewhen_value)

@@ -290,6 +290,7 @@ fn request_scalar_call_is_supported(name: &str) -> bool {
             | "ta.rising"
             | "ta.falling"
             | "ta.barssince"
+            | "ta.valuewhen"
             | "ta.cross"
             | "ta.crossover"
             | "ta.crossunder"
