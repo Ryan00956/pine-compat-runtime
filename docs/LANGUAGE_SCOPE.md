@@ -290,7 +290,7 @@ Request data:
   calls such as `math.random` are not part of this subset.
   Requested-context rolling callsite state is isolated from chart state.
   Selected provider-backed tuple expressions are supported when destructured
-  directly from the request, currently `ta.macd`.
+  directly from the request, currently `ta.macd` and `ta.bb`.
   Provider-backed `ta.vwap` support is limited to scalar source-call
   expressions; other provider-backed tuple expressions remain outside this
   subset.

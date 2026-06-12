@@ -642,6 +642,45 @@ fn request_security_evaluates_provider_macd_tuple_in_requested_context() {
 }
 
 #[test]
+fn request_security_evaluates_provider_bb_tuple_in_requested_context() {
+    let program = compile_program(
+        "indicator(\"request provider bb tuple\")\n[basis, upper, lower] = request.security(\"NYSE:IBM\", timeframe.period, ta.bb(close, 3, 2))\nplot(basis)\nplot(upper)\nplot(lower)\n",
+    );
+    let environment = external_symbol_environment(
+        "NYSE:IBM",
+        vec![
+            timed_bar(0, 20.0),
+            timed_bar(60_000, 21.0),
+            timed_bar(120_000, 22.0),
+            timed_bar(180_000, 23.0),
+            timed_bar(240_000, 24.0),
+        ],
+    );
+    let result = HistoricalRuntime::with_request_environment(&program, environment)
+        .run(&[
+            timed_bar(0, 5.0),
+            timed_bar(60_000, 6.0),
+            timed_bar(120_000, 7.0),
+            timed_bar(180_000, 8.0),
+            timed_bar(240_000, 9.0),
+        ])
+        .expect("provider ta.bb tuple expression should run");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[0].values[1], PineValue::Na);
+    assert_values_close(&result.plots[0].values[2..], &[21.0, 22.0, 23.0]);
+    assert_values_close(
+        &result.plots[1].values[2..],
+        &[22.632993161855453, 23.632993161855453, 24.632993161855453],
+    );
+    assert_values_close(
+        &result.plots[2].values[2..],
+        &[19.367006838144547, 20.367006838144547, 21.367006838144547],
+    );
+}
+
+#[test]
 fn request_security_isolates_provider_ta_state_from_chart_state() {
     let program = compile_program(
         "indicator(\"request ta\")\nprovider = request.security(\"NYSE:IBM\", timeframe.period, ta.sma(close, 2))\nchart = ta.sma(close, 2)\nplot(provider)\nplot(chart)\n",
