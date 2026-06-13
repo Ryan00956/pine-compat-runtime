@@ -1180,6 +1180,15 @@ fn reports_unsupported_array_first_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_last_linefill_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_last_linefill.pine",
+        "array.new_linefill",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_join_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_join_label.pine",
