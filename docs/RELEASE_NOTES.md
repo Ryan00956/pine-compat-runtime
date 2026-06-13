@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.size` semantic coverage for unsupported linefill
+  arrays.
 - Added fixture-backed `array.push` semantic coverage for unsupported linefill
   arrays.
 - Added fixture-backed `array.get` semantic coverage for unsupported linefill
