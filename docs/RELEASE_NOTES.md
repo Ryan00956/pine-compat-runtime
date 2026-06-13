@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.length` coverage for empty strings returning 0.
 - Added fixture-backed `str.format` coverage for bool placeholder arguments.
 - Added fixture-backed `str.format` coverage for `na` placeholder arguments
   rendering as `NaN`.
