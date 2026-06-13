@@ -178,7 +178,7 @@ str.startswith	supported	literal prefix check including empty pattern; na source
 str.endswith	supported	literal suffix check including empty pattern; na source or pattern returns na	tests/fixtures/runtime/strings.pine
 str.pos	supported	first substring Unicode scalar position, empty substring at 0, and na for no match or na required args	tests/fixtures/runtime/strings.pine
 str.substring	supported	begin/end Unicode scalar index substring with omitted or na end clamped to length, na begin default, and overlong end clamped to length	tests/fixtures/runtime/strings.pine
-str.trim	supported	ASCII whitespace trimming around string values	tests/fixtures/runtime/strings.pine
+str.trim	supported	ASCII whitespace trimming around string values and na input propagation	tests/fixtures/runtime/strings.pine
 str.repeat	supported	string repetition with optional separator, zero-count empty result, and na source/count/separator propagation	tests/fixtures/runtime/strings.pine
 str.replace	supported	single literal occurrence replacement with optional occurrence index, no-match passthrough, empty-target boundary insertion, and na source/target/replacement propagation	tests/fixtures/runtime/strings.pine
 str.replace_all	supported	all literal occurrence replacement, empty-target boundary insertion, and na source/target/replacement propagation	tests/fixtures/runtime/strings.pine

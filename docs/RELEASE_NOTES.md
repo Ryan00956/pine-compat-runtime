@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.trim` coverage for `na` input arguments.
 - Added fixture-backed `str.upper` and `str.lower` coverage for `na` input
   arguments.
 - Added fixture-backed `str.tostring` coverage for `na` format arguments
