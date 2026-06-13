@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array median bool")
+values = array.new_bool()
+plot(array.median(values))

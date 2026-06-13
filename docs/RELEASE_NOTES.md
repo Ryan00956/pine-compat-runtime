@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.median` semantic coverage for unsupported bool
+  arrays.
 - Added fixture-backed `array.mode` semantic coverage for unsupported bool
   arrays.
 - Added fixture-backed `array.percentile_nearest_rank` semantic coverage for
