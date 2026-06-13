@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `label.get_text` boundary coverage for unsupported later
+  label getters.
 - Added fixture-backed `label.get_y` boundary coverage for unsupported later
   label getters.
 - Added fixture-backed `label.get_x` boundary coverage for unsupported later
