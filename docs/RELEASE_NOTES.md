@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.substring` coverage for equal begin/end indexes
+  returning an empty string.
 - Added fixture-backed `str.contains`, `str.startswith`, and `str.endswith`
   coverage for ordinary no-match cases returning `false`.
 - Added fixture-backed `str.length` coverage for empty strings returning 0.
