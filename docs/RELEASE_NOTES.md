@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `table.cell` boundary coverage for unsupported table
+  cell text-formatting variants.
 - Added fixture-backed `table.new` boundary coverage for unsupported table
   position/layout variants.
 - Added fixture-backed drawing object method syntax boundary coverage for

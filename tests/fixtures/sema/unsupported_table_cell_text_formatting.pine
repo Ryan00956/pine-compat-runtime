@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported table.cell text formatting")
+id = table.new(position.top_right, 1, 1)
+table.cell(id, 0, 0, "A", text_formatting=text.format_bold + 4)
+plot(close)
