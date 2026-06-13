@@ -1188,6 +1188,14 @@ fn reports_unsupported_box_set_xloc_values_fixture() {
 }
 
 #[test]
+fn reports_unsupported_table_new_modes_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_table_new_modes.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
 fn reports_unsupported_label_method_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_label_method.pine",

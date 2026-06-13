@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported table.new modes")
+table.new("position.bad", 1, 1)
+plot(close)

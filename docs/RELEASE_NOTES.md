@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `table.new` boundary coverage for unsupported table
+  position/layout variants.
 - Added fixture-backed drawing object method syntax boundary coverage for
   unsupported drawing methods, chart.point overloads, and xloc/time variants.
 - Added fixture-backed `box.get_right` boundary coverage for unsupported other
