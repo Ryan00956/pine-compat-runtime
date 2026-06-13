@@ -21,6 +21,8 @@ words.push("a")
 words.push("b")
 plot(words.join("-") == "a-b" ? 1 : 0)
 plot(words.join(na) == "a,b" ? 1 : 0)
+words.insert(1, "")
+plot(words.join("|") == "a||b" ? 1 : 0)
 
 colors = array.new_color()
 colors.push(color.red)

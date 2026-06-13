@@ -1107,6 +1107,8 @@ words.push("a")
 words.push("b")
 plot(words.join("-") == "a-b" ? 1 : 0)
 plot(words.join(na) == "a,b" ? 1 : 0)
+words.insert(1, "")
+plot(words.join("|") == "a||b" ? 1 : 0)
 
 colors = array.new_color()
 colors.push(color.red)
@@ -1127,7 +1129,7 @@ plot(array.join(empty, "|") == "" ? 1 : 0)
     let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 8);
+    assert_eq!(result.plots.len(), 9);
     for plot in &result.plots {
         assert_values_close(&plot.values, &[1.0, 1.0]);
     }

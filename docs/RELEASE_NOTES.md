@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.join` coverage for string arrays containing empty
+  elements.
 - Added fixture-backed `str.tostring(false)` coverage for bool stringification.
 - Added fixture-backed `str.split` coverage for missing separators returning a
   single source-string element.
