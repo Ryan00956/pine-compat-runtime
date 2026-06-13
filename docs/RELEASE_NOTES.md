@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.get_price` boundary coverage for unsupported
+  `xloc.bar_time` line coordinates.
 - Added fixture-backed `line.delete` boundary coverage for unsupported later
   line methods.
 - Added fixture-backed `line.set_extend` boundary coverage for unsupported
