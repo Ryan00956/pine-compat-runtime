@@ -817,6 +817,7 @@ words.push("a")
 words.push("b")
 words.push("a")
 plot(words.includes("b") ? words.lastindexof("a") : 0)
+plot(words.indexof("z") == -1 and words.lastindexof("z") == -1 ? 1 : 0)
 
 colors = array.new_color()
 colors.push(color.red)
@@ -834,7 +835,7 @@ plot(colors.includes(color.green) ? colors.indexof(color.green) : 0)
     let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 21);
+    assert_eq!(result.plots.len(), 22);
     assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0]);
     assert_values_close(&result.plots[2].values, &[2.0, 2.0, 2.0]);
@@ -856,6 +857,7 @@ plot(colors.includes(color.green) ? colors.indexof(color.green) : 0)
     assert_values_close(&result.plots[18].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[19].values, &[2.0, 2.0, 2.0]);
     assert_values_close(&result.plots[20].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[21].values, &[1.0, 1.0, 1.0]);
 }
 
 #[test]
