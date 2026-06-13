@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array lastindexof linefill")
+a = array.new_linefill(0)
+plot(a.lastindexof(na))

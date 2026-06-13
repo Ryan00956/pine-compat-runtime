@@ -1197,6 +1197,15 @@ fn reports_unsupported_array_indexof_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_lastindexof_linefill_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_lastindexof_linefill.pine",
+        "array.new_linefill",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_bool.pine",
