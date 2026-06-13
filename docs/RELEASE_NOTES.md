@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.set_color` boundary coverage for unsupported later
+  line methods.
 - Added fixture-backed `line.set_xloc` boundary coverage for unsupported
   `xloc.bar_time` and chart-point line methods.
 - Added fixture-backed `line.set_xy2` boundary coverage for unsupported later
