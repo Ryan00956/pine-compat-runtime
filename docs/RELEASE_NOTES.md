@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.binary_search_rightmost` semantic coverage for
+  unsupported bool arrays.
 - Added fixture-backed `array.binary_search_leftmost` semantic coverage for
   unsupported bool arrays.
 - Added fixture-backed `array.binary_search` semantic coverage for unsupported
