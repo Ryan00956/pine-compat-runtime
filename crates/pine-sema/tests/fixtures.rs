@@ -1275,6 +1275,14 @@ fn reports_unsupported_array_avg_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sum_bool_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_bool.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_standardize_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_standardize_bool.pine",

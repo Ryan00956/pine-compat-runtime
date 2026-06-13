@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array sum bool")
+values = array.new_bool()
+plot(array.sum(values))
