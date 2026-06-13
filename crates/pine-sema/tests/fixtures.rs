@@ -1751,6 +1751,14 @@ fn reports_unsupported_array_binary_search_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_string_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_leftmost_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_leftmost_bool.pine",
