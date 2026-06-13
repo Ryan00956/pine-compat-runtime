@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.pop` coverage for empty scalar arrays returning
+  `na` without changing array size.
 - Added fixture-backed `array.shift` coverage for preserving remaining element
   order after removing the first element.
 - Added fixture-backed `array.concat` coverage for appending a non-empty source

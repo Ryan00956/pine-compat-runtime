@@ -14,8 +14,10 @@ array.set(values, 0, low)
 first = array.get(values, 0)
 last = array.pop(values)
 missing = array.get(values, 10)
+empty = array.new_float()
 plot(first + last + array.size(values))
 plot(na(missing) ? 1 : 0)
+plot(na(array.pop(empty)) and array.size(empty) == 0 ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -28,9 +30,10 @@ plot(na(missing) ? 1 : 0)
     let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 2);
+    assert_eq!(result.plots.len(), 3);
     assert_values_close(&result.plots[0].values, &[4.0, 6.0, 8.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
 }
 
 #[test]
@@ -44,8 +47,10 @@ values.set(0, low)
 first = values.get(0)
 last = values.pop()
 missing = values.get(10)
+empty = array.new_float()
 plot(first + last + values.size())
 plot(na(missing) ? 1 : 0)
+plot(na(empty.pop()) and empty.size() == 0 ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -58,9 +63,10 @@ plot(na(missing) ? 1 : 0)
     let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 2);
+    assert_eq!(result.plots.len(), 3);
     assert_values_close(&result.plots[0].values, &[4.0, 6.0, 8.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
 }
 
 #[test]
