@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.clear` coverage for clearing copied box arrays
+  without deleting the referenced box id and reusing the cleared array.
 - Added fixture-backed `array.clear` coverage for clearing copied line arrays
   without deleting the referenced line id and reusing the cleared array.
 - Added fixture-backed `array.clear` coverage for clearing copied label arrays
