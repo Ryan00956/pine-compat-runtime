@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `label.set_textalign` boundary coverage for unsupported
+  later label text layout methods.
 - Added fixture-backed `label.set_tooltip` boundary coverage for unsupported
   later label methods.
 - Added fixture-backed `label.set_size` boundary coverage for unsupported
