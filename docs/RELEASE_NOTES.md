@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed `array.indexof` and `array.lastindexof` coverage for
+  bool-array repeated-hit and not-found searches.
+- Added fixture-backed `array.indexof` and `array.lastindexof` coverage for
   string-array not-found searches returning `-1`.
 - Added fixture-backed `array.binary_search` coverage for exact empty-array
   searches returning `-1`.
