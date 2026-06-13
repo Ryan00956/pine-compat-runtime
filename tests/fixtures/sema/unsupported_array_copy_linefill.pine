@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array copy linefill")
+a = array.new_linefill(0)
+b = a.copy()
+plot(close)
