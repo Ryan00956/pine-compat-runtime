@@ -1211,6 +1211,14 @@ fn reports_unsupported_array_variance_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_every_string_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_covariance_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_covariance_bool.pine",
