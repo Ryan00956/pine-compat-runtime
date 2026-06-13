@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.split` coverage for `na` separator arguments.
 - Added fixture-backed `str.repeat` coverage for `na` source and separator
   arguments.
 - Added fixture-backed `str.replace` and `str.replace_all` coverage for `na`
