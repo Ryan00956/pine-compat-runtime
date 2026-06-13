@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.replace_all` coverage for no-match inputs leaving
+  the source string unchanged.
 - Added fixture-backed `str.substring` coverage for equal begin/end indexes
   returning an empty string.
 - Added fixture-backed `str.contains`, `str.startswith`, and `str.endswith`
