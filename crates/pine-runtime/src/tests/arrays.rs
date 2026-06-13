@@ -830,6 +830,8 @@ plot(not words.includes("z") and not bool_search.includes(false) ? 1 : 0)
 empty_truth_ints = array.new_int()
 empty_truth_floats = array.new_float()
 plot(empty_truth_ints.every() and not empty_truth_ints.some() and array.every(empty_truth_floats) and not array.some(empty_truth_floats) ? 1 : 0)
+empty_float_search = array.new_float()
+plot(empty_float_search.binary_search(close) == -1 and empty_float_search.binary_search_leftmost(close) == -1 and empty_float_search.binary_search_rightmost(close) == -1 ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -842,7 +844,7 @@ plot(empty_truth_ints.every() and not empty_truth_ints.some() and array.every(em
     let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 25);
+    assert_eq!(result.plots.len(), 26);
     assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0]);
     assert_values_close(&result.plots[2].values, &[2.0, 2.0, 2.0]);
@@ -868,6 +870,7 @@ plot(empty_truth_ints.every() and not empty_truth_ints.some() and array.every(em
     assert_values_close(&result.plots[22].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[23].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[24].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[25].values, &[1.0, 1.0, 1.0]);
 }
 
 #[test]

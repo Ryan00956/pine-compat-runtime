@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.binary_search`, `array.binary_search_leftmost`,
+  and `array.binary_search_rightmost` coverage for empty float arrays.
 - Added fixture-backed `array.every` and `array.some` coverage for empty int
   and float arrays.
 - Added fixture-backed `array.includes` coverage for bool and string not-found
