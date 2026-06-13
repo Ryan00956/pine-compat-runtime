@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array abs string")
+values = array.new_string()
+result = array.abs(values)
+plot(array.size(result))
