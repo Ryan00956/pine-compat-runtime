@@ -18,12 +18,13 @@ fn closed_trade_profit_percent(entry_price: f64, qty: f64, profit: f64) -> f64 {
     normalize_zero(profit / denominator * 100.0)
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 struct AllocatedEntryFill {
     entry_price: f64,
     entry_bar_index: usize,
     entry_time: i64,
     entry_commission: f64,
+    entry_metadata: StrategyOrderMetadata,
 }
 
 impl AllocatedEntryFill {
@@ -40,6 +41,7 @@ impl AllocatedEntryFill {
                 entry_bar_index: fallback_entry_bar_index,
                 entry_time: fallback_entry_time,
                 entry_commission: fallback_entry_commission,
+                entry_metadata: StrategyOrderMetadata::default(),
             };
         };
 
@@ -51,6 +53,7 @@ impl AllocatedEntryFill {
                 .iter()
                 .map(|allocation| allocation.entry_commission)
                 .sum(),
+            entry_metadata: first_allocation.entry_metadata.clone(),
         }
     }
 }
@@ -75,6 +78,19 @@ enum StrategyExitFillAlertKind {
     Loss,
     Trailing,
     Generic,
+}
+
+fn exit_comment(
+    metadata: &StrategyExitMetadata,
+    kind: StrategyExitFillAlertKind,
+) -> Option<String> {
+    let specific = match kind {
+        StrategyExitFillAlertKind::Profit => metadata.comment_profit.as_ref(),
+        StrategyExitFillAlertKind::Loss => metadata.comment_loss.as_ref(),
+        StrategyExitFillAlertKind::Trailing => metadata.comment_trailing.as_ref(),
+        StrategyExitFillAlertKind::Generic => None,
+    };
+    specific.or(metadata.comment.as_ref()).cloned()
 }
 
 fn pending_exit_alert_kind(
@@ -214,6 +230,8 @@ impl BrokerState {
             ),
             max_runup: self.current_open_trade_max_runup_for_quantity(fill.qty),
             max_drawdown: self.current_open_trade_max_drawdown_for_quantity(fill.qty),
+            entry_comment: fill.entry_fill.entry_metadata.comment.clone(),
+            exit_comment: fill.close_metadata.comment.clone(),
             close_metadata: fill.close_metadata,
         });
     }
@@ -259,6 +277,7 @@ impl BrokerState {
         let exit_commission = self.exit_commission_for_fill(qty, current_price);
         let commission = entry_fill.entry_commission + exit_commission;
         let profit = (current_price - entry_fill.entry_price) * qty - commission;
+        let closed_entry_commission = entry_fill.entry_commission;
 
         self.order_book.exits_mut().clear_for_entry(&entry_id);
         self.record_order_event(
@@ -296,7 +315,7 @@ impl BrokerState {
             return;
         }
 
-        self.open_entry_commission -= entry_fill.entry_commission;
+        self.open_entry_commission -= closed_entry_commission;
         self.apply_trade_allocations_and_sync_position(&allocations);
         self.record_position_snapshot(bar_index);
     }
@@ -342,6 +361,7 @@ impl BrokerState {
                     entry_bar_index: allocation.entry_bar_index,
                     entry_time: allocation.entry_time,
                     entry_commission: allocation.entry_commission,
+                    entry_metadata: allocation.entry_metadata.clone(),
                 },
                 exit_bar_index: bar_index,
                 exit_time: time,
@@ -474,6 +494,7 @@ impl BrokerState {
         let exit_commission = self.exit_commission_for_fill(qty, price);
         let commission = entry_fill.entry_commission + exit_commission;
         let profit = (price - entry_fill.entry_price) * qty - commission;
+        let closed_entry_commission = entry_fill.entry_commission;
         let metadata = self.take_next_close_metadata();
         self.record_closed_trade_fill(ClosedTradeFill {
             entry_id: id.clone(),
@@ -517,7 +538,7 @@ impl BrokerState {
             return;
         }
 
-        self.open_entry_commission -= entry_fill.entry_commission;
+        self.open_entry_commission -= closed_entry_commission;
         self.apply_trade_allocations_and_sync_position(&allocations);
         self.record_position_snapshot(bar_index);
     }
@@ -607,7 +628,10 @@ impl BrokerState {
                 qty,
                 profit,
                 commission,
-                close_metadata: StrategyOrderMetadata::default(),
+                close_metadata: StrategyOrderMetadata {
+                    comment: exit_comment(&alert_metadata, alert_kind),
+                    ..StrategyOrderMetadata::default()
+                },
             });
             entry_commission
         } else {
@@ -619,6 +643,7 @@ impl BrokerState {
                     entry_bar_index: allocation.entry_bar_index,
                     entry_time: allocation.entry_time,
                     entry_commission: allocation.entry_commission,
+                    entry_metadata: allocation.entry_metadata.clone(),
                 };
                 let commission = allocation.entry_commission + allocated_exit_commission;
                 let profit =
@@ -657,7 +682,10 @@ impl BrokerState {
                     qty: allocation.quantity,
                     profit,
                     commission,
-                    close_metadata: StrategyOrderMetadata::default(),
+                    close_metadata: StrategyOrderMetadata {
+                        comment: exit_comment(&alert_metadata, alert_kind),
+                        ..StrategyOrderMetadata::default()
+                    },
                 });
                 closed_entry_commission += allocation.entry_commission;
             }

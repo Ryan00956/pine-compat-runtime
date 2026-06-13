@@ -48,6 +48,7 @@ pub(super) struct TradeAllocation {
     pub(super) entry_time: i64,
     pub(super) quantity: f64,
     pub(super) entry_commission: f64,
+    pub(super) entry_metadata: StrategyOrderMetadata,
 }
 
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -126,6 +127,7 @@ impl TradeLedger {
                 entry_time: trade.entry_time,
                 quantity,
                 entry_commission,
+                entry_metadata: trade.entry_metadata.clone(),
             });
             remaining -= quantity;
         }
@@ -166,6 +168,7 @@ impl TradeLedger {
             entry_time: trade.entry_time,
             quantity,
             entry_commission,
+            entry_metadata: trade.entry_metadata.clone(),
         }]
     }
 

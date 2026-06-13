@@ -60,8 +60,10 @@ impl<'a> HistoricalRuntime<'a> {
             "strategy.cancel_all" => self.eval_strategy_cancel_all(),
             "strategy.exit" => self.eval_strategy_exit(args),
             "strategy.closedtrades.entry_price"
+            | "strategy.closedtrades.entry_comment"
             | "strategy.closedtrades.entry_id"
             | "strategy.closedtrades.exit_price"
+            | "strategy.closedtrades.exit_comment"
             | "strategy.closedtrades.exit_id"
             | "strategy.closedtrades.entry_bar_index"
             | "strategy.closedtrades.exit_bar_index"
@@ -75,6 +77,7 @@ impl<'a> HistoricalRuntime<'a> {
                 self.eval_strategy_closed_trade_field(callee, args)
             }
             "strategy.opentrades.entry_price"
+            | "strategy.opentrades.entry_comment"
             | "strategy.opentrades.entry_id"
             | "strategy.opentrades.entry_bar_index"
             | "strategy.opentrades.entry_time"
@@ -106,8 +109,18 @@ impl<'a> HistoricalRuntime<'a> {
 
         Ok(match callee {
             "strategy.closedtrades.entry_price" => PineValue::Float(trade.entry_price),
+            "strategy.closedtrades.entry_comment" => self
+                .strategy_broker
+                .closed_trade_entry_comment(trade_num)
+                .map(|value| PineValue::String(value.to_owned()))
+                .unwrap_or(PineValue::Na),
             "strategy.closedtrades.entry_id" => PineValue::String(trade.id.clone()),
             "strategy.closedtrades.exit_price" => PineValue::Float(trade.exit_price),
+            "strategy.closedtrades.exit_comment" => self
+                .strategy_broker
+                .closed_trade_exit_comment(trade_num)
+                .map(|value| PineValue::String(value.to_owned()))
+                .unwrap_or(PineValue::Na),
             "strategy.closedtrades.exit_id" => PineValue::String(trade.exit_id.clone()),
             "strategy.closedtrades.entry_bar_index" => {
                 PineValue::Int(i64::try_from(trade.entry_bar_index).unwrap_or(i64::MAX))
@@ -152,6 +165,11 @@ impl<'a> HistoricalRuntime<'a> {
                 .strategy_broker
                 .open_trade_entry_price(trade_num)
                 .map_or(PineValue::Na, PineValue::Float),
+            "strategy.opentrades.entry_comment" => self
+                .strategy_broker
+                .open_trade_entry_comment(trade_num)
+                .map(|value| PineValue::String(value.to_owned()))
+                .unwrap_or(PineValue::Na),
             "strategy.opentrades.entry_id" => self
                 .strategy_broker
                 .open_trade_entry_id(trade_num)

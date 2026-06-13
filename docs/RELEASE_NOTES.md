@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added script-visible strategy trade comment helpers:
+  `strategy.closedtrades.entry_comment`,
+  `strategy.closedtrades.exit_comment`, and
+  `strategy.opentrades.entry_comment` for fixture-backed commented trades
+  without expanding public strategy JSON.
 - Added `table.cell_set_text_wrap()` support for populated table cells. Runtime
   output is now `schemaVersion: 5`, and table cell snapshots include
   host-neutral `textWrap`.

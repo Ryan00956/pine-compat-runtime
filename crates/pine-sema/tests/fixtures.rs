@@ -1031,11 +1031,7 @@ fn reports_unknown_strategy_variable_fixture() {
 fn reports_unsupported_strategy_order_and_trade_namespace_fixture() {
     assert_strategy_unsupported_fixture(
         "tests/fixtures/sema/unsupported_strategy_order_and_trade_namespaces.pine",
-        &[
-            "strategy.risk.max_drawdown",
-            "strategy.closedtrades.exit_comment",
-            "strategy.opentrades.entry_comment",
-        ],
+        &["strategy.risk.max_drawdown"],
     );
 }
 

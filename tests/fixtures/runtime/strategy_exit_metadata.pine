@@ -2,6 +2,8 @@
 strategy("Strategy exit metadata", overlay=true)
 message = close > open ? "up" : "down"
 if bar_index == 0
-    strategy.entry("L", strategy.long, qty=2)
+    strategy.entry("L", strategy.long, qty=2, comment="entry comment")
     strategy.exit("XL", "L", stop=2.5, comment="exit", comment_loss="loss", alert_message=message, alert_loss="loss alert", disable_alert=false)
 plot(strategy.closedtrades)
+plot(na(strategy.closedtrades.entry_comment(0)) ? na : strategy.closedtrades.entry_comment(0) == "entry comment" ? 1 : 0)
+plot(na(strategy.closedtrades.exit_comment(0)) ? na : strategy.closedtrades.exit_comment(0) == "loss" ? 1 : 0)

@@ -222,7 +222,12 @@ Stage 7
 Slice 4 adds `strategy.closedtrades.entry_id(trade_num)`, which returns the
 entry id already retained on the closed trade record. Stage 7 Slice 5 adds
 `strategy.closedtrades.exit_id(trade_num)`, which returns the close or
-`strategy.exit` id retained on the closed trade record. Stage 7 Slice 15 adds
+`strategy.exit` id retained on the closed trade record. Strategy trade comment
+helpers add `strategy.closedtrades.entry_comment(trade_num)` and
+`strategy.closedtrades.exit_comment(trade_num)` for commented fixture-backed
+trades; invalid, out-of-range, or uncommented reads return `na`, and comments
+remain internal script-visible metadata rather than public strategy JSON
+fields. Stage 7 Slice 15 adds
 `strategy.closedtrades.max_runup(trade_num)`, returning the largest high-based
 favorable excursion retained for the closed trade quantity. Stage 7 Slice 16
 adds `strategy.closedtrades.max_drawdown(trade_num)`, returning the largest
@@ -279,7 +284,10 @@ commission when configured. Stage 7 Slice 13 adds
 `strategy.opentrades.max_runup(trade_num)`, returning the largest high-based
 favorable excursion seen so far for that open position. Stage 7 Slice 14 adds
 `strategy.opentrades.max_drawdown(trade_num)`, returning the largest low-based
-adverse excursion seen so far for that open position. Other open-trade
+adverse excursion seen so far for that open position. Strategy trade comment
+helpers add `strategy.opentrades.entry_comment(trade_num)` for commented
+fixture-backed open trades; invalid, out-of-range, flat-state, or uncommented
+reads return `na`, with no public strategy JSON expansion. Other open-trade
 namespace functions and public open-trade record output remain unsupported.
 Stage 7 Slice 35 adds `strategy.opentrades.capital_held` as the one variable
 inside the open-trade namespace. In the current no-margin subset it returns

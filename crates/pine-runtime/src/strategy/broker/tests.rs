@@ -245,6 +245,7 @@ fn trade_ledger_allocates_omitted_entry_by_global_fifo() {
                 entry_time: 1000,
                 quantity: 1.0,
                 entry_commission: 2.0,
+                entry_metadata: StrategyOrderMetadata::default(),
             },
             TradeAllocation {
                 trade_index: 1,
@@ -255,6 +256,7 @@ fn trade_ledger_allocates_omitted_entry_by_global_fifo() {
                 entry_time: 1100,
                 quantity: 1.25,
                 entry_commission: 3.75,
+                entry_metadata: StrategyOrderMetadata::default(),
             },
         ]
     );
@@ -321,6 +323,7 @@ fn trade_ledger_allocates_specific_open_trade_key() {
             entry_time: 1100,
             quantity: 1.5,
             entry_commission: 3.0,
+            entry_metadata: StrategyOrderMetadata::default(),
         }]
     );
 
@@ -424,6 +427,7 @@ fn trade_ledger_allocates_matching_entry_by_fifo() {
                 entry_time: 1000,
                 quantity: 1.0,
                 entry_commission: 2.0,
+                entry_metadata: StrategyOrderMetadata::default(),
             },
             TradeAllocation {
                 trade_index: 2,
@@ -434,6 +438,7 @@ fn trade_ledger_allocates_matching_entry_by_fifo() {
                 entry_time: 1200,
                 quantity: 1.5,
                 entry_commission: 6.0,
+                entry_metadata: StrategyOrderMetadata::default(),
             },
         ]
     );

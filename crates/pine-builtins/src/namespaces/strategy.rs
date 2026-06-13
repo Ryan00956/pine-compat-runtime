@@ -264,6 +264,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "strategy.closedtrades.entry_comment",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_STRING),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "strategy.closedtrades.entry_id",
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_TRADE_FIELD_PARAMS,
@@ -275,6 +282,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_TRADE_FIELD_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.closedtrades.exit_comment",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_STRING),
         variadic: false,
     },
     BuiltinSignature {
@@ -352,6 +366,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: STRATEGY_TRADE_FIELD_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_FLOAT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "strategy.opentrades.entry_comment",
+        phase: BuiltinPhase::Phase1Core,
+        params: STRATEGY_TRADE_FIELD_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_STRING),
         variadic: false,
     },
     BuiltinSignature {

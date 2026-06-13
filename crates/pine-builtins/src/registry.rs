@@ -295,8 +295,10 @@ mod tests {
     fn registers_strategy_trade_field_signatures() {
         for name in [
             "strategy.closedtrades.entry_price",
+            "strategy.closedtrades.entry_comment",
             "strategy.closedtrades.entry_id",
             "strategy.closedtrades.exit_price",
+            "strategy.closedtrades.exit_comment",
             "strategy.closedtrades.exit_id",
             "strategy.closedtrades.entry_bar_index",
             "strategy.closedtrades.exit_bar_index",
@@ -308,6 +310,7 @@ mod tests {
             "strategy.closedtrades.max_runup",
             "strategy.closedtrades.max_drawdown",
             "strategy.opentrades.entry_price",
+            "strategy.opentrades.entry_comment",
             "strategy.opentrades.entry_id",
             "strategy.opentrades.entry_bar_index",
             "strategy.opentrades.entry_time",

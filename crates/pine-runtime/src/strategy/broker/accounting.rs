@@ -292,6 +292,22 @@ impl BrokerState {
     }
 
     #[must_use]
+    pub(crate) fn closed_trade_entry_comment(&self, trade_num: i64) -> Option<&str> {
+        let index = usize::try_from(trade_num).ok()?;
+        self.closed_trade_metrics
+            .get(index)
+            .and_then(|metrics| metrics.entry_comment.as_deref())
+    }
+
+    #[must_use]
+    pub(crate) fn closed_trade_exit_comment(&self, trade_num: i64) -> Option<&str> {
+        let index = usize::try_from(trade_num).ok()?;
+        self.closed_trade_metrics
+            .get(index)
+            .and_then(|metrics| metrics.exit_comment.as_deref())
+    }
+
+    #[must_use]
     pub fn winning_trade_count(&self) -> i64 {
         i64::try_from(
             self.trades
@@ -342,6 +358,12 @@ impl BrokerState {
     #[must_use]
     pub(crate) fn open_trade_entry_id(&self, trade_num: i64) -> Option<&str> {
         self.open_trade_at(trade_num).map(|trade| trade.id.as_str())
+    }
+
+    #[must_use]
+    pub(crate) fn open_trade_entry_comment(&self, trade_num: i64) -> Option<&str> {
+        self.open_trade_at(trade_num)
+            .and_then(|trade| trade.entry_metadata.comment.as_deref())
     }
 
     #[must_use]

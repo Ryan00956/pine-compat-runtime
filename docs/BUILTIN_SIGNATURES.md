@@ -308,8 +308,10 @@ strategy.max_contracts_held_all -> series float
 strategy.max_contracts_held_long -> series float
 strategy.max_contracts_held_short -> series float
 strategy.closedtrades.entry_price(trade_num: series/simple numeric) -> series float
+strategy.closedtrades.entry_comment(trade_num: series/simple numeric) -> series string
 strategy.closedtrades.entry_id(trade_num: series/simple numeric) -> series string
 strategy.closedtrades.exit_price(trade_num: series/simple numeric) -> series float
+strategy.closedtrades.exit_comment(trade_num: series/simple numeric) -> series string
 strategy.closedtrades.exit_id(trade_num: series/simple numeric) -> series string
 strategy.closedtrades.entry_bar_index(trade_num: series/simple numeric) -> series int
 strategy.closedtrades.exit_bar_index(trade_num: series/simple numeric) -> series int
@@ -322,6 +324,7 @@ strategy.closedtrades.max_runup(trade_num: series/simple numeric) -> series floa
 strategy.closedtrades.max_drawdown(trade_num: series/simple numeric) -> series float
 strategy.opentrades.capital_held -> series float
 strategy.opentrades.entry_price(trade_num: series/simple numeric) -> series float
+strategy.opentrades.entry_comment(trade_num: series/simple numeric) -> series string
 strategy.opentrades.entry_id(trade_num: series/simple numeric) -> series string
 strategy.opentrades.entry_bar_index(trade_num: series/simple numeric) -> series int
 strategy.opentrades.entry_time(trade_num: series/simple numeric) -> series int
@@ -491,14 +494,16 @@ helpers can render `{{strategy.order.alert_message}}` for selected public fill
 events; external alert delivery remains unsupported. Richer strategy order
 options remain unsupported.
 `strategy.closedtrades.entry_price`, `strategy.closedtrades.exit_price`,
-`strategy.closedtrades.entry_id`, `strategy.closedtrades.exit_id`,
+`strategy.closedtrades.entry_comment`, `strategy.closedtrades.entry_id`,
+`strategy.closedtrades.exit_comment`, `strategy.closedtrades.exit_id`,
 `strategy.closedtrades.entry_bar_index`, and
 `strategy.closedtrades.exit_bar_index`, `strategy.closedtrades.entry_time`,
 `strategy.closedtrades.exit_time`, `strategy.closedtrades.commission`,
 `strategy.closedtrades.size`, `strategy.closedtrades.profit`, and
 `strategy.closedtrades.max_runup`, and `strategy.closedtrades.max_drawdown` are
 read-only strategy-mode field functions over the current closed-trade list.
-`strategy.opentrades.entry_price`, `strategy.opentrades.entry_id`, and
+`strategy.opentrades.entry_price`, `strategy.opentrades.entry_comment`,
+`strategy.opentrades.entry_id`, and
 `strategy.opentrades.entry_bar_index`, `strategy.opentrades.entry_time`, and
 `strategy.opentrades.size`, `strategy.opentrades.profit`, and
 `strategy.opentrades.commission`, `strategy.opentrades.max_runup`, and

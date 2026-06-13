@@ -1192,6 +1192,8 @@ struct ClosedTradeMetrics {
     profit_percent: f64,
     max_runup: f64,
     max_drawdown: f64,
+    entry_comment: Option<String>,
+    exit_comment: Option<String>,
     close_metadata: StrategyOrderMetadata,
 }
 
