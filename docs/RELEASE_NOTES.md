@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.new` boundary coverage for unsupported
+  `xloc.bar_time` and invalid text-formatting modes.
 - Added fixture-backed `line.get_y2` boundary coverage for unsupported rich
   line methods.
 - Added fixture-backed `line.get_x2` boundary coverage for unsupported rich

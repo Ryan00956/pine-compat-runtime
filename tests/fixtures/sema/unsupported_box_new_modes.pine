@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported box.new modes")
+box.new(left=bar_index, top=high, right=bar_index, bottom=low, xloc=xloc.bar_time, text_formatting=text.format_bold + 4)
+plot(close)
