@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.min` coverage for rejected string arrays.
 - Added fixture-backed `array.abs` coverage for rejected string arrays.
 - Added fixture-backed `array.binary_search_rightmost` coverage for rejected string arrays.
 - Added fixture-backed `array.binary_search_leftmost` coverage for rejected string arrays.
