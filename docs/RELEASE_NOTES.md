@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.set_y2` boundary coverage for unsupported later
+  line methods.
 - Added fixture-backed `line.set_x2` boundary coverage for unsupported later
   line methods.
 - Added fixture-backed `line.set_xy1` boundary coverage for unsupported later
