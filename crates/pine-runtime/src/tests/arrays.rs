@@ -1285,6 +1285,9 @@ plot(float_head.get(0) == close and na(float_head.get(1)) ? 1 : 0)
 float_more = array.from(na, high)
 float_returned = floats.concat(float_more)
 plot(float_returned.size() == 5 and floats.size() == 5 and na(floats.get(3)) and floats.get(4) == high and float_more.size() == 2 ? 1 : 0)
+empty_float_more = array.new_float()
+floats.concat(empty_float_more)
+plot(float_returned.size() == 5 and floats.size() == 5 and empty_float_more.size() == 0 ? 1 : 0)
 
 flags = array.from(true, false, true)
 flag_tail = flags.slice(1, 3)
@@ -1310,7 +1313,7 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     let bars = vec![bar(1.0), bar(2.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 18);
+    assert_eq!(result.plots.len(), 19);
     assert_values_close(&result.plots[0].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[1].values, &[23.0, 23.0]);
     assert_values_close(&result.plots[2].values, &[2.0, 2.0]);
@@ -1324,11 +1327,12 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     assert_values_close(&result.plots[10].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[13].values, &[2.0, 2.0]);
-    assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[14].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[16].values, &[0.0, 0.0]);
-    assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[17].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
 }
 
 #[test]

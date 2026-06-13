@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.concat` coverage for empty float source arrays.
 - Added fixture-backed `array.join` coverage for empty color arrays.
 - Added fixture-backed `array.join` coverage for empty bool arrays.
 - Added fixture-backed `array.join` coverage for empty float arrays.
