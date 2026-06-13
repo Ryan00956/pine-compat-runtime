@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.replace` coverage for negative occurrence values
+  leaving the source string unchanged.
 - Added fixture-backed `str.repeat` coverage for omitted separator arguments
   defaulting to an empty string.
 - Added fixture-backed `str.tonumber` coverage for empty and whitespace-padded
