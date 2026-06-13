@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.reverse` semantic coverage for unsupported
+  linefill arrays.
 - Added fixture-backed `array.clear` semantic coverage for unsupported linefill
   arrays.
 - Added fixture-backed `array.clear` coverage for clearing copied table arrays
