@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.sort` semantic coverage for unsupported bool
+  arrays.
 - Added fixture-backed `array.slice` semantic coverage for unsupported linefill
   arrays.
 - Added fixture-backed `array.join` semantic coverage for unsupported label
