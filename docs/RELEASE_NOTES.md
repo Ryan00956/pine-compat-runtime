@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.repeat` coverage for omitted separator arguments
+  defaulting to an empty string.
 - Added fixture-backed `str.tonumber` coverage for empty and whitespace-padded
   invalid inputs returning `na`.
 - Added fixture-backed `str.substring` coverage for `na` source arguments.
