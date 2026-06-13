@@ -40,6 +40,8 @@
   placeholder interpolation.
 - Clarified the `ta.vwap` conformance notes so the cumulative fixture-backed
   subset is not described as a semantic rejection case.
+- Refined the `ta.vwap` conformance wording to describe the cumulative default
+  anchoring subset without treating session resets as a rejected call shape.
 - Added fixture-backed `table.set_position` boundary coverage for unsupported
   table position values.
 - Added fixture-backed `table.cell` boundary coverage for unsupported table
