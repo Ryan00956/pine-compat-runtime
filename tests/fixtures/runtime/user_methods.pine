@@ -11,6 +11,17 @@ method keep(Point p) => p
 method keepBlock(Point p) =>
     copy = p
     copy
+method keepIf(Point p, bool flip) =>
+    if flip
+        copy = p
+        copy
+    else
+        copy = p
+        copy
+method keepFor(Point p, int count) =>
+    for i = 0 to count
+        copy = p
+        copy
 method choose(Point p, Point other) => other
 method chooseBlock(Point p, Point other) =>
     copy = other
@@ -64,6 +75,8 @@ p = Point.new(close)
 q = Point.new(open)
 same = p.keep()
 sameBlock = p.keepBlock()
+sameIf = p.keepIf(bar_index < 2)
+sameFor = p.keepFor(2)
 chosen = p.choose(q)
 chosenBlock = p.chooseBlock(q)
 wrapped = p.wrap(q)
@@ -111,3 +124,5 @@ plot(made.x + close)
 plot(madeBlock.x + close)
 plot(madeNamed.x + close)
 plot(madeNamedBlock.x + close)
+plot(sameIf.x + close)
+plot(sameFor.x + close)

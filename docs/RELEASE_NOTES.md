@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added runtime fixture coverage for pure user-defined methods that return
+  local UDT aliases from final `if`/`else` or `for` bodies.
 - Added fixture-backed `strategy.close` no-op coverage for while-flat,
   wrong-entry-id, and repeated close calls without changing public strategy JSON.
 - Added script-visible strategy trade comment helpers:
