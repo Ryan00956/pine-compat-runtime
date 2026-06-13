@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array every box")
+values = array.new_box()
+plot(array.every(values) ? 1 : 0)
