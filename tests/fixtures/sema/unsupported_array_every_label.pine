@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array every label")
+values = array.new_label()
+plot(array.every(values) ? 1 : 0)
