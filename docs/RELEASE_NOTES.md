@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.remove` coverage for out-of-range scalar removals
+  returning `na` without mutating the array.
 - Added fixture-backed `array.pop` coverage for empty scalar arrays returning
   `na` without changing array size.
 - Added fixture-backed `array.shift` coverage for preserving remaining element
