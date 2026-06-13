@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `label.set_size` boundary coverage for unsupported
+  later label methods.
 - Added fixture-backed `label.set_style` boundary coverage for unsupported
   later label methods.
 - Added fixture-backed `label.set_textcolor` boundary coverage for unsupported
