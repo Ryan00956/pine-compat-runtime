@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.tostring(false)` coverage for bool stringification.
 - Added fixture-backed `str.split` coverage for missing separators returning a
   single source-string element.
 - Added fixture-backed `str.replace_all` coverage for no-match inputs leaving
