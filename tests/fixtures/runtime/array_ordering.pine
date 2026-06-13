@@ -68,6 +68,8 @@ empty_string_sort = array.new_string()
 empty_string_sort.sort()
 empty_string_indices = array.sort_indices(empty_string_sort)
 plot(empty_string_sort.size() == 0 and empty_string_indices.size() == 0 ? 1 : 0)
+empty_string_sort.reverse()
+plot(empty_string_sort.size())
 
 colors = array.new_color()
 colors.push(color.red)

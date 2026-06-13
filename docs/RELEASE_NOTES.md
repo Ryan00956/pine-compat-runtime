@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.reverse` coverage for empty string arrays.
 - Added fixture-backed `array.sort` and `array.sort_indices` coverage for empty
   string arrays.
 - Added fixture-backed `array.binary_search`, `array.binary_search_leftmost`,

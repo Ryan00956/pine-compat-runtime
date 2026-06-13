@@ -1074,6 +1074,8 @@ empty_string_sort = array.new_string()
 empty_string_sort.sort()
 empty_string_indices = array.sort_indices(empty_string_sort)
 plot(empty_string_sort.size() == 0 and empty_string_indices.size() == 0 ? 1 : 0)
+empty_string_sort.reverse()
+plot(empty_string_sort.size())
 
 colors = array.new_color()
 colors.push(color.red)
@@ -1092,7 +1094,7 @@ plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
     let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 21);
+    assert_eq!(result.plots.len(), 22);
     assert_values_close(&result.plots[0].values, &[123.0, 123.0]);
     assert_values_close(&result.plots[1].values, &[321.0, 321.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
@@ -1113,7 +1115,8 @@ plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
     assert_values_close(&result.plots[17].values, &[0.0, 0.0]);
     assert_values_close(&result.plots[18].values, &[0.0, 0.0]);
     assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[20].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
 }
 
 #[test]
