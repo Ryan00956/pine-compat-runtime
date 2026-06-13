@@ -1157,6 +1157,15 @@ fn reports_unsupported_label_method_fixture() {
 }
 
 #[test]
+fn reports_unsupported_label_getter_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_label_getter.pine",
+        "label.get_style",
+        "drawing object",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array.pine",

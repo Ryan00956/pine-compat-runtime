@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `label.get_x` boundary coverage for unsupported later
+  label getters.
 - Added fixture-backed `label.delete` boundary coverage for unsupported later
   label methods.
 - Added fixture-backed `label.set_text_formatting` boundary coverage for richer
