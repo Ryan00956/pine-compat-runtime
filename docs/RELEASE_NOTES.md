@@ -38,6 +38,8 @@
   statement-block arms.
 - Added fixture-backed `alert()` boundary coverage for unsupported Pine-source
   placeholder interpolation.
+- Clarified the `ta.vwap` conformance notes so the cumulative fixture-backed
+  subset is not described as a semantic rejection case.
 - Added fixture-backed `table.set_position` boundary coverage for unsupported
   table position values.
 - Added fixture-backed `table.cell` boundary coverage for unsupported table
