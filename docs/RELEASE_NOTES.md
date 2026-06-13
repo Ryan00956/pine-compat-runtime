@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.clear` coverage for clearing copied label arrays
+  without deleting the referenced label id and reusing the cleared array.
 - Added fixture-backed `array.concat` runtime coverage for the 100,000 element
   result limit.
 - Added fixture-backed `array.concat` semantic coverage for mismatched source
