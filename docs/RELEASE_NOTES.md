@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed alert placeholder coverage for rejected
+  `alertcondition` plot placeholders.
 - Added fixture-backed alert placeholder coverage for rejected unknown
   `alertcondition` message placeholders.
 - Added fixture-backed alert placeholder coverage for rejected
