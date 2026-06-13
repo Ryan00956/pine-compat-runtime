@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `color.from_gradient` lower-endpoint clamping and
+  equal-range top-color coverage.
 - Added fixture-backed `color.rgb` channel rounding/clamping and
   `color.new`/`color.rgb` transparency clamping coverage.
 - Added zero-offset UTC/GMT timezone aliases for UTC-only time component
