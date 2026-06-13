@@ -100,6 +100,8 @@ formatted_time_date = str.format_time(1609459200000, "yyyy-MM-dd")
 formatted_time_text = str.format_time(1609459200000, "HH:mm:ss 'on' MMM dd, yyyy", "UTC")
 formatted_time_alias = str.format_time(1609459200000, "HH:mm:ssZ", "UTC+00:00")
 formatted_time_gmt_alias = str.format_time(1609459200000, "HH:mm:ssZ", "GMT-0")
+formatted_time_na_format = str.format_time(1609459200000, na)
+formatted_time_na_timezone = str.format_time(1609459200000, "HH:mm:ssZ", na)
 missing_format_time = str.format_time(na)
 plot(upper == "SMA" and lower == "sma" and unicode_length == 2 ? length : 0)
 plot(na(missing) ? 1 : 0)
@@ -129,9 +131,9 @@ plot(match_prefix == "NASDAQ:" and match_suffix == "AAPL" and match_missing == "
 plot(na(missing_match_regex) and na(missing_match_pattern) ? 1 : 0)
 plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2) == "" and split_words.get(3) == "C" ? 1 : 0)
 plot(split_chars.size() == 2 and split_chars.get(0) == "x" and split_chars.get(1) == "y" and split_unicode.size() == 2 and split_unicode.get(0) == "å" and split_unicode.get(1) == "β" and na(split_missing) and na(split_missing_separator) ? 1 : 0)
-plot(formatted_time_default == "2021-01-01T00:00:00+0000" and formatted_time_date == "2021-01-01" ? 1 : 0)
+plot(formatted_time_default == "2021-01-01T00:00:00+0000" and formatted_time_date == "2021-01-01" and formatted_time_na_format == "2021-01-01T00:00:00+0000" ? 1 : 0)
 plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_time) ? 1 : 0)
-plot(formatted_time_alias == "00:00:00+0000" and formatted_time_gmt_alias == "00:00:00+0000" ? 1 : 0)
+plot(formatted_time_alias == "00:00:00+0000" and formatted_time_gmt_alias == "00:00:00+0000" and formatted_time_na_timezone == "00:00:00+0000" ? 1 : 0)
 "##,
     );
     let analysis = analyze_source(&source);

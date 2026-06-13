@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.format_time` coverage for `na` format and timezone
+  arguments defaulting to the UTC subset.
 - Added fixture-backed `str.format` coverage for `na` formatString arguments.
 - Added fixture-backed `str.match` coverage for `na` regex arguments.
 - Added fixture-backed `str.split` coverage for `na` separator arguments.
