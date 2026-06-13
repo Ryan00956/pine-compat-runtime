@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed function side-effect coverage for rejected `input.*` calls
+  inside user-defined functions.
 - Added dedicated fixture-backed `request.*` boundary coverage for unsupported
   request families beyond `request.security`.
 - Trimmed the generic unsupported drawing-method fixture to label/line/box/table

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported input function side effect")
+length() =>
+    input.int(14, "Length")
+plot(length())
