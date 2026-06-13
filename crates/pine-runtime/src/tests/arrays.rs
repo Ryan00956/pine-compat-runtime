@@ -1062,6 +1062,9 @@ plot(words.get(0) == "a" and words.get(1) == "b" and words.get(2) == "c" and wor
 flags = array.from(true, false, false)
 flags.reverse()
 plot(not flags.get(0) and not flags.get(1) and flags.get(2) ? 1 : 0)
+empty_flags = array.new_bool()
+empty_flags.reverse()
+plot(empty_flags.size())
 
 empty_sort = array.new_float()
 array.sort(empty_sort)
@@ -1094,7 +1097,7 @@ plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
     let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 22);
+    assert_eq!(result.plots.len(), 23);
     assert_values_close(&result.plots[0].values, &[123.0, 123.0]);
     assert_values_close(&result.plots[1].values, &[321.0, 321.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
@@ -1114,9 +1117,10 @@ plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
     assert_values_close(&result.plots[16].values, &[0.0, 0.0]);
     assert_values_close(&result.plots[17].values, &[0.0, 0.0]);
     assert_values_close(&result.plots[18].values, &[0.0, 0.0]);
-    assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[20].values, &[0.0, 0.0]);
-    assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[19].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[21].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
 }
 
 #[test]
