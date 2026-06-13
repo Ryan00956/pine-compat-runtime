@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.replace` coverage for `na` occurrence values
+  defaulting to the first occurrence.
 - Added fixture-backed `str.replace` coverage for negative occurrence values
   leaving the source string unchanged.
 - Added fixture-backed `str.repeat` coverage for omitted separator arguments
