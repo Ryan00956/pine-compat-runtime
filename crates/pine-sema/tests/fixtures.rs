@@ -1135,6 +1135,19 @@ fn reports_unsupported_drawing_fixture() {
 }
 
 #[test]
+fn reports_unsupported_label_new_modes_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_label_new_modes.pine",
+        &[
+            "xloc.bar_index",
+            "yloc.price",
+            "label.style_label_down",
+            "size.normal",
+        ],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array.pine",

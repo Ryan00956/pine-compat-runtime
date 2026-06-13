@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `label.new` semantic coverage for unsupported mode
+  options.
 - Added fixture-backed `array.new_table` boundary coverage for unsupported
   linefill array constructors.
 - Added fixture-backed `array.new_box` boundary coverage for unsupported
