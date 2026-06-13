@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.slice` semantic coverage for unsupported linefill
+  arrays.
 - Added fixture-backed `array.join` semantic coverage for unsupported label
   arrays.
 - Added fixture-backed `array.reverse` semantic coverage for unsupported
