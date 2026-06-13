@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.concat` coverage for empty table source arrays.
 - Added fixture-backed `array.concat` coverage for empty box source arrays.
 - Added fixture-backed `array.concat` coverage for empty line source arrays.
 - Added fixture-backed `array.concat` coverage for empty label source arrays.

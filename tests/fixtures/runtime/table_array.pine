@@ -1,6 +1,7 @@
 //@version=5
 indicator("Table array")
 var tables = array.new_table()
+var table_concat_checks = array.new_bool()
 if bar_index == 0
     first = table.new(position.top_right, 1, 1)
     second = table.new(position.bottom_left, 1, 1)
@@ -26,6 +27,10 @@ if bar_index == 2
     tables.fill(tables.first(), 0, 1)
     sliced = tables.slice(0, 1)
     sliced.concat(tables)
+    empty_tables = array.new_table()
+    before_empty_table_concat = tables.size()
+    tables.concat(empty_tables)
+    table_concat_checks.push(tables.size() == before_empty_table_concat and empty_tables.size() == 0)
     table.cell(sliced.get(0), 0, 0, "slice")
     if tables.includes(tables.first())
         table.set_frame_color(tables.first(), color.blue)
@@ -41,3 +46,4 @@ if bar_index == 3
     scratch.clear()
 plot(tables.size())
 plot(close)
+plot(table_concat_checks.size() == 1 and table_concat_checks.get(0) ? 1 : 0)
