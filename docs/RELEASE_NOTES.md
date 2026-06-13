@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.format` coverage for `na` formatString arguments.
 - Added fixture-backed `str.match` coverage for `na` regex arguments.
 - Added fixture-backed `str.split` coverage for `na` separator arguments.
 - Added fixture-backed `str.repeat` coverage for `na` source and separator
