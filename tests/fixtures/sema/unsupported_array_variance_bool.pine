@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array variance bool")
+values = array.new_bool()
+plot(array.variance(values))
