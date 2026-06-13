@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.new` semantic coverage for unsupported mode
+  options.
 - Added fixture-backed `label.get_text` boundary coverage for unsupported later
   label getters.
 - Added fixture-backed `label.get_y` boundary coverage for unsupported later

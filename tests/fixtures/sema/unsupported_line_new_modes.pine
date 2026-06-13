@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported line.new modes")
+line.new(x1=bar_index, y1=low, x2=bar_index, y2=high, xloc=xloc.bar_time, style="line.style_unknown")
+plot(close)

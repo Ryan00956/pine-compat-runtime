@@ -1148,6 +1148,14 @@ fn reports_unsupported_label_new_modes_fixture() {
 }
 
 #[test]
+fn reports_unsupported_line_new_modes_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_line_new_modes.pine",
+        &["xloc.bar_index", "line.style_"],
+    );
+}
+
+#[test]
 fn reports_unsupported_label_method_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_label_method.pine",
