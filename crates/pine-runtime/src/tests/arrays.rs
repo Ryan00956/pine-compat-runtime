@@ -444,6 +444,7 @@ last = array.last(values)
 shifted = array.shift(values)
 empty = array.new_string()
 plot(first + last + shifted + array.size(values))
+plot(array.first(values) == 2 and array.size(values) == 1 ? 1 : 0)
 plot(na(array.first(empty)) and na(array.last(empty)) and na(array.shift(empty)) ? 1 : 0)
 "#,
     );
@@ -457,9 +458,10 @@ plot(na(array.first(empty)) and na(array.last(empty)) and na(array.shift(empty))
     let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 2);
+    assert_eq!(result.plots.len(), 3);
     assert_values_close(&result.plots[0].values, &[5.0, 5.0, 5.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
 }
 
 #[test]

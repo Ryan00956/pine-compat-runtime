@@ -6,6 +6,7 @@ number_first = array.first(numbers)
 number_last = array.last(numbers)
 number_shifted = array.shift(numbers)
 plot(number_first + number_last + number_shifted + array.size(numbers))
+plot(array.first(numbers) == 2 and array.size(numbers) == 1 ? 1 : 0)
 
 floats = array.new_float()
 floats.unshift(high)
