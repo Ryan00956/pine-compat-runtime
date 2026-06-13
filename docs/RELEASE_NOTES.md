@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.tonumber` coverage for empty and whitespace-padded
+  invalid inputs returning `na`.
 - Added fixture-backed `str.substring` coverage for `na` source arguments.
 - Added fixture-backed `str.trim` coverage for `na` input arguments.
 - Added fixture-backed `str.upper` and `str.lower` coverage for `na` input
