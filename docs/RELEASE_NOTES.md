@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.set_text_wrap` boundary coverage for unsupported
+  later box font methods.
 - Added fixture-backed `box.set_text_valign` boundary coverage for unsupported
   later box text wrap/font methods.
 - Added fixture-backed `box.set_text_halign` boundary coverage for unsupported
