@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.new_bool` semantic coverage for incompatible
+  initial values.
 - Added fixture-backed `array.new_int` semantic coverage for incompatible
   initial values.
 - Added fixture-backed `array.new_float` semantic coverage for incompatible

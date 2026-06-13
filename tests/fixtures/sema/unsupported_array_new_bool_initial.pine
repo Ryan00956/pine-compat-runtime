@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array new bool initial")
+values = array.new_bool(1, close)
+plot(close)
