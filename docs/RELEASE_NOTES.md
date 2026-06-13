@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.includes` semantic coverage for unsupported
+  linefill arrays.
 - Added fixture-backed `array.some` semantic coverage for unsupported string
   arrays.
 - Added fixture-backed `array.every` semantic coverage for unsupported string
