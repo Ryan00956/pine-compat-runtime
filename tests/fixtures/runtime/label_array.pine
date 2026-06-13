@@ -1,6 +1,7 @@
 //@version=5
 indicator("Label array")
 var labels = array.new_label()
+var label_concat_checks = array.new_bool()
 if bar_index == 0
     first = label.new(bar_index, high, "first")
     second = label.copy(first)
@@ -26,6 +27,10 @@ if bar_index == 2
     labels.fill(labels.first(), 0, 1)
     sliced = labels.slice(0, 1)
     sliced.concat(labels)
+    empty_labels = array.new_label()
+    before_empty_label_concat = labels.size()
+    labels.concat(empty_labels)
+    label_concat_checks.push(labels.size() == before_empty_label_concat and empty_labels.size() == 0)
     label.set_y(sliced.get(0), close)
     if labels.includes(labels.first())
         label.set_text(labels.first(), "found")
@@ -41,3 +46,4 @@ if bar_index == 3
     scratch.clear()
 plot(labels.size())
 plot(close)
+plot(label_concat_checks.size() == 1 and label_concat_checks.get(0) ? 1 : 0)
