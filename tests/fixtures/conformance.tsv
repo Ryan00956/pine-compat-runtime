@@ -180,7 +180,7 @@ str.pos	supported	first substring Unicode scalar position, empty substring at 0,
 str.substring	supported	begin/end Unicode scalar index substring with na source propagation, omitted or na end clamped to length, na begin default, and overlong end clamped to length	tests/fixtures/runtime/strings.pine
 str.trim	supported	ASCII whitespace trimming around string values and na input propagation	tests/fixtures/runtime/strings.pine
 str.repeat	supported	string repetition with default empty separator or explicit separator, zero-count empty result, and na source/count/separator propagation	tests/fixtures/runtime/strings.pine
-str.replace	supported	single literal occurrence replacement with optional occurrence index, na occurrence defaulting to 0, no-match and negative-occurrence passthrough, empty-target boundary insertion, and na source/target/replacement propagation	tests/fixtures/runtime/strings.pine
+str.replace	supported	single literal occurrence replacement with optional occurrence index, na occurrence defaulting to 0, no-match, negative-occurrence, and out-of-range occurrence passthrough, empty-target boundary insertion, and na source/target/replacement propagation	tests/fixtures/runtime/strings.pine
 str.replace_all	supported	all literal occurrence replacement, empty-target boundary insertion, and na source/target/replacement propagation	tests/fixtures/runtime/strings.pine
 str.tonumber	supported	ASCII decimal or scientific-notation strings with optional leading sign; invalid, empty, whitespace-padded, and non-finite parsed inputs return na	tests/fixtures/runtime/strings.pine
 str.tostring	supported	scalar values, float arrays, na format defaulting, and fixture-covered custom/format.* numeric formats	tests/fixtures/runtime/strings.pine
