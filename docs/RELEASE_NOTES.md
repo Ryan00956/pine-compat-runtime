@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.concat` coverage for appending into empty int
+  target arrays.
 - Added fixture-backed `array.concat` coverage for empty color source arrays.
 - Added fixture-backed `array.concat` coverage for empty int source arrays.
 - Added fixture-backed `array.concat` coverage for empty bool source arrays.
