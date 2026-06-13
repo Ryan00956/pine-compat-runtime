@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.delete` boundary coverage for unsupported later box
+  methods.
 - Added fixture-backed `box.set_text_formatting` boundary coverage for richer
   unsupported box text layout methods.
 - Added fixture-backed `box.set_text_font_family` boundary coverage for richer
