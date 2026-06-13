@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed drawing object method syntax boundary coverage for
+  unsupported drawing methods, chart.point overloads, and xloc/time variants.
 - Added fixture-backed `box.get_right` boundary coverage for unsupported other
   box methods.
 - Added fixture-backed `box.get_left` boundary coverage for unsupported other
