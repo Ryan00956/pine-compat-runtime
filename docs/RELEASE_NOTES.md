@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.concat` coverage for bool source-array value
+  non-mutation during append.
 - Added fixture-backed `array.concat` coverage for float source-array value
   non-mutation during append.
 - Added fixture-backed `array.concat` coverage for color source-array value
