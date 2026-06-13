@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported alertcondition dynamic title")
+title = input.string("Up", "Title")
+alertcondition(close > open, title, "Message")
