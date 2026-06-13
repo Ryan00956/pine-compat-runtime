@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.tostring` coverage for `na` format arguments
+  defaulting to the standard numeric format.
 - Added fixture-backed `str.format_time` coverage for `na` format and timezone
   arguments defaulting to the UTC subset.
 - Added fixture-backed `str.format` coverage for `na` formatString arguments.
