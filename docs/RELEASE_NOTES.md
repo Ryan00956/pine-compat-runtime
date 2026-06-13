@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `color.rgb` channel rounding/clamping and
+  `color.new`/`color.rgb` transparency clamping coverage.
 - Added zero-offset UTC/GMT timezone aliases for UTC-only time component
   helpers and `str.format_time`.
 - Added `str.tonumber` support for finite ASCII scientific-notation strings.
