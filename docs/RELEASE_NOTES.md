@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.set_left` boundary coverage for unsupported later
+  box methods.
 - Added fixture-backed `box.new` boundary coverage for unsupported
   `xloc.bar_time` and invalid text-formatting modes.
 - Added fixture-backed `line.get_y2` boundary coverage for unsupported rich
