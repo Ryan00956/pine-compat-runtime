@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.set_extend` boundary coverage for unsupported
+  later line methods.
 - Added fixture-backed `line.set_style` boundary coverage for unsupported later
   line methods.
 - Added fixture-backed `line.set_width` boundary coverage for unsupported later
