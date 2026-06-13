@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.upper` and `str.lower` coverage for `na` input
+  arguments.
 - Added fixture-backed `str.tostring` coverage for `na` format arguments
   defaulting to the standard numeric format.
 - Added fixture-backed `str.format_time` coverage for `na` format and timezone
