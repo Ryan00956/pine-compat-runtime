@@ -1591,6 +1591,14 @@ fn reports_unsupported_array_every_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_every_table_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_some_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_some_string.pine",
