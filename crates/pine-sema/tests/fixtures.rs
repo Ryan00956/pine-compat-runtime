@@ -1230,6 +1230,14 @@ fn reports_unsupported_table_cell_method_fixture() {
 }
 
 #[test]
+fn reports_unsupported_switch_statement_block_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_switch_statement_block.pine",
+        "E_PARSE_SWITCH_BLOCK",
+    );
+}
+
+#[test]
 fn reports_unsupported_label_method_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_label_method.pine",
