@@ -1189,6 +1189,14 @@ fn reports_unsupported_array_last_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_from_linefill_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_from_linefill.pine",
+        &["`array.from` arguments must infer one supported array element kind"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_size_linefill_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_size_linefill.pine",
