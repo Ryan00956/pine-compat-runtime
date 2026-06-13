@@ -1868,6 +1868,15 @@ fn reports_unsupported_alertcondition_title_placeholder_fixture() {
 }
 
 #[test]
+fn reports_unsupported_alertcondition_unknown_placeholder_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_alertcondition_unknown_placeholder.pine",
+        "alert_placeholders",
+        "alert placeholder `{{unknown}}`",
+    );
+}
+
+#[test]
 fn reports_unsupported_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_function_side_effect.pine",
