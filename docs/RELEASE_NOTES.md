@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.some` coverage for rejected box arrays.
 - Added fixture-backed `array.every` coverage for rejected box arrays.
 - Added fixture-backed `array.some` coverage for rejected line arrays.
 - Added fixture-backed `array.every` coverage for rejected line arrays.
