@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.concat` coverage for appending into empty box
+  target arrays.
 - Added fixture-backed `array.concat` coverage for appending into empty line
   target arrays.
 - Added fixture-backed `array.concat` coverage for appending into empty label
