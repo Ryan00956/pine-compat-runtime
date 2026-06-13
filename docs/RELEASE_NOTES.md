@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.join` coverage for empty float arrays.
 - Added fixture-backed `array.join` coverage for empty int arrays.
 - Added fixture-backed `array.reverse` coverage for empty color arrays.
 - Added fixture-backed array ordering coverage for empty int arrays.
