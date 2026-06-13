@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.binary_search_leftmost` coverage for rejected string arrays.
 - Added fixture-backed `array.binary_search` coverage for rejected string arrays.
 - Added fixture-backed `array.some` coverage for rejected table arrays.
 - Added fixture-backed `array.every` coverage for rejected table arrays.

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array binary search leftmost string")
+values = array.new_string()
+plot(array.binary_search_leftmost(values, "a"))
