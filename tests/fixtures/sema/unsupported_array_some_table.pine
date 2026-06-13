@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array some table")
+values = array.new_table()
+plot(array.some(values) ? 1 : 0)

@@ -1639,6 +1639,14 @@ fn reports_unsupported_array_some_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_some_table_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_covariance_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_covariance_bool.pine",
