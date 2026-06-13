@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.new_line` boundary coverage for unsupported
+  linefill array constructors.
 - Added fixture-backed `array.new_color` semantic coverage for incompatible
   initial values.
 - Added fixture-backed `array.new_string` semantic coverage for incompatible
