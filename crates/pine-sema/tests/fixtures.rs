@@ -1212,6 +1212,15 @@ fn reports_unsupported_table_set_position_values_fixture() {
 }
 
 #[test]
+fn reports_unsupported_table_method_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_table_method.pine",
+        "table.set_border_style",
+        "drawing object",
+    );
+}
+
+#[test]
 fn reports_unsupported_label_method_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_label_method.pine",

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `table.set_bgcolor` boundary coverage for unsupported
+  table layout methods.
 - Added fixture-backed `table.set_position` boundary coverage for unsupported
   table position values.
 - Added fixture-backed `table.cell` boundary coverage for unsupported table

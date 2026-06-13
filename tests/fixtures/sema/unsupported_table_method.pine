@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported table method")
+id = table.new(position.top_right, 1, 1)
+table.set_border_style(id, "line.style_dashed")
+plot(close)
