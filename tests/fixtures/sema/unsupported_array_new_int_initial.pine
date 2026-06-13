@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array new int initial")
+values = array.new_int(1, close)
+plot(close)
