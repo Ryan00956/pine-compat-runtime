@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added dedicated fixture-backed `polyline.*` boundary coverage for unsupported
+  point-list drawing construction.
 - Added fixture-backed `table.set_bgcolor` boundary coverage for unsupported
   table layout methods.
 - Added fixture-backed `table.set_frame_color` boundary coverage for unsupported

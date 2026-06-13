@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported polyline")
+polyline.new(na)
