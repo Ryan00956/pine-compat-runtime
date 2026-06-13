@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array every line")
+values = array.new_line()
+plot(array.every(values) ? 1 : 0)
