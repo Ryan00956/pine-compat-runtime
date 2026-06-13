@@ -1181,6 +1181,8 @@ empty_floats = array.new_float()
 plot(array.join(empty_floats, "|") == "" ? 1 : 0)
 empty_flags = array.new_bool()
 plot(empty_flags.join("|") == "" ? 1 : 0)
+empty_colors = array.new_color()
+plot(array.join(empty_colors, "|") == "" ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -1193,7 +1195,7 @@ plot(empty_flags.join("|") == "" ? 1 : 0)
     let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 12);
+    assert_eq!(result.plots.len(), 13);
     for plot in &result.plots {
         assert_values_close(&plot.values, &[1.0, 1.0]);
     }
