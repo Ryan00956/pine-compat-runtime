@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `label.set_text` boundary coverage for unsupported later
+  label methods.
 - Added fixture-backed `label.set_xy` boundary coverage for unsupported later
   label methods.
 - Added fixture-backed `label.set_y` boundary coverage for unsupported later
