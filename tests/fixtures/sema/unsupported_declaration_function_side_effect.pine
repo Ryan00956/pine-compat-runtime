@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported declaration function side effect")
+declare() =>
+    indicator("Nested")
+    close
+plot(declare())
