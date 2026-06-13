@@ -1,6 +1,7 @@
 //@version=5
 indicator("Box array")
 var boxes = array.new_box()
+var box_concat_checks = array.new_bool()
 if bar_index == 0
     first = box.new(bar_index, high, bar_index + 1, low)
     second = box.copy(first)
@@ -26,6 +27,10 @@ if bar_index == 2
     boxes.fill(boxes.first(), 0, 1)
     sliced = boxes.slice(0, 1)
     sliced.concat(boxes)
+    empty_boxes = array.new_box()
+    before_empty_box_concat = boxes.size()
+    boxes.concat(empty_boxes)
+    box_concat_checks.push(boxes.size() == before_empty_box_concat and empty_boxes.size() == 0)
     box.set_bottom(sliced.get(0), close)
     if boxes.includes(boxes.first())
         box.set_text(boxes.first(), "found")
@@ -41,3 +46,4 @@ if bar_index == 3
     scratch.clear()
 plot(boxes.size())
 plot(close)
+plot(box_concat_checks.size() == 1 and box_concat_checks.get(0) ? 1 : 0)
