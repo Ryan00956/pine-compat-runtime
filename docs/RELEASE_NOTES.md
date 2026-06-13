@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.get_y1` boundary coverage for unsupported rich
+  line methods.
 - Added fixture-backed `line.get_x1` boundary coverage for unsupported rich
   line methods.
 - Added fixture-backed `line.get_price` boundary coverage for unsupported
