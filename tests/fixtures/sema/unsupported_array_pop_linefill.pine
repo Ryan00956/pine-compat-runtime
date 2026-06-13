@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array pop linefill")
+a = array.new_linefill(0)
+value = a.pop()
+plot(close)
