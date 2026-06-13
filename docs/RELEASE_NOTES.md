@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added dedicated fixture-backed `request.*` boundary coverage for unsupported
+  request families beyond `request.security`.
 - Trimmed the generic unsupported drawing-method fixture to label/line/box/table
   method coverage now that `polyline.*` has dedicated evidence.
 - Added dedicated fixture-backed `polyline.*` boundary coverage for unsupported

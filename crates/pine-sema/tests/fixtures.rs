@@ -33,6 +33,15 @@ fn reports_unsupported_request_lower_tf_fixture() {
 }
 
 #[test]
+fn reports_unsupported_request_family_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_request_family.pine",
+        "request.financial",
+        "outside the supported request.security subset",
+    );
+}
+
+#[test]
 fn reports_unsupported_request_math_calls_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_request_math_calls.pine",
