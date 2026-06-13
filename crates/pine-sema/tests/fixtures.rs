@@ -1144,6 +1144,15 @@ fn reports_unsupported_array_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_clear_linefill_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_clear_linefill.pine",
+        "array.new_linefill",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_concat_mismatch_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_concat_mismatch.pine",

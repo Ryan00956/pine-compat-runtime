@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.clear` semantic coverage for unsupported linefill
+  arrays.
 - Added fixture-backed `array.clear` coverage for clearing copied table arrays
   without deleting the referenced table id and reusing the cleared array.
 - Added fixture-backed `array.clear` coverage for clearing copied box arrays
