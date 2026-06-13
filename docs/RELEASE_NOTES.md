@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.some` coverage for rejected color arrays.
 - Added fixture-backed `array.every` coverage for rejected color arrays.
 - Added fixture-backed `alertcondition` coverage for rejected dynamic messages.
 - Added fixture-backed `alertcondition` coverage for rejected dynamic titles.

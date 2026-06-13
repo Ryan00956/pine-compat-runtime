@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array some color")
+values = array.new_color()
+plot(array.some(values) ? 1 : 0)
