@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.shift` semantic coverage for unsupported linefill
+  arrays.
 - Added fixture-backed `array.last` semantic coverage for unsupported linefill
   arrays.
 - Added fixture-backed `array.first` semantic coverage for unsupported
