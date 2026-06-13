@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.split` coverage for empty-separator Unicode scalar
+  splitting.
 - Added fixture-backed `str.substring` coverage for `na` end positions
   defaulting to the source string length.
 - Preserved exact RGB color values for fully opaque `color.new` and
