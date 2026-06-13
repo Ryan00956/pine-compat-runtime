@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.stdev` semantic coverage for unsupported bool
+  arrays.
 - Added fixture-backed `array.sort_indices` semantic coverage for unsupported
   bool arrays.
 - Added fixture-backed `array.sort` semantic coverage for unsupported bool
