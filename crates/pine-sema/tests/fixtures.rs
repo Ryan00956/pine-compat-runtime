@@ -1221,6 +1221,15 @@ fn reports_unsupported_table_method_fixture() {
 }
 
 #[test]
+fn reports_unsupported_table_cell_method_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_table_cell_method.pine",
+        "table.cell_set_border_color",
+        "drawing object",
+    );
+}
+
+#[test]
 fn reports_unsupported_label_method_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_label_method.pine",

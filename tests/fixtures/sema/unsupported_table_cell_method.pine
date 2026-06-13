@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported table cell method")
+id = table.new(position.top_right, 1, 1)
+table.cell(id, 0, 0, "A")
+table.cell_set_border_color(id, 0, 0, color.red)
+plot(close)
