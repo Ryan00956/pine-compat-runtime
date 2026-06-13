@@ -571,6 +571,17 @@ mod tests {
     }
 
     #[test]
+    fn runtime_error_fixtures_report_expected_messages() {
+        for (fixture, expected_message) in crate::runtime_snapshots::RUNTIME_ERROR_FIXTURES {
+            let message = runtime_fixture_error(fixture);
+            assert!(
+                message.contains(expected_message),
+                "{fixture} error `{message}` did not contain `{expected_message}`"
+            );
+        }
+    }
+
+    #[test]
     fn strategy_exit_bracket_fixture_has_single_exit_order_and_trade() {
         let output =
             runtime_fixture_json("tests/fixtures/runtime/strategy_exit_bracket_both_hit.pine");
@@ -851,6 +862,22 @@ mod tests {
         let result =
             run_historical(&analysis.hir.expect("fixture HIR"), &bars).expect("runtime result");
         public_runtime_result_json(&result)
+    }
+
+    fn runtime_fixture_error(fixture: &str) -> String {
+        let workspace = workspace_dir();
+        let source_text = fs::read_to_string(workspace.join(fixture)).expect("fixture source");
+        let source = SourceFile::new(fixture, source_text);
+        let analysis = analyze_source(&source);
+        assert!(
+            analysis.diagnostics.is_empty(),
+            "{fixture} diagnostics: {:?}",
+            analysis.diagnostics
+        );
+        let bars = parse_bars_csv(runtime_fixture_bars_csv(fixture)).expect("bars fixture");
+        run_historical(&analysis.hir.expect("fixture HIR"), &bars)
+            .expect_err("runtime fixture should fail")
+            .message
     }
 
     fn runtime_library_fixture_json(fixture: &str, library_sources: &[(&str, &str)]) -> String {

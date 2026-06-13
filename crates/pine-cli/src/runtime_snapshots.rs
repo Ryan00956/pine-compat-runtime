@@ -1276,6 +1276,11 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
     ),
 ];
 
+pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[(
+    "tests/fixtures/regressions/array_concat_limit.pine",
+    "array.concat cannot exceed 100000 elements",
+)];
+
 pub(crate) type RuntimeLibrarySnapshotFixture = (
     &'static str,
     &'static str,
