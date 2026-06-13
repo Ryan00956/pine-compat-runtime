@@ -1144,6 +1144,14 @@ fn reports_unsupported_array_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_concat_mismatch_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_concat_mismatch.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_import_fixture_missing_host_library() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_import.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");

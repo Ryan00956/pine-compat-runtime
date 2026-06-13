@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array concat mismatch")
+ints = array.new_int()
+floats = array.new_float()
+plot(array.size(array.concat(ints, floats)))
