@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array push linefill")
+a = array.new_linefill(0)
+a.push(na)
+plot(close)
