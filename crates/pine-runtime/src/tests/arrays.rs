@@ -1198,6 +1198,9 @@ plot(tail.join("|") == "b|c" and words.join("|") == "a|b|c|d" ? 1 : 0)
 empty_extra = array.new_string()
 words.concat(empty_extra)
 plot(words.join("|") == "a|b|c|d" and empty_extra.size() == 0 ? 1 : 0)
+empty_target = array.new_string()
+empty_target.concat(extra)
+plot(empty_target.join("|") == "d" and extra.size() == 1 ? 1 : 0)
 
 colors = array.new_color()
 colors.push(color.red)
@@ -1241,7 +1244,7 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     let bars = vec![bar(1.0), bar(2.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 17);
+    assert_eq!(result.plots.len(), 18);
     assert_values_close(&result.plots[0].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[1].values, &[23.0, 23.0]);
     assert_values_close(&result.plots[2].values, &[2.0, 2.0]);
@@ -1251,14 +1254,15 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[9].values, &[2.0, 2.0]);
-    assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[10].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[12].values, &[2.0, 2.0]);
-    assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[13].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[15].values, &[0.0, 0.0]);
-    assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[16].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
 }
 
 #[test]

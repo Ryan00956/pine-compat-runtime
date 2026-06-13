@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.concat` coverage for appending a non-empty source
+  array into an empty target array.
 - Added fixture-backed `array.join` coverage for string arrays containing empty
   elements.
 - Added fixture-backed `str.tostring(false)` coverage for bool stringification.
