@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.avg` semantic coverage for unsupported bool
+  arrays.
 - Added fixture-backed `array.range` semantic coverage for unsupported bool
   arrays.
 - Added fixture-backed `array.median` semantic coverage for unsupported bool
