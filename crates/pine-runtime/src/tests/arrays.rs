@@ -826,6 +826,7 @@ plot(colors.includes(color.green) ? colors.indexof(color.green) : 0)
 
 bool_search = array.from(true, true)
 plot(bool_search.indexof(true) == 0 and bool_search.lastindexof(true) == 1 and bool_search.indexof(false) == -1 and bool_search.lastindexof(false) == -1 ? 1 : 0)
+plot(not words.includes("z") and not bool_search.includes(false) ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -838,7 +839,7 @@ plot(bool_search.indexof(true) == 0 and bool_search.lastindexof(true) == 1 and b
     let bars = vec![bar(1.0), bar(2.0), bar(3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 23);
+    assert_eq!(result.plots.len(), 24);
     assert_values_close(&result.plots[0].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[1].values, &[0.0, 0.0, 0.0]);
     assert_values_close(&result.plots[2].values, &[2.0, 2.0, 2.0]);
@@ -862,6 +863,7 @@ plot(bool_search.indexof(true) == 0 and bool_search.lastindexof(true) == 1 and b
     assert_values_close(&result.plots[20].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[21].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[22].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[23].values, &[1.0, 1.0, 1.0]);
 }
 
 #[test]

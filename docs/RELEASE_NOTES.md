@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.includes` coverage for bool and string not-found
+  searches returning `false`.
 - Added fixture-backed `array.indexof` and `array.lastindexof` coverage for
   bool-array repeated-hit and not-found searches.
 - Added fixture-backed `array.indexof` and `array.lastindexof` coverage for

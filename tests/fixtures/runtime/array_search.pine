@@ -66,3 +66,4 @@ plot(colors.includes(color.green) ? colors.indexof(color.green) : 0)
 
 bool_search = array.from(true, true)
 plot(bool_search.indexof(true) == 0 and bool_search.lastindexof(true) == 1 and bool_search.indexof(false) == -1 and bool_search.lastindexof(false) == -1 ? 1 : 0)
+plot(not words.includes("z") and not bool_search.includes(false) ? 1 : 0)
