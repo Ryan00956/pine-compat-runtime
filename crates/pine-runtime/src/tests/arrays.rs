@@ -1312,6 +1312,9 @@ plot(flags.size() == 4 and not flags.get(3) and bool_more.size() == 1 ? 1 : 0)
 empty_bool_more = array.new_bool()
 flags.concat(empty_bool_more)
 plot(flags.size() == 4 and empty_bool_more.size() == 0 ? 1 : 0)
+empty_bool_target = array.new_bool()
+empty_bool_target.concat(bool_more)
+plot(empty_bool_target.size() == 1 and not empty_bool_target.get(0) and bool_more.size() == 1 ? 1 : 0)
 
 empty_window = ints.slice(2, 2)
 plot(empty_window.size())
@@ -1328,7 +1331,7 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     let bars = vec![bar(1.0), bar(2.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 24);
+    assert_eq!(result.plots.len(), 25);
     assert_values_close(&result.plots[0].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[1].values, &[23.0, 23.0]);
     assert_values_close(&result.plots[2].values, &[2.0, 2.0]);
@@ -1351,8 +1354,9 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[22].values, &[0.0, 0.0]);
-    assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[23].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
 }
 
 #[test]
