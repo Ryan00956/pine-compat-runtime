@@ -1,6 +1,8 @@
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
+use crate::builtins::colors::interpolate_color;
+
 use super::*;
 
 #[test]
@@ -17,7 +19,7 @@ clamped_opaque = color.new(clamped_base, -10)
 clamped_clear = color.new(clamped_base, 120)
 gradient = color.from_gradient(close, 1, 3, color.red, color.green)
 gradient_low = color.from_gradient(0, 1, 3, color.red, color.green)
-gradient_equal = color.from_gradient(2, 2, 2, color.green, color.red)
+gradient_equal = color.from_gradient(2, 2, 2, color.red, color.green)
 missing_gradient = color.from_gradient(na, 1, 3, color.red, color.green)
 hex = #ff990080
 channels = color.r(custom) + color.g(custom) + color.b(custom) + color.t(custom)
@@ -34,7 +36,7 @@ plot(clamped_transparency)
 plot(hex_channels)
 plot(gradient_channels)
 plot(color.r(gradient_low) == color.r(color.red) and color.g(gradient_low) == color.g(color.red) and color.b(gradient_low) == color.b(color.red) and color.t(gradient_low) == color.t(color.red) ? 1 : 0)
-plot(color.r(gradient_equal) == color.r(color.red) and color.g(gradient_equal) == color.g(color.red) and color.b(gradient_equal) == color.b(color.red) and color.t(gradient_equal) == color.t(color.red) ? 1 : 0)
+plot(color.r(gradient_equal) == color.r(color.green) and color.g(gradient_equal) == color.g(color.green) and color.b(gradient_equal) == color.b(color.green) and color.t(gradient_equal) == color.t(color.green) ? 1 : 0)
 plot(na(missing_gradient) ? 1 : 0)
 "#,
     );
@@ -61,6 +63,8 @@ plot(na(missing_gradient) ? 1 : 0)
     assert_eq!(apply_transparency(0xFF0000, 50), 0xFF000080);
     assert_eq!(apply_transparency(0x112233, -10), 0x112233FF);
     assert_eq!(apply_transparency(0x112233, 120), 0x11223300);
+    assert_eq!(interpolate_color(0xFF0000, 0x008000, 0.0), 0xFF0000);
+    assert_eq!(interpolate_color(0xFF0000, 0x008000, 1.0), 0x008000);
     assert_eq!(
         result.bg_colors[0].values,
         vec![PineValue::Color(0xFF990080), PineValue::Color(0xFF990080)]

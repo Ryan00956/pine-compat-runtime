@@ -27,6 +27,13 @@ pub(crate) fn color_rgba(color: u32) -> (u32, u32, u32, u32) {
 }
 
 pub(crate) fn interpolate_color(bottom_color: u32, top_color: u32, ratio: f64) -> u32 {
+    if ratio <= 0.0 {
+        return bottom_color;
+    }
+    if ratio >= 1.0 {
+        return top_color;
+    }
+
     let (bottom_red, bottom_green, bottom_blue, bottom_alpha) = color_rgba(bottom_color);
     let (top_red, top_green, top_blue, top_alpha) = color_rgba(top_color);
     let interpolate = |bottom: u32, top: u32| -> u32 {

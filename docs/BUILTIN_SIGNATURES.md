@@ -1094,8 +1094,8 @@ to 0-255, and clamps transparency to 0-100.
 `color.r`, `color.g`, `color.b`, and `color.t` return `na` for `na` colors;
 `color.t` returns transparency on the 0-100 scale.
 `color.from_gradient` linearly interpolates RGBA channels between the two
-colors, clamps values outside the numeric range to the nearest endpoint, and
-returns `na` when any required input is `na`. Equal bottom/top values return
+colors, clamps values outside the numeric range to the exact endpoint color,
+and returns `na` when any required input is `na`. Equal bottom/top values return
 the top color.
 
 Hex color literals are parsed by the syntax layer and lowered to the runtime's

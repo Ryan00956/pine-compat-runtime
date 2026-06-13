@@ -167,7 +167,7 @@ color.r	supported	red channel extraction from literal, rgb/new, and gradient col
 color.g	supported	green channel extraction from literal, rgb/new, and gradient colors	tests/fixtures/runtime/colors.pine
 color.b	supported	blue channel extraction from literal, rgb/new, and gradient colors	tests/fixtures/runtime/colors.pine
 color.t	supported	transparency channel extraction from alpha-backed colors as rounded 0..100 transparency	tests/fixtures/runtime/colors.pine
-color.from_gradient	supported	linear RGBA interpolation with lower/upper endpoint clamping and equal-range top-color handling	tests/fixtures/runtime/colors.pine
+color.from_gradient	supported	linear RGBA interpolation with exact lower/upper endpoint colors and equal-range top-color handling	tests/fixtures/runtime/colors.pine
 hex color literal	supported	#RRGGBB and #RRGGBBAA literals normalize to const colors	tests/fixtures/runtime/colors.pine;tests/fixtures/syntax/phase1_basic.pine
 scientific numeric literal	supported	integer and decimal float literals with e/E exponent notation parse as floats	tests/fixtures/syntax/phase1_basic.pine
 str.length	supported	string length with fixture-backed upper/lower case relation	tests/fixtures/runtime/strings.pine

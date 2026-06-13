@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preserved exact endpoint colors for clamped and equal-range
+  `color.from_gradient` results.
 - Added fixture-backed `color.from_gradient` lower-endpoint clamping and
   equal-range top-color coverage.
 - Added fixture-backed `color.rgb` channel rounding/clamping and
