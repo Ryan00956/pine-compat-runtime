@@ -1156,6 +1156,14 @@ fn reports_unsupported_line_new_modes_fixture() {
 }
 
 #[test]
+fn reports_unsupported_line_set_xloc_values_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_line_set_xloc_values.pine",
+        &["xloc.bar_index"],
+    );
+}
+
+#[test]
 fn reports_unsupported_label_method_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_label_method.pine",
