@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.concat` coverage for line source-array
+  non-mutation during append.
 - Added fixture-backed `array.concat` coverage for label source-array
   non-mutation during append.
 - Added fixture-backed `array.concat` coverage for appending into empty table
