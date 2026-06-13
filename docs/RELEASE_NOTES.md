@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.format` coverage for bool placeholder arguments.
 - Added fixture-backed `str.format` coverage for `na` placeholder arguments
   rendering as `NaN`.
 - Added fixture-backed `str.replace` coverage for out-of-range occurrence
