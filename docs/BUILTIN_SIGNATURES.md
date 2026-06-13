@@ -1168,7 +1168,8 @@ the first matched substring, an empty string when there is no match, `na` for
 separators split the source into Unicode scalar values. It returns `na` for
 `na` inputs and errors if the result would exceed 100,000 array elements.
 `str.format_time` supports UNIX timestamps in milliseconds and a UTC-only
-timezone subset (`UTC`, `Etc/UTC`, `GMT`, `Z`, `+0000`, `+00:00`). Omitted or
+timezone subset (`UTC`, `Etc/UTC`, `GMT`, `Z`, `+0000`, `-0000`, `+00:00`,
+`-00:00`, and zero-offset `UTC`/`GMT` offset aliases). Omitted or
 `na` `format` defaults to `yyyy-MM-dd'T'HH:mm:ssZ`. Supported tokens include
 `y`/`Y`, `M`, `d`, `H`, `h`, `m`, `s`, `S`, `a`, `Z`, and single-quoted
 literals. Other time zones are runtime errors until exchange/IANA timezone

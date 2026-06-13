@@ -50,7 +50,22 @@ pub(crate) fn dayofweek_value(datetime: DateTime<Utc>) -> i64 {
 pub(crate) fn is_supported_utc_timezone(timezone: &str) -> bool {
     matches!(
         timezone,
-        "UTC" | "Etc/UTC" | "GMT" | "Z" | "+0000" | "+00:00"
+        "UTC"
+            | "Etc/UTC"
+            | "GMT"
+            | "Z"
+            | "+0000"
+            | "-0000"
+            | "+00:00"
+            | "-00:00"
+            | "UTC+0"
+            | "UTC-0"
+            | "UTC+00:00"
+            | "UTC-00:00"
+            | "GMT+0"
+            | "GMT-0"
+            | "GMT+00:00"
+            | "GMT-00:00"
     )
 }
 

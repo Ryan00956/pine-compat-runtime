@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added zero-offset UTC/GMT timezone aliases for UTC-only time component
+  helpers and `str.format_time`.
 - Added `str.tonumber` support for finite ASCII scientific-notation strings.
 - Added runtime fixture coverage for pure user-defined methods that return
   local UDT aliases from final `if`/`else` or `for` bodies.

@@ -80,6 +80,8 @@ split_missing = str.split(na, ",")
 formatted_time_default = str.format_time(1609459200000)
 formatted_time_date = str.format_time(1609459200000, "yyyy-MM-dd")
 formatted_time_text = str.format_time(1609459200000, "HH:mm:ss 'on' MMM dd, yyyy", "UTC")
+formatted_time_alias = str.format_time(1609459200000, "HH:mm:ssZ", "UTC+00:00")
+formatted_time_gmt_alias = str.format_time(1609459200000, "HH:mm:ssZ", "GMT-0")
 missing_format_time = str.format_time(na)
 plot(upper == "SMA" and lower == "sma" ? length : 0)
 plot(na(missing) ? 1 : 0)
@@ -111,6 +113,7 @@ plot(split_words.size() == 4 and split_words.get(0) == "A" and split_words.get(2
 plot(split_chars.size() == 2 and split_chars.get(0) == "x" and split_chars.get(1) == "y" and na(split_missing) ? 1 : 0)
 plot(formatted_time_default == "2021-01-01T00:00:00+0000" and formatted_time_date == "2021-01-01" ? 1 : 0)
 plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_time) ? 1 : 0)
+plot(formatted_time_alias == "00:00:00+0000" and formatted_time_gmt_alias == "00:00:00+0000" ? 1 : 0)
 "##,
     );
     let analysis = analyze_source(&source);
