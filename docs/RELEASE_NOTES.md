@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Trimmed the generic unsupported drawing-method fixture to label/line/box/table
+  method coverage now that `polyline.*` has dedicated evidence.
 - Added dedicated fixture-backed `polyline.*` boundary coverage for unsupported
   point-list drawing construction.
 - Added fixture-backed `table.set_bgcolor` boundary coverage for unsupported
