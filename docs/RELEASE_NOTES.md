@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `label.set_text_formatting` boundary coverage for richer
+  unsupported label text layout methods.
 - Added fixture-backed `label.set_text_font_family` boundary coverage for richer
   unsupported label text layout methods.
 - Added fixture-backed `label.set_textalign` boundary coverage for unsupported
