@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Expanded unsupported drawing-method conformance evidence to cite dedicated
+  label and table method fixtures.
 - Added fixture-backed function side-effect coverage for rejected
   `strategy.cancel_all` calls inside user-defined functions.
 - Added fixture-backed function side-effect coverage for rejected
