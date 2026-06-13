@@ -1146,8 +1146,8 @@ to 0. `str.replace_all` replaces all non-overlapping occurrences. Empty
 targets replace zero-width character boundaries. Replacement results over
 40,960 characters are runtime errors.
 `str.tonumber` accepts strings containing ASCII digits, an optional leading
-sign, and at most one decimal point. It returns `na` for invalid formats,
-`na` inputs, and non-finite parsed results.
+sign, at most one decimal point, and optional scientific notation exponent. It
+returns `na` for invalid formats, `na` inputs, and non-finite parsed results.
 `str.tostring` supports scalar int, float, bool, string, `na`, and
 fixture-covered non-color array values. Numeric formatting supports the default
 `#.########`, `format.mintick` and `format.price` as the default format,

@@ -58,9 +58,22 @@ pub(crate) fn replace_all_zero_width_boundaries(source: &str, replacement: &str)
 
 pub(crate) fn is_pine_numeric_string(value: &str) -> bool {
     let unsigned = value.strip_prefix(['+', '-']).unwrap_or(value);
+    let (significand, exponent) = match unsigned.split_once(['e', 'E']) {
+        Some((significand, exponent)) => (significand, Some(exponent)),
+        None => (unsigned, None),
+    };
+    if unsigned
+        .chars()
+        .filter(|ch| matches!(ch, 'e' | 'E'))
+        .count()
+        > 1
+    {
+        return false;
+    }
+
     let mut saw_digit = false;
     let mut saw_decimal = false;
-    for ch in unsigned.chars() {
+    for ch in significand.chars() {
         if ch.is_ascii_digit() {
             saw_digit = true;
         } else if ch == '.' && !saw_decimal {
@@ -69,7 +82,16 @@ pub(crate) fn is_pine_numeric_string(value: &str) -> bool {
             return false;
         }
     }
-    saw_digit
+    if !saw_digit {
+        return false;
+    }
+
+    if let Some(exponent) = exponent {
+        let exponent = exponent.strip_prefix(['+', '-']).unwrap_or(exponent);
+        !exponent.is_empty() && exponent.chars().all(|ch| ch.is_ascii_digit())
+    } else {
+        true
+    }
 }
 
 pub(crate) fn stringify_array(values: &[PineValue], format: &str) -> String {
