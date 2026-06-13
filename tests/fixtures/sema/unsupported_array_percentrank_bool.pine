@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentrank bool")
+values = array.new_bool()
+plot(array.percentrank(values, 0))
