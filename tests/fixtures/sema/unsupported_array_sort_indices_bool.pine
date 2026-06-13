@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported array sort_indices bool")
+values = array.new_bool()
+values.push(true)
+indices = values.sort_indices()
+plot(close)
