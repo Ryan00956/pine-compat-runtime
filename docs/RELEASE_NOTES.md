@@ -32,6 +32,8 @@
   unsupported richer table cell layout methods.
 - Added fixture-backed `table.cell_set_text_valign` boundary coverage for
   unsupported richer table cell layout methods.
+- Corrected the `ta.vwap` conformance status to `partial` because
+  session-derived anchoring remains unsupported.
 - Added fixture-backed `table.set_position` boundary coverage for unsupported
   table position values.
 - Added fixture-backed `table.cell` boundary coverage for unsupported table
