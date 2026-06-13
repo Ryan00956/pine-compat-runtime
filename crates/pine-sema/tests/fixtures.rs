@@ -1216,6 +1216,15 @@ fn reports_unsupported_array_set_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_get_linefill_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_get_linefill.pine",
+        "array.new_linefill",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_pop_linefill_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_pop_linefill.pine",

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array get linefill")
+a = array.new_linefill(1)
+value = a.get(0)
+plot(close)
