@@ -24,6 +24,8 @@
   unsupported richer table cell methods.
 - Added fixture-backed `table.cell_set_width` boundary coverage for unsupported
   richer table cell layout methods.
+- Added fixture-backed `table.cell_set_height` boundary coverage for unsupported
+  richer table cell layout methods.
 - Added fixture-backed `table.set_position` boundary coverage for unsupported
   table position values.
 - Added fixture-backed `table.cell` boundary coverage for unsupported table
