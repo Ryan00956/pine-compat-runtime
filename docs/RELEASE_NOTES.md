@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.some` semantic coverage for unsupported string
+  arrays.
 - Added fixture-backed `array.every` semantic coverage for unsupported string
   arrays.
 - Added fixture-backed `array.binary_search_rightmost` semantic coverage for
