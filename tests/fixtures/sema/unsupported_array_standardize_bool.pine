@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array standardize bool")
+values = array.new_bool()
+standardized = array.standardize(values)
+plot(close)
