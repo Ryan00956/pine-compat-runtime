@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.unshift` semantic coverage for unsupported
+  linefill arrays.
 - Added fixture-backed `array.remove` semantic coverage for unsupported linefill
   arrays.
 - Added fixture-backed `array.pop` semantic coverage for unsupported linefill
