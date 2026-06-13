@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.split` coverage for missing separators returning a
+  single source-string element.
 - Added fixture-backed `str.replace_all` coverage for no-match inputs leaving
   the source string unchanged.
 - Added fixture-backed `str.substring` coverage for equal begin/end indexes
