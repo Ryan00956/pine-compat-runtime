@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `label.set_x` boundary coverage for unsupported later
+  label methods.
 - Added fixture-backed `label.new` semantic coverage for unsupported mode
   options.
 - Added fixture-backed `array.new_table` boundary coverage for unsupported

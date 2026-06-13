@@ -1148,6 +1148,15 @@ fn reports_unsupported_label_new_modes_fixture() {
 }
 
 #[test]
+fn reports_unsupported_label_method_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_label_method.pine",
+        "label.set_point",
+        "drawing object",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array.pine",
