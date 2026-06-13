@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `strategy.close` no-op coverage for while-flat,
+  wrong-entry-id, and repeated close calls without changing public strategy JSON.
 - Added script-visible strategy trade comment helpers:
   `strategy.closedtrades.entry_comment`,
   `strategy.closedtrades.exit_comment`, and

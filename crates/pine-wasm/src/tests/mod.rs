@@ -3137,6 +3137,17 @@ fn runs_strategy_close_fixture_contract() {
 }
 
 #[test]
+fn runs_strategy_close_noop_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/strategy_close_noop.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("strategy close no-op fixture should run");
+
+    assert_snapshot("runtime_strategy_close_noop.json", &output);
+}
+
+#[test]
 fn runs_strategy_close_qty_partial_from_csv_to_trade_json() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/strategy_close_qty_partial.pine"),
