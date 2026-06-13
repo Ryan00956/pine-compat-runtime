@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.set_text_color` boundary coverage for unsupported
+  later box text size/style/layout methods.
 - Added fixture-backed `box.set_text` boundary coverage for unsupported later
   box text style/layout methods.
 - Added fixture-backed `box.set_xloc` boundary coverage for unsupported
