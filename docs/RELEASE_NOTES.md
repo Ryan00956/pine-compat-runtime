@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.insert` coverage for out-of-range scalar inserts
+  leaving existing arrays unchanged.
 - Added fixture-backed `array.remove` coverage for out-of-range scalar removals
   returning `na` without mutating the array.
 - Added fixture-backed `array.pop` coverage for empty scalar arrays returning

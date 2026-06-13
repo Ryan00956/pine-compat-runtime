@@ -551,6 +551,8 @@ negative_tail = negative.remove(-1)
 plot(negative_head + negative_tail + negative.size())
 plot(na(negative.get(-3)) and na(negative.remove(-3)) ? 1 : 0)
 plot(negative.size() == 2 ? 1 : 0)
+negative.insert(9, 40)
+plot(negative.size() == 2 and negative.get(0) == 99 and negative.get(1) == 25 ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -563,7 +565,7 @@ plot(negative.size() == 2 ? 1 : 0)
     let bars = vec![bar(1.0), bar(2.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 13);
+    assert_eq!(result.plots.len(), 14);
     assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[1].values, &[23.0, 23.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
@@ -577,6 +579,7 @@ plot(negative.size() == 2 ? 1 : 0)
     assert_values_close(&result.plots[10].values, &[42.0, 42.0]);
     assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
 }
 
 #[test]
