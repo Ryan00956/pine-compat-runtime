@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.set_lefttop` boundary coverage for unsupported
+  later box methods.
 - Added fixture-backed `box.set_bottom` boundary coverage for unsupported later
   box methods.
 - Added fixture-backed `box.set_right` boundary coverage for unsupported later
