@@ -1291,6 +1291,14 @@ fn reports_unsupported_array_max_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_min_bool_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_bool.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_standardize_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_standardize_bool.pine",
