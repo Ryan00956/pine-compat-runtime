@@ -1,0 +1,6 @@
+//@version=5
+strategy("Unsupported strategy cancel function side effect")
+cancel_entry() =>
+    strategy.cancel("L")
+    close
+plot(cancel_entry())
