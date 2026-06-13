@@ -1,0 +1,6 @@
+//@version=5
+strategy("Unsupported strategy close_all function side effect")
+close_everything() =>
+    strategy.close_all()
+    close
+plot(close_everything())
