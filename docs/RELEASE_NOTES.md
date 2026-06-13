@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.replace` and `str.replace_all` coverage for `na`
+  target and replacement arguments.
 - Added fixture-backed `str.pos` coverage for `na` source arguments.
 - Added fixture-backed `str.contains`, `str.startswith`, and `str.endswith`
   coverage for `na` pattern arguments.
