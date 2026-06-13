@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.binary_search` coverage for exact empty-array
+  searches returning `-1`.
 - Added fixture-backed `array.insert` coverage for out-of-range scalar inserts
   leaving existing arrays unchanged.
 - Added fixture-backed `array.remove` coverage for out-of-range scalar removals
