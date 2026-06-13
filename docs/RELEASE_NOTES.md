@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed function side-effect coverage for rejected
+  `strategy.close` calls inside user-defined functions.
 - Added fixture-backed alert placeholder coverage for rejected
   `alertcondition` plot placeholders.
 - Added fixture-backed alert placeholder coverage for rejected unknown

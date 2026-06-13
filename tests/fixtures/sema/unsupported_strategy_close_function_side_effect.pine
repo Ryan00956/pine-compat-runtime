@@ -1,0 +1,6 @@
+//@version=5
+strategy("Unsupported strategy close function side effect")
+close_now() =>
+    strategy.close("L")
+    close
+plot(close_now())
