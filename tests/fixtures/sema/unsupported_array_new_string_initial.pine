@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array new string initial")
+values = array.new_string(1, close)
+plot(close)
