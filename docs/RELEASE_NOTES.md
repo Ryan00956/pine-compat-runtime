@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.length` coverage for Unicode scalar counting.
 - Added fixture-backed `str.split` coverage for empty-separator Unicode scalar
   splitting.
 - Added fixture-backed `str.substring` coverage for `na` end positions
