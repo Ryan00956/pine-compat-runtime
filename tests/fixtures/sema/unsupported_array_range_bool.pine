@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array range bool")
+values = array.new_bool()
+plot(array.range(values))
