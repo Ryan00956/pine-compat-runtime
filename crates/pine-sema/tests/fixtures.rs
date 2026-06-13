@@ -1204,6 +1204,14 @@ fn reports_unsupported_table_cell_text_formatting_fixture() {
 }
 
 #[test]
+fn reports_unsupported_table_set_position_values_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_table_set_position_values.pine",
+        "E_CALL_ARG_VALUE",
+    );
+}
+
+#[test]
 fn reports_unsupported_label_method_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_label_method.pine",

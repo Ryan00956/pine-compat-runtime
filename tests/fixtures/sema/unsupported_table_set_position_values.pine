@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported table.set_position values")
+id = table.new(position.top_right, 1, 1)
+table.set_position(id, "position.bad")
+plot(close)
