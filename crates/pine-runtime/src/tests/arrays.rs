@@ -1297,6 +1297,9 @@ plot(float_returned.size() == 5 and floats.size() == 5 and na(floats.get(3)) and
 empty_float_more = array.new_float()
 floats.concat(empty_float_more)
 plot(float_returned.size() == 5 and floats.size() == 5 and empty_float_more.size() == 0 ? 1 : 0)
+empty_float_target = array.new_float()
+empty_float_target.concat(float_more)
+plot(empty_float_target.size() == 2 and na(empty_float_target.get(0)) and empty_float_target.get(1) == high and float_more.size() == 2 ? 1 : 0)
 
 flags = array.from(true, false, true)
 flag_tail = flags.slice(1, 3)
@@ -1325,7 +1328,7 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     let bars = vec![bar(1.0), bar(2.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 23);
+    assert_eq!(result.plots.len(), 24);
     assert_values_close(&result.plots[0].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[1].values, &[23.0, 23.0]);
     assert_values_close(&result.plots[2].values, &[2.0, 2.0]);
@@ -1343,12 +1346,13 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[17].values, &[2.0, 2.0]);
-    assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[18].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[21].values, &[0.0, 0.0]);
-    assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[22].values, &[0.0, 0.0]);
+    assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
 }
 
 #[test]

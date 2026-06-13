@@ -61,6 +61,9 @@ plot(float_returned.size() == 5 and floats.size() == 5 and na(floats.get(3)) and
 empty_float_more = array.new_float()
 floats.concat(empty_float_more)
 plot(float_returned.size() == 5 and floats.size() == 5 and empty_float_more.size() == 0 ? 1 : 0)
+empty_float_target = array.new_float()
+empty_float_target.concat(float_more)
+plot(empty_float_target.size() == 2 and na(empty_float_target.get(0)) and empty_float_target.get(1) == high and float_more.size() == 2 ? 1 : 0)
 
 flags = array.from(true, false, true)
 flag_tail = flags.slice(1, 3)
