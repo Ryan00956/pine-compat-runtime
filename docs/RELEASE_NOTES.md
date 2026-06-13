@@ -30,6 +30,8 @@
   unsupported richer table cell layout methods.
 - Added fixture-backed `table.cell_set_text_halign` boundary coverage for
   unsupported richer table cell layout methods.
+- Added fixture-backed `table.cell_set_text_valign` boundary coverage for
+  unsupported richer table cell layout methods.
 - Added fixture-backed `table.set_position` boundary coverage for unsupported
   table position values.
 - Added fixture-backed `table.cell` boundary coverage for unsupported table
