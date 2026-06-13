@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed alert placeholder coverage for rejected
+  `alertcondition` title placeholders.
 - Added fixture-backed function side-effect coverage for rejected declaration
   calls inside user-defined functions.
 - Added fixture-backed function side-effect coverage for rejected `input.*` calls
