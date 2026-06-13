@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array covariance bool")
+left = array.new_bool()
+right = array.new_bool()
+plot(array.covariance(left, right))

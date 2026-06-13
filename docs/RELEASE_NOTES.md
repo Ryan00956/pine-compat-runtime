@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.covariance` semantic coverage for unsupported
+  bool arrays.
 - Added fixture-backed `array.standardize` semantic coverage for unsupported
   bool arrays.
 - Added fixture-backed `array.variance` semantic coverage for unsupported bool
