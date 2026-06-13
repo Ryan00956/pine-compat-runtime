@@ -1985,6 +1985,15 @@ fn reports_unsupported_strategy_cancel_function_side_effect_fixture() {
 }
 
 #[test]
+fn reports_unsupported_strategy_cancel_all_function_side_effect_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_strategy_cancel_all_function_side_effect.pine",
+        "function_side_effect",
+        "strategy order calls",
+    );
+}
+
+#[test]
 fn reports_unsupported_dynamic_history_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_dynamic_history.pine",

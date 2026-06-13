@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed function side-effect coverage for rejected
+  `strategy.cancel_all` calls inside user-defined functions.
+- Added fixture-backed function side-effect coverage for rejected
   `strategy.cancel` calls inside user-defined functions.
 - Added fixture-backed function side-effect coverage for rejected
   `strategy.close_all` calls inside user-defined functions.

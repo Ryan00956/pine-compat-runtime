@@ -1,0 +1,6 @@
+//@version=5
+strategy("Unsupported strategy cancel_all function side effect")
+cancel_everything() =>
+    strategy.cancel_all()
+    close
+plot(cancel_everything())
