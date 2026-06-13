@@ -116,7 +116,7 @@ box.set_top	partial	box id top mutation snapshots only; deleted or na boxes are 
 box.set_right	partial	box id right mutation snapshots only; deleted or na boxes are no-op; later box methods unsupported	tests/fixtures/runtime/box_mutation.pine;tests/fixtures/sema/unsupported_drawing.pine
 box.set_bottom	partial	box id bottom mutation snapshots only; deleted or na boxes are no-op; later box methods unsupported	tests/fixtures/runtime/box_mutation.pine;tests/fixtures/sema/unsupported_drawing.pine
 box.set_lefttop	partial	box id left/top mutation snapshots only; deleted or na boxes are no-op; later box methods unsupported	tests/fixtures/runtime/box_mutation.pine;tests/fixtures/runtime/box_control_flow.pine;tests/fixtures/sema/unsupported_drawing.pine
-box.set_rightbottom	partial	box id right/bottom mutation snapshots only; deleted or na boxes are no-op; later box methods unsupported	tests/fixtures/runtime/box_mutation.pine
+box.set_rightbottom	partial	box id right/bottom mutation snapshots only; deleted or na boxes are no-op; later box methods unsupported	tests/fixtures/runtime/box_mutation.pine;tests/fixtures/sema/unsupported_drawing.pine
 box.set_bgcolor	partial	box id background color mutation snapshots only; deleted or na boxes are no-op; later box methods unsupported	tests/fixtures/runtime/box_mutation.pine;tests/fixtures/runtime/box_control_flow.pine
 box.set_border_color	partial	box id border color mutation snapshots only; deleted or na boxes are no-op; later box methods unsupported	tests/fixtures/runtime/box_mutation.pine
 box.set_border_width	partial	box id border width mutation snapshots only; deleted or na boxes are no-op; later box methods unsupported	tests/fixtures/runtime/box_mutation.pine;tests/fixtures/runtime/box_control_flow.pine
