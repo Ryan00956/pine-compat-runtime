@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.format` coverage for `na` placeholder arguments
+  rendering as `NaN`.
 - Added fixture-backed `str.replace` coverage for out-of-range occurrence
   values leaving the source string unchanged.
 - Added fixture-backed `str.replace` coverage for `na` occurrence values
