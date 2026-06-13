@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.abs` semantic coverage for unsupported bool
+  arrays.
 - Added fixture-backed `array.min` semantic coverage for unsupported bool
   arrays.
 - Added fixture-backed `array.max` semantic coverage for unsupported bool
