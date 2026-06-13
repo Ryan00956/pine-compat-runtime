@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.sort` and `array.sort_indices` coverage for empty
+  string arrays.
 - Added fixture-backed `array.binary_search`, `array.binary_search_leftmost`,
   and `array.binary_search_rightmost` coverage for empty float arrays.
 - Added fixture-backed `array.every` and `array.some` coverage for empty int
