@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preserved exact RGB color values for fully opaque `color.new` and
+  `color.rgb` results.
 - Preserved exact endpoint colors for clamped and equal-range
   `color.from_gradient` results.
 - Added fixture-backed `color.from_gradient` lower-endpoint clamping and

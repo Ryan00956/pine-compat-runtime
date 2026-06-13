@@ -10,7 +10,7 @@ pub(crate) fn apply_transparency(color: u32, transp: i64) -> u32 {
     let rgb = if color > 0xFF_FFFF { color >> 8 } else { color } & 0xFF_FFFF;
     let transp = transp.clamp(0, 100) as u32;
     let alpha = ((100 - transp) * 255 + 50) / 100;
-    (rgb << 8) | alpha
+    compose_color(rgb, alpha)
 }
 
 pub(crate) fn color_channel(value: f64) -> u32 {
@@ -24,6 +24,16 @@ pub(crate) fn color_rgba(color: u32) -> (u32, u32, u32, u32) {
         (color, 0xFF)
     };
     ((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF, alpha)
+}
+
+pub(crate) fn compose_color(rgb: u32, alpha: u32) -> u32 {
+    let rgb = rgb & 0xFF_FFFF;
+    let alpha = alpha & 0xFF;
+    if alpha == 0xFF {
+        rgb
+    } else {
+        (rgb << 8) | alpha
+    }
 }
 
 pub(crate) fn interpolate_color(bottom_color: u32, top_color: u32, ratio: f64) -> u32 {
@@ -45,7 +55,7 @@ pub(crate) fn interpolate_color(bottom_color: u32, top_color: u32, ratio: f64) -
     let green = interpolate(bottom_green, top_green);
     let blue = interpolate(bottom_blue, top_blue);
     let alpha = interpolate(bottom_alpha, top_alpha);
-    (red << 24) | (green << 16) | (blue << 8) | alpha
+    compose_color((red << 16) | (green << 8) | blue, alpha)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -1088,9 +1088,10 @@ Named colors include the common TradingView color constants used by fixtures.
 Hex color literals in `#RRGGBB` and `#RRGGBBAA` form are accepted as const
 colors.
 `color.new` defaults `transp` to 0 when omitted and clamps transparency to the
-0-100 range.
+0-100 range. Fully opaque results preserve the exact RGB color value.
 `color.rgb` rounds channel inputs to integer RGBA channels, clamps RGB channels
-to 0-255, and clamps transparency to 0-100.
+to 0-255, and clamps transparency to 0-100. Fully opaque results preserve the
+exact RGB color value.
 `color.r`, `color.g`, `color.b`, and `color.t` return `na` for `na` colors;
 `color.t` returns transparency on the 0-100 scale.
 `color.from_gradient` linearly interpolates RGBA channels between the two

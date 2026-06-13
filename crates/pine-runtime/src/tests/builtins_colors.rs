@@ -1,7 +1,7 @@
 use pine_sema::analyze_source;
 use pine_syntax::SourceFile;
 
-use crate::builtins::colors::interpolate_color;
+use crate::builtins::colors::{compose_color, interpolate_color};
 
 use super::*;
 
@@ -12,8 +12,10 @@ fn runs_color_new_and_named_colors() {
         r#"indicator("colors")
 c = color.new(color.red, 50)
 opaque = color.new(color.blue)
+opaque_blue = color.new(color.blue, 0)
 custom = color.rgb(255, 153, 0, 50)
 clamped = color.rgb(260.4, -1.4, 127.5, 125)
+opaque_rgb = color.rgb(0, 128, 0, 0)
 clamped_base = #112233
 clamped_opaque = color.new(clamped_base, -10)
 clamped_clear = color.new(clamped_base, 120)
@@ -30,8 +32,10 @@ gradient_channels = color.r(gradient) + color.g(gradient) + color.b(gradient) + 
 bgcolor(custom)
 plot(na(c) ? 0 : 1)
 plot(opaque == color.new(color.blue, 0) ? 1 : 0)
+plot(opaque_blue == color.blue ? 1 : 0)
 plot(channels)
 plot(clamped_channels)
+plot(color.r(opaque_rgb) == 0 and color.g(opaque_rgb) == 128 and color.b(opaque_rgb) == 0 and color.t(opaque_rgb) == 0 ? 1 : 0)
 plot(clamped_transparency)
 plot(hex_channels)
 plot(gradient_channels)
@@ -52,17 +56,21 @@ plot(na(missing_gradient) ? 1 : 0)
 
     assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[2].values, &[458.0, 458.0]);
-    assert_values_close(&result.plots[3].values, &[483.0, 483.0]);
-    assert_values_close(&result.plots[4].values, &[100.0, 100.0]);
-    assert_values_close(&result.plots[5].values, &[458.0, 458.0]);
-    assert_values_close(&result.plots[6].values, &[255.0, 192.0]);
-    assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[3].values, &[458.0, 458.0]);
+    assert_values_close(&result.plots[4].values, &[483.0, 483.0]);
+    assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[6].values, &[100.0, 100.0]);
+    assert_values_close(&result.plots[7].values, &[458.0, 458.0]);
+    assert_values_close(&result.plots[8].values, &[255.0, 192.0]);
     assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
     assert_eq!(apply_transparency(0xFF0000, 50), 0xFF000080);
-    assert_eq!(apply_transparency(0x112233, -10), 0x112233FF);
+    assert_eq!(apply_transparency(0x112233, -10), 0x112233);
     assert_eq!(apply_transparency(0x112233, 120), 0x11223300);
+    assert_eq!(compose_color(0x008000, 0xFF), 0x008000);
+    assert_eq!(compose_color(0x008000, 0x80), 0x00800080);
     assert_eq!(interpolate_color(0xFF0000, 0x008000, 0.0), 0xFF0000);
     assert_eq!(interpolate_color(0xFF0000, 0x008000, 1.0), 0x008000);
     assert_eq!(
