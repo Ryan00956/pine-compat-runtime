@@ -1,6 +1,7 @@
 //@version=5
 indicator("Line array")
 var lines = array.new_line()
+var line_concat_checks = array.new_bool()
 if bar_index == 0
     first = line.new(bar_index, low, bar_index + 1, high)
     second = line.copy(first)
@@ -26,6 +27,10 @@ if bar_index == 2
     lines.fill(lines.first(), 0, 1)
     sliced = lines.slice(0, 1)
     sliced.concat(lines)
+    empty_lines = array.new_line()
+    before_empty_line_concat = lines.size()
+    lines.concat(empty_lines)
+    line_concat_checks.push(lines.size() == before_empty_line_concat and empty_lines.size() == 0)
     line.set_extend(sliced.get(0), extend.right)
     if lines.includes(lines.first())
         line.set_color(lines.first(), color.blue)
@@ -41,3 +46,4 @@ if bar_index == 3
     scratch.clear()
 plot(lines.size())
 plot(close)
+plot(line_concat_checks.size() == 1 and line_concat_checks.get(0) ? 1 : 0)
