@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.percentile_nearest_rank` semantic coverage for
+  unsupported bool arrays.
 - Added fixture-backed `array.percentile_linear_interpolation` semantic
   coverage for unsupported bool arrays.
 - Added fixture-backed `array.percentrank` semantic coverage for unsupported
