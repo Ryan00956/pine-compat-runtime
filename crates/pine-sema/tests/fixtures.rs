@@ -1144,6 +1144,14 @@ fn reports_unsupported_array_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_new_float_initial_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_new_float_initial.pine",
+        &["`array.new_float` argument `initial_value` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_clear_linefill_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_clear_linefill.pine",

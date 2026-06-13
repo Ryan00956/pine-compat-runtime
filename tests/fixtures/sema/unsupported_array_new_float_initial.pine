@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array new float initial")
+values = array.new_float(1, "x")
+plot(close)

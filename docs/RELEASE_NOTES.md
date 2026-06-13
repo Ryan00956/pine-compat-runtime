@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.new_float` semantic coverage for incompatible
+  initial values.
 - Added fixture-backed `array.from` semantic coverage for unsupported linefill
   arrays.
 - Added fixture-backed `array.size` semantic coverage for unsupported linefill
