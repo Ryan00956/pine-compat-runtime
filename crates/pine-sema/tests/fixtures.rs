@@ -1894,6 +1894,14 @@ fn reports_unsupported_alertcondition_dynamic_title_fixture() {
 }
 
 #[test]
+fn reports_unsupported_alertcondition_dynamic_message_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_alertcondition_dynamic_message.pine",
+        &["argument `message`", "Input String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_function_side_effect_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_function_side_effect.pine",

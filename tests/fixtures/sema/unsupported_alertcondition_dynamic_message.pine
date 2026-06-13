@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported alertcondition dynamic message")
+message = input.string("Message", "Message")
+alertcondition(close > open, "Cross", message)
