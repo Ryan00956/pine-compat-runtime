@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.set_xloc` boundary coverage for unsupported
+  `xloc.bar_time` and chart-point box methods.
 - Added fixture-backed `box.set_extend` boundary coverage for unsupported later
   box methods.
 - Added fixture-backed `box.set_border_style` boundary coverage for unsupported
