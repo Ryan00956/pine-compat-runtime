@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.pos` coverage for Unicode scalar result indexes.
 - Added fixture-backed `str.substring` coverage for Unicode scalar indexes.
 - Added fixture-backed `str.length` coverage for Unicode scalar counting.
 - Added fixture-backed `str.split` coverage for empty-separator Unicode scalar
