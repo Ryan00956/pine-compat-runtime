@@ -1093,6 +1093,9 @@ colors.push(color.red)
 colors.push(color.green)
 colors.reverse()
 plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
+empty_colors = array.new_color()
+empty_colors.reverse()
+plot(empty_colors.size())
 "#,
     );
     let analysis = analyze_source(&source);
@@ -1105,7 +1108,7 @@ plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
     let bars = vec![bar_ohlc(1.0, 4.0, 0.0, 2.0), bar_ohlc(2.0, 6.0, 1.0, 3.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 26);
+    assert_eq!(result.plots.len(), 27);
     assert_values_close(&result.plots[0].values, &[123.0, 123.0]);
     assert_values_close(&result.plots[1].values, &[321.0, 321.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
@@ -1132,6 +1135,7 @@ plot(colors.get(0) == color.green and colors.get(1) == color.red ? 1 : 0)
     assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[24].values, &[0.0, 0.0]);
     assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[26].values, &[0.0, 0.0]);
 }
 
 #[test]
