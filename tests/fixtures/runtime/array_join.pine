@@ -31,3 +31,5 @@ plot(colors.join("|") == "16711680|32768" ? 1 : 0)
 
 empty = array.new_string()
 plot(array.join(empty, "|") == "" ? 1 : 0)
+empty_ints = array.new_int()
+plot(empty_ints.join("|") == "" ? 1 : 0)
