@@ -1967,6 +1967,14 @@ fn reports_unsupported_array_max_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_max_line_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_min_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_min_bool.pine",

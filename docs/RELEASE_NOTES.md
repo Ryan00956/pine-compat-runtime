@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.max` coverage for rejected line arrays.
 - Added fixture-backed `array.max` coverage for rejected label arrays.
 - Added fixture-backed `array.min` coverage for rejected table arrays.
 - Added fixture-backed `array.min` coverage for rejected box arrays.
