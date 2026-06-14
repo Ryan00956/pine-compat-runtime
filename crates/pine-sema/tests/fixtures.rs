@@ -1607,6 +1607,14 @@ fn reports_unsupported_array_sort_indices_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_indices_line_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_indices_color_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_color.pine",
