@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.sort` coverage for rejected color arrays.
 - Added fixture-backed `array.stdev` coverage for rejected color arrays.
 - Added fixture-backed `array.variance` coverage for rejected color arrays.
 - Added fixture-backed `array.standardize` coverage for rejected color arrays.
