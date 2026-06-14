@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array every polyline")
+values = array.new_polyline(0)
+plot(array.every(values) ? 1 : 0)

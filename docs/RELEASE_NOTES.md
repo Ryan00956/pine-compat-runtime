@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.every` coverage for rejected polyline arrays.
 - Added fixture-backed `array.includes` coverage for rejected polyline arrays.
 - Added fixture-backed `array.copy` coverage for rejected polyline arrays.
 - Added fixture-backed `array.last` coverage for rejected polyline arrays.
