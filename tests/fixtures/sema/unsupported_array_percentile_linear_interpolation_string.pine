@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentile linear interpolation string")
+values = array.new_string()
+plot(array.percentile_linear_interpolation(values, 50))

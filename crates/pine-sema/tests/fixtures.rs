@@ -1671,6 +1671,14 @@ fn reports_unsupported_array_percentile_linear_interpolation_bool_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_linear_interpolation_string_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_string.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_nearest_rank_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_bool.pine",
