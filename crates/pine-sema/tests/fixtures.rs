@@ -1847,6 +1847,14 @@ fn reports_unsupported_array_mode_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_mode_line_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_median_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_median_bool.pine",
