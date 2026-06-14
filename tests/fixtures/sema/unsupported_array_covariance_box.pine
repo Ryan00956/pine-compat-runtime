@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array covariance box")
+left = array.new_box()
+right = array.new_box()
+plot(array.covariance(left, right))
