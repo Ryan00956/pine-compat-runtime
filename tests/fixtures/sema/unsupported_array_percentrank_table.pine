@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentrank table")
+values = array.new_table()
+plot(array.percentrank(values, 0))
