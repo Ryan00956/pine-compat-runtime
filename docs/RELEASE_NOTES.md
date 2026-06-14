@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.sort` coverage for rejected box arrays.
 - Added fixture-backed `array.sort` coverage for rejected line arrays.
 - Added fixture-backed `array.sort` coverage for rejected label arrays.
 - Added fixture-backed `array.stdev` coverage for rejected table arrays.
