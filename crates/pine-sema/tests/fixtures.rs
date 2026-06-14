@@ -2015,6 +2015,14 @@ fn reports_unsupported_array_abs_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_abs_line_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_bool.pine",
