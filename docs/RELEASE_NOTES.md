@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.avg` coverage for rejected label arrays.
 - Added fixture-backed `array.sum` coverage for rejected table arrays.
 - Added fixture-backed `array.sum` coverage for rejected box arrays.
 - Added fixture-backed `array.sum` coverage for rejected line arrays.

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array avg label")
+values = array.new_label()
+plot(array.avg(values))
