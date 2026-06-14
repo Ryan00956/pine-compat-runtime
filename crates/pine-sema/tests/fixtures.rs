@@ -1767,6 +1767,14 @@ fn reports_unsupported_array_covariance_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_covariance_table_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentrank_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentrank_bool.pine",
