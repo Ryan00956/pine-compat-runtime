@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.from` coverage for rejected polyline arrays.
 - Added fixture-backed `array.new_*` summary coverage for rejected polyline
   array constructors.
 - Linked the `array.*` summary row to explicit linefill constructor rejection
