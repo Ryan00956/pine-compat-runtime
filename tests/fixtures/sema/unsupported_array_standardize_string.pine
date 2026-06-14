@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array standardize string")
+values = array.new_string()
+standardized = array.standardize(values)
+plot(close)
