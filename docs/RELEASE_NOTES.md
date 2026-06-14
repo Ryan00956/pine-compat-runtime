@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.concat` coverage for rejected polyline arrays.
 - Added fixture-backed `array.slice` coverage for rejected polyline arrays.
 - Added fixture-backed `array.join` coverage for rejected polyline arrays.
 - Added fixture-backed `array.reverse` coverage for rejected polyline arrays.
