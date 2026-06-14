@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.slice` coverage for rejected UDT arrays.
 - Added fixture-backed `array.join` coverage for rejected UDT arrays.
 - Added fixture-backed `array.reverse` coverage for rejected UDT arrays.
 - Added fixture-backed `array.sort_indices` coverage for rejected UDT arrays.

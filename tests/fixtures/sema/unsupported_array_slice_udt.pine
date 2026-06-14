@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array slice UDT")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+part = values.slice(0, 1)
+plot(close)
