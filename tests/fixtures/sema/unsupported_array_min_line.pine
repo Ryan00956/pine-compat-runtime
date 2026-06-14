@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array min line")
+values = array.new_line()
+plot(array.min(values))

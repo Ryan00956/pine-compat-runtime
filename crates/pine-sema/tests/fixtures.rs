@@ -1991,6 +1991,14 @@ fn reports_unsupported_array_min_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_min_line_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_abs_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_abs_bool.pine",
