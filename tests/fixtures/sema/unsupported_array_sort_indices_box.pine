@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported array sort_indices box")
+values = array.new_box()
+values.push(box.new(bar_index, high, bar_index + 1, low))
+indices = values.sort_indices()
+plot(close)
