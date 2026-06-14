@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array max box")
+values = array.new_box()
+plot(array.max(values))
