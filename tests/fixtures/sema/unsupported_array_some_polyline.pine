@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array some polyline")
+values = array.new_polyline(0)
+plot(array.some(values) ? 1 : 0)
