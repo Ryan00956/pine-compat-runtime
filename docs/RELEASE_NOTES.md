@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.mode` coverage for rejected label arrays.
 - Added fixture-backed `array.median` coverage for rejected table arrays.
 - Added fixture-backed `array.median` coverage for rejected box arrays.
 - Added fixture-backed `array.median` coverage for rejected line arrays.
