@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.max` coverage for rejected color arrays.
 - Added fixture-backed `array.min` coverage for rejected color arrays.
 - Added fixture-backed `array.abs` coverage for rejected color arrays.
 - Added fixture-backed `array.avg` coverage for rejected string arrays.
