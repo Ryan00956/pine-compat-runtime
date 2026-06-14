@@ -1623,6 +1623,14 @@ fn reports_unsupported_array_stdev_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_stdev_table_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_variance_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_variance_bool.pine",
