@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.binary_search_leftmost` coverage for rejected
+  color arrays.
 - Added fixture-backed `array.binary_search` coverage for rejected color arrays.
 - Added fixture-backed `array.sort_indices` coverage for rejected color arrays.
 - Added fixture-backed `array.sort` coverage for rejected color arrays.

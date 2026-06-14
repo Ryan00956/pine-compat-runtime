@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array binary search leftmost color")
+values = array.new_color()
+plot(array.binary_search_leftmost(values, color.red))
