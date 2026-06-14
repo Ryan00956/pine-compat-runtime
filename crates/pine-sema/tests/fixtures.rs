@@ -1640,6 +1640,15 @@ fn reports_unsupported_array_sort_indices_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_indices_linefill_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_linefill.pine",
+        "array.new_linefill",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_indices_color_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_color.pine",

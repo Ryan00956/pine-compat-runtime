@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.sort_indices` coverage for rejected linefill
+  arrays.
 - Added fixture-backed `array.sort` coverage for rejected linefill arrays.
 - Added fixture-backed `array.sort_indices` coverage for rejected table arrays.
 - Added fixture-backed `array.sort_indices` coverage for rejected box arrays.
