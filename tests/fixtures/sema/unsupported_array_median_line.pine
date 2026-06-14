@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array median line")
+values = array.new_line()
+plot(array.median(values))
