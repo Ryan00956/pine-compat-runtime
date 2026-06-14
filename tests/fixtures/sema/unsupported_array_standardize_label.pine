@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array standardize label")
+values = array.new_label()
+standardized = array.standardize(values)
+plot(close)

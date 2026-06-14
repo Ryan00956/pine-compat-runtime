@@ -2583,6 +2583,14 @@ fn reports_unsupported_array_standardize_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_standardize_label_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_concat_mismatch_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_concat_mismatch.pine",
