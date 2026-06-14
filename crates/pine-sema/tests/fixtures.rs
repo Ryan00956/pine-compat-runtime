@@ -1815,6 +1815,14 @@ fn reports_unsupported_array_sort_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_indices_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_bool.pine",
