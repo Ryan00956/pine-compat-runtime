@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array range color")
+values = array.new_color()
+plot(array.range(values))
