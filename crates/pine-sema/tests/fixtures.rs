@@ -1599,6 +1599,14 @@ fn reports_unsupported_array_stdev_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_stdev_label_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_variance_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_variance_bool.pine",

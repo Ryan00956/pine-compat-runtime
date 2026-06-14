@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array stdev label")
+values = array.new_label()
+plot(array.stdev(values))
