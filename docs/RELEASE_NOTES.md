@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.percentile_linear_interpolation` coverage for
+  rejected color arrays.
 - Added fixture-backed `array.percentile_nearest_rank` coverage for rejected
   color arrays.
 - Added fixture-backed `array.mode` coverage for rejected color arrays.

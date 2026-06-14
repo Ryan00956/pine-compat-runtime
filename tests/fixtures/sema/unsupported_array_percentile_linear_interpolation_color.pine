@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentile linear interpolation color")
+values = array.new_color()
+plot(array.percentile_linear_interpolation(values, 50))
