@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.max` coverage for rejected polyline arrays.
 - Added fixture-backed `array.min` coverage for rejected polyline arrays.
 - Added fixture-backed `array.abs` coverage for rejected polyline arrays.
 - Added fixture-backed `array.binary_search_rightmost` coverage for rejected polyline arrays.
