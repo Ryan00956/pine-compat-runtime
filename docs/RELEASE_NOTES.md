@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.percentile_linear_interpolation` coverage for
+  rejected linefill arrays.
 - Added fixture-backed `array.percentrank` coverage for rejected linefill arrays.
 - Added fixture-backed `array.covariance` coverage for rejected linefill arrays.
 - Added fixture-backed `array.standardize` coverage for rejected linefill

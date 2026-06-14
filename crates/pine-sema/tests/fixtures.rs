@@ -2069,6 +2069,15 @@ fn reports_unsupported_array_percentile_linear_interpolation_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_linear_interpolation_linefill_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_linefill.pine",
+        "array.new_linefill",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_nearest_rank_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_bool.pine",
