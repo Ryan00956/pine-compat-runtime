@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array avg polyline")
+values = array.new_polyline(0)
+plot(array.avg(values))
