@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added fixture-backed `array.avg` coverage for rejected string arrays.
+- Added fixture-backed `array.stdev` coverage for rejected string arrays.
 - Added fixture-backed `array.variance` coverage for rejected string arrays.
 - Added fixture-backed `array.standardize` coverage for rejected string arrays.
 - Added fixture-backed `array.covariance` coverage for rejected string arrays.
