@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array pop polyline")
+a = array.new_polyline(0)
+value = a.pop()
+plot(close)
