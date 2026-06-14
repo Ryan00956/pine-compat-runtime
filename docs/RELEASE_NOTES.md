@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed `array.percentile_nearest_rank` coverage for rejected
+  box arrays.
+- Added fixture-backed `array.percentile_nearest_rank` coverage for rejected
   line arrays.
 - Added fixture-backed `array.percentile_nearest_rank` coverage for rejected
   label arrays.
