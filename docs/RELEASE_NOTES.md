@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed `array.percentile_linear_interpolation` coverage for
+  rejected line arrays.
+- Added fixture-backed `array.percentile_linear_interpolation` coverage for
   rejected label arrays.
 - Added fixture-backed `array.percentile_nearest_rank` coverage for rejected
   table arrays.
