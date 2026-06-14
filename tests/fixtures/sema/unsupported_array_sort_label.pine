@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported array sort label")
+values = array.new_label()
+values.push(label.new(bar_index, high, "x"))
+array.sort(values)
+plot(close)
