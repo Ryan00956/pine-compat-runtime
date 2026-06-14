@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array median label")
+values = array.new_label()
+plot(array.median(values))
