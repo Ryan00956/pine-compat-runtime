@@ -1591,6 +1591,15 @@ fn reports_unsupported_array_sort_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_linefill_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_linefill.pine",
+        "array.new_linefill",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_indices_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_bool.pine",
