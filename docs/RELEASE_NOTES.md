@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.binary_search` coverage for rejected linefill
+  arrays.
 - Added fixture-backed `array.abs` coverage for rejected linefill arrays.
 - Added fixture-backed `array.min` coverage for rejected linefill arrays.
 - Added fixture-backed `array.max` coverage for rejected linefill arrays.
