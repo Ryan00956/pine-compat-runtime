@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.every` coverage for rejected linefill arrays.
 - Added fixture-backed `array.binary_search_rightmost` coverage for rejected
   linefill arrays.
 - Added fixture-backed `array.binary_search_leftmost` coverage for rejected
