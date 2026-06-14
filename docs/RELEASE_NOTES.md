@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Linked the `array.*` summary row to explicit linefill constructor rejection
+  coverage.
 - Added fixture-backed `array.concat` coverage for rejected linefill arrays.
 - Added fixture-backed `array.join` coverage for rejected linefill arrays.
 - Added fixture-backed `array.some` coverage for rejected linefill arrays.
