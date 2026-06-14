@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array join UDT")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+text = array.join(values)
+plot(close)

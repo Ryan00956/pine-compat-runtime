@@ -1685,6 +1685,14 @@ fn reports_unsupported_array_join_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_join_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_join_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_slice_linefill_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_slice_linefill.pine",
