@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.binary_search_rightmost` coverage for rejected
+  label arrays.
 - Added fixture-backed `array.binary_search_leftmost` coverage for rejected
   table arrays.
 - Added fixture-backed `array.binary_search_leftmost` coverage for rejected
