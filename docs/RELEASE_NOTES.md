@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.abs` coverage for rejected table arrays.
 - Added fixture-backed `array.abs` coverage for rejected box arrays.
 - Added fixture-backed `array.abs` coverage for rejected line arrays.
 - Added fixture-backed `array.abs` coverage for rejected label arrays.
