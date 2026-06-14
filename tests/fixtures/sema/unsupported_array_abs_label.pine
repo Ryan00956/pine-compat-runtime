@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array abs label")
+values = array.new_label()
+result = array.abs(values)
+plot(result.size())
