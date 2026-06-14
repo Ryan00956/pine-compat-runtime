@@ -1778,6 +1778,15 @@ fn reports_unsupported_array_variance_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_variance_linefill_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_linefill.pine",
+        "array.new_linefill",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_every_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_every_string.pine",

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.variance` coverage for rejected linefill arrays.
 - Added fixture-backed `array.stdev` coverage for rejected linefill arrays.
 - Added fixture-backed `array.sort_indices` coverage for rejected linefill
   arrays.
