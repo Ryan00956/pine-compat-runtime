@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.stdev` coverage for rejected polyline arrays.
 - Added fixture-backed `array.variance` coverage for rejected polyline arrays.
 - Added fixture-backed `array.standardize` coverage for rejected polyline
   arrays.
