@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array covariance linefill")
+left = array.new_linefill(0)
+right = array.new_linefill(0)
+plot(array.covariance(left, right))
