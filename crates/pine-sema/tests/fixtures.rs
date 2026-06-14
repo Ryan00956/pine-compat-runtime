@@ -1983,6 +1983,14 @@ fn reports_unsupported_array_max_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_max_table_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_min_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_min_bool.pine",
