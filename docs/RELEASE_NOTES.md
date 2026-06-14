@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.median` coverage for rejected color arrays.
 - Added fixture-backed `array.range` coverage for rejected color arrays.
 - Added fixture-backed `array.avg` coverage for rejected color arrays.
 - Added fixture-backed `array.sum` coverage for rejected color arrays.

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array median color")
+values = array.new_color()
+plot(array.median(values))
