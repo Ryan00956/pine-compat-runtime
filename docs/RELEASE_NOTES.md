@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.percentrank` coverage for rejected box arrays.
 - Added fixture-backed `array.percentrank` coverage for rejected line arrays.
 - Added fixture-backed `array.percentrank` coverage for rejected label arrays.
 - Added fixture-backed `array.percentile_linear_interpolation` coverage for
