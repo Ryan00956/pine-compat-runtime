@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array sum label")
+values = array.new_label()
+plot(array.sum(values))
