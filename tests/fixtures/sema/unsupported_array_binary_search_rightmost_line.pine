@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array binary search rightmost line")
+values = array.new_line()
+plot(array.binary_search_rightmost(values, 1))
