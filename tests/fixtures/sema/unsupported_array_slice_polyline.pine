@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array slice polyline")
+a = array.new_polyline(0)
+part = a.slice(0, 1)
+plot(close)
