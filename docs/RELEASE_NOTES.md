@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.min` coverage for rejected linefill arrays.
 - Added fixture-backed `array.max` coverage for rejected linefill arrays.
 - Added fixture-backed `array.sum` coverage for rejected linefill arrays.
 - Added fixture-backed `array.avg` coverage for rejected linefill arrays.
