@@ -2958,6 +2958,15 @@ fn reports_unsupported_array_concat_mismatch_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_concat_linefill_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_concat_linefill.pine",
+        "array.new_linefill",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_import_fixture_missing_host_library() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_import.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.concat` coverage for rejected linefill arrays.
 - Added fixture-backed `array.join` coverage for rejected linefill arrays.
 - Added fixture-backed `array.some` coverage for rejected linefill arrays.
 - Added fixture-backed `array.every` coverage for rejected linefill arrays.
