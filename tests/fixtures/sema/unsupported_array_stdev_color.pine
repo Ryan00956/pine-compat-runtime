@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array stdev color")
+values = array.new_color()
+plot(array.stdev(values))
