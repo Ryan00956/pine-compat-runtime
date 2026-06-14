@@ -1823,6 +1823,14 @@ fn reports_unsupported_array_percentile_nearest_rank_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_nearest_rank_line_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_mode_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_mode_bool.pine",
