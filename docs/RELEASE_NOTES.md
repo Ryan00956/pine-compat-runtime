@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.standardize` coverage for rejected line arrays.
 - Added fixture-backed `array.standardize` coverage for rejected label arrays.
 - Added fixture-backed `array.covariance` coverage for rejected table arrays.
 - Added fixture-backed `array.covariance` coverage for rejected box arrays.
