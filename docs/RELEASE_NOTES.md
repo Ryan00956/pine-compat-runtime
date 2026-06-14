@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.remove` coverage for rejected polyline arrays.
 - Added fixture-backed `array.pop` coverage for rejected polyline arrays.
 - Added fixture-backed `array.insert` coverage for rejected polyline arrays.
 - Added fixture-backed `array.set` coverage for rejected polyline arrays.
