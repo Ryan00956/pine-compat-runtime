@@ -2459,6 +2459,15 @@ fn reports_unsupported_array_sum_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sum_linefill_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_linefill.pine",
+        "array.new_linefill",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_max_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_max_bool.pine",
