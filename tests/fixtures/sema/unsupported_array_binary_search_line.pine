@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array binary search line")
+values = array.new_line()
+plot(array.binary_search(values, 1))
