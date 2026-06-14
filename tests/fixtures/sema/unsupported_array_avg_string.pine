@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array avg string")
+values = array.new_string()
+plot(array.avg(values))
