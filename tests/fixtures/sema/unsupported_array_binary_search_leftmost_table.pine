@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array binary search leftmost table")
+values = array.new_table()
+plot(array.binary_search_leftmost(values, 1))

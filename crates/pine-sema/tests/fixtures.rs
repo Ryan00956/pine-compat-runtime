@@ -2111,6 +2111,14 @@ fn reports_unsupported_array_binary_search_leftmost_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_leftmost_table_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_rightmost_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_rightmost_bool.pine",
