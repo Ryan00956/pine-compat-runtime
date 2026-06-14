@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array lastindexof polyline")
+a = array.new_polyline(0)
+plot(a.lastindexof(na))

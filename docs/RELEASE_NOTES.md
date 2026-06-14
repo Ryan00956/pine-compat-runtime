@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.lastindexof` coverage for rejected polyline arrays.
 - Added fixture-backed `array.indexof` coverage for rejected polyline arrays.
 - Added fixture-backed `array.some` coverage for rejected polyline arrays.
 - Added fixture-backed `array.every` coverage for rejected polyline arrays.
