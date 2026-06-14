@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array min label")
+values = array.new_label()
+plot(array.min(values))
