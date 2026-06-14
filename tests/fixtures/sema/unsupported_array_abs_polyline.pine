@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array abs polyline")
+values = array.new_polyline(0)
+result = array.abs(values)
+plot(result.size())

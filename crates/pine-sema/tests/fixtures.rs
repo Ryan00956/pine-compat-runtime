@@ -2869,6 +2869,15 @@ fn reports_unsupported_array_abs_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_abs_polyline_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_polyline.pine",
+        "array.new_polyline",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_bool.pine",
