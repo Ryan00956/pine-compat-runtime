@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.reverse` coverage for rejected polyline arrays.
 - Added fixture-backed `array.sort_indices` coverage for rejected polyline
   arrays.
 - Added fixture-backed `array.sort` coverage for rejected polyline arrays.
