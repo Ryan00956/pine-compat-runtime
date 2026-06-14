@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentile_nearest_rank linefill")
+values = array.new_linefill(0)
+plot(array.percentile_nearest_rank(values, 50))
