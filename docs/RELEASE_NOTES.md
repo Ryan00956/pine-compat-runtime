@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.variance` coverage for rejected color arrays.
 - Added fixture-backed `array.standardize` coverage for rejected color arrays.
 - Added fixture-backed `array.covariance` coverage for rejected color arrays.
 - Added fixture-backed `array.percentrank` coverage for rejected color arrays.
