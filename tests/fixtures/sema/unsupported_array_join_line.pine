@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array join line")
+values = array.new_line()
+text = array.join(values)
+plot(close)

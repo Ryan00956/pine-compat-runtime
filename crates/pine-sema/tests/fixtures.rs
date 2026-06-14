@@ -1483,6 +1483,14 @@ fn reports_unsupported_array_join_label_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_join_line_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_join_line.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_slice_linefill_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_slice_linefill.pine",

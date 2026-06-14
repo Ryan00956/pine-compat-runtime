@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.join` coverage for rejected line arrays.
 - Added fixture-backed `array.binary_search_rightmost` coverage for rejected
   color arrays.
 - Added fixture-backed `array.binary_search_leftmost` coverage for rejected
