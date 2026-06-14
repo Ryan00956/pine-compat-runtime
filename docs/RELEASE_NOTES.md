@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed `array.avg` coverage for rejected string arrays.
+- Added fixture-backed `array.percentile_nearest_rank` coverage for rejected
+  string arrays.
 - Added fixture-backed `array.mode` coverage for rejected string arrays.
 - Added fixture-backed `array.median` coverage for rejected string arrays.
 - Added fixture-backed `array.range` coverage for rejected string arrays.
