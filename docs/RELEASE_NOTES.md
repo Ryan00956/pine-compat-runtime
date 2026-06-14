@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.mode` coverage for rejected polyline arrays.
 - Added fixture-backed `array.median` coverage for rejected polyline arrays.
 - Added fixture-backed `array.range` coverage for rejected polyline arrays.
 - Added fixture-backed `array.avg` coverage for rejected polyline arrays.
