@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array min box")
+values = array.new_box()
+plot(array.min(values))
