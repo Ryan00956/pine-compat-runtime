@@ -1807,6 +1807,14 @@ fn reports_unsupported_array_sum_string_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sum_color_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_color.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_max_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_max_bool.pine",
