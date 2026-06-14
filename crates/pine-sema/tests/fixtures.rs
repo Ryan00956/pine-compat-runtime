@@ -1767,6 +1767,14 @@ fn reports_unsupported_array_percentrank_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentrank_label_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_label.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_linear_interpolation_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_bool.pine",
