@@ -1332,6 +1332,15 @@ fn reports_unsupported_array_new_linefill_constructor_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_new_polyline_constructor_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_new_polyline_constructor.pine",
+        "array.new_polyline",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_clear_linefill_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_clear_linefill.pine",

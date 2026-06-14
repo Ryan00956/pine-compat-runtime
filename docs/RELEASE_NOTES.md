@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.new_*` summary coverage for rejected polyline
+  array constructors.
 - Linked the `array.*` summary row to explicit linefill constructor rejection
   coverage.
 - Added fixture-backed `array.concat` coverage for rejected linefill arrays.
