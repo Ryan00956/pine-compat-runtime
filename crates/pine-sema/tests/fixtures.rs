@@ -1438,6 +1438,15 @@ fn reports_unsupported_array_insert_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_insert_polyline_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_insert_polyline.pine",
+        "array.new_polyline",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_set_linefill_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_set_linefill.pine",
