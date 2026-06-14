@@ -1839,6 +1839,14 @@ fn reports_unsupported_array_min_string_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_min_color_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_color.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_abs_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_abs_bool.pine",
