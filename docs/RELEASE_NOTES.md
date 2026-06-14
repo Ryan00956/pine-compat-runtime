@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.get` coverage for rejected polyline arrays.
 - Added fixture-backed `array.push` coverage for rejected polyline arrays.
 - Added fixture-backed `array.size` coverage for rejected polyline arrays.
 - Added fixture-backed `array.from` coverage for rejected polyline arrays.
