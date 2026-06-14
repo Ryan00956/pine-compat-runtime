@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.standardize` coverage for rejected polyline
+  arrays.
 - Added fixture-backed `array.covariance` coverage for rejected polyline
   arrays.
 - Added fixture-backed `array.percentrank` coverage for rejected polyline
