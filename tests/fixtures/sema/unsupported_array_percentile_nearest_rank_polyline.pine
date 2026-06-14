@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentile_nearest_rank polyline")
+values = array.new_polyline(0)
+plot(array.percentile_nearest_rank(values, 50))
