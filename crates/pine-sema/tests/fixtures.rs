@@ -1583,6 +1583,14 @@ fn reports_unsupported_array_sort_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_table_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_indices_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_bool.pine",

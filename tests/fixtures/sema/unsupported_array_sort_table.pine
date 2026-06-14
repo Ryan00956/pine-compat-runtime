@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported array sort table")
+values = array.new_table()
+values.push(table.new(position.top_right, 1, 1))
+array.sort(values)
+plot(close)
