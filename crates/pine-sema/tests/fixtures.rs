@@ -3082,6 +3082,15 @@ fn reports_unsupported_array_binary_search_rightmost_linefill_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_rightmost_polyline_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_polyline.pine",
+        "array.new_polyline",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_standardize_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_standardize_bool.pine",

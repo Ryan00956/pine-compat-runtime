@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array binary search rightmost polyline")
+values = array.new_polyline(0)
+plot(array.binary_search_rightmost(values, 1))
