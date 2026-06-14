@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported array reverse UDT")
+type Point
+    float x
+
+values = array.from(Point.new(close))
+values.reverse()
+plot(close)

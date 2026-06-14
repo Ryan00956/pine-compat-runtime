@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.reverse` coverage for rejected UDT arrays.
 - Added fixture-backed `array.sort_indices` coverage for rejected UDT arrays.
 - Added fixture-backed `array.sort` coverage for rejected UDT arrays.
 - Added fixture-backed `array.clear` coverage for rejected polyline arrays.
