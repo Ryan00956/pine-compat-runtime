@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentile nearest rank table")
+values = array.new_table()
+plot(array.percentile_nearest_rank(values, 50))
