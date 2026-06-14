@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array median polyline")
+values = array.new_polyline(0)
+plot(array.median(values))
