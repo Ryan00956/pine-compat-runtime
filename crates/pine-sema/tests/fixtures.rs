@@ -2784,6 +2784,15 @@ fn reports_unsupported_array_binary_search_leftmost_table_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_leftmost_linefill_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_linefill.pine",
+        "array.new_linefill",
+        "array function",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_rightmost_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_rightmost_bool.pine",
