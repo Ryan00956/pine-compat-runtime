@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.abs` coverage for rejected box arrays.
 - Added fixture-backed `array.abs` coverage for rejected line arrays.
 - Added fixture-backed `array.abs` coverage for rejected label arrays.
 - Added fixture-backed `array.binary_search_rightmost` coverage for rejected
