@@ -1959,6 +1959,14 @@ fn reports_unsupported_array_sum_box_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sum_table_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_table.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_max_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_max_bool.pine",
