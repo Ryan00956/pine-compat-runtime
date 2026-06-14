@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array max linefill")
+values = array.new_linefill(0)
+plot(array.max(values))
