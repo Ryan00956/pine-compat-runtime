@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array variance label")
+values = array.new_label()
+plot(array.variance(values))
