@@ -41,7 +41,12 @@ const TIME_FUNCTION_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "bars_back",
-        accepts: Accepts::SimpleInt,
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "timeframe_bars_back",
+        accepts: Accepts::IntCompatible,
         optional: true,
     },
 ];

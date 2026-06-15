@@ -2,10 +2,14 @@
 
 ## Unreleased
 
+- Added fixture-backed `timeframe_bars_back` support to the current
+  `time(timeframe)` and `time_close(timeframe)` subset, applying chart
+  `bars_back` first and then offsetting on the requested UTC timeframe bucket
+  while leaving session and timezone arguments unsupported.
 - Added fixture-backed `bars_back` support to the current `time(timeframe)` and
   `time_close(timeframe)` subset, using the fixed chart timeframe before UTC
-  timeframe bucket mapping while leaving session, timezone, and
-  `timeframe_bars_back` arguments unsupported.
+  timeframe bucket mapping while leaving session and timezone arguments
+  unsupported.
 - Added fixture-backed `time(timeframe)` and `time_close(timeframe)` support for
   the current fixed chart timeframe and UTC higher-timeframe bucket open/close
   timestamps; session and timezone overloads remain unsupported.

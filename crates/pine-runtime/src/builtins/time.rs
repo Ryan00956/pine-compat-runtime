@@ -422,6 +422,23 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} bars_back cannot reference more than 500 future bars"),
             });
         }
+        let timeframe_bars_back =
+            if let Some(arg) = time_function_arg(args, "timeframe_bars_back", 2) {
+                match self.eval_expr(&arg.value)? {
+                    PineValue::Int(value) => value,
+                    PineValue::Na => return Ok(PineValue::Na),
+                    _ => return Ok(PineValue::Na),
+                }
+            } else {
+                0
+            };
+        if timeframe_bars_back < -500 {
+            return Err(RuntimeError {
+                message: format!(
+                    "{name} timeframe_bars_back cannot reference more than 500 future bars"
+                ),
+            });
+        }
         let timeframe = if timeframe.is_empty() {
             DEFAULT_CHART_TIMEFRAME
         } else {
@@ -442,7 +459,7 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} unsupported lower timeframe `{timeframe}`"),
             });
         }
-        if seconds == chart_seconds && bars_back == 0 {
+        if seconds == chart_seconds && bars_back == 0 && timeframe_bars_back == 0 {
             return Ok(self
                 .current_builtin_i64(name)
                 .map(PineValue::Int)
@@ -475,6 +492,11 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(bucket) = timeframe_bucket(base_time, seconds) else {
             return Err(RuntimeError {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
+            });
+        };
+        let Some(bucket) = bucket.checked_sub(timeframe_bars_back) else {
+            return Err(RuntimeError {
+                message: format!("{name} timeframe_bars_back timestamp is out of range"),
             });
         };
         let bucket = if close_time {

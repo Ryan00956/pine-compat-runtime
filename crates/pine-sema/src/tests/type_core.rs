@@ -407,9 +407,12 @@ chart_close = time_close(timeframe.period)
 daily_close = time_close("D")
 previous_daily_open = time("D", bars_back = 1)
 previous_chart_close = time_close("", 1)
+previous_timeframe_daily_open = time("D", timeframe_bars_back = 1)
+dynamic_offset_daily_close = time_close("D", bars_back = bar_index, timeframe_bars_back = bar_index)
 plot(year(ts) + month(ts, "UTC") + weekofyear(ts) + dayofmonth(ts) + dayofweek(ts) + hour(ts) + minute(ts) + second(ts) + time_tradingday / 1000000000000 + (dayofweek == dayofweek.friday ? 1 : 0))
 plot(daily_open <= time and chart_open == time and chart_close == time_close and daily_close >= time_close ? 1 : 0)
 plot(previous_daily_open <= daily_open and previous_chart_close <= time_close ? 1 : 0)
+plot(previous_timeframe_daily_open <= daily_open and dynamic_offset_daily_close <= daily_close ? 1 : 0)
 "#,
     );
 
@@ -446,7 +449,7 @@ fn rejects_unsupported_time_function_overloads() {
     let analysis = analyze(
         r#"indicator("unsupported time overloads")
 plot(time("D", "0930-1600"))
-plot(time_close("D", timeframe_bars_back = 1))
+plot(time_close("D", timezone = "UTC"))
 "#,
     );
 
