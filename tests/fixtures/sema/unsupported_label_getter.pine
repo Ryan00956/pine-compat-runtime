@@ -1,3 +1,3 @@
 //@version=5
 indicator("Unsupported label getter")
-plot(str.length(label.get_textalign(na)))
+plot(label.get_style(na))

@@ -2,10 +2,8 @@
 
 ## Unreleased
 
-- Added fixture-backed `label.get_tooltip` runtime support for namespace and
-  drawing method-call syntax, while keeping later label getters unsupported.
-- Added fixture-backed `label.get_style` runtime support for namespace and
-  drawing method-call syntax, while keeping later label getters unsupported.
+- Restored the official label getter boundary to `label.get_x`,
+  `label.get_y`, and `label.get_text`; later label getters remain unsupported.
 - Added a conformance metadata guardrail requiring unsupported sema evidence for partial rows with unsupported notes.
 - Extended the array conformance metadata guardrail to require linefill and polyline fixture evidence when those unsupported array kinds are claimed.
 - Added a conformance metadata guardrail requiring UDT fixture evidence for array UDT notes.

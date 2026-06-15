@@ -35,8 +35,6 @@ impl<'a> HistoricalRuntime<'a> {
             "label.get_x" => self.eval_label_get_x(args),
             "label.get_y" => self.eval_label_get_y(args),
             "label.get_text" => self.eval_label_get_text(args),
-            "label.get_style" => self.eval_label_get_style(args),
-            "label.get_tooltip" => self.eval_label_get_tooltip(args),
             "line.new" => self.eval_line_new(args),
             "line.set_x1" => self.eval_line_set_x1(args),
             "line.set_y1" => self.eval_line_set_y1(args),
