@@ -166,3 +166,22 @@ for i = 0 to 1
     else
         loop_percentrank_results.push(loop_percentrank_source.percentrank(3))
 plot(loop_percentrank_results.get(0) + loop_percentrank_results.get(1))
+
+branch_covariance_x = array.from(1, 2, 3)
+branch_covariance_y = array.from(2, 4, 8)
+branch_covariance_results = array.new_float()
+if bar_index % 2 == 0
+    branch_covariance_results.push(array.covariance(branch_covariance_x, branch_covariance_y) + branch_covariance_x.covariance(branch_covariance_y, false))
+else
+    branch_covariance_results.push(branch_covariance_x.covariance(branch_covariance_y) * 10 + array.covariance(branch_covariance_x, branch_covariance_y, false))
+plot(branch_covariance_results.get(0))
+
+loop_covariance_x = array.from(1.0, 2.0, 3.0)
+loop_covariance_y = array.from(1.0, 2.0, 3.0)
+loop_covariance_results = array.new_float()
+for i = 0 to 1
+    if i == 0
+        loop_covariance_results.push(array.covariance(loop_covariance_x, loop_covariance_y))
+    else
+        loop_covariance_results.push(loop_covariance_x.covariance(loop_covariance_y, false))
+plot(loop_covariance_results.get(0) * 10 + loop_covariance_results.get(1))

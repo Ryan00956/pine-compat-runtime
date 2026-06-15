@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch and loop control-flow coverage for
+  `array.covariance`.
+- Added fixture-backed branch and loop control-flow coverage for
   `array.percentrank`.
 - Added fixture-backed branch and loop control-flow coverage for
   `array.percentile_nearest_rank` and
