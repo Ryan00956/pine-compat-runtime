@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Extended the array conformance metadata guardrail to require linefill and polyline fixture evidence when those unsupported array kinds are claimed.
 - Added a conformance metadata guardrail requiring UDT fixture evidence for array UDT notes.
 - Added fixture-backed `array.clear` coverage for rejected UDT arrays.
 - Added fixture-backed `array.concat` coverage for rejected UDT arrays.

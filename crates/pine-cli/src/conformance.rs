@@ -75,7 +75,7 @@ pub(crate) fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixE
 
         validate_status_fixture_paths(line_number, feature, status, &fixtures)?;
         validate_request_fixture_paths(line_number, feature, status, &fixtures)?;
-        validate_array_udt_fixture_paths(line_number, feature, notes, &fixtures)?;
+        validate_array_unsupported_type_fixture_paths(line_number, feature, notes, &fixtures)?;
 
         entries.push(MatrixEntry {
             feature: feature.to_owned(),
@@ -88,22 +88,30 @@ pub(crate) fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixE
     Ok(entries)
 }
 
-fn validate_array_udt_fixture_paths(
+fn validate_array_unsupported_type_fixture_paths(
     line_number: usize,
     feature: &str,
     notes: &str,
     fixtures: &[&str],
 ) -> Result<(), String> {
-    if feature.starts_with("array.")
-        && contains_ascii_word(notes, "UDT")
-        && !fixtures
-            .iter()
-            .any(|fixture| fixture.to_ascii_lowercase().contains("udt"))
-    {
-        return Err(format!(
-            "line {line_number}: array feature `{feature}` with UDT notes must reference UDT fixture coverage"
-        ));
+    if !feature.starts_with("array.") {
+        return Ok(());
     }
+
+    for unsupported_type in ["linefill", "polyline", "UDT"] {
+        if contains_ascii_word(notes, unsupported_type) {
+            let fixture_term = unsupported_type.to_ascii_lowercase();
+            if !fixtures
+                .iter()
+                .any(|fixture| fixture.to_ascii_lowercase().contains(&fixture_term))
+            {
+                return Err(format!(
+                    "line {line_number}: array feature `{feature}` with {unsupported_type} notes must reference {unsupported_type} fixture coverage"
+                ));
+            }
+        }
+    }
+
     Ok(())
 }
 

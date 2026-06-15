@@ -239,13 +239,31 @@ mod tests {
     }
 
     #[test]
-    fn rejects_array_udt_claims_without_udt_fixtures() {
-        let error = try_conformance_entries_from_tsv(
-            "feature\tstatus\tnotes\tfixtures\narray.clear\tpartial\tUDT arrays remain unsupported\ttests/fixtures/runtime/array_clear.pine\n",
-        )
-        .expect_err("array UDT claim should require UDT fixture coverage");
+    fn rejects_array_unsupported_type_claims_without_matching_fixtures() {
+        for (unsupported_type, fixture, expected) in [
+            (
+                "linefill arrays remain unsupported",
+                "tests/fixtures/runtime/array_clear.pine;tests/fixtures/sema/unsupported_array_clear_polyline.pine",
+                "must reference linefill fixture coverage",
+            ),
+            (
+                "polyline arrays remain unsupported",
+                "tests/fixtures/runtime/array_clear.pine;tests/fixtures/sema/unsupported_array_clear_linefill.pine",
+                "must reference polyline fixture coverage",
+            ),
+            (
+                "UDT arrays remain unsupported",
+                "tests/fixtures/runtime/array_clear.pine",
+                "must reference UDT fixture coverage",
+            ),
+        ] {
+            let error = try_conformance_entries_from_tsv(&format!(
+                "feature\tstatus\tnotes\tfixtures\narray.clear\tpartial\t{unsupported_type}\t{fixture}\n",
+            ))
+            .expect_err("array unsupported type claim should require matching fixture coverage");
 
-        assert!(error.contains("must reference UDT fixture coverage"));
+            assert!(error.contains(expected), "{error}");
+        }
     }
 
     #[test]
