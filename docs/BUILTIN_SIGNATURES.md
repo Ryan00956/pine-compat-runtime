@@ -215,6 +215,7 @@ ticker.kagi(tickerid: simple string, style: simple string, param: simple numeric
 ticker.linebreak(tickerid: simple string, number_of_lines: simple int) -> simple string
 ticker.new(prefix: simple string, ticker: simple string, session?: simple string, adjustment?: simple string) -> simple string
 ticker.modify(tickerid: simple string, session?: simple string, adjustment?: simple string) -> simple string
+ticker.pointfigure(tickerid: simple string, source: simple string, style: simple string, param: simple numeric, reversal: simple int) -> simple string
 ticker.renko(tickerid: simple string, style: simple string, param: simple numeric) -> simple string
 ticker.standard(symbol: simple string) -> simple string
 ```
@@ -263,6 +264,14 @@ and returns the supplied ticker ID. Supplying the optional `session` and
 or `adjustment.dividends` returns a modified ticker ID that preserves the
 standard symbol for `ticker.standard()`. Host request semantics for adjusted
 data remain outside this subset.
+
+`ticker.pointfigure(tickerid, source, style, param, reversal)` currently
+implements the simple-string Point & Figure ticker ID constructor subset for
+source strings such as `"hl"` or `"close"`, style strings such as `"ATR"` or
+`"Traditional"`, finite simple numeric parameters, and simple integer reversal
+amounts. It returns a modified ticker ID that preserves the standard symbol for
+`ticker.standard()`. Actual Point & Figure OHLC data remains
+host/request-provider-owned through `request.security()`.
 
 `ticker.renko(tickerid, style, param)` currently implements the simple-string
 Renko ticker ID constructor subset for style strings such as `"ATR"` or

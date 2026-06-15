@@ -219,6 +219,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "ticker.linebreak",
     "ticker.new",
     "ticker.modify",
+    "ticker.pointfigure",
     "ticker.renko",
     "ticker.standard",
     "strategy",

@@ -5,4 +5,5 @@ modified_over_adjusted = ticker.modify(syminfo.tickerid, session.extended, adjus
 over_renko = ticker.renko(syminfo.tickerid, "ATR", 10, "extra")
 over_linebreak = ticker.linebreak(syminfo.tickerid, 3, "extra")
 over_kagi = ticker.kagi(syminfo.tickerid, "ATR", 10, "extra")
-plot(na(over_adjusted) and na(modified_over_adjusted) and na(over_renko) and na(over_linebreak) and na(over_kagi) ? 1 : 0)
+over_pointfigure = ticker.pointfigure(syminfo.tickerid, "hl", "ATR", 14, 3, "extra")
+plot(na(over_adjusted) and na(modified_over_adjusted) and na(over_renko) and na(over_linebreak) and na(over_kagi) and na(over_pointfigure) ? 1 : 0)

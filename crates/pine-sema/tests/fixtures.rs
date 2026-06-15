@@ -3645,6 +3645,7 @@ fn reports_unsupported_ticker_constructors_fixture() {
             "ticker.renko",
             "ticker.linebreak",
             "ticker.kagi",
+            "ticker.pointfigure",
         ],
     );
 }

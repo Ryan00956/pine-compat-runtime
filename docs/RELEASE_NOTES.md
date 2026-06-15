@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `ticker.pointfigure` support for Point & Figure
+  ticker ID construction while leaving actual non-standard OHLC data
+  host/request-provider-owned.
 - Added fixture-backed partial `ticker.kagi` support for Kagi ticker ID
   construction while leaving actual non-standard OHLC data
   host/request-provider-owned.

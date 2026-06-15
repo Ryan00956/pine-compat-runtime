@@ -138,6 +138,7 @@ mod tests {
                     | "ticker.linebreak"
                     | "ticker.new"
                     | "ticker.modify"
+                    | "ticker.pointfigure"
                     | "ticker.renko"
                     | "ticker.standard"
             )

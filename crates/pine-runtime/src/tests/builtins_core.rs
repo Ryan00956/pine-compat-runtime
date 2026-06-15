@@ -157,6 +157,11 @@ kagi_adjusted = ticker.kagi(adjusted_created, "Traditional", 2.5)
 kagi_standard = ticker.standard(kagi_adjusted)
 missing_kagi_symbol = ticker.kagi(na, "ATR", 10)
 missing_kagi_style = ticker.kagi(created, na, 10)
+pnf_created = ticker.pointfigure(created, "hl", "ATR", 14, 3)
+pnf_adjusted = ticker.pointfigure(adjusted_created, "close", "Traditional", 2.5, 2)
+pnf_standard = ticker.standard(pnf_adjusted)
+missing_pnf_symbol = ticker.pointfigure(na, "hl", "ATR", 14, 3)
+missing_pnf_source = ticker.pointfigure(created, na, "ATR", 14, 3)
 missing = ticker.standard(na)
 plot(created == "NASDAQ:AAPL" ? 1 : 0)
 plot(chart_created == "NASDAQ:AAPL" ? 1 : 0)
@@ -197,6 +202,11 @@ plot(kagi_adjusted == "{\"chart\":\"kagi\",\"style\":\"Traditional\",\"param\":2
 plot(kagi_standard == "NASDAQ:AAPL" ? 1 : 0)
 plot(na(missing_kagi_symbol) ? 1 : 0)
 plot(na(missing_kagi_style) ? 1 : 0)
+plot(pnf_created == "{\"chart\":\"pointfigure\",\"source\":\"hl\",\"style\":\"ATR\",\"param\":14,\"reversal\":3,\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
+plot(pnf_adjusted == "{\"chart\":\"pointfigure\",\"source\":\"close\",\"style\":\"Traditional\",\"param\":2.5,\"reversal\":2,\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
+plot(pnf_standard == "NASDAQ:AAPL" ? 1 : 0)
+plot(na(missing_pnf_symbol) ? 1 : 0)
+plot(na(missing_pnf_source) ? 1 : 0)
 plot(na(missing) ? 1 : 0)
 plot(adjustment.none == "none" and adjustment.splits == "splits" and adjustment.dividends == "dividends" ? 1 : 0)
 "#,
@@ -252,6 +262,11 @@ plot(adjustment.none == "none" and adjustment.splits == "splits" and adjustment.
     assert_values_close(&result.plots[38].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[39].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[40].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[41].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[42].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[43].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[44].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[45].values, &[1.0, 1.0]);
 }
 
 #[test]

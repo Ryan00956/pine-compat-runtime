@@ -68,6 +68,34 @@ const KAGI_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const POINTFIGURE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "tickerid",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "source",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "style",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "param",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "reversal",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
 const RENKO_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "tickerid",
@@ -137,6 +165,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "ticker.modify",
         phase: BuiltinPhase::Phase1Core,
         params: MODIFY_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_STRING),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ticker.pointfigure",
+        phase: BuiltinPhase::Phase1Core,
+        params: POINTFIGURE_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_STRING),
         variadic: false,
     },

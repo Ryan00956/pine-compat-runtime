@@ -18,6 +18,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ticker.linebreak" => self.eval_ticker_linebreak(args),
             "ticker.new" => self.eval_ticker_new(args),
             "ticker.modify" => self.eval_ticker_modify(args),
+            "ticker.pointfigure" => self.eval_ticker_pointfigure(args),
             "ticker.renko" => self.eval_ticker_renko(args),
             "ticker.standard" => self.eval_ticker_standard(args),
             _ => return None,
@@ -63,6 +64,29 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::String(linebreak_ticker_id(
             &symbol,
             number_of_lines,
+        )))
+    }
+
+    fn eval_ticker_pointfigure(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(tickerid) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::String(source) = self.eval_expr(&args[1].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::String(style) = self.eval_expr(&args[2].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let Some(param) = numeric_param_string(&self.eval_expr(&args[3].value)?) else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::Int(reversal) = self.eval_expr(&args[4].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        let symbol = standard_ticker_id(&tickerid);
+        Ok(PineValue::String(pointfigure_ticker_id(
+            &symbol, &source, &style, &param, reversal,
         )))
     }
 
@@ -192,6 +216,23 @@ fn kagi_ticker_id(symbol: &str, style: &str, param: &str) -> String {
     )
 }
 
+fn pointfigure_ticker_id(
+    symbol: &str,
+    source: &str,
+    style: &str,
+    param: &str,
+    reversal: i64,
+) -> String {
+    format!(
+        r#"{{"chart":"pointfigure","source":"{}","style":"{}","param":{},"reversal":{},"symbol":"{}"}}"#,
+        escape_json_string(source),
+        escape_json_string(style),
+        param,
+        reversal,
+        escape_json_string(symbol)
+    )
+}
+
 fn renko_ticker_id(symbol: &str, style: &str, param: &str) -> String {
     format!(
         r#"{{"chart":"renko","style":"{}","param":{},"symbol":"{}"}}"#,
@@ -295,6 +336,14 @@ mod tests {
         assert_eq!(
             kagi_ticker_id(r#"TEST:Q\""#, r#"AT\"R"#, "10"),
             r#"{"chart":"kagi","style":"AT\\\"R","param":10,"symbol":"TEST:Q\\\""}"#
+        );
+    }
+
+    #[test]
+    fn pointfigure_ticker_preserves_symbol_and_non_standard_fields() {
+        assert_eq!(
+            pointfigure_ticker_id(r#"TEST:Q\""#, r#"h\"l"#, r#"AT\"R"#, "10", 3),
+            r#"{"chart":"pointfigure","source":"h\\\"l","style":"AT\\\"R","param":10,"reversal":3,"symbol":"TEST:Q\\\""}"#
         );
     }
 
