@@ -211,6 +211,7 @@ math.e	supported	Euler's number constant with fixture-backed exp(1) relation	tes
 math.phi	supported	golden-ratio constant with fixture-backed rphi difference relation	tests/fixtures/runtime/math.pine
 math.rphi	supported	inverse golden-ratio constant with fixture-backed phi difference relation	tests/fixtures/runtime/math.pine
 syminfo.tickerid	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.main_tickerid	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.ticker	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.prefix	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.description	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
@@ -222,6 +223,7 @@ syminfo.timezone	supported	fixed default symbol metadata subset	tests/fixtures/r
 syminfo.root	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.volumetype	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.mintick	supported	fixed default mintick subset used by math.round_to_mintick and equal to minmove/pricescale	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/syminfo.pine
+syminfo.mincontract	supported	fixed default minimum contract size symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.pointvalue	supported	fixed default pointvalue symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.minmove	supported	fixed default minmove symbol metadata subset used with pricescale to derive mintick	tests/fixtures/runtime/syminfo.pine
 syminfo.pricescale	supported	fixed default pricescale symbol metadata subset used with minmove to derive mintick	tests/fixtures/runtime/syminfo.pine

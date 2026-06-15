@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed fixed-default `syminfo.main_tickerid` and
+  `syminfo.mincontract` metadata variables.
 - Added fixture-backed unsupported `map.*` and `matrix.*` collection namespace
   coverage until dedicated storage models are designed.
 - Added fixture-backed unsupported `log.*` coverage for Pine Logs functions

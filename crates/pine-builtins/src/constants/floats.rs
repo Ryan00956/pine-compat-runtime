@@ -25,6 +25,10 @@ const NAMED_FLOAT_CONSTANTS: &[NamedFloatConstant] = &[
         value: 0.01,
     },
     NamedFloatConstant {
+        name: "syminfo.mincontract",
+        value: 1.0,
+    },
+    NamedFloatConstant {
         name: "syminfo.pointvalue",
         value: 1.0,
     },

@@ -269,6 +269,11 @@ bar-close mark-to-market accounting for the long-only order subset and applying
 supported commission debits and slippage-adjusted fill prices when configured.
 Supported fixed-tick limit verification can delay supported long limit entry and
 limit/profit exit fills while preserving the original limit fill price.
+The fixed symbol metadata subset uses a default `NASDAQ:AAPL` chart identity and
+now includes `syminfo.main_tickerid` plus `syminfo.mincontract` alongside the
+existing ticker, exchange, currency, session, mintick, pointvalue, minmove, and
+pricescale fields. Host-configurable symbol metadata remains outside the current
+runtime contract.
 Currency conversion, symbol precision rounding, lot-step constraints, pyramiding,
 short orders,
 `strategy.exit` same-side/3+ trigger/invalid trailing variants, reservation

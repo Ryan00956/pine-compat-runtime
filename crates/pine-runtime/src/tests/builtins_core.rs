@@ -68,17 +68,18 @@ fn runs_syminfo_metadata() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("syminfo")
-identity = syminfo.tickerid == "NASDAQ:AAPL" and syminfo.ticker == "AAPL" and syminfo.prefix == "NASDAQ"
+identity = syminfo.tickerid == "NASDAQ:AAPL" and syminfo.main_tickerid == "NASDAQ:AAPL" and syminfo.ticker == "AAPL" and syminfo.prefix == "NASDAQ"
 details = syminfo.description == "Apple Inc." and syminfo.type == "stock" and syminfo.currency == "USD" and syminfo.basecurrency == "USD"
 session = syminfo.session == "regular" and syminfo.timezone == "Etc/UTC" and syminfo.root == "AAPL" and syminfo.volumetype == "base"
 plot(identity ? 1 : 0)
 plot(details ? 1 : 0)
 plot(session ? 1 : 0)
 plot(syminfo.mintick)
+plot(syminfo.mincontract)
 plot(syminfo.pointvalue)
 plot(syminfo.minmove)
 plot(syminfo.pricescale)
-plot(syminfo.mintick == syminfo.minmove / syminfo.pricescale and syminfo.pointvalue == 1 ? 1 : 0)
+plot(syminfo.mintick == syminfo.minmove / syminfo.pricescale and syminfo.pointvalue == 1 and syminfo.mincontract == 1 ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -97,8 +98,9 @@ plot(syminfo.mintick == syminfo.minmove / syminfo.pricescale and syminfo.pointva
     assert_values_close(&result.plots[3].values, &[0.01, 0.01]);
     assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[6].values, &[100.0, 100.0]);
-    assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[7].values, &[100.0, 100.0]);
+    assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
 }
 
 #[test]

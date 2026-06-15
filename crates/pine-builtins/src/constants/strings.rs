@@ -125,6 +125,10 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
         value: "Apple Inc.",
     },
     NamedStringConstant {
+        name: "syminfo.main_tickerid",
+        value: "NASDAQ:AAPL",
+    },
+    NamedStringConstant {
         name: "syminfo.prefix",
         value: "NASDAQ",
     },
