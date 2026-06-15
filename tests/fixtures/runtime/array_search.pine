@@ -72,3 +72,20 @@ empty_truth_floats = array.new_float()
 plot(empty_truth_ints.every() and not empty_truth_ints.some() and array.every(empty_truth_floats) and not array.some(empty_truth_floats) ? 1 : 0)
 empty_float_search = array.new_float()
 plot(empty_float_search.binary_search(close) == -1 and empty_float_search.binary_search_leftmost(close) == -1 and empty_float_search.binary_search_rightmost(close) == -1 ? 1 : 0)
+
+branch_search_source = array.from(2, 4, 2)
+branch_search_results = array.new_int()
+if bar_index % 2 == 0
+    branch_search_results.push((array.includes(branch_search_source, 4) ? 10 : 0) + array.indexof(branch_search_source, 2) + branch_search_source.lastindexof(2))
+else
+    branch_search_results.push((branch_search_source.includes(9) ? 10 : 0) + array.indexof(branch_search_source, 9) + branch_search_source.lastindexof(9))
+plot(branch_search_results.get(0))
+
+loop_search_source = array.from("a", "b", "a")
+loop_search_results = array.new_int()
+for i = 0 to 1
+    if i == 0
+        loop_search_results.push((loop_search_source.includes("b") ? 10 : 0) + array.indexof(loop_search_source, "a"))
+    else
+        loop_search_results.push(loop_search_source.lastindexof("a") + (array.includes(loop_search_source, "z") ? 100 : 0))
+plot(loop_search_results.get(0) + loop_search_results.get(1))
