@@ -164,15 +164,20 @@ pub(crate) fn timeframe_seconds(timeframe: &str) -> Option<i64> {
     }
 }
 
-pub(crate) fn timestamp_unsigned_parts(
+pub(crate) fn normalize_timestamp_parts(
+    year: i64,
     month: i64,
     day: i64,
     hour: i64,
     minute: i64,
     second: i64,
-) -> Option<(u32, u32, u32, u32, u32)> {
+) -> Option<(i32, u32, u32, u32, u32, u32)> {
+    let total_months = year.checked_mul(12)?.checked_add(month.checked_sub(1)?)?;
+    let normalized_year = i32::try_from(total_months.div_euclid(12)).ok()?;
+    let normalized_month = u32::try_from(total_months.rem_euclid(12) + 1).ok()?;
     Some((
-        u32::try_from(month).ok()?,
+        normalized_year,
+        normalized_month,
         u32::try_from(day).ok()?,
         u32::try_from(hour).ok()?,
         u32::try_from(minute).ok()?,
@@ -413,13 +418,8 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
-        let Ok(year) = i32::try_from(year) else {
-            return Err(RuntimeError {
-                message: format!("timestamp year is out of range: {year}"),
-            });
-        };
-        let Some((month, day, hour, minute, second)) =
-            timestamp_unsigned_parts(month, day, args.hour, args.minute, args.second)
+        let Some((year, month, day, hour, minute, second)) =
+            normalize_timestamp_parts(year, month, day, args.hour, args.minute, args.second)
         else {
             return Err(RuntimeError {
                 message: format!(
