@@ -50,6 +50,24 @@ const LINEBREAK_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const KAGI_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "tickerid",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "style",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "param",
+        accepts: Accepts::SimpleNumeric,
+        optional: false,
+    },
+];
+
 const RENKO_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "tickerid",
@@ -98,6 +116,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "ticker.linebreak",
         phase: BuiltinPhase::Phase1Core,
         params: LINEBREAK_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_STRING),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ticker.kagi",
+        phase: BuiltinPhase::Phase1Core,
+        params: KAGI_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_STRING),
         variadic: false,
     },

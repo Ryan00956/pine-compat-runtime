@@ -152,6 +152,11 @@ linebreak_created = ticker.linebreak(created, 3)
 linebreak_adjusted = ticker.linebreak(adjusted_created, 4)
 linebreak_standard = ticker.standard(linebreak_adjusted)
 missing_linebreak_symbol = ticker.linebreak(na, 3)
+kagi_created = ticker.kagi(created, "ATR", 10)
+kagi_adjusted = ticker.kagi(adjusted_created, "Traditional", 2.5)
+kagi_standard = ticker.standard(kagi_adjusted)
+missing_kagi_symbol = ticker.kagi(na, "ATR", 10)
+missing_kagi_style = ticker.kagi(created, na, 10)
 missing = ticker.standard(na)
 plot(created == "NASDAQ:AAPL" ? 1 : 0)
 plot(chart_created == "NASDAQ:AAPL" ? 1 : 0)
@@ -187,6 +192,11 @@ plot(linebreak_created == "{\"chart\":\"linebreak\",\"lines\":3,\"symbol\":\"NAS
 plot(linebreak_adjusted == "{\"chart\":\"linebreak\",\"lines\":4,\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
 plot(linebreak_standard == "NASDAQ:AAPL" ? 1 : 0)
 plot(na(missing_linebreak_symbol) ? 1 : 0)
+plot(kagi_created == "{\"chart\":\"kagi\",\"style\":\"ATR\",\"param\":10,\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
+plot(kagi_adjusted == "{\"chart\":\"kagi\",\"style\":\"Traditional\",\"param\":2.5,\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
+plot(kagi_standard == "NASDAQ:AAPL" ? 1 : 0)
+plot(na(missing_kagi_symbol) ? 1 : 0)
+plot(na(missing_kagi_style) ? 1 : 0)
 plot(na(missing) ? 1 : 0)
 plot(adjustment.none == "none" and adjustment.splits == "splits" and adjustment.dividends == "dividends" ? 1 : 0)
 "#,
@@ -237,6 +247,11 @@ plot(adjustment.none == "none" and adjustment.splits == "splits" and adjustment.
     assert_values_close(&result.plots[33].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[34].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[35].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[36].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[37].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[38].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[39].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[40].values, &[1.0, 1.0]);
 }
 
 #[test]

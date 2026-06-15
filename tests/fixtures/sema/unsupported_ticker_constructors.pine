@@ -4,4 +4,5 @@ over_adjusted = ticker.new(syminfo.prefix, syminfo.ticker, session.extended, adj
 modified_over_adjusted = ticker.modify(syminfo.tickerid, session.extended, adjustment.dividends, "extra")
 over_renko = ticker.renko(syminfo.tickerid, "ATR", 10, "extra")
 over_linebreak = ticker.linebreak(syminfo.tickerid, 3, "extra")
-plot(na(over_adjusted) and na(modified_over_adjusted) and na(over_renko) and na(over_linebreak) ? 1 : 0)
+over_kagi = ticker.kagi(syminfo.tickerid, "ATR", 10, "extra")
+plot(na(over_adjusted) and na(modified_over_adjusted) and na(over_renko) and na(over_linebreak) and na(over_kagi) ? 1 : 0)

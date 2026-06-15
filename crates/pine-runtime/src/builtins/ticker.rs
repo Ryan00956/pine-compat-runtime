@@ -14,6 +14,7 @@ impl<'a> HistoricalRuntime<'a> {
 
         Some(match callee {
             "ticker.heikinashi" => self.eval_ticker_heikinashi(args),
+            "ticker.kagi" => self.eval_ticker_kagi(args),
             "ticker.linebreak" => self.eval_ticker_linebreak(args),
             "ticker.new" => self.eval_ticker_new(args),
             "ticker.modify" => self.eval_ticker_modify(args),
@@ -33,6 +34,21 @@ impl<'a> HistoricalRuntime<'a> {
             &symbol,
             "heikinashi",
         )))
+    }
+
+    fn eval_ticker_kagi(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(tickerid) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::String(style) = self.eval_expr(&args[1].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let Some(param) = numeric_param_string(&self.eval_expr(&args[2].value)?) else {
+            return Ok(PineValue::Na);
+        };
+
+        let symbol = standard_ticker_id(&tickerid);
+        Ok(PineValue::String(kagi_ticker_id(&symbol, &style, &param)))
     }
 
     fn eval_ticker_linebreak(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -167,6 +183,15 @@ fn linebreak_ticker_id(symbol: &str, number_of_lines: i64) -> String {
     )
 }
 
+fn kagi_ticker_id(symbol: &str, style: &str, param: &str) -> String {
+    format!(
+        r#"{{"chart":"kagi","style":"{}","param":{},"symbol":"{}"}}"#,
+        escape_json_string(style),
+        param,
+        escape_json_string(symbol)
+    )
+}
+
 fn renko_ticker_id(symbol: &str, style: &str, param: &str) -> String {
     format!(
         r#"{{"chart":"renko","style":"{}","param":{},"symbol":"{}"}}"#,
@@ -262,6 +287,14 @@ mod tests {
         assert_eq!(
             linebreak_ticker_id(r#"TEST:Q\""#, 3),
             r#"{"chart":"linebreak","lines":3,"symbol":"TEST:Q\\\""}"#
+        );
+    }
+
+    #[test]
+    fn kagi_ticker_preserves_symbol_and_numeric_param_fields() {
+        assert_eq!(
+            kagi_ticker_id(r#"TEST:Q\""#, r#"AT\"R"#, "10"),
+            r#"{"chart":"kagi","style":"AT\\\"R","param":10,"symbol":"TEST:Q\\\""}"#
         );
     }
 

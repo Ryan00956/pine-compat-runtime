@@ -907,6 +907,7 @@ modified = ticker.modify(created)
 modified_extended = ticker.modify(created, session.extended)
 modified_adjusted = ticker.modify(created, session.extended, adjustment.splits)
 ha = ticker.heikinashi(adjusted)
+kagi = ticker.kagi(adjusted, "ATR", 10)
 linebreak = ticker.linebreak(adjusted, 3)
 renko = ticker.renko(adjusted, "ATR", 10)
 standard = ticker.standard(syminfo.tickerid)
@@ -915,9 +916,10 @@ modified_standard = ticker.standard(modified_extended)
 adjusted_standard = ticker.standard(adjusted)
 modified_adjusted_standard = ticker.standard(modified_adjusted)
 ha_standard = ticker.standard(ha)
+kagi_standard = ticker.standard(kagi)
 linebreak_standard = ticker.standard(linebreak)
 renko_standard = ticker.standard(renko)
-plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjusted_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and modified_standard == "NASDAQ:AAPL" and modified_adjusted_standard == "NASDAQ:AAPL" and ha_standard == "NASDAQ:AAPL" and linebreak_standard == "NASDAQ:AAPL" and renko_standard == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
+plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjusted_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and modified_standard == "NASDAQ:AAPL" and modified_adjusted_standard == "NASDAQ:AAPL" and ha_standard == "NASDAQ:AAPL" and kagi_standard == "NASDAQ:AAPL" and linebreak_standard == "NASDAQ:AAPL" and renko_standard == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
 "#,
     );
 
@@ -928,6 +930,7 @@ plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjuste
     );
     for feature in [
         "ticker.heikinashi",
+        "ticker.kagi",
         "ticker.linebreak",
         "ticker.new",
         "ticker.modify",
