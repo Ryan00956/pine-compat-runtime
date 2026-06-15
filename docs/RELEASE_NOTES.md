@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added fixture-backed branch and loop control-flow coverage for
+  `array.binary_search`, `array.binary_search_leftmost`, and
+  `array.binary_search_rightmost`.
+- Added fixture-backed branch and loop control-flow coverage for
   `array.every` and `array.some`.
 - Added fixture-backed branch and loop control-flow coverage for
   `array.includes`, `array.indexof`, and `array.lastindexof`.
