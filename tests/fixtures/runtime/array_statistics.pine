@@ -98,3 +98,20 @@ for i = 0 to 1
     else
         loop_minmax_results.push(loop_minmax_source.max())
 plot(loop_minmax_results.get(0) * 10 + loop_minmax_results.get(1))
+
+branch_sumavg_source = array.from(2, 4, 6)
+branch_sumavg_results = array.new_float()
+if bar_index % 2 == 0
+    branch_sumavg_results.push(array.sum(branch_sumavg_source) + branch_sumavg_source.avg())
+else
+    branch_sumavg_results.push(branch_sumavg_source.range() + array.avg(branch_sumavg_source))
+plot(branch_sumavg_results.get(0))
+
+loop_sumavg_source = array.from(3, 6, 9)
+loop_sumavg_results = array.new_float()
+for i = 0 to 1
+    if i == 0
+        loop_sumavg_results.push(array.sum(loop_sumavg_source))
+    else
+        loop_sumavg_results.push(loop_sumavg_source.avg() + array.range(loop_sumavg_source))
+plot(loop_sumavg_results.get(0) + loop_sumavg_results.get(1))
