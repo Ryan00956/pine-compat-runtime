@@ -688,10 +688,10 @@ Supported request merge constants include `barmerge.gaps_off`,
 `barmerge.lookahead_on` as string constants. `request.security` accepts only
 the default `barmerge.gaps_off` and `barmerge.lookahead_off` merge metadata;
 non-default merge behavior remains unsupported.
-Supported direct currency constants include `currency.NONE`, `currency.USD`,
-`currency.EUR`, `currency.JPY`, `currency.GBP`, `currency.AUD`,
-`currency.CAD`, `currency.CHF`, `currency.BTC`, `currency.ETH`, and
-`currency.USDT` as string values such as `"USD"`. Request currency conversion
+Supported direct currency constants include the official `currency.*`
+currency-code set from `currency.AUD` through `currency.ZAR`, including
+`currency.NONE`, `currency.BTC`, `currency.ETH`, `currency.USD`, and
+`currency.USDT`, as string values such as `"USD"`. Request currency conversion
 and strategy account currency are not implemented.
 
 ## Utility

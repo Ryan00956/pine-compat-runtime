@@ -3,4 +3,8 @@ indicator("Currency constants")
 major = currency.USD == "USD" and currency.EUR == "EUR" and currency.JPY == "JPY" and currency.GBP == "GBP"
 cross = currency.AUD == "AUD" and currency.CAD == "CAD" and currency.CHF == "CHF"
 crypto = currency.BTC == "BTC" and currency.ETH == "ETH" and currency.USDT == "USDT"
-plot(major and cross and crypto and currency.NONE == "NONE" ? 1 : 0)
+asia = currency.BDT == "BDT" and currency.BHD == "BHD" and currency.CNY == "CNY" and currency.HKD == "HKD" and currency.IDR == "IDR" and currency.ILS == "ILS" and currency.INR == "INR" and currency.KRW == "KRW" and currency.KWD == "KWD" and currency.LKR == "LKR" and currency.MYR == "MYR" and currency.PHP == "PHP" and currency.PKR == "PKR" and currency.QAR == "QAR" and currency.SAR == "SAR" and currency.SGD == "SGD" and currency.THB == "THB" and currency.TWD == "TWD" and currency.VND == "VND"
+europe = currency.CZK == "CZK" and currency.DKK == "DKK" and currency.HUF == "HUF" and currency.ISK == "ISK" and currency.NOK == "NOK" and currency.PLN == "PLN" and currency.RON == "RON" and currency.RSD == "RSD" and currency.RUB == "RUB" and currency.SEK == "SEK" and currency.TRY == "TRY"
+americas = currency.BRL == "BRL" and currency.CLP == "CLP" and currency.COP == "COP" and currency.MXN == "MXN" and currency.PEN == "PEN" and currency.VES == "VES"
+other = currency.EGP == "EGP" and currency.KES == "KES" and currency.MAD == "MAD" and currency.NGN == "NGN" and currency.NZD == "NZD" and currency.TND == "TND" and currency.ZAR == "ZAR"
+plot(major and cross and crypto and asia and europe and americas and other and currency.NONE == "NONE" ? 1 : 0)
