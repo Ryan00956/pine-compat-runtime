@@ -1,0 +1,9 @@
+//@version=5
+indicator("Unsupported array concat UDT")
+type Point
+    float x
+
+left = array.from(Point.new(close))
+right = array.from(Point.new(open))
+result = array.concat(left, right)
+plot(close)
