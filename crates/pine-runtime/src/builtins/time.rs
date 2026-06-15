@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, FixedOffset, NaiveDate, TimeZone, Timelike, Utc};
+use chrono::{DateTime, Datelike, Duration, FixedOffset, NaiveDate, TimeZone, Timelike, Utc};
 use pine_ir::HirCallArg;
 
 use crate::*;
@@ -171,18 +171,22 @@ pub(crate) fn normalize_timestamp_parts(
     hour: i64,
     minute: i64,
     second: i64,
-) -> Option<(i32, u32, u32, u32, u32, u32)> {
+) -> Option<DateTime<Utc>> {
     let total_months = year.checked_mul(12)?.checked_add(month.checked_sub(1)?)?;
     let normalized_year = i32::try_from(total_months.div_euclid(12)).ok()?;
     let normalized_month = u32::try_from(total_months.rem_euclid(12) + 1).ok()?;
-    Some((
-        normalized_year,
-        normalized_month,
-        u32::try_from(day).ok()?,
-        u32::try_from(hour).ok()?,
-        u32::try_from(minute).ok()?,
-        u32::try_from(second).ok()?,
-    ))
+    let base = Utc
+        .with_ymd_and_hms(normalized_year, normalized_month, 1, 0, 0, 0)
+        .single()?;
+    let day_offset = day.checked_sub(1)?.checked_mul(86_400)?;
+    let hour_offset = hour.checked_mul(3_600)?;
+    let minute_offset = minute.checked_mul(60)?;
+    let total_seconds = day_offset
+        .checked_add(hour_offset)?
+        .checked_add(minute_offset)?
+        .checked_add(second)?;
+    let offset = Duration::try_seconds(total_seconds)?;
+    base.checked_add_signed(offset)
 }
 
 pub(crate) fn utc_datetime_from_millis(timestamp: i64) -> Result<DateTime<Utc>, RuntimeError> {
@@ -418,7 +422,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
-        let Some((year, month, day, hour, minute, second)) =
+        let Some(datetime) =
             normalize_timestamp_parts(year, month, day, args.hour, args.minute, args.second)
         else {
             return Err(RuntimeError {
@@ -430,17 +434,6 @@ impl<'a> HistoricalRuntime<'a> {
                 ),
             });
         };
-        let Some(datetime) = Utc
-            .with_ymd_and_hms(year, month, day, hour, minute, second)
-            .single()
-        else {
-            return Err(RuntimeError {
-                message: format!(
-                    "timestamp invalid UTC datetime: {year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}"
-                ),
-            });
-        };
-
         Ok(PineValue::Int(datetime.timestamp_millis()))
     }
 

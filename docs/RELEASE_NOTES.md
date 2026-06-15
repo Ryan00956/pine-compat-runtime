@@ -2,9 +2,8 @@
 
 ## Unreleased
 
-- Added fixture-backed numeric `timestamp()` month-offset normalization for
-  zero, negative, and overflow `month` values while leaving broader day/time
-  overflow normalization unsupported.
+- Added fixture-backed numeric `timestamp()` offset normalization for zero,
+  negative, and overflow month/day/time values.
 - Added fixture-backed `timestamp(dateString)` support for const ISO dates,
   English month dates, optional time-of-day, and UTC/GMT/fixed-offset timezone
   tokens while leaving IANA timezone conversion, broader date-string parsing,

@@ -330,9 +330,10 @@ For now, these function overloads use the same UTC-only timezone subset as
 `str.format_time`; unsupported time zones are runtime errors. `timestamp`
 currently supports numeric calendar arguments with an optional UTC-equivalent
 `timezone` argument, including named calendar parameters and normalized
-zero/negative/overflow `month` offsets. Omitted hour/minute/second default to 0,
-`na` inputs return `na`, and invalid UTC dates or unsupported day/time overflow
-normalization are runtime errors. The `timestamp(dateString)` overload accepts const strings
+zero/negative/overflow `month`, `day`, `hour`, `minute`, and `second` offsets.
+Omitted hour/minute/second default to 0, `na` inputs return `na`, and timestamp
+values outside the UTC datetime range are runtime errors. The
+`timestamp(dateString)` overload accepts const strings
 for ISO dates such as `"2021-01-01"`, English month dates such as
 `"29 Aug 2024"`, optional `HH:mm` or `HH:mm:ss` time-of-day tokens, and
 optional `UTC`/`GMT`/fixed-offset timezone tokens such as `"UTC+0"` or
