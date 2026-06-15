@@ -11,5 +11,6 @@ pub(crate) mod strategy;
 pub(crate) mod strings;
 pub(crate) mod syminfo;
 pub(crate) mod ta;
+pub(crate) mod ticker;
 pub(crate) mod time;
 pub(crate) mod variables;

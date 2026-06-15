@@ -1,7 +1,7 @@
 use crate::namespaces::types::VOID;
 use crate::namespaces::{
     alerts, arrays, colors, core, drawings, math, outputs, requests, strategy, strings, syminfo,
-    ta, time,
+    ta, ticker, time,
 };
 use crate::signature::{BuiltinParam, BuiltinPhase, BuiltinSignature, ReturnSpec};
 
@@ -24,6 +24,7 @@ const BUILTIN_COUNT: usize = core::SCRIPT_SIGNATURES.len()
     + colors::SIGNATURES.len()
     + strings::SIGNATURES.len()
     + syminfo::SIGNATURES.len()
+    + ticker::SIGNATURES.len()
     + time::SIGNATURES.len()
     + core::CAST_SIGNATURES.len()
     + math::SIGNATURES.len()
@@ -49,6 +50,7 @@ const fn build_phase_1_builtins() -> [BuiltinSignature; BUILTIN_COUNT] {
     index = copy_signatures(&mut builtins, index, colors::SIGNATURES);
     index = copy_signatures(&mut builtins, index, strings::SIGNATURES);
     index = copy_signatures(&mut builtins, index, syminfo::SIGNATURES);
+    index = copy_signatures(&mut builtins, index, ticker::SIGNATURES);
     index = copy_signatures(&mut builtins, index, time::SIGNATURES);
     index = copy_signatures(&mut builtins, index, core::CAST_SIGNATURES);
     index = copy_signatures(&mut builtins, index, math::SIGNATURES);

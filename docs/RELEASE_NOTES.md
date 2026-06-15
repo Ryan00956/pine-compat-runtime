@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `ticker.standard` support for simple-string
+  standard ticker IDs while leaving other ticker constructors unsupported.
 - Tightened `syminfo` metadata closeout by documenting the
   `syminfo.main_tickerid` signature and asserting analyzer support evidence for
   `syminfo.main_tickerid` and `syminfo.mincontract`.

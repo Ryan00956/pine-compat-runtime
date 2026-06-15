@@ -1,0 +1,10 @@
+//@version=5
+indicator("Ticker helpers")
+plain = ticker.standard("NASDAQ:AAPL")
+current = ticker.standard(syminfo.tickerid)
+modified = ticker.standard("{\"session\":\"extended\",\"symbol\":\"NASDAQ:AAPL\"}")
+missing = ticker.standard(na)
+plot(plain == "NASDAQ:AAPL" ? 1 : 0)
+plot(current == "NASDAQ:AAPL" ? 1 : 0)
+plot(modified == "NASDAQ:AAPL" ? 1 : 0)
+plot(na(missing) ? 1 : 0)

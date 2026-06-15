@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported ticker constructors")
+ha = ticker.heikinashi(syminfo.tickerid)
+renko = ticker.renko(syminfo.tickerid, "ATR", 10)
+plot(na(ha) and na(renko) ? 1 : 0)

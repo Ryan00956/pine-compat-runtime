@@ -894,6 +894,32 @@ plot(identity and details and session and classification and helpers ? scale : 0
 }
 
 #[test]
+fn accepts_ticker_standard() {
+    let analysis = analyze(
+        r#"indicator("ticker standard")
+standard = ticker.standard(syminfo.tickerid)
+plot(standard == "NASDAQ:AAPL" ? 1 : 0)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|supported| supported.feature == "ticker.standard"),
+        "ticker.standard should be reported as supported"
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_chart_type_metadata() {
     let analysis = analyze(
         r#"indicator("chart type metadata")

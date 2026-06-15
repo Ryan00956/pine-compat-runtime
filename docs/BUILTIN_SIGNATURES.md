@@ -203,6 +203,7 @@ syminfo.minmove -> const int
 syminfo.pricescale -> const int
 syminfo.prefix(symbol: simple string) -> simple string
 syminfo.ticker(symbol: simple string) -> simple string
+ticker.standard(symbol: simple string) -> simple string
 ```
 
 `syminfo.*` currently uses fixed default symbol metadata until runtime symbol
@@ -216,6 +217,12 @@ currency, `regular` session, `Etc/UTC` timezone, `base` volume type,
 string directly. They split `PREFIX:TICKER` on the first `:`; symbols without a
 prefix return `""` from `syminfo.prefix()` and the whole symbol from
 `syminfo.ticker()`.
+
+`ticker.standard(symbol)` currently implements the simple-string standard ticker
+ID subset. Plain `PREFIX:TICKER` values are returned unchanged, and known
+TradingView ticker-id strings containing a quoted `"symbol"` field return that
+field's value. Other modifier encodings and ticker constructors remain outside
+this subset.
 
 The same names are also supported as functions over a timestamp:
 

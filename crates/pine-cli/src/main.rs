@@ -128,7 +128,12 @@ mod tests {
             .any(|prefix| name.starts_with(prefix))
             || matches!(
                 name,
-                "request.security" | "strategy" | "alert" | "alertcondition" | "ta.vwap"
+                "request.security"
+                    | "strategy"
+                    | "alert"
+                    | "alertcondition"
+                    | "ta.vwap"
+                    | "ticker.standard"
             )
     }
 

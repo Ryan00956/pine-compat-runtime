@@ -257,6 +257,7 @@ syminfo.mincontract	supported	fixed default minimum contract size symbol metadat
 syminfo.pointvalue	supported	fixed default pointvalue symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.minmove	supported	fixed default minmove symbol metadata subset used with pricescale to derive mintick	tests/fixtures/runtime/syminfo.pine
 syminfo.pricescale	supported	fixed default pricescale symbol metadata subset used with minmove to derive mintick	tests/fixtures/runtime/syminfo.pine
+ticker.standard	partial	simple-string standard ticker ID subset; plain PREFIX:TICKER values are returned unchanged and known ticker-id strings containing a quoted symbol field return that standard symbol, while other modifier encodings and ticker constructors remain unsupported	tests/fixtures/runtime/ticker.pine;tests/fixtures/sema/unsupported_ticker_constructors.pine
 math.sin	supported	trigonometric sine with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine
 math.cos	supported	trigonometric cosine with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine
 math.tan	supported	trigonometric tangent with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine

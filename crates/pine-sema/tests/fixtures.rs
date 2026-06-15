@@ -3632,6 +3632,18 @@ fn reports_unsupported_log_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ticker_constructors_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_ticker_constructors.pine",
+        "E_UNKNOWN_FUNCTION",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ticker_constructors.pine",
+        &["ticker.heikinashi", "ticker.renko"],
+    );
+}
+
+#[test]
 fn reports_unsupported_map_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_map.pine",
