@@ -8,6 +8,16 @@ p = Point.new(close, open)
 plot(p.x + p.y)
 p.x := high
 plot(p.x + p.y)
+branch = Point.new(close, open)
+if bar_index < 2
+    branch.x := branch.x + 10
+else
+    branch.y := branch.y + 20
+plot(branch.x + branch.y)
+loop_mutated = Point.new(close, open)
+for i = 0 to 1
+    loop_mutated.x := loop_mutated.x + i
+plot(loop_mutated.x + loop_mutated.y)
 looped = for i = 0 to 1
     Point.new(p.x + i, p.y)
 plot(looped.x + looped.y)

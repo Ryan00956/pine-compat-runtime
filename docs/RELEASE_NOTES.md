@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed local UDT scalar field mutation coverage inside branch
+  and for-loop bodies while keeping mutation inside UDFs and methods
+  unsupported.
 - Added fixture-backed unsupported coverage for `linefill.*`, keeping the
   linefill object namespace boundary explicit beyond the `linefill.all`
   collection variable.
