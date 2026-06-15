@@ -1,6 +1,7 @@
 use crate::namespaces::types::VOID;
 use crate::namespaces::{
-    alerts, arrays, colors, core, drawings, math, outputs, requests, strategy, strings, ta, time,
+    alerts, arrays, colors, core, drawings, math, outputs, requests, strategy, strings, syminfo,
+    ta, time,
 };
 use crate::signature::{BuiltinParam, BuiltinPhase, BuiltinSignature, ReturnSpec};
 
@@ -22,6 +23,7 @@ const BUILTIN_COUNT: usize = core::SCRIPT_SIGNATURES.len()
     + drawings::tables::SIGNATURES.len()
     + colors::SIGNATURES.len()
     + strings::SIGNATURES.len()
+    + syminfo::SIGNATURES.len()
     + time::SIGNATURES.len()
     + core::CAST_SIGNATURES.len()
     + math::SIGNATURES.len()
@@ -46,6 +48,7 @@ const fn build_phase_1_builtins() -> [BuiltinSignature; BUILTIN_COUNT] {
     index = copy_signatures(&mut builtins, index, drawings::tables::SIGNATURES);
     index = copy_signatures(&mut builtins, index, colors::SIGNATURES);
     index = copy_signatures(&mut builtins, index, strings::SIGNATURES);
+    index = copy_signatures(&mut builtins, index, syminfo::SIGNATURES);
     index = copy_signatures(&mut builtins, index, time::SIGNATURES);
     index = copy_signatures(&mut builtins, index, core::CAST_SIGNATURES);
     index = copy_signatures(&mut builtins, index, math::SIGNATURES);
@@ -205,6 +208,21 @@ mod tests {
             get_phase_1_builtin("strategy.cancel_all").expect("strategy.cancel_all signature");
         assert!(signature.params.is_empty());
         assert!(!signature.variadic);
+    }
+
+    #[test]
+    fn registers_syminfo_symbol_helper_signatures() {
+        for name in ["syminfo.prefix", "syminfo.ticker"] {
+            let signature = get_phase_1_builtin(name).expect("syminfo symbol helper signature");
+            assert_eq!(signature.params.len(), 1);
+            assert_eq!(signature.params[0].name, "symbol");
+            assert_eq!(signature.params[0].accepts, crate::Accepts::SimpleString);
+            assert_eq!(
+                signature.returns,
+                ReturnSpec::Fixed(crate::namespaces::types::SIMPLE_STRING)
+            );
+            assert!(!signature.variadic);
+        }
     }
 
     #[test]

@@ -220,8 +220,8 @@ math.phi	supported	golden-ratio constant with fixture-backed rphi difference rel
 math.rphi	supported	inverse golden-ratio constant with fixture-backed phi difference relation	tests/fixtures/runtime/math.pine
 syminfo.tickerid	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.main_tickerid	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
-syminfo.ticker	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
-syminfo.prefix	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.ticker	supported	fixed default symbol metadata variable plus simple-string symbol helper extracting ticker without exchange prefix	tests/fixtures/runtime/syminfo.pine
+syminfo.prefix	supported	fixed default symbol metadata variable plus simple-string symbol helper extracting exchange prefix	tests/fixtures/runtime/syminfo.pine
 syminfo.description	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.sector	supported	fixed default symbol classification metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.industry	supported	fixed default symbol classification metadata subset	tests/fixtures/runtime/syminfo.pine

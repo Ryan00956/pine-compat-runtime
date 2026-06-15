@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed `syminfo.prefix(symbol)` and `syminfo.ticker(symbol)`
+  simple-string helpers while preserving the existing fixed default
+  `syminfo.prefix` and `syminfo.ticker` variables.
 - Added fixture-backed fixed-default `syminfo.sector`,
   `syminfo.industry`, and `syminfo.country` metadata variables.
 - Aligned the remaining built-in `color.*` named constants with TradingView's

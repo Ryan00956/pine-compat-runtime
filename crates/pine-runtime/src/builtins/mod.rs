@@ -9,6 +9,7 @@ pub(crate) mod outputs;
 pub(crate) mod requests;
 pub(crate) mod strategy;
 pub(crate) mod strings;
+pub(crate) mod syminfo;
 pub(crate) mod ta;
 pub(crate) mod time;
 pub(crate) mod variables;

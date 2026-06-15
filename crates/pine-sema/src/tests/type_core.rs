@@ -838,8 +838,9 @@ identity = syminfo.tickerid == "NASDAQ:AAPL" and syminfo.ticker == "AAPL" and sy
 details = syminfo.description == "Apple Inc." and syminfo.type == "stock" and syminfo.currency == "USD" and syminfo.basecurrency == "USD"
 session = syminfo.session == "regular" and syminfo.timezone == "Etc/UTC" and syminfo.root == "AAPL" and syminfo.volumetype == "base"
 classification = syminfo.sector == "Electronic Technology" and syminfo.industry == "Telecommunications Equipment" and syminfo.country == "US"
+helpers = syminfo.prefix("NASDAQ:AAPL") == "NASDAQ" and syminfo.ticker("NASDAQ:AAPL") == "AAPL" and syminfo.prefix(syminfo.tickerid) == "NASDAQ" and syminfo.ticker(syminfo.tickerid) == "AAPL"
 scale = syminfo.mintick + syminfo.pointvalue + syminfo.minmove + syminfo.pricescale
-plot(identity and details and session and classification ? scale : 0)
+plot(identity and details and session and classification and helpers ? scale : 0)
 "#,
     );
 

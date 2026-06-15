@@ -212,6 +212,8 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "str.tostring",
     "str.trim",
     "str.upper",
+    "syminfo.prefix",
+    "syminfo.ticker",
     "strategy",
     "strategy.close",
     "strategy.close_all",

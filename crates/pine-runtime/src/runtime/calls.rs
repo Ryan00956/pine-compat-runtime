@@ -34,6 +34,9 @@ impl<'a> HistoricalRuntime<'a> {
         if let Some(result) = self.eval_string_call(callee, args) {
             return result;
         }
+        if let Some(result) = self.eval_syminfo_call(callee, args) {
+            return result;
+        }
         if let Some(result) = self.eval_time_call(callee, args) {
             return result;
         }
