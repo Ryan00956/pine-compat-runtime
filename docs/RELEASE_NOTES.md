@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch and loop control-flow coverage for
+  `array.median` and `array.mode`.
 - Added fixture-backed branch and loop control-flow coverage for `array.sum`,
   `array.avg`, and `array.range`.
 - Added fixture-backed branch and loop control-flow coverage for `array.min`
