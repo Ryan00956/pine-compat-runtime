@@ -2,16 +2,17 @@
 
 ## Unreleased
 
+- Added fixture-backed `adjustment.none`, `adjustment.splits`, and
+  `adjustment.dividends` constants plus partial `ticker.new`/`ticker.modify`
+  adjustment modifier support for modified ticker IDs.
 - Added fixture-backed partial `ticker.modify(..., session)` support for
-  session-modified ticker IDs while leaving adjustment modifiers unsupported.
+  session-modified ticker IDs.
 - Added fixture-backed partial `ticker.new(..., session)` support for
-  session-modified ticker IDs while leaving adjustment modifiers unsupported.
+  session-modified ticker IDs.
 - Added fixture-backed partial `ticker.modify` support for the single-argument
-  no-modifier ticker ID subset while leaving session/adjustment modifiers
-  unsupported.
+  no-modifier ticker ID subset.
 - Added fixture-backed partial `ticker.new` support for the two-argument
-  default `PREFIX:TICKER` constructor subset while leaving session/adjustment
-  modifiers unsupported.
+  default `PREFIX:TICKER` constructor subset.
 - Added fixture-backed partial `ticker.standard` support for simple-string
   standard ticker IDs while leaving other ticker constructors unsupported.
 - Tightened `syminfo` metadata closeout by documenting the

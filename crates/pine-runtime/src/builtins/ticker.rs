@@ -35,8 +35,20 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::String(session) = self.eval_expr(&session_arg.value)? else {
             return Ok(PineValue::Na);
         };
+        let adjustment = if let Some(adjustment_arg) = args.get(3) {
+            let PineValue::String(adjustment) = self.eval_expr(&adjustment_arg.value)? else {
+                return Ok(PineValue::Na);
+            };
+            Some(adjustment)
+        } else {
+            None
+        };
 
-        Ok(PineValue::String(modified_ticker_id(&symbol, &session)))
+        Ok(PineValue::String(modified_ticker_id(
+            &symbol,
+            &session,
+            adjustment.as_deref(),
+        )))
     }
 
     fn eval_ticker_modify(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -50,9 +62,21 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::String(session) = self.eval_expr(&session_arg.value)? else {
             return Ok(PineValue::Na);
         };
+        let adjustment = if let Some(adjustment_arg) = args.get(2) {
+            let PineValue::String(adjustment) = self.eval_expr(&adjustment_arg.value)? else {
+                return Ok(PineValue::Na);
+            };
+            Some(adjustment)
+        } else {
+            None
+        };
 
         let symbol = standard_ticker_id(&tickerid);
-        Ok(PineValue::String(modified_ticker_id(&symbol, &session)))
+        Ok(PineValue::String(modified_ticker_id(
+            &symbol,
+            &session,
+            adjustment.as_deref(),
+        )))
     }
 
     fn eval_ticker_standard(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -68,12 +92,18 @@ fn standard_ticker_id(symbol: &str) -> String {
     extract_json_symbol_field(symbol).unwrap_or_else(|| symbol.to_owned())
 }
 
-fn modified_ticker_id(symbol: &str, session: &str) -> String {
-    format!(
-        r#"{{"session":"{}","symbol":"{}"}}"#,
-        escape_json_string(session),
-        escape_json_string(symbol)
-    )
+fn modified_ticker_id(symbol: &str, session: &str, adjustment: Option<&str>) -> String {
+    let session = escape_json_string(session);
+    let symbol = escape_json_string(symbol);
+    match adjustment {
+        Some(adjustment) => format!(
+            r#"{{"session":"{}","adjustment":"{}","symbol":"{}"}}"#,
+            session,
+            escape_json_string(adjustment),
+            symbol
+        ),
+        None => format!(r#"{{"session":"{}","symbol":"{}"}}"#, session, symbol),
+    }
 }
 
 fn escape_json_string(value: &str) -> String {
@@ -132,8 +162,12 @@ mod tests {
     #[test]
     fn modified_ticker_escapes_json_string_fields() {
         assert_eq!(
-            modified_ticker_id(r#"TEST:Q\""#, r#"reg\"ular"#),
+            modified_ticker_id(r#"TEST:Q\""#, r#"reg\"ular"#, None),
             r#"{"session":"reg\\\"ular","symbol":"TEST:Q\\\""}"#
+        );
+        assert_eq!(
+            modified_ticker_id("NASDAQ:AAPL", "extended", Some("dividends")),
+            r#"{"session":"extended","adjustment":"dividends","symbol":"NASDAQ:AAPL"}"#
         );
     }
 }

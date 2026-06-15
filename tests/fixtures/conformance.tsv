@@ -82,6 +82,9 @@ session.isfirstbar_regular	supported	fixed default regular-session boundary subs
 session.islastbar_regular	supported	fixed default regular-session boundary subset; matches session.islastbar while every runtime bar is regular-session data	tests/fixtures/runtime/session.pine
 session.regular	supported	named regular session string constant used with syminfo.session in the fixed default session subset	tests/fixtures/runtime/session.pine
 session.extended	supported	named extended session string constant; extended-hours data remains outside the fixed default session subset	tests/fixtures/runtime/session.pine
+adjustment.none	supported	named no-adjustment string constant used with ticker.new/ticker.modify in the modified ticker ID subset	tests/fixtures/runtime/ticker.pine
+adjustment.splits	supported	named splits-adjustment string constant used with ticker.new/ticker.modify in the modified ticker ID subset	tests/fixtures/runtime/ticker.pine
+adjustment.dividends	supported	named dividends-adjustment string constant used with ticker.new/ticker.modify in the modified ticker ID subset	tests/fixtures/runtime/ticker.pine
 plot	supported	series output plus common style/display metadata parameter subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/if.pine;tests/fixtures/runtime/snapshot_plot.pine
 plotchar	supported	bool/numeric marker series with const char, color-compatible color, and common marker metadata parameters	tests/fixtures/runtime/plotchar.pine
 plotshape	supported	bool/numeric marker series with style/location/text/size constants and common marker metadata parameters	tests/fixtures/runtime/plotshape.pine
@@ -257,8 +260,8 @@ syminfo.mincontract	supported	fixed default minimum contract size symbol metadat
 syminfo.pointvalue	supported	fixed default pointvalue symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.minmove	supported	fixed default minmove symbol metadata subset used with pricescale to derive mintick	tests/fixtures/runtime/syminfo.pine
 syminfo.pricescale	supported	fixed default pricescale symbol metadata subset used with minmove to derive mintick	tests/fixtures/runtime/syminfo.pine
-ticker.new	partial	simple-string default ticker constructor subset returning PREFIX:TICKER, plus session.regular/session.extended-compatible modified ticker IDs when the optional session argument is supplied; adjustment modifiers remain unsupported	tests/fixtures/runtime/ticker.pine;tests/fixtures/sema/unsupported_ticker_constructors.pine
-ticker.modify	partial	simple-string ticker ID identity subset, plus session.regular/session.extended-compatible modified ticker IDs when the optional session argument is supplied; adjustment modifiers remain unsupported	tests/fixtures/runtime/ticker.pine;tests/fixtures/sema/unsupported_ticker_constructors.pine
+ticker.new	partial	simple-string default ticker constructor subset returning PREFIX:TICKER, plus session.regular/session.extended-compatible and adjustment.none/adjustment.splits/adjustment.dividends-compatible modified ticker IDs when optional session and adjustment arguments are supplied	tests/fixtures/runtime/ticker.pine;tests/fixtures/sema/unsupported_ticker_constructors.pine
+ticker.modify	partial	simple-string ticker ID identity subset, plus session.regular/session.extended-compatible and adjustment.none/adjustment.splits/adjustment.dividends-compatible modified ticker IDs when optional session and adjustment arguments are supplied	tests/fixtures/runtime/ticker.pine;tests/fixtures/sema/unsupported_ticker_constructors.pine
 ticker.standard	partial	simple-string standard ticker ID subset; plain PREFIX:TICKER values are returned unchanged and known ticker-id strings containing a quoted symbol field return that standard symbol, while other modifier encodings and ticker constructors remain unsupported	tests/fixtures/runtime/ticker.pine;tests/fixtures/sema/unsupported_ticker_constructors.pine
 math.sin	supported	trigonometric sine with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine
 math.cos	supported	trigonometric cosine with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine

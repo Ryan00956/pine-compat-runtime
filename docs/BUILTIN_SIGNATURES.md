@@ -164,6 +164,9 @@ session.isfirstbar_regular -> series bool
 session.islastbar_regular -> series bool
 session.regular -> const string
 session.extended -> const string
+adjustment.none -> const string
+adjustment.splits -> const string
+adjustment.dividends -> const string
 ```
 
 The current subset assumes every runtime bar is in the regular session:
@@ -177,6 +180,10 @@ match the non-regular-specific boundary variables. `session.regular` is the
 `"regular"` string constant and `session.extended` is the `"extended"` string
 constant; exchange calendars, separate session days, and extended-hours data are
 not implemented by these constants.
+`adjustment.none`, `adjustment.splits`, and `adjustment.dividends` are direct
+string constants used by the current modified ticker ID subset. They do not
+perform price adjustment unless a host request provider interprets the modified
+ticker ID.
 
 Symbol info:
 
@@ -203,8 +210,8 @@ syminfo.minmove -> const int
 syminfo.pricescale -> const int
 syminfo.prefix(symbol: simple string) -> simple string
 syminfo.ticker(symbol: simple string) -> simple string
-ticker.new(prefix: simple string, ticker: simple string, session?: simple string) -> simple string
-ticker.modify(tickerid: simple string, session?: simple string) -> simple string
+ticker.new(prefix: simple string, ticker: simple string, session?: simple string, adjustment?: simple string) -> simple string
+ticker.modify(tickerid: simple string, session?: simple string, adjustment?: simple string) -> simple string
 ticker.standard(symbol: simple string) -> simple string
 ```
 
@@ -221,16 +228,20 @@ prefix return `""` from `syminfo.prefix()` and the whole symbol from
 `syminfo.ticker()`.
 
 `ticker.new(prefix, ticker)` currently implements the default ticker constructor
-subset and returns `PREFIX:TICKER`. Supplying the optional `session` argument
-with values such as `session.regular`, `session.extended`, or `syminfo.session`
-returns a modified ticker ID that preserves the standard symbol for
-`ticker.standard()`. Adjustment modifiers remain outside this subset.
+subset and returns `PREFIX:TICKER`. Supplying the optional `session` and
+`adjustment` arguments with values such as `session.regular`,
+`session.extended`, `syminfo.session`, `adjustment.none`, `adjustment.splits`,
+or `adjustment.dividends` returns a modified ticker ID that preserves the
+standard symbol for `ticker.standard()`. Host request semantics for adjusted
+data remain outside this subset.
 
 `ticker.modify(tickerid)` currently implements the no-modifier identity subset
-and returns the supplied ticker ID. Supplying the optional `session` argument
-with values such as `session.regular`, `session.extended`, or `syminfo.session`
-returns a modified ticker ID that preserves the standard symbol for
-`ticker.standard()`. Adjustment modifiers remain outside this subset.
+and returns the supplied ticker ID. Supplying the optional `session` and
+`adjustment` arguments with values such as `session.regular`,
+`session.extended`, `syminfo.session`, `adjustment.none`, `adjustment.splits`,
+or `adjustment.dividends` returns a modified ticker ID that preserves the
+standard symbol for `ticker.standard()`. Host request semantics for adjusted
+data remain outside this subset.
 
 `ticker.standard(symbol)` currently implements the simple-string standard ticker
 ID subset. Plain `PREFIX:TICKER` values are returned unchanged, and known

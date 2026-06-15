@@ -479,7 +479,7 @@ plot(timeframe.period == "1" and is_one_minute and roundtrip and tf_change ? sec
 #[test]
 fn accepts_barstate_isfirst() {
     let analysis = analyze(
-        "plot((barstate.isfirst or barstate.islast or barstate.islastconfirmedhistory or barstate.isnew or barstate.isconfirmed or barstate.ishistory or barstate.isrealtime or session.ismarket or session.ispremarket or session.ispostmarket or session.isfirstbar or session.islastbar or session.isfirstbar_regular or session.islastbar_regular or syminfo.session == session.regular or syminfo.session == session.extended) ? 1 : 0)\n",
+        "plot((barstate.isfirst or barstate.islast or barstate.islastconfirmedhistory or barstate.isnew or barstate.isconfirmed or barstate.ishistory or barstate.isrealtime or session.ismarket or session.ispremarket or session.ispostmarket or session.isfirstbar or session.islastbar or session.isfirstbar_regular or session.islastbar_regular or syminfo.session == session.regular or syminfo.session == session.extended or adjustment.none == \"none\" or adjustment.splits == \"splits\" or adjustment.dividends == \"dividends\") ? 1 : 0)\n",
     );
 
     assert!(
@@ -546,6 +546,9 @@ fn accepts_barstate_isfirst() {
         "session.islastbar_regular",
         "session.regular",
         "session.extended",
+        "adjustment.none",
+        "adjustment.splits",
+        "adjustment.dividends",
     ] {
         assert!(
             analysis
@@ -899,12 +902,16 @@ fn accepts_ticker_standard() {
         r#"indicator("ticker standard")
 created = ticker.new(syminfo.prefix, syminfo.ticker)
 extended = ticker.new(syminfo.prefix, syminfo.ticker, session.extended)
+adjusted = ticker.new(syminfo.prefix, syminfo.ticker, session.extended, adjustment.dividends)
 modified = ticker.modify(created)
 modified_extended = ticker.modify(created, session.extended)
+modified_adjusted = ticker.modify(created, session.extended, adjustment.splits)
 standard = ticker.standard(syminfo.tickerid)
 extended_standard = ticker.standard(extended)
 modified_standard = ticker.standard(modified_extended)
-plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and modified_standard == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
+adjusted_standard = ticker.standard(adjusted)
+modified_adjusted_standard = ticker.standard(modified_adjusted)
+plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjusted_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and modified_standard == "NASDAQ:AAPL" and modified_adjusted_standard == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
 "#,
     );
 

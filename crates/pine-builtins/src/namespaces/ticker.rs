@@ -18,6 +18,11 @@ const NEW_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SimpleString,
         optional: true,
     },
+    BuiltinParam {
+        name: "adjustment",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
 ];
 
 const SYMBOL_PARAMS: &[BuiltinParam] = &[BuiltinParam {
@@ -34,6 +39,11 @@ const MODIFY_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "session",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "adjustment",
         accepts: Accepts::SimpleString,
         optional: true,
     },

@@ -111,6 +111,18 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     same_string_constant("format.price"),
     same_string_constant("format.percent"),
     same_string_constant("format.volume"),
+    NamedStringConstant {
+        name: "adjustment.dividends",
+        value: "dividends",
+    },
+    NamedStringConstant {
+        name: "adjustment.none",
+        value: "none",
+    },
+    NamedStringConstant {
+        name: "adjustment.splits",
+        value: "splits",
+    },
     currency_string_constant("currency.AUD", "AUD"),
     currency_string_constant("currency.BDT", "BDT"),
     currency_string_constant("currency.BHD", "BHD"),
