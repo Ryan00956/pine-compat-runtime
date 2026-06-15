@@ -863,6 +863,9 @@ Current normalized output fields are:
 - `label.all`: a snapshot label-array of currently existing label ids in
   creation order. Deleted labels are omitted from subsequent reads. Mutating the
   returned array does not mutate the underlying label store.
+- `line.all`: a snapshot line-array of currently existing line ids in creation
+  order. Deleted lines are omitted from subsequent reads. Mutating the returned
+  array does not mutate the underlying line store.
 
 Parameters such as `offset`, `show_last`, `display`, `force_overlay`, and
 `editable` do not yet transform, filter, or annotate the runtime output series.

@@ -2,7 +2,7 @@ use pine_ir::{PineType, Qualifier, ValueKind};
 
 use crate::namespaces::types::{
     SERIES_BOOL, SERIES_INT, SIMPLE_BOOL, SIMPLE_COLOR, SIMPLE_INT, SIMPLE_LABEL_ARRAY,
-    SIMPLE_STRING,
+    SIMPLE_LINE_ARRAY, SIMPLE_STRING,
 };
 
 const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
@@ -181,6 +181,7 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("chart.is_range", SIMPLE_BOOL),
     ("chart.is_renko", SIMPLE_BOOL),
     ("label.all", SIMPLE_LABEL_ARRAY),
+    ("line.all", SIMPLE_LINE_ARRAY),
     (
         "ta.accdist",
         PineType::new(Qualifier::Series, ValueKind::Float),
@@ -297,10 +298,14 @@ mod tests {
     }
 
     #[test]
-    fn registers_label_all_array_value() {
+    fn registers_drawing_all_array_values() {
         assert_eq!(
             builtin_series_value_type("label.all"),
             Some(SIMPLE_LABEL_ARRAY)
+        );
+        assert_eq!(
+            builtin_series_value_type("line.all"),
+            Some(SIMPLE_LINE_ARRAY)
         );
     }
 

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `line.all` support for exposing a snapshot array
+  of currently existing line ids while omitting deleted lines.
 - Added fixture-backed partial `label.all` support for exposing a snapshot
   array of currently existing label ids while omitting deleted labels.
 - Added fixture-backed `str.format` UTC date/time placeholder coverage for the
