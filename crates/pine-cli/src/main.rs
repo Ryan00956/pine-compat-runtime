@@ -311,6 +311,7 @@ mod tests {
             "map.*",
             "matrix.*",
             "unsupported label/line/box/table methods",
+            "linefill.*",
             "polyline.*",
             "non-int history offsets",
             "negative history offsets",
