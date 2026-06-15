@@ -1359,6 +1359,14 @@ fn reports_unsupported_array_clear_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_clear_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_clear_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_reverse_linefill_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_reverse_linefill.pine",
