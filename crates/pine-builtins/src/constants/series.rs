@@ -156,6 +156,13 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("timeframe.ismonthly", SIMPLE_BOOL),
     ("timeframe.isdwm", SIMPLE_BOOL),
     ("timeframe.multiplier", SIMPLE_INT),
+    ("chart.is_standard", SIMPLE_BOOL),
+    ("chart.is_heikinashi", SIMPLE_BOOL),
+    ("chart.is_kagi", SIMPLE_BOOL),
+    ("chart.is_linebreak", SIMPLE_BOOL),
+    ("chart.is_pnf", SIMPLE_BOOL),
+    ("chart.is_range", SIMPLE_BOOL),
+    ("chart.is_renko", SIMPLE_BOOL),
     (
         "ta.accdist",
         PineType::new(Qualifier::Series, ValueKind::Float),
@@ -202,6 +209,21 @@ mod tests {
                 builtin_series_value_type(name),
                 Some(PineType::new(Qualifier::Series, ValueKind::Int))
             );
+        }
+    }
+
+    #[test]
+    fn registers_chart_type_metadata_values() {
+        for name in [
+            "chart.is_standard",
+            "chart.is_heikinashi",
+            "chart.is_kagi",
+            "chart.is_linebreak",
+            "chart.is_pnf",
+            "chart.is_range",
+            "chart.is_renko",
+        ] {
+            assert_eq!(builtin_series_value_type(name), Some(SIMPLE_BOOL));
         }
     }
 

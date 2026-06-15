@@ -136,6 +136,20 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "timeframe.multiplier" {
             return PineValue::Int(1);
         }
+        if name == "chart.is_standard" {
+            return PineValue::Bool(true);
+        }
+        if matches!(
+            name,
+            "chart.is_heikinashi"
+                | "chart.is_kagi"
+                | "chart.is_linebreak"
+                | "chart.is_pnf"
+                | "chart.is_range"
+                | "chart.is_renko"
+        ) {
+            return PineValue::Bool(false);
+        }
         if name == "strategy.position_size" {
             return PineValue::Float(self.strategy_broker.position_size());
         }

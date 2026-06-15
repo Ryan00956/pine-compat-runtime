@@ -79,6 +79,13 @@ timeframe.isweekly -> simple bool
 timeframe.ismonthly -> simple bool
 timeframe.isdwm -> simple bool
 timeframe.multiplier -> simple int
+chart.is_standard -> simple bool
+chart.is_heikinashi -> simple bool
+chart.is_kagi -> simple bool
+chart.is_linebreak -> simple bool
+chart.is_pnf -> simple bool
+chart.is_range -> simple bool
+chart.is_renko -> simple bool
 ```
 
 `year`, `month`, `weekofyear`, `dayofmonth`, `dayofweek`, `hour`, `minute`,
@@ -88,6 +95,13 @@ timezone metadata exists. `dayofweek.sunday` through `dayofweek.saturday`
 evaluate to const ints `1` through `7`; `weekofyear` uses the UTC ISO week
 number in the current subset. `time_close` uses the fixed default 1-minute
 chart timeframe and returns `time + 60000`.
+
+The current chart type metadata subset assumes a standard bars/candles-style
+chart: `chart.is_standard` is `true`, while `chart.is_heikinashi`,
+`chart.is_kagi`, `chart.is_linebreak`, `chart.is_pnf`, `chart.is_range`, and
+`chart.is_renko` are `false`. Host-owned viewport and appearance metadata such
+as visible bar times and chart colors are not implemented by this fixed
+chart-type subset.
 
 Bar state:
 

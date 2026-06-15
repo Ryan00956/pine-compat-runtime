@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed fixed-default chart type metadata variables:
+  `chart.is_standard`, `chart.is_heikinashi`, `chart.is_kagi`,
+  `chart.is_linebreak`, `chart.is_pnf`, `chart.is_range`, and
+  `chart.is_renko`.
 - Added fixture-backed `syminfo.prefix(symbol)` and `syminfo.ticker(symbol)`
   simple-string helpers while preserving the existing fixed default
   `syminfo.prefix` and `syminfo.ticker` variables.

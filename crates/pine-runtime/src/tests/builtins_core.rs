@@ -110,6 +110,38 @@ plot(syminfo.mintick == syminfo.minmove / syminfo.pricescale and syminfo.pointva
 }
 
 #[test]
+fn runs_chart_type_metadata() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("chart type metadata")
+plot(chart.is_standard ? 1 : 0)
+plot(chart.is_heikinashi ? 1 : 0)
+plot(chart.is_kagi ? 1 : 0)
+plot(chart.is_linebreak ? 1 : 0)
+plot(chart.is_pnf ? 1 : 0)
+plot(chart.is_range ? 1 : 0)
+plot(chart.is_renko ? 1 : 0)
+plot(chart.is_standard and not chart.is_heikinashi and not chart.is_kagi and not chart.is_linebreak and not chart.is_pnf and not chart.is_range and not chart.is_renko ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result =
+        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)]).expect("result");
+
+    assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
+    for plot in &result.plots[1..7] {
+        assert_values_close(&plot.values, &[0.0, 0.0]);
+    }
+    assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
+}
+
+#[test]
 fn runs_type_casts() {
     let source = SourceFile::new(
         "test.pine",

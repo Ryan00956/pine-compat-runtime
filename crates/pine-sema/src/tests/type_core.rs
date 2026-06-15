@@ -881,6 +881,40 @@ plot(identity and details and session and classification and helpers ? scale : 0
 }
 
 #[test]
+fn accepts_chart_type_metadata() {
+    let analysis = analyze(
+        r#"indicator("chart type metadata")
+is_standard = chart.is_standard and not chart.is_heikinashi and not chart.is_kagi and not chart.is_linebreak and not chart.is_pnf and not chart.is_range and not chart.is_renko
+plot(is_standard ? 1 : 0)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    for feature in [
+        "chart.is_standard",
+        "chart.is_heikinashi",
+        "chart.is_kagi",
+        "chart.is_linebreak",
+        "chart.is_pnf",
+        "chart.is_range",
+        "chart.is_renko",
+    ] {
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == feature),
+            "{feature} not reported as supported"
+        );
+    }
+}
+
+#[test]
 fn accepts_if_tuple_declaration_shadowing_outer_symbols() {
     let analysis =
         analyze("x = close\ny = close\nif close > open\n    [x, y] = [high, low]\nplot(x)\n");

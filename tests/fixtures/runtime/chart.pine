@@ -1,0 +1,10 @@
+//@version=5
+indicator("Chart metadata")
+plot(chart.is_standard ? 1 : 0)
+plot(chart.is_heikinashi ? 1 : 0)
+plot(chart.is_kagi ? 1 : 0)
+plot(chart.is_linebreak ? 1 : 0)
+plot(chart.is_pnf ? 1 : 0)
+plot(chart.is_range ? 1 : 0)
+plot(chart.is_renko ? 1 : 0)
+plot(chart.is_standard and not chart.is_heikinashi and not chart.is_kagi and not chart.is_linebreak and not chart.is_pnf and not chart.is_range and not chart.is_renko ? 1 : 0)
