@@ -1128,7 +1128,10 @@ color.t(color: color-compatible) -> float with same qualifier
 color.from_gradient(value: numeric, bottom_value: numeric, top_value: numeric, bottom_color: color-compatible, top_color: color-compatible) -> color with strongest qualifier
 ```
 
-Named colors include the common TradingView color constants used by fixtures.
+Named colors include the common TradingView color constants used by fixtures;
+`color.orange` is fixture-backed to the official `#FF9800` RGB value. The
+remaining named color RGB values are not yet fully audited against the official
+color table.
 Hex color literals in `#RRGGBB` and `#RRGGBBAA` form are accepted as const
 colors.
 `color.new` defaults `transp` to 0 when omitted and clamps transparency to the

@@ -70,7 +70,7 @@ pub const NAMED_COLORS: &[NamedColor] = &[
     },
     NamedColor {
         name: "color.orange",
-        rgb: 0xFF9900,
+        rgb: 0xFF9800,
     },
 ];
 

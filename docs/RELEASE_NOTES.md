@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Aligned the direct `color.orange` named constant with TradingView's official
+  `#FF9800` RGB value and added fixture-backed channel coverage.
 - Added fixture-backed direct `strategy.oca.cancel`, `strategy.oca.none`, and
   `strategy.oca.reduce` string constants while keeping OCA order behavior
   unsupported.

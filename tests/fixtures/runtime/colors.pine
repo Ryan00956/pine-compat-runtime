@@ -19,10 +19,12 @@ clamped_channels = color.r(clamped) + color.g(clamped) + color.b(clamped) + colo
 clamped_transparency = color.t(clamped_opaque) + color.t(clamped_clear)
 hex_channels = color.r(hex) + color.g(hex) + color.b(hex) + color.t(hex)
 gradient_channels = color.r(gradient) + color.g(gradient) + color.b(gradient) + color.t(gradient)
+official_orange = color.r(color.orange) == 255 and color.g(color.orange) == 152 and color.b(color.orange) == 0 and color.t(color.orange) == 0
 bgcolor(custom)
 plot(close, color=shade)
 plot(opaque == color.new(color.blue, 0) ? 1 : 0)
 plot(opaque_blue == color.blue ? 1 : 0)
+plot(official_orange ? 1 : 0)
 plot(channels)
 plot(clamped_channels)
 plot(color.r(opaque_rgb) == 0 and color.g(opaque_rgb) == 128 and color.b(opaque_rgb) == 0 and color.t(opaque_rgb) == 0 ? 1 : 0)
