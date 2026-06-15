@@ -50,6 +50,7 @@ plot(barstate.ishistory ? close : 0)
 plot(barstate.isrealtime ? close : 0)
 plot(barstate.islast ? close : 0)
 plot(barstate.isnew ? close : 0)
+plot(barstate.islastconfirmedhistory ? close : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -69,6 +70,7 @@ plot(barstate.isnew ? close : 0)
     assert_values_close(&confirmed.plots[2].values, &[0.0]);
     assert_values_close(&confirmed.plots[3].values, &[1.0]);
     assert_values_close(&confirmed.plots[4].values, &[1.0]);
+    assert_values_close(&confirmed.plots[5].values, &[1.0]);
 
     let forming = runtime
         .update(BarUpdate::forming(bar(2.0)))
@@ -78,6 +80,7 @@ plot(barstate.isnew ? close : 0)
     assert_values_close(&forming.plots[2].values, &[0.0, 2.0]);
     assert_values_close(&forming.plots[3].values, &[1.0, 2.0]);
     assert_values_close(&forming.plots[4].values, &[1.0, 2.0]);
+    assert_values_close(&forming.plots[5].values, &[1.0, 0.0]);
 
     let forming = runtime
         .update(BarUpdate::forming(bar(4.0)))
@@ -87,6 +90,7 @@ plot(barstate.isnew ? close : 0)
     assert_values_close(&forming.plots[2].values, &[0.0, 4.0]);
     assert_values_close(&forming.plots[3].values, &[1.0, 4.0]);
     assert_values_close(&forming.plots[4].values, &[1.0, 0.0]);
+    assert_values_close(&forming.plots[5].values, &[1.0, 0.0]);
 
     let confirmed = runtime
         .update(BarUpdate::confirmed(bar(3.0)))
@@ -96,6 +100,7 @@ plot(barstate.isnew ? close : 0)
     assert_values_close(&confirmed.plots[2].values, &[0.0, 3.0]);
     assert_values_close(&confirmed.plots[3].values, &[1.0, 3.0]);
     assert_values_close(&confirmed.plots[4].values, &[1.0, 0.0]);
+    assert_values_close(&confirmed.plots[5].values, &[1.0, 0.0]);
 }
 
 #[test]

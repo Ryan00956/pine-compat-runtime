@@ -123,6 +123,7 @@ Bar state:
 ```text
 barstate.isfirst -> series bool
 barstate.islast -> series bool
+barstate.islastconfirmedhistory -> series bool
 barstate.isnew -> series bool
 barstate.isconfirmed -> series bool
 barstate.ishistory -> series bool
@@ -133,6 +134,12 @@ barstate.isrealtime -> series bool
 `barstate.islast` is `true` on the last known bar in finite historical batch
 execution and on current realtime updates. Open-ended `append_bar` historical
 updates treat the appended bar as the latest known bar.
+`barstate.islastconfirmedhistory` is `true` on the last known confirmed
+historical bar in finite historical batch execution. Open-ended `append_bar`
+historical updates treat the appended historical bar as the current last
+confirmed historical bar. Forming and confirmed realtime updates return
+`false`; host-owned market-open repaint behavior that would mark the bar
+immediately preceding a realtime bar is not expanded by this subset.
 `barstate.isnew` is `true` for historical bars and for the first realtime
 update of a new bar. Subsequent forming updates for the same realtime bar and
 the confirming update after a forming update return `false`.

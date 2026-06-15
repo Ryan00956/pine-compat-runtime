@@ -130,6 +130,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Bool),
     ),
     (
+        "barstate.islastconfirmedhistory",
+        PineType::new(Qualifier::Series, ValueKind::Bool),
+    ),
+    (
         "barstate.isnew",
         PineType::new(Qualifier::Series, ValueKind::Bool),
     ),
@@ -263,6 +267,21 @@ mod tests {
             "session.islastbar",
             "session.isfirstbar_regular",
             "session.islastbar_regular",
+        ] {
+            assert_eq!(builtin_series_value_type(name), Some(SERIES_BOOL));
+        }
+    }
+
+    #[test]
+    fn registers_barstate_values() {
+        for name in [
+            "barstate.isfirst",
+            "barstate.islast",
+            "barstate.islastconfirmedhistory",
+            "barstate.isnew",
+            "barstate.isconfirmed",
+            "barstate.ishistory",
+            "barstate.isrealtime",
         ] {
             assert_eq!(builtin_series_value_type(name), Some(SERIES_BOOL));
         }

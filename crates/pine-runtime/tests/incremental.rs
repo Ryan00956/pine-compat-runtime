@@ -83,6 +83,7 @@ fn runtime_fixtures_match_incremental_append_execution() {
 
         let text = fs::read_to_string(&path).expect("fixture should be readable");
         let has_latest_known_bar_state = text.contains("barstate.islast")
+            || text.contains("barstate.islastconfirmedhistory")
             || text.contains("session.islastbar")
             || text.contains("session.islastbar_regular")
             || text.contains("last_bar_index")

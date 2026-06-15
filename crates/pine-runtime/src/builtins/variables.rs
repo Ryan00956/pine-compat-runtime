@@ -67,6 +67,9 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "barstate.islast" {
             return PineValue::Bool(self.is_latest_known_bar());
         }
+        if name == "barstate.islastconfirmedhistory" {
+            return PineValue::Bool(self.is_last_confirmed_history_bar());
+        }
         if name == "barstate.isnew" {
             return PineValue::Bool(self.current_bar_is_new);
         }
@@ -326,6 +329,13 @@ impl<'a> HistoricalRuntime<'a> {
                 .historical_end
                 .is_none_or(|historical_end| self.bars + 1 == historical_end),
             BarUpdateKind::Forming | BarUpdateKind::Confirmed => true,
+        }
+    }
+
+    fn is_last_confirmed_history_bar(&self) -> bool {
+        match self.current_bar_update_kind {
+            BarUpdateKind::Historical => self.is_latest_known_bar(),
+            BarUpdateKind::Forming | BarUpdateKind::Confirmed => false,
         }
     }
 }

@@ -335,6 +335,7 @@ fn runs_barstate_isfirst_over_historical_bars() {
         r#"indicator("barstate")
 plot(barstate.isfirst ? 1 : 0)
 plot(barstate.islast ? 1 : 0)
+plot(barstate.islastconfirmedhistory ? 1 : 0)
 plot(barstate.isnew ? 1 : 0)
 plot(barstate.isconfirmed ? 1 : 0)
 plot(barstate.ishistory ? 1 : 0)
@@ -363,20 +364,21 @@ plot(syminfo.session == session.extended ? 1 : 0)
 
     assert_values_close(&result.plots[0].values, &[1.0, 0.0, 0.0]);
     assert_values_close(&result.plots[1].values, &[0.0, 0.0, 1.0]);
-    assert_values_close(&result.plots[2].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[2].values, &[0.0, 0.0, 1.0]);
     assert_values_close(&result.plots[3].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[4].values, &[1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[5].values, &[0.0, 0.0, 0.0]);
-    assert_values_close(&result.plots[6].values, &[1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[7].values, &[0.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[5].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[6].values, &[0.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[7].values, &[1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[8].values, &[0.0, 0.0, 0.0]);
-    assert_values_close(&result.plots[9].values, &[1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[10].values, &[1.0, 0.0, 0.0]);
-    assert_values_close(&result.plots[11].values, &[0.0, 0.0, 1.0]);
-    assert_values_close(&result.plots[12].values, &[1.0, 0.0, 0.0]);
-    assert_values_close(&result.plots[13].values, &[0.0, 0.0, 1.0]);
-    assert_values_close(&result.plots[14].values, &[1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[15].values, &[0.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[9].values, &[0.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[10].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[11].values, &[1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[12].values, &[0.0, 0.0, 1.0]);
+    assert_values_close(&result.plots[13].values, &[1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[14].values, &[0.0, 0.0, 1.0]);
+    assert_values_close(&result.plots[15].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[16].values, &[0.0, 0.0, 0.0]);
 }
 
 #[test]

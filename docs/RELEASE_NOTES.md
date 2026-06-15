@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `barstate.islastconfirmedhistory` for the current
+  runtime's last known confirmed historical bar.
 - Added fixture-backed `last_bar_index` and `last_bar_time` series variables
   for the last known loaded chart bar in the current runtime dataset.
 - Added fixture-backed fixed-default chart viewport metadata variables:
