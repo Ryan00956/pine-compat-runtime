@@ -149,3 +149,20 @@ for i = 0 to 1
     else
         loop_percentile_results.push(loop_percentile_source.percentile_linear_interpolation(25))
 plot(loop_percentile_results.get(0) * 10 + loop_percentile_results.get(1))
+
+branch_percentrank_source = array.from(1, 3, 5, 7)
+branch_percentrank_results = array.new_float()
+if bar_index % 2 == 0
+    branch_percentrank_results.push(array.percentrank(branch_percentrank_source, 1) + branch_percentrank_source.percentrank(2))
+else
+    branch_percentrank_results.push(branch_percentrank_source.percentrank(0) * 10 + array.percentrank(branch_percentrank_source, 3))
+plot(branch_percentrank_results.get(0))
+
+loop_percentrank_source = array.from(2.0, 4.0, na, 8.0)
+loop_percentrank_results = array.new_float()
+for i = 0 to 1
+    if i == 0
+        loop_percentrank_results.push(array.percentrank(loop_percentrank_source, 1))
+    else
+        loop_percentrank_results.push(loop_percentrank_source.percentrank(3))
+plot(loop_percentrank_results.get(0) + loop_percentrank_results.get(1))
