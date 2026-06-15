@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed computed-bound coverage for `array.slice` while keeping
+  Pine's shallow parent-window slice semantics unsupported.
 - Added fixture-backed computed-index and computed-range coverage for
   `array.insert`, `array.remove`, and `array.fill` scalar-array operands.
 - Added fixture-backed computed-size constructor coverage for label, line, box,

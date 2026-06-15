@@ -96,3 +96,10 @@ plot(empty_bool_target.size() == source_bool_size and empty_bool_target.get(0) =
 empty_window = ints.slice(2, 2)
 plot(empty_window.size())
 plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(ints, 2, 1)) ? 1 : 0)
+
+slice_from = 1
+slice_to = 3
+computed_slice_source = array.from(4, 5, 6, 7)
+computed_slice = computed_slice_source.slice(slice_from, slice_to + 0)
+computed_slice.set(0, 50)
+plot(computed_slice.size() * 100 + computed_slice.get(0) + computed_slice.get(1) + computed_slice_source.get(slice_from))
