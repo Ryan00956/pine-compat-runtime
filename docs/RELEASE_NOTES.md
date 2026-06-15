@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Added fixture-backed branch and loop control-flow coverage for
+  `array.percentile_nearest_rank` and
+  `array.percentile_linear_interpolation`.
+- Added fixture-backed branch and loop control-flow coverage for
   `array.median` and `array.mode`.
 - Added fixture-backed branch and loop control-flow coverage for `array.sum`,
   `array.avg`, and `array.range`.

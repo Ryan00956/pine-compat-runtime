@@ -132,3 +132,20 @@ for i = 0 to 1
     else
         loop_median_mode_results.push(loop_median_mode_source.mode())
 plot(loop_median_mode_results.get(0) * 10 + loop_median_mode_results.get(1))
+
+branch_percentile_source = array.from(1, 3, 5, 7)
+branch_percentile_results = array.new_float()
+if bar_index % 2 == 0
+    branch_percentile_results.push(array.percentile_nearest_rank(branch_percentile_source, 50) + branch_percentile_source.percentile_linear_interpolation(50))
+else
+    branch_percentile_results.push(branch_percentile_source.percentile_nearest_rank(75) * 10 + array.percentile_linear_interpolation(branch_percentile_source, 25))
+plot(branch_percentile_results.get(0))
+
+loop_percentile_source = array.from(2.0, 4.0, 8.0, 10.0)
+loop_percentile_results = array.new_float()
+for i = 0 to 1
+    if i == 0
+        loop_percentile_results.push(array.percentile_nearest_rank(loop_percentile_source, 75))
+    else
+        loop_percentile_results.push(loop_percentile_source.percentile_linear_interpolation(25))
+plot(loop_percentile_results.get(0) * 10 + loop_percentile_results.get(1))
