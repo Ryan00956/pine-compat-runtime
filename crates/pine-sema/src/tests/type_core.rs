@@ -889,7 +889,8 @@ fn accepts_chart_type_metadata() {
     let analysis = analyze(
         r#"indicator("chart type metadata")
 is_standard = chart.is_standard and not chart.is_heikinashi and not chart.is_kagi and not chart.is_linebreak and not chart.is_pnf and not chart.is_range and not chart.is_renko
-plot(is_standard ? 1 : 0)
+appearance = color.r(chart.bg_color) == 255 and color.g(chart.bg_color) == 255 and color.b(chart.bg_color) == 255 and color.t(chart.bg_color) == 0 and color.r(chart.fg_color) == 0 and color.g(chart.fg_color) == 0 and color.b(chart.fg_color) == 0 and color.t(chart.fg_color) == 0
+plot(is_standard and appearance ? 1 : 0)
 "#,
     );
 
@@ -899,6 +900,8 @@ plot(is_standard ? 1 : 0)
         analysis.diagnostics
     );
     for feature in [
+        "chart.bg_color",
+        "chart.fg_color",
         "chart.is_standard",
         "chart.is_heikinashi",
         "chart.is_kagi",

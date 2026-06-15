@@ -1,6 +1,6 @@
 use pine_ir::{PineType, Qualifier, ValueKind};
 
-use crate::namespaces::types::{SERIES_BOOL, SIMPLE_BOOL, SIMPLE_INT, SIMPLE_STRING};
+use crate::namespaces::types::{SERIES_BOOL, SIMPLE_BOOL, SIMPLE_COLOR, SIMPLE_INT, SIMPLE_STRING};
 
 const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     (
@@ -160,6 +160,8 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("timeframe.ismonthly", SIMPLE_BOOL),
     ("timeframe.isdwm", SIMPLE_BOOL),
     ("timeframe.multiplier", SIMPLE_INT),
+    ("chart.bg_color", SIMPLE_COLOR),
+    ("chart.fg_color", SIMPLE_COLOR),
     ("chart.is_standard", SIMPLE_BOOL),
     ("chart.is_heikinashi", SIMPLE_BOOL),
     ("chart.is_kagi", SIMPLE_BOOL),
@@ -228,6 +230,13 @@ mod tests {
             "chart.is_renko",
         ] {
             assert_eq!(builtin_series_value_type(name), Some(SIMPLE_BOOL));
+        }
+    }
+
+    #[test]
+    fn registers_chart_appearance_metadata_values() {
+        for name in ["chart.bg_color", "chart.fg_color"] {
+            assert_eq!(builtin_series_value_type(name), Some(SIMPLE_COLOR));
         }
     }
 

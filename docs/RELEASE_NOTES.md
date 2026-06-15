@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed fixed-default chart appearance metadata variables:
+  `chart.bg_color` and `chart.fg_color`.
 - Added fixture-backed fixed-default regular-session boundary variables:
   `session.isfirstbar`, `session.islastbar`,
   `session.isfirstbar_regular`, and `session.islastbar_regular`.

@@ -47,6 +47,8 @@ timeframe.isweekly	supported	fixed default chart timeframe metadata subset	tests
 timeframe.ismonthly	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
 timeframe.isdwm	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
 timeframe.multiplier	supported	fixed default chart timeframe multiplier subset	tests/fixtures/runtime/timeframe.pine
+chart.bg_color	supported	fixed default chart appearance color subset; returns opaque white until host-provided chart appearance is available	tests/fixtures/runtime/chart.pine
+chart.fg_color	supported	fixed default chart appearance color subset; returns opaque black contrasting the fixed white background until host-provided chart appearance is available	tests/fixtures/runtime/chart.pine
 chart.is_standard	supported	fixed default standard chart type metadata subset; true while non-standard chart type flags are false	tests/fixtures/runtime/chart.pine
 chart.is_heikinashi	supported	fixed default standard chart type metadata subset; false while chart.is_standard is true	tests/fixtures/runtime/chart.pine
 chart.is_kagi	supported	fixed default standard chart type metadata subset; false while chart.is_standard is true	tests/fixtures/runtime/chart.pine

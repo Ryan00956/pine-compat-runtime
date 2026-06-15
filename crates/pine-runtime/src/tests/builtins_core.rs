@@ -122,6 +122,14 @@ plot(chart.is_pnf ? 1 : 0)
 plot(chart.is_range ? 1 : 0)
 plot(chart.is_renko ? 1 : 0)
 plot(chart.is_standard and not chart.is_heikinashi and not chart.is_kagi and not chart.is_linebreak and not chart.is_pnf and not chart.is_range and not chart.is_renko ? 1 : 0)
+plot(color.r(chart.bg_color))
+plot(color.g(chart.bg_color))
+plot(color.b(chart.bg_color))
+plot(color.t(chart.bg_color))
+plot(color.r(chart.fg_color))
+plot(color.g(chart.fg_color))
+plot(color.b(chart.fg_color))
+plot(color.t(chart.fg_color))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -139,6 +147,13 @@ plot(chart.is_standard and not chart.is_heikinashi and not chart.is_kagi and not
         assert_values_close(&plot.values, &[0.0, 0.0]);
     }
     assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[8].values, &[255.0, 255.0]);
+    assert_values_close(&result.plots[9].values, &[255.0, 255.0]);
+    assert_values_close(&result.plots[10].values, &[255.0, 255.0]);
+    assert_values_close(&result.plots[11].values, &[0.0, 0.0]);
+    for plot in &result.plots[12..16] {
+        assert_values_close(&plot.values, &[0.0, 0.0]);
+    }
 }
 
 #[test]

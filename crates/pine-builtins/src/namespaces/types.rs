@@ -19,6 +19,7 @@ pub(crate) const SERIES_TABLE: PineType = PineType::new(Qualifier::Series, Value
 pub(crate) const VOID: PineType = PineType::new(Qualifier::Const, ValueKind::Void);
 pub(crate) const SIMPLE_INT: PineType = PineType::new(Qualifier::Simple, ValueKind::Int);
 pub(crate) const SIMPLE_BOOL: PineType = PineType::new(Qualifier::Simple, ValueKind::Bool);
+pub(crate) const SIMPLE_COLOR: PineType = PineType::new(Qualifier::Simple, ValueKind::Color);
 pub(crate) const SIMPLE_STRING: PineType = PineType::new(Qualifier::Simple, ValueKind::String);
 pub(crate) const SIMPLE_FLOAT_ARRAY: PineType =
     PineType::new(Qualifier::Simple, ValueKind::FloatArray);

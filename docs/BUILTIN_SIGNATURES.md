@@ -79,6 +79,8 @@ timeframe.isweekly -> simple bool
 timeframe.ismonthly -> simple bool
 timeframe.isdwm -> simple bool
 timeframe.multiplier -> simple int
+chart.bg_color -> simple color
+chart.fg_color -> simple color
 chart.is_standard -> simple bool
 chart.is_heikinashi -> simple bool
 chart.is_kagi -> simple bool
@@ -96,12 +98,13 @@ evaluate to const ints `1` through `7`; `weekofyear` uses the UTC ISO week
 number in the current subset. `time_close` uses the fixed default 1-minute
 chart timeframe and returns `time + 60000`.
 
-The current chart type metadata subset assumes a standard bars/candles-style
-chart: `chart.is_standard` is `true`, while `chart.is_heikinashi`,
-`chart.is_kagi`, `chart.is_linebreak`, `chart.is_pnf`, `chart.is_range`, and
-`chart.is_renko` are `false`. Host-owned viewport and appearance metadata such
-as visible bar times and chart colors are not implemented by this fixed
-chart-type subset.
+The current chart metadata subset assumes a standard bars/candles-style chart
+with a fixed light appearance: `chart.bg_color` is opaque white and
+`chart.fg_color` is opaque black. `chart.is_standard` is `true`, while
+`chart.is_heikinashi`, `chart.is_kagi`, `chart.is_linebreak`, `chart.is_pnf`,
+`chart.is_range`, and `chart.is_renko` are `false`. Host-owned viewport
+metadata such as visible bar times and configurable chart appearance are not
+implemented by this fixed chart metadata subset.
 
 Bar state:
 

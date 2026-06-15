@@ -136,6 +136,12 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "timeframe.multiplier" {
             return PineValue::Int(1);
         }
+        if name == "chart.bg_color" {
+            return PineValue::Color(0xFFFFFF);
+        }
+        if name == "chart.fg_color" {
+            return PineValue::Color(0x000000);
+        }
         if name == "chart.is_standard" {
             return PineValue::Bool(true);
         }
