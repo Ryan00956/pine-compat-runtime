@@ -59,3 +59,6 @@ plot(lines.size())
 plot(close)
 plot(line_concat_checks.size() == 2 and line_concat_checks.get(0) and line_concat_checks.get(1) ? 1 : 0)
 plot(line_clear_checks.size() == 2 and line_clear_checks.get(0) and line_clear_checks.get(1) ? 1 : 0)
+line_slot_count = 1
+computed_lines = array.new_line(line_slot_count + 1)
+plot(computed_lines.size() + (na(computed_lines.get(line_slot_count)) ? 1 : 0))

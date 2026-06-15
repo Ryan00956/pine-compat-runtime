@@ -59,3 +59,6 @@ plot(boxes.size())
 plot(close)
 plot(box_concat_checks.size() == 2 and box_concat_checks.get(0) and box_concat_checks.get(1) ? 1 : 0)
 plot(box_clear_checks.size() == 2 and box_clear_checks.get(0) and box_clear_checks.get(1) ? 1 : 0)
+box_slot_count = 1
+computed_boxes = array.new_box(box_slot_count + 1)
+plot(computed_boxes.size() + (na(computed_boxes.get(box_slot_count)) ? 1 : 0))

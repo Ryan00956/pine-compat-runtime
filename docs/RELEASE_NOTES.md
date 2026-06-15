@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed computed-size constructor coverage for label, line, box,
+  and table id arrays while keeping linefill/polyline arrays unsupported.
 - Added fixture-backed computed-size constructor coverage for int, bool, string,
   and color arrays.
 - Aligned `str.pos` runtime behavior with Pine's `na` substring rule: a `na`

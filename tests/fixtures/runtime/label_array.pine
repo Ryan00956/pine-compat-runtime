@@ -59,3 +59,6 @@ plot(labels.size())
 plot(close)
 plot(label_concat_checks.size() == 2 and label_concat_checks.get(0) and label_concat_checks.get(1) ? 1 : 0)
 plot(label_clear_checks.size() == 2 and label_clear_checks.get(0) and label_clear_checks.get(1) ? 1 : 0)
+label_slot_count = 1
+computed_labels = array.new_label(label_slot_count + 1)
+plot(computed_labels.size() + (na(computed_labels.get(label_slot_count)) ? 1 : 0))
