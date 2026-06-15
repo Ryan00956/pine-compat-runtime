@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch and loop control-flow construction coverage for
+  `array.new_bool`.
+- Added fixture-backed branch and loop control-flow construction coverage for
   `array.new_int`.
 - Added fixture-backed branch and loop control-flow construction coverage for
   `array.new_float`.
