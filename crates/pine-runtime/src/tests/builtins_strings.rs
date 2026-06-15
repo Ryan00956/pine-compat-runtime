@@ -126,6 +126,8 @@ formatted_time_day_of_year = str.format_time(1609459200000, "D DD DDD", "UTC")
 formatted_time_day_of_year_later = str.format_time(1612235045000, "D DDD", "UTC")
 formatted_time_weekday = str.format_time(1609459200000, "E EEEE", "UTC")
 formatted_time_weekday_later = str.format_time(1612235045000, "EEE EEEE", "UTC")
+formatted_time_week_of_year = str.format_time(1609459200000, "w ww", "UTC")
+formatted_time_week_of_year_later = str.format_time(1612235045000, "w ww", "UTC")
 formatted_time_na_format = str.format_time(1609459200000, na)
 formatted_time_na_timezone = str.format_time(1609459200000, "HH:mm:ssZ", na)
 missing_format_time = str.format_time(na)
@@ -163,6 +165,7 @@ plot(formatted_time_alias == "00:00:00+0000" and formatted_time_gmt_alias == "00
 plot(formatted_time_fixed_east == "2021-01-01 04:00:00+0400" and formatted_time_fixed_west == "2020-12-31 19:00:00-0500" and formatted_time_numeric_offset == "05:30:00+0530" ? 1 : 0)
 plot(formatted_time_day_of_year == "1 01 001" and formatted_time_day_of_year_later == "33 033" ? 1 : 0)
 plot(formatted_time_weekday == "Fri Friday" and formatted_time_weekday_later == "Tue Tuesday" ? 1 : 0)
+plot(formatted_time_week_of_year == "53 53" and formatted_time_week_of_year_later == "5 05" ? 1 : 0)
 "##,
     );
     let analysis = analyze_source(&source);

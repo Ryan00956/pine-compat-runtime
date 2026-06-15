@@ -232,6 +232,7 @@ pub(crate) fn format_datetime_with_offset(
             'd' => push_padded_or_plain(&mut result, datetime.day(), count),
             'D' => push_padded_or_plain(&mut result, datetime.ordinal(), count),
             'E' => result.push_str(format_weekday(datetime.weekday(), count)),
+            'w' => push_padded_or_plain(&mut result, datetime.iso_week().week(), count),
             'H' => push_padded_or_plain(&mut result, datetime.hour(), count),
             'h' => {
                 let hour = match datetime.hour() % 12 {
