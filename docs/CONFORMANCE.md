@@ -810,7 +810,9 @@ Supported drawing creation, mutation, cloning, getter, and cell writes are cover
 changes, and drawing side effects inside user-defined functions are rejected
 under the existing side-effect policy. Keep unsupported coordinate modes and advanced object
 methods out of the supported matrix until they have fixtures and public-output
-coverage. `polyline.*` remains explicitly unsupported because it needs a
+coverage. `linefill.*` remains explicitly unsupported because it needs a
+linefill object store over supported line ids plus linefill collection
+semantics. `polyline.*` remains explicitly unsupported because it needs a
 fixture-backed point-object and point-array design; see
 `docs/PHASE_E_POLYLINE_GATE.md`.
 

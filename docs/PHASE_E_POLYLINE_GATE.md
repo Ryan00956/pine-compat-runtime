@@ -27,4 +27,6 @@ future point-object design:
 4. Then add `polyline.new` fixtures and matrix rows as partial support.
 
 Until then, `polyline.*` remains an explicit unsupported conformance row backed
-by `tests/fixtures/sema/unsupported_drawing.pine`.
+by `tests/fixtures/sema/unsupported_polyline.pine`, with `polyline.all`
+collection coverage backed by
+`tests/fixtures/sema/unsupported_polyline_all.pine`.

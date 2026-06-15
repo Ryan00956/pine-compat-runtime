@@ -70,6 +70,8 @@ truth for supported drawing claims.
   and row dimensions, with `table.cell` text/background/text-color writes.
 - Supported label, line, box, and table id-first functions also accept Pine
   method-call syntax as aliases for their namespace-call forms.
+- `linefill.*` is unsupported until the runtime has a linefill object store
+  over supported line ids plus collection semantics.
 - `polyline.*` is unsupported and has a dedicated design note in
   `docs/PHASE_E_POLYLINE_GATE.md`.
 
@@ -123,8 +125,8 @@ Runtime limits are deterministic:
 - Python binding tests assert representative `labels`, `lines`, `boxes`, and
   `tables` dictionary output. WASM tests assert the top-level drawing keys.
 - The matrix JSON snapshot includes separate rows for every supported drawing
-  method group and explicit unsupported rows for advanced drawing methods and
-  `polyline.*`.
+  method group and explicit unsupported rows for advanced drawing methods,
+  `linefill.*`, and `polyline.*`.
 
 ## Verification Results
 
@@ -152,6 +154,8 @@ dispatch module is 58 lines, and family modules are 164-280 lines.
 
 These are not blockers for closing Phase E:
 
+- `linefill.*` remains unsupported until the runtime has linefill object ids,
+  line-id binding semantics, and linefill collection support.
 - `polyline.*` remains unsupported until the runtime has `chart.point` values
   and typed point-list arrays.
 - Advanced label, line, box, and table methods remain diagnostic-only until

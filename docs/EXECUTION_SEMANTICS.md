@@ -1032,8 +1032,10 @@ rendering metadata:
 
 Accepted metadata such as `offset`, `show_last`, `display`, `force_overlay`,
 and `editable` does not yet transform, filter, or annotate these output series.
-`polyline.*` remains unsupported until `chart.point` values and point-list
-arrays have a fixture-backed execution model.
+`linefill.*` remains unsupported until linefill objects have a runtime store
+that binds supported line ids and collection semantics. `polyline.*` remains
+unsupported until `chart.point` values and point-list arrays have a
+fixture-backed execution model.
 
 ## Determinism
 
