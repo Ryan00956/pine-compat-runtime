@@ -326,13 +326,13 @@ time(timeframe: simple string, session?: string-compatible, timezone?: string-co
 time_close(timeframe: simple string, session?: string-compatible, timezone?: string-compatible, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
 ```
 
-For now, calendar component functions support UTC/GMT/numeric fixed-offset
-`timezone` arguments, while `str.format_time`, `time`, and `time_close` use a
-UTC-only timezone subset; unsupported time zones are runtime errors. The
-component variables still use the runtime's UTC bar-time view while exchange
-timezone defaults remain unsupported. `timestamp` currently supports numeric
-calendar arguments with an optional UTC/GMT/numeric fixed-offset `timezone`
-argument, including named calendar parameters and normalized
+For now, calendar component functions and `str.format_time` support
+UTC/GMT/numeric fixed-offset `timezone` arguments, while `time` and
+`time_close` use a UTC-only timezone subset; unsupported time zones are runtime
+errors. The component variables still use the runtime's UTC bar-time view while
+exchange timezone defaults remain unsupported. `timestamp` currently supports
+numeric calendar arguments with an optional UTC/GMT/numeric fixed-offset
+`timezone` argument, including named calendar parameters and normalized
 zero/negative/overflow `month`, `day`, `hour`, `minute`, and `second` offsets.
 Omitted hour/minute/second default to 0, `na` inputs return `na`, and timestamp
 values outside the UTC datetime range are runtime errors. The
@@ -1406,13 +1406,12 @@ the first matched substring, an empty string when there is no match, `na` for
 `str.split` splits by a literal separator and returns a string array. Empty
 separators split the source into Unicode scalar values. It returns `na` for
 `na` inputs and errors if the result would exceed 100,000 array elements.
-`str.format_time` supports UNIX timestamps in milliseconds and a UTC-only
-timezone subset (`UTC`, `Etc/UTC`, `GMT`, `Z`, `+0000`, `-0000`, `+00:00`,
-`-00:00`, and zero-offset `UTC`/`GMT` offset aliases). Omitted or
-`na` `format` defaults to `yyyy-MM-dd'T'HH:mm:ssZ`. Supported tokens include
-`y`/`Y`, `M`, `d`, `H`, `h`, `m`, `s`, `S`, `a`, `Z`, and single-quoted
-literals. Other time zones are runtime errors until exchange/IANA timezone
-support is designed.
+`str.format_time` supports UNIX timestamps in milliseconds and UTC/GMT/numeric
+fixed-offset timezone strings such as `UTC+4`, `GMT-5`, and `+05:30`. Omitted
+or `na` `format` defaults to `yyyy-MM-dd'T'HH:mm:ssZ`; omitted or `na`
+`timezone` defaults to UTC. Supported tokens include `y`/`Y`, `M`, `d`, `H`,
+`h`, `m`, `s`, `S`, `a`, `Z`, and single-quoted literals. IANA and exchange
+timezone conversion remain unsupported.
 
 ## Math
 

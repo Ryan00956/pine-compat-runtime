@@ -198,6 +198,14 @@ pub(crate) fn utc_datetime_from_millis(timestamp: i64) -> Result<DateTime<Utc>, 
 }
 
 pub(crate) fn format_utc_datetime(datetime: DateTime<Utc>, format: &str) -> String {
+    format_datetime_with_offset(datetime, format, "+0000")
+}
+
+pub(crate) fn format_datetime_with_offset(
+    datetime: DateTime<Utc>,
+    format: &str,
+    timezone_offset: &str,
+) -> String {
     let mut result = String::new();
     let mut chars = format.chars().peekable();
     while let Some(ch) = chars.next() {
@@ -234,7 +242,7 @@ pub(crate) fn format_utc_datetime(datetime: DateTime<Utc>, format: &str) -> Stri
             's' => push_padded_or_plain(&mut result, datetime.second(), count),
             'S' => result.push_str(&format_millis(datetime.timestamp_subsec_millis(), count)),
             'a' => result.push_str(if datetime.hour() < 12 { "AM" } else { "PM" }),
-            'Z' => result.push_str("+0000"),
+            'Z' => result.push_str(timezone_offset),
             other => {
                 for _ in 0..count {
                     result.push(other);
@@ -1182,7 +1190,7 @@ fn parse_timestamp_timezone_token(token: &str, original: &str) -> Result<i32, St
         .ok_or_else(|| format!("timestamp unsupported dateString `{original}`"))
 }
 
-fn parse_fixed_timezone_offset(timezone: &str) -> Option<i32> {
+pub(crate) fn parse_fixed_timezone_offset(timezone: &str) -> Option<i32> {
     let token = timezone.trim();
     if is_supported_utc_timezone(token) {
         return Some(0);
@@ -1220,4 +1228,12 @@ fn parse_timestamp_numeric_offset(offset: &str) -> Option<i32> {
         return None;
     }
     Some(sign * (hour * 3600 + minute * 60))
+}
+
+pub(crate) fn format_fixed_timezone_offset(offset_seconds: i32) -> String {
+    let sign = if offset_seconds < 0 { '-' } else { '+' };
+    let offset_seconds = offset_seconds.abs();
+    let hour = offset_seconds / 3600;
+    let minute = (offset_seconds % 3600) / 60;
+    format!("{sign}{hour:02}{minute:02}")
 }

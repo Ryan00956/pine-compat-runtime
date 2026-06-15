@@ -2,7 +2,8 @@ use pine_ir::{HirCallArg, HirExpr};
 use regex::Regex;
 
 use crate::builtins::time::{
-    format_utc_datetime, is_supported_utc_timezone, utc_datetime_from_millis,
+    format_datetime_with_offset, format_fixed_timezone_offset, format_utc_datetime,
+    parse_fixed_timezone_offset, utc_datetime_from_millis,
 };
 use crate::*;
 
@@ -697,16 +698,26 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             "UTC".to_owned()
         };
-        if !is_supported_utc_timezone(&timezone) {
-            return Err(RuntimeError {
+        let timezone_offset_seconds =
+            parse_fixed_timezone_offset(&timezone).ok_or_else(|| RuntimeError {
                 message: format!("str.format_time unsupported timezone `{timezone}`"),
-            });
-        }
+            })?;
         let datetime = utc_datetime_from_millis(timestamp).map_err(|_| RuntimeError {
             message: format!("str.format_time timestamp is out of range: {timestamp}"),
         })?;
+        let Some(offset) = chrono::Duration::try_seconds(i64::from(timezone_offset_seconds)) else {
+            return Err(RuntimeError {
+                message: format!("str.format_time unsupported timezone `{timezone}`"),
+            });
+        };
+        let Some(datetime) = datetime.checked_add_signed(offset) else {
+            return Err(RuntimeError {
+                message: format!("str.format_time timestamp is out of range: {timestamp}"),
+            });
+        };
 
-        let result = format_utc_datetime(datetime, &format);
+        let timezone_offset = format_fixed_timezone_offset(timezone_offset_seconds);
+        let result = format_datetime_with_offset(datetime, &format, &timezone_offset);
         self.string_value_or_error(result, "str.format_time")
     }
 
