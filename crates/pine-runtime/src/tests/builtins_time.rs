@@ -277,6 +277,79 @@ plot(time_close("D", 1, 1))
 }
 
 #[test]
+fn runs_time_and_time_close_functions_with_sessions() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("time sessions")
+session_open = time("", "0001-0003")
+session_close = time_close("", "0001-0003")
+session_open_utc = time("", "0001-0003", "UTC")
+session_previous_open = time("", session = "0001-0003", bars_back = 1)
+split_session_close = time_close("", "0001-0002,0003-0004")
+plot(na(session_open) ? -1 : session_open / 60000)
+plot(na(session_close) ? -1 : session_close / 60000)
+plot(not na(time("", "0001-0003:5")) ? 1 : 0)
+plot(na(time("", "0001-0003:6")) ? 1 : 0)
+plot(na(session_open_utc) ? -1 : session_open_utc / 60000)
+plot(na(session_previous_open) ? -1 : session_previous_open / 60000)
+plot(na(split_session_close) ? -1 : split_session_close / 60000)
+plot(time("", "24x7") == time ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        Bar {
+            time: 0,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 60_000,
+            open: 2.0,
+            high: 2.0,
+            low: 2.0,
+            close: 2.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 120_000,
+            open: 3.0,
+            high: 3.0,
+            low: 3.0,
+            close: 3.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 180_000,
+            open: 4.0,
+            high: 4.0,
+            low: 4.0,
+            close: 4.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
+
+    assert_values_close(&result.plots[0].values, &[-1.0, 1.0, 2.0, -1.0]);
+    assert_values_close(&result.plots[1].values, &[-1.0, 2.0, 3.0, -1.0]);
+    assert_values_close(&result.plots[2].values, &[0.0, 1.0, 1.0, 0.0]);
+    assert_values_close(&result.plots[3].values, &[1.0, 1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[4].values, &[-1.0, 1.0, 2.0, -1.0]);
+    assert_values_close(&result.plots[5].values, &[-1.0, -1.0, 1.0, 2.0]);
+    assert_values_close(&result.plots[6].values, &[-1.0, 2.0, -1.0, 4.0]);
+    assert_values_close(&result.plots[7].values, &[1.0, 1.0, 1.0, 1.0]);
+}
+
+#[test]
 fn runs_timeframe_helpers() {
     let source = SourceFile::new(
         "test.pine",
@@ -581,6 +654,60 @@ plot(time_close("D", timeframe_bars_back = -501))
         error
             .message
             .contains("time_close timeframe_bars_back cannot reference more than 500 future bars"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_time_function_unsupported_session_timezone() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad time session timezone")
+plot(time("", "0001-0003", "America/New_York"))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected time session timezone error");
+
+    assert!(
+        error
+            .message
+            .contains("time unsupported timezone `America/New_York`"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_time_function_unsupported_session_string() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad time session")
+plot(time("", "2500-2600"))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected time session parse error");
+
+    assert!(
+        error
+            .message
+            .contains("time unsupported session `2500-2600`"),
         "{}",
         error.message
     );

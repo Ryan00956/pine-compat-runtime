@@ -296,6 +296,9 @@ pub(crate) fn is_ta_extreme_length_overload(name: &str) -> bool {
 pub(crate) fn is_ta_pivot_default_source_overload(name: &str) -> bool {
     matches!(name, "ta.pivothigh" | "ta.pivotlow")
 }
+pub(crate) fn is_time_function_overload(name: &str) -> bool {
+    matches!(name, "time" | "time_close")
+}
 pub(crate) fn is_ta_vwap_bands_call(name: &str, args: &[CallArg]) -> bool {
     name == "ta.vwap"
         && args.iter().enumerate().any(|(index, arg)| {
@@ -509,6 +512,11 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) {
+        if is_time_function_overload(signature.name) {
+            self.validate_time_function_args(signature, args, arg_types);
+            return;
+        }
+
         let required_count = signature
             .params
             .iter()
@@ -633,6 +641,209 @@ impl Analyzer {
         self.validate_indicator_args(signature, args);
         self.validate_alert_args(signature, args);
         self.validate_label_new_args(signature, args);
+    }
+
+    fn validate_time_function_args(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) {
+        if args.is_empty() {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!("`{}` expects at least 1 argument(s), got 0", signature.name),
+                Span::default(),
+            ));
+            return;
+        }
+
+        if args.len() > 5 {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!(
+                    "`{}` expects at most 5 argument(s), got {}",
+                    signature.name,
+                    args.len()
+                ),
+                args[5].span,
+            ));
+        }
+        if !args.iter().enumerate().any(|(index, arg)| {
+            arg.name.as_deref() == Some("timeframe") || (index == 0 && arg.name.is_none())
+        }) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!("`{}` expects a `timeframe` argument", signature.name),
+                args.first().map_or(Span::default(), |arg| arg.span),
+            ));
+        }
+
+        for (index, arg) in args.iter().enumerate() {
+            if let Some(name) = &arg.name {
+                let accepts = match name.as_str() {
+                    "timeframe" => Accepts::SimpleString,
+                    "session" | "timezone" => Accepts::StringCompatible,
+                    "bars_back" | "timeframe_bars_back" => Accepts::IntCompatible,
+                    _ => {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_NAME",
+                            format!("`{}` has no argument named `{name}`", signature.name),
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                };
+                self.validate_time_function_arg_type(
+                    signature.name,
+                    name,
+                    accepts,
+                    index,
+                    arg,
+                    arg_types,
+                );
+                continue;
+            }
+
+            let Some((param_name, accepts)) =
+                self.resolve_time_function_positional_arg(signature.name, args, arg_types, index)
+            else {
+                continue;
+            };
+            self.validate_time_function_arg_type(
+                signature.name,
+                param_name,
+                accepts,
+                index,
+                arg,
+                arg_types,
+            );
+        }
+    }
+
+    fn validate_time_function_arg_type(
+        &mut self,
+        function_name: &str,
+        param_name: &str,
+        accepts: Accepts,
+        index: usize,
+        arg: &CallArg,
+        arg_types: &[Option<PineType>],
+    ) {
+        let Some(arg_type) = arg_types.get(index).copied().flatten() else {
+            return;
+        };
+        if !accepts_type(accepts, arg_type) {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_TYPE",
+                format!(
+                    "`{}` argument `{}` does not accept {:?} {:?}",
+                    function_name, param_name, arg_type.qualifier, arg_type.kind
+                ),
+                arg.span,
+            ));
+        }
+    }
+
+    fn resolve_time_function_positional_arg(
+        &mut self,
+        function_name: &str,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+        index: usize,
+    ) -> Option<(&'static str, Accepts)> {
+        match index {
+            0 => Some(("timeframe", Accepts::SimpleString)),
+            1 => self.resolve_time_second_positional_arg(function_name, args, arg_types),
+            2 => self.resolve_time_third_positional_arg(function_name, args, arg_types),
+            3 => self.resolve_time_fourth_positional_arg(function_name, args, arg_types),
+            4 => Some(("timeframe_bars_back", Accepts::IntCompatible)),
+            _ => None,
+        }
+    }
+
+    fn resolve_time_second_positional_arg(
+        &mut self,
+        function_name: &str,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> Option<(&'static str, Accepts)> {
+        let arg_type = arg_types.get(1).copied().flatten()?;
+        if accepts_type(Accepts::IntCompatible, arg_type)
+            && !accepts_type(Accepts::StringCompatible, arg_type)
+        {
+            return Some(("bars_back", Accepts::IntCompatible));
+        }
+        if accepts_type(Accepts::StringCompatible, arg_type) {
+            return Some(("session", Accepts::StringCompatible));
+        }
+        self.diagnostics.push(Diagnostic::error(
+            "E_CALL_ARG_TYPE",
+            format!(
+                "`{}` second positional argument must be a session string or bars_back int",
+                function_name
+            ),
+            args[1].span,
+        ));
+        None
+    }
+
+    fn resolve_time_third_positional_arg(
+        &mut self,
+        function_name: &str,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> Option<(&'static str, Accepts)> {
+        let second_type = arg_types.get(1).copied().flatten()?;
+        let third_type = arg_types.get(2).copied().flatten()?;
+        if accepts_type(Accepts::IntCompatible, second_type)
+            && !accepts_type(Accepts::StringCompatible, second_type)
+        {
+            return Some(("timeframe_bars_back", Accepts::IntCompatible));
+        }
+        if accepts_type(Accepts::StringCompatible, third_type) {
+            return Some(("timezone", Accepts::StringCompatible));
+        }
+        if accepts_type(Accepts::IntCompatible, third_type) {
+            return Some(("bars_back", Accepts::IntCompatible));
+        }
+        self.diagnostics.push(Diagnostic::error(
+            "E_CALL_ARG_TYPE",
+            format!(
+                "`{}` third positional argument must be a timezone string or bars_back int",
+                function_name
+            ),
+            args[2].span,
+        ));
+        None
+    }
+
+    fn resolve_time_fourth_positional_arg(
+        &mut self,
+        function_name: &str,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> Option<(&'static str, Accepts)> {
+        let second_type = arg_types.get(1).copied().flatten()?;
+        let third_type = arg_types.get(2).copied().flatten()?;
+        if accepts_type(Accepts::IntCompatible, second_type)
+            && !accepts_type(Accepts::StringCompatible, second_type)
+        {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!(
+                    "`{}` positional bars_back overload expects at most 3 argument(s), got {}",
+                    function_name,
+                    args.len()
+                ),
+                args[3].span,
+            ));
+            return None;
+        }
+        if accepts_type(Accepts::StringCompatible, third_type) {
+            return Some(("bars_back", Accepts::IntCompatible));
+        }
+        Some(("timeframe_bars_back", Accepts::IntCompatible))
     }
 
     pub(crate) fn validate_label_new_args(

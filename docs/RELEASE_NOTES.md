@@ -2,14 +2,18 @@
 
 ## Unreleased
 
+- Added fixture-backed UTC time-based `session` argument support to the current
+  `time(timeframe)` and `time_close(timeframe)` subset, including `24x7`,
+  `HHmm-HHmm`, comma-separated periods, optional Pine day digits, overnight
+  periods, and session-end clipping for `time_close`, while leaving
+  IANA/exchange timezone conversion and named-session data unsupported.
 - Added fixture-backed `timeframe_bars_back` support to the current
   `time(timeframe)` and `time_close(timeframe)` subset, applying chart
   `bars_back` first and then offsetting on the requested UTC timeframe bucket
-  while leaving session and timezone arguments unsupported.
+  while leaving IANA/exchange timezone conversion unsupported.
 - Added fixture-backed `bars_back` support to the current `time(timeframe)` and
   `time_close(timeframe)` subset, using the fixed chart timeframe before UTC
-  timeframe bucket mapping while leaving session and timezone arguments
-  unsupported.
+  timeframe bucket mapping.
 - Added fixture-backed `time(timeframe)` and `time_close(timeframe)` support for
   the current fixed chart timeframe and UTC higher-timeframe bucket open/close
   timestamps; session and timezone overloads remain unsupported.

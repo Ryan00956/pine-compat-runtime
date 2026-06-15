@@ -40,6 +40,16 @@ const TIME_FUNCTION_PARAMS: &[BuiltinParam] = &[
         optional: false,
     },
     BuiltinParam {
+        name: "session",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "timezone",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
         name: "bars_back",
         accepts: Accepts::IntCompatible,
         optional: true,

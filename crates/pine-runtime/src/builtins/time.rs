@@ -281,6 +281,36 @@ pub(crate) fn format_millis(millis: u32, width: usize) -> String {
     value[..width.min(3)].to_owned()
 }
 
+struct BarTimeFunctionArgs {
+    timeframe: String,
+    session: Option<String>,
+    timezone: String,
+    bars_back: i64,
+    timeframe_bars_back: i64,
+}
+
+impl Default for BarTimeFunctionArgs {
+    fn default() -> Self {
+        Self {
+            timeframe: String::new(),
+            session: None,
+            timezone: "UTC".to_owned(),
+            bars_back: 0,
+            timeframe_bars_back: 0,
+        }
+    }
+}
+
+struct TimeSession {
+    periods: Vec<TimeSessionPeriod>,
+    days: [bool; 8],
+}
+
+struct TimeSessionPeriod {
+    start_minute: i64,
+    end_minute: i64,
+}
+
 impl<'a> HistoricalRuntime<'a> {
     pub(crate) fn eval_time_call(
         &mut self,
@@ -400,49 +430,36 @@ impl<'a> HistoricalRuntime<'a> {
         close_time: bool,
     ) -> Result<PineValue, RuntimeError> {
         let name = if close_time { "time_close" } else { "time" };
-        let Some(timeframe_arg) = time_function_arg(args, "timeframe", 0) else {
+        let Some(args) = self.eval_bar_time_function_args(args)? else {
             return Ok(PineValue::Na);
         };
-        let timeframe = match self.eval_expr(&timeframe_arg.value)? {
-            PineValue::String(value) => value,
-            PineValue::Na => return Ok(PineValue::Na),
-            _ => return Ok(PineValue::Na),
-        };
-        let bars_back = if let Some(arg) = time_function_arg(args, "bars_back", 1) {
-            match self.eval_expr(&arg.value)? {
-                PineValue::Int(value) => value,
-                PineValue::Na => return Ok(PineValue::Na),
-                _ => return Ok(PineValue::Na),
-            }
-        } else {
-            0
-        };
-        if bars_back < -500 {
+        if args.bars_back < -500 {
             return Err(RuntimeError {
                 message: format!("{name} bars_back cannot reference more than 500 future bars"),
             });
         }
-        let timeframe_bars_back =
-            if let Some(arg) = time_function_arg(args, "timeframe_bars_back", 2) {
-                match self.eval_expr(&arg.value)? {
-                    PineValue::Int(value) => value,
-                    PineValue::Na => return Ok(PineValue::Na),
-                    _ => return Ok(PineValue::Na),
-                }
-            } else {
-                0
-            };
-        if timeframe_bars_back < -500 {
+        if args.timeframe_bars_back < -500 {
             return Err(RuntimeError {
                 message: format!(
                     "{name} timeframe_bars_back cannot reference more than 500 future bars"
                 ),
             });
         }
-        let timeframe = if timeframe.is_empty() {
+        if !is_supported_utc_timezone(&args.timezone) {
+            return Err(RuntimeError {
+                message: format!("{name} unsupported timezone `{}`", args.timezone),
+            });
+        }
+        let session = match args.session.as_deref() {
+            Some("") | None => None,
+            Some(session) => Some(parse_time_session(session).ok_or_else(|| RuntimeError {
+                message: format!("{name} unsupported session `{session}`"),
+            })?),
+        };
+        let timeframe = if args.timeframe.is_empty() {
             DEFAULT_CHART_TIMEFRAME
         } else {
-            timeframe.trim()
+            args.timeframe.trim()
         };
         let Some(seconds) = timeframe_seconds(timeframe) else {
             return Err(RuntimeError {
@@ -459,7 +476,11 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} unsupported lower timeframe `{timeframe}`"),
             });
         }
-        if seconds == chart_seconds && bars_back == 0 && timeframe_bars_back == 0 {
+        if session.is_none()
+            && seconds == chart_seconds
+            && args.bars_back == 0
+            && args.timeframe_bars_back == 0
+        {
             return Ok(self
                 .current_builtin_i64(name)
                 .map(PineValue::Int)
@@ -474,7 +495,7 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
             });
         };
-        let Some(offset_ms) = bars_back.checked_mul(chart_duration_ms) else {
+        let Some(offset_ms) = args.bars_back.checked_mul(chart_duration_ms) else {
             return Err(RuntimeError {
                 message: format!("{name} bars_back timestamp is out of range"),
             });
@@ -494,23 +515,174 @@ impl<'a> HistoricalRuntime<'a> {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
             });
         };
-        let Some(bucket) = bucket.checked_sub(timeframe_bars_back) else {
+        let Some(bucket) = bucket.checked_sub(args.timeframe_bars_back) else {
             return Err(RuntimeError {
                 message: format!("{name} timeframe_bars_back timestamp is out of range"),
             });
         };
-        let bucket = if close_time {
-            bucket.checked_add(1)
-        } else {
-            Some(bucket)
-        };
-        let Some(bucket) = bucket.and_then(|value| value.checked_mul(duration_ms)) else {
+        let Some(open_time) = bucket.checked_mul(duration_ms) else {
             return Err(RuntimeError {
                 message: format!("{name} timestamp is out of range for timeframe `{timeframe}`"),
             });
         };
+        let Some(close_timestamp) = bucket
+            .checked_add(1)
+            .and_then(|value| value.checked_mul(duration_ms))
+        else {
+            return Err(RuntimeError {
+                message: format!("{name} timestamp is out of range for timeframe `{timeframe}`"),
+            });
+        };
+        if let Some(session) = session {
+            let Some(session_close) =
+                session_close_for_bar_open(open_time, close_timestamp, &session)?
+            else {
+                return Ok(PineValue::Na);
+            };
+            return Ok(PineValue::Int(if close_time {
+                session_close
+            } else {
+                open_time
+            }));
+        }
 
-        Ok(PineValue::Int(bucket))
+        Ok(PineValue::Int(if close_time {
+            close_timestamp
+        } else {
+            open_time
+        }))
+    }
+
+    fn eval_bar_time_function_args(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<Option<BarTimeFunctionArgs>, RuntimeError> {
+        let mut parsed = BarTimeFunctionArgs::default();
+        let mut positional = Vec::new();
+        let mut saw_timeframe = false;
+        for arg in args {
+            if let Some(name) = arg.name.as_deref() {
+                match name {
+                    "timeframe" => {
+                        let Some(value) = self.eval_time_function_string_arg(arg)? else {
+                            return Ok(None);
+                        };
+                        parsed.timeframe = value;
+                        saw_timeframe = true;
+                    }
+                    "session" => {
+                        let Some(value) = self.eval_time_function_string_arg(arg)? else {
+                            return Ok(None);
+                        };
+                        parsed.session = Some(value);
+                    }
+                    "timezone" => {
+                        let Some(value) = self.eval_time_function_string_arg(arg)? else {
+                            return Ok(None);
+                        };
+                        parsed.timezone = value;
+                    }
+                    "bars_back" => {
+                        let Some(value) = self.eval_time_function_int_arg(arg)? else {
+                            return Ok(None);
+                        };
+                        parsed.bars_back = value;
+                    }
+                    "timeframe_bars_back" => {
+                        let Some(value) = self.eval_time_function_int_arg(arg)? else {
+                            return Ok(None);
+                        };
+                        parsed.timeframe_bars_back = value;
+                    }
+                    _ => {}
+                }
+            } else {
+                positional.push(arg);
+            }
+        }
+
+        if let Some(timeframe_arg) = positional.first() {
+            let Some(timeframe) = self.eval_time_function_string_arg(timeframe_arg)? else {
+                return Ok(None);
+            };
+            parsed.timeframe = timeframe;
+            saw_timeframe = true;
+        }
+        if !saw_timeframe {
+            return Ok(None);
+        }
+
+        let mut second_is_bars_back = false;
+        let mut third_is_timezone = false;
+        if let Some(arg) = positional.get(1) {
+            match self.eval_expr(&arg.value)? {
+                PineValue::String(value) => parsed.session = Some(value),
+                PineValue::Int(value) => {
+                    parsed.bars_back = value;
+                    second_is_bars_back = true;
+                }
+                PineValue::Na => return Ok(None),
+                _ => return Ok(None),
+            }
+        }
+        if let Some(arg) = positional.get(2) {
+            if second_is_bars_back {
+                let Some(value) = self.eval_time_function_int_arg(arg)? else {
+                    return Ok(None);
+                };
+                parsed.timeframe_bars_back = value;
+            } else {
+                match self.eval_expr(&arg.value)? {
+                    PineValue::String(value) => {
+                        parsed.timezone = value;
+                        third_is_timezone = true;
+                    }
+                    PineValue::Int(value) => parsed.bars_back = value,
+                    PineValue::Na => return Ok(None),
+                    _ => return Ok(None),
+                }
+            }
+        }
+        if let Some(arg) = positional.get(3) {
+            let Some(value) = self.eval_time_function_int_arg(arg)? else {
+                return Ok(None);
+            };
+            if third_is_timezone {
+                parsed.bars_back = value;
+            } else {
+                parsed.timeframe_bars_back = value;
+            }
+        }
+        if let Some(arg) = positional.get(4) {
+            let Some(value) = self.eval_time_function_int_arg(arg)? else {
+                return Ok(None);
+            };
+            parsed.timeframe_bars_back = value;
+        }
+
+        Ok(Some(parsed))
+    }
+
+    fn eval_time_function_string_arg(
+        &mut self,
+        arg: &HirCallArg,
+    ) -> Result<Option<String>, RuntimeError> {
+        Ok(match self.eval_expr(&arg.value)? {
+            PineValue::String(value) => Some(value),
+            PineValue::Na => None,
+            _ => None,
+        })
+    }
+
+    fn eval_time_function_int_arg(
+        &mut self,
+        arg: &HirCallArg,
+    ) -> Result<Option<i64>, RuntimeError> {
+        Ok(match self.eval_expr(&arg.value)? {
+            PineValue::Int(value) => Some(value),
+            PineValue::Na => None,
+            _ => None,
+        })
     }
 
     pub(crate) fn eval_timeframe_in_seconds(
@@ -621,17 +793,162 @@ impl<'a> HistoricalRuntime<'a> {
     }
 }
 
-fn time_function_arg<'a>(
-    args: &'a [HirCallArg],
-    name: &str,
-    positional_index: usize,
-) -> Option<&'a HirCallArg> {
-    args.iter()
-        .find(|arg| arg.name.as_deref() == Some(name))
-        .or_else(|| {
-            args.iter()
-                .enumerate()
-                .find(|(index, arg)| *index == positional_index && arg.name.is_none())
-                .map(|(_, arg)| arg)
+fn parse_time_session(session: &str) -> Option<TimeSession> {
+    if session == "24x7" {
+        return Some(TimeSession {
+            periods: vec![TimeSessionPeriod {
+                start_minute: 0,
+                end_minute: 0,
+            }],
+            days: all_session_days(),
+        });
+    }
+
+    let (periods, days) = match session.split_once(':') {
+        Some((periods, days)) => (periods, parse_session_days(days)?),
+        None => (session, all_session_days()),
+    };
+    if periods.is_empty() {
+        return None;
+    }
+    let periods = periods
+        .split(',')
+        .map(parse_session_period)
+        .collect::<Option<Vec<_>>>()?;
+    if periods.is_empty() {
+        return None;
+    }
+
+    Some(TimeSession { periods, days })
+}
+
+fn all_session_days() -> [bool; 8] {
+    [false, true, true, true, true, true, true, true]
+}
+
+fn parse_session_days(days: &str) -> Option<[bool; 8]> {
+    if days.is_empty() {
+        return None;
+    }
+    let mut parsed = [false; 8];
+    for ch in days.chars() {
+        let day = ch.to_digit(10)?;
+        if !(1..=7).contains(&day) {
+            return None;
+        }
+        parsed[day as usize] = true;
+    }
+    Some(parsed)
+}
+
+fn parse_session_period(period: &str) -> Option<TimeSessionPeriod> {
+    let (start, end) = period.split_once('-')?;
+    Some(TimeSessionPeriod {
+        start_minute: parse_session_hhmm(start)?,
+        end_minute: parse_session_hhmm(end)?,
+    })
+}
+
+fn parse_session_hhmm(value: &str) -> Option<i64> {
+    if value.len() != 4 || !value.chars().all(|ch| ch.is_ascii_digit()) {
+        return None;
+    }
+    let hour = value[..2].parse::<i64>().ok()?;
+    let minute = value[2..].parse::<i64>().ok()?;
+    if !(0..=23).contains(&hour) || !(0..=59).contains(&minute) {
+        return None;
+    }
+    Some(hour * 60 + minute)
+}
+
+fn session_close_for_bar_open(
+    open_time: i64,
+    default_close: i64,
+    session: &TimeSession,
+) -> Result<Option<i64>, RuntimeError> {
+    let datetime = utc_datetime_from_millis(open_time)?;
+    let minute = i64::from(datetime.hour()) * 60 + i64::from(datetime.minute());
+    let day = dayofweek_value(datetime) as usize;
+    let midnight = utc_midnight_millis(datetime)?;
+
+    for period in &session.periods {
+        let Some(close_time) =
+            session_period_close_for_open(minute, day, midnight, period, &session.days)?
+        else {
+            continue;
+        };
+        return Ok(Some(default_close.min(close_time)));
+    }
+
+    Ok(None)
+}
+
+fn session_period_close_for_open(
+    minute: i64,
+    day: usize,
+    midnight: i64,
+    period: &TimeSessionPeriod,
+    days: &[bool; 8],
+) -> Result<Option<i64>, RuntimeError> {
+    const DAY_MS: i64 = 86_400_000;
+
+    if period.start_minute == period.end_minute {
+        if days[day] {
+            return Ok(Some(midnight.checked_add(DAY_MS).ok_or_else(|| {
+                RuntimeError {
+                    message: "time session timestamp is out of range".to_owned(),
+                }
+            })?));
+        }
+        return Ok(None);
+    }
+
+    if period.start_minute < period.end_minute {
+        if days[day] && minute >= period.start_minute && minute < period.end_minute {
+            return Ok(Some(session_end_timestamp(midnight, period.end_minute)?));
+        }
+        return Ok(None);
+    }
+
+    if minute >= period.start_minute {
+        let session_day = if day == 7 { 1 } else { day + 1 };
+        if !days[session_day] {
+            return Ok(None);
+        }
+        let next_midnight = midnight.checked_add(DAY_MS).ok_or_else(|| RuntimeError {
+            message: "time session timestamp is out of range".to_owned(),
+        })?;
+        return Ok(Some(session_end_timestamp(
+            next_midnight,
+            period.end_minute,
+        )?));
+    }
+
+    if minute < period.end_minute && days[day] {
+        return Ok(Some(session_end_timestamp(midnight, period.end_minute)?));
+    }
+
+    Ok(None)
+}
+
+fn session_end_timestamp(midnight: i64, end_minute: i64) -> Result<i64, RuntimeError> {
+    midnight
+        .checked_add(end_minute.checked_mul(60_000).ok_or_else(|| RuntimeError {
+            message: "time session timestamp is out of range".to_owned(),
+        })?)
+        .ok_or_else(|| RuntimeError {
+            message: "time session timestamp is out of range".to_owned(),
         })
+}
+
+fn utc_midnight_millis(datetime: DateTime<Utc>) -> Result<i64, RuntimeError> {
+    let Some(midnight) = Utc
+        .with_ymd_and_hms(datetime.year(), datetime.month(), datetime.day(), 0, 0, 0)
+        .single()
+    else {
+        return Err(RuntimeError {
+            message: "time session timestamp is out of range".to_owned(),
+        });
+    };
+    Ok(midnight.timestamp_millis())
 }

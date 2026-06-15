@@ -321,8 +321,8 @@ minute(time: int-compatible, timezone?: string-compatible) -> int with strongest
 second(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 timestamp(year: int-compatible, month: int-compatible, day: int-compatible, hour?: int-compatible, minute?: int-compatible, second?: int-compatible)
   -> int with strongest qualifier
-time(timeframe: simple string, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
-time_close(timeframe: simple string, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
+time(timeframe: simple string, session?: string-compatible, timezone?: string-compatible, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
+time_close(timeframe: simple string, session?: string-compatible, timezone?: string-compatible, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
 ```
 
 For now, these function overloads use the same UTC-only timezone subset as
@@ -330,19 +330,24 @@ For now, these function overloads use the same UTC-only timezone subset as
 currently supports only the numeric UTC subset; omitted hour/minute/second
 default to 0, `na` inputs return `na`, and invalid UTC dates are runtime
 errors.
-`time(timeframe, bars_back, timeframe_bars_back)` and
-`time_close(timeframe, bars_back, timeframe_bars_back)` currently implement the
-simple-string timeframe subset with optional int-compatible `bars_back` and
-`timeframe_bars_back` offsets. `""` and `timeframe.period` use the current
-fixed chart timeframe and return the current bar's existing `time` or
-`time_close` value when both offsets are omitted or 0. For nonzero `bars_back`,
-the runtime offsets from the current bar using the fixed 1-minute chart
-timeframe before mapping to the requested UTC timeframe bucket. It then applies
-`timeframe_bars_back` on that requested timeframe bucket. Higher timeframe
-strings in the supported timeframe subset return UTC bucket opening or closing
-timestamps. Negative `bars_back` and `timeframe_bars_back` values can reference
-at most 500 future bars in their respective offset spaces. Time-based session
-strings and timezone overrides remain unsupported.
+`time(timeframe, session, timezone, bars_back, timeframe_bars_back)` and
+`time_close(timeframe, session, timezone, bars_back, timeframe_bars_back)`
+currently implement the simple-string timeframe subset with optional
+time-based session strings, UTC-equivalent timezone strings, int-compatible
+`bars_back`, and int-compatible `timeframe_bars_back` offsets. `""` and
+`timeframe.period` use the current fixed chart timeframe and return the current
+bar's existing `time` or `time_close` value when no session is supplied and both
+offsets are omitted or 0. For nonzero `bars_back`, the runtime offsets from the
+current bar using the fixed 1-minute chart timeframe before mapping to the
+requested UTC timeframe bucket. It then applies `timeframe_bars_back` on that
+requested timeframe bucket. Higher timeframe strings in the supported timeframe
+subset return UTC bucket opening or closing timestamps. Negative `bars_back`
+and `timeframe_bars_back` values can reference at most 500 future bars in their
+respective offset spaces. The session subset accepts `24x7`, `HHmm-HHmm`,
+comma-separated intraday periods, and optional Pine day digits in UTC; overnight
+periods are supported in the UTC-only calendar subset. `time_close` clips the
+returned close timestamp to the matching session period end. IANA/exchange
+timezone conversion and named-session data remain unsupported.
 
 Timeframe helpers:
 
