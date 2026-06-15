@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed computed-index and computed-range coverage for
+  `array.insert`, `array.remove`, and `array.fill` scalar-array operands.
 - Added fixture-backed computed-size constructor coverage for label, line, box,
   and table id arrays while keeping linefill/polyline arrays unsupported.
 - Added fixture-backed computed-size constructor coverage for int, bool, string,

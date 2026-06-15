@@ -24,3 +24,9 @@ plot(flags.get(0) and not flags.get(1) ? 1 : 0)
 array.fill(flags, false, -1, 1)
 array.fill(flags, false, 0, 3)
 plot(flags.get(0) and not flags.get(1) ? 1 : 0)
+
+fill_from = 1
+fill_to = 3
+computed_fill = array.new_int(4, 0)
+computed_fill.fill(7, fill_from, fill_to + 0)
+plot(computed_fill.get(0) * 1000 + computed_fill.get(fill_from) * 100 + computed_fill.get(fill_to - 1) * 10 + computed_fill.get(3))

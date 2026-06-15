@@ -46,3 +46,9 @@ plot(na(negative.get(-3)) and na(negative.remove(-3)) ? 1 : 0)
 plot(negative.size() == 2 ? 1 : 0)
 negative.insert(9, 40)
 plot(negative.size() == 2 and negative.get(0) == 99 and negative.get(1) == 25 ? 1 : 0)
+
+computed_index = 1
+computed_positions = array.from(5, 15)
+computed_positions.insert(computed_index + 1, 25)
+computed_removed = computed_positions.remove(computed_index)
+plot(computed_removed + computed_positions.get(0) + computed_positions.get(computed_index))
