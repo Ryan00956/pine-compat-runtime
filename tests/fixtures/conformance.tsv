@@ -223,6 +223,9 @@ syminfo.main_tickerid	supported	fixed default symbol metadata subset	tests/fixtu
 syminfo.ticker	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.prefix	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.description	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.sector	supported	fixed default symbol classification metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.industry	supported	fixed default symbol classification metadata subset	tests/fixtures/runtime/syminfo.pine
+syminfo.country	supported	fixed default symbol country metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.type	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.currency	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine
 syminfo.basecurrency	supported	fixed default symbol metadata subset	tests/fixtures/runtime/syminfo.pine

@@ -199,6 +199,14 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
         value: "Apple Inc.",
     },
     NamedStringConstant {
+        name: "syminfo.country",
+        value: "US",
+    },
+    NamedStringConstant {
+        name: "syminfo.industry",
+        value: "Telecommunications Equipment",
+    },
+    NamedStringConstant {
         name: "syminfo.main_tickerid",
         value: "NASDAQ:AAPL",
     },
@@ -213,6 +221,10 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     NamedStringConstant {
         name: "syminfo.session",
         value: "regular",
+    },
+    NamedStringConstant {
+        name: "syminfo.sector",
+        value: "Electronic Technology",
     },
     NamedStringConstant {
         name: "syminfo.ticker",

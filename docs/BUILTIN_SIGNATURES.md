@@ -135,6 +135,9 @@ syminfo.tickerid -> const string
 syminfo.ticker -> const string
 syminfo.prefix -> const string
 syminfo.description -> const string
+syminfo.sector -> const string
+syminfo.industry -> const string
+syminfo.country -> const string
 syminfo.type -> const string
 syminfo.currency -> const string
 syminfo.basecurrency -> const string
@@ -143,6 +146,7 @@ syminfo.timezone -> const string
 syminfo.root -> const string
 syminfo.volumetype -> const string
 syminfo.mintick -> const float
+syminfo.mincontract -> const float
 syminfo.pointvalue -> const float
 syminfo.minmove -> const int
 syminfo.pricescale -> const int
@@ -150,9 +154,10 @@ syminfo.pricescale -> const int
 
 `syminfo.*` currently uses fixed default symbol metadata until runtime symbol
 metadata is available: `NASDAQ:AAPL`, ticker `AAPL`, prefix `NASDAQ`, stock
-type, `USD` currency/base currency, `regular` session, `Etc/UTC` timezone,
-`base` volume type, `mintick = 0.01`, `pointvalue = 1.0`, `minmove = 1`, and
-`pricescale = 100`.
+type, `Electronic Technology` sector, `Telecommunications Equipment` industry,
+`US` country, `USD` currency/base currency, `regular` session, `Etc/UTC`
+timezone, `base` volume type, `mintick = 0.01`, `mincontract = 1.0`,
+`pointvalue = 1.0`, `minmove = 1`, and `pricescale = 100`.
 
 The same names are also supported as functions over a timestamp:
 

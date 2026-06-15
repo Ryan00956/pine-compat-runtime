@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed fixed-default `syminfo.sector`,
+  `syminfo.industry`, and `syminfo.country` metadata variables.
 - Aligned the remaining built-in `color.*` named constants with TradingView's
   official 17-color RGB table and expanded fixture-backed channel coverage.
 - Aligned the direct `color.orange` named constant with TradingView's official

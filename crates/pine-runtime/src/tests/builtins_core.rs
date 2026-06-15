@@ -71,9 +71,11 @@ fn runs_syminfo_metadata() {
 identity = syminfo.tickerid == "NASDAQ:AAPL" and syminfo.main_tickerid == "NASDAQ:AAPL" and syminfo.ticker == "AAPL" and syminfo.prefix == "NASDAQ"
 details = syminfo.description == "Apple Inc." and syminfo.type == "stock" and syminfo.currency == "USD" and syminfo.basecurrency == "USD"
 session = syminfo.session == "regular" and syminfo.timezone == "Etc/UTC" and syminfo.root == "AAPL" and syminfo.volumetype == "base"
+classification = syminfo.sector == "Electronic Technology" and syminfo.industry == "Telecommunications Equipment" and syminfo.country == "US"
 plot(identity ? 1 : 0)
 plot(details ? 1 : 0)
 plot(session ? 1 : 0)
+plot(classification ? 1 : 0)
 plot(syminfo.mintick)
 plot(syminfo.mincontract)
 plot(syminfo.pointvalue)
@@ -95,12 +97,13 @@ plot(syminfo.mintick == syminfo.minmove / syminfo.pricescale and syminfo.pointva
     assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[3].values, &[0.01, 0.01]);
-    assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[4].values, &[0.01, 0.01]);
     assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[7].values, &[100.0, 100.0]);
-    assert_values_close(&result.plots[8].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[7].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[8].values, &[100.0, 100.0]);
+    assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
 }
 
 #[test]
