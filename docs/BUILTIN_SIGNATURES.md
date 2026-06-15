@@ -695,10 +695,11 @@ currency-code set from `currency.AUD` through `currency.ZAR`, including
 and strategy account currency are not implemented.
 Supported direct strategy constants include `strategy.long`, `strategy.short`,
 `strategy.fixed`, `strategy.cash`, `strategy.percent_of_equity`,
+`strategy.oca.cancel`, `strategy.oca.none`, `strategy.oca.reduce`,
 `strategy.commission.cash_per_contract`,
 `strategy.commission.cash_per_order`, and `strategy.commission.percent` as
 string values. `strategy.entry` execution remains long-only; `strategy.short`
-entries remain unsupported.
+entries remain unsupported, and OCA order behavior remains unsupported.
 
 ## Utility
 

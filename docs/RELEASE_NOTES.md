@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed direct `strategy.oca.cancel`, `strategy.oca.none`, and
+  `strategy.oca.reduce` string constants while keeping OCA order behavior
+  unsupported.
 - Added fixture-backed direct `strategy.short` string constant coverage while
   keeping short `strategy.entry` execution unsupported.
 - Added fixture-backed direct `currency.*` string constants for the official
