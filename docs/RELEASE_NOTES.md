@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed unsupported `map.*` and `matrix.*` collection namespace
+  coverage until dedicated storage models are designed.
 - Added fixture-backed unsupported `log.*` coverage for Pine Logs functions
   until a host-owned log output contract exists.
 - Added a conformance metadata guardrail that rejects non-official `label.get_*`

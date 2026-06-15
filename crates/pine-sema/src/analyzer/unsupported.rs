@@ -3,6 +3,9 @@ use crate::prelude::*;
 pub(crate) const VARIP_DRAWING_UNSUPPORTED_REASON: &str = "varip drawing object ids are not supported; retaining only an id would be unsafe while drawing object stores roll back between forming updates";
 pub(crate) const VARIP_VALUE_UNSUPPORTED_REASON: &str = "varip currently supports scalar int, float, bool, string, color, na, and scalar typed-array declarations only; drawing ids, tuples, UDTs, and other value families are not implemented";
 pub(crate) const LOG_UNSUPPORTED_REASON: &str = "Pine Logs output is not implemented; log.info, log.warning, and log.error require a host-owned log pane/output contract";
+pub(crate) const MAP_UNSUPPORTED_REASON: &str =
+    "map collections are not implemented; map.* requires a dedicated key/value storage model";
+pub(crate) const MATRIX_UNSUPPORTED_REASON: &str = "matrix collections are not implemented; matrix.* requires a dedicated two-dimensional storage model";
 pub(crate) const STRATEGY_UNSUPPORTED_REASON: &str = "strategy order functions beyond the supported strategy.entry/strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all/strategy.exit subset, broker emulation settings, and rich backtesting features are not implemented";
 pub(crate) const STRATEGY_STATE_UNSUPPORTED_REASON: &str = "strategy state variables beyond the supported position, profit, equity, and trade-count subset are not implemented";
 
@@ -17,6 +20,16 @@ pub(crate) fn unsupported_strategy_reason(name: &str) -> Option<&'static str> {
 pub(crate) fn unsupported_log_reason(name: &str) -> Option<&'static str> {
     if matches!(name, "log.info" | "log.warning" | "log.error") {
         Some(LOG_UNSUPPORTED_REASON)
+    } else {
+        None
+    }
+}
+
+pub(crate) fn unsupported_collection_reason(name: &str) -> Option<&'static str> {
+    if name.starts_with("map.") {
+        Some(MAP_UNSUPPORTED_REASON)
+    } else if name.starts_with("matrix.") {
+        Some(MATRIX_UNSUPPORTED_REASON)
     } else {
         None
     }
@@ -57,6 +70,8 @@ impl Analyzer {
         let unsupported_reason = if pine_builtins::is_phase_1_builtin(name) {
             None
         } else if let Some(reason) = unsupported_log_reason(name) {
+            Some(reason)
+        } else if let Some(reason) = unsupported_collection_reason(name) {
             Some(reason)
         } else if name.starts_with("strategy.") {
             Some(STRATEGY_UNSUPPORTED_REASON)

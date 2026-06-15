@@ -3619,6 +3619,24 @@ fn reports_unsupported_log_fixture() {
 }
 
 #[test]
+fn reports_unsupported_map_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_map.pine",
+        "map.put",
+        "map collections are not implemented",
+    );
+}
+
+#[test]
+fn reports_unsupported_matrix_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_matrix.pine",
+        "matrix.get",
+        "matrix collections are not implemented",
+    );
+}
+
+#[test]
 fn reports_unsupported_alertcondition_dynamic_title_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_alertcondition_dynamic_title.pine",

@@ -295,6 +295,8 @@ mod tests {
             "request.*",
             "strategy.*",
             "alert placeholders",
+            "map.*",
+            "matrix.*",
             "unsupported label/line/box/table methods",
             "polyline.*",
             "non-int history offsets",

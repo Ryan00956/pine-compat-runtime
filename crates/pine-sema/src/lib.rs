@@ -40,8 +40,8 @@ mod prelude {
     pub(crate) use crate::analyzer::strategy::is_strategy_state_variable;
     pub(crate) use crate::analyzer::unsupported::{
         STRATEGY_STATE_UNSUPPORTED_REASON, VARIP_DRAWING_UNSUPPORTED_REASON,
-        VARIP_VALUE_UNSUPPORTED_REASON, unsupported_log_reason, unsupported_strategy_reason,
-        unsupported_syntax_reason,
+        VARIP_VALUE_UNSUPPORTED_REASON, unsupported_collection_reason, unsupported_log_reason,
+        unsupported_strategy_reason, unsupported_syntax_reason,
     };
     pub(crate) use crate::analyzer::user_types::{UserTypeInfo, span_key};
     pub(crate) use crate::compatibility::{FeatureUse, UnsupportedFeature};
