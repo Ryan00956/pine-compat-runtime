@@ -7,6 +7,10 @@ impl Analyzer {
         args: &[CallArg],
         arg_types: &[Option<PineType>],
     ) {
+        if self.validate_timestamp_date_string_overload(signature.name, args, arg_types) {
+            return;
+        }
+
         let first_positional_is_timezone = args.first().is_some_and(|arg| arg.name.is_none())
             && arg_types
                 .first()
@@ -66,6 +70,44 @@ impl Analyzer {
                 args.first().map_or(Span::default(), |arg| arg.span),
             ));
         }
+    }
+
+    fn validate_timestamp_date_string_overload(
+        &mut self,
+        function_name: &str,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> bool {
+        let Some(first_arg) = args.first() else {
+            return false;
+        };
+        let Some(first_type) = arg_types.first().copied().flatten() else {
+            return false;
+        };
+        let is_date_string = if let Some(name) = first_arg.name.as_deref() {
+            name == "dateString"
+        } else {
+            args.len() == 1 && first_type.kind == ValueKind::String
+        };
+        if !is_date_string {
+            return false;
+        }
+        if args.len() > 1 {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!("`{function_name}` dateString overload expects 1 argument"),
+                args[1].span,
+            ));
+        }
+        self.validate_timestamp_arg_type(
+            function_name,
+            "dateString",
+            Accepts::ConstString,
+            0,
+            first_arg,
+            arg_types,
+        );
+        true
     }
 
     fn validate_timestamp_arg_type(

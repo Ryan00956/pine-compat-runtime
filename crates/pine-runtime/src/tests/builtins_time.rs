@@ -23,6 +23,11 @@ date_ts = timestamp(2021, 1, 1)
 made_ts_utc = timestamp("UTC0", 2021, 2, 2, 3, 4, 5)
 made_ts_named = timestamp(timezone = "Etc/UTC", year = 2021, month = 2, day = 2, hour = 3, minute = 4, second = 5)
 date_ts_named = timestamp(year = 2021, month = 1, day = 1)
+date_ts_string = timestamp("2021-01-01")
+month_ts_string = timestamp("29 Aug 2024")
+named_month_ts_string = timestamp(dateString = "29 Aug 2024")
+utc_ts_string = timestamp("20 Aug 2024 00:00:00 UTC+0")
+offset_ts_string = timestamp("1 May 2022 00:00 -0400")
 plot(year(ts))
 plot(month(ts, "UTC"))
 plot(weekofyear(ts))
@@ -38,6 +43,7 @@ plot(year(ts, "Etc/UTC") == 2021 and month(ts, "GMT") == 2 and weekofyear(ts, "Z
 plot(year(ts, "UTC+0") == 2021 and month(ts, "GMT+00:00") == 2 and dayofmonth(ts, "-0000") == 2 and hour(ts, "UTC-00:00") == 3 and minute(ts, "GMT-0") == 4 and second(ts, "-00:00") == 5 ? 1 : 0)
 plot(made_ts == ts and date_ts == 1609459200000 ? 1 : 0)
 plot(made_ts_utc == ts and made_ts_named == ts and date_ts_named == date_ts ? 1 : 0)
+plot(date_ts_string == date_ts and month_ts_string == 1724889600000 and named_month_ts_string == month_ts_string and utc_ts_string == 1724112000000 and offset_ts_string == 1651377600000 ? 1 : 0)
 plot(na(timestamp(na, 1, 1)) ? 1 : 0)
 "#,
     );
@@ -96,6 +102,7 @@ plot(na(timestamp(na, 1, 1)) ? 1 : 0)
     assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
 }
 
 #[test]
@@ -634,6 +641,41 @@ plot(timeframe.change("1H") ? 1 : 0)
         err.message
             .contains("timeframe.change unsupported timeframe `1H`"),
         "unexpected error: {err:?}"
+    );
+}
+
+#[test]
+fn rejects_unsupported_timestamp_date_string() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad timestamp date string")
+plot(timestamp("20 Aug 2024 00:00 America/New_York"))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let err = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[Bar {
+            time: 1_609_459_200_000,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        }],
+    )
+    .expect_err("expected timestamp dateString error");
+    assert!(
+        err.message
+            .contains("timestamp unsupported dateString `20 Aug 2024 00:00 America/New_York`"),
+        "{}",
+        err.message
     );
 }
 

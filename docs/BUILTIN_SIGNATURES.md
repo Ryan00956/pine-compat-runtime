@@ -321,6 +321,7 @@ minute(time: int-compatible, timezone?: string-compatible) -> int with strongest
 second(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 timestamp(timezone?: string-compatible, year: int-compatible, month: int-compatible, day: int-compatible, hour?: int-compatible, minute?: int-compatible, second?: int-compatible)
   -> int with strongest qualifier
+timestamp(dateString: const string) -> const int
 time(timeframe: simple string, session?: string-compatible, timezone?: string-compatible, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
 time_close(timeframe: simple string, session?: string-compatible, timezone?: string-compatible, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
 ```
@@ -330,8 +331,13 @@ For now, these function overloads use the same UTC-only timezone subset as
 currently supports numeric calendar arguments with an optional UTC-equivalent
 `timezone` argument, including named calendar parameters. Omitted
 hour/minute/second default to 0, `na` inputs return `na`, and invalid UTC dates
-are runtime errors. The `timestamp(dateString)` overload, IANA timezone
-conversion, and exchange-timezone default semantics remain unsupported.
+are runtime errors. The `timestamp(dateString)` overload accepts const strings
+for ISO dates such as `"2021-01-01"`, English month dates such as
+`"29 Aug 2024"`, optional `HH:mm` or `HH:mm:ss` time-of-day tokens, and
+optional `UTC`/`GMT`/fixed-offset timezone tokens such as `"UTC+0"` or
+`"-0400"`; omitted time-of-day and timezone default to midnight UTC. IANA
+timezone conversion, broader date-string parsing, and exchange-timezone default
+semantics remain unsupported.
 `time(timeframe, session, timezone, bars_back, timeframe_bars_back)` and
 `time_close(timeframe, session, timezone, bars_back, timeframe_bars_back)`
 currently implement the simple-string timeframe subset with optional
