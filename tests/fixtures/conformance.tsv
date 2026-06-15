@@ -20,6 +20,8 @@ close	supported	global OHLCV series value	tests/fixtures/runtime/global_series.p
 volume	supported	global OHLCV series value	tests/fixtures/runtime/global_series.pine
 time	supported	global bar timestamp series value	tests/fixtures/runtime/global_series.pine
 time_close	supported	fixed default chart bar close timestamp series value	tests/fixtures/runtime/global_series.pine
+last_bar_index	supported	last known loaded chart bar index series value over the current dataset	tests/fixtures/runtime/global_series.pine
+last_bar_time	supported	last known loaded chart bar opening timestamp series value over the current dataset	tests/fixtures/runtime/global_series.pine
 hl2	supported	(high + low) / 2 derived series	tests/fixtures/runtime/global_series.pine
 hlc3	supported	(high + low + close) / 3 derived series	tests/fixtures/runtime/global_series.pine
 hlcc4	supported	(high + low + close + close) / 4 derived series	tests/fixtures/runtime/global_series.pine

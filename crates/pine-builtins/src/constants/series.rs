@@ -1,6 +1,8 @@
 use pine_ir::{PineType, Qualifier, ValueKind};
 
-use crate::namespaces::types::{SERIES_BOOL, SIMPLE_BOOL, SIMPLE_COLOR, SIMPLE_INT, SIMPLE_STRING};
+use crate::namespaces::types::{
+    SERIES_BOOL, SERIES_INT, SIMPLE_BOOL, SIMPLE_COLOR, SIMPLE_INT, SIMPLE_STRING,
+};
 
 const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     (
@@ -150,6 +152,8 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("session.islastbar", SERIES_BOOL),
     ("session.isfirstbar_regular", SERIES_BOOL),
     ("session.islastbar_regular", SERIES_BOOL),
+    ("last_bar_index", SERIES_INT),
+    ("last_bar_time", SERIES_INT),
     ("timeframe.period", SIMPLE_STRING),
     ("timeframe.main_period", SIMPLE_STRING),
     ("timeframe.isseconds", SIMPLE_BOOL),
@@ -261,6 +265,13 @@ mod tests {
             "session.islastbar_regular",
         ] {
             assert_eq!(builtin_series_value_type(name), Some(SERIES_BOOL));
+        }
+    }
+
+    #[test]
+    fn registers_last_bar_metadata_values() {
+        for name in ["last_bar_index", "last_bar_time"] {
+            assert_eq!(builtin_series_value_type(name), Some(SERIES_INT));
         }
     }
 

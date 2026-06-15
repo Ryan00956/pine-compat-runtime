@@ -85,6 +85,8 @@ fn runtime_fixtures_match_incremental_append_execution() {
         let has_latest_known_bar_state = text.contains("barstate.islast")
             || text.contains("session.islastbar")
             || text.contains("session.islastbar_regular")
+            || text.contains("last_bar_index")
+            || text.contains("last_bar_time")
             || text.contains("chart.right_visible_bar_time");
         let analysis = analyze_fixture(&path, text);
         assert!(

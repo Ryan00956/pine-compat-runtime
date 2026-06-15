@@ -12,6 +12,8 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) current_bar_update_kind: BarUpdateKind,
     pub(crate) current_bar_is_new: bool,
     pub(crate) current_bar: Option<Bar>,
+    pub(crate) last_bar_index: Option<usize>,
+    pub(crate) last_bar_time: Option<i64>,
     pub(crate) chart_visible_left_time: Option<i64>,
     pub(crate) chart_visible_right_time: Option<i64>,
     pub(crate) request_environment: RequestEnvironment,
@@ -121,6 +123,8 @@ impl<'a> HistoricalRuntime<'a> {
             current_bar_update_kind: BarUpdateKind::Historical,
             current_bar_is_new: true,
             current_bar: None,
+            last_bar_index: None,
+            last_bar_time: None,
             chart_visible_left_time: None,
             chart_visible_right_time: None,
             request_environment,
@@ -225,7 +229,13 @@ impl<'a> HistoricalRuntime<'a> {
         if let Some(first) = bars.first() {
             self.chart_visible_left_time.get_or_insert(first.time);
         }
-        if let Some(last) = bars.last() {
+        if let Some((offset, last)) = bars
+            .len()
+            .checked_sub(1)
+            .map(|offset| (offset, &bars[offset]))
+        {
+            self.last_bar_index = Some(self.bars + offset);
+            self.last_bar_time = Some(last.time);
             self.chart_visible_right_time = Some(last.time);
         }
         let result = (|| {
@@ -267,6 +277,8 @@ impl<'a> HistoricalRuntime<'a> {
                 BarUpdateKind::Forming | BarUpdateKind::Confirmed
             )
         {
+            self.last_bar_index = Some(bar_index);
+            self.last_bar_time = Some(bar.time);
             self.chart_visible_right_time = Some(bar.time);
         }
         self.series_store.set_current_bar(bar_index);

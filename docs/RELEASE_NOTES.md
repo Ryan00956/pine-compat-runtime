@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `last_bar_index` and `last_bar_time` series variables
+  for the last known loaded chart bar in the current runtime dataset.
 - Added fixture-backed fixed-default chart viewport metadata variables:
   `chart.left_visible_bar_time` and `chart.right_visible_bar_time`.
 - Added fixture-backed fixed-default chart appearance metadata variables:

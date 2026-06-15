@@ -100,6 +100,14 @@ impl<'a> HistoricalRuntime<'a> {
         if matches!(name, "session.islastbar" | "session.islastbar_regular") {
             return PineValue::Bool(self.is_latest_known_bar());
         }
+        if name == "last_bar_index" {
+            return self
+                .last_bar_index
+                .map_or(PineValue::Na, |index| PineValue::Int(index as i64));
+        }
+        if name == "last_bar_time" {
+            return self.last_bar_time.map_or(PineValue::Na, PineValue::Int);
+        }
         if name == "syminfo.tickerid" {
             return PineValue::String(self.request_environment.chart().symbol().to_owned());
         }

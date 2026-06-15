@@ -20,6 +20,8 @@ plot(hlc3)
 plot(hlcc4)
 plot(ohlc4)
 plot(bar_index)
+plot(last_bar_index)
+plot(last_bar_time)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -61,6 +63,8 @@ plot(bar_index)
     assert_values_close(&result.plots[9].values, &[2.5, 4.0]);
     assert_values_close(&result.plots[10].values, &[2.0, 3.5]);
     assert_values_close(&result.plots[11].values, &[0.0, 1.0]);
+    assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[13].values, &[2000.0, 2000.0]);
 }
 
 #[test]

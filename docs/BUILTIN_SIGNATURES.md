@@ -56,6 +56,8 @@ close     -> series float
 volume    -> series float
 time      -> series int
 time_close -> series int
+last_bar_index -> series int
+last_bar_time -> series int
 year      -> series int
 month     -> series int
 weekofyear -> series int
@@ -99,6 +101,12 @@ timezone metadata exists. `dayofweek.sunday` through `dayofweek.saturday`
 evaluate to const ints `1` through `7`; `weekofyear` uses the UTC ISO week
 number in the current subset. `time_close` uses the fixed default 1-minute
 chart timeframe and returns `time + 60000`.
+
+`last_bar_index` and `last_bar_time` reference the last known loaded chart bar
+in the current dataset. `last_bar_index` is the zero-based index of that bar,
+and `last_bar_time` is that bar's opening timestamp. Host-owned realtime script
+restart/repaint behavior beyond the loaded runtime dataset is not expanded by
+this subset.
 
 The current chart metadata subset assumes a standard bars/candles-style chart
 with a fixed full-dataset viewport and a fixed light appearance:

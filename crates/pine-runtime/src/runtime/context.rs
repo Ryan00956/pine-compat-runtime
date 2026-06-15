@@ -45,6 +45,15 @@ impl<'a> HistoricalRuntime<'a> {
             ("volume", PineValue::Float(bar.volume)),
             ("time", PineValue::Int(bar.time)),
             ("time_close", PineValue::Int(time_close)),
+            (
+                "last_bar_index",
+                self.last_bar_index
+                    .map_or(PineValue::Na, |index| PineValue::Int(index as i64)),
+            ),
+            (
+                "last_bar_time",
+                self.last_bar_time.map_or(PineValue::Na, PineValue::Int),
+            ),
             ("year", PineValue::Int(datetime.year() as i64)),
             ("month", PineValue::Int(datetime.month() as i64)),
             (
