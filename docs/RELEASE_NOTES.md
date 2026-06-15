@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch and loop control-flow coverage for
+  `array.standardize`.
+- Added fixture-backed branch and loop control-flow coverage for
   `array.covariance`.
 - Added fixture-backed branch and loop control-flow coverage for
   `array.percentrank`.

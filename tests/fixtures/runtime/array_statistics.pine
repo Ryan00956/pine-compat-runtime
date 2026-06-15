@@ -185,3 +185,26 @@ for i = 0 to 1
     else
         loop_covariance_results.push(loop_covariance_x.covariance(loop_covariance_y, false))
 plot(loop_covariance_results.get(0) * 10 + loop_covariance_results.get(1))
+
+branch_standardize_source = array.from(2, 4, 6)
+branch_standardize_results = array.new_float()
+if bar_index % 2 == 0
+    branch_standardized_namespace = array.standardize(branch_standardize_source)
+    branch_standardized_method = branch_standardize_source.standardize()
+    branch_standardize_results.push(branch_standardized_namespace.get(2) - branch_standardized_method.get(0))
+else
+    branch_standardized_method_alt = branch_standardize_source.standardize()
+    branch_standardized_namespace_alt = array.standardize(branch_standardize_source)
+    branch_standardize_results.push(branch_standardized_method_alt.get(2) * 10 + branch_standardized_namespace_alt.get(0))
+plot(branch_standardize_results.get(0))
+
+loop_standardize_source = array.from(1.0, 2.0, 3.0)
+loop_standardize_results = array.new_float()
+for i = 0 to 1
+    if i == 0
+        loop_standardized_namespace = array.standardize(loop_standardize_source)
+        loop_standardize_results.push(loop_standardized_namespace.get(2))
+    else
+        loop_standardized_method = loop_standardize_source.standardize()
+        loop_standardize_results.push(loop_standardized_method.get(0))
+plot(loop_standardize_results.get(0) * 10 + loop_standardize_results.get(1))
