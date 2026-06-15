@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `label.get_tooltip` runtime support for namespace and
+  drawing method-call syntax, while keeping later label getters unsupported.
 - Added fixture-backed `label.get_style` runtime support for namespace and
   drawing method-call syntax, while keeping later label getters unsupported.
 - Added a conformance metadata guardrail requiring unsupported sema evidence for partial rows with unsupported notes.

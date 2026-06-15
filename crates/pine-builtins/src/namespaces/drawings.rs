@@ -978,6 +978,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "label.get_tooltip",
+        phase: BuiltinPhase::Phase1Core,
+        params: LABEL_GET_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_STRING),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "line.new",
         phase: BuiltinPhase::Phase1Core,
         params: LINE_NEW_PARAMS,

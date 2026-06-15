@@ -120,6 +120,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "label.delete",
     "label.get_style",
     "label.get_text",
+    "label.get_tooltip",
     "label.get_x",
     "label.get_y",
     "label.new",
