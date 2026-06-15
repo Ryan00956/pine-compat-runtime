@@ -39,3 +39,23 @@ colors = array.new_color(1, color.red)
 color_copy = array.copy(colors)
 color_copy.set(0, color.green)
 plot(colors.get(0) == color.red and color_copy.get(0) == color.green ? 1 : 0)
+
+branch_copy_source = array.from(10, 20)
+branch_copy_results = array.new_int()
+if bar_index % 2 == 0
+    branch_copy = branch_copy_source.copy()
+    branch_copy.set(0, 100)
+    branch_copy_results.push(branch_copy.get(0) + branch_copy_source.get(0))
+else
+    branch_copy = array.copy(branch_copy_source)
+    branch_copy.set(1, 200)
+    branch_copy_results.push(branch_copy.get(1) + branch_copy_source.get(1))
+plot(branch_copy_results.get(0))
+
+loop_copy_source = array.from(3)
+loop_copy_results = array.new_int()
+for i = 0 to 1
+    loop_copy = loop_copy_source.copy()
+    loop_copy.push(i)
+    loop_copy_results.push(loop_copy.size())
+plot(loop_copy_results.get(0) * 10 + loop_copy_results.get(1) + loop_copy_source.size())

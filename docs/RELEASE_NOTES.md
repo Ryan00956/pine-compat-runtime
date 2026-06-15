@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch and loop copy-site coverage for `array.copy`
+  while preserving source-array independence.
 - Added fixture-backed branch and loop control-flow mutation coverage for
   `array.concat` while preserving source-array non-mutation.
 - Added fixture-backed branch and loop control-flow coverage for
