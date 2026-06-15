@@ -900,9 +900,11 @@ fn accepts_ticker_standard() {
 created = ticker.new(syminfo.prefix, syminfo.ticker)
 extended = ticker.new(syminfo.prefix, syminfo.ticker, session.extended)
 modified = ticker.modify(created)
+modified_extended = ticker.modify(created, session.extended)
 standard = ticker.standard(syminfo.tickerid)
 extended_standard = ticker.standard(extended)
-plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
+modified_standard = ticker.standard(modified_extended)
+plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and modified_standard == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
 "#,
     );
 

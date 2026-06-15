@@ -44,7 +44,15 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
-        Ok(PineValue::String(tickerid))
+        let Some(session_arg) = args.get(1) else {
+            return Ok(PineValue::String(tickerid));
+        };
+        let PineValue::String(session) = self.eval_expr(&session_arg.value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        let symbol = standard_ticker_id(&tickerid);
+        Ok(PineValue::String(modified_ticker_id(&symbol, &session)))
     }
 
     fn eval_ticker_standard(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {

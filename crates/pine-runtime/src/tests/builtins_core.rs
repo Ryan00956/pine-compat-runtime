@@ -125,10 +125,14 @@ extended_created = ticker.new("NASDAQ", "AAPL", session.extended)
 chart_session_created = ticker.new(syminfo.prefix, syminfo.ticker, syminfo.session)
 missing_session_created = ticker.new("NASDAQ", "AAPL", na)
 modified_identity = ticker.modify(created)
+modified_extended = ticker.modify(created, session.extended)
+modified_regular = ticker.modify(extended_created, session.regular)
 missing_modified = ticker.modify(na)
+missing_modified_session = ticker.modify(created, na)
 plain = ticker.standard("NASDAQ:AAPL")
 current = ticker.standard(syminfo.tickerid)
 extended_standard = ticker.standard(extended_created)
+modified_standard = ticker.standard(modified_regular)
 standard_from_modified = ticker.standard("{\"session\":\"extended\",\"symbol\":\"NASDAQ:AAPL\"}")
 missing = ticker.standard(na)
 plot(created == "NASDAQ:AAPL" ? 1 : 0)
@@ -138,10 +142,14 @@ plot(extended_created == "{\"session\":\"extended\",\"symbol\":\"NASDAQ:AAPL\"}"
 plot(chart_session_created == "{\"session\":\"regular\",\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
 plot(na(missing_session_created) ? 1 : 0)
 plot(modified_identity == "NASDAQ:AAPL" ? 1 : 0)
+plot(modified_extended == "{\"session\":\"extended\",\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
+plot(modified_regular == "{\"session\":\"regular\",\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
 plot(na(missing_modified) ? 1 : 0)
+plot(na(missing_modified_session) ? 1 : 0)
 plot(plain == "NASDAQ:AAPL" ? 1 : 0)
 plot(current == "NASDAQ:AAPL" ? 1 : 0)
 plot(extended_standard == "NASDAQ:AAPL" ? 1 : 0)
+plot(modified_standard == "NASDAQ:AAPL" ? 1 : 0)
 plot(standard_from_modified == "NASDAQ:AAPL" ? 1 : 0)
 plot(na(missing) ? 1 : 0)
 "#,
@@ -169,6 +177,10 @@ plot(na(missing) ? 1 : 0)
     assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
 }
 
 #[test]

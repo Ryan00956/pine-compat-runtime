@@ -204,7 +204,7 @@ syminfo.pricescale -> const int
 syminfo.prefix(symbol: simple string) -> simple string
 syminfo.ticker(symbol: simple string) -> simple string
 ticker.new(prefix: simple string, ticker: simple string, session?: simple string) -> simple string
-ticker.modify(tickerid: simple string) -> simple string
+ticker.modify(tickerid: simple string, session?: simple string) -> simple string
 ticker.standard(symbol: simple string) -> simple string
 ```
 
@@ -227,8 +227,10 @@ returns a modified ticker ID that preserves the standard symbol for
 `ticker.standard()`. Adjustment modifiers remain outside this subset.
 
 `ticker.modify(tickerid)` currently implements the no-modifier identity subset
-and returns the supplied ticker ID. Optional session and adjustment modifiers
-remain outside this subset.
+and returns the supplied ticker ID. Supplying the optional `session` argument
+with values such as `session.regular`, `session.extended`, or `syminfo.session`
+returns a modified ticker ID that preserves the standard symbol for
+`ticker.standard()`. Adjustment modifiers remain outside this subset.
 
 `ticker.standard(symbol)` currently implements the simple-string standard ticker
 ID subset. Plain `PREFIX:TICKER` values are returned unchanged, and known
