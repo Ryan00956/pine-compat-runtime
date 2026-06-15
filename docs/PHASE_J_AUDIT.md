@@ -28,8 +28,9 @@ fixtures, and the compatibility matrix.
 - Local scalar-field UDTs support top-level `type` declarations,
   `Type.new(...)` construction, field reads, ordinary variables, and `var`
   persistence.
-- UDT runtime values are immutable and roll back through ordinary `var`
-  confirmed-state semantics during realtime forming updates.
+- UDT runtime values roll back through ordinary `var` confirmed-state semantics
+  during realtime forming updates. Local scalar fields can be reassigned
+  outside UDF/method bodies, including in branch and `for` loop bodies.
 - Pure user-defined methods on local UDT receivers with scalar parameters lower
   through the existing inlined UDF body path with the receiver as the first
   internal argument.
@@ -169,9 +170,9 @@ the configured limit.
 - Side-effecting exported functions, library output declarations, library
   inputs, strategy-library interactions, and cross-library runtime state
   semantics remain unsupported.
-- UDT field mutation, UDT history references, UDT `varip`, nested UDT fields,
-  recursive UDTs, UDT arrays, generic UDT fields, and imported UDT values remain
-  unsupported.
+- UDT field mutation inside functions or methods, UDT history references, UDT
+  `varip`, nested UDT fields, recursive UDTs, UDT arrays, generic UDT fields,
+  and imported UDT values remain unsupported.
 - User-defined methods remain limited to pure methods on local UDT receivers
   with scalar parameters; recursive methods, generic methods, imported methods,
   side effects, and unsupported receiver families remain rejected.
