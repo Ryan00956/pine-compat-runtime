@@ -136,6 +136,16 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "timeframe.multiplier" {
             return PineValue::Int(1);
         }
+        if name == "chart.left_visible_bar_time" {
+            return self
+                .chart_visible_left_time
+                .map_or(PineValue::Na, PineValue::Int);
+        }
+        if name == "chart.right_visible_bar_time" {
+            return self
+                .chart_visible_right_time
+                .map_or(PineValue::Na, PineValue::Int);
+        }
         if name == "chart.bg_color" {
             return PineValue::Color(0xFFFFFF);
         }

@@ -79,6 +79,8 @@ timeframe.isweekly -> simple bool
 timeframe.ismonthly -> simple bool
 timeframe.isdwm -> simple bool
 timeframe.multiplier -> simple int
+chart.left_visible_bar_time -> simple int
+chart.right_visible_bar_time -> simple int
 chart.bg_color -> simple color
 chart.fg_color -> simple color
 chart.is_standard -> simple bool
@@ -99,12 +101,14 @@ number in the current subset. `time_close` uses the fixed default 1-minute
 chart timeframe and returns `time + 60000`.
 
 The current chart metadata subset assumes a standard bars/candles-style chart
-with a fixed light appearance: `chart.bg_color` is opaque white and
-`chart.fg_color` is opaque black. `chart.is_standard` is `true`, while
-`chart.is_heikinashi`, `chart.is_kagi`, `chart.is_linebreak`, `chart.is_pnf`,
-`chart.is_range`, and `chart.is_renko` are `false`. Host-owned viewport
-metadata such as visible bar times and configurable chart appearance are not
-implemented by this fixed chart metadata subset.
+with a fixed full-dataset viewport and a fixed light appearance:
+`chart.left_visible_bar_time` is the first loaded bar opening time and
+`chart.right_visible_bar_time` is the last known loaded bar opening time.
+`chart.bg_color` is opaque white and `chart.fg_color` is opaque black.
+`chart.is_standard` is `true`, while `chart.is_heikinashi`, `chart.is_kagi`,
+`chart.is_linebreak`, `chart.is_pnf`, `chart.is_range`, and `chart.is_renko`
+are `false`. Host-owned scroll/zoom viewport changes and configurable chart
+appearance are not implemented by this fixed chart metadata subset.
 
 Bar state:
 

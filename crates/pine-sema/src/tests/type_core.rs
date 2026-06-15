@@ -890,7 +890,8 @@ fn accepts_chart_type_metadata() {
         r#"indicator("chart type metadata")
 is_standard = chart.is_standard and not chart.is_heikinashi and not chart.is_kagi and not chart.is_linebreak and not chart.is_pnf and not chart.is_range and not chart.is_renko
 appearance = color.r(chart.bg_color) == 255 and color.g(chart.bg_color) == 255 and color.b(chart.bg_color) == 255 and color.t(chart.bg_color) == 0 and color.r(chart.fg_color) == 0 and color.g(chart.fg_color) == 0 and color.b(chart.fg_color) == 0 and color.t(chart.fg_color) == 0
-plot(is_standard and appearance ? 1 : 0)
+visible_window = chart.left_visible_bar_time <= chart.right_visible_bar_time
+plot(is_standard and appearance and visible_window ? 1 : 0)
 "#,
     );
 
@@ -902,6 +903,8 @@ plot(is_standard and appearance ? 1 : 0)
     for feature in [
         "chart.bg_color",
         "chart.fg_color",
+        "chart.left_visible_bar_time",
+        "chart.right_visible_bar_time",
         "chart.is_standard",
         "chart.is_heikinashi",
         "chart.is_kagi",

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed fixed-default chart viewport metadata variables:
+  `chart.left_visible_bar_time` and `chart.right_visible_bar_time`.
 - Added fixture-backed fixed-default chart appearance metadata variables:
   `chart.bg_color` and `chart.fg_color`.
 - Added fixture-backed fixed-default regular-session boundary variables:

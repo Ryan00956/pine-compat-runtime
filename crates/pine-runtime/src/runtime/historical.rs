@@ -12,6 +12,8 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) current_bar_update_kind: BarUpdateKind,
     pub(crate) current_bar_is_new: bool,
     pub(crate) current_bar: Option<Bar>,
+    pub(crate) chart_visible_left_time: Option<i64>,
+    pub(crate) chart_visible_right_time: Option<i64>,
     pub(crate) request_environment: RequestEnvironment,
     pub(crate) request_cache: HashMap<RequestCacheKey, Vec<(i64, PineValue)>>,
     pub(crate) eval_expr_depth: u32,
@@ -119,6 +121,8 @@ impl<'a> HistoricalRuntime<'a> {
             current_bar_update_kind: BarUpdateKind::Historical,
             current_bar_is_new: true,
             current_bar: None,
+            chart_visible_left_time: None,
+            chart_visible_right_time: None,
             request_environment,
             request_cache: HashMap::new(),
             eval_expr_depth: 0,
@@ -218,6 +222,12 @@ impl<'a> HistoricalRuntime<'a> {
     pub fn append_bars(&mut self, bars: &[Bar]) -> Result<(), RuntimeError> {
         let previous_historical_end = self.historical_end;
         self.historical_end = Some(self.bars + bars.len());
+        if let Some(first) = bars.first() {
+            self.chart_visible_left_time.get_or_insert(first.time);
+        }
+        if let Some(last) = bars.last() {
+            self.chart_visible_right_time = Some(last.time);
+        }
         let result = (|| {
             for bar in bars {
                 self.append_bar_with_kind(*bar, BarUpdateKind::Historical)?;
@@ -250,6 +260,15 @@ impl<'a> HistoricalRuntime<'a> {
         self.current_bar_update_kind = update_kind;
         self.current_bar_is_new = is_new_bar;
         self.current_bar = Some(bar);
+        self.chart_visible_left_time.get_or_insert(bar.time);
+        if self.historical_end.is_none()
+            || matches!(
+                self.current_bar_update_kind,
+                BarUpdateKind::Forming | BarUpdateKind::Confirmed
+            )
+        {
+            self.chart_visible_right_time = Some(bar.time);
+        }
         self.series_store.set_current_bar(bar_index);
         self.current_symbols.clear();
         self.current_series.clear();

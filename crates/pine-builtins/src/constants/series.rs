@@ -160,6 +160,8 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("timeframe.ismonthly", SIMPLE_BOOL),
     ("timeframe.isdwm", SIMPLE_BOOL),
     ("timeframe.multiplier", SIMPLE_INT),
+    ("chart.left_visible_bar_time", SIMPLE_INT),
+    ("chart.right_visible_bar_time", SIMPLE_INT),
     ("chart.bg_color", SIMPLE_COLOR),
     ("chart.fg_color", SIMPLE_COLOR),
     ("chart.is_standard", SIMPLE_BOOL),
@@ -237,6 +239,16 @@ mod tests {
     fn registers_chart_appearance_metadata_values() {
         for name in ["chart.bg_color", "chart.fg_color"] {
             assert_eq!(builtin_series_value_type(name), Some(SIMPLE_COLOR));
+        }
+    }
+
+    #[test]
+    fn registers_chart_visible_bar_time_values() {
+        for name in [
+            "chart.left_visible_bar_time",
+            "chart.right_visible_bar_time",
+        ] {
+            assert_eq!(builtin_series_value_type(name), Some(SIMPLE_INT));
         }
     }
 

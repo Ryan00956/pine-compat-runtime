@@ -130,6 +130,8 @@ plot(color.r(chart.fg_color))
 plot(color.g(chart.fg_color))
 plot(color.b(chart.fg_color))
 plot(color.t(chart.fg_color))
+plot(chart.left_visible_bar_time)
+plot(chart.right_visible_bar_time)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -139,8 +141,25 @@ plot(color.t(chart.fg_color))
         analysis.diagnostics
     );
 
-    let result =
-        run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)]).expect("result");
+    let bars = [
+        Bar {
+            time: 10_000,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 100.0,
+        },
+        Bar {
+            time: 20_000,
+            open: 2.0,
+            high: 2.0,
+            low: 2.0,
+            close: 2.0,
+            volume: 100.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
 
     assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
     for plot in &result.plots[1..7] {
@@ -154,6 +173,8 @@ plot(color.t(chart.fg_color))
     for plot in &result.plots[12..16] {
         assert_values_close(&plot.values, &[0.0, 0.0]);
     }
+    assert_values_close(&result.plots[16].values, &[10_000.0, 10_000.0]);
+    assert_values_close(&result.plots[17].values, &[20_000.0, 20_000.0]);
 }
 
 #[test]

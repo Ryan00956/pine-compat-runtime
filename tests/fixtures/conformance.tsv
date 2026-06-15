@@ -47,6 +47,8 @@ timeframe.isweekly	supported	fixed default chart timeframe metadata subset	tests
 timeframe.ismonthly	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
 timeframe.isdwm	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
 timeframe.multiplier	supported	fixed default chart timeframe multiplier subset	tests/fixtures/runtime/timeframe.pine
+chart.left_visible_bar_time	supported	fixed default chart viewport subset; returns the first loaded bar opening time until host-provided visible range is available	tests/fixtures/runtime/chart.pine
+chart.right_visible_bar_time	supported	fixed default chart viewport subset; returns the last known loaded bar opening time until host-provided visible range is available	tests/fixtures/runtime/chart.pine
 chart.bg_color	supported	fixed default chart appearance color subset; returns opaque white until host-provided chart appearance is available	tests/fixtures/runtime/chart.pine
 chart.fg_color	supported	fixed default chart appearance color subset; returns opaque black contrasting the fixed white background until host-provided chart appearance is available	tests/fixtures/runtime/chart.pine
 chart.is_standard	supported	fixed default standard chart type metadata subset; true while non-standard chart type flags are false	tests/fixtures/runtime/chart.pine
