@@ -39,3 +39,20 @@ empty_flags = array.new_bool()
 plot(empty_flags.join("|") == "" ? 1 : 0)
 empty_colors = array.new_color()
 plot(array.join(empty_colors, "|") == "" ? 1 : 0)
+
+branch_join_words = array.from("x", "y")
+branch_join_results = array.new_string()
+if bar_index % 2 == 0
+    branch_join_results.push(array.join(branch_join_words, "/"))
+else
+    branch_join_results.push(branch_join_words.join("|"))
+plot((bar_index % 2 == 0 and branch_join_results.get(0) == "x/y") or (bar_index % 2 != 0 and branch_join_results.get(0) == "x|y") ? 1 : 0)
+
+loop_join_values = array.from(1, 2, 3)
+loop_join_results = array.new_string()
+for i = 0 to 1
+    if i == 0
+        loop_join_results.push(array.join(loop_join_values, ":"))
+    else
+        loop_join_results.push(loop_join_values.join())
+plot(loop_join_results.get(0) == "1:2:3" and loop_join_results.get(1) == "1,2,3" ? 1 : 0)
