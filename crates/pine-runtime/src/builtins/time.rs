@@ -231,6 +231,7 @@ pub(crate) fn format_datetime_with_offset(
             'M' => result.push_str(&format_month(datetime.month(), count)),
             'd' => push_padded_or_plain(&mut result, datetime.day(), count),
             'D' => push_padded_or_plain(&mut result, datetime.ordinal(), count),
+            'E' => result.push_str(format_weekday(datetime.weekday(), count)),
             'H' => push_padded_or_plain(&mut result, datetime.hour(), count),
             'h' => {
                 let hour = match datetime.hour() % 12 {
@@ -297,6 +298,25 @@ pub(crate) fn format_month(month: u32, width: usize) -> String {
         2 => format!("{month:02}"),
         3 => SHORT[(month - 1) as usize].to_owned(),
         _ => LONG[(month - 1) as usize].to_owned(),
+    }
+}
+
+pub(crate) fn format_weekday(weekday: chrono::Weekday, width: usize) -> &'static str {
+    const SHORT: [&str; 7] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const LONG: [&str; 7] = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ];
+    let index = weekday.num_days_from_monday() as usize;
+    if width >= 4 {
+        LONG[index]
+    } else {
+        SHORT[index]
     }
 }
 

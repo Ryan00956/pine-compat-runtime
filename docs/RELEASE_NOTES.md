@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.format_time` support for the `E` weekday format
+  token.
 - Added fixture-backed `str.format_time` support for the `D` day-of-year
   format token.
 - Added fixture-backed fixed-offset timezone support to `time()` and
