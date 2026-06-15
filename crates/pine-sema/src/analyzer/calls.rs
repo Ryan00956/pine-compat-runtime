@@ -372,6 +372,10 @@ impl Analyzer {
             self.unsupported(&name, reason, callee.span);
             return None;
         }
+        if let Some(reason) = unsupported_log_reason(&name) {
+            self.unsupported(&name, reason, callee.span);
+            return None;
+        }
 
         self.check_feature_name(&name, callee.span);
         self.diagnostics.push(Diagnostic::error(

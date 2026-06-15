@@ -1,0 +1,5 @@
+//@version=6
+indicator("Unsupported log")
+log.info("bar {0}", bar_index)
+log.warning("close " + str.tostring(close))
+log.error("unsupported Pine Logs output")

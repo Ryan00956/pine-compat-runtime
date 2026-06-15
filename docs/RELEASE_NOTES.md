@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed unsupported `log.*` coverage for Pine Logs functions
+  until a host-owned log output contract exists.
 - Added a conformance metadata guardrail that rejects non-official `label.get_*`
   rows outside `label.get_x`, `label.get_y`, and `label.get_text`.
 - Restored the official label getter boundary to `label.get_x`,
