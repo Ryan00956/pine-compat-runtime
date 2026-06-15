@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported request merge options")
+bad_gaps = request.security(syminfo.tickerid, timeframe.period, close, gaps="barmerge.gaps_on")
+bad_lookahead = request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_off, lookahead="barmerge.lookahead_on")
+plot(bad_gaps + bad_lookahead)

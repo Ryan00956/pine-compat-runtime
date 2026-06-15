@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions, pure tuple literals, and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions, pure tuple literals, and selected tuple expressions, are supported; optional parameters, lower-timeframe requests, provider local aliases, and side-effecting requested expressions are not implemented";
+const REQUEST_SECURITY_UNSUPPORTED_REASON: &str = "only same-context request.security(syminfo.tickerid, timeframe.period, expression) scalar expressions, pure tuple literals, and selected tuple expressions, plus provider-backed same-or-higher-timeframe scalar expressions, pure tuple literals, and selected tuple expressions, are supported; optional gaps/lookahead are limited to barmerge.gaps_off and barmerge.lookahead_off, while lower-timeframe requests, provider local aliases, and side-effecting requested expressions are not implemented";
 
 impl Analyzer {
     pub(crate) fn analyze_request_call(
@@ -36,16 +36,19 @@ impl Analyzer {
         self.validate_call_args(signature, args, &arg_types);
 
         let mut unsupported = false;
-        if args.len() != 3 {
+        if !(3..=5).contains(&args.len()) {
             unsupported = true;
         }
-        if args.iter().any(|arg| arg.name.is_some()) {
+        if args.iter().take(3).any(|arg| arg.name.is_some()) {
             unsupported = true;
             self.diagnostics.push(Diagnostic::error(
                 "E_CALL_ARG_NAME",
-                "`request.security` currently supports positional arguments only",
+                "`request.security` currently requires symbol, timeframe, and expression as positional arguments",
                 span,
             ));
+        }
+        if !self.validate_request_security_merge_args(args) {
+            unsupported = true;
         }
 
         let same_context_symbol = args
@@ -102,6 +105,51 @@ impl Analyzer {
         }
 
         expression_type.map(series_request_type)
+    }
+
+    fn validate_request_security_merge_args(&mut self, args: &[CallArg]) -> bool {
+        let mut supported = true;
+        let signature = pine_builtins::get_phase_1_builtin("request.security")
+            .expect("request.security signature must exist");
+        self.validate_label_string_arg(signature, args, 3, "gaps", &["barmerge.gaps_off"]);
+        self.validate_label_string_arg(
+            signature,
+            args,
+            4,
+            "lookahead",
+            &["barmerge.lookahead_off"],
+        );
+
+        for (index, arg) in args.iter().enumerate().skip(3) {
+            let allowed_name = match arg.name.as_deref() {
+                Some("gaps") => "gaps",
+                Some("lookahead") => "lookahead",
+                Some(_) => {
+                    supported = false;
+                    continue;
+                }
+                None => match index {
+                    3 => "gaps",
+                    4 => "lookahead",
+                    _ => {
+                        supported = false;
+                        continue;
+                    }
+                },
+            };
+            let Some(value) = const_string_value(&arg.value) else {
+                continue;
+            };
+            let allowed_value = if allowed_name == "gaps" {
+                "barmerge.gaps_off"
+            } else {
+                "barmerge.lookahead_off"
+            };
+            if value != allowed_value {
+                supported = false;
+            }
+        }
+        supported
     }
 }
 

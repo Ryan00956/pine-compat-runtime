@@ -16,6 +16,16 @@ const REQUEST_SECURITY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::Any,
         optional: false,
     },
+    BuiltinParam {
+        name: "gaps",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "lookahead",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
 ];
 
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[BuiltinSignature {

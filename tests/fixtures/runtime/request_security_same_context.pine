@@ -1,6 +1,7 @@
 indicator("request.security same context")
 
 identity = request.security(syminfo.tickerid, timeframe.period, close + open)
+explicit_merge_defaults = request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off)
 history = request.security(syminfo.tickerid, timeframe.period, na(close[1]) ? close : close[1])
 sma = request.security(syminfo.tickerid, timeframe.period, ta.sma(close, 2))
 ema = request.security(syminfo.tickerid, timeframe.period, ta.ema(close, 2))
@@ -81,6 +82,7 @@ wvad_value = request.security(syminfo.tickerid, timeframe.period, ta.wvad)
 [vwap_basis, vwap_upper, vwap_lower] = request.security(syminfo.tickerid, timeframe.period, ta.vwap(close, false, 2.0))
 
 plot(identity)
+plot(explicit_merge_defaults)
 plot(history)
 plot(sma)
 plot(ema)

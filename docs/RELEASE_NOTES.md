@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed explicit default `request.security` merge metadata
+  support for `gaps=barmerge.gaps_off` and
+  `lookahead=barmerge.lookahead_off`; non-default merge modes remain
+  unsupported.
 - Added fixture-backed `indicator(..., format=..., precision=...)`
   declaration metadata support plus the `format.inherit` constant.
 - Added fixture-backed `scale.left`, `scale.right`, and `scale.none`

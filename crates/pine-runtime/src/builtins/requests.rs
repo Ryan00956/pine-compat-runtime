@@ -1,5 +1,6 @@
 use pine_ir::{CallSiteId, HirCallArg, HirExpr};
 
+use crate::builtins::args::call_arg_expr;
 use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
@@ -20,20 +21,38 @@ impl<'a> HistoricalRuntime<'a> {
         call_site_id: CallSiteId,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        if args.len() != 3 {
+        if !(3..=5).contains(&args.len()) {
             return Err(RuntimeError {
-                message: format!("request.security expects 3 argument(s), got {}", args.len()),
+                message: format!(
+                    "request.security expects 3 to 5 argument(s), got {}",
+                    args.len()
+                ),
             });
         }
 
-        let PineValue::String(symbol) = self.eval_expr(&args[0].value)? else {
+        let Some(symbol_expr) = call_arg_expr(args, 0, "symbol") else {
+            return Err(RuntimeError {
+                message: "request.security missing symbol argument".to_owned(),
+            });
+        };
+        let PineValue::String(symbol) = self.eval_expr(symbol_expr)? else {
             return Err(RuntimeError {
                 message: "request.security symbol must evaluate to string".to_owned(),
             });
         };
-        let PineValue::String(timeframe) = self.eval_expr(&args[1].value)? else {
+        let Some(timeframe_expr) = call_arg_expr(args, 1, "timeframe") else {
+            return Err(RuntimeError {
+                message: "request.security missing timeframe argument".to_owned(),
+            });
+        };
+        let PineValue::String(timeframe) = self.eval_expr(timeframe_expr)? else {
             return Err(RuntimeError {
                 message: "request.security timeframe must evaluate to string".to_owned(),
+            });
+        };
+        let Some(expression) = call_arg_expr(args, 2, "expression") else {
+            return Err(RuntimeError {
+                message: "request.security missing expression argument".to_owned(),
             });
         };
 
@@ -46,7 +65,7 @@ impl<'a> HistoricalRuntime<'a> {
         let chart_timeframe = chart.timeframe().clone();
 
         if symbol == chart_symbol && requested_timeframe == chart_timeframe {
-            return self.eval_expr(&args[2].value);
+            return self.eval_expr(expression);
         }
 
         self.eval_provider_security(
@@ -54,7 +73,7 @@ impl<'a> HistoricalRuntime<'a> {
             &symbol,
             requested_timeframe,
             &chart_timeframe,
-            &args[2].value,
+            expression,
         )
     }
 

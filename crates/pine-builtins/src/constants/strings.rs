@@ -96,6 +96,8 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     same_string_constant("display.price_scale"),
     same_string_constant("display.status_line"),
     same_string_constant("display.data_window"),
+    same_string_constant("barmerge.gaps_off"),
+    same_string_constant("barmerge.lookahead_off"),
     same_string_constant("scale.left"),
     same_string_constant("scale.right"),
     same_string_constant("scale.none"),

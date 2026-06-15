@@ -197,7 +197,7 @@ differences remain outside this subset.
 Request helpers:
 
 ```text
-request.security(symbol: simple string, timeframe: simple string, expression: any)
+request.security(symbol: simple string, timeframe: simple string, expression: any, gaps?: const string, lookahead?: const string)
   -> series type matching expression
 ```
 
@@ -235,12 +235,14 @@ The current executable subset has two forms:
   Higher-timeframe alignment uses default `gaps_off` and `lookahead_off`: only
   confirmed requested bars are visible, and missing requested bars forward-fill
   the last confirmed value.
+  Explicit default merge options are accepted as metadata:
+  `gaps=barmerge.gaps_off` and `lookahead=barmerge.lookahead_off`.
 
 Lower timeframe requests, provider expression local variable aliases, UDF calls,
 stateful math calls such as `math.random`, `ta.tr` variable form,
 output/drawing side effects, input
-declarations, array mutation, optional parameters, non-default barmerge
-behavior, explicit gaps, and lookahead remain unsupported.
+declarations, array mutation, non-default barmerge behavior, and non-default
+explicit gaps/lookahead remain unsupported.
 `request.security_lower_tf` is unsupported; it returns arrays in Pine and is not
 claimed until typed array return semantics and host output shapes are designed.
 `timeframe.in_seconds()` returns `60`.
@@ -681,6 +683,9 @@ format metadata accepts `format.inherit`, `format.price`, `format.percent`, and
 `format.volume`; `format.mintick` remains covered by `str.tostring`.
 Supported indicator scale constants include `scale.left`, `scale.right`, and
 `scale.none` as declaration metadata; chart axis placement remains host-owned.
+Supported request merge constants include `barmerge.gaps_off` and
+`barmerge.lookahead_off` for explicit default `request.security` merge metadata;
+non-default merge behavior remains unsupported.
 
 ## Utility
 

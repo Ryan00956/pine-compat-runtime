@@ -45,6 +45,27 @@ fn accepts_same_context_request_security() {
 }
 
 #[test]
+fn accepts_request_security_explicit_default_merge_args() {
+    let analysis = analyze(
+        "plot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_off))\nplot(request.security(syminfo.tickerid, timeframe.period, close, lookahead=barmerge.lookahead_off))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_global_scalar_varip_declaration() {
     let analysis = analyze("varip x = 0\nx := x + 1\nplot(x)\n");
 
@@ -2655,6 +2676,24 @@ fn rejects_provider_request_security_unsupported_call() {
     assert_eq!(
         analysis.compatibility.unsupported[0].feature,
         "request.security"
+    );
+}
+
+#[test]
+fn rejects_request_security_non_default_merge_args() {
+    let analysis = analyze(
+        "plot(request.security(syminfo.tickerid, timeframe.period, close, gaps=\"barmerge.gaps_on\"))\nplot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_off, lookahead=\"barmerge.lookahead_on\"))\n",
+    );
+    let codes = diagnostic_codes(&analysis);
+
+    assert!(codes.contains(&"E_CALL_ARG_VALUE"), "{codes:?}");
+    assert!(codes.contains(&"E_UNSUPPORTED_FEATURE"), "{codes:?}");
+    assert!(
+        analysis
+            .compatibility
+            .unsupported
+            .iter()
+            .any(|feature| feature.feature == "request.security")
     );
 }
 

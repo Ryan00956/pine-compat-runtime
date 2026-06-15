@@ -51,6 +51,19 @@ fn reports_unsupported_request_math_calls_fixture() {
 }
 
 #[test]
+fn reports_unsupported_request_merge_options_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_request_merge_options.pine",
+        "request.security",
+        "optional gaps/lookahead",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_request_merge_options.pine",
+        &["barmerge.gaps_off", "barmerge.lookahead_off"],
+    );
+}
+
+#[test]
 fn accepts_provider_request_context_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/request_security_provider_context.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
