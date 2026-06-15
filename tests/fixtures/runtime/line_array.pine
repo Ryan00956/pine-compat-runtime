@@ -62,3 +62,20 @@ plot(line_clear_checks.size() == 2 and line_clear_checks.get(0) and line_clear_c
 line_slot_count = 1
 computed_lines = array.new_line(line_slot_count + 1)
 plot(computed_lines.size() + (na(computed_lines.get(line_slot_count)) ? 1 : 0))
+
+branch_line_seed = line.new(bar_index, low, bar_index + 1, high)
+branch_new_line_score = bar_index * 0
+if bar_index % 2 == 0
+    branch_new_line_values = array.new_line(2, branch_line_seed)
+    branch_new_line_score := branch_new_line_values.size() * 100 + (not na(branch_new_line_values.get(0)) ? 10 : 0) + (branch_new_line_values.get(1) == branch_line_seed ? 1 : 0)
+else
+    branch_new_line_values = array.new_line(3)
+    branch_new_line_score := branch_new_line_values.size() * 100 + (na(branch_new_line_values.get(0)) ? 10 : 0) + (na(branch_new_line_values.get(2)) ? 1 : 0)
+plot(branch_new_line_score)
+
+loop_line_seed = line.copy(branch_line_seed)
+loop_new_line_score = bar_index * 0
+for i = 0 to 1
+    loop_new_line_values = array.new_line(i + 1, loop_line_seed)
+    loop_new_line_score := loop_new_line_score + loop_new_line_values.size() * 10 + (loop_new_line_values.get(i) == loop_line_seed ? 1 : 0)
+plot(loop_new_line_score)
