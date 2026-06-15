@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed unsupported coverage for `linefill.*`, keeping the
+  linefill object namespace boundary explicit beyond the `linefill.all`
+  collection variable.
 - Added fixture-backed unsupported coverage for `polyline.all`, keeping the
   remaining polyline object collection boundary explicit.
 - Added fixture-backed unsupported coverage for `linefill.all`, keeping the
