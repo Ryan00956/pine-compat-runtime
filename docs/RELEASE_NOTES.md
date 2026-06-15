@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Aligned the remaining built-in `color.*` named constants with TradingView's
+  official 17-color RGB table and expanded fixture-backed channel coverage.
 - Aligned the direct `color.orange` named constant with TradingView's official
   `#FF9800` RGB value and added fixture-backed channel coverage.
 - Added fixture-backed direct `strategy.oca.cancel`, `strategy.oca.none`, and

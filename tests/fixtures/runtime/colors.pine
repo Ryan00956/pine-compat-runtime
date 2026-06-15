@@ -19,12 +19,12 @@ clamped_channels = color.r(clamped) + color.g(clamped) + color.b(clamped) + colo
 clamped_transparency = color.t(clamped_opaque) + color.t(clamped_clear)
 hex_channels = color.r(hex) + color.g(hex) + color.b(hex) + color.t(hex)
 gradient_channels = color.r(gradient) + color.g(gradient) + color.b(gradient) + color.t(gradient)
-official_orange = color.r(color.orange) == 255 and color.g(color.orange) == 152 and color.b(color.orange) == 0 and color.t(color.orange) == 0
+official_named_colors = color.r(color.aqua) == 0 and color.g(color.aqua) == 188 and color.b(color.aqua) == 212 and color.t(color.aqua) == 0 and color.r(color.black) == 54 and color.g(color.black) == 58 and color.b(color.black) == 69 and color.r(color.blue) == 33 and color.g(color.blue) == 150 and color.b(color.blue) == 243 and color.r(color.fuchsia) == 224 and color.g(color.fuchsia) == 64 and color.b(color.fuchsia) == 251 and color.r(color.gray) == 120 and color.g(color.gray) == 123 and color.b(color.gray) == 134 and color.r(color.green) == 76 and color.g(color.green) == 175 and color.b(color.green) == 80 and color.r(color.lime) == 0 and color.g(color.lime) == 230 and color.b(color.lime) == 118 and color.r(color.maroon) == 136 and color.g(color.maroon) == 14 and color.b(color.maroon) == 79 and color.r(color.navy) == 49 and color.g(color.navy) == 27 and color.b(color.navy) == 146 and color.r(color.olive) == 128 and color.g(color.olive) == 128 and color.b(color.olive) == 0 and color.r(color.orange) == 255 and color.g(color.orange) == 152 and color.b(color.orange) == 0 and color.r(color.purple) == 156 and color.g(color.purple) == 39 and color.b(color.purple) == 176 and color.r(color.red) == 242 and color.g(color.red) == 54 and color.b(color.red) == 69 and color.r(color.silver) == 178 and color.g(color.silver) == 181 and color.b(color.silver) == 190 and color.r(color.teal) == 8 and color.g(color.teal) == 153 and color.b(color.teal) == 129 and color.r(color.white) == 255 and color.g(color.white) == 255 and color.b(color.white) == 255 and color.r(color.yellow) == 253 and color.g(color.yellow) == 216 and color.b(color.yellow) == 53
 bgcolor(custom)
 plot(close, color=shade)
 plot(opaque == color.new(color.blue, 0) ? 1 : 0)
 plot(opaque_blue == color.blue ? 1 : 0)
-plot(official_orange ? 1 : 0)
+plot(official_named_colors ? 1 : 0)
 plot(channels)
 plot(clamped_channels)
 plot(color.r(opaque_rgb) == 0 and color.g(opaque_rgb) == 128 and color.b(opaque_rgb) == 0 and color.t(opaque_rgb) == 0 ? 1 : 0)

@@ -8427,7 +8427,7 @@ def test_run_script_returns_label_array_outputs():
     snapshots = result["labels"][0]["snapshots"]
     assert snapshots[0]["text"] == "start"
     assert snapshots[1]["text"] == "array"
-    assert snapshots[2]["color"] == 0x008000
+    assert snapshots[2]["color"] == 0x4CAF50
 
 
 def test_run_script_returns_line_outputs():
@@ -8474,7 +8474,7 @@ def test_run_script_returns_line_new_style_outputs():
                     "y1": 2.0,
                     "x2": 2,
                     "y2": 2.0,
-                    "color": 0x008000,
+                    "color": 0x4CAF50,
                     "width": 2,
                     "style": "line.style_dashed",
                     "extend": "extend.right",
@@ -8553,7 +8553,7 @@ def test_run_script_returns_line_array_outputs():
                     "y1": 1.0,
                     "x2": 1,
                     "y2": 1.0,
-                    "color": 0x008000,
+                    "color": 0x4CAF50,
                     "width": 1,
                     "style": "line.style_solid",
                     "extend": "extend.none",
@@ -8565,7 +8565,7 @@ def test_run_script_returns_line_array_outputs():
                     "y1": 1.0,
                     "x2": 1,
                     "y2": 1.0,
-                    "color": 0x008000,
+                    "color": 0x4CAF50,
                     "width": 2,
                     "style": "line.style_solid",
                     "extend": "extend.none",
@@ -8626,7 +8626,7 @@ def test_run_script_returns_box_outputs():
                     "top": 2.0,
                     "right": 1,
                     "bottom": 2.0,
-                    "bgColor": 0x008000,
+                    "bgColor": 0x4CAF50,
                     "borderColor": None,
                     "borderWidth": 1,
                     "borderStyle": "line.style_solid",
@@ -8711,7 +8711,7 @@ def test_run_script_accepts_drawing_object_method_syntax():
     assert result["plots"][0]["values"] == [5, 6, 6]
     assert result["plots"][1]["values"] == [0, 1, 1]
     assert result["plots"][2]["values"] == [1, 2, 2]
-    assert result["tables"][0]["bgColor"] == 0x008000
+    assert result["tables"][0]["bgColor"] == 0x4CAF50
 
 
 def test_run_script_returns_box_new_style_outputs():
@@ -8731,7 +8731,7 @@ def test_run_script_returns_box_new_style_outputs():
                     "top": 2.0,
                     "right": 2,
                     "bottom": 2.0,
-                    "bgColor": 0x008000,
+                    "bgColor": 0x4CAF50,
                     "borderColor": 0xFFFFFF,
                     "borderWidth": 2,
                     "borderStyle": "line.style_dashed",
@@ -8785,8 +8785,8 @@ def test_run_script_returns_table_outputs():
         {
             "id": 1,
             "position": "position.bottom_right",
-            "bgColor": 0xFFFF00,
-            "frameColor": 0,
+            "bgColor": 0xFDD835,
+            "frameColor": 0x363A45,
             "frameWidth": 3,
             "borderColor": 0xFFFFFF,
             "borderWidth": 4,
@@ -8806,7 +8806,7 @@ def test_run_script_returns_table_outputs():
                             "column": 0,
                             "row": 0,
                             "text": "A",
-                            "bgColor": 0x008000,
+                            "bgColor": 0x4CAF50,
                             "textColor": 0xFFFFFF,
                             "width": None,
                             "height": None,
@@ -8824,7 +8824,7 @@ def test_run_script_returns_table_outputs():
                             "column": 0,
                             "row": 0,
                             "text": "B",
-                            "bgColor": 0x008000,
+                            "bgColor": 0x4CAF50,
                             "textColor": 0xFFFFFF,
                             "width": None,
                             "height": None,
@@ -8842,7 +8842,7 @@ def test_run_script_returns_table_outputs():
                             "column": 0,
                             "row": 0,
                             "text": "B",
-                            "bgColor": 0xFF0000,
+                            "bgColor": 0xF23645,
                             "textColor": 0xFFFFFF,
                             "width": None,
                             "height": None,
@@ -8860,8 +8860,8 @@ def test_run_script_returns_table_outputs():
                             "column": 0,
                             "row": 0,
                             "text": "B",
-                            "bgColor": 0xFF0000,
-                            "textColor": 0x0000FF,
+                            "bgColor": 0xF23645,
+                            "textColor": 0x2196F3,
                             "width": None,
                             "height": None,
                             "textSize": None,
@@ -8878,8 +8878,8 @@ def test_run_script_returns_table_outputs():
                             "column": 0,
                             "row": 0,
                             "text": "B",
-                            "bgColor": 0xFF0000,
-                            "textColor": 0x0000FF,
+                            "bgColor": 0xF23645,
+                            "textColor": 0x2196F3,
                             "width": 25,
                             "height": None,
                             "textSize": None,
@@ -8896,8 +8896,8 @@ def test_run_script_returns_table_outputs():
                             "column": 0,
                             "row": 0,
                             "text": "B",
-                            "bgColor": 0xFF0000,
-                            "textColor": 0x0000FF,
+                            "bgColor": 0xF23645,
+                            "textColor": 0x2196F3,
                             "width": 25,
                             "height": 40,
                             "textSize": None,
@@ -8914,8 +8914,8 @@ def test_run_script_returns_table_outputs():
                             "column": 0,
                             "row": 0,
                             "text": "B",
-                            "bgColor": 0xFF0000,
-                            "textColor": 0x0000FF,
+                            "bgColor": 0xF23645,
+                            "textColor": 0x2196F3,
                             "width": 25,
                             "height": 40,
                             "textSize": "size.small",
@@ -8932,8 +8932,8 @@ def test_run_script_returns_table_outputs():
                             "column": 0,
                             "row": 0,
                             "text": "B",
-                            "bgColor": 0xFF0000,
-                            "textColor": 0x0000FF,
+                            "bgColor": 0xF23645,
+                            "textColor": 0x2196F3,
                             "width": 25,
                             "height": 40,
                             "textSize": "size.small",
@@ -8950,8 +8950,8 @@ def test_run_script_returns_table_outputs():
                             "column": 0,
                             "row": 0,
                             "text": "B",
-                            "bgColor": 0xFF0000,
-                            "textColor": 0x0000FF,
+                            "bgColor": 0xF23645,
+                            "textColor": 0x2196F3,
                             "width": 25,
                             "height": 40,
                             "textSize": "size.small",
@@ -8968,8 +8968,8 @@ def test_run_script_returns_table_outputs():
                             "column": 0,
                             "row": 0,
                             "text": "B",
-                            "bgColor": 0xFF0000,
-                            "textColor": 0x0000FF,
+                            "bgColor": 0xF23645,
+                            "textColor": 0x2196F3,
                             "width": 25,
                             "height": 40,
                             "textSize": "size.small",
@@ -9084,7 +9084,7 @@ def test_run_script_returns_table_clear_outputs():
                             "column": 1,
                             "row": 0,
                             "text": "B",
-                            "bgColor": 0x008000,
+                            "bgColor": 0x4CAF50,
                             "textColor": None,
                             "width": None,
                             "height": None,
@@ -9179,7 +9179,7 @@ def test_run_script_returns_plotchar_outputs():
 
     assert result["plotChars"][0]["values"] == [False, False, True]
     assert result["plotChars"][0]["chars"] == ["x", "x", "x"]
-    assert result["plotChars"][0]["colors"] == [0x008000, 0x008000, 0x008000]
+    assert result["plotChars"][0]["colors"] == [0x4CAF50, 0x4CAF50, 0x4CAF50]
 
 
 def test_run_script_returns_plotshape_outputs():
@@ -9209,7 +9209,7 @@ def test_run_script_returns_plotshape_outputs():
         "location.belowbar",
         "location.belowbar",
     ]
-    assert result["plotShapes"][0]["colors"] == [0x008000, 0x008000, 0x008000]
+    assert result["plotShapes"][0]["colors"] == [0x4CAF50, 0x4CAF50, 0x4CAF50]
     assert result["plotShapes"][0]["texts"] == ["Buy", "Buy", "Buy"]
     assert result["plotShapes"][0]["textColors"] == [
         0xFFFFFF,
@@ -9230,8 +9230,8 @@ def test_run_script_returns_plotarrow_outputs():
     )
 
     assert result["plotArrows"][0]["values"] == [-1.0, 0.0, 1.0]
-    assert result["plotArrows"][0]["colorUps"] == [0x008000, 0x008000, 0x008000]
-    assert result["plotArrows"][0]["colorDowns"] == [0xFF0000, 0xFF0000, 0xFF0000]
+    assert result["plotArrows"][0]["colorUps"] == [0x4CAF50, 0x4CAF50, 0x4CAF50]
+    assert result["plotArrows"][0]["colorDowns"] == [0xF23645, 0xF23645, 0xF23645]
     assert result["plotArrows"][0]["minHeights"] == [5, 5, 5]
     assert result["plotArrows"][0]["maxHeights"] == [20, 20, 20]
 
@@ -9246,7 +9246,7 @@ def test_run_script_returns_plotbar_outputs():
     assert result["plotBars"][0]["highs"] == [1.0, 2.0, 3.0]
     assert result["plotBars"][0]["lows"] == [1.0, 2.0, 3.0]
     assert result["plotBars"][0]["closes"] == [1.0, 2.0, 3.0]
-    assert result["plotBars"][0]["colors"] == [0x008000, 0x008000, 0x008000]
+    assert result["plotBars"][0]["colors"] == [0x4CAF50, 0x4CAF50, 0x4CAF50]
 
 
 def test_run_script_returns_plotcandle_outputs():
@@ -9269,6 +9269,6 @@ def test_run_script_returns_plotcandle_outputs():
     assert result["plotCandles"][0]["highs"] == [1.0, 2.0, 3.0]
     assert result["plotCandles"][0]["lows"] == [1.0, 2.0, 3.0]
     assert result["plotCandles"][0]["closes"] == [1.0, 2.0, 3.0]
-    assert result["plotCandles"][0]["colors"] == [0x008000, 0x008000, 0x008000]
+    assert result["plotCandles"][0]["colors"] == [0x4CAF50, 0x4CAF50, 0x4CAF50]
     assert result["plotCandles"][0]["wickColors"] == [0xFFFFFF, 0xFFFFFF, 0xFFFFFF]
-    assert result["plotCandles"][0]["borderColors"] == [0xFF0000, 0xFF0000, 0xFF0000]
+    assert result["plotCandles"][0]["borderColors"] == [0xF23645, 0xF23645, 0xF23645]

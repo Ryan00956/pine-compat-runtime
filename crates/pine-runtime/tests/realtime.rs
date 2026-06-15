@@ -676,7 +676,7 @@ fn line_fixture_rolls_back_forming_lifecycle_changes() {
     assert_eq!(result.lines[0].snapshots[2].y1, PineValue::Float(2.0));
     assert_eq!(
         result.lines[0].snapshots[2].color,
-        PineValue::Color(0x008000)
+        PineValue::Color(0x4CAF50)
     );
     assert_eq!(result.lines[1].id, 2);
     assert_eq!(result.lines[1].snapshots.len(), 2);
@@ -726,7 +726,7 @@ fn box_fixture_rolls_back_forming_lifecycle_changes() {
     assert_eq!(result.boxes[0].snapshots[2].top, PineValue::Float(2.0));
     assert_eq!(
         result.boxes[0].snapshots[2].bg_color,
-        PineValue::Color(0x008000)
+        PineValue::Color(0x4CAF50)
     );
     assert_eq!(result.boxes[1].id, 2);
     assert_eq!(result.boxes[1].snapshots.len(), 2);
@@ -782,7 +782,7 @@ fn table_fixture_rolls_back_forming_cell_changes() {
     );
     assert_eq!(
         result.tables[0].snapshots[2].cells[0].bg_color,
-        PineValue::Color(0x008000)
+        PineValue::Color(0x4CAF50)
     );
     assert_eq!(result.tables[1].id, 2);
     assert_eq!(result.tables[1].snapshots.len(), 2);

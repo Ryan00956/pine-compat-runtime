@@ -62,17 +62,17 @@ plot(na(missing_gradient) ? 1 : 0)
     assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[6].values, &[100.0, 100.0]);
     assert_values_close(&result.plots[7].values, &[458.0, 458.0]);
-    assert_values_close(&result.plots[8].values, &[255.0, 192.0]);
+    assert_values_close(&result.plots[8].values, &[365.0, 349.0]);
     assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
-    assert_eq!(apply_transparency(0xFF0000, 50), 0xFF000080);
+    assert_eq!(apply_transparency(0xF23645, 50), 0xF2364580);
     assert_eq!(apply_transparency(0x112233, -10), 0x112233);
     assert_eq!(apply_transparency(0x112233, 120), 0x11223300);
-    assert_eq!(compose_color(0x008000, 0xFF), 0x008000);
-    assert_eq!(compose_color(0x008000, 0x80), 0x00800080);
-    assert_eq!(interpolate_color(0xFF0000, 0x008000, 0.0), 0xFF0000);
-    assert_eq!(interpolate_color(0xFF0000, 0x008000, 1.0), 0x008000);
+    assert_eq!(compose_color(0x4CAF50, 0xFF), 0x4CAF50);
+    assert_eq!(compose_color(0x4CAF50, 0x80), 0x4CAF5080);
+    assert_eq!(interpolate_color(0xF23645, 0x4CAF50, 0.0), 0xF23645);
+    assert_eq!(interpolate_color(0xF23645, 0x4CAF50, 1.0), 0x4CAF50);
     assert_eq!(
         result.bg_colors[0].values,
         vec![PineValue::Color(0xFF990080), PineValue::Color(0xFF990080)]

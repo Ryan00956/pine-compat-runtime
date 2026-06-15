@@ -131,7 +131,7 @@ plot(close)
     assert_eq!(snapshot.y1, PineValue::Float(4.0));
     assert_eq!(snapshot.x2, PineValue::Int(4));
     assert_eq!(snapshot.y2, PineValue::Float(4.0));
-    assert_eq!(snapshot.color, PineValue::Color(0x008000));
+    assert_eq!(snapshot.color, PineValue::Color(0x4CAF50));
     assert_eq!(snapshot.width, PineValue::Int(2));
     assert_eq!(
         snapshot.style,
@@ -186,7 +186,7 @@ plot(close)
     assert_eq!(line.snapshots[6].y2, PineValue::Float(1.0));
     assert_eq!(line.snapshots[7].x1, PineValue::Int(10));
     assert_eq!(line.snapshots[7].x2, PineValue::Int(12));
-    assert_eq!(line.snapshots[8].color, PineValue::Color(0x008000));
+    assert_eq!(line.snapshots[8].color, PineValue::Color(0x4CAF50));
     assert_eq!(line.snapshots[9].width, PineValue::Int(2));
     assert_eq!(
         line.snapshots[10].style,
@@ -388,7 +388,7 @@ plot(close)
     assert_eq!(snapshot.top, PineValue::Float(4.0));
     assert_eq!(snapshot.right, PineValue::Int(4));
     assert_eq!(snapshot.bottom, PineValue::Float(4.0));
-    assert_eq!(snapshot.bg_color, PineValue::Color(0x008000));
+    assert_eq!(snapshot.bg_color, PineValue::Color(0x4CAF50));
     assert_eq!(snapshot.border_color, PineValue::Color(0xFFFFFF));
     assert_eq!(snapshot.border_width, PineValue::Int(2));
     assert_eq!(
@@ -477,7 +477,7 @@ plot(close)
     assert_eq!(box_output.snapshots[6].bottom, PineValue::Float(1.0));
     assert_eq!(box_output.snapshots[7].left, PineValue::Int(10));
     assert_eq!(box_output.snapshots[7].right, PineValue::Int(12));
-    assert_eq!(box_output.snapshots[8].bg_color, PineValue::Color(0x008000));
+    assert_eq!(box_output.snapshots[8].bg_color, PineValue::Color(0x4CAF50));
     assert_eq!(
         box_output.snapshots[9].border_color,
         PineValue::Color(0xFFFFFF)
@@ -699,8 +699,8 @@ plot(close)
         table.position,
         PineValue::String("position.bottom_right".to_owned())
     );
-    assert_eq!(table.bg_color, PineValue::Color(0xFFFF00));
-    assert_eq!(table.frame_color, PineValue::Color(0x000000));
+    assert_eq!(table.bg_color, PineValue::Color(0xFDD835));
+    assert_eq!(table.frame_color, PineValue::Color(0x363A45));
     assert_eq!(table.frame_width, PineValue::Int(3));
     assert_eq!(table.border_color, PineValue::Color(0xFFFFFF));
     assert_eq!(table.border_width, PineValue::Int(4));
@@ -719,7 +719,7 @@ plot(close)
     assert_eq!(table.snapshots[2].cells[1].column, 1);
     assert_eq!(
         table.snapshots[2].cells[1].bg_color,
-        PineValue::Color(0x008000)
+        PineValue::Color(0x4CAF50)
     );
     assert_eq!(
         table.snapshots[2].cells[1].text_color,
@@ -751,11 +751,11 @@ plot(close)
     );
     assert_eq!(
         table.snapshots[5].cells[1].bg_color,
-        PineValue::Color(0xFF0000)
+        PineValue::Color(0xF23645)
     );
     assert_eq!(
         table.snapshots[6].cells[1].text_color,
-        PineValue::Color(0x0000FF)
+        PineValue::Color(0x2196F3)
     );
     assert_eq!(table.snapshots[7].cells[1].width, PineValue::Int(25));
     assert_eq!(table.snapshots[8].cells[1].height, PineValue::Int(40));
@@ -810,8 +810,8 @@ plot(close)
 
     assert_eq!(result.tables.len(), 2);
     assert_eq!(result.tables[0].bg_color, PineValue::Na);
-    assert_eq!(result.tables[1].bg_color, PineValue::Color(0xFFFF00));
-    assert_eq!(result.tables[1].frame_color, PineValue::Color(0x000000));
+    assert_eq!(result.tables[1].bg_color, PineValue::Color(0xFDD835));
+    assert_eq!(result.tables[1].frame_color, PineValue::Color(0x363A45));
     assert_eq!(result.tables[1].frame_width, PineValue::Int(2));
     assert_eq!(result.tables[1].border_color, PineValue::Color(0xFFFFFF));
     assert_eq!(result.tables[1].border_width, PineValue::Int(1));
@@ -1067,7 +1067,7 @@ plot(close)
         PineValue::String("xloc.bar_index".to_owned())
     );
     assert_eq!(snapshot.yloc, PineValue::String("yloc.price".to_owned()));
-    assert_eq!(snapshot.color, PineValue::Color(0x008000));
+    assert_eq!(snapshot.color, PineValue::Color(0x4CAF50));
     assert_eq!(
         snapshot.style,
         PineValue::String("label.style_label_up".to_owned())
@@ -1137,7 +1137,7 @@ plot(close)
         label.snapshots[3].text,
         PineValue::String("changed".to_owned())
     );
-    assert_eq!(label.snapshots[4].color, PineValue::Color(0x008000));
+    assert_eq!(label.snapshots[4].color, PineValue::Color(0x4CAF50));
     assert_eq!(label.snapshots[5].text_color, PineValue::Color(0xFFFFFF));
     assert_eq!(
         label.snapshots[6].style,
@@ -1342,12 +1342,12 @@ plot(close)
     let snapshots = &result.labels[0].snapshots;
     assert_eq!(snapshots.len(), 8);
     assert_eq!(snapshots[0].bar_index, 0);
-    assert_eq!(snapshots[1].color, PineValue::Color(0xFF0000));
+    assert_eq!(snapshots[1].color, PineValue::Color(0xF23645));
     assert_eq!(snapshots[2].text, PineValue::String("if".to_owned()));
-    assert_eq!(snapshots[3].color, PineValue::Color(0x008000));
-    assert_eq!(snapshots[4].color, PineValue::Color(0xFF0000));
+    assert_eq!(snapshots[3].color, PineValue::Color(0x4CAF50));
+    assert_eq!(snapshots[4].color, PineValue::Color(0xF23645));
     assert_eq!(snapshots[5].tooltip, PineValue::String("for".to_owned()));
-    assert_eq!(snapshots[6].color, PineValue::Color(0x008000));
+    assert_eq!(snapshots[6].color, PineValue::Color(0x4CAF50));
     assert_eq!(
         snapshots[7].size,
         PineValue::String("size.small".to_owned())
@@ -1415,14 +1415,14 @@ plot(close)
         result.bg_colors[0].values,
         vec![
             PineValue::Na,
-            PineValue::Color(0x008000),
-            PineValue::Color(0x008000)
+            PineValue::Color(0x4CAF50),
+            PineValue::Color(0x4CAF50)
         ]
     );
     assert_eq!(result.bar_colors.len(), 1);
     assert_eq!(
         result.bar_colors[0].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Color(0xFF0000)]
+        vec![PineValue::Na, PineValue::Na, PineValue::Color(0xF23645)]
     );
 }
 
@@ -1463,8 +1463,8 @@ plot(close)
         result.plot_chars[0].colors,
         vec![
             PineValue::Na,
-            PineValue::Color(0x008000),
-            PineValue::Color(0x008000)
+            PineValue::Color(0x4CAF50),
+            PineValue::Color(0x4CAF50)
         ]
     );
 }
@@ -1514,8 +1514,8 @@ plot(close)
         result.plot_shapes[0].colors,
         vec![
             PineValue::Na,
-            PineValue::Color(0x008000),
-            PineValue::Color(0x008000)
+            PineValue::Color(0x4CAF50),
+            PineValue::Color(0x4CAF50)
         ]
     );
     assert_eq!(
@@ -1573,16 +1573,16 @@ plot(close)
         result.plot_arrows[0].color_ups,
         vec![
             PineValue::Na,
-            PineValue::Color(0x008000),
-            PineValue::Color(0x008000)
+            PineValue::Color(0x4CAF50),
+            PineValue::Color(0x4CAF50)
         ]
     );
     assert_eq!(
         result.plot_arrows[0].color_downs,
         vec![
             PineValue::Na,
-            PineValue::Color(0xFF0000),
-            PineValue::Color(0xFF0000)
+            PineValue::Color(0xF23645),
+            PineValue::Color(0xF23645)
         ]
     );
     assert_eq!(
@@ -1640,8 +1640,8 @@ plot(close)
         result.plot_bars[0].colors,
         vec![
             PineValue::Na,
-            PineValue::Color(0x008000),
-            PineValue::Color(0x008000)
+            PineValue::Color(0x4CAF50),
+            PineValue::Color(0x4CAF50)
         ]
     );
 }
@@ -1691,8 +1691,8 @@ plot(close)
         result.plot_candles[0].colors,
         vec![
             PineValue::Na,
-            PineValue::Color(0x008000),
-            PineValue::Color(0x008000)
+            PineValue::Color(0x4CAF50),
+            PineValue::Color(0x4CAF50)
         ]
     );
     assert_eq!(
@@ -1707,8 +1707,8 @@ plot(close)
         result.plot_candles[0].border_colors,
         vec![
             PineValue::Na,
-            PineValue::Color(0xFF0000),
-            PineValue::Color(0xFF0000)
+            PineValue::Color(0xF23645),
+            PineValue::Color(0xF23645)
         ]
     );
 }

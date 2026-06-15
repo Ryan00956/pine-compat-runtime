@@ -27,7 +27,7 @@ plot(words.join("|") == "a||b" ? 1 : 0)
 colors = array.new_color()
 colors.push(color.red)
 colors.push(color.green)
-plot(colors.join("|") == "16711680|32768" ? 1 : 0)
+plot(colors.join("|") == "15873605|5025616" ? 1 : 0)
 
 empty = array.new_string()
 plot(array.join(empty, "|") == "" ? 1 : 0)

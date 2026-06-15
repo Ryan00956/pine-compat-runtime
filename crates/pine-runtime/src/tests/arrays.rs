@@ -337,7 +337,7 @@ plot(color.b(first) + color.g(last))
     assert_eq!(result.plots.len(), 3);
     assert_values_close(&result.plots[0].values, &[2.0, 2.0, 2.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[2].values, &[383.0, 383.0, 383.0]);
+    assert_values_close(&result.plots[2].values, &[418.0, 418.0, 418.0]);
 }
 
 #[test]
@@ -369,7 +369,7 @@ plot(color.b(first) + color.g(last))
     assert_eq!(result.plots.len(), 3);
     assert_values_close(&result.plots[0].values, &[2.0, 2.0, 2.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[2].values, &[383.0, 383.0, 383.0]);
+    assert_values_close(&result.plots[2].values, &[418.0, 418.0, 418.0]);
 }
 
 #[test]
@@ -1171,7 +1171,7 @@ plot(words.join("|") == "a||b" ? 1 : 0)
 colors = array.new_color()
 colors.push(color.red)
 colors.push(color.green)
-plot(colors.join("|") == "16711680|32768" ? 1 : 0)
+plot(colors.join("|") == "15873605|5025616" ? 1 : 0)
 
 empty = array.new_string()
 plot(array.join(empty, "|") == "" ? 1 : 0)
