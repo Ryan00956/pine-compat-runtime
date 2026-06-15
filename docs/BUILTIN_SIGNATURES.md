@@ -1412,8 +1412,9 @@ separators split the source into Unicode scalar values. It returns `na` for
 fixed-offset timezone strings such as `UTC+4`, `GMT-5`, and `+05:30`. Omitted
 or `na` `format` defaults to `yyyy-MM-dd'T'HH:mm:ssZ`; omitted or `na`
 `timezone` defaults to UTC. Supported tokens include `y`/`Y`, `M`, `d`, `H`,
-`h`, `m`, `s`, `S`, `a`, `Z`, and single-quoted literals. IANA and exchange
-timezone conversion remain unsupported.
+`D`, `h`, `m`, `s`, `S`, `a`, `Z`, and single-quoted literals. `D` renders the
+day of the year with optional zero-padding. IANA and exchange timezone
+conversion remain unsupported.
 
 ## Math
 

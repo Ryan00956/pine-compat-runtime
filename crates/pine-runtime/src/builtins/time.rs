@@ -230,6 +230,7 @@ pub(crate) fn format_datetime_with_offset(
             }
             'M' => result.push_str(&format_month(datetime.month(), count)),
             'd' => push_padded_or_plain(&mut result, datetime.day(), count),
+            'D' => push_padded_or_plain(&mut result, datetime.ordinal(), count),
             'H' => push_padded_or_plain(&mut result, datetime.hour(), count),
             'h' => {
                 let hour = match datetime.hour() % 12 {

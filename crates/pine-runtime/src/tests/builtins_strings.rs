@@ -122,6 +122,8 @@ formatted_time_gmt_alias = str.format_time(1609459200000, "HH:mm:ssZ", "GMT-0")
 formatted_time_fixed_east = str.format_time(1609459200000, "yyyy-MM-dd HH:mm:ssZ", "UTC+4")
 formatted_time_fixed_west = str.format_time(1609459200000, "yyyy-MM-dd HH:mm:ssZ", "GMT-5")
 formatted_time_numeric_offset = str.format_time(1609459200000, "HH:mm:ssZ", "+05:30")
+formatted_time_day_of_year = str.format_time(1609459200000, "D DD DDD", "UTC")
+formatted_time_day_of_year_later = str.format_time(1612235045000, "D DDD", "UTC")
 formatted_time_na_format = str.format_time(1609459200000, na)
 formatted_time_na_timezone = str.format_time(1609459200000, "HH:mm:ssZ", na)
 missing_format_time = str.format_time(na)
@@ -157,6 +159,7 @@ plot(formatted_time_default == "2021-01-01T00:00:00+0000" and formatted_time_dat
 plot(formatted_time_text == "00:00:00 on Jan 01, 2021" and na(missing_format_time) ? 1 : 0)
 plot(formatted_time_alias == "00:00:00+0000" and formatted_time_gmt_alias == "00:00:00+0000" and formatted_time_na_timezone == "00:00:00+0000" ? 1 : 0)
 plot(formatted_time_fixed_east == "2021-01-01 04:00:00+0400" and formatted_time_fixed_west == "2020-12-31 19:00:00-0500" and formatted_time_numeric_offset == "05:30:00+0530" ? 1 : 0)
+plot(formatted_time_day_of_year == "1 01 001" and formatted_time_day_of_year_later == "33 033" ? 1 : 0)
 "##,
     );
     let analysis = analyze_source(&source);

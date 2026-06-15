@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.format_time` support for the `D` day-of-year
+  format token.
 - Added fixture-backed fixed-offset timezone support to `time()` and
   `time_close()` time-based session filtering while leaving IANA timezone
   conversion, exchange-timezone defaults, and named-session data unsupported.
