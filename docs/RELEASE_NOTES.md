@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed fixed-offset timezone support to `time()` and
+  `time_close()` time-based session filtering while leaving IANA timezone
+  conversion, exchange-timezone defaults, and named-session data unsupported.
 - Added fixture-backed fixed-offset timezone support to `str.format_time`,
   including UTC/GMT offset strings and numeric offsets such as `+05:30` while
   leaving IANA timezone conversion and exchange-timezone defaults unsupported.

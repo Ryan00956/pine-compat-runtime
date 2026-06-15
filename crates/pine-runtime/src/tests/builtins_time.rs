@@ -315,6 +315,9 @@ fn runs_time_and_time_close_functions_with_sessions() {
 session_open = time("", "0001-0003")
 session_close = time_close("", "0001-0003")
 session_open_utc = time("", "0001-0003", "UTC")
+session_open_fixed_east = time("", "0401-0403", "UTC+4")
+session_close_fixed_west = time_close("", "1901-1903", "GMT-5")
+session_open_numeric_offset = time("", "0531-0533", "+05:30")
 session_previous_open = time("", session = "0001-0003", bars_back = 1)
 split_session_close = time_close("", "0001-0002,0003-0004")
 plot(na(session_open) ? -1 : session_open / 60000)
@@ -322,6 +325,9 @@ plot(na(session_close) ? -1 : session_close / 60000)
 plot(not na(time("", "0001-0003:5")) ? 1 : 0)
 plot(na(time("", "0001-0003:6")) ? 1 : 0)
 plot(na(session_open_utc) ? -1 : session_open_utc / 60000)
+plot(na(session_open_fixed_east) ? -1 : session_open_fixed_east / 60000)
+plot(na(session_close_fixed_west) ? -1 : session_close_fixed_west / 60000)
+plot(na(session_open_numeric_offset) ? -1 : session_open_numeric_offset / 60000)
 plot(na(session_previous_open) ? -1 : session_previous_open / 60000)
 plot(na(split_session_close) ? -1 : split_session_close / 60000)
 plot(time("", "24x7") == time ? 1 : 0)
@@ -375,9 +381,12 @@ plot(time("", "24x7") == time ? 1 : 0)
     assert_values_close(&result.plots[2].values, &[0.0, 1.0, 1.0, 0.0]);
     assert_values_close(&result.plots[3].values, &[1.0, 1.0, 1.0, 1.0]);
     assert_values_close(&result.plots[4].values, &[-1.0, 1.0, 2.0, -1.0]);
-    assert_values_close(&result.plots[5].values, &[-1.0, -1.0, 1.0, 2.0]);
-    assert_values_close(&result.plots[6].values, &[-1.0, 2.0, -1.0, 4.0]);
-    assert_values_close(&result.plots[7].values, &[1.0, 1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[5].values, &[-1.0, 1.0, 2.0, -1.0]);
+    assert_values_close(&result.plots[6].values, &[-1.0, 2.0, 3.0, -1.0]);
+    assert_values_close(&result.plots[7].values, &[-1.0, 1.0, 2.0, -1.0]);
+    assert_values_close(&result.plots[8].values, &[-1.0, -1.0, 1.0, 2.0]);
+    assert_values_close(&result.plots[9].values, &[-1.0, 2.0, -1.0, 4.0]);
+    assert_values_close(&result.plots[10].values, &[1.0, 1.0, 1.0, 1.0]);
 }
 
 #[test]

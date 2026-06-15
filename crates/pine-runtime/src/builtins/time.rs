@@ -580,11 +580,10 @@ impl<'a> HistoricalRuntime<'a> {
                 ),
             });
         }
-        if !is_supported_utc_timezone(&args.timezone) {
-            return Err(RuntimeError {
+        let timezone_offset_seconds =
+            parse_fixed_timezone_offset(&args.timezone).ok_or_else(|| RuntimeError {
                 message: format!("{name} unsupported timezone `{}`", args.timezone),
-            });
-        }
+            })?;
         let session = match args.session.as_deref() {
             Some("") | None => None,
             Some(session) => Some(parse_time_session(session).ok_or_else(|| RuntimeError {
@@ -669,8 +668,12 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         if let Some(session) = session {
-            let Some(session_close) =
-                session_close_for_bar_open(open_time, close_timestamp, &session)?
+            let Some(session_close) = session_close_for_bar_open(
+                open_time,
+                close_timestamp,
+                &session,
+                timezone_offset_seconds,
+            )?
             else {
                 return Ok(PineValue::Na);
             };
@@ -991,18 +994,35 @@ fn session_close_for_bar_open(
     open_time: i64,
     default_close: i64,
     session: &TimeSession,
+    timezone_offset_seconds: i32,
 ) -> Result<Option<i64>, RuntimeError> {
-    let datetime = utc_datetime_from_millis(open_time)?;
+    let timezone_offset_ms = i64::from(timezone_offset_seconds)
+        .checked_mul(1000)
+        .ok_or_else(|| RuntimeError {
+            message: "time session timestamp is out of range".to_owned(),
+        })?;
+    let local_open_time =
+        open_time
+            .checked_add(timezone_offset_ms)
+            .ok_or_else(|| RuntimeError {
+                message: "time session timestamp is out of range".to_owned(),
+            })?;
+    let datetime = utc_datetime_from_millis(local_open_time)?;
     let minute = i64::from(datetime.hour()) * 60 + i64::from(datetime.minute());
     let day = dayofweek_value(datetime) as usize;
     let midnight = utc_midnight_millis(datetime)?;
 
     for period in &session.periods {
-        let Some(close_time) =
+        let Some(local_close_time) =
             session_period_close_for_open(minute, day, midnight, period, &session.days)?
         else {
             continue;
         };
+        let close_time = local_close_time
+            .checked_sub(timezone_offset_ms)
+            .ok_or_else(|| RuntimeError {
+                message: "time session timestamp is out of range".to_owned(),
+            })?;
         return Ok(Some(default_close.min(close_time)));
     }
 

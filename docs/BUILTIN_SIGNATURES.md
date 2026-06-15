@@ -326,13 +326,13 @@ time(timeframe: simple string, session?: string-compatible, timezone?: string-co
 time_close(timeframe: simple string, session?: string-compatible, timezone?: string-compatible, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
 ```
 
-For now, calendar component functions and `str.format_time` support
-UTC/GMT/numeric fixed-offset `timezone` arguments, while `time` and
-`time_close` use a UTC-only timezone subset; unsupported time zones are runtime
-errors. The component variables still use the runtime's UTC bar-time view while
-exchange timezone defaults remain unsupported. `timestamp` currently supports
-numeric calendar arguments with an optional UTC/GMT/numeric fixed-offset
-`timezone` argument, including named calendar parameters and normalized
+For now, calendar component functions, `str.format_time`, `time`, and
+`time_close` support UTC/GMT/numeric fixed-offset `timezone` arguments;
+unsupported time zones are runtime errors. The component variables still use
+the runtime's UTC bar-time view while exchange timezone defaults remain
+unsupported. `timestamp` currently supports numeric calendar arguments with an
+optional UTC/GMT/numeric fixed-offset `timezone` argument, including named
+calendar parameters and normalized
 zero/negative/overflow `month`, `day`, `hour`, `minute`, and `second` offsets.
 Omitted hour/minute/second default to 0, `na` inputs return `na`, and timestamp
 values outside the UTC datetime range are runtime errors. The
@@ -346,8 +346,9 @@ semantics remain unsupported.
 `time(timeframe, session, timezone, bars_back, timeframe_bars_back)` and
 `time_close(timeframe, session, timezone, bars_back, timeframe_bars_back)`
 currently implement the simple-string timeframe subset with optional
-time-based session strings, UTC-equivalent timezone strings, int-compatible
-`bars_back`, and int-compatible `timeframe_bars_back` offsets. `""` and
+time-based session strings, UTC/GMT/numeric fixed-offset timezone strings,
+int-compatible `bars_back`, and int-compatible `timeframe_bars_back` offsets.
+`""` and
 `timeframe.period` use the current fixed chart timeframe and return the current
 bar's existing `time` or `time_close` value when no session is supplied and both
 offsets are omitted or 0. For nonzero `bars_back`, the runtime offsets from the
@@ -357,10 +358,11 @@ requested timeframe bucket. Higher timeframe strings in the supported timeframe
 subset return UTC bucket opening or closing timestamps. Negative `bars_back`
 and `timeframe_bars_back` values can reference at most 500 future bars in their
 respective offset spaces. The session subset accepts `24x7`, `HHmm-HHmm`,
-comma-separated intraday periods, and optional Pine day digits in UTC; overnight
-periods are supported in the UTC-only calendar subset. `time_close` clips the
-returned close timestamp to the matching session period end. IANA/exchange
-timezone conversion and named-session data remain unsupported.
+comma-separated intraday periods, optional Pine day digits, and fixed-offset
+timezone interpretation for those session strings. Overnight periods are
+supported in the fixed-offset calendar subset. `time_close` clips the returned
+close timestamp to the matching session period end. IANA/exchange timezone
+conversion and named-session data remain unsupported.
 
 Timeframe helpers:
 
