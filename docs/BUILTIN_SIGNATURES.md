@@ -869,6 +869,9 @@ Current normalized output fields are:
 - `box.all`: a snapshot box-array of currently existing box ids in creation
   order. Deleted boxes are omitted from subsequent reads. Mutating the returned
   array does not mutate the underlying box store.
+- `table.all`: a snapshot table-array of currently existing table ids in
+  creation order. Deleted tables are omitted from subsequent reads. Mutating the
+  returned array does not mutate the underlying table store.
 
 Parameters such as `offset`, `show_last`, `display`, `force_overlay`, and
 `editable` do not yet transform, filter, or annotate the runtime output series.

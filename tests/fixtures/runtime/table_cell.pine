@@ -1,8 +1,13 @@
 //@version=5
 indicator("Table cell")
 var table_id = table.new(position.top_right, 2, 2)
+var deleted_table = table.new(position.bottom_left, 1, 1)
 if bar_index == 1
+    table.delete(deleted_table)
     table.cell(table_id, 0, 0, "A")
+    visible_tables = table.all
+    if array.size(visible_tables) > 0
+        table.cell(array.get(visible_tables, 0), 0, 1, "from_all")
 if bar_index == 2
     table.cell(table_id, column=1, row=0, text="B", bgcolor=color.green, text_color=color.white, tooltip="initial", text_font_family=font.family_monospace, text_formatting=text.format_bold)
     table.cell(table_id, 0, 0, "C")
@@ -43,4 +48,6 @@ table.cell_set_text_wrap(na, 0, 1, text.wrap_none)
 table.cell_set_tooltip(na, 0, 1, "noop")
 table.cell_set_text_font_family(na, 0, 1, font.family_monospace)
 table.cell_set_text_formatting(na, 0, 1, text.format_italic)
+visible_table_count = array.size(table.all)
+plot(visible_table_count)
 plot(close)

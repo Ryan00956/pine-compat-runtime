@@ -218,6 +218,20 @@ impl<'a> HistoricalRuntime<'a> {
                 .collect();
             return self.new_array_from_values(ArrayElementKind::Box, boxes);
         }
+        if name == "table.all" {
+            let tables = self
+                .tables
+                .iter()
+                .filter(|table| {
+                    table
+                        .snapshots
+                        .last()
+                        .is_some_and(|snapshot| snapshot.exists)
+                })
+                .map(|table| PineValue::Table(table.id))
+                .collect();
+            return self.new_array_from_values(ArrayElementKind::Table, tables);
+        }
         if name == "strategy.position_size" {
             return PineValue::Float(self.strategy_broker.position_size());
         }
