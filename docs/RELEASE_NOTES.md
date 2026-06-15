@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed unsupported coverage for `linefill.all`, keeping the
+  remaining linefill object collection boundary explicit.
 - Added fixture-backed partial `table.all` support for exposing a snapshot
   array of currently existing table ids while omitting deleted tables.
 - Added fixture-backed partial `box.all` support for exposing a snapshot array

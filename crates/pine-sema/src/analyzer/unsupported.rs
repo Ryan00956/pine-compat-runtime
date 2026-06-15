@@ -83,6 +83,7 @@ impl Analyzer {
             || name.starts_with("line.")
             || name.starts_with("box.")
             || name.starts_with("table.")
+            || name.starts_with("linefill.")
             || name.starts_with("polyline.")
         {
             Some("this drawing object call is not supported in the current partial drawing subset")
