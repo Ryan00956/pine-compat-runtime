@@ -1,0 +1,25 @@
+//@version=5
+indicator("Array ordering control flow fixture")
+
+var branch_values = array.from(3, 1, 2)
+if bar_index % 2 == 0
+    branch_values.sort()
+else
+    branch_values.reverse()
+plot(branch_values.get(0) * 100 + branch_values.get(1) * 10 + branch_values.get(2))
+
+var loop_values = array.from(2, 0, 1)
+for i = 0 to 1
+    if i == 0
+        array.sort(loop_values)
+    else
+        array.reverse(loop_values)
+plot(loop_values.get(0) * 100 + loop_values.get(1) * 10 + loop_values.get(2))
+
+var words = array.from("b", "a", "c")
+if barstate.isfirst
+    words.sort()
+else
+    words.reverse()
+expected_first_word = bar_index % 2 == 0 ? "a" : "c"
+plot(words.get(0) == expected_first_word ? 1 : 0)

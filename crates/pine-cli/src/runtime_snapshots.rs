@@ -96,6 +96,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/array_ordering.pine",
     ),
     (
+        "runtime_array_ordering_control_flow.json",
+        "tests/fixtures/runtime/array_ordering_control_flow.pine",
+    ),
+    (
         "runtime_array_join.json",
         "tests/fixtures/runtime/array_join.pine",
     ),

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.sort` and `array.reverse` branch/loop control-flow
+  coverage for scalar arrays while keeping UDF array mutation side effects
+  unsupported.
 - Added fixture-backed local UDT scalar field mutation coverage inside branch
   and for-loop bodies while keeping mutation inside UDFs and methods
   unsupported.

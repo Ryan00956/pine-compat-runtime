@@ -198,6 +198,8 @@ Advanced sorting:
 
 - `array.sort` and `array.sort_indices` support scalar `float`, `int`, and
   `string` arrays with `order.ascending` and `order.descending`.
+- Runtime fixtures cover `array.sort` and `array.reverse` calls in branch and
+  loop bodies for scalar arrays.
 - `sort_field` for UDT arrays is not supported.
 - Sorting object arrays is not supported.
 

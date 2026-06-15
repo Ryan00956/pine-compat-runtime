@@ -1036,9 +1036,11 @@ population estimate by default; pass `false` for an unbiased sample estimate.
 `array.sort` and `array.sort_indices` support float, int, and string arrays,
 sort ascending by default, and accept `order.ascending` or `order.descending`.
 `na` values and empty string elements sort last in ascending order and first in
-descending order. `array.sort_indices` returns a new int array containing
-original indexes in sorted order without modifying the source array.
-`array.reverse` supports every supported typed array.
+descending order. Fixture-backed `array.sort` calls can run in branch and loop
+bodies. `array.sort_indices` returns a new int array containing original indexes
+in sorted order without modifying the source array. `array.reverse` supports
+every supported typed array and is fixture-backed in branch and loop bodies for
+scalar array values.
 `array.join` supports every supported typed array, defaults the
 separator to `,`, uses the default numeric string format, and renders colors as
 their normalized integer color values. Array assignment passes the runtime array
