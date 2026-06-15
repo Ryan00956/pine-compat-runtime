@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added a conformance metadata guardrail requiring UDT fixture evidence for array UDT notes.
 - Added fixture-backed `array.clear` coverage for rejected UDT arrays.
 - Added fixture-backed `array.concat` coverage for rejected UDT arrays.
 - Added fixture-backed `array.slice` coverage for rejected UDT arrays.

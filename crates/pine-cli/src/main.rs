@@ -239,6 +239,16 @@ mod tests {
     }
 
     #[test]
+    fn rejects_array_udt_claims_without_udt_fixtures() {
+        let error = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\narray.clear\tpartial\tUDT arrays remain unsupported\ttests/fixtures/runtime/array_clear.pine\n",
+        )
+        .expect_err("array UDT claim should require UDT fixture coverage");
+
+        assert!(error.contains("must reference UDT fixture coverage"));
+    }
+
+    #[test]
     fn matrix_includes_known_unsupported_platform_families() {
         let entries = conformance_entries();
         for feature in [
