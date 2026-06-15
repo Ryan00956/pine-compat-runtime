@@ -60,7 +60,7 @@ impl<'a> HistoricalRuntime<'a> {
         }
     }
 
-    pub(crate) fn eval_builtin_value(&self, name: &str) -> PineValue {
+    pub(crate) fn eval_builtin_value(&mut self, name: &str) -> PineValue {
         if name == "barstate.isfirst" {
             return PineValue::Bool(self.bars == 0);
         }
@@ -176,6 +176,20 @@ impl<'a> HistoricalRuntime<'a> {
                 | "chart.is_renko"
         ) {
             return PineValue::Bool(false);
+        }
+        if name == "label.all" {
+            let labels = self
+                .labels
+                .iter()
+                .filter(|label| {
+                    label
+                        .snapshots
+                        .last()
+                        .is_some_and(|snapshot| snapshot.exists)
+                })
+                .map(|label| PineValue::Label(label.id))
+                .collect();
+            return self.new_array_from_values(ArrayElementKind::Label, labels);
         }
         if name == "strategy.position_size" {
             return PineValue::Float(self.strategy_broker.position_size());

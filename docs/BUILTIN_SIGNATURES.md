@@ -860,6 +860,9 @@ Current normalized output fields are:
 - `plotbar`: open, high, low, close, and color series.
 - `plotcandle`: open, high, low, close, body color, wick color, and border
   color series.
+- `label.all`: a snapshot label-array of currently existing label ids in
+  creation order. Deleted labels are omitted from subsequent reads. Mutating the
+  returned array does not mutate the underlying label store.
 
 Parameters such as `offset`, `show_last`, `display`, `force_overlay`, and
 `editable` do not yet transform, filter, or annotate the runtime output series.

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `label.all` support for exposing a snapshot
+  array of currently existing label ids while omitting deleted labels.
 - Added fixture-backed `str.format` UTC date/time placeholder coverage for the
   `D`, `E`, `w`, and `W` format tokens.
 - Added fixture-backed `str.format_time` support for the `W` week-of-month
