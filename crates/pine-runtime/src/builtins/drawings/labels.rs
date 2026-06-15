@@ -322,6 +322,13 @@ impl<'a> HistoricalRuntime<'a> {
         self.eval_label_get(args, "label.get_text", |snapshot| snapshot.text.clone())
     }
 
+    pub(super) fn eval_label_get_style(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_label_get(args, "label.get_style", |snapshot| snapshot.style.clone())
+    }
+
     fn eval_label_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = label_call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {

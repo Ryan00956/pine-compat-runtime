@@ -118,6 +118,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "int",
     "label.copy",
     "label.delete",
+    "label.get_style",
     "label.get_text",
     "label.get_x",
     "label.get_y",

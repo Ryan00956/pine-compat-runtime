@@ -14,9 +14,11 @@ if bar_index == 1
     table_id.cell(0, 0, "A")
     table_id.set_bgcolor(color.green)
 text_length = str.length(label_id.get_text())
+style_is_down = label_id.get_style() == label.style_label_down ? 1 : 0
 line_x1 = line_id.get_x1()
 box_right = box_id.get_right()
 plot(text_length)
+plot(style_is_down)
 plot(line_x1)
 plot(box_right)
 plot(close)

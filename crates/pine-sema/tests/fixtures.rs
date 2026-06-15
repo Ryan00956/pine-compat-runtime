@@ -1268,7 +1268,7 @@ fn reports_unsupported_label_method_fixture() {
 fn reports_unsupported_label_getter_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_label_getter.pine",
-        "label.get_style",
+        "label.get_tooltip",
         "drawing object",
     );
 }
