@@ -61,6 +61,8 @@ barstate.isrealtime	supported	true for forming and confirmed realtime updates	te
 session.ismarket	supported	fixed default regular-session state subset; true while premarket/postmarket are false	tests/fixtures/runtime/session.pine
 session.ispremarket	supported	fixed default regular-session state subset; false while market is true	tests/fixtures/runtime/session.pine
 session.ispostmarket	supported	fixed default regular-session state subset; false while market is true	tests/fixtures/runtime/session.pine
+session.regular	supported	named regular session string constant used with syminfo.session in the fixed default session subset	tests/fixtures/runtime/session.pine
+session.extended	supported	named extended session string constant; extended-hours data remains outside the fixed default session subset	tests/fixtures/runtime/session.pine
 plot	supported	series output plus common style/display metadata parameter subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/if.pine;tests/fixtures/runtime/snapshot_plot.pine
 plotchar	supported	bool/numeric marker series with const char, color-compatible color, and common marker metadata parameters	tests/fixtures/runtime/plotchar.pine
 plotshape	supported	bool/numeric marker series with style/location/text/size constants and common marker metadata parameters	tests/fixtures/runtime/plotshape.pine

@@ -118,11 +118,15 @@ Session state:
 session.ismarket -> series bool
 session.ispremarket -> series bool
 session.ispostmarket -> series bool
+session.regular -> const string
+session.extended -> const string
 ```
 
 The current subset assumes every runtime bar is in the regular session:
 `session.ismarket` is `true`, while `session.ispremarket` and
-`session.ispostmarket` are `false`.
+`session.ispostmarket` are `false`. `session.regular` is the `"regular"`
+string constant and `session.extended` is the `"extended"` string constant;
+extended-hours data is not implemented by these constants.
 
 Symbol info:
 

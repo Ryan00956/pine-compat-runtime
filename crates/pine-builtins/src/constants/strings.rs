@@ -113,6 +113,14 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     same_string_constant("strategy.commission.cash_per_order"),
     same_string_constant("strategy.commission.percent"),
     NamedStringConstant {
+        name: "session.extended",
+        value: "extended",
+    },
+    NamedStringConstant {
+        name: "session.regular",
+        value: "regular",
+    },
+    NamedStringConstant {
         name: "syminfo.basecurrency",
         value: "USD",
     },

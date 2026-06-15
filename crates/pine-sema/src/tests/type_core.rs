@@ -479,7 +479,7 @@ plot(timeframe.period == "1" and is_one_minute and roundtrip and tf_change ? sec
 #[test]
 fn accepts_barstate_isfirst() {
     let analysis = analyze(
-        "plot((barstate.isfirst or barstate.islast or barstate.isnew or barstate.isconfirmed or barstate.ishistory or barstate.isrealtime or session.ismarket or session.ispremarket or session.ispostmarket) ? 1 : 0)\n",
+        "plot((barstate.isfirst or barstate.islast or barstate.isnew or barstate.isconfirmed or barstate.ishistory or barstate.isrealtime or session.ismarket or session.ispremarket or session.ispostmarket or syminfo.session == session.regular or syminfo.session == session.extended) ? 1 : 0)\n",
     );
 
     assert!(
@@ -533,6 +533,8 @@ fn accepts_barstate_isfirst() {
         "session.ismarket",
         "session.ispremarket",
         "session.ispostmarket",
+        "session.regular",
+        "session.extended",
     ] {
         assert!(
             analysis

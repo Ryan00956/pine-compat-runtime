@@ -2632,6 +2632,8 @@
   `barstate.isconfirmed`, `barstate.ishistory`, and `barstate.isrealtime`.
 - Added fixed-default regular-session `session.ismarket`,
   `session.ispremarket`, and `session.ispostmarket`.
+- Added `session.regular` and `session.extended` named string constants for
+  the current fixed-default session metadata subset.
 - Added `bgcolor` and `barcolor` support with bar-aligned color output series.
 - Added common `plot`, `hline`, `fill`, `bgcolor`, and `barcolor` metadata
   parameters for style/display compatibility; runtime output series remain
