@@ -75,6 +75,13 @@ pub(crate) fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixE
 
         validate_status_fixture_paths(line_number, feature, status, &fixtures)?;
         validate_request_fixture_paths(line_number, feature, status, &fixtures)?;
+        validate_partial_unsupported_notes_fixture_paths(
+            line_number,
+            feature,
+            status,
+            notes,
+            &fixtures,
+        )?;
         validate_array_unsupported_type_fixture_paths(line_number, feature, notes, &fixtures)?;
 
         entries.push(MatrixEntry {
@@ -86,6 +93,26 @@ pub(crate) fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixE
     }
 
     Ok(entries)
+}
+
+fn validate_partial_unsupported_notes_fixture_paths(
+    line_number: usize,
+    feature: &str,
+    status: &str,
+    notes: &str,
+    fixtures: &[&str],
+) -> Result<(), String> {
+    if status == "partial"
+        && contains_ascii_word(notes, "unsupported")
+        && !fixtures
+            .iter()
+            .any(|fixture| fixture.starts_with("tests/fixtures/sema/unsupported_"))
+    {
+        return Err(format!(
+            "line {line_number}: partial feature `{feature}` with unsupported notes must reference unsupported sema diagnostic fixture coverage"
+        ));
+    }
+    Ok(())
 }
 
 fn validate_array_unsupported_type_fixture_paths(

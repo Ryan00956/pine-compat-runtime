@@ -239,6 +239,16 @@ mod tests {
     }
 
     #[test]
+    fn rejects_partial_unsupported_notes_without_unsupported_fixtures() {
+        let error = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\nlabel.new\tpartial\tseries x remains unsupported\ttests/fixtures/runtime/labels.pine\n",
+        )
+        .expect_err("partial unsupported notes should require unsupported sema coverage");
+
+        assert!(error.contains("unsupported sema diagnostic fixture coverage"));
+    }
+
+    #[test]
     fn rejects_array_unsupported_type_claims_without_matching_fixtures() {
         for (unsupported_type, fixture, expected) in [
             (
@@ -253,7 +263,7 @@ mod tests {
             ),
             (
                 "UDT arrays remain unsupported",
-                "tests/fixtures/runtime/array_clear.pine",
+                "tests/fixtures/runtime/array_clear.pine;tests/fixtures/sema/unsupported_array_clear_polyline.pine",
                 "must reference UDT fixture coverage",
             ),
         ] {
