@@ -1,3 +1,3 @@
 //@version=5
 strategy("Unsupported short strategy entry")
-strategy.entry("S", "short", qty=1)
+strategy.entry("S", strategy.short, qty=1)

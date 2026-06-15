@@ -1,0 +1,6 @@
+//@version=5
+strategy("Strategy constants")
+directions = strategy.long == "strategy.long" and strategy.short == "strategy.short"
+defaults = strategy.fixed == "strategy.fixed" and strategy.cash == "strategy.cash" and strategy.percent_of_equity == "strategy.percent_of_equity"
+commissions = strategy.commission.cash_per_contract == "strategy.commission.cash_per_contract" and strategy.commission.cash_per_order == "strategy.commission.cash_per_order" and strategy.commission.percent == "strategy.commission.percent"
+plot(directions and defaults and commissions ? 1 : 0)

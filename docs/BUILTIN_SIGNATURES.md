@@ -693,6 +693,12 @@ currency-code set from `currency.AUD` through `currency.ZAR`, including
 `currency.NONE`, `currency.BTC`, `currency.ETH`, `currency.USD`, and
 `currency.USDT`, as string values such as `"USD"`. Request currency conversion
 and strategy account currency are not implemented.
+Supported direct strategy constants include `strategy.long`, `strategy.short`,
+`strategy.fixed`, `strategy.cash`, `strategy.percent_of_equity`,
+`strategy.commission.cash_per_contract`,
+`strategy.commission.cash_per_order`, and `strategy.commission.percent` as
+string values. `strategy.entry` execution remains long-only; `strategy.short`
+entries remain unsupported.
 
 ## Utility
 

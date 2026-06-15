@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed direct `strategy.short` string constant coverage while
+  keeping short `strategy.entry` execution unsupported.
 - Added fixture-backed direct `currency.*` string constants for the official
   currency-code set without enabling request currency conversion or strategy
   account currency.
