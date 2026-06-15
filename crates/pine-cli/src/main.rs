@@ -249,6 +249,18 @@ mod tests {
     }
 
     #[test]
+    fn rejects_label_getter_claims_outside_official_subset() {
+        let error = try_conformance_entries_from_tsv(
+            "feature\tstatus\tnotes\tfixtures\nlabel.get_style\tpartial\tstyle getter\ttests/fixtures/runtime/label_getters.pine\n",
+        )
+        .expect_err("non-official label getter should be rejected");
+
+        assert!(
+            error.contains("outside the official label.get_x/label.get_y/label.get_text subset")
+        );
+    }
+
+    #[test]
     fn rejects_array_unsupported_type_claims_without_matching_fixtures() {
         for (unsupported_type, fixture, expected) in [
             (

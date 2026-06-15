@@ -82,6 +82,7 @@ pub(crate) fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixE
             notes,
             &fixtures,
         )?;
+        validate_label_getter_feature(line_number, feature)?;
         validate_array_unsupported_type_fixture_paths(line_number, feature, notes, &fixtures)?;
 
         entries.push(MatrixEntry {
@@ -93,6 +94,17 @@ pub(crate) fn try_conformance_entries_from_tsv(text: &str) -> Result<Vec<MatrixE
     }
 
     Ok(entries)
+}
+
+fn validate_label_getter_feature(line_number: usize, feature: &str) -> Result<(), String> {
+    if feature.starts_with("label.get_")
+        && !matches!(feature, "label.get_x" | "label.get_y" | "label.get_text")
+    {
+        return Err(format!(
+            "line {line_number}: label getter feature `{feature}` is outside the official label.get_x/label.get_y/label.get_text subset"
+        ));
+    }
+    Ok(())
 }
 
 fn validate_partial_unsupported_notes_fixture_paths(
