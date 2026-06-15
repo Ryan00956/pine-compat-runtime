@@ -213,6 +213,7 @@ syminfo.ticker(symbol: simple string) -> simple string
 ticker.heikinashi(tickerid: simple string) -> simple string
 ticker.new(prefix: simple string, ticker: simple string, session?: simple string, adjustment?: simple string) -> simple string
 ticker.modify(tickerid: simple string, session?: simple string, adjustment?: simple string) -> simple string
+ticker.renko(tickerid: simple string, style: simple string, param: simple numeric) -> simple string
 ticker.standard(symbol: simple string) -> simple string
 ```
 
@@ -248,6 +249,13 @@ and returns the supplied ticker ID. Supplying the optional `session` and
 or `adjustment.dividends` returns a modified ticker ID that preserves the
 standard symbol for `ticker.standard()`. Host request semantics for adjusted
 data remain outside this subset.
+
+`ticker.renko(tickerid, style, param)` currently implements the simple-string
+Renko ticker ID constructor subset for style strings such as `"ATR"` or
+`"Traditional"` and finite simple numeric parameters. It returns a modified
+ticker ID that preserves the standard symbol for `ticker.standard()`. Actual
+Renko OHLC data remains host/request-provider-owned through
+`request.security()`.
 
 `ticker.standard(symbol)` currently implements the simple-string standard ticker
 ID subset. Plain `PREFIX:TICKER` values are returned unchanged, and known

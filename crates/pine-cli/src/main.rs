@@ -136,6 +136,7 @@ mod tests {
                     | "ticker.heikinashi"
                     | "ticker.new"
                     | "ticker.modify"
+                    | "ticker.renko"
                     | "ticker.standard"
             )
     }

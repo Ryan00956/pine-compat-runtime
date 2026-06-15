@@ -3635,7 +3635,7 @@ fn reports_unsupported_log_fixture() {
 fn reports_unsupported_ticker_constructors_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_ticker_constructors.pine",
-        "E_UNKNOWN_FUNCTION",
+        "E_CALL_ARITY",
     );
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ticker_constructors.pine",

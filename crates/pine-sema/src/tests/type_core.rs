@@ -907,13 +907,15 @@ modified = ticker.modify(created)
 modified_extended = ticker.modify(created, session.extended)
 modified_adjusted = ticker.modify(created, session.extended, adjustment.splits)
 ha = ticker.heikinashi(adjusted)
+renko = ticker.renko(adjusted, "ATR", 10)
 standard = ticker.standard(syminfo.tickerid)
 extended_standard = ticker.standard(extended)
 modified_standard = ticker.standard(modified_extended)
 adjusted_standard = ticker.standard(adjusted)
 modified_adjusted_standard = ticker.standard(modified_adjusted)
 ha_standard = ticker.standard(ha)
-plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjusted_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and modified_standard == "NASDAQ:AAPL" and modified_adjusted_standard == "NASDAQ:AAPL" and ha_standard == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
+renko_standard = ticker.standard(renko)
+plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjusted_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and modified_standard == "NASDAQ:AAPL" and modified_adjusted_standard == "NASDAQ:AAPL" and ha_standard == "NASDAQ:AAPL" and renko_standard == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
 "#,
     );
 
@@ -926,6 +928,7 @@ plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjuste
         "ticker.heikinashi",
         "ticker.new",
         "ticker.modify",
+        "ticker.renko",
         "ticker.standard",
     ] {
         assert!(

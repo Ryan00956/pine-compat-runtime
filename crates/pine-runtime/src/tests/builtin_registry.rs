@@ -217,6 +217,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "ticker.heikinashi",
     "ticker.new",
     "ticker.modify",
+    "ticker.renko",
     "ticker.standard",
     "strategy",
     "strategy.close",

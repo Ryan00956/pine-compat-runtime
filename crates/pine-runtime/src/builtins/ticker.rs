@@ -16,6 +16,7 @@ impl<'a> HistoricalRuntime<'a> {
             "ticker.heikinashi" => self.eval_ticker_heikinashi(args),
             "ticker.new" => self.eval_ticker_new(args),
             "ticker.modify" => self.eval_ticker_modify(args),
+            "ticker.renko" => self.eval_ticker_renko(args),
             "ticker.standard" => self.eval_ticker_standard(args),
             _ => return None,
         })
@@ -31,6 +32,21 @@ impl<'a> HistoricalRuntime<'a> {
             &symbol,
             "heikinashi",
         )))
+    }
+
+    fn eval_ticker_renko(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(tickerid) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::String(style) = self.eval_expr(&args[1].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let Some(param) = numeric_param_string(&self.eval_expr(&args[2].value)?) else {
+            return Ok(PineValue::Na);
+        };
+
+        let symbol = standard_ticker_id(&tickerid);
+        Ok(PineValue::String(renko_ticker_id(&symbol, &style, &param)))
     }
 
     fn eval_ticker_new(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -127,6 +143,23 @@ fn non_standard_ticker_id(symbol: &str, chart: &str) -> String {
     )
 }
 
+fn renko_ticker_id(symbol: &str, style: &str, param: &str) -> String {
+    format!(
+        r#"{{"chart":"renko","style":"{}","param":{},"symbol":"{}"}}"#,
+        escape_json_string(style),
+        param,
+        escape_json_string(symbol)
+    )
+}
+
+fn numeric_param_string(value: &PineValue) -> Option<String> {
+    match value {
+        PineValue::Int(value) => Some(value.to_string()),
+        PineValue::Float(value) if value.is_finite() => Some(value.to_string()),
+        _ => None,
+    }
+}
+
 fn escape_json_string(value: &str) -> String {
     let mut escaped = String::new();
     for ch in value.chars() {
@@ -198,5 +231,19 @@ mod tests {
             non_standard_ticker_id(r#"TEST:Q\""#, "heikinashi"),
             r#"{"chart":"heikinashi","symbol":"TEST:Q\\\""}"#
         );
+    }
+
+    #[test]
+    fn renko_ticker_preserves_symbol_and_numeric_param_fields() {
+        assert_eq!(
+            renko_ticker_id(r#"TEST:Q\""#, r#"AT\"R"#, "10"),
+            r#"{"chart":"renko","style":"AT\\\"R","param":10,"symbol":"TEST:Q\\\""}"#
+        );
+        assert_eq!(numeric_param_string(&PineValue::Int(10)), Some("10".into()));
+        assert_eq!(
+            numeric_param_string(&PineValue::Float(2.5)),
+            Some("2.5".into())
+        );
+        assert_eq!(numeric_param_string(&PineValue::Na), None);
     }
 }
