@@ -2,9 +2,13 @@
 
 ## Unreleased
 
+- Added fixture-backed `bars_back` support to the current `time(timeframe)` and
+  `time_close(timeframe)` subset, using the fixed chart timeframe before UTC
+  timeframe bucket mapping while leaving session, timezone, and
+  `timeframe_bars_back` arguments unsupported.
 - Added fixture-backed `time(timeframe)` and `time_close(timeframe)` support for
   the current fixed chart timeframe and UTC higher-timeframe bucket open/close
-  timestamps; session, timezone, and `bars_back` overloads remain unsupported.
+  timestamps; session and timezone overloads remain unsupported.
 - Added fixture-backed `settlement_as_close.*` and `backadjustment.*` constants
   plus partial `ticker.new`/`ticker.modify` support for recording those
   futures-specific ticker ID modifiers.

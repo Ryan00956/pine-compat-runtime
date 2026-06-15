@@ -161,6 +161,64 @@ plot(na(time(na)) and na(time_close(na)) ? 1 : 0)
 }
 
 #[test]
+fn runs_time_and_time_close_functions_with_bars_back() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("time bars back")
+plot(time("", bars_back = 1))
+plot(time_close("", 1))
+plot(time("D", bars_back = 1))
+plot(time_close("D", bars_back = -1))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        Bar {
+            time: 60_000,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 86_400_000,
+            open: 2.0,
+            high: 2.0,
+            low: 2.0,
+            close: 2.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 86_460_000,
+            open: 3.0,
+            high: 3.0,
+            low: 3.0,
+            close: 3.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
+
+    assert_values_close(&result.plots[0].values, &[0.0, 86_340_000.0, 86_400_000.0]);
+    assert_values_close(
+        &result.plots[1].values,
+        &[60_000.0, 86_400_000.0, 86_460_000.0],
+    );
+    assert_values_close(&result.plots[2].values, &[0.0, 0.0, 86_400_000.0]);
+    assert_values_close(
+        &result.plots[3].values,
+        &[86_400_000.0, 172_800_000.0, 172_800_000.0],
+    );
+}
+
+#[test]
 fn runs_timeframe_helpers() {
     let source = SourceFile::new(
         "test.pine",
@@ -413,5 +471,32 @@ plot(timeframe.change("1H") ? 1 : 0)
         err.message
             .contains("timeframe.change unsupported timeframe `1H`"),
         "unexpected error: {err:?}"
+    );
+}
+
+#[test]
+fn rejects_time_function_bars_back_past_future_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad time bars back")
+plot(time("D", bars_back = -501))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected bars_back future limit error");
+
+    assert!(
+        error
+            .message
+            .contains("time bars_back cannot reference more than 500 future bars"),
+        "{}",
+        error.message
     );
 }

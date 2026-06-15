@@ -33,11 +33,18 @@ const TIMEFRAME_CHANGE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
-const TIME_FUNCTION_PARAMS: &[BuiltinParam] = &[BuiltinParam {
-    name: "timeframe",
-    accepts: Accepts::SimpleString,
-    optional: false,
-}];
+const TIME_FUNCTION_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "timeframe",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "bars_back",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+];
 
 const TIMESTAMP_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {

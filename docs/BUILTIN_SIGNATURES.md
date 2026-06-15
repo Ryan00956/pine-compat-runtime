@@ -321,8 +321,8 @@ minute(time: int-compatible, timezone?: string-compatible) -> int with strongest
 second(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 timestamp(year: int-compatible, month: int-compatible, day: int-compatible, hour?: int-compatible, minute?: int-compatible, second?: int-compatible)
   -> int with strongest qualifier
-time(timeframe: simple string) -> series int
-time_close(timeframe: simple string) -> series int
+time(timeframe: simple string, bars_back?: simple int) -> series int
+time_close(timeframe: simple string, bars_back?: simple int) -> series int
 ```
 
 For now, these function overloads use the same UTC-only timezone subset as
@@ -330,12 +330,17 @@ For now, these function overloads use the same UTC-only timezone subset as
 currently supports only the numeric UTC subset; omitted hour/minute/second
 default to 0, `na` inputs return `na`, and invalid UTC dates are runtime
 errors.
-`time(timeframe)` and `time_close(timeframe)` currently implement the
-simple-string timeframe subset only. `""` and `timeframe.period` use the current
-fixed chart timeframe and return the current bar's existing `time` or
-`time_close` value. Higher timeframe strings in the supported timeframe subset
-return UTC bucket opening or closing timestamps. Time-based session strings,
-timezone overrides, and `bars_back` remain unsupported.
+`time(timeframe, bars_back)` and `time_close(timeframe, bars_back)` currently
+implement the simple-string timeframe subset with an optional simple-int
+`bars_back`. `""` and `timeframe.period` use the current fixed chart timeframe
+and return the current bar's existing `time` or `time_close` value when
+`bars_back` is omitted or 0. For nonzero `bars_back`, the runtime offsets from
+the current bar using the fixed 1-minute chart timeframe before mapping to the
+requested UTC timeframe bucket. Higher timeframe strings in the supported
+timeframe subset return UTC bucket opening or closing timestamps. Negative
+`bars_back` values can reference at most 500 future chart bars. Time-based
+session strings, timezone overrides, and `timeframe_bars_back` remain
+unsupported.
 
 Timeframe helpers:
 

@@ -405,8 +405,11 @@ daily_open = time("D")
 chart_open = time("")
 chart_close = time_close(timeframe.period)
 daily_close = time_close("D")
+previous_daily_open = time("D", bars_back = 1)
+previous_chart_close = time_close("", 1)
 plot(year(ts) + month(ts, "UTC") + weekofyear(ts) + dayofmonth(ts) + dayofweek(ts) + hour(ts) + minute(ts) + second(ts) + time_tradingday / 1000000000000 + (dayofweek == dayofweek.friday ? 1 : 0))
 plot(daily_open <= time and chart_open == time and chart_close == time_close and daily_close >= time_close ? 1 : 0)
+plot(previous_daily_open <= daily_open and previous_chart_close <= time_close ? 1 : 0)
 "#,
     );
 
@@ -443,7 +446,7 @@ fn rejects_unsupported_time_function_overloads() {
     let analysis = analyze(
         r#"indicator("unsupported time overloads")
 plot(time("D", "0930-1600"))
-plot(time_close("D", bars_back = -1))
+plot(time_close("D", timeframe_bars_back = 1))
 "#,
     );
 
@@ -451,7 +454,15 @@ plot(time_close("D", bars_back = -1))
         analysis
             .diagnostics
             .iter()
-            .any(|diagnostic| diagnostic.code == "E_CALL_ARITY"),
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_NAME"),
         "{:?}",
         analysis.diagnostics
     );

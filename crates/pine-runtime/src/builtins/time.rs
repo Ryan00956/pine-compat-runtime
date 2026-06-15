@@ -399,21 +399,35 @@ impl<'a> HistoricalRuntime<'a> {
         args: &[HirCallArg],
         close_time: bool,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(arg) = args.first() else {
+        let name = if close_time { "time_close" } else { "time" };
+        let Some(timeframe_arg) = time_function_arg(args, "timeframe", 0) else {
             return Ok(PineValue::Na);
         };
-        let timeframe = match self.eval_expr(&arg.value)? {
+        let timeframe = match self.eval_expr(&timeframe_arg.value)? {
             PineValue::String(value) => value,
             PineValue::Na => return Ok(PineValue::Na),
             _ => return Ok(PineValue::Na),
         };
+        let bars_back = if let Some(arg) = time_function_arg(args, "bars_back", 1) {
+            match self.eval_expr(&arg.value)? {
+                PineValue::Int(value) => value,
+                PineValue::Na => return Ok(PineValue::Na),
+                _ => return Ok(PineValue::Na),
+            }
+        } else {
+            0
+        };
+        if bars_back < -500 {
+            return Err(RuntimeError {
+                message: format!("{name} bars_back cannot reference more than 500 future bars"),
+            });
+        }
         let timeframe = if timeframe.is_empty() {
             DEFAULT_CHART_TIMEFRAME
         } else {
             timeframe.trim()
         };
         let Some(seconds) = timeframe_seconds(timeframe) else {
-            let name = if close_time { "time_close" } else { "time" };
             return Err(RuntimeError {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
             });
@@ -424,13 +438,11 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         if seconds < chart_seconds {
-            let name = if close_time { "time_close" } else { "time" };
             return Err(RuntimeError {
                 message: format!("{name} unsupported lower timeframe `{timeframe}`"),
             });
         }
-        if seconds == chart_seconds {
-            let name = if close_time { "time_close" } else { "time" };
+        if seconds == chart_seconds && bars_back == 0 {
             return Ok(self
                 .current_builtin_i64(name)
                 .map(PineValue::Int)
@@ -440,14 +452,27 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(current_time) = self.current_builtin_i64("time") else {
             return Ok(PineValue::Na);
         };
-        let Some(bucket) = timeframe_bucket(current_time, seconds) else {
-            let name = if close_time { "time_close" } else { "time" };
+        let Some(chart_duration_ms) = chart_seconds.checked_mul(1000) else {
             return Err(RuntimeError {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
             });
         };
+        let Some(offset_ms) = bars_back.checked_mul(chart_duration_ms) else {
+            return Err(RuntimeError {
+                message: format!("{name} bars_back timestamp is out of range"),
+            });
+        };
+        let Some(base_time) = current_time.checked_sub(offset_ms) else {
+            return Err(RuntimeError {
+                message: format!("{name} bars_back timestamp is out of range"),
+            });
+        };
         let Some(duration_ms) = seconds.checked_mul(1000) else {
-            let name = if close_time { "time_close" } else { "time" };
+            return Err(RuntimeError {
+                message: format!("{name} unsupported timeframe `{timeframe}`"),
+            });
+        };
+        let Some(bucket) = timeframe_bucket(base_time, seconds) else {
             return Err(RuntimeError {
                 message: format!("{name} unsupported timeframe `{timeframe}`"),
             });
@@ -458,7 +483,6 @@ impl<'a> HistoricalRuntime<'a> {
             Some(bucket)
         };
         let Some(bucket) = bucket.and_then(|value| value.checked_mul(duration_ms)) else {
-            let name = if close_time { "time_close" } else { "time" };
             return Err(RuntimeError {
                 message: format!("{name} timestamp is out of range for timeframe `{timeframe}`"),
             });
@@ -573,4 +597,19 @@ impl<'a> HistoricalRuntime<'a> {
         };
         Ok(Some(value))
     }
+}
+
+fn time_function_arg<'a>(
+    args: &'a [HirCallArg],
+    name: &str,
+    positional_index: usize,
+) -> Option<&'a HirCallArg> {
+    args.iter()
+        .find(|arg| arg.name.as_deref() == Some(name))
+        .or_else(|| {
+            args.iter()
+                .enumerate()
+                .find(|(index, arg)| *index == positional_index && arg.name.is_none())
+                .map(|(_, arg)| arg)
+        })
 }
