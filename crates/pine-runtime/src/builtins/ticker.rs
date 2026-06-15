@@ -14,6 +14,7 @@ impl<'a> HistoricalRuntime<'a> {
 
         Some(match callee {
             "ticker.new" => self.eval_ticker_new(args),
+            "ticker.modify" => self.eval_ticker_modify(args),
             "ticker.standard" => self.eval_ticker_standard(args),
             _ => return None,
         })
@@ -28,6 +29,14 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(PineValue::String(format!("{prefix}:{ticker}")))
+    }
+
+    fn eval_ticker_modify(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(tickerid) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        Ok(PineValue::String(tickerid))
     }
 
     fn eval_ticker_standard(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {

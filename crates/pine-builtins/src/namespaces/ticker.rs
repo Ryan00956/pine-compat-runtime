@@ -21,11 +21,24 @@ const SYMBOL_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const TICKERID_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "tickerid",
+    accepts: Accepts::SimpleString,
+    optional: false,
+}];
+
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "ticker.new",
         phase: BuiltinPhase::Phase1Core,
         params: NEW_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_STRING),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ticker.modify",
+        phase: BuiltinPhase::Phase1Core,
+        params: TICKERID_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_STRING),
         variadic: false,
     },

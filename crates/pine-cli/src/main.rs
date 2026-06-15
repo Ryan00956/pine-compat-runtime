@@ -134,6 +134,7 @@ mod tests {
                     | "alertcondition"
                     | "ta.vwap"
                     | "ticker.new"
+                    | "ticker.modify"
                     | "ticker.standard"
             )
     }
