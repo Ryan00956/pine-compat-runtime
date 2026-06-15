@@ -725,7 +725,8 @@ functions can also use Pine method syntax, where the object receiver becomes
 the first function argument; for example, `id.set_text("x")` is analyzed and
 lowered as `label.set_text(id, "x")` when `id` is a label. This method syntax
 does not widen the supported method set: unsupported drawing methods,
-chart-point overloads, and unsupported xloc/time variants remain unsupported.
+chart-point overloads, and unsupported line/box xloc time-coordinate variants
+remain unsupported.
 Deleting `na`,
 mutating `na`, or mutating an already deleted
 drawing object is a no-op where deletion exists; supported label getters return

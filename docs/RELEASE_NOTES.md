@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed drawing method-syntax coverage for supported
+  coordinate/location mutators while keeping unsupported chart-point and
+  line/box time-coordinate variants out of scope.
 - Added fixture-backed `array.sort` and `array.reverse` branch/loop control-flow
   coverage for scalar arrays while keeping UDF array mutation side effects
   unsupported.
