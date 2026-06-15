@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch and loop control-flow coverage for
+  `array.slice` while preserving copied-array mutation independence.
 - Added fixture-backed branch and loop control-flow mutation coverage for
   `array.clear`.
 - Added fixture-backed branch and loop control-flow coverage for `array.join`.
