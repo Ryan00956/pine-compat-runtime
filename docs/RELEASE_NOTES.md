@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed unsupported coverage for `polyline.all`, keeping the
+  remaining polyline object collection boundary explicit.
 - Added fixture-backed unsupported coverage for `linefill.all`, keeping the
   remaining linefill object collection boundary explicit.
 - Added fixture-backed partial `table.all` support for exposing a snapshot
