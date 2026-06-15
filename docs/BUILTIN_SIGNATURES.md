@@ -326,14 +326,16 @@ time(timeframe: simple string, session?: string-compatible, timezone?: string-co
 time_close(timeframe: simple string, session?: string-compatible, timezone?: string-compatible, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
 ```
 
-For now, calendar component functions, `str.format_time`, `time`, and
-`time_close` use a UTC-only timezone subset; unsupported time zones are runtime
-errors. `timestamp` currently supports numeric calendar arguments with an
-optional UTC/GMT/numeric fixed-offset `timezone` argument, including named
-calendar parameters and normalized zero/negative/overflow `month`, `day`,
-`hour`, `minute`, and `second` offsets. Omitted hour/minute/second default to
-0, `na` inputs return `na`, and timestamp values outside the UTC datetime range
-are runtime errors. The
+For now, calendar component functions support UTC/GMT/numeric fixed-offset
+`timezone` arguments, while `str.format_time`, `time`, and `time_close` use a
+UTC-only timezone subset; unsupported time zones are runtime errors. The
+component variables still use the runtime's UTC bar-time view while exchange
+timezone defaults remain unsupported. `timestamp` currently supports numeric
+calendar arguments with an optional UTC/GMT/numeric fixed-offset `timezone`
+argument, including named calendar parameters and normalized
+zero/negative/overflow `month`, `day`, `hour`, `minute`, and `second` offsets.
+Omitted hour/minute/second default to 0, `na` inputs return `na`, and timestamp
+values outside the UTC datetime range are runtime errors. The
 `timestamp(dateString)` overload accepts const strings
 for ISO dates such as `"2021-01-01"`, English month dates such as
 `"29 Aug 2024"`, optional `HH:mm` or `HH:mm:ss` time-of-day tokens, and

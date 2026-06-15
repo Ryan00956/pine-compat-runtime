@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed fixed-offset timezone support to calendar component
+  functions such as `hour(time, "UTC+4")` while leaving IANA timezone
+  conversion and exchange-timezone defaults unsupported.
 - Added fixture-backed fixed-offset timezone support to numeric `timestamp()`
   calls, covering `UTC`/`GMT` offset strings and numeric offsets such as
   `+05:30` while leaving IANA timezone conversion and exchange-timezone default
