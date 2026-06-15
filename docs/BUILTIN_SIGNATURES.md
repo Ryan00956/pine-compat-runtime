@@ -167,6 +167,12 @@ session.extended -> const string
 adjustment.none -> const string
 adjustment.splits -> const string
 adjustment.dividends -> const string
+settlement_as_close.on -> const string
+settlement_as_close.off -> const string
+settlement_as_close.inherit -> const string
+backadjustment.on -> const string
+backadjustment.off -> const string
+backadjustment.inherit -> const string
 ```
 
 The current subset assumes every runtime bar is in the regular session:
@@ -184,6 +190,11 @@ not implemented by these constants.
 string constants used by the current modified ticker ID subset. They do not
 perform price adjustment unless a host request provider interprets the modified
 ticker ID.
+`settlement_as_close.on/off/inherit` and `backadjustment.on/off/inherit` are
+direct string constants used by the current modified ticker ID subset. They
+record futures-specific ticker modifiers for host request providers; they do
+not perform settlement-as-close or back-adjusted data transformations on their
+own.
 
 Symbol info:
 
@@ -214,8 +225,8 @@ ticker.heikinashi(tickerid: simple string) -> simple string
 ticker.inherit(from_tickerid: simple string, symbol: simple string) -> simple string
 ticker.kagi(tickerid: simple string, style: simple string, param: simple numeric) -> simple string
 ticker.linebreak(tickerid: simple string, number_of_lines: simple int) -> simple string
-ticker.new(prefix: simple string, ticker: simple string, session?: simple string, adjustment?: simple string) -> simple string
-ticker.modify(tickerid: simple string, session?: simple string, adjustment?: simple string) -> simple string
+ticker.new(prefix: simple string, ticker: simple string, session?: simple string, adjustment?: simple string, settlement_as_close?: simple string, backadjustment?: simple string) -> simple string
+ticker.modify(tickerid: simple string, session?: simple string, adjustment?: simple string, settlement_as_close?: simple string, backadjustment?: simple string) -> simple string
 ticker.pointfigure(tickerid: simple string, source: simple string, style: simple string, param: simple numeric, reversal: simple int) -> simple string
 ticker.renko(tickerid: simple string, style: simple string, param: simple numeric) -> simple string
 ticker.standard(symbol: simple string) -> simple string
@@ -262,17 +273,19 @@ host/request-provider-owned through `request.security()`.
 subset and returns `PREFIX:TICKER`. Supplying the optional `session` and
 `adjustment` arguments with values such as `session.regular`,
 `session.extended`, `syminfo.session`, `adjustment.none`, `adjustment.splits`,
-or `adjustment.dividends` returns a modified ticker ID that preserves the
-standard symbol for `ticker.standard()`. Host request semantics for adjusted
-data remain outside this subset.
+`adjustment.dividends`, `settlement_as_close.on/off/inherit`, and
+`backadjustment.on/off/inherit` returns a modified ticker ID that preserves the
+standard symbol for `ticker.standard()`. Host request semantics for adjusted,
+settlement-as-close, and back-adjusted data remain outside this subset.
 
 `ticker.modify(tickerid)` currently implements the no-modifier identity subset
 and returns the supplied ticker ID. Supplying the optional `session` and
 `adjustment` arguments with values such as `session.regular`,
 `session.extended`, `syminfo.session`, `adjustment.none`, `adjustment.splits`,
-or `adjustment.dividends` returns a modified ticker ID that preserves the
-standard symbol for `ticker.standard()`. Host request semantics for adjusted
-data remain outside this subset.
+`adjustment.dividends`, `settlement_as_close.on/off/inherit`, and
+`backadjustment.on/off/inherit` returns a modified ticker ID that preserves the
+standard symbol for `ticker.standard()`. Host request semantics for adjusted,
+settlement-as-close, and back-adjusted data remain outside this subset.
 
 `ticker.pointfigure(tickerid, source, style, param, reversal)` currently
 implements the simple-string Point & Figure ticker ID constructor subset for

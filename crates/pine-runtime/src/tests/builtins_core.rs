@@ -126,13 +126,19 @@ chart_session_created = ticker.new(syminfo.prefix, syminfo.ticker, syminfo.sessi
 missing_session_created = ticker.new("NASDAQ", "AAPL", na)
 adjusted_created = ticker.new("NASDAQ", "AAPL", session.extended, adjustment.dividends)
 missing_adjusted_created = ticker.new("NASDAQ", "AAPL", session.extended, na)
+futures_created = ticker.new("COMEX", "GC1!", session.regular, adjustment.none, settlement_as_close.on, backadjustment.inherit)
+missing_futures_settlement = ticker.new("COMEX", "GC1!", session.regular, adjustment.none, na, backadjustment.inherit)
+missing_futures_backadjustment = ticker.new("COMEX", "GC1!", session.regular, adjustment.none, settlement_as_close.on, na)
 modified_identity = ticker.modify(created)
 modified_extended = ticker.modify(created, session.extended)
 modified_regular = ticker.modify(extended_created, session.regular)
 modified_adjusted = ticker.modify(created, session.extended, adjustment.splits)
+modified_futures = ticker.modify(futures_created, session.regular, adjustment.none, settlement_as_close.off, backadjustment.on)
 missing_modified = ticker.modify(na)
 missing_modified_session = ticker.modify(created, na)
 missing_modified_adjustment = ticker.modify(created, session.extended, na)
+missing_modified_settlement = ticker.modify(created, session.extended, adjustment.none, na, backadjustment.on)
+missing_modified_backadjustment = ticker.modify(created, session.extended, adjustment.none, settlement_as_close.on, na)
 plain = ticker.standard("NASDAQ:AAPL")
 current = ticker.standard(syminfo.tickerid)
 extended_standard = ticker.standard(extended_created)
@@ -166,6 +172,7 @@ inherited_plain = ticker.inherit(created, "NYSE:PFE")
 inherited_adjusted = ticker.inherit(adjusted_created, "NYSE:PFE")
 inherited_renko = ticker.inherit(renko_adjusted, "NYSE:PFE")
 inherited_ha = ticker.inherit(ha_adjusted, "NYSE:PFE")
+inherited_futures = ticker.inherit(modified_futures, "COMEX:SI1!")
 inherited_standard = ticker.standard(inherited_adjusted)
 missing_inherited_from = ticker.inherit(na, "NYSE:PFE")
 missing_inherited_symbol = ticker.inherit(adjusted_created, na)
@@ -178,13 +185,19 @@ plot(chart_session_created == "{\"session\":\"regular\",\"symbol\":\"NASDAQ:AAPL
 plot(na(missing_session_created) ? 1 : 0)
 plot(adjusted_created == "{\"session\":\"extended\",\"adjustment\":\"dividends\",\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
 plot(na(missing_adjusted_created) ? 1 : 0)
+plot(futures_created == "{\"session\":\"regular\",\"adjustment\":\"none\",\"settlement-as-close\":\"on\",\"backadjustment\":\"inherit\",\"symbol\":\"COMEX:GC1!\"}" ? 1 : 0)
+plot(na(missing_futures_settlement) ? 1 : 0)
+plot(na(missing_futures_backadjustment) ? 1 : 0)
 plot(modified_identity == "NASDAQ:AAPL" ? 1 : 0)
 plot(modified_extended == "{\"session\":\"extended\",\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
 plot(modified_regular == "{\"session\":\"regular\",\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
 plot(modified_adjusted == "{\"session\":\"extended\",\"adjustment\":\"splits\",\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
+plot(modified_futures == "{\"session\":\"regular\",\"adjustment\":\"none\",\"settlement-as-close\":\"off\",\"backadjustment\":\"on\",\"symbol\":\"COMEX:GC1!\"}" ? 1 : 0)
 plot(na(missing_modified) ? 1 : 0)
 plot(na(missing_modified_session) ? 1 : 0)
 plot(na(missing_modified_adjustment) ? 1 : 0)
+plot(na(missing_modified_settlement) ? 1 : 0)
+plot(na(missing_modified_backadjustment) ? 1 : 0)
 plot(plain == "NASDAQ:AAPL" ? 1 : 0)
 plot(current == "NASDAQ:AAPL" ? 1 : 0)
 plot(extended_standard == "NASDAQ:AAPL" ? 1 : 0)
@@ -218,11 +231,12 @@ plot(inherited_plain == "NYSE:PFE" ? 1 : 0)
 plot(inherited_adjusted == "{\"session\":\"extended\",\"adjustment\":\"dividends\",\"symbol\":\"NYSE:PFE\"}" ? 1 : 0)
 plot(inherited_renko == "{\"chart\":\"renko\",\"style\":\"Traditional\",\"param\":2.5,\"symbol\":\"NYSE:PFE\"}" ? 1 : 0)
 plot(inherited_ha == "{\"chart\":\"heikinashi\",\"symbol\":\"NYSE:PFE\"}" ? 1 : 0)
+plot(inherited_futures == "{\"session\":\"regular\",\"adjustment\":\"none\",\"settlement-as-close\":\"off\",\"backadjustment\":\"on\",\"symbol\":\"COMEX:SI1!\"}" ? 1 : 0)
 plot(inherited_standard == "NYSE:PFE" ? 1 : 0)
 plot(na(missing_inherited_from) ? 1 : 0)
 plot(na(missing_inherited_symbol) ? 1 : 0)
 plot(na(missing) ? 1 : 0)
-plot(adjustment.none == "none" and adjustment.splits == "splits" and adjustment.dividends == "dividends" ? 1 : 0)
+plot(adjustment.none == "none" and adjustment.splits == "splits" and adjustment.dividends == "dividends" and settlement_as_close.on == "on" and settlement_as_close.off == "off" and settlement_as_close.inherit == "inherit" and backadjustment.on == "on" and backadjustment.off == "off" and backadjustment.inherit == "inherit" ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -288,6 +302,13 @@ plot(adjustment.none == "none" and adjustment.splits == "splits" and adjustment.
     assert_values_close(&result.plots[50].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[51].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[52].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[53].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[54].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[55].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[56].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[57].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[58].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[59].values, &[1.0, 1.0]);
 }
 
 #[test]

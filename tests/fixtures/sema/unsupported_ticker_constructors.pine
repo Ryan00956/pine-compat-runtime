@@ -1,7 +1,7 @@
 //@version=6
 indicator("Unsupported ticker constructors")
-over_adjusted = ticker.new(syminfo.prefix, syminfo.ticker, session.extended, adjustment.dividends, "extra")
-modified_over_adjusted = ticker.modify(syminfo.tickerid, session.extended, adjustment.dividends, "extra")
+over_adjusted = ticker.new(syminfo.prefix, syminfo.ticker, session.extended, adjustment.dividends, settlement_as_close.on, backadjustment.inherit, "extra")
+modified_over_adjusted = ticker.modify(syminfo.tickerid, session.extended, adjustment.dividends, settlement_as_close.on, backadjustment.inherit, "extra")
 over_inherit = ticker.inherit(syminfo.tickerid, "NYSE:PFE", "extra")
 over_renko = ticker.renko(syminfo.tickerid, "ATR", 10, "extra")
 over_linebreak = ticker.linebreak(syminfo.tickerid, 3, "extra")

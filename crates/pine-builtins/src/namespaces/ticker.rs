@@ -23,6 +23,16 @@ const NEW_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SimpleString,
         optional: true,
     },
+    BuiltinParam {
+        name: "settlement_as_close",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "backadjustment",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
 ];
 
 const SYMBOL_PARAMS: &[BuiltinParam] = &[BuiltinParam {
@@ -140,6 +150,16 @@ const MODIFY_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "adjustment",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "settlement_as_close",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "backadjustment",
         accepts: Accepts::SimpleString,
         optional: true,
     },

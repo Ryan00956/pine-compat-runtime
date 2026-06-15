@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed `settlement_as_close.*` and `backadjustment.*` constants
+  plus partial `ticker.new`/`ticker.modify` support for recording those
+  futures-specific ticker ID modifiers.
 - Added fixture-backed partial `ticker.inherit` support for inheriting the
   runtime's known ticker ID modifiers onto another symbol.
 - Added fixture-backed partial `ticker.pointfigure` support for Point & Figure

@@ -123,6 +123,18 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
         name: "adjustment.splits",
         value: "splits",
     },
+    NamedStringConstant {
+        name: "backadjustment.inherit",
+        value: "inherit",
+    },
+    NamedStringConstant {
+        name: "backadjustment.off",
+        value: "off",
+    },
+    NamedStringConstant {
+        name: "backadjustment.on",
+        value: "on",
+    },
     currency_string_constant("currency.AUD", "AUD"),
     currency_string_constant("currency.BDT", "BDT"),
     currency_string_constant("currency.BHD", "BHD"),
@@ -197,6 +209,18 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     NamedStringConstant {
         name: "session.regular",
         value: "regular",
+    },
+    NamedStringConstant {
+        name: "settlement_as_close.inherit",
+        value: "inherit",
+    },
+    NamedStringConstant {
+        name: "settlement_as_close.off",
+        value: "off",
+    },
+    NamedStringConstant {
+        name: "settlement_as_close.on",
+        value: "on",
     },
     NamedStringConstant {
         name: "syminfo.basecurrency",

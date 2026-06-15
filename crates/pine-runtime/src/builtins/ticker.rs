@@ -143,11 +143,31 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             None
         };
+        let settlement_as_close = if let Some(settlement_arg) = args.get(4) {
+            let PineValue::String(settlement_as_close) = self.eval_expr(&settlement_arg.value)?
+            else {
+                return Ok(PineValue::Na);
+            };
+            Some(settlement_as_close)
+        } else {
+            None
+        };
+        let backadjustment = if let Some(backadjustment_arg) = args.get(5) {
+            let PineValue::String(backadjustment) = self.eval_expr(&backadjustment_arg.value)?
+            else {
+                return Ok(PineValue::Na);
+            };
+            Some(backadjustment)
+        } else {
+            None
+        };
 
         Ok(PineValue::String(modified_ticker_id(
             &symbol,
             &session,
             adjustment.as_deref(),
+            settlement_as_close.as_deref(),
+            backadjustment.as_deref(),
         )))
     }
 
@@ -170,12 +190,32 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             None
         };
+        let settlement_as_close = if let Some(settlement_arg) = args.get(3) {
+            let PineValue::String(settlement_as_close) = self.eval_expr(&settlement_arg.value)?
+            else {
+                return Ok(PineValue::Na);
+            };
+            Some(settlement_as_close)
+        } else {
+            None
+        };
+        let backadjustment = if let Some(backadjustment_arg) = args.get(4) {
+            let PineValue::String(backadjustment) = self.eval_expr(&backadjustment_arg.value)?
+            else {
+                return Ok(PineValue::Na);
+            };
+            Some(backadjustment)
+        } else {
+            None
+        };
 
         let symbol = standard_ticker_id(&tickerid);
         Ok(PineValue::String(modified_ticker_id(
             &symbol,
             &session,
             adjustment.as_deref(),
+            settlement_as_close.as_deref(),
+            backadjustment.as_deref(),
         )))
     }
 
@@ -196,18 +236,34 @@ fn inherited_ticker_id(from_tickerid: &str, symbol: &str) -> String {
     replace_json_symbol_field(from_tickerid, symbol).unwrap_or_else(|| symbol.to_owned())
 }
 
-fn modified_ticker_id(symbol: &str, session: &str, adjustment: Option<&str>) -> String {
-    let session = escape_json_string(session);
-    let symbol = escape_json_string(symbol);
-    match adjustment {
-        Some(adjustment) => format!(
-            r#"{{"session":"{}","adjustment":"{}","symbol":"{}"}}"#,
-            session,
-            escape_json_string(adjustment),
-            symbol
-        ),
-        None => format!(r#"{{"session":"{}","symbol":"{}"}}"#, session, symbol),
+fn modified_ticker_id(
+    symbol: &str,
+    session: &str,
+    adjustment: Option<&str>,
+    settlement_as_close: Option<&str>,
+    backadjustment: Option<&str>,
+) -> String {
+    let mut fields = vec![format!(r#""session":"{}""#, escape_json_string(session))];
+    if let Some(adjustment) = adjustment {
+        fields.push(format!(
+            r#""adjustment":"{}""#,
+            escape_json_string(adjustment)
+        ));
     }
+    if let Some(settlement_as_close) = settlement_as_close {
+        fields.push(format!(
+            r#""settlement-as-close":"{}""#,
+            escape_json_string(settlement_as_close)
+        ));
+    }
+    if let Some(backadjustment) = backadjustment {
+        fields.push(format!(
+            r#""backadjustment":"{}""#,
+            escape_json_string(backadjustment)
+        ));
+    }
+    fields.push(format!(r#""symbol":"{}""#, escape_json_string(symbol)));
+    format!("{{{}}}", fields.join(","))
 }
 
 fn non_standard_ticker_id(symbol: &str, chart: &str) -> String {
@@ -387,12 +443,22 @@ mod tests {
     #[test]
     fn modified_ticker_escapes_json_string_fields() {
         assert_eq!(
-            modified_ticker_id(r#"TEST:Q\""#, r#"reg\"ular"#, None),
+            modified_ticker_id(r#"TEST:Q\""#, r#"reg\"ular"#, None, None, None),
             r#"{"session":"reg\\\"ular","symbol":"TEST:Q\\\""}"#
         );
         assert_eq!(
-            modified_ticker_id("NASDAQ:AAPL", "extended", Some("dividends")),
+            modified_ticker_id("NASDAQ:AAPL", "extended", Some("dividends"), None, None),
             r#"{"session":"extended","adjustment":"dividends","symbol":"NASDAQ:AAPL"}"#
+        );
+        assert_eq!(
+            modified_ticker_id(
+                "COMEX:GC1!",
+                "regular",
+                Some("none"),
+                Some("on"),
+                Some("inherit")
+            ),
+            r#"{"session":"regular","adjustment":"none","settlement-as-close":"on","backadjustment":"inherit","symbol":"COMEX:GC1!"}"#
         );
     }
 

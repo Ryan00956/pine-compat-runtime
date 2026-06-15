@@ -479,7 +479,7 @@ plot(timeframe.period == "1" and is_one_minute and roundtrip and tf_change ? sec
 #[test]
 fn accepts_barstate_isfirst() {
     let analysis = analyze(
-        "plot((barstate.isfirst or barstate.islast or barstate.islastconfirmedhistory or barstate.isnew or barstate.isconfirmed or barstate.ishistory or barstate.isrealtime or session.ismarket or session.ispremarket or session.ispostmarket or session.isfirstbar or session.islastbar or session.isfirstbar_regular or session.islastbar_regular or syminfo.session == session.regular or syminfo.session == session.extended or adjustment.none == \"none\" or adjustment.splits == \"splits\" or adjustment.dividends == \"dividends\") ? 1 : 0)\n",
+        "plot((barstate.isfirst or barstate.islast or barstate.islastconfirmedhistory or barstate.isnew or barstate.isconfirmed or barstate.ishistory or barstate.isrealtime or session.ismarket or session.ispremarket or session.ispostmarket or session.isfirstbar or session.islastbar or session.isfirstbar_regular or session.islastbar_regular or syminfo.session == session.regular or syminfo.session == session.extended or adjustment.none == \"none\" or adjustment.splits == \"splits\" or adjustment.dividends == \"dividends\" or settlement_as_close.on == \"on\" or settlement_as_close.off == \"off\" or settlement_as_close.inherit == \"inherit\" or backadjustment.on == \"on\" or backadjustment.off == \"off\" or backadjustment.inherit == \"inherit\") ? 1 : 0)\n",
     );
 
     assert!(
@@ -549,6 +549,12 @@ fn accepts_barstate_isfirst() {
         "adjustment.none",
         "adjustment.splits",
         "adjustment.dividends",
+        "settlement_as_close.on",
+        "settlement_as_close.off",
+        "settlement_as_close.inherit",
+        "backadjustment.on",
+        "backadjustment.off",
+        "backadjustment.inherit",
     ] {
         assert!(
             analysis
@@ -903,9 +909,11 @@ fn accepts_ticker_standard() {
 created = ticker.new(syminfo.prefix, syminfo.ticker)
 extended = ticker.new(syminfo.prefix, syminfo.ticker, session.extended)
 adjusted = ticker.new(syminfo.prefix, syminfo.ticker, session.extended, adjustment.dividends)
+futures = ticker.new(syminfo.prefix, syminfo.ticker, session.regular, adjustment.none, settlement_as_close.on, backadjustment.inherit)
 modified = ticker.modify(created)
 modified_extended = ticker.modify(created, session.extended)
 modified_adjusted = ticker.modify(created, session.extended, adjustment.splits)
+modified_futures = ticker.modify(futures, session.regular, adjustment.none, settlement_as_close.off, backadjustment.on)
 ha = ticker.heikinashi(adjusted)
 inherited = ticker.inherit(adjusted, "NYSE:PFE")
 kagi = ticker.kagi(adjusted, "ATR", 10)
@@ -916,14 +924,16 @@ standard = ticker.standard(syminfo.tickerid)
 extended_standard = ticker.standard(extended)
 modified_standard = ticker.standard(modified_extended)
 adjusted_standard = ticker.standard(adjusted)
+futures_standard = ticker.standard(futures)
 modified_adjusted_standard = ticker.standard(modified_adjusted)
+modified_futures_standard = ticker.standard(modified_futures)
 ha_standard = ticker.standard(ha)
 inherited_standard = ticker.standard(inherited)
 kagi_standard = ticker.standard(kagi)
 linebreak_standard = ticker.standard(linebreak)
 pointfigure_standard = ticker.standard(pointfigure)
 renko_standard = ticker.standard(renko)
-plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjusted_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and modified_standard == "NASDAQ:AAPL" and modified_adjusted_standard == "NASDAQ:AAPL" and ha_standard == "NASDAQ:AAPL" and inherited_standard == "NYSE:PFE" and kagi_standard == "NASDAQ:AAPL" and linebreak_standard == "NASDAQ:AAPL" and pointfigure_standard == "NASDAQ:AAPL" and renko_standard == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
+plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjusted_standard == "NASDAQ:AAPL" and futures_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and modified_standard == "NASDAQ:AAPL" and modified_adjusted_standard == "NASDAQ:AAPL" and modified_futures_standard == "NASDAQ:AAPL" and ha_standard == "NASDAQ:AAPL" and inherited_standard == "NYSE:PFE" and kagi_standard == "NASDAQ:AAPL" and linebreak_standard == "NASDAQ:AAPL" and pointfigure_standard == "NASDAQ:AAPL" and renko_standard == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
 "#,
     );
 
