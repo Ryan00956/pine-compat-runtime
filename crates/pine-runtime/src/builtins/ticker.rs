@@ -14,6 +14,7 @@ impl<'a> HistoricalRuntime<'a> {
 
         Some(match callee {
             "ticker.heikinashi" => self.eval_ticker_heikinashi(args),
+            "ticker.linebreak" => self.eval_ticker_linebreak(args),
             "ticker.new" => self.eval_ticker_new(args),
             "ticker.modify" => self.eval_ticker_modify(args),
             "ticker.renko" => self.eval_ticker_renko(args),
@@ -31,6 +32,21 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::String(non_standard_ticker_id(
             &symbol,
             "heikinashi",
+        )))
+    }
+
+    fn eval_ticker_linebreak(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(tickerid) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::Int(number_of_lines) = self.eval_expr(&args[1].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        let symbol = standard_ticker_id(&tickerid);
+        Ok(PineValue::String(linebreak_ticker_id(
+            &symbol,
+            number_of_lines,
         )))
     }
 
@@ -143,6 +159,14 @@ fn non_standard_ticker_id(symbol: &str, chart: &str) -> String {
     )
 }
 
+fn linebreak_ticker_id(symbol: &str, number_of_lines: i64) -> String {
+    format!(
+        r#"{{"chart":"linebreak","lines":{},"symbol":"{}"}}"#,
+        number_of_lines,
+        escape_json_string(symbol)
+    )
+}
+
 fn renko_ticker_id(symbol: &str, style: &str, param: &str) -> String {
     format!(
         r#"{{"chart":"renko","style":"{}","param":{},"symbol":"{}"}}"#,
@@ -230,6 +254,14 @@ mod tests {
         assert_eq!(
             non_standard_ticker_id(r#"TEST:Q\""#, "heikinashi"),
             r#"{"chart":"heikinashi","symbol":"TEST:Q\\\""}"#
+        );
+    }
+
+    #[test]
+    fn linebreak_ticker_preserves_symbol_and_line_count_fields() {
+        assert_eq!(
+            linebreak_ticker_id(r#"TEST:Q\""#, 3),
+            r#"{"chart":"linebreak","lines":3,"symbol":"TEST:Q\\\""}"#
         );
     }
 

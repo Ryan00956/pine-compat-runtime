@@ -3639,7 +3639,12 @@ fn reports_unsupported_ticker_constructors_fixture() {
     );
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ticker_constructors.pine",
-        &["ticker.renko", "ticker.new", "ticker.modify"],
+        &[
+            "ticker.new",
+            "ticker.modify",
+            "ticker.renko",
+            "ticker.linebreak",
+        ],
     );
 }
 

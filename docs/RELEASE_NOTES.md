@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `ticker.linebreak` support for Line Break ticker
+  ID construction while leaving actual non-standard OHLC data
+  host/request-provider-owned.
 - Added fixture-backed partial `ticker.renko` support for Renko ticker ID
   construction while leaving actual non-standard OHLC data
   host/request-provider-owned.

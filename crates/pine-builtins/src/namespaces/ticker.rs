@@ -37,6 +37,19 @@ const HEIKINASHI_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const LINEBREAK_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "tickerid",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "number_of_lines",
+        accepts: Accepts::SimpleInt,
+        optional: false,
+    },
+];
+
 const RENKO_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "tickerid",
@@ -78,6 +91,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "ticker.heikinashi",
         phase: BuiltinPhase::Phase1Core,
         params: HEIKINASHI_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_STRING),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ticker.linebreak",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINEBREAK_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_STRING),
         variadic: false,
     },

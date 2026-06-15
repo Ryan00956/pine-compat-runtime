@@ -211,6 +211,7 @@ syminfo.pricescale -> const int
 syminfo.prefix(symbol: simple string) -> simple string
 syminfo.ticker(symbol: simple string) -> simple string
 ticker.heikinashi(tickerid: simple string) -> simple string
+ticker.linebreak(tickerid: simple string, number_of_lines: simple int) -> simple string
 ticker.new(prefix: simple string, ticker: simple string, session?: simple string, adjustment?: simple string) -> simple string
 ticker.modify(tickerid: simple string, session?: simple string, adjustment?: simple string) -> simple string
 ticker.renko(tickerid: simple string, style: simple string, param: simple numeric) -> simple string
@@ -233,6 +234,12 @@ prefix return `""` from `syminfo.prefix()` and the whole symbol from
 Ashi ticker ID constructor subset. It returns a modified ticker ID that
 preserves the standard symbol for `ticker.standard()`. Actual Heikin Ashi OHLC
 data remains host/request-provider-owned through `request.security()`.
+
+`ticker.linebreak(tickerid, number_of_lines)` currently implements the
+simple-string Line Break ticker ID constructor subset with a simple integer line
+count. It returns a modified ticker ID that preserves the standard symbol for
+`ticker.standard()`. Actual Line Break OHLC data remains
+host/request-provider-owned through `request.security()`.
 
 `ticker.new(prefix, ticker)` currently implements the default ticker constructor
 subset and returns `PREFIX:TICKER`. Supplying the optional `session` and

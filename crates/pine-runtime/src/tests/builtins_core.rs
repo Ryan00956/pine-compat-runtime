@@ -148,6 +148,10 @@ renko_adjusted = ticker.renko(adjusted_created, "Traditional", 2.5)
 renko_standard = ticker.standard(renko_adjusted)
 missing_renko_symbol = ticker.renko(na, "ATR", 10)
 missing_renko_style = ticker.renko(created, na, 10)
+linebreak_created = ticker.linebreak(created, 3)
+linebreak_adjusted = ticker.linebreak(adjusted_created, 4)
+linebreak_standard = ticker.standard(linebreak_adjusted)
+missing_linebreak_symbol = ticker.linebreak(na, 3)
 missing = ticker.standard(na)
 plot(created == "NASDAQ:AAPL" ? 1 : 0)
 plot(chart_created == "NASDAQ:AAPL" ? 1 : 0)
@@ -179,6 +183,10 @@ plot(renko_adjusted == "{\"chart\":\"renko\",\"style\":\"Traditional\",\"param\"
 plot(renko_standard == "NASDAQ:AAPL" ? 1 : 0)
 plot(na(missing_renko_symbol) ? 1 : 0)
 plot(na(missing_renko_style) ? 1 : 0)
+plot(linebreak_created == "{\"chart\":\"linebreak\",\"lines\":3,\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
+plot(linebreak_adjusted == "{\"chart\":\"linebreak\",\"lines\":4,\"symbol\":\"NASDAQ:AAPL\"}" ? 1 : 0)
+plot(linebreak_standard == "NASDAQ:AAPL" ? 1 : 0)
+plot(na(missing_linebreak_symbol) ? 1 : 0)
 plot(na(missing) ? 1 : 0)
 plot(adjustment.none == "none" and adjustment.splits == "splits" and adjustment.dividends == "dividends" ? 1 : 0)
 "#,
@@ -225,6 +233,10 @@ plot(adjustment.none == "none" and adjustment.splits == "splits" and adjustment.
     assert_values_close(&result.plots[29].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[30].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[31].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[32].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[33].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[34].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[35].values, &[1.0, 1.0]);
 }
 
 #[test]
