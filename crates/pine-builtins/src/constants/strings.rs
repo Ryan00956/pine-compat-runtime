@@ -111,6 +111,17 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     same_string_constant("format.price"),
     same_string_constant("format.percent"),
     same_string_constant("format.volume"),
+    currency_string_constant("currency.AUD", "AUD"),
+    currency_string_constant("currency.BTC", "BTC"),
+    currency_string_constant("currency.CAD", "CAD"),
+    currency_string_constant("currency.CHF", "CHF"),
+    currency_string_constant("currency.ETH", "ETH"),
+    currency_string_constant("currency.EUR", "EUR"),
+    currency_string_constant("currency.GBP", "GBP"),
+    currency_string_constant("currency.JPY", "JPY"),
+    currency_string_constant("currency.NONE", "NONE"),
+    currency_string_constant("currency.USD", "USD"),
+    currency_string_constant("currency.USDT", "USDT"),
     same_string_constant("order.ascending"),
     same_string_constant("order.descending"),
     same_string_constant("strategy.fixed"),
@@ -180,6 +191,10 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
 
 const fn same_string_constant(name: &'static str) -> NamedStringConstant {
     NamedStringConstant { name, value: name }
+}
+
+const fn currency_string_constant(name: &'static str, value: &'static str) -> NamedStringConstant {
+    NamedStringConstant { name, value }
 }
 
 #[must_use]

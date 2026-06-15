@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed direct `currency.*` string constants for a first
+  currency-code subset without enabling request currency conversion or strategy
+  account currency.
 - Added fixture-backed `barmerge.gaps_on` and `barmerge.lookahead_on` string
   constants while keeping non-default `request.security` merge behavior
   unsupported.
