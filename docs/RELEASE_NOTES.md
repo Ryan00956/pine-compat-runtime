@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed computed-size constructor coverage for int, bool, string,
+  and color arrays.
 - Aligned `str.pos` runtime behavior with Pine's `na` substring rule: a `na`
   search substring now returns position 0 while a `na` source still returns
   `na`.

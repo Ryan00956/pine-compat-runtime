@@ -165,6 +165,14 @@ array.set(values, n, close + 10)
 plot(array.get(values, n - 1))
 plot(array.get(values, n))
 plot(array.size(values))
+ints = array.new_int(n + 2, n)
+flags = array.new_bool(n + 1, bar_index >= 0)
+words = array.new_string(n + 1, "seed")
+colors = array.new_color(n + 1, color.red)
+plot(array.size(ints) + array.get(ints, 0))
+plot(array.size(flags) + (array.get(flags, n) ? 1 : 0))
+plot(array.size(words) + (array.get(words, n) == "seed" ? 1 : 0))
+plot(array.size(colors) + (array.get(colors, n) == color.red ? 1 : 0))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -180,6 +188,10 @@ plot(array.size(values))
     assert_values_close(&result.plots[0].values, &[1.0, 2.0, 3.0]);
     assert_values_close(&result.plots[1].values, &[11.0, 12.0, 13.0]);
     assert_values_close(&result.plots[2].values, &[2.0, 2.0, 2.0]);
+    assert_values_close(&result.plots[3].values, &[4.0, 4.0, 4.0]);
+    assert_values_close(&result.plots[4].values, &[3.0, 3.0, 3.0]);
+    assert_values_close(&result.plots[5].values, &[3.0, 3.0, 3.0]);
+    assert_values_close(&result.plots[6].values, &[3.0, 3.0, 3.0]);
 }
 
 #[test]
