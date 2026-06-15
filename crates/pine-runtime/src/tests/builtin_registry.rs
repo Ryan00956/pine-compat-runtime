@@ -214,6 +214,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "str.upper",
     "syminfo.prefix",
     "syminfo.ticker",
+    "ticker.heikinashi",
     "ticker.new",
     "ticker.modify",
     "ticker.standard",

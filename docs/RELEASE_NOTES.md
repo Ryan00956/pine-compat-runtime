@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `ticker.heikinashi` support for Heikin Ashi
+  ticker ID construction while leaving actual non-standard OHLC data
+  host/request-provider-owned.
 - Added fixture-backed `adjustment.none`, `adjustment.splits`, and
   `adjustment.dividends` constants plus partial `ticker.new`/`ticker.modify`
   adjustment modifier support for modified ticker IDs.

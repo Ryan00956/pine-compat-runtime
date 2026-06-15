@@ -31,6 +31,12 @@ const SYMBOL_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const HEIKINASHI_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "tickerid",
+    accepts: Accepts::SimpleString,
+    optional: false,
+}];
+
 const MODIFY_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "tickerid",
@@ -50,6 +56,13 @@ const MODIFY_PARAMS: &[BuiltinParam] = &[
 ];
 
 pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
+    BuiltinSignature {
+        name: "ticker.heikinashi",
+        phase: BuiltinPhase::Phase1Core,
+        params: HEIKINASHI_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_STRING),
+        variadic: false,
+    },
     BuiltinSignature {
         name: "ticker.new",
         phase: BuiltinPhase::Phase1Core,

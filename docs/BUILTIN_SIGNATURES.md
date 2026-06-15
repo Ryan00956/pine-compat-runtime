@@ -210,6 +210,7 @@ syminfo.minmove -> const int
 syminfo.pricescale -> const int
 syminfo.prefix(symbol: simple string) -> simple string
 syminfo.ticker(symbol: simple string) -> simple string
+ticker.heikinashi(tickerid: simple string) -> simple string
 ticker.new(prefix: simple string, ticker: simple string, session?: simple string, adjustment?: simple string) -> simple string
 ticker.modify(tickerid: simple string, session?: simple string, adjustment?: simple string) -> simple string
 ticker.standard(symbol: simple string) -> simple string
@@ -226,6 +227,11 @@ currency, `regular` session, `Etc/UTC` timezone, `base` volume type,
 string directly. They split `PREFIX:TICKER` on the first `:`; symbols without a
 prefix return `""` from `syminfo.prefix()` and the whole symbol from
 `syminfo.ticker()`.
+
+`ticker.heikinashi(tickerid)` currently implements the simple-string Heikin
+Ashi ticker ID constructor subset. It returns a modified ticker ID that
+preserves the standard symbol for `ticker.standard()`. Actual Heikin Ashi OHLC
+data remains host/request-provider-owned through `request.security()`.
 
 `ticker.new(prefix, ticker)` currently implements the default ticker constructor
 subset and returns `PREFIX:TICKER`. Supplying the optional `session` and

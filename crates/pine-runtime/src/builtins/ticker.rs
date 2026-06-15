@@ -13,11 +13,24 @@ impl<'a> HistoricalRuntime<'a> {
         }
 
         Some(match callee {
+            "ticker.heikinashi" => self.eval_ticker_heikinashi(args),
             "ticker.new" => self.eval_ticker_new(args),
             "ticker.modify" => self.eval_ticker_modify(args),
             "ticker.standard" => self.eval_ticker_standard(args),
             _ => return None,
         })
+    }
+
+    fn eval_ticker_heikinashi(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(tickerid) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        let symbol = standard_ticker_id(&tickerid);
+        Ok(PineValue::String(non_standard_ticker_id(
+            &symbol,
+            "heikinashi",
+        )))
     }
 
     fn eval_ticker_new(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -106,6 +119,14 @@ fn modified_ticker_id(symbol: &str, session: &str, adjustment: Option<&str>) -> 
     }
 }
 
+fn non_standard_ticker_id(symbol: &str, chart: &str) -> String {
+    format!(
+        r#"{{"chart":"{}","symbol":"{}"}}"#,
+        escape_json_string(chart),
+        escape_json_string(symbol)
+    )
+}
+
 fn escape_json_string(value: &str) -> String {
     let mut escaped = String::new();
     for ch in value.chars() {
@@ -168,6 +189,14 @@ mod tests {
         assert_eq!(
             modified_ticker_id("NASDAQ:AAPL", "extended", Some("dividends")),
             r#"{"session":"extended","adjustment":"dividends","symbol":"NASDAQ:AAPL"}"#
+        );
+    }
+
+    #[test]
+    fn non_standard_ticker_preserves_escaped_symbol_field() {
+        assert_eq!(
+            non_standard_ticker_id(r#"TEST:Q\""#, "heikinashi"),
+            r#"{"chart":"heikinashi","symbol":"TEST:Q\\\""}"#
         );
     }
 }

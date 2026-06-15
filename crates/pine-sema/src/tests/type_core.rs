@@ -906,12 +906,14 @@ adjusted = ticker.new(syminfo.prefix, syminfo.ticker, session.extended, adjustme
 modified = ticker.modify(created)
 modified_extended = ticker.modify(created, session.extended)
 modified_adjusted = ticker.modify(created, session.extended, adjustment.splits)
+ha = ticker.heikinashi(adjusted)
 standard = ticker.standard(syminfo.tickerid)
 extended_standard = ticker.standard(extended)
 modified_standard = ticker.standard(modified_extended)
 adjusted_standard = ticker.standard(adjusted)
 modified_adjusted_standard = ticker.standard(modified_adjusted)
-plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjusted_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and modified_standard == "NASDAQ:AAPL" and modified_adjusted_standard == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
+ha_standard = ticker.standard(ha)
+plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjusted_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and modified_standard == "NASDAQ:AAPL" and modified_adjusted_standard == "NASDAQ:AAPL" and ha_standard == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
 "#,
     );
 
@@ -920,7 +922,12 @@ plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and adjuste
         "{:?}",
         analysis.diagnostics
     );
-    for feature in ["ticker.new", "ticker.modify", "ticker.standard"] {
+    for feature in [
+        "ticker.heikinashi",
+        "ticker.new",
+        "ticker.modify",
+        "ticker.standard",
+    ] {
         assert!(
             analysis
                 .compatibility

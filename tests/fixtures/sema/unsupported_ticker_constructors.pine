@@ -1,7 +1,6 @@
 //@version=6
 indicator("Unsupported ticker constructors")
-ha = ticker.heikinashi(syminfo.tickerid)
 renko = ticker.renko(syminfo.tickerid, "ATR", 10)
 over_adjusted = ticker.new(syminfo.prefix, syminfo.ticker, session.extended, adjustment.dividends, "extra")
 modified_over_adjusted = ticker.modify(syminfo.tickerid, session.extended, adjustment.dividends, "extra")
-plot(na(ha) and na(renko) and na(over_adjusted) and na(modified_over_adjusted) ? 1 : 0)
+plot(na(renko) and na(over_adjusted) and na(modified_over_adjusted) ? 1 : 0)
