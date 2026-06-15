@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch and loop control-flow coverage for `array.from`
+  inference across scalar array element kinds.
 - Added fixture-backed branch and loop control-flow coverage for `array.abs`
   while preserving source-array non-mutation.
 - Added fixture-backed branch and loop control-flow read coverage for
