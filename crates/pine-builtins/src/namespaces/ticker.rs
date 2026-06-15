@@ -13,6 +13,11 @@ const NEW_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::SimpleString,
         optional: false,
     },
+    BuiltinParam {
+        name: "session",
+        accepts: Accepts::SimpleString,
+        optional: true,
+    },
 ];
 
 const SYMBOL_PARAMS: &[BuiltinParam] = &[BuiltinParam {

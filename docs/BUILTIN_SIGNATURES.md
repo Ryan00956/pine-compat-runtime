@@ -203,7 +203,7 @@ syminfo.minmove -> const int
 syminfo.pricescale -> const int
 syminfo.prefix(symbol: simple string) -> simple string
 syminfo.ticker(symbol: simple string) -> simple string
-ticker.new(prefix: simple string, ticker: simple string) -> simple string
+ticker.new(prefix: simple string, ticker: simple string, session?: simple string) -> simple string
 ticker.modify(tickerid: simple string) -> simple string
 ticker.standard(symbol: simple string) -> simple string
 ```
@@ -220,9 +220,11 @@ string directly. They split `PREFIX:TICKER` on the first `:`; symbols without a
 prefix return `""` from `syminfo.prefix()` and the whole symbol from
 `syminfo.ticker()`.
 
-`ticker.new(prefix, ticker)` currently implements the two-argument default
-ticker constructor subset and returns `PREFIX:TICKER`. Optional session and
-adjustment modifiers remain outside this subset.
+`ticker.new(prefix, ticker)` currently implements the default ticker constructor
+subset and returns `PREFIX:TICKER`. Supplying the optional `session` argument
+with values such as `session.regular`, `session.extended`, or `syminfo.session`
+returns a modified ticker ID that preserves the standard symbol for
+`ticker.standard()`. Adjustment modifiers remain outside this subset.
 
 `ticker.modify(tickerid)` currently implements the no-modifier identity subset
 and returns the supplied ticker ID. Optional session and adjustment modifiers

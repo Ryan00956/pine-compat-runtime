@@ -28,7 +28,15 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         };
 
-        Ok(PineValue::String(format!("{prefix}:{ticker}")))
+        let symbol = format!("{prefix}:{ticker}");
+        let Some(session_arg) = args.get(2) else {
+            return Ok(PineValue::String(symbol));
+        };
+        let PineValue::String(session) = self.eval_expr(&session_arg.value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        Ok(PineValue::String(modified_ticker_id(&symbol, &session)))
     }
 
     fn eval_ticker_modify(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
@@ -50,6 +58,26 @@ impl<'a> HistoricalRuntime<'a> {
 
 fn standard_ticker_id(symbol: &str) -> String {
     extract_json_symbol_field(symbol).unwrap_or_else(|| symbol.to_owned())
+}
+
+fn modified_ticker_id(symbol: &str, session: &str) -> String {
+    format!(
+        r#"{{"session":"{}","symbol":"{}"}}"#,
+        escape_json_string(session),
+        escape_json_string(symbol)
+    )
+}
+
+fn escape_json_string(value: &str) -> String {
+    let mut escaped = String::new();
+    for ch in value.chars() {
+        match ch {
+            '\\' => escaped.push_str(r#"\\"#),
+            '"' => escaped.push_str(r#"\""#),
+            _ => escaped.push(ch),
+        }
+    }
+    escaped
 }
 
 fn extract_json_symbol_field(value: &str) -> Option<String> {
@@ -91,5 +119,13 @@ mod tests {
             "COMEX:GC1!"
         );
         assert_eq!(standard_ticker_id("NASDAQ:AAPL"), "NASDAQ:AAPL");
+    }
+
+    #[test]
+    fn modified_ticker_escapes_json_string_fields() {
+        assert_eq!(
+            modified_ticker_id(r#"TEST:Q\""#, r#"reg\"ular"#),
+            r#"{"session":"reg\\\"ular","symbol":"TEST:Q\\\""}"#
+        );
     }
 }

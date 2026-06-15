@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `ticker.new(..., session)` support for
+  session-modified ticker IDs while leaving adjustment modifiers unsupported.
 - Added fixture-backed partial `ticker.modify` support for the single-argument
   no-modifier ticker ID subset while leaving session/adjustment modifiers
   unsupported.

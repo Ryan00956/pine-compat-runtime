@@ -898,9 +898,11 @@ fn accepts_ticker_standard() {
     let analysis = analyze(
         r#"indicator("ticker standard")
 created = ticker.new(syminfo.prefix, syminfo.ticker)
+extended = ticker.new(syminfo.prefix, syminfo.ticker, session.extended)
 modified = ticker.modify(created)
 standard = ticker.standard(syminfo.tickerid)
-plot(created == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
+extended_standard = ticker.standard(extended)
+plot(created == "NASDAQ:AAPL" and extended_standard == "NASDAQ:AAPL" and modified == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
 "#,
     );
 
