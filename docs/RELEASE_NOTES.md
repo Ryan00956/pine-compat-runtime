@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed fixed-offset timezone support to numeric `timestamp()`
+  calls, covering `UTC`/`GMT` offset strings and numeric offsets such as
+  `+05:30` while leaving IANA timezone conversion and exchange-timezone default
+  semantics unsupported.
 - Added fixture-backed numeric `timestamp()` offset normalization for zero,
   negative, and overflow month/day/time values.
 - Added fixture-backed `timestamp(dateString)` support for const ISO dates,

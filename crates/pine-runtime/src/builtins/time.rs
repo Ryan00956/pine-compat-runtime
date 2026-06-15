@@ -413,11 +413,10 @@ impl<'a> HistoricalRuntime<'a> {
                 .map_err(|message| RuntimeError { message });
         }
         let timezone = args.timezone.unwrap_or_else(|| "UTC".to_owned());
-        if !is_supported_utc_timezone(&timezone) {
-            return Err(RuntimeError {
+        let timezone_offset_seconds =
+            parse_fixed_timezone_offset(&timezone).ok_or_else(|| RuntimeError {
                 message: format!("timestamp unsupported timezone `{timezone}`"),
-            });
-        }
+            })?;
         let (Some(year), Some(month), Some(day)) = (args.year, args.month, args.day) else {
             return Ok(PineValue::Na);
         };
@@ -425,6 +424,21 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(datetime) =
             normalize_timestamp_parts(year, month, day, args.hour, args.minute, args.second)
         else {
+            return Err(RuntimeError {
+                message: format!(
+                    "timestamp invalid UTC datetime: {year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}",
+                    hour = args.hour,
+                    minute = args.minute,
+                    second = args.second
+                ),
+            });
+        };
+        let Some(offset) = Duration::try_seconds(i64::from(timezone_offset_seconds)) else {
+            return Err(RuntimeError {
+                message: format!("timestamp unsupported timezone `{timezone}`"),
+            });
+        };
+        let Some(datetime) = datetime.checked_sub_signed(offset) else {
             return Err(RuntimeError {
                 message: format!(
                     "timestamp invalid UTC datetime: {year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}",
@@ -1149,18 +1163,23 @@ fn parse_timestamp_time_token(token: &str, original: &str) -> Result<(u32, u32, 
 }
 
 fn parse_timestamp_timezone_token(token: &str, original: &str) -> Result<i32, String> {
-    if matches!(token, "UTC" | "GMT" | "Z") {
-        return Ok(0);
+    parse_fixed_timezone_offset(token)
+        .ok_or_else(|| format!("timestamp unsupported dateString `{original}`"))
+}
+
+fn parse_fixed_timezone_offset(timezone: &str) -> Option<i32> {
+    let token = timezone.trim();
+    if is_supported_utc_timezone(token) {
+        return Some(0);
     }
     let offset = token
         .strip_prefix("UTC")
         .or_else(|| token.strip_prefix("GMT"))
         .unwrap_or(token);
     if offset == "0" {
-        return Ok(0);
+        return Some(0);
     }
     parse_timestamp_numeric_offset(offset)
-        .ok_or_else(|| format!("timestamp unsupported dateString `{original}`"))
 }
 
 fn parse_timestamp_numeric_offset(offset: &str) -> Option<i32> {

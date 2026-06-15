@@ -31,6 +31,9 @@ day_zero_ts = timestamp(2021, 1, 0)
 hour_overflow_ts = timestamp(2021, 1, 1, 24)
 minute_second_overflow_ts = timestamp(2021, 1, 1, 0, 61, 1)
 negative_time_ts = timestamp(2021, 1, 1, -1, -1, -1)
+fixed_offset_east_ts = timestamp("UTC+4", 2021, 1, 1)
+fixed_offset_west_ts = timestamp("GMT-5", 2021, 1, 1)
+numeric_offset_ts = timestamp("+05:30", 2021, 1, 1)
 date_ts_string = timestamp("2021-01-01")
 month_ts_string = timestamp("29 Aug 2024")
 named_month_ts_string = timestamp(dateString = "29 Aug 2024")
@@ -53,6 +56,7 @@ plot(made_ts == ts and date_ts == 1609459200000 ? 1 : 0)
 plot(made_ts_utc == ts and made_ts_named == ts and date_ts_named == date_ts ? 1 : 0)
 plot(previous_month_zero_ts == 1606780800000 and previous_month_negative_ts == 1604188800000 and future_month_overflow_ts == 1643771045000 ? 1 : 0)
 plot(day_overflow_ts == 1614643200000 and day_zero_ts == 1609372800000 and hour_overflow_ts == 1609545600000 and minute_second_overflow_ts == 1609462861000 and negative_time_ts == 1609455539000 ? 1 : 0)
+plot(fixed_offset_east_ts == 1609444800000 and fixed_offset_west_ts == 1609477200000 and numeric_offset_ts == 1609439400000 ? 1 : 0)
 plot(date_ts_string == date_ts and month_ts_string == 1724889600000 and named_month_ts_string == month_ts_string and utc_ts_string == 1724112000000 and offset_ts_string == 1651377600000 ? 1 : 0)
 plot(na(timestamp(na, 1, 1)) ? 1 : 0)
 "#,
@@ -115,6 +119,7 @@ plot(na(timestamp(na, 1, 1)) ? 1 : 0)
     assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[26].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[27].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[28].values, &[1.0, 1.0]);
 }
 
 #[test]
