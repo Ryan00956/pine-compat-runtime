@@ -24,6 +24,14 @@ impl<'a> HistoricalRuntime<'a> {
             .ok_or_else(|| RuntimeError {
                 message: format!("time_close timestamp is out of range: {}", bar.time),
             })?;
+        let millis_since_midnight = i64::from(datetime.num_seconds_from_midnight()) * 1000
+            + i64::from(datetime.timestamp_subsec_millis());
+        let time_tradingday =
+            bar.time
+                .checked_sub(millis_since_midnight)
+                .ok_or_else(|| RuntimeError {
+                    message: format!("time_tradingday timestamp is out of range: {}", bar.time),
+                })?;
         let previous_close = self.price_flow_previous_close;
         let previous_volume = self.price_flow_previous_volume;
         self.accdist_current = self.next_accdist(bar);
@@ -45,6 +53,7 @@ impl<'a> HistoricalRuntime<'a> {
             ("volume", PineValue::Float(bar.volume)),
             ("time", PineValue::Int(bar.time)),
             ("time_close", PineValue::Int(time_close)),
+            ("time_tradingday", PineValue::Int(time_tradingday)),
             (
                 "last_bar_index",
                 self.last_bar_index

@@ -56,6 +56,7 @@ close     -> series float
 volume    -> series float
 time      -> series int
 time_close -> series int
+time_tradingday -> series int
 last_bar_index -> series int
 last_bar_time -> series int
 year      -> series int
@@ -101,6 +102,9 @@ timezone metadata exists. `dayofweek.sunday` through `dayofweek.saturday`
 evaluate to const ints `1` through `7`; `weekofyear` uses the UTC ISO week
 number in the current subset. `time_close` uses the fixed default 1-minute
 chart timeframe and returns `time + 60000`.
+`time_tradingday` currently implements the fixed UTC single-day session subset:
+it returns 00:00 UTC for the current bar's UTC calendar day. Overnight sessions
+whose trading day differs from the bar opening date remain outside this subset.
 
 `last_bar_index` and `last_bar_time` reference the last known loaded chart bar
 in the current dataset. `last_bar_index` is the zero-based index of that bar,

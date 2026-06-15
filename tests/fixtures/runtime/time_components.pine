@@ -8,6 +8,7 @@ plot(dayofweek)
 plot(hour)
 plot(minute)
 plot(second)
+plot(time_tradingday)
 ts = 1612235045000
 made_ts = timestamp(2021, 2, 2, 3, 4, 5)
 date_ts = timestamp(2021, 1, 1)

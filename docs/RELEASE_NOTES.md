@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `time_tradingday` for the current UTC single-day session
+  subset while leaving overnight trading-day rollover host/session-owned.
 - Added fixture-backed `barstate.islastconfirmedhistory` for the current
   runtime's last known confirmed historical bar.
 - Added fixture-backed `last_bar_index` and `last_bar_time` series variables

@@ -16,6 +16,10 @@ pub(crate) const INITIAL_SYMBOLS: &[(&str, PineType)] = &[
         PineType::new(Qualifier::Series, ValueKind::Int),
     ),
     (
+        "time_tradingday",
+        PineType::new(Qualifier::Series, ValueKind::Int),
+    ),
+    (
         "last_bar_index",
         PineType::new(Qualifier::Series, ValueKind::Int),
     ),

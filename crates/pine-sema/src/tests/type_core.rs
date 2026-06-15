@@ -401,7 +401,7 @@ fn accepts_time_helpers() {
     let analysis = analyze(
         r#"indicator("time helpers")
 ts = timestamp(2021, 2, 2, 3, 4, 5)
-plot(year(ts) + month(ts, "UTC") + weekofyear(ts) + dayofmonth(ts) + dayofweek(ts) + hour(ts) + minute(ts) + second(ts) + (dayofweek == dayofweek.friday ? 1 : 0))
+plot(year(ts) + month(ts, "UTC") + weekofyear(ts) + dayofmonth(ts) + dayofweek(ts) + hour(ts) + minute(ts) + second(ts) + time_tradingday / 1000000000000 + (dayofweek == dayofweek.friday ? 1 : 0))
 "#,
     );
 

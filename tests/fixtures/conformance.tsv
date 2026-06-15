@@ -20,6 +20,7 @@ close	supported	global OHLCV series value	tests/fixtures/runtime/global_series.p
 volume	supported	global OHLCV series value	tests/fixtures/runtime/global_series.pine
 time	supported	global bar timestamp series value	tests/fixtures/runtime/global_series.pine
 time_close	supported	fixed default chart bar close timestamp series value	tests/fixtures/runtime/global_series.pine
+time_tradingday	supported	UTC single-day session subset; returns the current bar's UTC calendar day at 00:00 while overnight session trading-day rollover remains unsupported	tests/fixtures/runtime/time_components.pine
 last_bar_index	supported	last known loaded chart bar index series value over the current dataset	tests/fixtures/runtime/global_series.pine
 last_bar_time	supported	last known loaded chart bar opening timestamp series value over the current dataset	tests/fixtures/runtime/global_series.pine
 hl2	supported	(high + low) / 2 derived series	tests/fixtures/runtime/global_series.pine

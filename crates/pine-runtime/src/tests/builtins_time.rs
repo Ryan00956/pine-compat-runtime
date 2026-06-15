@@ -16,6 +16,7 @@ plot(dayofweek)
 plot(hour)
 plot(minute)
 plot(second)
+plot(time_tradingday)
 ts = 1612235045000
 made_ts = timestamp(2021, 2, 2, 3, 4, 5)
 date_ts = timestamp(2021, 1, 1)
@@ -71,21 +72,25 @@ plot(na(timestamp(na, 1, 1)) ? 1 : 0)
     assert_values_close(&result.plots[5].values, &[0.0, 3.0]);
     assert_values_close(&result.plots[6].values, &[0.0, 4.0]);
     assert_values_close(&result.plots[7].values, &[0.0, 5.0]);
-    assert_values_close(&result.plots[8].values, &[2021.0, 2021.0]);
-    assert_values_close(&result.plots[9].values, &[2.0, 2.0]);
-    assert_values_close(&result.plots[10].values, &[5.0, 5.0]);
-    assert_values_close(&result.plots[11].values, &[2.0, 2.0]);
-    assert_values_close(&result.plots[12].values, &[3.0, 3.0]);
+    assert_values_close(
+        &result.plots[8].values,
+        &[1_609_459_200_000.0, 1_612_224_000_000.0],
+    );
+    assert_values_close(&result.plots[9].values, &[2021.0, 2021.0]);
+    assert_values_close(&result.plots[10].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[11].values, &[5.0, 5.0]);
+    assert_values_close(&result.plots[12].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[13].values, &[3.0, 3.0]);
-    assert_values_close(&result.plots[14].values, &[4.0, 4.0]);
-    assert_values_close(&result.plots[15].values, &[5.0, 5.0]);
-    assert_values_close(&result.plots[16].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[14].values, &[3.0, 3.0]);
+    assert_values_close(&result.plots[15].values, &[4.0, 4.0]);
+    assert_values_close(&result.plots[16].values, &[5.0, 5.0]);
+    assert_values_close(&result.plots[17].values, &[1.0, 0.0]);
     assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
 }
 
 #[test]
