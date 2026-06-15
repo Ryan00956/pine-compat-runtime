@@ -23,3 +23,15 @@ else
     words.reverse()
 expected_first_word = bar_index % 2 == 0 ? "a" : "c"
 plot(words.get(0) == expected_first_word ? 1 : 0)
+
+var branch_index_source = array.from(30, 10, 20)
+branch_indices = bar_index % 2 == 0 ? branch_index_source.sort_indices() : branch_index_source.sort_indices(order.descending)
+expected_first_index = bar_index % 2 == 0 ? 1 : 0
+plot(branch_indices.get(0) == expected_first_index and branch_index_source.get(0) == 30 ? 1 : 0)
+
+loop_index_acc = array.new_int()
+loop_index_source = array.from("b", "a", "c")
+for i = 0 to 1
+    loop_indices = i == 0 ? loop_index_source.sort_indices(order.ascending) : loop_index_source.sort_indices(order.descending)
+    loop_index_acc.push(loop_indices.get(0))
+plot(loop_index_acc.get(0) + loop_index_acc.get(1) == 3 and loop_index_source.get(0) == "b" ? 1 : 0)

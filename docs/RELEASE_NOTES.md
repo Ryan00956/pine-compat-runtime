@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch and loop control-flow coverage for
+  `array.sort_indices` while preserving source-array non-mutation.
 - Added fixture-backed computed-bound coverage for `array.slice` while keeping
   Pine's shallow parent-window slice semantics unsupported.
 - Added fixture-backed computed-index and computed-range coverage for
