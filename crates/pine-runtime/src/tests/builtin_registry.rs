@@ -342,6 +342,8 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "table.set_frame_color",
     "table.set_frame_width",
     "table.set_position",
+    "time",
+    "time_close",
     "timeframe.change",
     "timeframe.from_seconds",
     "timeframe.in_seconds",

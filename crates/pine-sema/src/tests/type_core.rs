@@ -401,7 +401,12 @@ fn accepts_time_helpers() {
     let analysis = analyze(
         r#"indicator("time helpers")
 ts = timestamp(2021, 2, 2, 3, 4, 5)
+daily_open = time("D")
+chart_open = time("")
+chart_close = time_close(timeframe.period)
+daily_close = time_close("D")
 plot(year(ts) + month(ts, "UTC") + weekofyear(ts) + dayofmonth(ts) + dayofweek(ts) + hour(ts) + minute(ts) + second(ts) + time_tradingday / 1000000000000 + (dayofweek == dayofweek.friday ? 1 : 0))
+plot(daily_open <= time and chart_open == time and chart_close == time_close and daily_close >= time_close ? 1 : 0)
 "#,
     );
 
@@ -431,6 +436,25 @@ plot(year(ts) + month(ts, "UTC") + weekofyear(ts) + dayofmonth(ts) + dayofweek(t
             "{feature} not reported as supported"
         );
     }
+}
+
+#[test]
+fn rejects_unsupported_time_function_overloads() {
+    let analysis = analyze(
+        r#"indicator("unsupported time overloads")
+plot(time("D", "0930-1600"))
+plot(time_close("D", bars_back = -1))
+"#,
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARITY"),
+        "{:?}",
+        analysis.diagnostics
+    );
 }
 
 #[test]

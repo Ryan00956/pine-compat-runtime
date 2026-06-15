@@ -321,6 +321,8 @@ minute(time: int-compatible, timezone?: string-compatible) -> int with strongest
 second(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 timestamp(year: int-compatible, month: int-compatible, day: int-compatible, hour?: int-compatible, minute?: int-compatible, second?: int-compatible)
   -> int with strongest qualifier
+time(timeframe: simple string) -> series int
+time_close(timeframe: simple string) -> series int
 ```
 
 For now, these function overloads use the same UTC-only timezone subset as
@@ -328,6 +330,12 @@ For now, these function overloads use the same UTC-only timezone subset as
 currently supports only the numeric UTC subset; omitted hour/minute/second
 default to 0, `na` inputs return `na`, and invalid UTC dates are runtime
 errors.
+`time(timeframe)` and `time_close(timeframe)` currently implement the
+simple-string timeframe subset only. `""` and `timeframe.period` use the current
+fixed chart timeframe and return the current bar's existing `time` or
+`time_close` value. Higher timeframe strings in the supported timeframe subset
+return UTC bucket opening or closing timestamps. Time-based session strings,
+timezone overrides, and `bars_back` remain unsupported.
 
 Timeframe helpers:
 

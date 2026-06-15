@@ -297,6 +297,8 @@ impl<'a> HistoricalRuntime<'a> {
             "minute" => self.eval_time_component(args, TimeComponent::Minute),
             "second" => self.eval_time_component(args, TimeComponent::Second),
             "timestamp" => self.eval_timestamp(args),
+            "time" => self.eval_bar_time_function(args, false),
+            "time_close" => self.eval_bar_time_function(args, true),
             "timeframe.in_seconds" => self.eval_timeframe_in_seconds(args),
             "timeframe.from_seconds" => self.eval_timeframe_from_seconds(args),
             "timeframe.change" => self.eval_timeframe_change(args),
@@ -390,6 +392,79 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(PineValue::Int(datetime.timestamp_millis()))
+    }
+
+    pub(crate) fn eval_bar_time_function(
+        &mut self,
+        args: &[HirCallArg],
+        close_time: bool,
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(arg) = args.first() else {
+            return Ok(PineValue::Na);
+        };
+        let timeframe = match self.eval_expr(&arg.value)? {
+            PineValue::String(value) => value,
+            PineValue::Na => return Ok(PineValue::Na),
+            _ => return Ok(PineValue::Na),
+        };
+        let timeframe = if timeframe.is_empty() {
+            DEFAULT_CHART_TIMEFRAME
+        } else {
+            timeframe.trim()
+        };
+        let Some(seconds) = timeframe_seconds(timeframe) else {
+            let name = if close_time { "time_close" } else { "time" };
+            return Err(RuntimeError {
+                message: format!("{name} unsupported timeframe `{timeframe}`"),
+            });
+        };
+        let Some(chart_seconds) = timeframe_seconds(DEFAULT_CHART_TIMEFRAME) else {
+            return Err(RuntimeError {
+                message: format!("unsupported default chart timeframe `{DEFAULT_CHART_TIMEFRAME}`"),
+            });
+        };
+        if seconds < chart_seconds {
+            let name = if close_time { "time_close" } else { "time" };
+            return Err(RuntimeError {
+                message: format!("{name} unsupported lower timeframe `{timeframe}`"),
+            });
+        }
+        if seconds == chart_seconds {
+            let name = if close_time { "time_close" } else { "time" };
+            return Ok(self
+                .current_builtin_i64(name)
+                .map(PineValue::Int)
+                .unwrap_or(PineValue::Na));
+        }
+
+        let Some(current_time) = self.current_builtin_i64("time") else {
+            return Ok(PineValue::Na);
+        };
+        let Some(bucket) = timeframe_bucket(current_time, seconds) else {
+            let name = if close_time { "time_close" } else { "time" };
+            return Err(RuntimeError {
+                message: format!("{name} unsupported timeframe `{timeframe}`"),
+            });
+        };
+        let Some(duration_ms) = seconds.checked_mul(1000) else {
+            let name = if close_time { "time_close" } else { "time" };
+            return Err(RuntimeError {
+                message: format!("{name} unsupported timeframe `{timeframe}`"),
+            });
+        };
+        let bucket = if close_time {
+            bucket.checked_add(1)
+        } else {
+            Some(bucket)
+        };
+        let Some(bucket) = bucket.and_then(|value| value.checked_mul(duration_ms)) else {
+            let name = if close_time { "time_close" } else { "time" };
+            return Err(RuntimeError {
+                message: format!("{name} timestamp is out of range for timeframe `{timeframe}`"),
+            });
+        };
+
+        Ok(PineValue::Int(bucket))
     }
 
     pub(crate) fn eval_timeframe_in_seconds(

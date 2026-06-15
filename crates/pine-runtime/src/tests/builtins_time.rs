@@ -94,6 +94,73 @@ plot(na(timestamp(na, 1, 1)) ? 1 : 0)
 }
 
 #[test]
+fn runs_time_and_time_close_functions_for_timeframes() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("time functions")
+plot(time(""))
+plot(time(timeframe.period))
+plot(time("D"))
+plot(time_close(""))
+plot(time_close(timeframe.period))
+plot(time_close("D"))
+plot(na(time(na)) and na(time_close(na)) ? 1 : 0)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![
+        Bar {
+            time: 0,
+            open: 1.0,
+            high: 1.0,
+            low: 1.0,
+            close: 1.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 60_000,
+            open: 2.0,
+            high: 2.0,
+            low: 2.0,
+            close: 2.0,
+            volume: 1.0,
+        },
+        Bar {
+            time: 86_460_000,
+            open: 3.0,
+            high: 3.0,
+            low: 3.0,
+            close: 3.0,
+            volume: 1.0,
+        },
+    ];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("result");
+
+    assert_values_close(&result.plots[0].values, &[0.0, 60_000.0, 86_460_000.0]);
+    assert_values_close(&result.plots[1].values, &[0.0, 60_000.0, 86_460_000.0]);
+    assert_values_close(&result.plots[2].values, &[0.0, 0.0, 86_400_000.0]);
+    assert_values_close(
+        &result.plots[3].values,
+        &[60_000.0, 120_000.0, 86_520_000.0],
+    );
+    assert_values_close(
+        &result.plots[4].values,
+        &[60_000.0, 120_000.0, 86_520_000.0],
+    );
+    assert_values_close(
+        &result.plots[5].values,
+        &[86_400_000.0, 86_400_000.0, 172_800_000.0],
+    );
+    assert_values_close(&result.plots[6].values, &[1.0, 1.0, 1.0]);
+}
+
+#[test]
 fn runs_timeframe_helpers() {
     let source = SourceFile::new(
         "test.pine",

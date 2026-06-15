@@ -33,6 +33,12 @@ const TIMEFRAME_CHANGE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const TIME_FUNCTION_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "timeframe",
+    accepts: Accepts::SimpleString,
+    optional: false,
+}];
+
 const TIMESTAMP_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "year",
@@ -128,6 +134,20 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: TIMESTAMP_PARAMS,
         returns: ReturnSpec::PromotedInt,
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "time",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIME_FUNCTION_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "time_close",
+        phase: BuiltinPhase::Phase1Core,
+        params: TIME_FUNCTION_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_INT),
         variadic: false,
     },
     BuiltinSignature {
