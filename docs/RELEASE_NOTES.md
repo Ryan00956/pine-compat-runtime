@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch and loop control-flow coverage for
+  `array.variance` and `array.stdev`.
+- Added fixture-backed branch and loop control-flow coverage for
   `array.standardize`.
 - Added fixture-backed branch and loop control-flow coverage for
   `array.covariance`.

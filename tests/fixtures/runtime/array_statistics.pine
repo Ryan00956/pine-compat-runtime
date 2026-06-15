@@ -208,3 +208,20 @@ for i = 0 to 1
         loop_standardized_method = loop_standardize_source.standardize()
         loop_standardize_results.push(loop_standardized_method.get(0))
 plot(loop_standardize_results.get(0) * 10 + loop_standardize_results.get(1))
+
+branch_variance_stdev_source = array.from(2, 4, 6)
+branch_variance_stdev_results = array.new_float()
+if bar_index % 2 == 0
+    branch_variance_stdev_results.push(array.variance(branch_variance_stdev_source) + branch_variance_stdev_source.stdev(false))
+else
+    branch_variance_stdev_results.push(branch_variance_stdev_source.variance(false) * 10 + array.stdev(branch_variance_stdev_source))
+plot(branch_variance_stdev_results.get(0))
+
+loop_variance_stdev_source = array.from(1.0, 2.0, 3.0)
+loop_variance_stdev_results = array.new_float()
+for i = 0 to 1
+    if i == 0
+        loop_variance_stdev_results.push(array.variance(loop_variance_stdev_source) + array.stdev(loop_variance_stdev_source))
+    else
+        loop_variance_stdev_results.push(loop_variance_stdev_source.variance(false) + loop_variance_stdev_source.stdev(false))
+plot(loop_variance_stdev_results.get(0) + loop_variance_stdev_results.get(1))
