@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch and loop control-flow mutation coverage for
+  `array.shift` and `array.unshift`.
+- Added fixture-backed branch and loop control-flow mutation coverage for
   `array.insert` and `array.remove`.
 - Added fixture-backed branch and loop control-flow coverage for
   `array.slice` while preserving copied-array mutation independence.

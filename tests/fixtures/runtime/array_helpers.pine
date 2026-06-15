@@ -41,3 +41,26 @@ plot(flag_first and not flag_last and flags.shift() and flags.size() == 1 ? 1 : 
 
 empty = array.new_bool()
 plot(na(array.first(empty)) and na(array.last(empty)) and na(array.shift(empty)) ? 1 : 0)
+
+branch_shift_unshift = array.from(2, 3)
+branch_shift_unshift_score = bar_index * 0
+if bar_index % 2 == 0
+    array.unshift(branch_shift_unshift, 1)
+    branch_shifted_even = branch_shift_unshift.shift()
+    branch_shift_unshift_score := branch_shifted_even * 100 + branch_shift_unshift.get(0) * 10 + branch_shift_unshift.get(1)
+else
+    branch_shift_unshift.unshift(4)
+    branch_shifted_odd = array.shift(branch_shift_unshift)
+    branch_shift_unshift_score := branch_shifted_odd * 100 + branch_shift_unshift.get(0) * 10 + branch_shift_unshift.get(1)
+plot(branch_shift_unshift_score)
+
+loop_shift_unshift = array.from(5)
+loop_shift_unshift_score = bar_index * 0
+for i = 0 to 1
+    if i == 0
+        array.unshift(loop_shift_unshift, i + 1)
+        loop_shift_unshift_score := loop_shift_unshift_score + loop_shift_unshift.shift()
+    else
+        loop_shift_unshift.unshift(i + 1)
+        loop_shift_unshift_score := loop_shift_unshift_score + array.shift(loop_shift_unshift)
+plot(loop_shift_unshift_score * 100 + loop_shift_unshift.size() * 10 + loop_shift_unshift.get(0))
