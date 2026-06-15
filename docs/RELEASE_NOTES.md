@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Tightened `syminfo` metadata closeout by documenting the
+  `syminfo.main_tickerid` signature and asserting analyzer support evidence for
+  `syminfo.main_tickerid` and `syminfo.mincontract`.
 - Added fixture-backed `time_tradingday` for the current UTC single-day session
   subset while leaving overnight trading-day rollover host/session-owned.
 - Added fixture-backed `barstate.islastconfirmedhistory` for the current

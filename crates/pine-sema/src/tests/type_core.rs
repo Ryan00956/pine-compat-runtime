@@ -845,12 +845,12 @@ plot(array.size(floor_values) + array.size(ceil_values) + array.size(trunc_value
 fn accepts_syminfo_metadata() {
     let analysis = analyze(
         r#"indicator("syminfo")
-identity = syminfo.tickerid == "NASDAQ:AAPL" and syminfo.ticker == "AAPL" and syminfo.prefix == "NASDAQ"
+identity = syminfo.tickerid == "NASDAQ:AAPL" and syminfo.main_tickerid == "NASDAQ:AAPL" and syminfo.ticker == "AAPL" and syminfo.prefix == "NASDAQ"
 details = syminfo.description == "Apple Inc." and syminfo.type == "stock" and syminfo.currency == "USD" and syminfo.basecurrency == "USD"
 session = syminfo.session == "regular" and syminfo.timezone == "Etc/UTC" and syminfo.root == "AAPL" and syminfo.volumetype == "base"
 classification = syminfo.sector == "Electronic Technology" and syminfo.industry == "Telecommunications Equipment" and syminfo.country == "US"
 helpers = syminfo.prefix("NASDAQ:AAPL") == "NASDAQ" and syminfo.ticker("NASDAQ:AAPL") == "AAPL" and syminfo.prefix(syminfo.tickerid) == "NASDAQ" and syminfo.ticker(syminfo.tickerid) == "AAPL"
-scale = syminfo.mintick + syminfo.pointvalue + syminfo.minmove + syminfo.pricescale
+scale = syminfo.mintick + syminfo.mincontract + syminfo.pointvalue + syminfo.minmove + syminfo.pricescale
 plot(identity and details and session and classification and helpers ? scale : 0)
 "#,
     );
@@ -862,6 +862,7 @@ plot(identity and details and session and classification and helpers ? scale : 0
     );
     for feature in [
         "syminfo.tickerid",
+        "syminfo.main_tickerid",
         "syminfo.ticker",
         "syminfo.prefix",
         "syminfo.description",
@@ -876,6 +877,7 @@ plot(identity and details and session and classification and helpers ? scale : 0
         "syminfo.root",
         "syminfo.volumetype",
         "syminfo.mintick",
+        "syminfo.mincontract",
         "syminfo.pointvalue",
         "syminfo.minmove",
         "syminfo.pricescale",

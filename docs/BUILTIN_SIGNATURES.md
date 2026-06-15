@@ -182,6 +182,7 @@ Symbol info:
 
 ```text
 syminfo.tickerid -> const string
+syminfo.main_tickerid -> const string
 syminfo.ticker -> const string
 syminfo.prefix -> const string
 syminfo.description -> const string
@@ -205,11 +206,12 @@ syminfo.ticker(symbol: simple string) -> simple string
 ```
 
 `syminfo.*` currently uses fixed default symbol metadata until runtime symbol
-metadata is available: `NASDAQ:AAPL`, ticker `AAPL`, prefix `NASDAQ`, stock
-type, `Electronic Technology` sector, `Telecommunications Equipment` industry,
-`US` country, `USD` currency/base currency, `regular` session, `Etc/UTC`
-timezone, `base` volume type, `mintick = 0.01`, `mincontract = 1.0`,
-`pointvalue = 1.0`, `minmove = 1`, and `pricescale = 100`.
+metadata is available: `tickerid = main_tickerid = NASDAQ:AAPL`, ticker `AAPL`,
+prefix `NASDAQ`, stock type, `Electronic Technology` sector,
+`Telecommunications Equipment` industry, `US` country, `USD` currency/base
+currency, `regular` session, `Etc/UTC` timezone, `base` volume type,
+`mintick = 0.01`, `mincontract = 1.0`, `pointvalue = 1.0`, `minmove = 1`, and
+`pricescale = 100`.
 `syminfo.prefix(symbol)` and `syminfo.ticker(symbol)` parse the supplied simple
 string directly. They split `PREFIX:TICKER` on the first `:`; symbols without a
 prefix return `""` from `syminfo.prefix()` and the whole symbol from
