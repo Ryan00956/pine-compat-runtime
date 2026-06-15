@@ -34,3 +34,26 @@ plot(colors.get(0) == color.blue ? 1 : 0)
 empty = array.new_float()
 empty.clear()
 plot(empty.size())
+
+branch_clear_values = array.from(1, 2, 3)
+if bar_index % 2 == 0
+    array.clear(branch_clear_values)
+    branch_clear_values.push(4)
+else
+    branch_clear_values.clear()
+    branch_clear_values.push(5)
+plot(branch_clear_values.size())
+plot(branch_clear_values.get(0))
+
+loop_clear_values = array.from("a", "b")
+loop_clear_results = array.new_int()
+for i = 0 to 1
+    if i == 0
+        array.clear(loop_clear_values)
+        loop_clear_values.push("x")
+    else
+        loop_clear_values.clear()
+        loop_clear_values.push("y")
+    loop_clear_results.push(loop_clear_values.size())
+plot(loop_clear_results.get(0) + loop_clear_results.get(1))
+plot(loop_clear_values.get(0) == "y" ? 1 : 0)

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch and loop control-flow mutation coverage for
+  `array.clear`.
 - Added fixture-backed branch and loop control-flow coverage for `array.join`.
 - Added fixture-backed branch and loop control-flow coverage for
   `array.variance` and `array.stdev`.
