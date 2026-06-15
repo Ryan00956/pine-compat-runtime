@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch and loop control-flow mutation coverage for
+  `array.set`.
+- Added fixture-backed branch and loop control-flow mutation coverage for
   `array.pop`.
 - Added fixture-backed branch and loop control-flow mutation coverage for
   `array.shift` and `array.unshift`.

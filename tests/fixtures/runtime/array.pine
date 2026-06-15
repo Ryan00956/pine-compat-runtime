@@ -62,3 +62,18 @@ for i = 0 to 1
     else
         loop_pop_score := loop_pop_score + loop_pop_values.pop()
 plot(loop_pop_score * 100 + loop_pop_values.size() * 10 + loop_pop_values.get(0))
+
+branch_set_values = array.from(1, 2, 3)
+if bar_index % 2 == 0
+    array.set(branch_set_values, 1, 20)
+else
+    branch_set_values.set(2, 30)
+plot(branch_set_values.get(0) * 100 + branch_set_values.get(1) * 10 + branch_set_values.get(2))
+
+loop_set_values = array.from(4, 5, 6)
+for i = 0 to 1
+    if i == 0
+        array.set(loop_set_values, i, 40)
+    else
+        loop_set_values.set(i + 1, 60)
+plot(loop_set_values.get(0) + loop_set_values.get(1) + loop_set_values.get(2))
