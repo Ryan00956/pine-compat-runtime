@@ -204,6 +204,20 @@ impl<'a> HistoricalRuntime<'a> {
                 .collect();
             return self.new_array_from_values(ArrayElementKind::Line, lines);
         }
+        if name == "box.all" {
+            let boxes = self
+                .boxes
+                .iter()
+                .filter(|drawing_box| {
+                    drawing_box
+                        .snapshots
+                        .last()
+                        .is_some_and(|snapshot| snapshot.exists)
+                })
+                .map(|drawing_box| PineValue::Box(drawing_box.id))
+                .collect();
+            return self.new_array_from_values(ArrayElementKind::Box, boxes);
+        }
         if name == "strategy.position_size" {
             return PineValue::Float(self.strategy_broker.position_size());
         }

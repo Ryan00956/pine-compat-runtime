@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `box.all` support for exposing a snapshot array
+  of currently existing box ids while omitting deleted boxes.
 - Added fixture-backed partial `line.all` support for exposing a snapshot array
   of currently existing line ids while omitting deleted lines.
 - Added fixture-backed partial `label.all` support for exposing a snapshot

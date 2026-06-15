@@ -1,8 +1,8 @@
 use pine_ir::{PineType, Qualifier, ValueKind};
 
 use crate::namespaces::types::{
-    SERIES_BOOL, SERIES_INT, SIMPLE_BOOL, SIMPLE_COLOR, SIMPLE_INT, SIMPLE_LABEL_ARRAY,
-    SIMPLE_LINE_ARRAY, SIMPLE_STRING,
+    SERIES_BOOL, SERIES_INT, SIMPLE_BOOL, SIMPLE_BOX_ARRAY, SIMPLE_COLOR, SIMPLE_INT,
+    SIMPLE_LABEL_ARRAY, SIMPLE_LINE_ARRAY, SIMPLE_STRING,
 };
 
 const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
@@ -182,6 +182,7 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("chart.is_renko", SIMPLE_BOOL),
     ("label.all", SIMPLE_LABEL_ARRAY),
     ("line.all", SIMPLE_LINE_ARRAY),
+    ("box.all", SIMPLE_BOX_ARRAY),
     (
         "ta.accdist",
         PineType::new(Qualifier::Series, ValueKind::Float),
@@ -307,6 +308,7 @@ mod tests {
             builtin_series_value_type("line.all"),
             Some(SIMPLE_LINE_ARRAY)
         );
+        assert_eq!(builtin_series_value_type("box.all"), Some(SIMPLE_BOX_ARRAY));
     }
 
     #[test]

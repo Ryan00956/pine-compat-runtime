@@ -866,6 +866,9 @@ Current normalized output fields are:
 - `line.all`: a snapshot line-array of currently existing line ids in creation
   order. Deleted lines are omitted from subsequent reads. Mutating the returned
   array does not mutate the underlying line store.
+- `box.all`: a snapshot box-array of currently existing box ids in creation
+  order. Deleted boxes are omitted from subsequent reads. Mutating the returned
+  array does not mutate the underlying box store.
 
 Parameters such as `offset`, `show_last`, `display`, `force_overlay`, and
 `editable` do not yet transform, filter, or annotate the runtime output series.
