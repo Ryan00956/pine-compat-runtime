@@ -103,3 +103,22 @@ computed_slice_source = array.from(4, 5, 6, 7)
 computed_slice = computed_slice_source.slice(slice_from, slice_to + 0)
 computed_slice.set(0, 50)
 plot(computed_slice.size() * 100 + computed_slice.get(0) + computed_slice.get(1) + computed_slice_source.get(slice_from))
+
+branch_concat_target = array.from(1)
+branch_concat_even = array.from(2)
+branch_concat_odd = array.from(3)
+if bar_index % 2 == 0
+    branch_concat_target.concat(branch_concat_even)
+else
+    branch_concat_target.concat(branch_concat_odd)
+plot(branch_concat_target.get(0) * 10 + branch_concat_target.get(1))
+
+loop_concat_target = array.new_int()
+loop_concat_first = array.from(4)
+loop_concat_second = array.from(5)
+for i = 0 to 1
+    if i == 0
+        loop_concat_target.concat(loop_concat_first)
+    else
+        loop_concat_target.concat(loop_concat_second)
+plot(loop_concat_target.get(0) * 10 + loop_concat_target.get(1) + loop_concat_first.size() + loop_concat_second.size())
