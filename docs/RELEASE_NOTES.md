@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch and loop control-flow coverage for
+  `array.every` and `array.some`.
+- Added fixture-backed branch and loop control-flow coverage for
   `array.includes`, `array.indexof`, and `array.lastindexof`.
 - Added fixture-backed branch and loop copy-site coverage for `array.copy`
   while preserving source-array independence.

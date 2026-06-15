@@ -89,3 +89,20 @@ for i = 0 to 1
     else
         loop_search_results.push(loop_search_source.lastindexof("a") + (array.includes(loop_search_source, "z") ? 100 : 0))
 plot(loop_search_results.get(0) + loop_search_results.get(1))
+
+branch_truth_source = array.from(true, bar_index % 2 == 0)
+branch_truth_results = array.new_int()
+if bar_index % 2 == 0
+    branch_truth_results.push((array.every(branch_truth_source) ? 10 : 0) + (branch_truth_source.some() ? 1 : 0))
+else
+    branch_truth_results.push((branch_truth_source.every() ? 10 : 0) + (array.some(branch_truth_source) ? 1 : 0))
+plot(branch_truth_results.get(0))
+
+loop_truth_source = array.from(1, 0, 2)
+loop_truth_results = array.new_int()
+for i = 0 to 1
+    if i == 0
+        loop_truth_results.push(array.every(loop_truth_source) ? 100 : 1)
+    else
+        loop_truth_results.push(loop_truth_source.some() ? 10 : 100)
+plot(loop_truth_results.get(0) + loop_truth_results.get(1))
