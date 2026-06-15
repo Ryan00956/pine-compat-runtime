@@ -137,3 +137,18 @@ for i = 0 to 1
     loop_new_string_values = array.new_string(i + 1, i == 0 ? "first" : "second")
     loop_new_string_score := loop_new_string_score + loop_new_string_values.size() * 10 + (loop_new_string_values.get(i) == (i == 0 ? "first" : "second") ? 1 : 0)
 plot(loop_new_string_score)
+
+branch_new_color_score = bar_index * 0
+if bar_index % 2 == 0
+    branch_new_color_values = array.new_color(2, color.red)
+    branch_new_color_score := branch_new_color_values.size() * 100 + (branch_new_color_values.get(0) == color.red ? 10 : 0) + (branch_new_color_values.get(1) == color.red ? 1 : 0)
+else
+    branch_new_color_values = array.new_color(3, color.green)
+    branch_new_color_score := branch_new_color_values.size() * 100 + (branch_new_color_values.get(0) == color.green ? 10 : 0) + (branch_new_color_values.get(2) == color.green ? 1 : 0)
+plot(branch_new_color_score)
+
+loop_new_color_score = bar_index * 0
+for i = 0 to 1
+    loop_new_color_values = array.new_color(i + 1, i == 0 ? color.blue : color.red)
+    loop_new_color_score := loop_new_color_score + loop_new_color_values.size() * 10 + (loop_new_color_values.get(i) == (i == 0 ? color.blue : color.red) ? 1 : 0)
+plot(loop_new_color_score)
