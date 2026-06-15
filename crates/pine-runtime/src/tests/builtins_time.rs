@@ -20,6 +20,9 @@ plot(time_tradingday)
 ts = 1612235045000
 made_ts = timestamp(2021, 2, 2, 3, 4, 5)
 date_ts = timestamp(2021, 1, 1)
+made_ts_utc = timestamp("UTC0", 2021, 2, 2, 3, 4, 5)
+made_ts_named = timestamp(timezone = "Etc/UTC", year = 2021, month = 2, day = 2, hour = 3, minute = 4, second = 5)
+date_ts_named = timestamp(year = 2021, month = 1, day = 1)
 plot(year(ts))
 plot(month(ts, "UTC"))
 plot(weekofyear(ts))
@@ -34,6 +37,7 @@ plot(na(year(na)) and na(weekofyear(na)) and na(dayofweek(na)) ? 1 : 0)
 plot(year(ts, "Etc/UTC") == 2021 and month(ts, "GMT") == 2 and weekofyear(ts, "Z") == 5 and dayofmonth(ts, "+0000") == 2 and dayofweek(ts, "+00:00") == dayofweek.tuesday and hour(ts, na) == 3 and minute(ts, "UTC") == 4 and second(ts, "Etc/UTC") == 5 ? 1 : 0)
 plot(year(ts, "UTC+0") == 2021 and month(ts, "GMT+00:00") == 2 and dayofmonth(ts, "-0000") == 2 and hour(ts, "UTC-00:00") == 3 and minute(ts, "GMT-0") == 4 and second(ts, "-00:00") == 5 ? 1 : 0)
 plot(made_ts == ts and date_ts == 1609459200000 ? 1 : 0)
+plot(made_ts_utc == ts and made_ts_named == ts and date_ts_named == date_ts ? 1 : 0)
 plot(na(timestamp(na, 1, 1)) ? 1 : 0)
 "#,
     );
@@ -91,6 +95,7 @@ plot(na(timestamp(na, 1, 1)) ? 1 : 0)
     assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
 }
 
 #[test]
@@ -528,6 +533,33 @@ plot(timestamp(2021, 2, 30))
         error
             .message
             .contains("timestamp invalid UTC datetime: 2021-02-30"),
+        "{}",
+        error.message
+    );
+}
+
+#[test]
+fn rejects_unsupported_timestamp_timezone() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("bad timestamp timezone")
+plot(timestamp("America/New_York", 2021, 1, 1))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected timestamp timezone error");
+
+    assert!(
+        error
+            .message
+            .contains("timestamp unsupported timezone `America/New_York`"),
         "{}",
         error.message
     );

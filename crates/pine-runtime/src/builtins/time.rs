@@ -58,12 +58,18 @@ pub(crate) fn is_supported_utc_timezone(timezone: &str) -> bool {
             | "-0000"
             | "+00:00"
             | "-00:00"
+            | "UTC0"
             | "UTC+0"
             | "UTC-0"
+            | "UTC+0000"
+            | "UTC-0000"
             | "UTC+00:00"
             | "UTC-00:00"
+            | "GMT0"
             | "GMT+0"
             | "GMT-0"
+            | "GMT+0000"
+            | "GMT-0000"
             | "GMT+00:00"
             | "GMT-00:00"
     )
@@ -301,6 +307,17 @@ impl Default for BarTimeFunctionArgs {
     }
 }
 
+#[derive(Default)]
+struct TimestampArgs {
+    timezone: Option<String>,
+    year: Option<i64>,
+    month: Option<i64>,
+    day: Option<i64>,
+    hour: i64,
+    minute: i64,
+    second: i64,
+}
+
 struct TimeSession {
     periods: Vec<TimeSessionPeriod>,
     days: [bool; 8],
@@ -377,22 +394,16 @@ impl<'a> HistoricalRuntime<'a> {
         &mut self,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
-        let Some(year) = self.eval_optional_timestamp_part(args, 0, 0)? else {
+        let Some(args) = self.eval_timestamp_args(args)? else {
             return Ok(PineValue::Na);
         };
-        let Some(month) = self.eval_optional_timestamp_part(args, 1, 0)? else {
-            return Ok(PineValue::Na);
-        };
-        let Some(day) = self.eval_optional_timestamp_part(args, 2, 0)? else {
-            return Ok(PineValue::Na);
-        };
-        let Some(hour) = self.eval_optional_timestamp_part(args, 3, 0)? else {
-            return Ok(PineValue::Na);
-        };
-        let Some(minute) = self.eval_optional_timestamp_part(args, 4, 0)? else {
-            return Ok(PineValue::Na);
-        };
-        let Some(second) = self.eval_optional_timestamp_part(args, 5, 0)? else {
+        let timezone = args.timezone.unwrap_or_else(|| "UTC".to_owned());
+        if !is_supported_utc_timezone(&timezone) {
+            return Err(RuntimeError {
+                message: format!("timestamp unsupported timezone `{timezone}`"),
+            });
+        }
+        let (Some(year), Some(month), Some(day)) = (args.year, args.month, args.day) else {
             return Ok(PineValue::Na);
         };
 
@@ -402,11 +413,14 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         let Some((month, day, hour, minute, second)) =
-            timestamp_unsigned_parts(month, day, hour, minute, second)
+            timestamp_unsigned_parts(month, day, args.hour, args.minute, args.second)
         else {
             return Err(RuntimeError {
                 message: format!(
-                    "timestamp invalid UTC datetime: {year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}"
+                    "timestamp invalid UTC datetime: {year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02}",
+                    hour = args.hour,
+                    minute = args.minute,
+                    second = args.second
                 ),
             });
         };
@@ -422,6 +436,80 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(PineValue::Int(datetime.timestamp_millis()))
+    }
+
+    fn eval_timestamp_args(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<Option<TimestampArgs>, RuntimeError> {
+        let mut parsed = TimestampArgs::default();
+        let mut positional = Vec::new();
+        for arg in args {
+            if let Some(name) = arg.name.as_deref() {
+                match name {
+                    "timezone" => {
+                        let Some(value) = self.eval_time_function_string_arg(arg)? else {
+                            return Ok(None);
+                        };
+                        parsed.timezone = Some(value);
+                    }
+                    "year" => parsed.year = self.eval_timestamp_int_arg(arg)?,
+                    "month" => parsed.month = self.eval_timestamp_int_arg(arg)?,
+                    "day" => parsed.day = self.eval_timestamp_int_arg(arg)?,
+                    "hour" => {
+                        let Some(value) = self.eval_timestamp_int_arg(arg)? else {
+                            return Ok(None);
+                        };
+                        parsed.hour = value;
+                    }
+                    "minute" => {
+                        let Some(value) = self.eval_timestamp_int_arg(arg)? else {
+                            return Ok(None);
+                        };
+                        parsed.minute = value;
+                    }
+                    "second" => {
+                        let Some(value) = self.eval_timestamp_int_arg(arg)? else {
+                            return Ok(None);
+                        };
+                        parsed.second = value;
+                    }
+                    _ => {}
+                }
+            } else {
+                positional.push(arg);
+            }
+        }
+
+        let mut offset = 0;
+        if let Some(arg) = positional.first() {
+            match self.eval_expr(&arg.value)? {
+                PineValue::String(value) => {
+                    parsed.timezone = Some(value);
+                    offset = 1;
+                }
+                PineValue::Na => return Ok(None),
+                PineValue::Int(value) => parsed.year = Some(value),
+                _ => return Ok(None),
+            }
+        }
+
+        for (index, arg) in positional.iter().enumerate().skip(offset) {
+            let Some(value) = self.eval_timestamp_int_arg(arg)? else {
+                return Ok(None);
+            };
+            match index - offset {
+                0 => parsed.year = Some(value),
+                1 => parsed.month = Some(value),
+                2 => parsed.day = Some(value),
+                3 => parsed.hour = value,
+                4 => parsed.minute = value,
+                5 => parsed.second = value,
+                _ => {}
+            }
+        }
+
+        Ok(Some(parsed))
     }
 
     pub(crate) fn eval_bar_time_function(
@@ -685,6 +773,14 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    fn eval_timestamp_int_arg(&mut self, arg: &HirCallArg) -> Result<Option<i64>, RuntimeError> {
+        Ok(match self.eval_expr(&arg.value)? {
+            PineValue::Int(value) => Some(value),
+            PineValue::Na => None,
+            _ => None,
+        })
+    }
+
     pub(crate) fn eval_timeframe_in_seconds(
         &mut self,
         args: &[HirCallArg],
@@ -773,23 +869,6 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         Ok(PineValue::Bool(current_bucket != previous_bucket))
-    }
-
-    pub(crate) fn eval_optional_timestamp_part(
-        &mut self,
-        args: &[HirCallArg],
-        index: usize,
-        default: i64,
-    ) -> Result<Option<i64>, RuntimeError> {
-        let Some(arg) = args.get(index) else {
-            return Ok(Some(default));
-        };
-        let value = match self.eval_expr(&arg.value)? {
-            PineValue::Int(value) => value,
-            PineValue::Na => return Ok(None),
-            _ => return Ok(None),
-        };
-        Ok(Some(value))
     }
 }
 

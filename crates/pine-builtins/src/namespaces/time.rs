@@ -63,6 +63,11 @@ const TIME_FUNCTION_PARAMS: &[BuiltinParam] = &[
 
 const TIMESTAMP_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
+        name: "timezone",
+        accepts: Accepts::StringCompatible,
+        optional: true,
+    },
+    BuiltinParam {
         name: "year",
         accepts: Accepts::IntCompatible,
         optional: false,

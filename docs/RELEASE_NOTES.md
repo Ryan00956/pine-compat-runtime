@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed UTC-equivalent `timezone` support and named calendar
+  argument parsing to the numeric `timestamp()` subset while leaving
+  `timestamp(dateString)`, IANA timezone conversion, and exchange-timezone
+  default semantics unsupported.
 - Added fixture-backed UTC time-based `session` argument support to the current
   `time(timeframe)` and `time_close(timeframe)` subset, including `24x7`,
   `HHmm-HHmm`, comma-separated periods, optional Pine day digits, overnight

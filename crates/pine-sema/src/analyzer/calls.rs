@@ -299,6 +299,9 @@ pub(crate) fn is_ta_pivot_default_source_overload(name: &str) -> bool {
 pub(crate) fn is_time_function_overload(name: &str) -> bool {
     matches!(name, "time" | "time_close")
 }
+pub(crate) fn is_timestamp_overload(name: &str) -> bool {
+    name == "timestamp"
+}
 pub(crate) fn is_ta_vwap_bands_call(name: &str, args: &[CallArg]) -> bool {
     name == "ta.vwap"
         && args.iter().enumerate().any(|(index, arg)| {
@@ -514,6 +517,10 @@ impl Analyzer {
     ) {
         if is_time_function_overload(signature.name) {
             self.validate_time_function_args(signature, args, arg_types);
+            return;
+        }
+        if is_timestamp_overload(signature.name) {
+            self.validate_timestamp_args(signature, args, arg_types);
             return;
         }
 

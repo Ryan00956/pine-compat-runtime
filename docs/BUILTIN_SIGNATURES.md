@@ -319,7 +319,7 @@ dayofweek(time: int-compatible, timezone?: string-compatible) -> int with strong
 hour(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 minute(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
 second(time: int-compatible, timezone?: string-compatible) -> int with strongest qualifier
-timestamp(year: int-compatible, month: int-compatible, day: int-compatible, hour?: int-compatible, minute?: int-compatible, second?: int-compatible)
+timestamp(timezone?: string-compatible, year: int-compatible, month: int-compatible, day: int-compatible, hour?: int-compatible, minute?: int-compatible, second?: int-compatible)
   -> int with strongest qualifier
 time(timeframe: simple string, session?: string-compatible, timezone?: string-compatible, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
 time_close(timeframe: simple string, session?: string-compatible, timezone?: string-compatible, bars_back?: int-compatible, timeframe_bars_back?: int-compatible) -> series int
@@ -327,9 +327,11 @@ time_close(timeframe: simple string, session?: string-compatible, timezone?: str
 
 For now, these function overloads use the same UTC-only timezone subset as
 `str.format_time`; unsupported time zones are runtime errors. `timestamp`
-currently supports only the numeric UTC subset; omitted hour/minute/second
-default to 0, `na` inputs return `na`, and invalid UTC dates are runtime
-errors.
+currently supports numeric calendar arguments with an optional UTC-equivalent
+`timezone` argument, including named calendar parameters. Omitted
+hour/minute/second default to 0, `na` inputs return `na`, and invalid UTC dates
+are runtime errors. The `timestamp(dateString)` overload, IANA timezone
+conversion, and exchange-timezone default semantics remain unsupported.
 `time(timeframe, session, timezone, bars_back, timeframe_bars_back)` and
 `time_close(timeframe, session, timezone, bars_back, timeframe_bars_back)`
 currently implement the simple-string timeframe subset with optional
