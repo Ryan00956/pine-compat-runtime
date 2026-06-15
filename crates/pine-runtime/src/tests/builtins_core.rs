@@ -162,6 +162,13 @@ pnf_adjusted = ticker.pointfigure(adjusted_created, "close", "Traditional", 2.5,
 pnf_standard = ticker.standard(pnf_adjusted)
 missing_pnf_symbol = ticker.pointfigure(na, "hl", "ATR", 14, 3)
 missing_pnf_source = ticker.pointfigure(created, na, "ATR", 14, 3)
+inherited_plain = ticker.inherit(created, "NYSE:PFE")
+inherited_adjusted = ticker.inherit(adjusted_created, "NYSE:PFE")
+inherited_renko = ticker.inherit(renko_adjusted, "NYSE:PFE")
+inherited_ha = ticker.inherit(ha_adjusted, "NYSE:PFE")
+inherited_standard = ticker.standard(inherited_adjusted)
+missing_inherited_from = ticker.inherit(na, "NYSE:PFE")
+missing_inherited_symbol = ticker.inherit(adjusted_created, na)
 missing = ticker.standard(na)
 plot(created == "NASDAQ:AAPL" ? 1 : 0)
 plot(chart_created == "NASDAQ:AAPL" ? 1 : 0)
@@ -207,6 +214,13 @@ plot(pnf_adjusted == "{\"chart\":\"pointfigure\",\"source\":\"close\",\"style\":
 plot(pnf_standard == "NASDAQ:AAPL" ? 1 : 0)
 plot(na(missing_pnf_symbol) ? 1 : 0)
 plot(na(missing_pnf_source) ? 1 : 0)
+plot(inherited_plain == "NYSE:PFE" ? 1 : 0)
+plot(inherited_adjusted == "{\"session\":\"extended\",\"adjustment\":\"dividends\",\"symbol\":\"NYSE:PFE\"}" ? 1 : 0)
+plot(inherited_renko == "{\"chart\":\"renko\",\"style\":\"Traditional\",\"param\":2.5,\"symbol\":\"NYSE:PFE\"}" ? 1 : 0)
+plot(inherited_ha == "{\"chart\":\"heikinashi\",\"symbol\":\"NYSE:PFE\"}" ? 1 : 0)
+plot(inherited_standard == "NYSE:PFE" ? 1 : 0)
+plot(na(missing_inherited_from) ? 1 : 0)
+plot(na(missing_inherited_symbol) ? 1 : 0)
 plot(na(missing) ? 1 : 0)
 plot(adjustment.none == "none" and adjustment.splits == "splits" and adjustment.dividends == "dividends" ? 1 : 0)
 "#,
@@ -267,6 +281,13 @@ plot(adjustment.none == "none" and adjustment.splits == "splits" and adjustment.
     assert_values_close(&result.plots[43].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[44].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[45].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[46].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[47].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[48].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[49].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[50].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[51].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[52].values, &[1.0, 1.0]);
 }
 
 #[test]

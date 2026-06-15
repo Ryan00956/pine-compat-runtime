@@ -134,6 +134,7 @@ mod tests {
                     | "alertcondition"
                     | "ta.vwap"
                     | "ticker.heikinashi"
+                    | "ticker.inherit"
                     | "ticker.kagi"
                     | "ticker.linebreak"
                     | "ticker.new"

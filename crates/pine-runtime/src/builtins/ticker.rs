@@ -14,6 +14,7 @@ impl<'a> HistoricalRuntime<'a> {
 
         Some(match callee {
             "ticker.heikinashi" => self.eval_ticker_heikinashi(args),
+            "ticker.inherit" => self.eval_ticker_inherit(args),
             "ticker.kagi" => self.eval_ticker_kagi(args),
             "ticker.linebreak" => self.eval_ticker_linebreak(args),
             "ticker.new" => self.eval_ticker_new(args),
@@ -34,6 +35,20 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::String(non_standard_ticker_id(
             &symbol,
             "heikinashi",
+        )))
+    }
+
+    fn eval_ticker_inherit(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        let PineValue::String(from_tickerid) = self.eval_expr(&args[0].value)? else {
+            return Ok(PineValue::Na);
+        };
+        let PineValue::String(symbol) = self.eval_expr(&args[1].value)? else {
+            return Ok(PineValue::Na);
+        };
+
+        Ok(PineValue::String(inherited_ticker_id(
+            &from_tickerid,
+            &symbol,
         )))
     }
 
@@ -177,6 +192,10 @@ fn standard_ticker_id(symbol: &str) -> String {
     extract_json_symbol_field(symbol).unwrap_or_else(|| symbol.to_owned())
 }
 
+fn inherited_ticker_id(from_tickerid: &str, symbol: &str) -> String {
+    replace_json_symbol_field(from_tickerid, symbol).unwrap_or_else(|| symbol.to_owned())
+}
+
 fn modified_ticker_id(symbol: &str, session: &str, adjustment: Option<&str>) -> String {
     let session = escape_json_string(session);
     let symbol = escape_json_string(symbol);
@@ -263,14 +282,58 @@ fn escape_json_string(value: &str) -> String {
 }
 
 fn extract_json_symbol_field(value: &str) -> Option<String> {
+    let (start, end) = json_symbol_field_value_bounds(value)?;
+    Some(unescape_json_string_content(&value[start..end]))
+}
+
+fn replace_json_symbol_field(value: &str, symbol: &str) -> Option<String> {
+    let (start, end) = json_symbol_field_value_bounds(value)?;
+    Some(format!(
+        "{}{}{}",
+        &value[..start],
+        escape_json_string(symbol),
+        &value[end..]
+    ))
+}
+
+fn json_symbol_field_value_bounds(value: &str) -> Option<(usize, usize)> {
     let marker = "\"symbol\"";
-    let after_marker = value.split_once(marker)?.1.trim_start();
-    let after_colon = after_marker.strip_prefix(':')?.trim_start();
-    let mut chars = after_colon.strip_prefix('"')?.chars();
+    let marker_start = value.find(marker)?;
+    let after_marker_start = marker_start + marker.len();
+    let after_marker = value[after_marker_start..].trim_start();
+    let colon_offset = value[after_marker_start..].len() - after_marker.len();
+    let colon_start = after_marker_start + colon_offset;
+    let after_colon_start = value[colon_start..]
+        .strip_prefix(':')
+        .map(|_| colon_start + 1)?;
+    let after_colon = value[after_colon_start..].trim_start();
+    let quote_offset = value[after_colon_start..].len() - after_colon.len();
+    let quote_start = after_colon_start + quote_offset;
+    let content_start = value[quote_start..]
+        .strip_prefix('"')
+        .map(|_| quote_start + 1)?;
+    let mut escaped = false;
+
+    for (offset, ch) in value[content_start..].char_indices() {
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        match ch {
+            '\\' => escaped = true,
+            '"' => return Some((content_start, content_start + offset)),
+            _ => {}
+        }
+    }
+
+    None
+}
+
+fn unescape_json_string_content(value: &str) -> String {
     let mut symbol = String::new();
     let mut escaped = false;
 
-    for ch in chars.by_ref() {
+    for ch in value.chars() {
         if escaped {
             symbol.push(ch);
             escaped = false;
@@ -278,12 +341,11 @@ fn extract_json_symbol_field(value: &str) -> Option<String> {
         }
         match ch {
             '\\' => escaped = true,
-            '"' => return Some(symbol),
             _ => symbol.push(ch),
         }
     }
 
-    None
+    symbol
 }
 
 #[cfg(test)]
@@ -301,6 +363,25 @@ mod tests {
             "COMEX:GC1!"
         );
         assert_eq!(standard_ticker_id("NASDAQ:AAPL"), "NASDAQ:AAPL");
+    }
+
+    #[test]
+    fn inherited_ticker_replaces_known_symbol_field() {
+        assert_eq!(
+            inherited_ticker_id(
+                r#"{"session":"extended","adjustment":"dividends","symbol":"NASDAQ:AAPL"}"#,
+                r#"NYSE:PF\"E"#
+            ),
+            r#"{"session":"extended","adjustment":"dividends","symbol":"NYSE:PF\\\"E"}"#
+        );
+        assert_eq!(
+            inherited_ticker_id(
+                r#"{"chart":"renko","style":"ATR","param":10,"symbol":"NASDAQ:AAPL"}"#,
+                "NYSE:PFE"
+            ),
+            r#"{"chart":"renko","style":"ATR","param":10,"symbol":"NYSE:PFE"}"#
+        );
+        assert_eq!(inherited_ticker_id("NASDAQ:AAPL", "NYSE:PFE"), "NYSE:PFE");
     }
 
     #[test]

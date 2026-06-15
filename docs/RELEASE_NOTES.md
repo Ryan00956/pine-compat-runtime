@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `ticker.inherit` support for inheriting the
+  runtime's known ticker ID modifiers onto another symbol.
 - Added fixture-backed partial `ticker.pointfigure` support for Point & Figure
   ticker ID construction while leaving actual non-standard OHLC data
   host/request-provider-owned.

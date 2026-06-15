@@ -37,6 +37,19 @@ const HEIKINASHI_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const INHERIT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "from_tickerid",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "symbol",
+        accepts: Accepts::SimpleString,
+        optional: false,
+    },
+];
+
 const LINEBREAK_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "tickerid",
@@ -137,6 +150,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "ticker.heikinashi",
         phase: BuiltinPhase::Phase1Core,
         params: HEIKINASHI_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_STRING),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "ticker.inherit",
+        phase: BuiltinPhase::Phase1Core,
+        params: INHERIT_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_STRING),
         variadic: false,
     },

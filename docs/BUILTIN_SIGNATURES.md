@@ -211,6 +211,7 @@ syminfo.pricescale -> const int
 syminfo.prefix(symbol: simple string) -> simple string
 syminfo.ticker(symbol: simple string) -> simple string
 ticker.heikinashi(tickerid: simple string) -> simple string
+ticker.inherit(from_tickerid: simple string, symbol: simple string) -> simple string
 ticker.kagi(tickerid: simple string, style: simple string, param: simple numeric) -> simple string
 ticker.linebreak(tickerid: simple string, number_of_lines: simple int) -> simple string
 ticker.new(prefix: simple string, ticker: simple string, session?: simple string, adjustment?: simple string) -> simple string
@@ -236,6 +237,14 @@ prefix return `""` from `syminfo.prefix()` and the whole symbol from
 Ashi ticker ID constructor subset. It returns a modified ticker ID that
 preserves the standard symbol for `ticker.standard()`. Actual Heikin Ashi OHLC
 data remains host/request-provider-owned through `request.security()`.
+
+`ticker.inherit(from_tickerid, symbol)` currently implements a simple-string
+inheritance subset over this runtime's known modified ticker ID representation.
+When `from_tickerid` contains a quoted `"symbol"` field produced by supported
+`ticker.*` constructors, it returns the same ticker ID shape with that field
+replaced by `symbol`. Plain standard ticker IDs have no modifiers to inherit and
+return `symbol` unchanged. Other TradingView ticker ID modifier encodings remain
+outside this subset.
 
 `ticker.kagi(tickerid, style, param)` currently implements the simple-string
 Kagi ticker ID constructor subset for style strings such as `"ATR"` or

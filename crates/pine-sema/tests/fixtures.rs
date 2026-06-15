@@ -3642,6 +3642,7 @@ fn reports_unsupported_ticker_constructors_fixture() {
         &[
             "ticker.new",
             "ticker.modify",
+            "ticker.inherit",
             "ticker.renko",
             "ticker.linebreak",
             "ticker.kagi",

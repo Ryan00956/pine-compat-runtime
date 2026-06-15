@@ -215,6 +215,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "syminfo.prefix",
     "syminfo.ticker",
     "ticker.heikinashi",
+    "ticker.inherit",
     "ticker.kagi",
     "ticker.linebreak",
     "ticker.new",
