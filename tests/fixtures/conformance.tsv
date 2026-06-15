@@ -1,5 +1,5 @@
 feature	status	notes	fixtures
-indicator	supported	fixture-derived executable subset	tests/fixtures/runtime/io.pine
+indicator	supported	fixture-derived executable declaration subset with overlay and named scale metadata accepted; chart axis layout remains host-owned	tests/fixtures/runtime/io.pine
 input	supported	const int/float/bool/string/color defval plus common metadata parameter subset	tests/fixtures/runtime/generic_input.pine
 input.int	supported	defval plus common min/max/step/options/metadata parameter subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/inputs.pine
 input.float	supported	defval plus common min/max/step/options/metadata parameter subset	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/inputs.pine
@@ -70,6 +70,7 @@ plotarrow	supported	numeric arrow marker series with up/down colors, height boun
 plotbar	supported	OHLC bar output with optional color and common display metadata parameters	tests/fixtures/runtime/plotbar.pine
 plotcandle	supported	OHLC candle output with body, wick, border colors, and common display metadata parameters	tests/fixtures/runtime/plotcandle.pine
 display constants	supported	common display.* metadata constants as direct values	tests/fixtures/runtime/io.pine;tests/fixtures/runtime/color_outputs.pine
+scale constants	supported	scale.left, scale.right, and scale.none declaration metadata constants as direct values; chart axis placement remains host-owned	tests/fixtures/runtime/io.pine
 bgcolor	supported	color series output with conditional padding plus common metadata parameters	tests/fixtures/runtime/color_outputs.pine
 barcolor	supported	color series output with conditional padding plus common metadata parameters	tests/fixtures/runtime/color_outputs.pine
 hline	supported	horizontal line output plus common style/display metadata parameters	tests/fixtures/runtime/io.pine

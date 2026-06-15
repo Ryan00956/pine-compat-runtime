@@ -157,6 +157,47 @@ barcolor(close > open ? color.green : color.red, title="Bars", offset=0, editabl
 }
 
 #[test]
+fn accepts_indicator_scale_metadata_parameter() {
+    let analysis = analyze(
+        r#"indicator("Scale metadata", overlay=true, scale=scale.right)
+plot(scale.left == "scale.left" and scale.right == "scale.right" and scale.none == "scale.none" ? close : open)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    for name in ["scale.left", "scale.right", "scale.none"] {
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == name),
+            "{name} should be reported as supported"
+        );
+    }
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_unknown_indicator_scale_metadata_value() {
+    let analysis = analyze("indicator(\"Scale metadata\", scale=\"custom\")\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+}
+
+#[test]
 fn accepts_alertcondition_const_string_subset() {
     let analysis = analyze(
         r#"alertcondition(close > open, "Up", "Close is above open")

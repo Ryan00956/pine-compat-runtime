@@ -871,6 +871,14 @@ impl Analyzer {
             return;
         }
 
+        self.validate_label_string_arg(
+            signature,
+            args,
+            4,
+            "scale",
+            &["scale.left", "scale.right", "scale.none"],
+        );
+
         for (index, arg) in args.iter().enumerate() {
             let is_max_bars_back = arg.name.as_deref() == Some("max_bars_back")
                 || (arg.name.is_none()

@@ -286,7 +286,7 @@ ohlc4 = (open + high + low + close) / 4
 ## Declarations
 
 ```text
-indicator(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, ...)
+indicator(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, scale?: const string, ...)
   -> void
 strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric)
   -> void
@@ -348,6 +348,10 @@ strategy.opentrades.max_drawdown(trade_num: series/simple numeric) -> series flo
 Only metadata arguments needed by the output and history-retention model should
 be accepted in Phase 1. `max_bars_back` must be non-negative when provided.
 Unsupported named arguments should produce compatibility diagnostics.
+`indicator(..., scale=...)` accepts the fixture-backed `scale.left`,
+`scale.right`, and `scale.none` named constants as declaration metadata. The
+runtime rejects other const string scale values and does not emit chart axis
+placement or price-scale layout fields; those remain host-owned.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
 use the configured or default fixed quantity.
@@ -666,6 +670,8 @@ Parameters such as `offset`, `show_last`, `display`, `force_overlay`, and
 Supported direct display constants include `display.all`, `display.none`,
 `display.pane`, `display.price_scale`, `display.status_line`, and
 `display.data_window`. Display flag arithmetic is not implemented yet.
+Supported indicator scale constants include `scale.left`, `scale.right`, and
+`scale.none` as declaration metadata; chart axis placement remains host-owned.
 
 ## Utility
 

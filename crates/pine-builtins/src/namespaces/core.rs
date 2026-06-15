@@ -25,6 +25,11 @@ const INDICATOR_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
         optional: true,
     },
+    BuiltinParam {
+        name: "scale",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
 ];
 
 const STRATEGY_PARAMS: &[BuiltinParam] = &[

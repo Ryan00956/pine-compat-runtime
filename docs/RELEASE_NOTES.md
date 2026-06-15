@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `scale.left`, `scale.right`, and `scale.none`
+  declaration metadata constants for `indicator(..., scale=...)`.
 - Added fixture-backed fixed-default `syminfo.main_tickerid` and
   `syminfo.mincontract` metadata variables.
 - Added fixture-backed unsupported `map.*` and `matrix.*` collection namespace
