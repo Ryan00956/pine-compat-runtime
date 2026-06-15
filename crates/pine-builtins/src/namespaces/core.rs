@@ -21,13 +21,23 @@ const INDICATOR_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
     BuiltinParam {
-        name: "max_bars_back",
+        name: "format",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "precision",
         accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
         optional: true,
     },
     BuiltinParam {
         name: "scale",
         accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "max_bars_back",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
         optional: true,
     },
 ];

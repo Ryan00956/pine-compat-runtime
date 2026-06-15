@@ -102,6 +102,7 @@ const NAMED_STRING_CONSTANTS: &[NamedStringConstant] = &[
     same_string_constant("alert.freq_all"),
     same_string_constant("alert.freq_once_per_bar"),
     same_string_constant("alert.freq_once_per_bar_close"),
+    same_string_constant("format.inherit"),
     same_string_constant("format.mintick"),
     same_string_constant("format.price"),
     same_string_constant("format.percent"),

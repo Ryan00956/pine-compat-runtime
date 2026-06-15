@@ -874,12 +874,43 @@ impl Analyzer {
         self.validate_label_string_arg(
             signature,
             args,
-            4,
+            3,
+            "format",
+            &[
+                "format.inherit",
+                "format.price",
+                "format.percent",
+                "format.volume",
+            ],
+        );
+        self.validate_label_string_arg(
+            signature,
+            args,
+            5,
             "scale",
             &["scale.left", "scale.right", "scale.none"],
         );
 
         for (index, arg) in args.iter().enumerate() {
+            let is_precision = arg.name.as_deref() == Some("precision")
+                || (arg.name.is_none()
+                    && signature
+                        .params
+                        .get(index)
+                        .is_some_and(|param| param.name == "precision"));
+            if is_precision {
+                if let Some(value) = const_int_value(&arg.value)
+                    && !(0..=16).contains(&value)
+                {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_VALUE",
+                        "`indicator` argument `precision` must be between 0 and 16",
+                        arg.span,
+                    ));
+                }
+                continue;
+            }
+
             let is_max_bars_back = arg.name.as_deref() == Some("max_bars_back")
                 || (arg.name.is_none()
                     && signature

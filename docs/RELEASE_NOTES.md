@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `indicator(..., format=..., precision=...)`
+  declaration metadata support plus the `format.inherit` constant.
 - Added fixture-backed `scale.left`, `scale.right`, and `scale.none`
   declaration metadata constants for `indicator(..., scale=...)`.
 - Added fixture-backed fixed-default `syminfo.main_tickerid` and

@@ -86,7 +86,7 @@ pub(crate) fn max_bars_back_from_expr(expr: &HirExpr) -> Option<u32> {
             .iter()
             .enumerate()
             .find(|(index, arg)| {
-                arg.name.as_deref() == Some("max_bars_back") || (arg.name.is_none() && *index == 3)
+                arg.name.as_deref() == Some("max_bars_back") || (arg.name.is_none() && *index == 6)
             })
             .and_then(|(_, arg)| constant_hir_int(&arg.value))
             .and_then(|value| u32::try_from(value).ok()),

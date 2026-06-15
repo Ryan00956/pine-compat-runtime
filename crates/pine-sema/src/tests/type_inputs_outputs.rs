@@ -184,8 +184,68 @@ plot(scale.left == "scale.left" and scale.right == "scale.right" and scale.none 
 }
 
 #[test]
+fn accepts_indicator_format_precision_metadata_parameters() {
+    let analysis = analyze(
+        r#"indicator("Format metadata", overlay=true, format=format.percent, precision=2, scale=scale.right)
+plot(format.inherit == "format.inherit" and format.price == "format.price" and format.percent == "format.percent" and format.volume == "format.volume" ? close : open)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    for name in [
+        "format.inherit",
+        "format.price",
+        "format.percent",
+        "format.volume",
+    ] {
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|feature| feature.feature == name),
+            "{name} should be reported as supported"
+        );
+    }
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn rejects_unknown_indicator_scale_metadata_value() {
     let analysis = analyze("indicator(\"Scale metadata\", scale=\"custom\")\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+}
+
+#[test]
+fn rejects_unknown_indicator_format_metadata_value() {
+    let analysis = analyze("indicator(\"Format metadata\", format=\"custom\")\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+}
+
+#[test]
+fn rejects_out_of_range_indicator_precision_metadata_value() {
+    let analysis = analyze("indicator(\"Format metadata\", precision=17)\n");
 
     assert!(
         analysis
@@ -1329,6 +1389,21 @@ fn accepts_indicator_max_bars_back() {
         analysis.diagnostics
     );
     let hir = analysis.hir.expect("HIR");
+    assert_eq!(hir.max_bars_back, Some(10));
+}
+
+#[test]
+fn accepts_indicator_metadata_positional_order() {
+    let analysis = analyze(
+        "indicator(\"Demo\", \"D\", true, format.price, 2, scale.right, 10)\nplot(close[bar_index])\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("hir");
     assert_eq!(hir.max_bars_back, Some(10));
 }
 
