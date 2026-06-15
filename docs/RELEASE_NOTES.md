@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch and loop control-flow read coverage for
+  `array.first` and `array.last`.
 - Added fixture-backed branch and loop control-flow mutation coverage for
   `array.fill`.
 - Added fixture-backed branch and loop control-flow mutation coverage for
