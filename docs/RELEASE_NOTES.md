@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.format` UTC date/time placeholder coverage for the
+  `D`, `E`, `w`, and `W` format tokens.
 - Added fixture-backed `str.format_time` support for the `W` week-of-month
   format token in the current Monday-based week subset.
 - Added fixture-backed `str.format_time` support for the `w` ISO week-of-year
