@@ -43,3 +43,22 @@ plot((array.get(fresh_string, 0) == "head" and array.pop(fresh_string) == "tail"
 plot(array.size(persisted_color))
 plot(array.get(persisted_color, 0) == color.red ? 1 : 0)
 plot((array.get(fresh_color, 0) == color.blue and array.pop(fresh_color) == color.green) ? array.size(fresh_color) : 0)
+
+branch_pop_values = array.from(10, 20, 30)
+branch_pop_score = bar_index * 0
+if bar_index % 2 == 0
+    branch_popped_even = array.pop(branch_pop_values)
+    branch_pop_score := branch_popped_even * 100 + branch_pop_values.size() * 10 + branch_pop_values.get(1)
+else
+    branch_popped_odd = branch_pop_values.pop()
+    branch_pop_score := branch_popped_odd * 100 + branch_pop_values.size() * 10 + branch_pop_values.get(1)
+plot(branch_pop_score)
+
+loop_pop_values = array.from(1, 2, 3)
+loop_pop_score = bar_index * 0
+for i = 0 to 1
+    if i == 0
+        loop_pop_score := loop_pop_score + array.pop(loop_pop_values)
+    else
+        loop_pop_score := loop_pop_score + loop_pop_values.pop()
+plot(loop_pop_score * 100 + loop_pop_values.size() * 10 + loop_pop_values.get(0))
