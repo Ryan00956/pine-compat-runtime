@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Aligned `str.pos` runtime behavior with Pine's `na` substring rule: a `na`
+  search substring now returns position 0 while a `na` source still returns
+  `na`.
 - Added fixture-backed drawing method-syntax coverage for supported
   coordinate/location mutators while keeping unsupported chart-point and
   line/box time-coordinate variants out of scope.

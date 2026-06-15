@@ -1389,8 +1389,8 @@ Supported `str.*` helpers return `na` for `na` inputs.
 `str.length` counts Unicode scalar values.
 `str.contains`, `str.startswith`, and `str.endswith` return `true` for empty
 substring arguments.
-`str.pos` returns `na` when no match is found or when a required argument is
-`na`; empty substring arguments return 0. `str.substring` treats `na`
+`str.pos` returns `na` when no match is found or when the source is `na`;
+empty or `na` substring arguments return 0. `str.substring` treats `na`
 `begin_pos` as 0 and omitted, `na`, or too-large `end_pos` as the string
 length; invalid ranges are runtime errors.
 `str.trim` removes leading and trailing ASCII whitespace only. `str.repeat`
