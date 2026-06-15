@@ -132,15 +132,25 @@ Session state:
 session.ismarket -> series bool
 session.ispremarket -> series bool
 session.ispostmarket -> series bool
+session.isfirstbar -> series bool
+session.islastbar -> series bool
+session.isfirstbar_regular -> series bool
+session.islastbar_regular -> series bool
 session.regular -> const string
 session.extended -> const string
 ```
 
 The current subset assumes every runtime bar is in the regular session:
 `session.ismarket` is `true`, while `session.ispremarket` and
-`session.ispostmarket` are `false`. `session.regular` is the `"regular"`
-string constant and `session.extended` is the `"extended"` string constant;
-extended-hours data is not implemented by these constants.
+`session.ispostmarket` are `false`. `session.isfirstbar` is `true` only on the
+first runtime bar, while `session.islastbar` follows the runtime's latest known
+bar policy used by `barstate.islast`: the last bar in a finite historical batch
+and current realtime updates are `true`. Because this subset has only regular
+session bars, `session.isfirstbar_regular` and `session.islastbar_regular`
+match the non-regular-specific boundary variables. `session.regular` is the
+`"regular"` string constant and `session.extended` is the `"extended"` string
+constant; exchange calendars, separate session days, and extended-hours data are
+not implemented by these constants.
 
 Symbol info:
 

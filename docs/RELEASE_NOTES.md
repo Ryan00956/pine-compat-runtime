@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed fixed-default regular-session boundary variables:
+  `session.isfirstbar`, `session.islastbar`,
+  `session.isfirstbar_regular`, and `session.islastbar_regular`.
 - Added fixture-backed fixed-default chart type metadata variables:
   `chart.is_standard`, `chart.is_heikinashi`, `chart.is_kagi`,
   `chart.is_linebreak`, `chart.is_pnf`, `chart.is_range`, and

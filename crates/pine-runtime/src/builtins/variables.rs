@@ -65,13 +65,7 @@ impl<'a> HistoricalRuntime<'a> {
             return PineValue::Bool(self.bars == 0);
         }
         if name == "barstate.islast" {
-            let is_last = match self.current_bar_update_kind {
-                BarUpdateKind::Historical => self
-                    .historical_end
-                    .is_none_or(|historical_end| self.bars + 1 == historical_end),
-                BarUpdateKind::Forming | BarUpdateKind::Confirmed => true,
-            };
-            return PineValue::Bool(is_last);
+            return PineValue::Bool(self.is_latest_known_bar());
         }
         if name == "barstate.isnew" {
             return PineValue::Bool(self.current_bar_is_new);
@@ -99,6 +93,12 @@ impl<'a> HistoricalRuntime<'a> {
         }
         if name == "session.ispremarket" || name == "session.ispostmarket" {
             return PineValue::Bool(false);
+        }
+        if matches!(name, "session.isfirstbar" | "session.isfirstbar_regular") {
+            return PineValue::Bool(self.bars == 0);
+        }
+        if matches!(name, "session.islastbar" | "session.islastbar_regular") {
+            return PineValue::Bool(self.is_latest_known_bar());
         }
         if name == "syminfo.tickerid" {
             return PineValue::String(self.request_environment.chart().symbol().to_owned());
@@ -294,6 +294,15 @@ impl<'a> HistoricalRuntime<'a> {
             return self.wvad_current.clone();
         }
         eval_static_builtin_value(name)
+    }
+
+    fn is_latest_known_bar(&self) -> bool {
+        match self.current_bar_update_kind {
+            BarUpdateKind::Historical => self
+                .historical_end
+                .is_none_or(|historical_end| self.bars + 1 == historical_end),
+            BarUpdateKind::Forming | BarUpdateKind::Confirmed => true,
+        }
     }
 }
 

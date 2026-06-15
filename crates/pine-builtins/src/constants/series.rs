@@ -146,6 +146,10 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("session.ismarket", SERIES_BOOL),
     ("session.ispremarket", SERIES_BOOL),
     ("session.ispostmarket", SERIES_BOOL),
+    ("session.isfirstbar", SERIES_BOOL),
+    ("session.islastbar", SERIES_BOOL),
+    ("session.isfirstbar_regular", SERIES_BOOL),
+    ("session.islastbar_regular", SERIES_BOOL),
     ("timeframe.period", SIMPLE_STRING),
     ("timeframe.main_period", SIMPLE_STRING),
     ("timeframe.isseconds", SIMPLE_BOOL),
@@ -224,6 +228,18 @@ mod tests {
             "chart.is_renko",
         ] {
             assert_eq!(builtin_series_value_type(name), Some(SIMPLE_BOOL));
+        }
+    }
+
+    #[test]
+    fn registers_session_bar_boundary_values() {
+        for name in [
+            "session.isfirstbar",
+            "session.islastbar",
+            "session.isfirstbar_regular",
+            "session.islastbar_regular",
+        ] {
+            assert_eq!(builtin_series_value_type(name), Some(SERIES_BOOL));
         }
     }
 

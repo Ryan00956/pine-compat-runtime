@@ -82,7 +82,9 @@ fn runtime_fixtures_match_incremental_append_execution() {
         }
 
         let text = fs::read_to_string(&path).expect("fixture should be readable");
-        let has_islast = text.contains("barstate.islast");
+        let has_latest_known_bar_state = text.contains("barstate.islast")
+            || text.contains("session.islastbar")
+            || text.contains("session.islastbar_regular");
         let analysis = analyze_fixture(&path, text);
         assert!(
             analysis.diagnostics.is_empty(),
@@ -180,7 +182,7 @@ fn runtime_fixtures_match_incremental_append_execution() {
 
         let full = run_historical(&hir, bars).expect("full execution should succeed");
         let mut runtime = HistoricalRuntime::new(&hir);
-        if has_islast {
+        if has_latest_known_bar_state {
             runtime
                 .append_bars(bars)
                 .expect("append execution should succeed");

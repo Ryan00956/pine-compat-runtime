@@ -343,6 +343,10 @@ plot(session.ismarket ? 1 : 0)
 plot(session.ispremarket ? 1 : 0)
 plot(session.ispostmarket ? 1 : 0)
 plot(session.ismarket and not session.ispremarket and not session.ispostmarket ? 1 : 0)
+plot(session.isfirstbar ? 1 : 0)
+plot(session.islastbar ? 1 : 0)
+plot(session.isfirstbar_regular ? 1 : 0)
+plot(session.islastbar_regular ? 1 : 0)
 plot(syminfo.session == session.regular ? 1 : 0)
 plot(syminfo.session == session.extended ? 1 : 0)
 "#,
@@ -367,8 +371,12 @@ plot(syminfo.session == session.extended ? 1 : 0)
     assert_values_close(&result.plots[7].values, &[0.0, 0.0, 0.0]);
     assert_values_close(&result.plots[8].values, &[0.0, 0.0, 0.0]);
     assert_values_close(&result.plots[9].values, &[1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[10].values, &[1.0, 1.0, 1.0]);
-    assert_values_close(&result.plots[11].values, &[0.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[10].values, &[1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[11].values, &[0.0, 0.0, 1.0]);
+    assert_values_close(&result.plots[12].values, &[1.0, 0.0, 0.0]);
+    assert_values_close(&result.plots[13].values, &[0.0, 0.0, 1.0]);
+    assert_values_close(&result.plots[14].values, &[1.0, 1.0, 1.0]);
+    assert_values_close(&result.plots[15].values, &[0.0, 0.0, 0.0]);
 }
 
 #[test]
