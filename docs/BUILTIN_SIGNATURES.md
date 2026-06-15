@@ -683,8 +683,10 @@ format metadata accepts `format.inherit`, `format.price`, `format.percent`, and
 `format.volume`; `format.mintick` remains covered by `str.tostring`.
 Supported indicator scale constants include `scale.left`, `scale.right`, and
 `scale.none` as declaration metadata; chart axis placement remains host-owned.
-Supported request merge constants include `barmerge.gaps_off` and
-`barmerge.lookahead_off` for explicit default `request.security` merge metadata;
+Supported request merge constants include `barmerge.gaps_off`,
+`barmerge.gaps_on`, `barmerge.lookahead_off`, and
+`barmerge.lookahead_on` as string constants. `request.security` accepts only
+the default `barmerge.gaps_off` and `barmerge.lookahead_off` merge metadata;
 non-default merge behavior remains unsupported.
 
 ## Utility

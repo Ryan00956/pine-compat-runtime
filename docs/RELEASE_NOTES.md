@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed `barmerge.gaps_on` and `barmerge.lookahead_on` string
+  constants while keeping non-default `request.security` merge behavior
+  unsupported.
 - Added fixture-backed explicit default `request.security` merge metadata
   support for `gaps=barmerge.gaps_off` and
   `lookahead=barmerge.lookahead_off`; non-default merge modes remain

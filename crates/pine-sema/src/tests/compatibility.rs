@@ -2682,7 +2682,7 @@ fn rejects_provider_request_security_unsupported_call() {
 #[test]
 fn rejects_request_security_non_default_merge_args() {
     let analysis = analyze(
-        "plot(request.security(syminfo.tickerid, timeframe.period, close, gaps=\"barmerge.gaps_on\"))\nplot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_off, lookahead=\"barmerge.lookahead_on\"))\n",
+        "plot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_on))\nplot(request.security(syminfo.tickerid, timeframe.period, close, gaps=barmerge.gaps_off, lookahead=barmerge.lookahead_on))\n",
     );
     let codes = diagnostic_codes(&analysis);
 
