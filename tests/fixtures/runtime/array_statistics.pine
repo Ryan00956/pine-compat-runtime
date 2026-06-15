@@ -81,3 +81,20 @@ plot(empty_abs.size())
 empty_standardized = array.standardize(empty)
 only_na_standardized = only_na.standardize()
 plot(na(array.min(empty)) and na(array.min(only_na)) and na(array.max(empty)) and na(array.max(only_na)) and na(array.sum(empty)) and na(array.sum(only_na)) and na(array.avg(empty)) and na(array.avg(only_na)) and na(array.range(empty)) and na(array.range(only_na)) and na(array.median(empty)) and na(array.median(only_na)) and na(array.mode(empty)) and na(array.mode(only_na)) and na(array.mode(ints)) and na(array.percentile_nearest_rank(empty, 50)) and na(array.percentile_nearest_rank(only_na, 50)) and na(array.percentile_nearest_rank(ints, 150)) and na(array.percentile_linear_interpolation(empty, 50)) and na(array.percentile_linear_interpolation(only_na, 50)) and na(array.percentile_linear_interpolation(ints, -1)) and na(array.percentile_linear_interpolation(ints, 150)) and na(array.percentrank(empty, 0)) and na(array.percentrank(only_na, 0)) and na(array.percentrank(floats, 2)) and na(array.percentrank(ints, -1)) and na(array.percentrank(ints, 3)) and empty_standardized.size() == 0 and only_na_standardized.size() == 0 and na(array.covariance(empty, empty)) and na(array.covariance(only_na, only_na)) and na(array.variance(empty)) and na(array.variance(only_na)) and na(array.variance(array.from(1), false)) and na(array.stdev(empty)) and na(array.stdev(only_na)) and na(array.stdev(array.from(1), false)) ? 1 : 0)
+
+branch_minmax_source = array.from(4, 1, 7)
+branch_minmax_results = array.new_int()
+if bar_index % 2 == 0
+    branch_minmax_results.push(array.min(branch_minmax_source) + branch_minmax_source.max())
+else
+    branch_minmax_results.push(branch_minmax_source.min() * 10 + array.max(branch_minmax_source))
+plot(branch_minmax_results.get(0))
+
+loop_minmax_source = array.from(6, 2, 9)
+loop_minmax_results = array.new_int()
+for i = 0 to 1
+    if i == 0
+        loop_minmax_results.push(array.min(loop_minmax_source))
+    else
+        loop_minmax_results.push(loop_minmax_source.max())
+plot(loop_minmax_results.get(0) * 10 + loop_minmax_results.get(1))

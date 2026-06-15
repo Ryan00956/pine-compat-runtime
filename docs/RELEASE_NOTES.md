@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch and loop control-flow coverage for `array.min`
+  and `array.max`.
 - Added fixture-backed branch and loop control-flow coverage for
   `array.binary_search`, `array.binary_search_leftmost`, and
   `array.binary_search_rightmost`.
