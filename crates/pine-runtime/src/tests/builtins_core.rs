@@ -118,10 +118,16 @@ fn runs_ticker_standard_subset() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("ticker standard")
+created = ticker.new("NASDAQ", "AAPL")
+chart_created = ticker.new(syminfo.prefix, syminfo.ticker)
+missing_created = ticker.new(na, "AAPL")
 plain = ticker.standard("NASDAQ:AAPL")
 current = ticker.standard(syminfo.tickerid)
 modified = ticker.standard("{\"session\":\"extended\",\"symbol\":\"NASDAQ:AAPL\"}")
 missing = ticker.standard(na)
+plot(created == "NASDAQ:AAPL" ? 1 : 0)
+plot(chart_created == "NASDAQ:AAPL" ? 1 : 0)
+plot(na(missing_created) ? 1 : 0)
 plot(plain == "NASDAQ:AAPL" ? 1 : 0)
 plot(current == "NASDAQ:AAPL" ? 1 : 0)
 plot(modified == "NASDAQ:AAPL" ? 1 : 0)
@@ -142,6 +148,9 @@ plot(na(missing) ? 1 : 0)
     assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[5].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[6].values, &[1.0, 1.0]);
 }
 
 #[test]

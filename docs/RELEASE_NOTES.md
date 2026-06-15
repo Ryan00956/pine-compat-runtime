@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `ticker.new` support for the two-argument
+  default `PREFIX:TICKER` constructor subset while leaving session/adjustment
+  modifiers unsupported.
 - Added fixture-backed partial `ticker.standard` support for simple-string
   standard ticker IDs while leaving other ticker constructors unsupported.
 - Tightened `syminfo` metadata closeout by documenting the

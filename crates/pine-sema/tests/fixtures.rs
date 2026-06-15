@@ -3639,7 +3639,7 @@ fn reports_unsupported_ticker_constructors_fixture() {
     );
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ticker_constructors.pine",
-        &["ticker.heikinashi", "ticker.renko"],
+        &["ticker.heikinashi", "ticker.renko", "ticker.new"],
     );
 }
 

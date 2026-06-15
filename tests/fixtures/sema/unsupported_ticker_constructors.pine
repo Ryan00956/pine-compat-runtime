@@ -2,4 +2,5 @@
 indicator("Unsupported ticker constructors")
 ha = ticker.heikinashi(syminfo.tickerid)
 renko = ticker.renko(syminfo.tickerid, "ATR", 10)
-plot(na(ha) and na(renko) ? 1 : 0)
+extended = ticker.new(syminfo.prefix, syminfo.ticker, session.extended)
+plot(na(ha) and na(renko) and na(extended) ? 1 : 0)

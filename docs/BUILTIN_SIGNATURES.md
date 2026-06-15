@@ -203,6 +203,7 @@ syminfo.minmove -> const int
 syminfo.pricescale -> const int
 syminfo.prefix(symbol: simple string) -> simple string
 syminfo.ticker(symbol: simple string) -> simple string
+ticker.new(prefix: simple string, ticker: simple string) -> simple string
 ticker.standard(symbol: simple string) -> simple string
 ```
 
@@ -217,6 +218,10 @@ currency, `regular` session, `Etc/UTC` timezone, `base` volume type,
 string directly. They split `PREFIX:TICKER` on the first `:`; symbols without a
 prefix return `""` from `syminfo.prefix()` and the whole symbol from
 `syminfo.ticker()`.
+
+`ticker.new(prefix, ticker)` currently implements the two-argument default
+ticker constructor subset and returns `PREFIX:TICKER`. Optional session and
+adjustment modifiers remain outside this subset.
 
 `ticker.standard(symbol)` currently implements the simple-string standard ticker
 ID subset. Plain `PREFIX:TICKER` values are returned unchanged, and known

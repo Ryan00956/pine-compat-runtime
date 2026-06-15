@@ -897,8 +897,9 @@ plot(identity and details and session and classification and helpers ? scale : 0
 fn accepts_ticker_standard() {
     let analysis = analyze(
         r#"indicator("ticker standard")
+created = ticker.new(syminfo.prefix, syminfo.ticker)
 standard = ticker.standard(syminfo.tickerid)
-plot(standard == "NASDAQ:AAPL" ? 1 : 0)
+plot(created == "NASDAQ:AAPL" and standard == "NASDAQ:AAPL" ? 1 : 0)
 "#,
     );
 
@@ -907,14 +908,16 @@ plot(standard == "NASDAQ:AAPL" ? 1 : 0)
         "{:?}",
         analysis.diagnostics
     );
-    assert!(
-        analysis
-            .compatibility
-            .supported
-            .iter()
-            .any(|supported| supported.feature == "ticker.standard"),
-        "ticker.standard should be reported as supported"
-    );
+    for feature in ["ticker.new", "ticker.standard"] {
+        assert!(
+            analysis
+                .compatibility
+                .supported
+                .iter()
+                .any(|supported| supported.feature == feature),
+            "{feature} should be reported as supported"
+        );
+    }
     assert!(analysis.compatibility.unsupported.is_empty());
     assert!(analysis.hir.is_some());
 }
