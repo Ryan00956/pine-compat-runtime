@@ -233,6 +233,7 @@ pub(crate) fn format_datetime_with_offset(
             'D' => push_padded_or_plain(&mut result, datetime.ordinal(), count),
             'E' => result.push_str(format_weekday(datetime.weekday(), count)),
             'w' => push_padded_or_plain(&mut result, datetime.iso_week().week(), count),
+            'W' => push_padded_or_plain(&mut result, iso_week_of_month(datetime), count),
             'H' => push_padded_or_plain(&mut result, datetime.hour(), count),
             'h' => {
                 let hour = match datetime.hour() % 12 {
@@ -300,6 +301,13 @@ pub(crate) fn format_month(month: u32, width: usize) -> String {
         3 => SHORT[(month - 1) as usize].to_owned(),
         _ => LONG[(month - 1) as usize].to_owned(),
     }
+}
+
+pub(crate) fn iso_week_of_month(datetime: DateTime<Utc>) -> u32 {
+    let first_day = NaiveDate::from_ymd_opt(datetime.year(), datetime.month(), 1)
+        .expect("datetime month has a valid first day");
+    let leading_days = first_day.weekday().num_days_from_monday();
+    ((datetime.day() + leading_days - 1) / 7) + 1
 }
 
 pub(crate) fn format_weekday(weekday: chrono::Weekday, width: usize) -> &'static str {

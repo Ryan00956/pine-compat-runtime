@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `str.format_time` support for the `W` week-of-month
+  format token in the current Monday-based week subset.
 - Added fixture-backed `str.format_time` support for the `w` ISO week-of-year
   format token.
 - Added fixture-backed `str.format_time` support for the `E` weekday format
