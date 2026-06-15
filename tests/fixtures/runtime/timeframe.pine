@@ -2,6 +2,7 @@
 indicator("Timeframe")
 tf = input.timeframe("60", "TF")
 plot(timeframe.period == "1" ? 1 : 0)
+plot(timeframe.main_period == timeframe.period ? 1 : 0)
 plot(timeframe.in_seconds())
 plot(timeframe.in_seconds(""))
 plot(timeframe.in_seconds("1S"))

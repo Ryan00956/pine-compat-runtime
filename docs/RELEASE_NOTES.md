@@ -2684,6 +2684,8 @@
 - Added fixed-default `timeframe.period` and `timeframe.in_seconds` support for
   common seconds/minutes/days/weeks/months timeframe strings, plus
   `timeframe.from_seconds` for the exact reverse conversion subset.
+- Added fixed-default `timeframe.main_period` support for the current
+  single-chart-timeframe runtime subset.
 - Added `timeframe.change` UTC bucket detection for the supported timeframe
   string subset.
 - Added fixed-default `timeframe.is*` and `timeframe.multiplier` chart

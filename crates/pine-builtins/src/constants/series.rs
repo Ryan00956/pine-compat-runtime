@@ -147,6 +147,7 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("session.ispremarket", SERIES_BOOL),
     ("session.ispostmarket", SERIES_BOOL),
     ("timeframe.period", SIMPLE_STRING),
+    ("timeframe.main_period", SIMPLE_STRING),
     ("timeframe.isseconds", SIMPLE_BOOL),
     ("timeframe.isminutes", SIMPLE_BOOL),
     ("timeframe.isintraday", SIMPLE_BOOL),

@@ -70,6 +70,7 @@ hlcc4     -> series float
 ohlc4     -> series float
 bar_index -> series int
 timeframe.period -> simple string
+timeframe.main_period -> simple string
 timeframe.isseconds -> simple bool
 timeframe.isminutes -> simple bool
 timeframe.isintraday -> simple bool
@@ -179,10 +180,15 @@ timeframe.change(timeframe: simple string) -> series bool
 ```
 
 The current subset assumes a fixed default chart timeframe of `1` minute, so
-`timeframe.period` returns `"1"`, `timeframe.multiplier` returns `1`,
+`timeframe.period` and `timeframe.main_period` return `"1"`,
+`timeframe.multiplier` returns `1`,
 `timeframe.isminutes` and `timeframe.isintraday` return `true`, and
 `timeframe.isseconds`, `timeframe.isdaily`, `timeframe.isweekly`,
 `timeframe.ismonthly`, and `timeframe.isdwm` return `false`.
+
+`timeframe.main_period` currently matches the single chart timeframe. Main
+timeframe overrides from declaration parameters and requested-context
+differences remain outside this subset.
 
 Request helpers:
 

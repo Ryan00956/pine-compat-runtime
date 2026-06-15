@@ -103,7 +103,7 @@ impl<'a> HistoricalRuntime<'a> {
         if name == "syminfo.tickerid" {
             return PineValue::String(self.request_environment.chart().symbol().to_owned());
         }
-        if name == "timeframe.period" {
+        if matches!(name, "timeframe.period" | "timeframe.main_period") {
             return PineValue::String(
                 self.request_environment
                     .chart()

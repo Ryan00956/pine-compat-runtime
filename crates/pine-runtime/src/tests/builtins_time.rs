@@ -95,6 +95,7 @@ fn runs_timeframe_helpers() {
         r#"indicator("timeframe helpers")
 tf = input.timeframe("60", "TF")
 plot(timeframe.period == "1" ? 1 : 0)
+plot(timeframe.main_period == timeframe.period ? 1 : 0)
 plot(timeframe.in_seconds())
 plot(timeframe.in_seconds(""))
 plot(timeframe.in_seconds("1S"))
@@ -128,15 +129,15 @@ plot(timeframe.multiplier)
         run_historical(&analysis.hir.expect("HIR"), &[bar(1.0), bar(2.0)]).expect("result");
 
     assert_values_close(&result.plots[0].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[1].values, &[60.0, 60.0]);
+    assert_values_close(&result.plots[1].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[2].values, &[60.0, 60.0]);
-    assert_values_close(&result.plots[3].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[4].values, &[45.0, 45.0]);
-    assert_values_close(&result.plots[5].values, &[3600.0, 3600.0]);
-    assert_values_close(&result.plots[6].values, &[86_400.0, 86_400.0]);
-    assert_values_close(&result.plots[7].values, &[1_209_600.0, 1_209_600.0]);
-    assert_values_close(&result.plots[8].values, &[7_776_000.0, 7_776_000.0]);
-    assert_values_close(&result.plots[9].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[3].values, &[60.0, 60.0]);
+    assert_values_close(&result.plots[4].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[5].values, &[45.0, 45.0]);
+    assert_values_close(&result.plots[6].values, &[3600.0, 3600.0]);
+    assert_values_close(&result.plots[7].values, &[86_400.0, 86_400.0]);
+    assert_values_close(&result.plots[8].values, &[1_209_600.0, 1_209_600.0]);
+    assert_values_close(&result.plots[9].values, &[7_776_000.0, 7_776_000.0]);
     assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[11].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[12].values, &[1.0, 1.0]);
@@ -145,9 +146,10 @@ plot(timeframe.multiplier)
     assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[18].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[19].values, &[1.0, 0.0]);
     assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
 }
 
 #[test]

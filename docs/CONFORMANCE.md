@@ -66,6 +66,14 @@ matrix schema changes. The text-only CLI `analyze` output is
 diagnostic console output and is not part of the machine-readable schema until
 a JSON mode is added.
 
+## Built-In Runtime Contract
+
+Built-in compatibility is claimed one fixture-backed subset at a time. The
+current timeframe metadata subset exposes `timeframe.period` and
+`timeframe.main_period` as the runtime's single chart timeframe string. Main
+timeframe declaration overrides and requested-context differences are not
+claimed until a separate fixture-backed slice designs that context model.
+
 ## Strategy Runtime Contract
 
 Phase G marks `strategy` as partial. The executable subset accepts
