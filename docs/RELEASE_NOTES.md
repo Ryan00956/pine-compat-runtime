@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch and loop control-flow construction coverage for
+  `array.new_int`.
+- Added fixture-backed branch and loop control-flow construction coverage for
   `array.new_float`.
 - Added fixture-backed branch and loop control-flow coverage for `array.from`
   inference across scalar array element kinds.
