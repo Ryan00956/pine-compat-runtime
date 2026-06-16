@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow deletion coverage for
+  `box.delete`.
 - Added fixture-backed while-loop control-flow mutation coverage for
   `box.set_text_formatting`.
 - Added fixture-backed while-loop control-flow mutation coverage for
