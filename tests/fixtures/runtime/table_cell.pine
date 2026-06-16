@@ -42,6 +42,10 @@ if bar_index == 2
         table.cell_set_text_size(table_id, 1, 0, size.large)
         text_size_i := text_size_i + 1
     table.cell_set_text_halign(table_id, 1, 0, text.align_left)
+    text_halign_i = 0
+    while text_halign_i < 1
+        table.cell_set_text_halign(table_id, 1, 0, text.align_right)
+        text_halign_i := text_halign_i + 1
     table.cell_set_text_valign(table_id, 1, 0, text.align_top)
     table.cell_set_text_wrap(table_id, 1, 0, text.wrap_auto)
     table.cell_set_tooltip(table_id, 1, 0, "updated")

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow cell horizontal text-alignment
+  mutation coverage for `table.cell_set_text_halign`.
 - Added fixture-backed while-loop control-flow cell text-size mutation coverage
   for `table.cell_set_text_size`.
 - Added fixture-backed while-loop control-flow cell height mutation coverage for

@@ -819,8 +819,9 @@ size in the host-neutral snapshot, including when called from ordinary
 control-flow blocks, while preserving the cell's other supported fields; actual
 text rendering remains a host responsibility.
 `table.cell_set_text_halign` updates the target previously populated cell
-horizontal text alignment in the host-neutral snapshot while preserving the
-cell's other supported fields; actual text layout remains a host responsibility.
+horizontal text alignment in the host-neutral snapshot, including when called
+from ordinary control-flow blocks, while preserving the cell's other supported
+fields; actual text layout remains a host responsibility.
 `table.cell_set_text_valign` updates the target previously populated cell
 vertical text alignment in the host-neutral snapshot while preserving the cell's
 other supported fields; actual text layout remains a host responsibility.
