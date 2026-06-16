@@ -65,6 +65,7 @@
   mutation coverage.
 - Added fixture-backed while-loop control-flow `box.set_text_formatting`
   mutation coverage.
+- Added fixture-backed while-loop control-flow `box.delete` coverage.
 - Added fixture-backed while-loop control-flow `box.set_border_color` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `box.set_bgcolor` mutation
