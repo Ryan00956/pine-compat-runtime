@@ -35,9 +35,13 @@ while textalign_i < 1
     else
         label.set_textalign(label_id, text.align_left)
     textalign_i := textalign_i + 1
-switch direction
-    1 => label.set_text_font_family(label_id, font.family_monospace)
-    => label.set_text_font_family(label_id, font.family_monospace)
+text_font_family_i = 0
+while text_font_family_i < 1
+    if direction == 1
+        label.set_text_font_family(label_id, font.family_monospace)
+    else
+        label.set_text_font_family(label_id, font.family_monospace)
+    text_font_family_i := text_font_family_i + 1
 switch direction
     1 => label.set_text_formatting(label_id, text.format_bold)
     => label.set_text_formatting(label_id, text.format_bold + text.format_italic)
