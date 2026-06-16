@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch control-flow mutation coverage for
+  `label.set_xy`.
+- Added fixture-backed branch control-flow mutation coverage for
   `label.set_y`.
 - Added fixture-backed branch control-flow mutation coverage for
   `label.set_x`.
