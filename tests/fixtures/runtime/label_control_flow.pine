@@ -2,6 +2,7 @@
 indicator("Label control flow")
 var label_id = label.new(bar_index, high, "start")
 if bar_index == 1
+    label.set_x(label_id, bar_index)
     label.set_text(label_id, "if")
 direction = close > open ? 1 : -1
 switch direction

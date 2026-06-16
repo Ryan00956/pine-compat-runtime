@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch control-flow mutation coverage for
+  `label.set_x`.
 - Aligned the `table.cell` conformance row with existing fixture-backed
   branch/loop control-flow cell-write coverage.
 - Aligned selected `box.set_*` conformance rows with existing
