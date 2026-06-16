@@ -57,6 +57,10 @@ if bar_index == 2
         table.cell_set_text_wrap(table_id, 1, 0, text.wrap_none)
         text_wrap_i := text_wrap_i + 1
     table.cell_set_tooltip(table_id, 1, 0, "updated")
+    tooltip_i = 0
+    while tooltip_i < 1
+        table.cell_set_tooltip(table_id, 1, 0, "loop-updated")
+        tooltip_i := tooltip_i + 1
     table.cell_set_text_font_family(table_id, 1, 0, font.family_default)
     table.cell_set_text_formatting(table_id, 1, 0, text.format_bold + text.format_italic)
     table.set_position(table_id, position.bottom_right)

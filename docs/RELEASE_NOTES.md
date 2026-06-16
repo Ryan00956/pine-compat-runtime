@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow cell tooltip mutation coverage
+  for `table.cell_set_tooltip`.
 - Added fixture-backed while-loop control-flow cell text-wrap mutation coverage
   for `table.cell_set_text_wrap`.
 - Added fixture-backed while-loop control-flow cell vertical text-alignment

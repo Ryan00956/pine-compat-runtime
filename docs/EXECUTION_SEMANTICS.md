@@ -831,8 +831,9 @@ wrap in the host-neutral snapshot, including when called from ordinary
 control-flow blocks, while preserving the cell's other supported fields; actual
 wrapping and table layout remain a host responsibility.
 `table.cell_set_tooltip` updates the target previously populated cell tooltip
-in the host-neutral snapshot while preserving the cell's
-other supported fields; actual tooltip display remains a host responsibility.
+in the host-neutral snapshot, including when called from ordinary control-flow
+blocks, while preserving the cell's other supported fields; actual tooltip
+display remains a host responsibility.
 `table.cell_set_text_font_family` updates the target previously populated cell
 font-family in the host-neutral snapshot while preserving the cell's other
 supported fields; actual font rendering remains a host responsibility.
