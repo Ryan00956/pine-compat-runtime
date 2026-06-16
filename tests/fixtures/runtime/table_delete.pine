@@ -10,3 +10,9 @@ if bar_index == 2
     table.delete(table_id)
 table.delete(na)
 plot(close)
+var loop_table = table.new(position.bottom_left, 1, 1)
+i = 0
+while i < 1
+    if bar_index == 2
+        table.delete(loop_table)
+    i := i + 1

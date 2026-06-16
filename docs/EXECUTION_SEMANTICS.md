@@ -775,8 +775,9 @@ including when called from ordinary control-flow blocks. `table.new` optional
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize the
 table's final background-color, frame-color, frame-width, border-color, and
 border-width values.
-`table.delete` appends an `exists: false` table snapshot. `table.clear` removes
-already populated cells in the inclusive rectangular range from `start_column`,
+`table.delete` appends an `exists: false` table snapshot, including when called
+from ordinary control-flow blocks. `table.clear` removes already populated cells
+in the inclusive rectangular range from `start_column`,
 `start_row` to `end_column`, `end_row`; it also removes merged-cell records
 that intersect the cleared range, while preserving the table object and
 table-level style fields. `table.merge_cells` appends inclusive

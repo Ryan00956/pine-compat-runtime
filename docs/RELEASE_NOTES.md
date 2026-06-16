@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow deletion coverage for
+  `table.delete`.
 - Added fixture-backed while-loop control-flow mutation coverage for
   `table.set_border_width`.
 - Added fixture-backed while-loop control-flow mutation coverage for
