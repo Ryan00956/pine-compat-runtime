@@ -23,6 +23,7 @@ flow_right_value = right_value
 top_value = box.get_top(id)
 flow_top_value = top_value
 bottom_value = box.get_bottom(id)
+flow_bottom_value = bottom_value
 visible_boxes = box.all
 visible_box_count = array.size(visible_boxes)
 flow_visible_box_count = visible_box_count
@@ -53,6 +54,10 @@ if bar_index == 1
     while get_top_i < 1
         flow_top_value := box.get_top(id)
         get_top_i := get_top_i + 1
+    get_bottom_i = 0
+    while get_bottom_i < 1
+        flow_bottom_value := box.get_bottom(id)
+        get_bottom_i := get_bottom_i + 1
 deleted_left = bar_index >= 2 ? nz(box.get_left(id), -1) : -1
 deleted_right = bar_index >= 2 ? nz(box.get_right(id), -1) : -1
 deleted_top = bar_index >= 2 ? nz(box.get_top(id), -1) : -1
@@ -64,6 +69,7 @@ plot(flow_right_value)
 plot(top_value)
 plot(flow_top_value)
 plot(bottom_value)
+plot(flow_bottom_value)
 plot(visible_box_count)
 plot(flow_visible_box_count)
 plot(visible_box_left)

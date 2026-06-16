@@ -706,9 +706,9 @@ snapshot, `box.all` reads from ordinary control-flow blocks after deletion,
 fixture-backed `box.get_left` reads from ordinary control-flow blocks after
 mutation, fixture-backed `box.get_right` reads from ordinary control-flow
 blocks after mutation, fixture-backed `box.get_top` reads from ordinary
-control-flow blocks after mutation, plus fixture-backed `box.get_bottom` over
-the latest existing box snapshot, with sparse snapshots and a 500-box runtime
-limit.
+control-flow blocks after mutation, and fixture-backed `box.get_bottom` reads
+from ordinary control-flow blocks after mutation, with sparse snapshots and a
+500-box runtime limit.
 The executable table subset covers
 `table.new` position/dimension creation with optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialization

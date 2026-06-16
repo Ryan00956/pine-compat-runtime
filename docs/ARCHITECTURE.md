@@ -452,7 +452,7 @@ deletion. `box.get_left` reads latest existing box left values from ordinary
 control-flow blocks. `box.get_right` reads latest existing box right values
 from ordinary control-flow blocks. `box.get_top` reads latest existing box top
 values from ordinary control-flow blocks. `box.get_bottom` reads latest
-existing snapshot values.
+existing box bottom values from ordinary control-flow blocks.
 Table entries
 carry `position`, `bgColor`, `frameColor`, `frameWidth`, `borderColor`,
 `borderWidth`, `columns`, `rows`, and sparse cell snapshots. Each table snapshot
