@@ -6,7 +6,10 @@ if bar_index == 1
     while left_i < 1
         box.set_left(box_id, bar_index)
         left_i := left_i + 1
-    box.set_top(box_id, close + 10)
+    top_i = 0
+    while top_i < 1
+        box.set_top(box_id, close + 10)
+        top_i := top_i + 1
     box.set_right(box_id, bar_index + 2)
     box.set_bottom(box_id, close - 10)
     box.set_lefttop(box_id, bar_index + 1, close + 20)
