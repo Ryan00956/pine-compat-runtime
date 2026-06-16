@@ -26,10 +26,14 @@ while bgcolor_i < 1
     if bar_index == 3
         table.set_bgcolor(table_id, color.yellow)
     bgcolor_i := bgcolor_i + 1
+frame_color_i = 0
+while frame_color_i < 1
+    if bar_index == 3
+        table.set_frame_color(table_id, color.black)
+    frame_color_i := frame_color_i + 1
 k = 0
 while k < 1
     if bar_index == 3
-        table.set_frame_color(table_id, color.black)
         table.set_frame_width(table_id, 3)
         table.set_border_color(table_id, color.white)
         table.set_border_width(table_id, 4)
