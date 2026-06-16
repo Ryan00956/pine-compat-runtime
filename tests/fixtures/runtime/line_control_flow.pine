@@ -7,7 +7,11 @@ if bar_index == 1
     line.set_xy1(line_id, bar_index + 2, close + 20)
     line.set_x2(line_id, bar_index + 3)
     line.set_y2(line_id, close + 30)
-    line.set_xy2(line_id, bar_index + 4, close + 40)
+xy2_i = 0
+while xy2_i < 1
+    if bar_index == 1
+        line.set_xy2(line_id, bar_index + 4, close + 40)
+    xy2_i := xy2_i + 1
 color_i = 0
 while color_i < 1
     if bar_index == 1
