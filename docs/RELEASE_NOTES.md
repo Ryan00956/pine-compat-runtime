@@ -9,6 +9,7 @@
   coverage.
 - Added fixture-backed while-loop control-flow `label.set_size` mutation
   coverage.
+- Added fixture-backed while-loop control-flow `table.cell` write coverage.
 - Added fixture-backed while-loop control-flow `line.set_x1` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `line.set_y1` mutation
