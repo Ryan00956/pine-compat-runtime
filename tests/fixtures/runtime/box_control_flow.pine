@@ -24,5 +24,6 @@ while j < 1
         box.set_border_style(box_id, line.style_dashed)
         box.set_extend(box_id, extend.right)
         box.set_xloc(box_id, bar_index - 2, bar_index + 3, xloc.bar_index)
+        box.set_text(box_id, "flow box")
     j := j + 1
 plot(close)
