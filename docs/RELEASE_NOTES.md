@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Aligned selected `label.set_*` conformance rows with existing
+  fixture-backed branch/loop control-flow mutation coverage.
 - Aligned the aggregate `array.*` conformance row with fixture-backed
   branch/loop control-flow coverage across supported array operations.
 - Added fixture-backed branch and loop control-flow copy-call coverage for
