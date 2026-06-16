@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow cloning coverage for
+  `line.copy`.
 - Added fixture-backed while-loop control-flow deletion coverage for
   `line.delete`.
 - Added fixture-backed while-loop control-flow `label.get_text` read coverage.

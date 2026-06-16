@@ -748,10 +748,10 @@ and returns `na` for `na` or deleted labels. `label.all` returns currently
 existing label ids in creation order, including when read from ordinary
 control-flow blocks after label deletion. `line.delete` appends an
 `exists: false` line snapshot, including when called from ordinary control-flow
-blocks. `line.copy` clones the latest
-existing line
-snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
-and shares the line object limit. `line.get_x1`, `line.get_y1`,
+blocks. `line.copy` clones the latest existing line snapshot into a new
+deterministic id, including when called from ordinary control-flow blocks,
+returns `na` for `na` or deleted lines, and shares the line object limit.
+`line.get_x1`, `line.get_y1`,
 `line.get_x2`, and `line.get_y2` read the corresponding value from the latest
 existing line snapshot and return `na` for `na` or deleted lines.
 `line.get_price` reads the latest existing bar-index line snapshot, applies
