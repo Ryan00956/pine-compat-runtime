@@ -12,6 +12,10 @@ if bar_index == 2
     table.cell(table_id, column=1, row=0, text="B", bgcolor=color.green, text_color=color.white, tooltip="initial", text_font_family=font.family_monospace, text_formatting=text.format_bold)
     table.cell(table_id, 0, 0, "C")
     table.cell_set_text(table_id, 1, 0, "B2")
+    text_i = 0
+    while text_i < 1
+        table.cell_set_text(table_id, 1, 0, "B3")
+        text_i := text_i + 1
     table.cell_set_bgcolor(table_id, 1, 0, color.red)
     table.cell_set_text_color(table_id, 1, 0, color.blue)
     table.cell_set_width(table_id, 1, 0, 25)

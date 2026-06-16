@@ -459,7 +459,7 @@ called from ordinary control-flow blocks,
 called from ordinary control-flow blocks, `table.delete` records an
 `exists: false` snapshot, including when called from ordinary control-flow
 blocks, while
-`table.cell_set_text`,
+`table.cell_set_text`, including when called from ordinary control-flow blocks,
 `table.cell_set_bgcolor`, `table.cell_set_text_color`, and
 `table.cell_set_width`/`table.cell_set_height`/`table.cell_set_text_size`
 `table.cell_set_text_halign`/`table.cell_set_text_valign`/

@@ -798,7 +798,8 @@ border-color value. `table.set_border_width` updates the table's final
 border-width value; visual anchoring, border rendering, and layout remain host
 responsibilities. `table.cell_set_text`
 updates the target previously populated cell text in the host-neutral table
-snapshot while preserving the cell's other supported fields.
+snapshot, including when called from ordinary control-flow blocks, while
+preserving the cell's other supported fields.
 `table.cell_set_bgcolor` updates the target previously populated cell
 background color while preserving the cell's other supported fields.
 `table.cell_set_text_color` updates the target previously populated cell text

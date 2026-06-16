@@ -716,8 +716,9 @@ cell-content removal snapshots, including while-loop control-flow clearing
 coverage,
 `table.merge_cells` inclusive merged-cell rectangle snapshots, including
 while-loop control-flow merge coverage, and
-`table.cell_set_text` text mutations plus `table.cell_set_bgcolor` background
-color mutations plus `table.cell_set_text_color` text-color mutations plus
+`table.cell_set_text` text mutations, including while-loop control-flow
+mutation coverage, plus `table.cell_set_bgcolor` background color mutations
+plus `table.cell_set_text_color` text-color mutations plus
 `table.cell_set_width` width mutations plus `table.cell_set_height` height
 mutations plus `table.cell_set_text_size` text-size mutations for previously
 populated cells plus `table.cell_set_text_halign` horizontal text-alignment
@@ -796,9 +797,10 @@ table's final frame-color value. `table.set_frame_width` updates only the
 table's final frame-width value. `table.set_border_color` updates only the
 table's final border-color value. `table.set_border_width` updates only the
 table's final border-width value; border rendering and table layout remain host
-responsibilities. `table.cell_set_text` updates only the target cell text snapshot
-after `table.cell` has populated that cell; `table.cell_set_bgcolor` updates
-only the target cell background color snapshot after `table.cell` has populated
+responsibilities. `table.cell_set_text` updates only the target cell text
+snapshot after `table.cell` has populated that cell, including when called from
+ordinary control-flow blocks; `table.cell_set_bgcolor` updates only the target
+cell background color snapshot after `table.cell` has populated
 that cell; `table.cell_set_text_color` updates only the target cell text-color
 snapshot after `table.cell` has populated that cell; `table.cell_set_width`
 updates only the target cell width snapshot after `table.cell` has populated
