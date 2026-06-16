@@ -49,10 +49,14 @@ while width_i < 1
     if bar_index == 2
         line.set_width(line_id, 2)
     width_i := width_i + 1
-j = 0
-while j < 1
+extend_i = 0
+while extend_i < 1
     if bar_index == 3
         line.set_extend(line_id, extend.right)
+    extend_i := extend_i + 1
+xloc_i = 0
+while xloc_i < 1
+    if bar_index == 3
         line.set_xloc(line_id, bar_index - 2, bar_index + 3, xloc.bar_index)
-    j := j + 1
+    xloc_i := xloc_i + 1
 plot(close)
