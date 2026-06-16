@@ -768,7 +768,9 @@ interpolation or extrapolation for the requested x value, and returns `na` for
 `na`, deleted, vertical, or nonnumeric lines; time-coordinate price lookup
 remains unsupported. `box.copy` clones the latest existing box
 snapshot into a new deterministic id, returns `na` for `na` or deleted boxes,
-and shares the box object limit. `box.set_extend` records the selected
+and shares the box object limit. `box.all` returns currently existing box ids in
+creation order, including when read from ordinary control-flow blocks after box
+deletion. `box.set_extend` records the selected
 horizontal extend constant in the host-neutral snapshot; visual extension
 remains a host responsibility. `box.set_xloc` with `xloc.bar_index` updates the
 box's left and right values in the host-neutral snapshot; time-coordinate box

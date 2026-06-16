@@ -702,9 +702,10 @@ text-formatting mutators,
 `box.set_xloc` for the `xloc.bar_index` subset that updates left and right snapshots,
 `box.delete`, and
 fixture-backed cloning with `box.copy` over the latest existing box
-snapshot, plus fixture-backed `box.get_left`, `box.get_right`, `box.get_top`,
-and `box.get_bottom` over the latest existing box snapshot, with sparse
-snapshots and a 500-box runtime limit.
+snapshot, `box.all` reads from ordinary control-flow blocks after deletion,
+plus fixture-backed `box.get_left`, `box.get_right`, `box.get_top`, and
+`box.get_bottom` over the latest existing box snapshot, with sparse snapshots
+and a 500-box runtime limit.
 The executable table subset covers
 `table.new` position/dimension creation with optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialization
