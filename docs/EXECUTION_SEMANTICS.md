@@ -835,8 +835,9 @@ in the host-neutral snapshot, including when called from ordinary control-flow
 blocks, while preserving the cell's other supported fields; actual tooltip
 display remains a host responsibility.
 `table.cell_set_text_font_family` updates the target previously populated cell
-font-family in the host-neutral snapshot while preserving the cell's other
-supported fields; actual font rendering remains a host responsibility.
+font-family in the host-neutral snapshot, including when called from ordinary
+control-flow blocks, while preserving the cell's other supported fields; actual
+font rendering remains a host responsibility.
 `table.cell_set_text_formatting` updates the target previously populated cell
 text-formatting mask in the host-neutral snapshot while preserving the cell's
 other supported fields; actual bold/italic rendering remains a host

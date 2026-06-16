@@ -732,7 +732,8 @@ coverage, plus `table.cell_set_text_wrap` text-wrap mutations, including
 while-loop control-flow mutation coverage, plus
 `table.cell_set_tooltip` tooltip mutations, including while-loop control-flow
 mutation coverage, plus
-`table.cell_set_text_font_family` font-family mutations plus
+`table.cell_set_text_font_family` font-family mutations, including while-loop
+control-flow mutation coverage, plus
 `table.cell_set_text_formatting` text-formatting mutations for previously
 populated cells
 with
@@ -835,7 +836,8 @@ host-specific;
 control-flow blocks, while tooltip display and text layout remains
 host-specific; `table.cell_set_text_font_family` updates only the
 target cell font-family snapshot after `table.cell` has populated that cell,
-while font rendering remains host-specific; `table.cell_set_text_formatting`
+including when called from ordinary control-flow blocks, while font rendering
+remains host-specific; `table.cell_set_text_formatting`
 updates only the target cell text-formatting mask snapshot after `table.cell`
 has populated that cell, while bold/italic rendering remains host-specific;
 other table cell text rendering remains host-specific.

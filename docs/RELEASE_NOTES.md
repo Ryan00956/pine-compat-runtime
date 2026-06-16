@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow cell text font-family mutation
+  coverage for `table.cell_set_text_font_family`.
 - Added fixture-backed while-loop control-flow cell tooltip mutation coverage
   for `table.cell_set_tooltip`.
 - Added fixture-backed while-loop control-flow cell text-wrap mutation coverage
