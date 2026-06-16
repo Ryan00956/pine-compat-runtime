@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow `box.set_right` mutation coverage.
 - Added fixture-backed while-loop control-flow `box.set_top` mutation coverage.
 - Added fixture-backed while-loop control-flow `box.set_left` mutation coverage.
 - Added fixture-backed while-loop control-flow cloning coverage for `box.copy`.
