@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed switch branch control-flow mutation coverage for
+  `label.set_textcolor`.
 - Added fixture-backed branch control-flow mutation coverage for
   `label.set_xy`.
 - Added fixture-backed branch control-flow mutation coverage for
