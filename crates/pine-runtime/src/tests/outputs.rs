@@ -1316,9 +1316,11 @@ while color_i < 1
     else
         label.set_color(label_id, color.red)
     color_i := color_i + 1
-for i = 0 to 0
+tooltip_i = 0
+while tooltip_i < 1
     if bar_index == 2
         label.set_tooltip(label_id, "for")
+    tooltip_i := tooltip_i + 1
 j = 0
 while j < 1
     if bar_index == 3
