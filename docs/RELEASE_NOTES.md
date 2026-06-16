@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow `line.set_y2` mutation
+  coverage.
 - Added fixture-backed while-loop control-flow `line.set_xy2` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `line.set_color` mutation
