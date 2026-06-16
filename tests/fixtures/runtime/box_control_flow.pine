@@ -2,7 +2,10 @@
 indicator("Box control flow")
 var box_id = box.new(bar_index, high, bar_index, low)
 if bar_index == 1
-    box.set_left(box_id, bar_index)
+    left_i = 0
+    while left_i < 1
+        box.set_left(box_id, bar_index)
+        left_i := left_i + 1
     box.set_top(box_id, close + 10)
     box.set_right(box_id, bar_index + 2)
     box.set_bottom(box_id, close - 10)
