@@ -703,7 +703,8 @@ cell writes,
 control-flow mutation coverage,
 `table.set_bgcolor` final background-color mutations, including while-loop
 control-flow mutation coverage,
-`table.set_frame_color` final frame-color mutations,
+`table.set_frame_color` final frame-color mutations, including while-loop
+control-flow mutation coverage,
 `table.set_frame_width` final frame-width mutations,
 `table.set_border_color` final border-color mutations,
 `table.set_border_width` final border-width mutations, `table.delete` deletion
