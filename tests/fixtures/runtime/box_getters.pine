@@ -19,8 +19,11 @@ missing_left = nz(box.get_left(na), -1)
 missing_right = nz(box.get_right(na), -1)
 missing_top = nz(box.get_top(na), -1)
 missing_bottom = nz(box.get_bottom(na), -1)
+branch_visible_box_count = bar_index * 0 - 1
 if bar_index == 2
     box.delete(id)
+    branch_visible_boxes = box.all
+    branch_visible_box_count := array.size(branch_visible_boxes)
 deleted_left = bar_index >= 2 ? nz(box.get_left(id), -1) : -1
 deleted_right = bar_index >= 2 ? nz(box.get_right(id), -1) : -1
 deleted_top = bar_index >= 2 ? nz(box.get_top(id), -1) : -1
@@ -39,4 +42,5 @@ plot(deleted_left)
 plot(deleted_right)
 plot(deleted_top)
 plot(deleted_bottom)
+plot(branch_visible_box_count)
 plot(close)

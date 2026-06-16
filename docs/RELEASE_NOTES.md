@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed branch control-flow collection coverage for `box.all`.
 - Added fixture-backed for-loop control-flow copy coverage for `box.copy`.
 - Added fixture-backed while-loop control-flow deletion coverage for
   `box.delete`.
