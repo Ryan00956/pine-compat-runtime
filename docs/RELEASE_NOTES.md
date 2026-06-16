@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch and loop control-flow copy-call coverage for
+  `array.copy`.
 - Added fixture-backed branch and loop control-flow call coverage for
   `array.get`.
 - Added fixture-backed branch and loop control-flow mutation coverage for

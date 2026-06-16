@@ -55,7 +55,7 @@ plot(branch_copy_results.get(0))
 loop_copy_source = array.from(3)
 loop_copy_results = array.new_int()
 for i = 0 to 1
-    loop_copy = loop_copy_source.copy()
+    loop_copy = i == 0 ? loop_copy_source.copy() : array.copy(loop_copy_source)
     loop_copy.push(i)
     loop_copy_results.push(loop_copy.size())
 plot(loop_copy_results.get(0) * 10 + loop_copy_results.get(1) + loop_copy_source.size())
