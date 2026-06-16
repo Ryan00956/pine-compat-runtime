@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow `label.set_style` mutation
+  coverage.
 - Added fixture-backed while-loop control-flow `label.set_textcolor` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `label.set_color` mutation
