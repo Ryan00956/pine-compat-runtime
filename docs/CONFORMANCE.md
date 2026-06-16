@@ -699,7 +699,8 @@ The executable table subset covers
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialization
 plus `table.cell` text/background/text-color/tooltip/font-family/text-formatting
 cell writes,
-`table.set_position` final-position mutations,
+`table.set_position` final-position mutations, including while-loop
+control-flow mutation coverage,
 `table.set_bgcolor` final background-color mutations,
 `table.set_frame_color` final frame-color mutations,
 `table.set_frame_width` final frame-width mutations,

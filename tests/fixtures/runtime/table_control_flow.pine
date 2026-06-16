@@ -16,3 +16,8 @@ while j < 1
         table.cell(table_id, 1, 1, "while", text_color=color.white)
     j := j + 1
 plot(close)
+k = 0
+while k < 1
+    if bar_index == 3
+        table.set_position(table_id, position.bottom_right)
+    k := k + 1

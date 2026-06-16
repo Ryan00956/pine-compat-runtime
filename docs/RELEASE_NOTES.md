@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow mutation coverage for
+  `table.set_position`.
 - Added fixture-backed branch control-flow getter coverage for
   `box.get_bottom`.
 - Added fixture-backed branch control-flow getter coverage for `box.get_top`.

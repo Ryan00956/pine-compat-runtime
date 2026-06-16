@@ -761,7 +761,8 @@ bold+italic combinations; text rendering, glyph styling, and font layout remain
 host responsibilities. `box.get_left`, `box.get_right`, `box.get_top`, and
 `box.get_bottom` read the corresponding value from the latest existing box
 snapshot and return `na` for `na` or deleted boxes. `table.set_position`
-updates the table's final position value. `table.new` optional `bgcolor`,
+updates the table's final position value, including when called from ordinary
+control-flow blocks. `table.new` optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize the
 table's final background-color, frame-color, frame-width, border-color, and
 border-width values.
