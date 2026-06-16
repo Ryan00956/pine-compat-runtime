@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow cell height mutation coverage for
+  `table.cell_set_height`.
 - Added fixture-backed while-loop control-flow cell width mutation coverage for
   `table.cell_set_width`.
 - Added fixture-backed while-loop control-flow cell text-color mutation
