@@ -5,6 +5,7 @@ if bar_index == 1
     box.set_left(box_id, bar_index)
     box.set_top(box_id, close + 10)
     box.set_right(box_id, bar_index + 2)
+    box.set_bottom(box_id, close - 10)
 direction = close > open ? 1 : -1
 switch direction
     1 => box.set_bgcolor(box_id, color.green)
