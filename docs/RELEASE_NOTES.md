@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed switch branch control-flow mutation coverage for
+  `label.set_text_font_family`.
+- Added fixture-backed switch branch control-flow mutation coverage for
   `label.set_textalign`.
 - Added fixture-backed switch branch control-flow mutation coverage for
   `label.set_style`.
