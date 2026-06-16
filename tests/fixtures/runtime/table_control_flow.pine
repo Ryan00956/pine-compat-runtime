@@ -22,4 +22,5 @@ while k < 1
         table.set_position(table_id, position.bottom_right)
         table.set_bgcolor(table_id, color.yellow)
         table.set_frame_color(table_id, color.black)
+        table.set_frame_width(table_id, 3)
     k := k + 1

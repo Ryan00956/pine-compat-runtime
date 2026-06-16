@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed while-loop control-flow mutation coverage for
+  `table.set_frame_width`.
+- Added fixture-backed while-loop control-flow mutation coverage for
   `table.set_frame_color`.
 - Added fixture-backed while-loop control-flow mutation coverage for
   `table.set_bgcolor`.
