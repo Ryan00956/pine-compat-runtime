@@ -839,9 +839,9 @@ font-family in the host-neutral snapshot, including when called from ordinary
 control-flow blocks, while preserving the cell's other supported fields; actual
 font rendering remains a host responsibility.
 `table.cell_set_text_formatting` updates the target previously populated cell
-text-formatting mask in the host-neutral snapshot while preserving the cell's
-other supported fields; actual bold/italic rendering remains a host
-responsibility.
+text-formatting mask in the host-neutral snapshot, including when called from
+ordinary control-flow blocks, while preserving the cell's other supported
+fields; actual bold/italic rendering remains a host responsibility.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from

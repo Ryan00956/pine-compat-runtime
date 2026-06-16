@@ -467,7 +467,8 @@ those setters are called from ordinary control-flow blocks, plus
 blocks, plus `table.cell_set_tooltip`, including when called from ordinary
 control-flow blocks, plus
 `table.cell_set_text_font_family`, including when called from ordinary
-control-flow blocks, plus `table.cell_set_text_formatting` mutate only
+control-flow blocks, plus `table.cell_set_text_formatting`, including when
+called from ordinary control-flow blocks, mutate only
 the stored text/background/text color/width/height/text size/text
 alignment/text wrap/tooltip/font-family/text-formatting for cells already
 populated by `table.cell`, `table.clear` removes populated cells in an

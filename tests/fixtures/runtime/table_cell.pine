@@ -67,6 +67,10 @@ if bar_index == 2
         table.cell_set_text_font_family(table_id, 1, 0, font.family_monospace)
         text_font_family_i := text_font_family_i + 1
     table.cell_set_text_formatting(table_id, 1, 0, text.format_bold + text.format_italic)
+    text_formatting_i = 0
+    while text_formatting_i < 1
+        table.cell_set_text_formatting(table_id, 1, 0, text.format_italic)
+        text_formatting_i := text_formatting_i + 1
     table.set_position(table_id, position.bottom_right)
     table.set_bgcolor(table_id, color.yellow)
     table.set_frame_color(table_id, color.black)

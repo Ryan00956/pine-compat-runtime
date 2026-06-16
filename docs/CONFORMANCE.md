@@ -734,8 +734,8 @@ while-loop control-flow mutation coverage, plus
 mutation coverage, plus
 `table.cell_set_text_font_family` font-family mutations, including while-loop
 control-flow mutation coverage, plus
-`table.cell_set_text_formatting` text-formatting mutations for previously
-populated cells
+`table.cell_set_text_formatting` text-formatting mutations, including
+while-loop control-flow mutation coverage, for previously populated cells
 with
 deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
 per-table limit. `table.all` returns currently existing table ids in creation
@@ -839,7 +839,8 @@ target cell font-family snapshot after `table.cell` has populated that cell,
 including when called from ordinary control-flow blocks, while font rendering
 remains host-specific; `table.cell_set_text_formatting`
 updates only the target cell text-formatting mask snapshot after `table.cell`
-has populated that cell, while bold/italic rendering remains host-specific;
+has populated that cell, including when called from ordinary control-flow
+blocks, while bold/italic rendering remains host-specific;
 other table cell text rendering remains host-specific.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state
 changes, and drawing side effects inside user-defined functions are rejected
