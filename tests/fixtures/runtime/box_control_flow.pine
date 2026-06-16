@@ -22,5 +22,6 @@ j = 0
 while j < 1
     if bar_index == 3
         box.set_border_style(box_id, line.style_dashed)
+        box.set_extend(box_id, extend.right)
     j := j + 1
 plot(close)
