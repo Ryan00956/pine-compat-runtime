@@ -15,6 +15,7 @@ flow_x2_value = x2_value
 y1_value = line.get_y1(id)
 flow_y1_value = y1_value
 y2_value = line.get_y2(id)
+flow_y2_value = y2_value
 price_value = line.get_price(id, bar_index + 5)
 flow_price_value = price_value
 visible_lines = line.all
@@ -39,6 +40,10 @@ if bar_index == 1
     while get_x2_i < 1
         flow_x2_value := line.get_x2(id)
         get_x2_i := get_x2_i + 1
+    get_y2_i = 0
+    while get_y2_i < 1
+        flow_y2_value := line.get_y2(id)
+        get_y2_i := get_y2_i + 1
     get_price_i = 0
     while get_price_i < 1
         flow_price_value := line.get_price(id, bar_index + 5)
@@ -61,6 +66,7 @@ plot(flow_x2_value)
 plot(y1_value)
 plot(flow_y1_value)
 plot(y2_value)
+plot(flow_y2_value)
 plot(price_value)
 plot(flow_price_value)
 plot(visible_line_count)
