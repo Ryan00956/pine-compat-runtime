@@ -5,6 +5,7 @@ var deleted_box = box.new(bar_index, low, bar_index + 1, high)
 branch_left_value = bar_index * 0 - 1
 branch_right_value = bar_index * 0 - 1
 branch_top_value = close * 0 - 1
+branch_bottom_value = close * 0 - 1
 if bar_index == 1
     box.set_left(id, bar_index - 10)
     box.set_right(id, bar_index + 10)
@@ -14,6 +15,7 @@ if bar_index == 1
     branch_left_value := box.get_left(id)
     branch_right_value := box.get_right(id)
     branch_top_value := box.get_top(id)
+    branch_bottom_value := box.get_bottom(id)
 left_value = box.get_left(id)
 right_value = box.get_right(id)
 top_value = box.get_top(id)
@@ -52,4 +54,5 @@ plot(branch_visible_box_count)
 plot(branch_left_value)
 plot(branch_right_value)
 plot(branch_top_value)
+plot(branch_bottom_value)
 plot(close)
