@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow `line.set_width` mutation
+  coverage.
 - Added fixture-backed while-loop control-flow `label.set_text_formatting`
   mutation coverage.
 - Added fixture-backed while-loop control-flow `label.set_text_font_family`
