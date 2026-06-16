@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Aligned the `table.cell` conformance row with existing fixture-backed
+  branch/loop control-flow cell-write coverage.
 - Aligned selected `box.set_*` conformance rows with existing
   fixture-backed branch/loop control-flow mutation coverage.
 - Aligned selected `line.set_*` conformance rows with existing
