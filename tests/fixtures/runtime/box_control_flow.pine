@@ -29,5 +29,6 @@ while j < 1
         box.set_text_size(box_id, size.small)
         box.set_text_halign(box_id, text.align_left)
         box.set_text_valign(box_id, text.align_top)
+        box.set_text_wrap(box_id, text.wrap_auto)
     j := j + 1
 plot(close)
