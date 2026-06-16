@@ -449,7 +449,8 @@ contract. Selected `box.set_*` mutators, including the `xloc.bar_index`
 `box.delete` reuse the same snapshot model;
 `box.all` reads current box ids from ordinary control-flow blocks after
 deletion. `box.get_left` reads latest existing box left values from ordinary
-control-flow blocks. `box.get_right`, `box.get_top`, and `box.get_bottom` read
+control-flow blocks. `box.get_right` reads latest existing box right values
+from ordinary control-flow blocks. `box.get_top` and `box.get_bottom` read
 latest existing snapshot values.
 Table entries
 carry `position`, `bgColor`, `frameColor`, `frameWidth`, `borderColor`,
