@@ -458,18 +458,15 @@ called from ordinary control-flow blocks,
 `table.set_border_width` updates the table's final border width, including when
 called from ordinary control-flow blocks, `table.delete` records an
 `exists: false` snapshot, including when called from ordinary control-flow
-blocks, while
-`table.cell_set_text`, including when called from ordinary control-flow blocks,
-`table.cell_set_bgcolor`, including when called from ordinary control-flow
-blocks, `table.cell_set_text_color`, including when called from ordinary
-control-flow blocks, and
-`table.cell_set_width`/`table.cell_set_height`/`table.cell_set_text_size`
+blocks, while `table.cell_set_text`, `table.cell_set_bgcolor`,
+`table.cell_set_text_color`, and `table.cell_set_width`, including when those
+setters are called from ordinary control-flow blocks, plus
+`table.cell_set_height`/`table.cell_set_text_size`/
 `table.cell_set_text_halign`/`table.cell_set_text_valign`/
 `table.cell_set_text_wrap`/`table.cell_set_tooltip`/
 `table.cell_set_text_font_family`/`table.cell_set_text_formatting` mutate only
-the stored text/background/text
-color/width/height/text size/text alignment/text wrap/tooltip/font-family/text-formatting
-for cells already
+the stored text/background/text color/width/height/text size/text
+alignment/text wrap/tooltip/font-family/text-formatting for cells already
 populated by `table.cell`, `table.clear` removes populated cells in an
 inclusive rectangular range, including from ordinary control-flow blocks, and
 removes merged-cell records intersecting that range, `table.merge_cells`

@@ -721,7 +721,8 @@ mutation coverage, plus `table.cell_set_bgcolor` background color mutations,
 including while-loop control-flow mutation coverage, plus
 `table.cell_set_text_color` text-color mutations, including while-loop
 control-flow mutation coverage, plus
-`table.cell_set_width` width mutations plus `table.cell_set_height` height
+`table.cell_set_width` width mutations, including while-loop control-flow
+mutation coverage, plus `table.cell_set_height` height
 mutations plus `table.cell_set_text_size` text-size mutations for previously
 populated cells plus `table.cell_set_text_halign` horizontal text-alignment
 mutations plus `table.cell_set_text_valign` vertical text-alignment mutations
@@ -808,7 +809,8 @@ including when called from ordinary control-flow blocks;
 snapshot after `table.cell` has populated that cell, including when called from
 ordinary control-flow blocks; `table.cell_set_width`
 updates only the target cell width snapshot after `table.cell` has populated
-that cell; `table.cell_set_height` updates only the target cell height snapshot
+that cell, including when called from ordinary control-flow blocks;
+`table.cell_set_height` updates only the target cell height snapshot
 after `table.cell` has populated that cell, while visual layout remains
 host-specific; `table.cell_set_text_size` updates only the target cell text-size
 snapshot after `table.cell` has populated that cell, while text rendering
