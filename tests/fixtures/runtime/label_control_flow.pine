@@ -7,9 +7,13 @@ if bar_index == 1
     label.set_xy(label_id, bar_index + 1, close)
     label.set_text(label_id, "if")
 direction = close > open ? 1 : -1
-switch direction
-    1 => label.set_color(label_id, color.green)
-    => label.set_color(label_id, color.red)
+color_i = 0
+while color_i < 1
+    if direction == 1
+        label.set_color(label_id, color.green)
+    else
+        label.set_color(label_id, color.red)
+    color_i := color_i + 1
 switch direction
     1 => label.set_textcolor(label_id, color.white)
     => label.set_textcolor(label_id, color.white)

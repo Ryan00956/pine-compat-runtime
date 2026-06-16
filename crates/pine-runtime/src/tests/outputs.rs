@@ -1309,9 +1309,13 @@ var label_id = label.new(bar_index, high, "start")
 if bar_index == 1
     label.set_text(label_id, "if")
 direction = close > open ? 1 : -1
-switch direction
-    1 => label.set_color(label_id, color.green)
-    => label.set_color(label_id, color.red)
+color_i = 0
+while color_i < 1
+    if direction == 1
+        label.set_color(label_id, color.green)
+    else
+        label.set_color(label_id, color.red)
+    color_i := color_i + 1
 for i = 0 to 0
     if bar_index == 2
         label.set_tooltip(label_id, "for")
