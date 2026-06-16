@@ -746,7 +746,9 @@ returns `na` for `na` or deleted labels. `label.get_text` reads the latest
 existing label text, including when called from ordinary control-flow blocks,
 and returns `na` for `na` or deleted labels. `label.all` returns currently
 existing label ids in creation order, including when read from ordinary
-control-flow blocks after label deletion. `line.copy` clones the latest
+control-flow blocks after label deletion. `line.delete` appends an
+`exists: false` line snapshot, including when called from ordinary control-flow
+blocks. `line.copy` clones the latest
 existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
 and shares the line object limit. `line.get_x1`, `line.get_y1`,

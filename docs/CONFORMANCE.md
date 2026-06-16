@@ -679,7 +679,8 @@ extend, color, style, and width initialization for existing host-neutral
 snapshot fields when `xloc` is omitted or `xloc.bar_index`; chart-point
 overloads and `xloc.bar_time` remain unsupported. It also covers selected
 endpoint/color/width/style/extend mutators, `line.set_xloc` for the
-`xloc.bar_index` subset that updates x1 and x2 snapshots, `line.delete`,
+`xloc.bar_index` subset that updates x1 and x2 snapshots, `line.delete`
+deletion snapshots, including while-loop control-flow deletion coverage,
 fixture-backed cloning with `line.copy`, and fixture-backed `line.get_x1`,
 `line.get_y1`, `line.get_x2`, `line.get_y2`, and `line.get_price` getters over
 the latest existing line snapshot, with sparse snapshots and a 500-line runtime
@@ -782,7 +783,9 @@ returns `na` for `na` or deleted labels. `label.get_text` reads the latest
 existing label text, including when called from ordinary control-flow blocks,
 and returns `na` for `na` or deleted labels. `label.all` returns currently
 existing label ids in creation order, including when read from ordinary
-control-flow blocks after label deletion. `line.copy` clones the latest
+control-flow blocks after label deletion. `line.delete` appends an
+`exists: false` line snapshot, including when called from ordinary control-flow
+blocks. `line.copy` clones the latest
 existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
 and shares the line runtime limit. `box.copy` clones the latest existing box
