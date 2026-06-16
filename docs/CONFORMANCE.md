@@ -709,8 +709,9 @@ control-flow mutation coverage,
 control-flow mutation coverage,
 `table.set_border_color` final border-color mutations, including while-loop
 control-flow mutation coverage,
-`table.set_border_width` final border-width mutations, `table.delete` deletion
-snapshots, `table.clear` inclusive rectangular cell-content removal snapshots,
+`table.set_border_width` final border-width mutations, including while-loop
+control-flow mutation coverage, `table.delete` deletion snapshots,
+`table.clear` inclusive rectangular cell-content removal snapshots,
 `table.merge_cells` inclusive merged-cell rectangle snapshots, and
 `table.cell_set_text` text mutations plus `table.cell_set_bgcolor` background
 color mutations plus `table.cell_set_text_color` text-color mutations plus

@@ -769,7 +769,9 @@ when called from ordinary control-flow blocks. `table.set_frame_width` updates
 the table's final frame-width value, including when called from ordinary
 control-flow blocks. `table.set_border_color` updates the table's final
 border-color value, including when called from ordinary control-flow blocks.
-`table.new` optional `bgcolor`,
+`table.set_border_width` updates the table's final border-width value,
+including when called from ordinary control-flow blocks. `table.new` optional
+`bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize the
 table's final background-color, frame-color, frame-width, border-color, and
 border-width values.

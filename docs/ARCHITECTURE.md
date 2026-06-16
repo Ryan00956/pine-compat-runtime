@@ -455,7 +455,8 @@ called from ordinary control-flow blocks,
 called from ordinary control-flow blocks,
 `table.set_border_color` updates the table's final border color, including when
 called from ordinary control-flow blocks,
-`table.set_border_width` updates the table's final border width, while
+`table.set_border_width` updates the table's final border width, including when
+called from ordinary control-flow blocks, while
 `table.cell_set_text`,
 `table.cell_set_bgcolor`, `table.cell_set_text_color`, and
 `table.cell_set_width`/`table.cell_set_height`/`table.cell_set_text_size`
