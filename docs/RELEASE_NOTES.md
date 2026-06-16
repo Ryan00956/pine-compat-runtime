@@ -61,6 +61,8 @@
   coverage.
 - Added fixture-backed while-loop control-flow `box.set_text_wrap` mutation
   coverage.
+- Added fixture-backed while-loop control-flow `box.set_text_font_family`
+  mutation coverage.
 - Added fixture-backed while-loop control-flow `box.set_border_color` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `box.set_bgcolor` mutation
