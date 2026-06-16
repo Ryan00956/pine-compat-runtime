@@ -703,7 +703,8 @@ text-formatting mutators,
 `box.delete`, and
 fixture-backed cloning with `box.copy` over the latest existing box
 snapshot, `box.all` reads from ordinary control-flow blocks after deletion,
-plus fixture-backed `box.get_left`, `box.get_right`, `box.get_top`, and
+fixture-backed `box.get_left` reads from ordinary control-flow blocks after
+mutation, plus fixture-backed `box.get_right`, `box.get_top`, and
 `box.get_bottom` over the latest existing box snapshot, with sparse snapshots
 and a 500-box runtime limit.
 The executable table subset covers

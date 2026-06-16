@@ -448,8 +448,9 @@ contract. Selected `box.set_*` mutators, including the `xloc.bar_index`
 `box.set_xloc` subset that rewrites left and right, `box.copy` cloning, and
 `box.delete` reuse the same snapshot model;
 `box.all` reads current box ids from ordinary control-flow blocks after
-deletion. `box.get_left`, `box.get_right`, `box.get_top`, and `box.get_bottom`
-read latest existing snapshot values.
+deletion. `box.get_left` reads latest existing box left values from ordinary
+control-flow blocks. `box.get_right`, `box.get_top`, and `box.get_bottom` read
+latest existing snapshot values.
 Table entries
 carry `position`, `bgColor`, `frameColor`, `frameWidth`, `borderColor`,
 `borderWidth`, `columns`, `rows`, and sparse cell snapshots. Each table snapshot

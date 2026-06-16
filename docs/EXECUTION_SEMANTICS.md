@@ -785,9 +785,11 @@ snapshot. `box.set_text_font_family` records the selected font-family constant
 in the host-neutral snapshot. `box.set_text_formatting` records the selected
 `text.format_none`/`text.format_bold`/`text.format_italic` mask, including
 bold+italic combinations; text rendering, glyph styling, and font layout remain
-host responsibilities. `box.get_left`, `box.get_right`, `box.get_top`, and
-`box.get_bottom` read the corresponding value from the latest existing box
-snapshot and return `na` for `na` or deleted boxes. `table.set_position`
+host responsibilities. `box.get_left` reads the latest existing box left value,
+including when called from ordinary control-flow blocks, and returns `na` for
+`na` or deleted boxes. `box.get_right`, `box.get_top`, and `box.get_bottom` read
+the corresponding value from the latest existing box snapshot and return `na`
+for `na` or deleted boxes. `table.set_position`
 updates the table's final position value, including when called from ordinary
 control-flow blocks. `table.set_bgcolor` updates the table's final background
 color value, including when called from ordinary control-flow blocks.
