@@ -62,3 +62,20 @@ plot(label_clear_checks.size() == 2 and label_clear_checks.get(0) and label_clea
 label_slot_count = 1
 computed_labels = array.new_label(label_slot_count + 1)
 plot(computed_labels.size() + (na(computed_labels.get(label_slot_count)) ? 1 : 0))
+
+branch_label_seed = label.new(bar_index, high, "branch")
+branch_new_label_score = bar_index * 0
+if bar_index % 2 == 0
+    branch_new_label_values = array.new_label(2, branch_label_seed)
+    branch_new_label_score := branch_new_label_values.size() * 100 + (not na(branch_new_label_values.get(0)) ? 10 : 0) + (branch_new_label_values.get(1) == branch_label_seed ? 1 : 0)
+else
+    branch_new_label_values = array.new_label(3)
+    branch_new_label_score := branch_new_label_values.size() * 100 + (na(branch_new_label_values.get(0)) ? 10 : 0) + (na(branch_new_label_values.get(2)) ? 1 : 0)
+plot(branch_new_label_score)
+
+loop_label_seed = label.copy(branch_label_seed)
+loop_new_label_score = bar_index * 0
+for i = 0 to 1
+    loop_new_label_values = array.new_label(i + 1, loop_label_seed)
+    loop_new_label_score := loop_new_label_score + loop_new_label_values.size() * 10 + (loop_new_label_values.get(i) == loop_label_seed ? 1 : 0)
+plot(loop_new_label_score)
