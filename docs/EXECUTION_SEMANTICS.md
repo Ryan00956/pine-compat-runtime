@@ -778,9 +778,10 @@ border-width values.
 `table.delete` appends an `exists: false` table snapshot, including when called
 from ordinary control-flow blocks. `table.clear` removes already populated cells
 in the inclusive rectangular range from `start_column`,
-`start_row` to `end_column`, `end_row`; it also removes merged-cell records
-that intersect the cleared range, while preserving the table object and
-table-level style fields. `table.merge_cells` appends inclusive
+`start_row` to `end_column`, `end_row`, including when called from ordinary
+control-flow blocks; it also removes merged-cell records that intersect the
+cleared range, while preserving the table object and table-level style fields.
+`table.merge_cells` appends inclusive
 `start_column`/`start_row` to `end_column`/`end_row` merge rectangles to the
 host-neutral table snapshot; deleted or `na` table ids are no-ops, invalid
 non-`na` ids are runtime errors, and out-of-bounds, reversed, or overlapping

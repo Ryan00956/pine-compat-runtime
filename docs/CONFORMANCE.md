@@ -712,7 +712,8 @@ control-flow mutation coverage,
 `table.set_border_width` final border-width mutations, including while-loop
 control-flow mutation coverage, `table.delete` deletion snapshots, including
 while-loop control-flow deletion coverage, `table.clear` inclusive rectangular
-cell-content removal snapshots,
+cell-content removal snapshots, including while-loop control-flow clearing
+coverage,
 `table.merge_cells` inclusive merged-cell rectangle snapshots, and
 `table.cell_set_text` text mutations plus `table.cell_set_bgcolor` background
 color mutations plus `table.cell_set_text_color` text-color mutations plus
@@ -778,9 +779,10 @@ the table's final background-color, frame-color, frame-width, border-color, and
 border-width values.
 `table.delete` appends an `exists: false` table snapshot. `table.clear` removes
 already populated cells in the inclusive rectangular range from `start_column`,
-`start_row` to `end_column`, `end_row`; it also removes merged-cell records
-that intersect the cleared range, while preserving the table object and
-table-level style fields. `table.merge_cells` appends inclusive
+`start_row` to `end_column`, `end_row`, including when called from ordinary
+control-flow blocks; it also removes merged-cell records that intersect the
+cleared range, while preserving the table object and table-level style fields.
+`table.merge_cells` appends inclusive
 `start_column`/`start_row` to `end_column`/`end_row` merge rectangles to the
 host-neutral table snapshot; deleted or `na` table ids are no-ops, invalid
 non-`na` ids are runtime errors, and out-of-bounds, reversed, or overlapping
