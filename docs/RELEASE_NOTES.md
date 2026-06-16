@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch and loop control-flow call coverage for
+  `array.size`.
 - Added fixture-backed branch and loop control-flow construction coverage for
   `array.new_table`.
 - Added fixture-backed branch and loop control-flow construction coverage for
