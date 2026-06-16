@@ -22,7 +22,10 @@ if bar_index == 1
     while lefttop_i < 1
         box.set_lefttop(box_id, bar_index + 1, close + 20)
         lefttop_i := lefttop_i + 1
-    box.set_rightbottom(box_id, bar_index + 4, close - 20)
+    rightbottom_i = 0
+    while rightbottom_i < 1
+        box.set_rightbottom(box_id, bar_index + 4, close - 20)
+        rightbottom_i := rightbottom_i + 1
 direction = close > open ? 1 : -1
 switch direction
     1 => box.set_bgcolor(box_id, color.green)
