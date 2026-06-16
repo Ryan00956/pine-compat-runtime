@@ -682,11 +682,12 @@ endpoint/color/width/style/extend mutators, `line.set_xloc` for the
 `xloc.bar_index` subset that updates x1 and x2 snapshots, `line.delete`
 deletion snapshots, including while-loop control-flow deletion coverage,
 fixture-backed cloning with `line.copy`, including while-loop control-flow
-cloning coverage, `line.all` reads from ordinary control-flow blocks, and
-fixture-backed `line.get_x1`,
-`line.get_y1`, `line.get_x2`, `line.get_y2`, and `line.get_price` getters over
-the latest existing line snapshot, including while-loop control-flow
-`line.get_price` reads, with sparse snapshots and a 500-line runtime limit.
+cloning coverage, `line.all` reads from ordinary control-flow blocks,
+fixture-backed `line.get_x1` reads from ordinary control-flow blocks, and
+fixture-backed `line.get_y1`, `line.get_x2`, `line.get_y2`, and
+`line.get_price` getters over the latest existing line snapshot, including
+while-loop control-flow `line.get_price` reads, with sparse snapshots and a
+500-line runtime limit.
 `line.get_price` uses bar-index x1/y1/x2/y2 interpolation and extrapolation and
 returns `na` for `na`, deleted, vertical, or nonnumeric lines; time-coordinate
 price lookup remains unsupported. The executable box subset covers
