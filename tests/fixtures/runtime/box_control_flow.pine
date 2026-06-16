@@ -27,9 +27,13 @@ if bar_index == 1
         box.set_rightbottom(box_id, bar_index + 4, close - 20)
         rightbottom_i := rightbottom_i + 1
 direction = close > open ? 1 : -1
-switch direction
-    1 => box.set_bgcolor(box_id, color.green)
-    => box.set_bgcolor(box_id, color.red)
+bg_i = 0
+while bg_i < 1
+    if direction == 1
+        box.set_bgcolor(box_id, color.green)
+    else
+        box.set_bgcolor(box_id, color.red)
+    bg_i := bg_i + 1
 switch direction
     1 => box.set_border_color(box_id, color.white)
     => box.set_border_color(box_id, color.black)
