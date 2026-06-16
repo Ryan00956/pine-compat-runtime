@@ -461,7 +461,8 @@ called from ordinary control-flow blocks, `table.delete` records an
 blocks, while
 `table.cell_set_text`, including when called from ordinary control-flow blocks,
 `table.cell_set_bgcolor`, including when called from ordinary control-flow
-blocks, `table.cell_set_text_color`, and
+blocks, `table.cell_set_text_color`, including when called from ordinary
+control-flow blocks, and
 `table.cell_set_width`/`table.cell_set_height`/`table.cell_set_text_size`
 `table.cell_set_text_halign`/`table.cell_set_text_valign`/
 `table.cell_set_text_wrap`/`table.cell_set_tooltip`/

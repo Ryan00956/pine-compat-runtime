@@ -719,7 +719,8 @@ while-loop control-flow merge coverage, and
 `table.cell_set_text` text mutations, including while-loop control-flow
 mutation coverage, plus `table.cell_set_bgcolor` background color mutations,
 including while-loop control-flow mutation coverage, plus
-`table.cell_set_text_color` text-color mutations plus
+`table.cell_set_text_color` text-color mutations, including while-loop
+control-flow mutation coverage, plus
 `table.cell_set_width` width mutations plus `table.cell_set_height` height
 mutations plus `table.cell_set_text_size` text-size mutations for previously
 populated cells plus `table.cell_set_text_halign` horizontal text-alignment
@@ -804,7 +805,8 @@ ordinary control-flow blocks; `table.cell_set_bgcolor` updates only the target
 cell background color snapshot after `table.cell` has populated that cell,
 including when called from ordinary control-flow blocks;
 `table.cell_set_text_color` updates only the target cell text-color
-snapshot after `table.cell` has populated that cell; `table.cell_set_width`
+snapshot after `table.cell` has populated that cell, including when called from
+ordinary control-flow blocks; `table.cell_set_width`
 updates only the target cell width snapshot after `table.cell` has populated
 that cell; `table.cell_set_height` updates only the target cell height snapshot
 after `table.cell` has populated that cell, while visual layout remains

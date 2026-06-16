@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow cell text-color mutation
+  coverage for `table.cell_set_text_color`.
 - Added fixture-backed while-loop control-flow cell background-color mutation
   coverage for `table.cell_set_bgcolor`.
 - Added fixture-backed while-loop control-flow cell text mutation coverage for
