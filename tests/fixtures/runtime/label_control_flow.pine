@@ -42,9 +42,13 @@ while text_font_family_i < 1
     else
         label.set_text_font_family(label_id, font.family_monospace)
     text_font_family_i := text_font_family_i + 1
-switch direction
-    1 => label.set_text_formatting(label_id, text.format_bold)
-    => label.set_text_formatting(label_id, text.format_bold + text.format_italic)
+text_formatting_i = 0
+while text_formatting_i < 1
+    if direction == 1
+        label.set_text_formatting(label_id, text.format_bold)
+    else
+        label.set_text_formatting(label_id, text.format_bold + text.format_italic)
+    text_formatting_i := text_formatting_i + 1
 tooltip_i = 0
 while tooltip_i < 1
     if bar_index == 2
