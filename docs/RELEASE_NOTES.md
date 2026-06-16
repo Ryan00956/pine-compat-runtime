@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow cloning coverage for `box.copy`.
 - Added fixture-backed while-loop control-flow `box.get_bottom` read coverage.
 - Added fixture-backed while-loop control-flow `box.get_top` read coverage.
 - Added fixture-backed while-loop control-flow `box.get_right` read coverage.

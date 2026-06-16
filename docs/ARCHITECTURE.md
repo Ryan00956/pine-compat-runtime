@@ -445,8 +445,8 @@ those host-neutral style and text snapshot fields for the left/top/right/bottom
 overload when `xloc` is omitted or `xloc.bar_index`; chart-point overloads and
 `xloc.bar_time` coordinate semantics remain outside the current runtime output
 contract. Selected `box.set_*` mutators, including the `xloc.bar_index`
-`box.set_xloc` subset that rewrites left and right, `box.copy` cloning, and
-`box.delete` reuse the same snapshot model;
+`box.set_xloc` subset that rewrites left and right, `box.copy` cloning from
+ordinary control-flow blocks, and `box.delete` reuse the same snapshot model;
 `box.all` reads current box ids from ordinary control-flow blocks after
 deletion. `box.get_left` reads latest existing box left values from ordinary
 control-flow blocks. `box.get_right` reads latest existing box right values

@@ -702,7 +702,8 @@ text-formatting mutators,
 `box.set_xloc` for the `xloc.bar_index` subset that updates left and right snapshots,
 `box.delete`, and
 fixture-backed cloning with `box.copy` over the latest existing box
-snapshot, `box.all` reads from ordinary control-flow blocks after deletion,
+snapshot from ordinary control-flow blocks, `box.all` reads from ordinary
+control-flow blocks after deletion,
 fixture-backed `box.get_left` reads from ordinary control-flow blocks after
 mutation, fixture-backed `box.get_right` reads from ordinary control-flow
 blocks after mutation, fixture-backed `box.get_top` reads from ordinary
