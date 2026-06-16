@@ -23,4 +23,5 @@ while k < 1
         table.set_bgcolor(table_id, color.yellow)
         table.set_frame_color(table_id, color.black)
         table.set_frame_width(table_id, 3)
+        table.set_border_color(table_id, color.white)
     k := k + 1
