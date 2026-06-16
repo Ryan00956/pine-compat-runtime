@@ -471,8 +471,8 @@ for cells already
 populated by `table.cell`, `table.clear` removes populated cells in an
 inclusive rectangular range, including from ordinary control-flow blocks, and
 removes merged-cell records intersecting that range, `table.merge_cells`
-records inclusive host-neutral merge rectangles, and `table.delete` appends a
-deleted snapshot.
+records inclusive host-neutral merge rectangles, including from ordinary
+control-flow blocks, and `table.delete` appends a deleted snapshot.
 `table.all` reads currently existing table ids in creation order, including
 from ordinary control-flow blocks after deletion.
 Delete calls append an `exists: false`

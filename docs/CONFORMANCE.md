@@ -714,7 +714,8 @@ control-flow mutation coverage, `table.delete` deletion snapshots, including
 while-loop control-flow deletion coverage, `table.clear` inclusive rectangular
 cell-content removal snapshots, including while-loop control-flow clearing
 coverage,
-`table.merge_cells` inclusive merged-cell rectangle snapshots, and
+`table.merge_cells` inclusive merged-cell rectangle snapshots, including
+while-loop control-flow merge coverage, and
 `table.cell_set_text` text mutations plus `table.cell_set_bgcolor` background
 color mutations plus `table.cell_set_text_color` text-color mutations plus
 `table.cell_set_width` width mutations plus `table.cell_set_height` height
@@ -784,9 +785,10 @@ control-flow blocks; it also removes merged-cell records that intersect the
 cleared range, while preserving the table object and table-level style fields.
 `table.merge_cells` appends inclusive
 `start_column`/`start_row` to `end_column`/`end_row` merge rectangles to the
-host-neutral table snapshot; deleted or `na` table ids are no-ops, invalid
-non-`na` ids are runtime errors, and out-of-bounds, reversed, or overlapping
-merge ranges are runtime errors. Later table-level and cell mutations of
+host-neutral table snapshot, including when called from ordinary control-flow
+blocks; deleted or `na` table ids are no-ops, invalid non-`na` ids are runtime
+errors, and out-of-bounds, reversed, or overlapping merge ranges are runtime
+errors. Later table-level and cell mutations of
 deleted tables are no-ops.
 `table.set_bgcolor` updates only the
 table's final background-color value. `table.set_frame_color` updates only the

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow merge coverage for
+  `table.merge_cells`.
 - Added fixture-backed while-loop control-flow clearing coverage for
   `table.clear`.
 - Added fixture-backed while-loop control-flow collection coverage for

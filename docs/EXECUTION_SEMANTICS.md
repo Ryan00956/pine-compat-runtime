@@ -783,9 +783,10 @@ control-flow blocks; it also removes merged-cell records that intersect the
 cleared range, while preserving the table object and table-level style fields.
 `table.merge_cells` appends inclusive
 `start_column`/`start_row` to `end_column`/`end_row` merge rectangles to the
-host-neutral table snapshot; deleted or `na` table ids are no-ops, invalid
-non-`na` ids are runtime errors, and out-of-bounds, reversed, or overlapping
-merge ranges are runtime errors. Later table-level or cell mutations of deleted
+host-neutral table snapshot, including when called from ordinary control-flow
+blocks; deleted or `na` table ids are no-ops, invalid non-`na` ids are runtime
+errors, and out-of-bounds, reversed, or overlapping merge ranges are runtime
+errors. Later table-level or cell mutations of deleted
 tables are no-ops.
 `table.all` returns currently existing table ids in creation order, including
 when read from ordinary control-flow blocks after table deletion.
