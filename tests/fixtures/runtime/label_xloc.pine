@@ -5,6 +5,7 @@ if bar_index == 1
     label.set_xloc(label_id, time, xloc.bar_time)
 if bar_index == 2
     label.set_xloc(label_id, bar_index, xloc.bar_index)
+if bar_index == 3
     xloc_i = 0
     while xloc_i < 1
         label.set_xloc(label_id, bar_index + 10, xloc.bar_index)
