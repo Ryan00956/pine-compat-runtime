@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow `label.set_y` mutation coverage.
 - Added fixture-backed while-loop control-flow `label.set_xy` mutation coverage.
 - Added fixture-backed while-loop control-flow `label.set_text` mutation
   coverage.

@@ -3,7 +3,11 @@ indicator("Label control flow")
 var label_id = label.new(bar_index, high, "start")
 if bar_index == 1
     label.set_x(label_id, bar_index)
-    label.set_y(label_id, low)
+y_i = 0
+while y_i < 1
+    if bar_index == 1
+        label.set_y(label_id, low)
+    y_i := y_i + 1
 xy_i = 0
 while xy_i < 1
     if bar_index == 1
