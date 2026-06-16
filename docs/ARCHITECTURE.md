@@ -427,7 +427,8 @@ those host-neutral style snapshot fields for the x1/y1/x2/y2 overload when
 contract. Selected `line.set_*` mutators, including the `xloc.bar_index`
 `line.set_xloc` subset that rewrites x1 and x2, reuse the same snapshot model;
 `line.copy` cloning and `line.delete` deletion from ordinary control-flow
-blocks also use that model. `line.get_x1`, `line.get_y1`,
+blocks also use that model. `line.all` reads current line ids from ordinary
+control-flow blocks. `line.get_x1`, `line.get_y1`,
 `line.get_x2`, and `line.get_y2` read latest existing line snapshot values;
 `line.get_price` derives a host-neutral bar-index price by interpolating or
 extrapolating across the latest existing x1/y1/x2/y2 snapshot. Box snapshots
