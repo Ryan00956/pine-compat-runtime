@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch control-flow mutation coverage for
+  `line.set_x1`.
 - Added fixture-backed switch branch control-flow mutation coverage for
   `label.set_text_formatting`.
 - Added fixture-backed switch branch control-flow mutation coverage for
