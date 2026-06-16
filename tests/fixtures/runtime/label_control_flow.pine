@@ -28,9 +28,13 @@ while style_i < 1
     else
         label.set_style(label_id, label.style_label_left)
     style_i := style_i + 1
-switch direction
-    1 => label.set_textalign(label_id, text.align_right)
-    => label.set_textalign(label_id, text.align_left)
+textalign_i = 0
+while textalign_i < 1
+    if direction == 1
+        label.set_textalign(label_id, text.align_right)
+    else
+        label.set_textalign(label_id, text.align_left)
+    textalign_i := textalign_i + 1
 switch direction
     1 => label.set_text_font_family(label_id, font.family_monospace)
     => label.set_text_font_family(label_id, font.family_monospace)
