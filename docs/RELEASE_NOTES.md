@@ -11,6 +11,8 @@
   coverage.
 - Added independent while-loop control-flow `label.set_xloc` mutation coverage.
 - Added independent while-loop control-flow `label.set_yloc` mutation coverage.
+- Added independent while-loop control-flow deletion coverage for
+  `label.delete`.
 - Added fixture-backed while-loop control-flow `table.cell` write coverage.
 - Added fixture-backed while-loop control-flow `table.set_position` mutation
   coverage.
