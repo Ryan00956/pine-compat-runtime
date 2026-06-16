@@ -827,8 +827,9 @@ vertical text alignment in the host-neutral snapshot, including when called
 from ordinary control-flow blocks, while preserving the cell's other supported
 fields; actual text layout remains a host responsibility.
 `table.cell_set_text_wrap` updates the target previously populated cell text
-wrap in the host-neutral snapshot while preserving the cell's other supported
-fields; actual wrapping and table layout remain a host responsibility.
+wrap in the host-neutral snapshot, including when called from ordinary
+control-flow blocks, while preserving the cell's other supported fields; actual
+wrapping and table layout remain a host responsibility.
 `table.cell_set_tooltip` updates the target previously populated cell tooltip
 in the host-neutral snapshot while preserving the cell's
 other supported fields; actual tooltip display remains a host responsibility.
