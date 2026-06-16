@@ -4,7 +4,11 @@ var label_id = label.new(bar_index, high, "start")
 if bar_index == 1
     label.set_x(label_id, bar_index)
     label.set_y(label_id, low)
-    label.set_xy(label_id, bar_index + 1, close)
+xy_i = 0
+while xy_i < 1
+    if bar_index == 1
+        label.set_xy(label_id, bar_index + 1, close)
+    xy_i := xy_i + 1
 text_i = 0
 while text_i < 1
     if bar_index == 1
