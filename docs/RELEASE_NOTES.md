@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed for-loop control-flow copy coverage for `box.copy`.
 - Added fixture-backed while-loop control-flow deletion coverage for
   `box.delete`.
 - Added fixture-backed while-loop control-flow mutation coverage for

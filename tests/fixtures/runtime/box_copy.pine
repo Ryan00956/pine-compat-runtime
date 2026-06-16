@@ -10,4 +10,8 @@ if bar_index == 2
     box.delete(copy)
     box.copy(copy)
 box.copy(na)
+if bar_index == 3
+    for i = 0 to 0
+        loop_copy = box.copy(original)
+        box.set_text(loop_copy, "loop copy")
 plot(close)
