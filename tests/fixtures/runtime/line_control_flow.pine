@@ -20,5 +20,6 @@ j = 0
 while j < 1
     if bar_index == 3
         line.set_extend(line_id, extend.right)
+        line.set_xloc(line_id, bar_index - 2, bar_index + 3, xloc.bar_index)
     j := j + 1
 plot(close)

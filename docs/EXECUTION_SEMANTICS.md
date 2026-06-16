@@ -683,7 +683,8 @@ snapshot fields for extend, color, style, and width when `xloc` is omitted or
 `xloc.bar_index`; `force_overlay` is accepted but remains a host display
 responsibility. The chart-point overload, `xloc.bar_time` coordinate semantics,
 and time-coordinate `line.set_xloc` remain unsupported; `line.set_xloc` with
-`xloc.bar_index` updates the line's x1 and x2 snapshot values. Boxes use the same lifecycle
+`xloc.bar_index` updates the line's x1 and x2 snapshot values, including when
+called from ordinary control-flow blocks. Boxes use the same lifecycle
 rules with bar-index left/right coordinates, price top/bottom coordinates,
 selected background/border fields, snapshot cloning, non-reused ids, and a
 500-object runtime limit. `box.new` can initialize existing box snapshot fields

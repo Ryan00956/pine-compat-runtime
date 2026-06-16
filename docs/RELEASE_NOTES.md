@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow `line.set_xloc` mutation
+  coverage for the `xloc.bar_index` subset.
 - Added fixture-backed while-loop control-flow `line.get_y2` read coverage.
 - Added fixture-backed while-loop control-flow `line.get_x2` read coverage.
 - Added fixture-backed while-loop control-flow `line.get_y1` read coverage.
