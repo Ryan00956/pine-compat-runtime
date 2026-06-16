@@ -27,5 +27,6 @@ while j < 1
         box.set_text(box_id, "flow box")
         box.set_text_color(box_id, color.white)
         box.set_text_size(box_id, size.small)
+        box.set_text_halign(box_id, text.align_left)
     j := j + 1
 plot(close)
