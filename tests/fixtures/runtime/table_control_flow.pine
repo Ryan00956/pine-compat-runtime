@@ -41,8 +41,8 @@ while border_color_i < 1
     if bar_index == 3
         table.set_border_color(table_id, color.white)
     border_color_i := border_color_i + 1
-k = 0
-while k < 1
+border_width_i = 0
+while border_width_i < 1
     if bar_index == 3
         table.set_border_width(table_id, 4)
-    k := k + 1
+    border_width_i := border_width_i + 1
