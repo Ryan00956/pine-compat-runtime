@@ -37,6 +37,10 @@ if bar_index == 2
         table.cell_set_height(table_id, 1, 0, 45)
         height_i := height_i + 1
     table.cell_set_text_size(table_id, 1, 0, size.small)
+    text_size_i = 0
+    while text_size_i < 1
+        table.cell_set_text_size(table_id, 1, 0, size.large)
+        text_size_i := text_size_i + 1
     table.cell_set_text_halign(table_id, 1, 0, text.align_left)
     table.cell_set_text_valign(table_id, 1, 0, text.align_top)
     table.cell_set_text_wrap(table_id, 1, 0, text.wrap_auto)

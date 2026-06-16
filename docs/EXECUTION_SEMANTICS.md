@@ -815,8 +815,9 @@ the host-neutral snapshot, including when called from ordinary control-flow
 blocks, while preserving the cell's other supported fields; actual table layout
 remains a host responsibility.
 `table.cell_set_text_size` updates the target previously populated cell text
-size in the host-neutral snapshot while preserving the cell's other supported
-fields; actual text rendering remains a host responsibility.
+size in the host-neutral snapshot, including when called from ordinary
+control-flow blocks, while preserving the cell's other supported fields; actual
+text rendering remains a host responsibility.
 `table.cell_set_text_halign` updates the target previously populated cell
 horizontal text alignment in the host-neutral snapshot while preserving the
 cell's other supported fields; actual text layout remains a host responsibility.

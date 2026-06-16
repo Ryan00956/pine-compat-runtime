@@ -724,8 +724,8 @@ control-flow mutation coverage, plus
 `table.cell_set_width` width mutations, including while-loop control-flow
 mutation coverage, plus `table.cell_set_height` height mutations, including
 while-loop control-flow mutation coverage, plus `table.cell_set_text_size`
-text-size mutations for previously
-populated cells plus `table.cell_set_text_halign` horizontal text-alignment
+text-size mutations, including while-loop control-flow mutation coverage, plus
+`table.cell_set_text_halign` horizontal text-alignment
 mutations plus `table.cell_set_text_valign` vertical text-alignment mutations
 plus `table.cell_set_text_wrap` text-wrap mutations plus
 `table.cell_set_tooltip` tooltip mutations plus
@@ -815,10 +815,11 @@ that cell, including when called from ordinary control-flow blocks;
 after `table.cell` has populated that cell, including when called from ordinary
 control-flow blocks, while visual layout remains host-specific;
 `table.cell_set_text_size` updates only the target cell text-size
-snapshot after `table.cell` has populated that cell, while text rendering
-remains host-specific; `table.cell_set_text_halign` updates only the target
-cell horizontal text-alignment snapshot after `table.cell` has populated that
-cell; `table.cell_set_text_valign` updates only the target cell vertical
+snapshot after `table.cell` has populated that cell, including when called from
+ordinary control-flow blocks, while text rendering remains host-specific;
+`table.cell_set_text_halign` updates only the target cell horizontal
+text-alignment snapshot after `table.cell` has populated that cell;
+`table.cell_set_text_valign` updates only the target cell vertical
 text-alignment snapshot after `table.cell` has populated that cell;
 `table.cell_set_text_wrap` updates only the target cell text-wrap snapshot
 after `table.cell` has populated that cell, while actual wrapping and table
