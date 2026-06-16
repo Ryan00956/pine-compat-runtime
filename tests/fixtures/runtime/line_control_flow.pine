@@ -8,7 +8,11 @@ if bar_index == 1
     line.set_x2(line_id, bar_index + 3)
     line.set_y2(line_id, close + 30)
     line.set_xy2(line_id, bar_index + 4, close + 40)
-    line.set_color(line_id, color.green)
+color_i = 0
+while color_i < 1
+    if bar_index == 1
+        line.set_color(line_id, color.green)
+    color_i := color_i + 1
 direction = close > open ? 1 : -1
 style_i = 0
 while style_i < 1
