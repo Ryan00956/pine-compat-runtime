@@ -4,6 +4,7 @@ var line_id = line.new(bar_index, high, bar_index, low)
 var loop_line = line.new(bar_index, high + 1, bar_index, low - 1)
 if bar_index == 1
     line.delete(line_id)
+if bar_index == 3
     delete_i = 0
     while delete_i < 1
         line.delete(loop_line)
