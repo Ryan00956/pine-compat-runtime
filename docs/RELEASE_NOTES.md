@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch control-flow mutation coverage for
+  `line.set_xy2`.
+- Added fixture-backed branch control-flow mutation coverage for
   `line.set_y2`.
 - Added fixture-backed branch control-flow mutation coverage for
   `line.set_x2`.
