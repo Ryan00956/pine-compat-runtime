@@ -62,3 +62,20 @@ plot(table_clear_checks.size() == 2 and table_clear_checks.get(0) and table_clea
 table_slot_count = 1
 computed_tables = array.new_table(table_slot_count + 1)
 plot(computed_tables.size() + (na(computed_tables.get(table_slot_count)) ? 1 : 0))
+
+branch_table_seed = table.new(position.top_left, 1, 1)
+branch_new_table_score = bar_index * 0
+if bar_index % 2 == 0
+    branch_new_table_values = array.new_table(2, branch_table_seed)
+    branch_new_table_score := branch_new_table_values.size() * 100 + (not na(branch_new_table_values.get(0)) ? 10 : 0) + (branch_new_table_values.get(1) == branch_table_seed ? 1 : 0)
+else
+    branch_new_table_values = array.new_table(3)
+    branch_new_table_score := branch_new_table_values.size() * 100 + (na(branch_new_table_values.get(0)) ? 10 : 0) + (na(branch_new_table_values.get(2)) ? 1 : 0)
+plot(branch_new_table_score)
+
+loop_table_seed = table.new(position.bottom_right, 1, 1)
+loop_new_table_score = bar_index * 0
+for i = 0 to 1
+    loop_new_table_values = array.new_table(i + 1, loop_table_seed)
+    loop_new_table_score := loop_new_table_score + loop_new_table_values.size() * 10 + (loop_new_table_values.get(i) == loop_table_seed ? 1 : 0)
+plot(loop_new_table_score)
