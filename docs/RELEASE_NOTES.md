@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch control-flow mutation coverage for
+  `box.set_rightbottom`.
+- Added fixture-backed branch control-flow mutation coverage for
   `box.set_lefttop`.
 - Added fixture-backed branch control-flow mutation coverage for
   `box.set_bottom`.
