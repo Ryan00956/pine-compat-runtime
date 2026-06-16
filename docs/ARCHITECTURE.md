@@ -412,8 +412,8 @@ an object `id` and a `snapshots` array. Label snapshots use `barIndex`,
 normalized Pine values, including `textAlign`, `textFontFamily`, and
 `textFormatting` for host-side text layout. The label lifecycle covers
 `label.new`, selected
-`label.set_*` mutators including x-location snapshot mutation from ordinary
-control-flow blocks and y-location snapshot mutation,
+`label.set_*` mutators including x-location and y-location snapshot mutation
+from ordinary control-flow blocks,
 `label.copy` cloning, and `label.delete`. Line snapshots cover `x1`, `y1`,
 `x2`, `y2`, `color`, `width`, `style`, and `extend`. `line.new` can initialize
 those host-neutral style snapshot fields for the x1/y1/x2/y2 overload when

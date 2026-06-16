@@ -724,7 +724,8 @@ non-`na` ids are runtime errors. Labels, lines, and boxes each have a
 per-table limit. `label.set_xloc` stores `xloc.bar_index` or `xloc.bar_time`
 with the new x-coordinate in the host-neutral snapshot, including when called
 from ordinary control-flow blocks. `label.set_yloc` stores the selected
-y-location constant. `label.set_textalign` stores the selected
+y-location constant, including when called from ordinary control-flow blocks.
+`label.set_textalign` stores the selected
 horizontal text alignment constant. `label.set_text_font_family` stores the
 selected font-family constant. `label.new` can initialize `textalign`,
 `text_font_family`, and a `text_formatting` mask in the host-neutral snapshot;

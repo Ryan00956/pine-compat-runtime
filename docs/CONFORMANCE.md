@@ -662,7 +662,8 @@ The Phase E drawing-object scaffold adds `labels`, `lines`, `boxes`, and
 subset covers `label.new`, selected `label.set_*` mutators including
 fixture-backed x-location snapshot mutation for `label.set_xloc`, including
 while-loop control-flow mutation coverage, and
-y-location snapshot mutation for `label.set_yloc`, text-alignment snapshot
+y-location snapshot mutation for `label.set_yloc`, including while-loop
+control-flow mutation coverage, text-alignment snapshot
 mutation for `label.set_textalign`, text font-family snapshot mutation for
 `label.set_text_font_family`, text-formatting snapshot mutation for
 `label.set_text_formatting`, `label.delete`,
@@ -758,8 +759,9 @@ are stable and not reused. `label.new` can initialize host-neutral label
 `label.set_xloc` records `xloc.bar_index` or `xloc.bar_time` plus the new `x`
 value in label snapshots, including when called from ordinary control-flow
 blocks; `label.set_yloc` records `yloc.price`,
-`yloc.abovebar`, or `yloc.belowbar`; `label.set_textalign` records horizontal
-text alignment in label snapshots. `label.set_text_font_family` records font
+`yloc.abovebar`, or `yloc.belowbar`, including when called from ordinary
+control-flow blocks; `label.set_textalign` records horizontal text alignment
+in label snapshots. `label.set_text_font_family` records font
 family in label snapshots. `label.set_text_formatting` records a
 `text.format_none`/`text.format_bold`/`text.format_italic` bitmask, including
 bold+italic combinations, while actual glyph styling remains host-specific.

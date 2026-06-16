@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow y-location mutation coverage for
+  `label.set_yloc`.
 - Added fixture-backed while-loop control-flow x-location mutation coverage for
   `label.set_xloc`.
 - Added fixture-backed while-loop control-flow cell text-formatting mutation
