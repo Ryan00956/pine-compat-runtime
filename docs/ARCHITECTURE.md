@@ -461,8 +461,8 @@ called from ordinary control-flow blocks, `table.delete` records an
 blocks, while `table.cell_set_text`, `table.cell_set_bgcolor`,
 `table.cell_set_text_color`, `table.cell_set_width`, and
 `table.cell_set_height`, `table.cell_set_text_size`, and
-`table.cell_set_text_halign`, including when those setters are called from
-ordinary control-flow blocks, plus `table.cell_set_text_valign`/
+`table.cell_set_text_halign`, and `table.cell_set_text_valign`, including when
+those setters are called from ordinary control-flow blocks, plus
 `table.cell_set_text_wrap`/`table.cell_set_tooltip`/
 `table.cell_set_text_font_family`/`table.cell_set_text_formatting` mutate only
 the stored text/background/text color/width/height/text size/text
