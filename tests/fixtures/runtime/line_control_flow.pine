@@ -4,6 +4,7 @@ var line_id = line.new(bar_index, high, bar_index, low)
 if bar_index == 1
     line.set_x1(line_id, bar_index + 1)
     line.set_y1(line_id, close + 10)
+    line.set_xy1(line_id, bar_index + 2, close + 20)
     line.set_color(line_id, color.green)
 direction = close > open ? 1 : -1
 switch direction
