@@ -23,5 +23,6 @@ while j < 1
     if bar_index == 3
         box.set_border_style(box_id, line.style_dashed)
         box.set_extend(box_id, extend.right)
+        box.set_xloc(box_id, bar_index - 2, bar_index + 3, xloc.bar_index)
     j := j + 1
 plot(close)

@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed while-loop control-flow mutation coverage for
+  `box.set_xloc`.
+- Added fixture-backed while-loop control-flow mutation coverage for
   `box.set_extend`.
 - Added fixture-backed switch branch control-flow mutation coverage for
   `box.set_border_color`.
