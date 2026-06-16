@@ -14,9 +14,13 @@ while color_i < 1
     else
         label.set_color(label_id, color.red)
     color_i := color_i + 1
-switch direction
-    1 => label.set_textcolor(label_id, color.white)
-    => label.set_textcolor(label_id, color.white)
+textcolor_i = 0
+while textcolor_i < 1
+    if direction == 1
+        label.set_textcolor(label_id, color.white)
+    else
+        label.set_textcolor(label_id, color.white)
+    textcolor_i := textcolor_i + 1
 switch direction
     1 => label.set_style(label_id, label.style_label_up)
     => label.set_style(label_id, label.style_label_left)
