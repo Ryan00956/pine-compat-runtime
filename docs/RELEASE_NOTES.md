@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed branch and loop control-flow construction coverage for
+  `array.new_box`.
+- Added fixture-backed branch and loop control-flow construction coverage for
   `array.new_label`.
 - Added fixture-backed branch and loop control-flow construction coverage for
   `array.new_line`.

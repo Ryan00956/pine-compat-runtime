@@ -62,3 +62,20 @@ plot(box_clear_checks.size() == 2 and box_clear_checks.get(0) and box_clear_chec
 box_slot_count = 1
 computed_boxes = array.new_box(box_slot_count + 1)
 plot(computed_boxes.size() + (na(computed_boxes.get(box_slot_count)) ? 1 : 0))
+
+branch_box_seed = box.new(bar_index, high, bar_index + 1, low)
+branch_new_box_score = bar_index * 0
+if bar_index % 2 == 0
+    branch_new_box_values = array.new_box(2, branch_box_seed)
+    branch_new_box_score := branch_new_box_values.size() * 100 + (not na(branch_new_box_values.get(0)) ? 10 : 0) + (branch_new_box_values.get(1) == branch_box_seed ? 1 : 0)
+else
+    branch_new_box_values = array.new_box(3)
+    branch_new_box_score := branch_new_box_values.size() * 100 + (na(branch_new_box_values.get(0)) ? 10 : 0) + (na(branch_new_box_values.get(2)) ? 1 : 0)
+plot(branch_new_box_score)
+
+loop_box_seed = box.copy(branch_box_seed)
+loop_new_box_score = bar_index * 0
+for i = 0 to 1
+    loop_new_box_values = array.new_box(i + 1, loop_box_seed)
+    loop_new_box_score := loop_new_box_score + loop_new_box_values.size() * 10 + (loop_new_box_values.get(i) == loop_box_seed ? 1 : 0)
+plot(loop_new_box_score)
