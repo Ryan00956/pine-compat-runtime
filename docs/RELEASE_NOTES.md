@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed branch control-flow getter coverage for `box.get_top`.
 - Added fixture-backed branch control-flow getter coverage for `box.get_right`.
 - Added fixture-backed branch control-flow getter coverage for `box.get_left`.
 - Added fixture-backed branch control-flow collection coverage for `box.all`.
