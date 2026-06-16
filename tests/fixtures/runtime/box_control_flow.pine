@@ -12,6 +12,9 @@ direction = close > open ? 1 : -1
 switch direction
     1 => box.set_bgcolor(box_id, color.green)
     => box.set_bgcolor(box_id, color.red)
+switch direction
+    1 => box.set_border_color(box_id, color.white)
+    => box.set_border_color(box_id, color.black)
 for i = 0 to 0
     if bar_index == 2
         box.set_border_width(box_id, 2)
