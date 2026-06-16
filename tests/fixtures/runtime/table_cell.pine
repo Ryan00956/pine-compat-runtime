@@ -17,6 +17,10 @@ if bar_index == 2
         table.cell_set_text(table_id, 1, 0, "B3")
         text_i := text_i + 1
     table.cell_set_bgcolor(table_id, 1, 0, color.red)
+    bgcolor_i = 0
+    while bgcolor_i < 1
+        table.cell_set_bgcolor(table_id, 1, 0, color.blue)
+        bgcolor_i := bgcolor_i + 1
     table.cell_set_text_color(table_id, 1, 0, color.blue)
     table.cell_set_width(table_id, 1, 0, 25)
     table.cell_set_height(table_id, 1, 0, 40)

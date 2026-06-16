@@ -801,7 +801,8 @@ updates the target previously populated cell text in the host-neutral table
 snapshot, including when called from ordinary control-flow blocks, while
 preserving the cell's other supported fields.
 `table.cell_set_bgcolor` updates the target previously populated cell
-background color while preserving the cell's other supported fields.
+background color, including when called from ordinary control-flow blocks,
+while preserving the cell's other supported fields.
 `table.cell_set_text_color` updates the target previously populated cell text
 color while preserving the cell's other supported fields.
 `table.cell_set_width` updates the target previously populated cell width in
