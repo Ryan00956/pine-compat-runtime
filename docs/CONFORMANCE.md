@@ -669,12 +669,11 @@ mutation for `label.set_textalign`, text font-family snapshot mutation for
 `label.set_text_formatting`, `label.delete` deletion snapshots, including
 while-loop control-flow deletion coverage,
 fixture-backed cloning with `label.copy`, including while-loop control-flow
-cloning coverage, and the fixture-backed `label.get_x`, including while-loop
-control-flow read coverage,
-`label.get_y`, including while-loop control-flow read coverage, and
-`label.get_text` getters over the latest existing label snapshot, plus
-`label.all` existing-label id reads, including while-loop control-flow read
-coverage, with a 500-label runtime limit. The
+cloning coverage, and the fixture-backed `label.get_x`, `label.get_y`, and
+`label.get_text` getters over the latest existing label snapshot, including
+while-loop control-flow read coverage for all three getters, plus `label.all`
+existing-label id reads, including while-loop control-flow read coverage, with a
+500-label runtime limit. The
 executable line subset covers `line.new` x1/y1/x2/y2 creation with optional
 extend, color, style, and width initialization for existing host-neutral
 snapshot fields when `xloc` is omitted or `xloc.bar_index`; chart-point
@@ -779,9 +778,12 @@ label runtime limit. `label.get_x` reads the latest existing label x-coordinate,
 including when called from ordinary control-flow blocks, and returns `na` for
 `na` or deleted labels. `label.get_y` reads the latest existing label
 y-coordinate, including when called from ordinary control-flow blocks, and
-returns `na` for `na` or deleted labels. `label.all` returns currently existing
-label ids in creation order, including when read from ordinary control-flow
-blocks after label deletion. `line.copy` clones the latest existing line
+returns `na` for `na` or deleted labels. `label.get_text` reads the latest
+existing label text, including when called from ordinary control-flow blocks,
+and returns `na` for `na` or deleted labels. `label.all` returns currently
+existing label ids in creation order, including when read from ordinary
+control-flow blocks after label deletion. `line.copy` clones the latest
+existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
 and shares the line runtime limit. `box.copy` clones the latest existing box
 snapshot into a new deterministic id, returns `na` for `na` or deleted boxes,

@@ -418,6 +418,7 @@ from ordinary control-flow blocks,
 deletion snapshots from ordinary control-flow blocks; `label.all` reads
 currently existing label ids and `label.get_x` reads latest label x-coordinates
 and `label.get_y` reads latest label y-coordinates from ordinary control-flow
+blocks; `label.get_text` reads latest label text from ordinary control-flow
 blocks. Line snapshots cover `x1`, `y1`,
 `x2`, `y2`, `color`, `width`, `style`, and `extend`. `line.new` can initialize
 those host-neutral style snapshot fields for the x1/y1/x2/y2 overload when

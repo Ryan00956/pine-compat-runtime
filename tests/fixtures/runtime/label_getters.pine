@@ -18,6 +18,7 @@ missing_x = label.get_x(na)
 missing_text_length = str.length(label.get_text(na))
 flow_x_value = x_value
 flow_y_value = y_value
+flow_text_length = text_length
 flow_visible_label_count = visible_label_count
 if bar_index == 1
     get_x_i = 0
@@ -28,6 +29,10 @@ if bar_index == 1
     while get_y_i < 1
         flow_y_value := label.get_y(label_id)
         get_y_i := get_y_i + 1
+    get_text_i = 0
+    while get_text_i < 1
+        flow_text_length := str.length(label.get_text(label_id))
+        get_text_i := get_text_i + 1
     all_i = 0
     while all_i < 1
         flow_visible_label_count := array.size(label.all)
@@ -41,4 +46,5 @@ plot(nz(missing_x, -1))
 plot(nz(missing_text_length, -1))
 plot(flow_x_value)
 plot(flow_y_value)
+plot(flow_text_length)
 plot(flow_visible_label_count)

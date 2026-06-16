@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow `label.get_text` read coverage.
 - Added fixture-backed while-loop control-flow `label.get_y` read coverage.
 - Added fixture-backed while-loop control-flow `label.get_x` read coverage.
 - Added fixture-backed while-loop control-flow `label.all` read coverage.
