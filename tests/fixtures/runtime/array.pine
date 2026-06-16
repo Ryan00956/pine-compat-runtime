@@ -166,3 +166,25 @@ loop_size_score = bar_index * 0
 for i = 0 to 1
     loop_size_score := loop_size_score + (i == 0 ? array.size(loop_size_values) * 10 : loop_size_values.size())
 plot(loop_size_score)
+
+branch_push_values = array.new_int()
+branch_push_score = bar_index * 0
+if bar_index % 2 == 0
+    array.push(branch_push_values, 2)
+    branch_push_values.push(4)
+    branch_push_score := branch_push_values.size() * 100 + branch_push_values.get(0) * 10 + branch_push_values.get(1)
+else
+    branch_push_values.push(3)
+    array.push(branch_push_values, 5)
+    branch_push_score := branch_push_values.size() * 100 + branch_push_values.get(0) * 10 + branch_push_values.get(1)
+plot(branch_push_score)
+
+loop_push_values = array.new_int()
+loop_push_score = bar_index * 0
+for i = 0 to 1
+    if i == 0
+        array.push(loop_push_values, 7)
+    else
+        loop_push_values.push(9)
+loop_push_score := loop_push_values.size() * 100 + loop_push_values.get(0) * 10 + loop_push_values.get(1)
+plot(loop_push_score)

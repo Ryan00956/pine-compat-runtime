@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed branch and loop control-flow mutation coverage for
+  `array.push`.
 - Added fixture-backed branch and loop control-flow call coverage for
   `array.size`.
 - Added fixture-backed branch and loop control-flow construction coverage for
