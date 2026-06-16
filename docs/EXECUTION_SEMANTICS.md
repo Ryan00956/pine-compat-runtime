@@ -786,6 +786,8 @@ host-neutral table snapshot; deleted or `na` table ids are no-ops, invalid
 non-`na` ids are runtime errors, and out-of-bounds, reversed, or overlapping
 merge ranges are runtime errors. Later table-level or cell mutations of deleted
 tables are no-ops.
+`table.all` returns currently existing table ids in creation order, including
+when read from ordinary control-flow blocks after table deletion.
 `table.set_bgcolor` updates the
 table's final background-color value. `table.set_frame_color` updates the
 table's final frame-color value. `table.set_frame_width` updates the table's

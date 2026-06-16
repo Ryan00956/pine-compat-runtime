@@ -727,7 +727,9 @@ plus `table.cell_set_text_wrap` text-wrap mutations plus
 populated cells
 with
 deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
-per-table limit. Supported label, line, box, and table id-first drawing
+per-table limit. `table.all` returns currently existing table ids in creation
+order, including when read from ordinary control-flow blocks after table
+deletion. Supported label, line, box, and table id-first drawing
 functions can also use Pine method syntax, where the object receiver becomes
 the first function argument; for example, `id.set_text("x")` is analyzed and
 lowered as `label.set_text(id, "x")` when `id` is a label. This method syntax

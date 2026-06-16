@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow collection coverage for
+  `table.all`.
 - Added fixture-backed while-loop control-flow deletion coverage for
   `table.delete`.
 - Added fixture-backed while-loop control-flow mutation coverage for

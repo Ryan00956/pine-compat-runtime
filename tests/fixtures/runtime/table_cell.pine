@@ -51,3 +51,9 @@ table.cell_set_text_formatting(na, 0, 1, text.format_italic)
 visible_table_count = array.size(table.all)
 plot(visible_table_count)
 plot(close)
+loop_visible_table_count = visible_table_count
+i = 0
+while i < 1
+    loop_visible_table_count := array.size(table.all)
+    i := i + 1
+plot(loop_visible_table_count)
