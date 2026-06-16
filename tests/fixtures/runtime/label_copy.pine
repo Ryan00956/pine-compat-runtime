@@ -2,9 +2,14 @@
 indicator("Label copy")
 var original = label.new(bar_index, high, "seed")
 var copy = label.copy(original)
+var loop_copy = label.copy(original)
 if bar_index == 1
     label.set_text(original, "changed")
     label.set_xy(copy, bar_index, low)
+    copy_i = 0
+    while copy_i < 1
+        loop_copy := label.copy(original)
+        copy_i := copy_i + 1
 if bar_index == 2
     label.delete(copy)
 deleted_copy_x = bar_index == 2 ? nz(label.get_x(label.copy(copy)), -1) : -1
@@ -15,3 +20,5 @@ plot(str.length(label.get_text(original)))
 plot(str.length(label.get_text(copy)))
 plot(deleted_copy_x)
 plot(missing_copy_x)
+plot(label.get_x(loop_copy))
+plot(str.length(label.get_text(loop_copy)))
