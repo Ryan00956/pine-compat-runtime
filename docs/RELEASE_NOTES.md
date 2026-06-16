@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow `box.get_top` read coverage.
 - Added fixture-backed while-loop control-flow `box.get_right` read coverage.
 - Added fixture-backed while-loop control-flow `box.get_left` read coverage.
 - Added fixture-backed while-loop control-flow `box.all` read coverage after

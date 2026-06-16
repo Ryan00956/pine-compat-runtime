@@ -789,9 +789,11 @@ host responsibilities. `box.get_left` reads the latest existing box left value,
 including when called from ordinary control-flow blocks, and returns `na` for
 `na` or deleted boxes. `box.get_right` reads the latest existing box right
 value, including when called from ordinary control-flow blocks, and returns
-`na` for `na` or deleted boxes. `box.get_top` and `box.get_bottom` read the
-corresponding value from the latest existing box snapshot and return `na` for
-`na` or deleted boxes. `table.set_position`
+`na` for `na` or deleted boxes. `box.get_top` reads the latest existing box top
+value, including when called from ordinary control-flow blocks, and returns
+`na` for `na` or deleted boxes. `box.get_bottom` reads the corresponding value
+from the latest existing box snapshot and returns `na` for `na` or deleted
+boxes. `table.set_position`
 updates the table's final position value, including when called from ordinary
 control-flow blocks. `table.set_bgcolor` updates the table's final background
 color value, including when called from ordinary control-flow blocks.
