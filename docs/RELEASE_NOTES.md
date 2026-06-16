@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow `label.all` read coverage.
 - Added fixture-backed while-loop control-flow cloning coverage for
   `label.copy`.
 - Added fixture-backed while-loop control-flow deletion coverage for

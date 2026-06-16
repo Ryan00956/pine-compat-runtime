@@ -738,7 +738,9 @@ label snapshot, including when called from ordinary control-flow blocks.
 `label.copy` clones the latest existing label
 snapshot into a new deterministic id, including when called from ordinary
 control-flow blocks, returns `na` for `na` or deleted labels, and shares the
-label object limit. `line.copy` clones the latest existing line
+label object limit. `label.all` returns currently existing label ids in
+creation order, including when read from ordinary control-flow blocks after
+label deletion. `line.copy` clones the latest existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
 and shares the line object limit. `line.get_x1`, `line.get_y1`,
 `line.get_x2`, and `line.get_y2` read the corresponding value from the latest

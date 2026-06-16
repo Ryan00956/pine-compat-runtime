@@ -415,7 +415,8 @@ normalized Pine values, including `textAlign`, `textFontFamily`, and
 `label.set_*` mutators including x-location and y-location snapshot mutation
 from ordinary control-flow blocks,
 `label.copy` cloning from ordinary control-flow blocks, and `label.delete`
-deletion snapshots from ordinary control-flow blocks. Line snapshots cover `x1`, `y1`,
+deletion snapshots from ordinary control-flow blocks; `label.all` reads
+currently existing label ids from ordinary control-flow blocks. Line snapshots cover `x1`, `y1`,
 `x2`, `y2`, `color`, `width`, `style`, and `extend`. `line.new` can initialize
 those host-neutral style snapshot fields for the x1/y1/x2/y2 overload when
 `xloc` is omitted or `xloc.bar_index`; chart-point overloads and

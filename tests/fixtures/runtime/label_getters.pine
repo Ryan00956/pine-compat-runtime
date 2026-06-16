@@ -16,6 +16,12 @@ visible_label_count = array.size(visible_labels)
 visible_label_text_length = visible_label_count > 0 ? str.length(label.get_text(array.get(visible_labels, 0))) : -1
 missing_x = label.get_x(na)
 missing_text_length = str.length(label.get_text(na))
+flow_visible_label_count = visible_label_count
+if bar_index == 1
+    all_i = 0
+    while all_i < 1
+        flow_visible_label_count := array.size(label.all)
+        all_i := all_i + 1
 plot(x_value)
 plot(y_value)
 plot(text_length)
@@ -23,3 +29,4 @@ plot(visible_label_count)
 plot(visible_label_text_length)
 plot(nz(missing_x, -1))
 plot(nz(missing_text_length, -1))
+plot(flow_visible_label_count)
