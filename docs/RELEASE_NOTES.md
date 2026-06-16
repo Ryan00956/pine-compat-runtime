@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow deletion coverage for
+  `label.delete`.
 - Added fixture-backed while-loop control-flow y-location mutation coverage for
   `label.set_yloc`.
 - Added fixture-backed while-loop control-flow x-location mutation coverage for

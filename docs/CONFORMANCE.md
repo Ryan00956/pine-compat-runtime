@@ -666,7 +666,8 @@ y-location snapshot mutation for `label.set_yloc`, including while-loop
 control-flow mutation coverage, text-alignment snapshot
 mutation for `label.set_textalign`, text font-family snapshot mutation for
 `label.set_text_font_family`, text-formatting snapshot mutation for
-`label.set_text_formatting`, `label.delete`,
+`label.set_text_formatting`, `label.delete` deletion snapshots, including
+while-loop control-flow deletion coverage,
 fixture-backed cloning with `label.copy`, and the fixture-backed `label.get_x`,
 `label.get_y`, and `label.get_text` getters over the latest existing label
 snapshot, with a 500-label runtime limit. The
@@ -765,7 +766,9 @@ in label snapshots. `label.set_text_font_family` records font
 family in label snapshots. `label.set_text_formatting` records a
 `text.format_none`/`text.format_bold`/`text.format_italic` bitmask, including
 bold+italic combinations, while actual glyph styling remains host-specific.
-Text layout remains host-specific. `label.copy` clones the latest existing label
+Text layout remains host-specific. `label.delete` appends an `exists: false`
+label snapshot, including when called from ordinary control-flow blocks.
+`label.copy` clones the latest existing label
 snapshot into a new deterministic id, returns `na` for `na` or deleted labels,
 and shares the label runtime limit. `line.copy` clones the latest existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,

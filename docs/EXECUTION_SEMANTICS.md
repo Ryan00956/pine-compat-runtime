@@ -733,7 +733,9 @@ selected font-family constant. `label.new` can initialize `textalign`,
 `label.set_text_formatting` stores the selected
 `text.format_none`/`text.format_bold`/`text.format_italic` mask, including
 bold+italic combinations. Above/below-bar, time/index, glyph styling, and text
-layout remain host responsibilities. `label.copy` clones the latest existing label
+layout remain host responsibilities. `label.delete` appends an `exists: false`
+label snapshot, including when called from ordinary control-flow blocks.
+`label.copy` clones the latest existing label
 snapshot into a new deterministic id, returns `na` for `na` or deleted labels,
 and shares the label object limit. `line.copy` clones the latest existing line
 snapshot into a new deterministic id, returns `na` for `na` or deleted lines,
