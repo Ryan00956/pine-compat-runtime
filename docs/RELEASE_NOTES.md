@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Added fixture-backed while-loop control-flow mutation coverage for
+  `box.set_text_valign`.
+- Added fixture-backed while-loop control-flow mutation coverage for
   `box.set_text_halign`.
 - Added fixture-backed while-loop control-flow mutation coverage for
   `box.set_text_size`.
