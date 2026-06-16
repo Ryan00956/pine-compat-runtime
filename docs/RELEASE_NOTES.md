@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added fixture-backed while-loop control-flow `line.get_y1` read coverage.
 - Added fixture-backed while-loop control-flow `line.get_x1` read coverage.
 - Added fixture-backed while-loop control-flow `line.get_price` read coverage.
 - Added fixture-backed while-loop control-flow `line.all` read coverage.

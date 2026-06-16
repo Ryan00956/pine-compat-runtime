@@ -755,9 +755,10 @@ returns `na` for `na` or deleted lines, and shares the line object limit.
 when read from ordinary control-flow blocks after line deletion.
 `line.get_x1` reads the latest existing line x1 value, including when called
 from ordinary control-flow blocks, and returns `na` for `na` or deleted lines.
-`line.get_y1`, `line.get_x2`, and `line.get_y2` read the corresponding value
-from the latest existing line snapshot and return `na` for `na` or deleted
-lines.
+`line.get_y1` reads the latest existing line y1 value, including when called
+from ordinary control-flow blocks, and returns `na` for `na` or deleted lines.
+`line.get_x2` and `line.get_y2` read the corresponding value from the latest
+existing line snapshot and return `na` for `na` or deleted lines.
 `line.get_price` reads the latest existing bar-index line snapshot, including
 when called from ordinary control-flow blocks, applies x1/y1/x2/y2
 interpolation or extrapolation for the requested x value, and returns `na` for

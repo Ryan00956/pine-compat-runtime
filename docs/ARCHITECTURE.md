@@ -429,8 +429,9 @@ contract. Selected `line.set_*` mutators, including the `xloc.bar_index`
 `line.copy` cloning and `line.delete` deletion from ordinary control-flow
 blocks also use that model. `line.all` reads current line ids from ordinary
 control-flow blocks. `line.get_x1` reads latest existing line x1 values from
-ordinary control-flow blocks. `line.get_y1`, `line.get_x2`, and `line.get_y2`
-read latest existing line snapshot values;
+ordinary control-flow blocks. `line.get_y1` reads latest existing line y1
+values from ordinary control-flow blocks. `line.get_x2` and `line.get_y2` read
+latest existing line snapshot values;
 `line.get_price` derives a host-neutral bar-index price from ordinary
 control-flow blocks by interpolating or extrapolating across the latest existing
 x1/y1/x2/y2 snapshot. Box snapshots
