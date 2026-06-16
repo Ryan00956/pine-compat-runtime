@@ -5,6 +5,7 @@ if bar_index == 1
     label.set_yloc(label_id, yloc.abovebar)
 if bar_index == 2
     label.set_yloc(label_id, yloc.belowbar)
+if bar_index == 3
     yloc_i = 0
     while yloc_i < 1
         label.set_yloc(label_id, yloc.price)
