@@ -22,6 +22,9 @@ switch direction
 switch direction
     1 => label.set_text_font_family(label_id, font.family_monospace)
     => label.set_text_font_family(label_id, font.family_monospace)
+switch direction
+    1 => label.set_text_formatting(label_id, text.format_bold)
+    => label.set_text_formatting(label_id, text.format_bold + text.format_italic)
 for i = 0 to 0
     if bar_index == 2
         label.set_tooltip(label_id, "for")
