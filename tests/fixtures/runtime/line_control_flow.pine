@@ -140,4 +140,9 @@ while independent_set_width_i < 1
     if bar_index == 3
         line.set_width(line_id, 3)
     independent_set_width_i := independent_set_width_i + 1
+independent_set_extend_i = 0
+while independent_set_extend_i < 1
+    if bar_index == 3
+        line.set_extend(line_id, extend.both)
+    independent_set_extend_i := independent_set_extend_i + 1
 plot(close)
