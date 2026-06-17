@@ -20,6 +20,7 @@
 - Added independent while-loop control-flow `label.get_x` read coverage.
 - Added independent while-loop control-flow `label.get_y` read coverage.
 - Added independent while-loop control-flow `label.get_text` read coverage.
+- Added independent while-loop control-flow read coverage for `label.all`.
 - Added fixture-backed while-loop control-flow `table.cell` write coverage.
 - Added independent while-loop control-flow `table.cell` write coverage.
 - Added independent while-loop control-flow `table.cell_set_text` mutation
