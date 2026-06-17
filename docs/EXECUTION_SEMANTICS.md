@@ -777,8 +777,8 @@ time-coordinate price lookup remains unsupported. `box.copy` clones the latest
 existing box snapshot into a new deterministic id, including when called from
 ordinary control-flow blocks, returns `na` for `na` or deleted boxes, and
 shares the box object limit. `box.all` returns currently existing box ids in
-creation order, including when read from ordinary control-flow blocks after box
-deletion. `box.set_extend` records the selected
+creation order, including when read from ordinary and independent while-loop
+control-flow blocks after box deletion. `box.set_extend` records the selected
 horizontal extend constant in the host-neutral snapshot; visual extension
 remains a host responsibility. `box.set_xloc` with `xloc.bar_index` updates the
 box's left and right values in the host-neutral snapshot; time-coordinate box
@@ -794,14 +794,16 @@ in the host-neutral snapshot. `box.set_text_formatting` records the selected
 `text.format_none`/`text.format_bold`/`text.format_italic` mask, including
 bold+italic combinations; text rendering, glyph styling, and font layout remain
 host responsibilities. `box.get_left` reads the latest existing box left value,
-including when called from ordinary control-flow blocks, and returns `na` for
-`na` or deleted boxes. `box.get_right` reads the latest existing box right
-value, including when called from ordinary control-flow blocks, and returns
-`na` for `na` or deleted boxes. `box.get_top` reads the latest existing box top
-value, including when called from ordinary control-flow blocks, and returns
-`na` for `na` or deleted boxes. `box.get_bottom` reads the latest existing box
-bottom value, including when called from ordinary control-flow blocks, and
-returns `na` for `na` or deleted boxes. `table.set_position`
+including when called from ordinary and independent while-loop control-flow
+blocks, and returns `na` for `na` or deleted boxes. `box.get_right` reads the
+latest existing box right value, including when called from ordinary and
+independent while-loop control-flow blocks, and returns `na` for `na` or
+deleted boxes. `box.get_top` reads the latest existing box top value, including
+when called from ordinary and independent while-loop control-flow blocks, and
+returns `na` for `na` or deleted boxes. `box.get_bottom` reads the latest
+existing box bottom value, including when called from ordinary and independent
+while-loop control-flow blocks, and returns `na` for `na` or deleted boxes.
+`table.set_position`
 updates the table's final position value, including when called from ordinary
 control-flow blocks. `table.set_bgcolor` updates the table's final background
 color value, including when called from ordinary control-flow blocks.

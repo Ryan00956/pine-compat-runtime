@@ -705,14 +705,11 @@ text-formatting mutators,
 `box.set_xloc` for the `xloc.bar_index` subset that updates left and right snapshots,
 `box.delete`, and
 fixture-backed cloning with `box.copy` over the latest existing box
-snapshot from ordinary control-flow blocks, `box.all` reads from ordinary
-control-flow blocks after deletion,
-fixture-backed `box.get_left` reads from ordinary control-flow blocks after
-mutation, fixture-backed `box.get_right` reads from ordinary control-flow
-blocks after mutation, fixture-backed `box.get_top` reads from ordinary
-control-flow blocks after mutation, and fixture-backed `box.get_bottom` reads
-from ordinary control-flow blocks after mutation, with sparse snapshots and a
-500-box runtime limit.
+snapshot from ordinary control-flow blocks, `box.all` reads from ordinary and
+independent while-loop control-flow blocks after deletion, fixture-backed
+`box.get_left`, `box.get_right`, `box.get_top`, and `box.get_bottom` reads from
+ordinary and independent while-loop control-flow blocks after mutation, with
+sparse snapshots and a 500-box runtime limit.
 The executable table subset covers
 `table.new` position/dimension creation with optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialization
@@ -820,8 +817,9 @@ in box snapshots. `box.set_text_formatting` records a
 bold+italic combinations, while actual glyph styling remains host-specific.
 Richer box text layout remains unsupported. `box.get_left`,
 `box.get_right`, `box.get_top`, and `box.get_bottom` read the latest existing
-box snapshot and return `na` for `na` or deleted boxes; other box methods remain
-unsupported. `table.set_position` updates only the table's final position
+box snapshot, including when called from ordinary and independent while-loop
+control-flow blocks, and return `na` for `na` or deleted boxes; other box
+methods remain unsupported. `table.set_position` updates only the table's final position
 value, with table layout left to hosts. `table.new` optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize only
 the table's final background-color, frame-color, frame-width, border-color, and

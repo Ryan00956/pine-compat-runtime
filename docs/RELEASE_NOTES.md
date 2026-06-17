@@ -136,6 +136,8 @@
 - Added independent while-loop control-flow `box.get_right` read coverage.
 - Added independent while-loop control-flow `box.get_top` read coverage.
 - Added independent while-loop control-flow `box.get_bottom` read coverage.
+- Synchronized box getter and `box.all` documentation with independent
+  while-loop read coverage.
 - Added independent while-loop control-flow `line.get_x1` read coverage.
 - Added independent while-loop control-flow `line.get_y1` read coverage.
 - Added independent while-loop control-flow `line.get_x2` read coverage.
