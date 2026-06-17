@@ -231,4 +231,10 @@ while independent_get_right_i < 1
     independent_get_right_value := box.get_right(right_box)
     independent_get_right_i := independent_get_right_i + 1
 plot(independent_get_right_value)
+independent_get_top_value = box.get_top(top_box)
+independent_get_top_i = 0
+while independent_get_top_i < 1
+    independent_get_top_value := box.get_top(top_box)
+    independent_get_top_i := independent_get_top_i + 1
+plot(independent_get_top_value)
 plot(close)
