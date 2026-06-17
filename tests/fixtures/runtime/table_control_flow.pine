@@ -22,6 +22,7 @@ var independent_cell_text_font_family_table = table.new(position.middle_right, 1
 var independent_cell_text_formatting_table = table.new(position.bottom_center, 1, 1)
 var independent_delete_table = table.new(position.top_left, 1, 1)
 var independent_clear_table = table.new(position.bottom_right, 1, 1)
+var independent_merge_table = table.new(position.middle_center, 2, 1)
 if bar_index == 1
     table.cell(table_id, 0, 0, "if")
 direction = close > open ? 1 : -1
@@ -129,6 +130,11 @@ if bar_index == 2
     while independent_clear_i < 1
         table.clear(independent_clear_table, 0, 0, 0, 0)
         independent_clear_i := independent_clear_i + 1
+    table.cell(independent_merge_table, 0, 0, "merge")
+    independent_merge_i = 0
+    while independent_merge_i < 1
+        table.merge_cells(independent_merge_table, 0, 0, 1, 0)
+        independent_merge_i := independent_merge_i + 1
 cell_i = 0
 while cell_i < 1
     if bar_index == 3

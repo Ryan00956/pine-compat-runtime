@@ -47,6 +47,8 @@
   `table.delete`.
 - Added independent while-loop control-flow clearing coverage for
   `table.clear`.
+- Added independent while-loop control-flow merging coverage for
+  `table.merge_cells`.
 - Added fixture-backed while-loop control-flow `table.set_position` mutation
   coverage.
 - Added independent while-loop control-flow `table.set_position` mutation
