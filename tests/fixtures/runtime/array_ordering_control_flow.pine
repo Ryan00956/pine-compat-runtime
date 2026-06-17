@@ -42,3 +42,12 @@ for i = 0 to 1
     loop_indices = i == 0 ? loop_index_source.sort_indices(order.ascending) : loop_index_source.sort_indices(order.descending)
     loop_index_acc.push(loop_indices.get(0))
 plot(loop_index_acc.get(0) + loop_index_acc.get(1) == 3 and loop_index_source.get(0) == "b" ? 1 : 0)
+
+independent_index_source = array.from(40, 20, 30)
+independent_index_value = bar_index * 0
+independent_index_i = 0
+while independent_index_i < 1
+    independent_indices = array.sort_indices(independent_index_source, order.descending)
+    independent_index_value := independent_indices.get(0) * 100 + independent_indices.get(1) * 10 + independent_indices.get(2)
+    independent_index_i := independent_index_i + 1
+plot(independent_index_value == 21 and independent_index_source.get(0) == 40 ? 1 : 0)
