@@ -18,6 +18,7 @@ var text_color_box = box.new(bar_index - 14, high + 14, bar_index, low - 14)
 var text_size_box = box.new(bar_index - 15, high + 15, bar_index, low - 15)
 var text_halign_box = box.new(bar_index - 16, high + 16, bar_index, low - 16)
 var text_valign_box = box.new(bar_index - 17, high + 17, bar_index, low - 17)
+var text_wrap_box = box.new(bar_index - 18, high + 18, bar_index, low - 18)
 if bar_index == 1
     left_i = 0
     while left_i < 1
@@ -112,6 +113,10 @@ if bar_index == 2
     while independent_text_valign_i < 1
         box.set_text_valign(text_valign_box, text.align_bottom)
         independent_text_valign_i := independent_text_valign_i + 1
+    independent_text_wrap_i = 0
+    while independent_text_wrap_i < 1
+        box.set_text_wrap(text_wrap_box, text.wrap_auto)
+        independent_text_wrap_i := independent_text_wrap_i + 1
 direction = close > open ? 1 : -1
 bg_i = 0
 while bg_i < 1
