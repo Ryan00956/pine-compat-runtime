@@ -123,4 +123,9 @@ while independent_set_text_i < 1
         label.set_text(label_id, "loop-text")
     independent_set_text_i := independent_set_text_i + 1
 plot(str.length(label.get_text(label_id)))
+independent_set_color_i = 0
+while independent_set_color_i < 1
+    if bar_index == 3
+        label.set_color(label_id, color.blue)
+    independent_set_color_i := independent_set_color_i + 1
 plot(close)
