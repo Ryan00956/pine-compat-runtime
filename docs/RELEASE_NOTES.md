@@ -131,6 +131,8 @@
 - Added independent while-loop control-flow `box.set_text_formatting`
   mutation coverage.
 - Added independent while-loop control-flow cloning coverage for `box.copy`.
+- Synchronized `box.copy` and `box.delete` documentation with independent
+  while-loop lifecycle coverage.
 - Added independent while-loop control-flow read coverage for `box.all`.
 - Added independent while-loop control-flow `box.get_left` read coverage.
 - Added independent while-loop control-flow `box.get_right` read coverage.

@@ -775,8 +775,11 @@ applies x1/y1/x2/y2 interpolation or extrapolation for the requested x value,
 and returns `na` for `na`, deleted, vertical, or nonnumeric lines;
 time-coordinate price lookup remains unsupported. `box.copy` clones the latest
 existing box snapshot into a new deterministic id, including when called from
-ordinary control-flow blocks, returns `na` for `na` or deleted boxes, and
-shares the box object limit. `box.all` returns currently existing box ids in
+ordinary and independent while-loop control-flow blocks, returns `na` for `na`
+or deleted boxes, and shares the box object limit. `box.delete` removes the
+latest existing box snapshot, including when called from ordinary and
+independent while-loop control-flow blocks, and deleting `na` or already deleted
+boxes is a no-op. `box.all` returns currently existing box ids in
 creation order, including when read from ordinary and independent while-loop
 control-flow blocks after box deletion. `box.set_extend` records the selected
 horizontal extend constant in the host-neutral snapshot; visual extension

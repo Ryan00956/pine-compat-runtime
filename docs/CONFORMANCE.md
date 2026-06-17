@@ -703,10 +703,10 @@ It also covers selected geometry/background/border/extend/text/text-color/
 text-size/horizontal-alignment/vertical-alignment/text-wrap/font-family/
 text-formatting mutators,
 `box.set_xloc` for the `xloc.bar_index` subset that updates left and right snapshots,
-`box.delete`, and
+`box.delete` from ordinary and independent while-loop control-flow blocks, and
 fixture-backed cloning with `box.copy` over the latest existing box
-snapshot from ordinary control-flow blocks, `box.all` reads from ordinary and
-independent while-loop control-flow blocks after deletion, fixture-backed
+snapshot from ordinary and independent while-loop control-flow blocks, `box.all`
+reads from ordinary and independent while-loop control-flow blocks after deletion, fixture-backed
 `box.get_left`, `box.get_right`, `box.get_top`, and `box.get_bottom` reads from
 ordinary and independent while-loop control-flow blocks after mutation, with
 sparse snapshots and a 500-box runtime limit.
@@ -802,8 +802,9 @@ returns `na` for `na` or deleted lines, and shares the line runtime limit.
 when read from ordinary and independent while-loop control-flow blocks after
 line deletion.
 `box.copy` clones the latest existing box
-snapshot into a new deterministic id, returns `na` for `na` or deleted boxes,
-and shares the box runtime limit. `box.set_extend` records the selected
+snapshot into a new deterministic id, including when called from ordinary and
+independent while-loop control-flow blocks, returns `na` for `na` or deleted
+boxes, and shares the box runtime limit. `box.set_extend` records the selected
 horizontal extend constant in box snapshots. `box.set_xloc` with
 `xloc.bar_index` updates left and right values in box snapshots; time-coordinate
 box x-location remains unsupported. `box.set_text` records text in box
