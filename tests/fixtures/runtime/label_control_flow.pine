@@ -133,4 +133,9 @@ while independent_set_textcolor_i < 1
     if bar_index == 3
         label.set_textcolor(label_id, color.yellow)
     independent_set_textcolor_i := independent_set_textcolor_i + 1
+independent_set_style_i = 0
+while independent_set_style_i < 1
+    if bar_index == 3
+        label.set_style(label_id, label.style_label_right)
+    independent_set_style_i := independent_set_style_i + 1
 plot(close)
