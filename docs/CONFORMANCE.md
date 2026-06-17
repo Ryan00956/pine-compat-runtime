@@ -699,7 +699,8 @@ extend, text, text-color, text-size, horizontal-alignment, vertical-alignment,
 text-wrap, font-family, and text-formatting initialization for existing
 host-neutral snapshot fields when `xloc` is omitted or `xloc.bar_index`;
 chart-point overloads and `xloc.bar_time` remain unsupported.
-It also covers selected geometry/background/border/extend/text/text-color/
+It also covers selected geometry mutators from ordinary and independent
+while-loop control-flow blocks, selected background/border/extend/text/text-color/
 text-size/horizontal-alignment/vertical-alignment/text-wrap/font-family/
 text-formatting mutators,
 `box.set_xloc` for the `xloc.bar_index` subset that updates left and right snapshots,
@@ -807,7 +808,10 @@ independent while-loop control-flow blocks, returns `na` for `na` or deleted
 boxes, and shares the box runtime limit. `box.set_extend` records the selected
 horizontal extend constant in box snapshots. `box.set_xloc` with
 `xloc.bar_index` updates left and right values in box snapshots; time-coordinate
-box x-location remains unsupported. `box.set_text` records text in box
+box x-location remains unsupported. `box.set_left`, `box.set_top`,
+`box.set_right`, `box.set_bottom`, `box.set_lefttop`, and
+`box.set_rightbottom` update box geometry snapshots, including when called from
+ordinary and independent while-loop control-flow blocks. `box.set_text` records text in box
 snapshots. `box.set_text_color` records text color in box snapshots.
 `box.set_text_size` records text size in box snapshots. `box.set_text_halign`
 records horizontal text alignment in box snapshots. `box.set_text_valign`

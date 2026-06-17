@@ -781,7 +781,11 @@ latest existing box snapshot, including when called from ordinary and
 independent while-loop control-flow blocks, and deleting `na` or already deleted
 boxes is a no-op. `box.all` returns currently existing box ids in
 creation order, including when read from ordinary and independent while-loop
-control-flow blocks after box deletion. `box.set_extend` records the selected
+control-flow blocks after box deletion. `box.set_left`, `box.set_top`,
+`box.set_right`, `box.set_bottom`, `box.set_lefttop`, and
+`box.set_rightbottom` update the host-neutral geometry snapshot, including when
+called from ordinary and independent while-loop control-flow blocks.
+`box.set_extend` records the selected
 horizontal extend constant in the host-neutral snapshot; visual extension
 remains a host responsibility. `box.set_xloc` with `xloc.bar_index` updates the
 box's left and right values in the host-neutral snapshot; time-coordinate box

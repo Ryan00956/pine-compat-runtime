@@ -106,6 +106,8 @@
 - Added independent while-loop control-flow `box.set_lefttop` mutation coverage.
 - Added independent while-loop control-flow `box.set_rightbottom` mutation
   coverage.
+- Synchronized box geometry mutator documentation with independent while-loop
+  mutation coverage.
 - Added independent while-loop control-flow `box.set_bgcolor` mutation coverage.
 - Added independent while-loop control-flow `box.set_border_color` mutation
   coverage.
