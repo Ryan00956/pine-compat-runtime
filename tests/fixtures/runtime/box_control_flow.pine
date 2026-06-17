@@ -11,6 +11,7 @@ var bgcolor_box = box.new(bar_index - 7, high + 7, bar_index, low - 7)
 var border_color_box = box.new(bar_index - 8, high + 8, bar_index, low - 8)
 var border_width_box = box.new(bar_index - 9, high + 9, bar_index, low - 9)
 var border_style_box = box.new(bar_index - 10, high + 10, bar_index, low - 10)
+var extend_box = box.new(bar_index - 11, high + 11, bar_index, low - 11)
 if bar_index == 1
     left_i = 0
     while left_i < 1
@@ -77,6 +78,10 @@ if bar_index == 2
     while independent_border_style_i < 1
         box.set_border_style(border_style_box, line.style_dotted)
         independent_border_style_i := independent_border_style_i + 1
+    independent_extend_i = 0
+    while independent_extend_i < 1
+        box.set_extend(extend_box, extend.right)
+        independent_extend_i := independent_extend_i + 1
 direction = close > open ? 1 : -1
 bg_i = 0
 while bg_i < 1
