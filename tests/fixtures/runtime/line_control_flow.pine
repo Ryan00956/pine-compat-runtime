@@ -120,4 +120,9 @@ while independent_set_y2_i < 1
     if bar_index == 3
         line.set_y2(line_id, close + 40)
     independent_set_y2_i := independent_set_y2_i + 1
+independent_set_xy2_i = 0
+while independent_set_xy2_i < 1
+    if bar_index == 3
+        line.set_xy2(line_id, bar_index + 5, close + 41)
+    independent_set_xy2_i := independent_set_xy2_i + 1
 plot(close)
