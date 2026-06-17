@@ -415,7 +415,7 @@ normalized Pine values, including `textAlign`, `textFontFamily`, and
 `label.set_*` mutators including coordinate, text, size, color, style, tooltip,
 alignment, font-family, and text-formatting snapshot mutation from ordinary and
 independent while-loop control-flow blocks plus x-location and y-location
-snapshot mutation from ordinary control-flow blocks,
+snapshot mutation from ordinary and independent while-loop control-flow blocks,
 `label.copy` cloning from ordinary and independent while-loop control-flow
 blocks, and `label.delete` deletion snapshots from ordinary and independent
 while-loop control-flow blocks; `label.all` reads

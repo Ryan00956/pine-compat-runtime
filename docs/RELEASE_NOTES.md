@@ -32,6 +32,8 @@
 - Added independent while-loop control-flow `label.set_size` mutation coverage.
 - Added independent while-loop control-flow `label.set_xloc` mutation coverage.
 - Added independent while-loop control-flow `label.set_yloc` mutation coverage.
+- Strengthened `label.set_xloc` and `label.set_yloc` independent while-loop
+  coverage with dedicated location fixtures.
 - Added independent while-loop control-flow deletion coverage for
   `label.delete`.
 - Added independent while-loop control-flow deletion coverage for `line.delete`.
