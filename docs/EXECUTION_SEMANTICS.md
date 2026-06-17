@@ -723,7 +723,10 @@ unsupported.
 already deleted drawing object are no-ops where deletion exists; invalid
 non-`na` ids are runtime errors. Labels, lines, and boxes each have a
 500-object runtime limit; tables have a 50-object limit and 1000-cell
-per-table limit. `label.set_xloc` stores `xloc.bar_index` or `xloc.bar_time`
+per-table limit. `label.set_x`, `label.set_y`, `label.set_xy`,
+`label.set_text`, and `label.set_size` update the latest existing label
+snapshot, including when called from ordinary and independent while-loop
+control-flow blocks. `label.set_xloc` stores `xloc.bar_index` or `xloc.bar_time`
 with the new x-coordinate in the host-neutral snapshot, including when called
 from ordinary control-flow blocks. `label.set_yloc` stores the selected
 y-location constant, including when called from ordinary control-flow blocks.

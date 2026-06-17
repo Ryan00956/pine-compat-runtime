@@ -13,6 +13,8 @@
 - Added independent while-loop control-flow `label.set_y` mutation coverage.
 - Added independent while-loop control-flow `label.set_xy` mutation coverage.
 - Added independent while-loop control-flow `label.set_text` mutation coverage.
+- Synchronized label coordinate/text/size mutator documentation with
+  independent while-loop coverage.
 - Added independent while-loop control-flow `label.set_color` mutation coverage.
 - Added independent while-loop control-flow `label.set_textcolor` mutation
   coverage.

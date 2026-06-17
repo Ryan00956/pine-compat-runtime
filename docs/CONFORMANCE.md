@@ -660,6 +660,9 @@ representative nested output families such as `plotShapes` and `plotCandles`.
 The Phase E drawing-object scaffold adds `labels`, `lines`, `boxes`, and
 `tables` as top-level runtime keys in `schemaVersion: 2`. The executable label
 subset covers `label.new`, selected `label.set_*` mutators including
+fixture-backed `label.set_x`, `label.set_y`, `label.set_xy`, `label.set_text`,
+and `label.set_size` mutations from ordinary and independent while-loop
+control-flow blocks,
 fixture-backed x-location snapshot mutation for `label.set_xloc`, including
 while-loop control-flow mutation coverage, and
 y-location snapshot mutation for `label.set_yloc`, including while-loop
@@ -779,6 +782,9 @@ drawing object is a no-op where deletion exists; supported label getters return
 are stable and not reused. `label.new` can initialize host-neutral label
 `textalign`, `text_font_family`, and `text_formatting` snapshot fields; its
 `force_overlay` argument is accepted but left to the host display layer.
+`label.set_x`, `label.set_y`, `label.set_xy`, `label.set_text`, and
+`label.set_size` update the latest existing label snapshot, including when
+called from ordinary and independent while-loop control-flow blocks.
 `label.set_xloc` records `xloc.bar_index` or `xloc.bar_time` plus the new `x`
 value in label snapshots, including when called from ordinary control-flow
 blocks; `label.set_yloc` records `yloc.price`,
