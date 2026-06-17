@@ -110,4 +110,11 @@ while independent_set_y_i < 1
         label.set_y(label_id, close + 9)
     independent_set_y_i := independent_set_y_i + 1
 plot(label.get_y(label_id))
+independent_set_xy_i = 0
+while independent_set_xy_i < 1
+    if bar_index == 3
+        label.set_xy(label_id, bar_index + 7, close + 11)
+    independent_set_xy_i := independent_set_xy_i + 1
+plot(label.get_x(label_id))
+plot(label.get_y(label_id))
 plot(close)
