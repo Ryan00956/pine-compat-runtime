@@ -53,6 +53,8 @@
   coverage.
 - Added independent while-loop control-flow `box.set_text_halign` mutation
   coverage.
+- Added independent while-loop control-flow `box.set_text_valign` mutation
+  coverage.
 - Added fixture-backed while-loop control-flow `line.set_x1` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `line.set_y1` mutation
