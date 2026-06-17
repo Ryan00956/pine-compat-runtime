@@ -24,6 +24,8 @@
   coverage.
 - Added fixture-backed while-loop control-flow `table.set_bgcolor` mutation
   coverage.
+- Added independent while-loop control-flow `table.set_bgcolor` mutation
+  coverage.
 - Added fixture-backed while-loop control-flow `table.set_frame_color` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `table.set_frame_width` mutation
