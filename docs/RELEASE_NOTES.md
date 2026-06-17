@@ -185,6 +185,8 @@
   for the `xloc.bar_index` subset.
 - Synchronized line mutator documentation with independent while-loop
   control-flow coverage.
+- Synchronized line mutator conformance notes with independent while-loop
+  coverage.
 - Added fixture-backed while-loop control-flow `line.set_x1` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `line.set_y1` mutation

@@ -686,8 +686,8 @@ executable line subset covers `line.new` x1/y1/x2/y2 creation with optional
 extend, color, style, and width initialization for existing host-neutral
 snapshot fields when `xloc` is omitted or `xloc.bar_index`; chart-point
 overloads and `xloc.bar_time` remain unsupported. It also covers selected
-endpoint/color/width/style/extend mutators, `line.set_xloc` for the
-`xloc.bar_index` subset that updates x1 and x2 snapshots, including ordinary
+endpoint/color/width/style/extend mutators and `line.set_xloc` for the
+`xloc.bar_index` subset that updates x1 and x2 snapshots, all including ordinary
 and independent while-loop control-flow mutation coverage, `line.delete`
 deletion snapshots, including ordinary and independent while-loop control-flow
 deletion coverage,
@@ -818,7 +818,10 @@ labels.
 from ordinary and independent while-loop control-flow blocks, and returns `na`
 for `na` or deleted labels. `label.all` returns currently existing label ids in
 creation order, including when read from ordinary and independent while-loop
-control-flow blocks after label deletion. `line.delete` appends an
+control-flow blocks after label deletion. Selected `line.set_*` mutators update
+endpoint/color/width/style/extend snapshots, and `line.set_xloc` with
+`xloc.bar_index` updates x1 and x2 snapshot values, including when called from
+ordinary and independent while-loop control-flow blocks. `line.delete` appends an
 `exists: false` line snapshot, including when called from ordinary and
 independent while-loop control-flow blocks. `line.copy` clones the latest
 existing line snapshot into a new deterministic id, including when called from
