@@ -425,8 +425,8 @@ those host-neutral style snapshot fields for the x1/y1/x2/y2 overload when
 `xloc` is omitted or `xloc.bar_index`; chart-point overloads and
 `xloc.bar_time` coordinate semantics remain outside the current runtime output
 contract. Selected `line.set_*` mutators, including the `xloc.bar_index`
-`line.set_xloc` subset that rewrites x1 and x2 from ordinary control-flow
-blocks, reuse the same snapshot model;
+`line.set_xloc` subset that rewrites x1 and x2 from ordinary and independent
+while-loop control-flow blocks, reuse the same snapshot model;
 `line.copy` cloning and `line.delete` deletion from ordinary control-flow
 blocks also use that model. `line.all` reads current line ids from ordinary
 control-flow blocks. `line.get_x1` reads latest existing line x1 values from

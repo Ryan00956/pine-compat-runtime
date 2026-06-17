@@ -679,8 +679,9 @@ extend, color, style, and width initialization for existing host-neutral
 snapshot fields when `xloc` is omitted or `xloc.bar_index`; chart-point
 overloads and `xloc.bar_time` remain unsupported. It also covers selected
 endpoint/color/width/style/extend mutators, `line.set_xloc` for the
-`xloc.bar_index` subset that updates x1 and x2 snapshots, including while-loop
-control-flow mutation coverage, `line.delete` deletion snapshots, including
+`xloc.bar_index` subset that updates x1 and x2 snapshots, including ordinary
+and independent while-loop control-flow mutation coverage, `line.delete`
+deletion snapshots, including
 while-loop control-flow deletion coverage,
 fixture-backed cloning with `line.copy`, including while-loop control-flow
 cloning coverage, `line.all` reads from ordinary control-flow blocks,
