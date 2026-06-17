@@ -19,6 +19,7 @@ var independent_cell_text_valign_table = table.new(position.top_right, 1, 1)
 var independent_cell_text_wrap_table = table.new(position.bottom_left, 1, 1)
 var independent_cell_tooltip_table = table.new(position.middle_left, 1, 1)
 var independent_cell_text_font_family_table = table.new(position.middle_right, 1, 1)
+var independent_cell_text_formatting_table = table.new(position.bottom_center, 1, 1)
 if bar_index == 1
     table.cell(table_id, 0, 0, "if")
 direction = close > open ? 1 : -1
@@ -112,6 +113,11 @@ if bar_index == 2
     while independent_cell_text_font_family_i < 1
         table.cell_set_text_font_family(independent_cell_text_font_family_table, 0, 0, font.family_monospace)
         independent_cell_text_font_family_i := independent_cell_text_font_family_i + 1
+    table.cell(independent_cell_text_formatting_table, 0, 0, "format")
+    independent_cell_text_formatting_i = 0
+    while independent_cell_text_formatting_i < 1
+        table.cell_set_text_formatting(independent_cell_text_formatting_table, 0, 0, text.format_italic)
+        independent_cell_text_formatting_i := independent_cell_text_formatting_i + 1
 cell_i = 0
 while cell_i < 1
     if bar_index == 3
