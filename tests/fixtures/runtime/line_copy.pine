@@ -6,6 +6,7 @@ if bar_index == 1
     line.set_color(original, color.green)
     line.set_xy1(copy, bar_index, low)
     line.set_xy2(copy, bar_index + 1, high)
+if bar_index == 3
     copy_i = 0
     while copy_i < 1
         line.copy(original)
