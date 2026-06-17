@@ -412,9 +412,10 @@ an object `id` and a `snapshots` array. Label snapshots use `barIndex`,
 normalized Pine values, including `textAlign`, `textFontFamily`, and
 `textFormatting` for host-side text layout. The label lifecycle covers
 `label.new`, selected
-`label.set_*` mutators including coordinate, text, and size snapshot mutation
-from ordinary and independent while-loop control-flow blocks plus x-location
-and y-location snapshot mutation from ordinary control-flow blocks,
+`label.set_*` mutators including coordinate, text, size, color, style, tooltip,
+alignment, font-family, and text-formatting snapshot mutation from ordinary and
+independent while-loop control-flow blocks plus x-location and y-location
+snapshot mutation from ordinary control-flow blocks,
 `label.copy` cloning from ordinary and independent while-loop control-flow
 blocks, and `label.delete` deletion snapshots from ordinary and independent
 while-loop control-flow blocks; `label.all` reads

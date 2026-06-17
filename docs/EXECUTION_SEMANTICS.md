@@ -726,7 +726,12 @@ non-`na` ids are runtime errors. Labels, lines, and boxes each have a
 per-table limit. `label.set_x`, `label.set_y`, `label.set_xy`,
 `label.set_text`, and `label.set_size` update the latest existing label
 snapshot, including when called from ordinary and independent while-loop
-control-flow blocks. `label.set_xloc` stores `xloc.bar_index` or `xloc.bar_time`
+control-flow blocks. `label.set_color`, `label.set_textcolor`,
+`label.set_style`, `label.set_tooltip`, `label.set_textalign`,
+`label.set_text_font_family`, and `label.set_text_formatting` update their
+host-neutral snapshot fields, including when called from ordinary and
+independent while-loop control-flow blocks. `label.set_xloc` stores
+`xloc.bar_index` or `xloc.bar_time`
 with the new x-coordinate in the host-neutral snapshot, including when called
 from ordinary control-flow blocks. `label.set_yloc` stores the selected
 y-location constant, including when called from ordinary control-flow blocks.
