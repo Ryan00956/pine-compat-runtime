@@ -3,6 +3,7 @@ indicator("Table control flow")
 var table_id = table.new(position.top_right, 2, 2)
 var position_table = table.new(position.top_left, 1, 1)
 var bgcolor_table = table.new(position.middle_left, 1, 1)
+var frame_color_table = table.new(position.middle_right, 1, 1)
 if bar_index == 1
     table.cell(table_id, 0, 0, "if")
 direction = close > open ? 1 : -1
@@ -21,6 +22,10 @@ if bar_index == 2
     while independent_bgcolor_i < 1
         table.set_bgcolor(bgcolor_table, color.blue)
         independent_bgcolor_i := independent_bgcolor_i + 1
+    independent_frame_color_i = 0
+    while independent_frame_color_i < 1
+        table.set_frame_color(frame_color_table, color.white)
+        independent_frame_color_i := independent_frame_color_i + 1
 cell_i = 0
 while cell_i < 1
     if bar_index == 3
