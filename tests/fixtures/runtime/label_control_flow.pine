@@ -117,4 +117,10 @@ while independent_set_xy_i < 1
     independent_set_xy_i := independent_set_xy_i + 1
 plot(label.get_x(label_id))
 plot(label.get_y(label_id))
+independent_set_text_i = 0
+while independent_set_text_i < 1
+    if bar_index == 3
+        label.set_text(label_id, "loop-text")
+    independent_set_text_i := independent_set_text_i + 1
+plot(str.length(label.get_text(label_id)))
 plot(close)
