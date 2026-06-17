@@ -225,4 +225,10 @@ while independent_get_left_i < 1
     independent_get_left_value := box.get_left(left_box)
     independent_get_left_i := independent_get_left_i + 1
 plot(independent_get_left_value)
+independent_get_right_value = box.get_right(right_box)
+independent_get_right_i = 0
+while independent_get_right_i < 1
+    independent_get_right_value := box.get_right(right_box)
+    independent_get_right_i := independent_get_right_i + 1
+plot(independent_get_right_value)
 plot(close)
