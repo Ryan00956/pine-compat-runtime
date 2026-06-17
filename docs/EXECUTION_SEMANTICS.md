@@ -850,52 +850,17 @@ when read from ordinary control-flow blocks after table deletion.
 `table.set_bgcolor`, `table.set_frame_color`, `table.set_frame_width`,
 `table.set_border_color`, and `table.set_border_width` update the table's final
 style values; visual anchoring, border rendering, and layout remain host
-responsibilities. `table.cell_set_text`
-updates the target previously populated cell text in the host-neutral table
-snapshot, including when called from ordinary control-flow blocks, while
-preserving the cell's other supported fields.
-`table.cell_set_bgcolor` updates the target previously populated cell
-background color, including when called from ordinary control-flow blocks,
-while preserving the cell's other supported fields.
-`table.cell_set_text_color` updates the target previously populated cell text
-color, including when called from ordinary control-flow blocks, while
-preserving the cell's other supported fields.
-`table.cell_set_width` updates the target previously populated cell width in
-the host-neutral snapshot, including when called from ordinary control-flow
-blocks, while preserving the cell's other supported fields; actual table layout
-remains a host responsibility.
-`table.cell_set_height` updates the target previously populated cell height in
-the host-neutral snapshot, including when called from ordinary control-flow
-blocks, while preserving the cell's other supported fields; actual table layout
-remains a host responsibility.
-`table.cell_set_text_size` updates the target previously populated cell text
-size in the host-neutral snapshot, including when called from ordinary
-control-flow blocks, while preserving the cell's other supported fields; actual
-text rendering remains a host responsibility.
-`table.cell_set_text_halign` updates the target previously populated cell
-horizontal text alignment in the host-neutral snapshot, including when called
-from ordinary control-flow blocks, while preserving the cell's other supported
-fields; actual text layout remains a host responsibility.
-`table.cell_set_text_valign` updates the target previously populated cell
-vertical text alignment in the host-neutral snapshot, including when called
-from ordinary control-flow blocks, while preserving the cell's other supported
-fields; actual text layout remains a host responsibility.
-`table.cell_set_text_wrap` updates the target previously populated cell text
-wrap in the host-neutral snapshot, including when called from ordinary
-control-flow blocks, while preserving the cell's other supported fields; actual
-wrapping and table layout remain a host responsibility.
-`table.cell_set_tooltip` updates the target previously populated cell tooltip
-in the host-neutral snapshot, including when called from ordinary control-flow
-blocks, while preserving the cell's other supported fields; actual tooltip
-display remains a host responsibility.
-`table.cell_set_text_font_family` updates the target previously populated cell
-font-family in the host-neutral snapshot, including when called from ordinary
-control-flow blocks, while preserving the cell's other supported fields; actual
-font rendering remains a host responsibility.
-`table.cell_set_text_formatting` updates the target previously populated cell
-text-formatting mask in the host-neutral snapshot, including when called from
-ordinary control-flow blocks, while preserving the cell's other supported
-fields; actual bold/italic rendering remains a host responsibility.
+responsibilities. `table.cell_set_text`, `table.cell_set_bgcolor`,
+`table.cell_set_text_color`, `table.cell_set_width`, `table.cell_set_height`,
+`table.cell_set_text_size`, `table.cell_set_text_halign`,
+`table.cell_set_text_valign`, `table.cell_set_text_wrap`,
+`table.cell_set_tooltip`, `table.cell_set_text_font_family`, and
+`table.cell_set_text_formatting` update the target previously populated cell in
+the host-neutral table snapshot, including when called from ordinary and
+independent while-loop control-flow blocks, while preserving the cell's other
+supported fields; actual table layout, text rendering, text layout, wrapping,
+tooltip display, font rendering, and bold/italic rendering remain host
+responsibilities.
 
 Drawing side effects are allowed in top-level control flow, including supported
 `if`, `switch`, `for`, and `while` bodies. Realtime forming updates start from

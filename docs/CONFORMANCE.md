@@ -736,26 +736,28 @@ cell-content removal snapshots, including while-loop control-flow clearing
 coverage,
 `table.merge_cells` inclusive merged-cell rectangle snapshots, including
 while-loop control-flow merge coverage, and
-`table.cell_set_text` text mutations, including while-loop control-flow
-mutation coverage, plus `table.cell_set_bgcolor` background color mutations,
-including while-loop control-flow mutation coverage, plus
-`table.cell_set_text_color` text-color mutations, including while-loop
-control-flow mutation coverage, plus
-`table.cell_set_width` width mutations, including while-loop control-flow
-mutation coverage, plus `table.cell_set_height` height mutations, including
+`table.cell_set_text` text mutations, including ordinary and independent
+while-loop control-flow mutation coverage, plus `table.cell_set_bgcolor`
+background color mutations, including ordinary and independent while-loop
+control-flow mutation coverage, plus `table.cell_set_text_color` text-color
+mutations, including ordinary and independent while-loop control-flow mutation
+coverage, plus `table.cell_set_width` width mutations, including ordinary and
+independent while-loop control-flow mutation coverage, plus
+`table.cell_set_height` height mutations, including ordinary and independent
 while-loop control-flow mutation coverage, plus `table.cell_set_text_size`
-text-size mutations, including while-loop control-flow mutation coverage, plus
-`table.cell_set_text_halign` horizontal text-alignment mutations, including
-while-loop control-flow mutation coverage, plus `table.cell_set_text_valign`
-vertical text-alignment mutations, including while-loop control-flow mutation
-coverage, plus `table.cell_set_text_wrap` text-wrap mutations, including
-while-loop control-flow mutation coverage, plus
-`table.cell_set_tooltip` tooltip mutations, including while-loop control-flow
-mutation coverage, plus
-`table.cell_set_text_font_family` font-family mutations, including while-loop
-control-flow mutation coverage, plus
+text-size mutations, including ordinary and independent while-loop
+control-flow mutation coverage, plus `table.cell_set_text_halign` horizontal
+text-alignment mutations, including ordinary and independent while-loop
+control-flow mutation coverage, plus `table.cell_set_text_valign` vertical
+text-alignment mutations, including ordinary and independent while-loop
+control-flow mutation coverage, plus `table.cell_set_text_wrap` text-wrap
+mutations, including ordinary and independent while-loop control-flow mutation
+coverage, plus `table.cell_set_tooltip` tooltip mutations, including ordinary
+and independent while-loop control-flow mutation coverage, plus
+`table.cell_set_text_font_family` font-family mutations, including ordinary and
+independent while-loop control-flow mutation coverage, plus
 `table.cell_set_text_formatting` text-formatting mutations, including
-while-loop control-flow mutation coverage, for previously populated cells
+ordinary and independent while-loop control-flow mutation coverage, for previously populated cells
 with
 deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
 per-table limit. `table.all` returns currently existing table ids in creation
@@ -851,42 +853,16 @@ deleted tables are no-ops.
 `table.set_border_color`, and `table.set_border_width` update only the table's
 final style values, including when called from ordinary and independent
 while-loop control-flow blocks; border rendering and table layout remain host
-responsibilities. `table.cell_set_text` updates only the target cell text
-snapshot after `table.cell` has populated that cell, including when called from
-ordinary control-flow blocks; `table.cell_set_bgcolor` updates only the target
-cell background color snapshot after `table.cell` has populated that cell,
-including when called from ordinary control-flow blocks;
-`table.cell_set_text_color` updates only the target cell text-color
-snapshot after `table.cell` has populated that cell, including when called from
-ordinary control-flow blocks; `table.cell_set_width`
-updates only the target cell width snapshot after `table.cell` has populated
-that cell, including when called from ordinary control-flow blocks;
-`table.cell_set_height` updates only the target cell height snapshot
-after `table.cell` has populated that cell, including when called from ordinary
-control-flow blocks, while visual layout remains host-specific;
-`table.cell_set_text_size` updates only the target cell text-size
-snapshot after `table.cell` has populated that cell, including when called from
-ordinary control-flow blocks, while text rendering remains host-specific;
-`table.cell_set_text_halign` updates only the target cell horizontal
-text-alignment snapshot after `table.cell` has populated that cell, including
-when called from ordinary control-flow blocks;
-`table.cell_set_text_valign` updates only the target cell vertical
-text-alignment snapshot after `table.cell` has populated that cell, including
-when called from ordinary control-flow blocks;
-`table.cell_set_text_wrap` updates only the target cell text-wrap snapshot
-after `table.cell` has populated that cell, including when called from ordinary
-control-flow blocks, while actual wrapping and table layout remain
-host-specific;
-`table.cell_set_tooltip` updates only the target cell tooltip snapshot after
-`table.cell` has populated that cell, including when called from ordinary
-control-flow blocks, while tooltip display and text layout remains
-host-specific; `table.cell_set_text_font_family` updates only the
-target cell font-family snapshot after `table.cell` has populated that cell,
-including when called from ordinary control-flow blocks, while font rendering
-remains host-specific; `table.cell_set_text_formatting`
-updates only the target cell text-formatting mask snapshot after `table.cell`
-has populated that cell, including when called from ordinary control-flow
-blocks, while bold/italic rendering remains host-specific;
+responsibilities. `table.cell_set_text`, `table.cell_set_bgcolor`,
+`table.cell_set_text_color`, `table.cell_set_width`, `table.cell_set_height`,
+`table.cell_set_text_size`, `table.cell_set_text_halign`,
+`table.cell_set_text_valign`, `table.cell_set_text_wrap`,
+`table.cell_set_tooltip`, `table.cell_set_text_font_family`, and
+`table.cell_set_text_formatting` update only previously populated cell
+snapshots, including when called from ordinary and independent while-loop
+control-flow blocks, while preserving other supported fields. Visual layout,
+text wrapping, tooltip display, font rendering, and bold/italic rendering
+remain host-specific;
 other table cell text rendering remains host-specific.
 Supported drawing creation, mutation, cloning, getter, and cell writes are covered under realtime rollback where state
 changes, and drawing side effects inside user-defined functions are rejected

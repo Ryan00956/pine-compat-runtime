@@ -68,6 +68,8 @@
   mutation coverage.
 - Added independent while-loop control-flow `table.cell_set_text_formatting`
   mutation coverage.
+- Synchronized table cell setter documentation with independent while-loop
+  mutation coverage.
 - Added independent while-loop control-flow deletion coverage for
   `table.delete`.
 - Added independent while-loop control-flow clearing coverage for
