@@ -83,4 +83,10 @@ while independent_get_y2_i < 1
     independent_get_y2_value := line.get_y2(line_id)
     independent_get_y2_i := independent_get_y2_i + 1
 plot(independent_get_y2_value)
+independent_get_price_value = line.get_price(line_id, bar_index + 5)
+independent_get_price_i = 0
+while independent_get_price_i < 1
+    independent_get_price_value := line.get_price(line_id, bar_index + 5)
+    independent_get_price_i := independent_get_price_i + 1
+plot(independent_get_price_value)
 plot(close)
