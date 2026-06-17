@@ -684,11 +684,13 @@ and independent while-loop control-flow mutation coverage, `line.delete`
 deletion snapshots, including ordinary and independent while-loop control-flow
 deletion coverage,
 fixture-backed cloning with `line.copy`, including ordinary and independent
-while-loop control-flow cloning coverage, `line.all` reads from ordinary control-flow blocks,
-fixture-backed `line.get_x1`, `line.get_y1`, `line.get_x2`, and `line.get_y2`
-reads from ordinary control-flow blocks, and fixture-backed `line.get_price`
-getter over the latest existing line snapshot, including while-loop
-control-flow reads, with sparse snapshots and a 500-line runtime limit.
+while-loop control-flow cloning coverage, `line.all` reads from ordinary and
+independent while-loop control-flow blocks, fixture-backed `line.get_x1`,
+`line.get_y1`, `line.get_x2`, and `line.get_y2` reads from ordinary and
+independent while-loop control-flow blocks, and fixture-backed
+`line.get_price` getter over the latest existing line snapshot, including
+ordinary and independent while-loop control-flow reads, with sparse snapshots
+and a 500-line runtime limit.
 `line.get_price` uses bar-index x1/y1/x2/y2 interpolation and extrapolation and
 returns `na` for `na`, deleted, vertical, or nonnumeric lines; time-coordinate
 price lookup remains unsupported. The executable box subset covers
@@ -800,7 +802,8 @@ existing line snapshot into a new deterministic id, including when called from
 ordinary and independent while-loop control-flow blocks,
 returns `na` for `na` or deleted lines, and shares the line runtime limit.
 `line.all` returns currently existing line ids in creation order, including
-when read from ordinary control-flow blocks after line deletion.
+when read from ordinary and independent while-loop control-flow blocks after
+line deletion.
 `box.copy` clones the latest existing box
 snapshot into a new deterministic id, returns `na` for `na` or deleted boxes,
 and shares the box runtime limit. `box.set_extend` records the selected

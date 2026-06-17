@@ -430,14 +430,12 @@ while-loop control-flow blocks, reuse the same snapshot model;
 `line.copy` cloning from ordinary and independent while-loop control-flow
 blocks and `line.delete` deletion from ordinary and independent while-loop
 control-flow blocks also use that model. `line.all` reads current line ids from
-ordinary control-flow blocks. `line.get_x1` reads latest existing line x1
-values from ordinary control-flow blocks. `line.get_y1` reads latest existing
-line y1 values from ordinary control-flow blocks. `line.get_x2` reads latest
-existing line x2 values from ordinary control-flow blocks. `line.get_y2` reads
-latest existing line y2 values from ordinary control-flow blocks;
-`line.get_price` derives a host-neutral bar-index price from ordinary
-control-flow blocks by interpolating or extrapolating across the latest existing
-x1/y1/x2/y2 snapshot. Box snapshots
+ordinary and independent while-loop control-flow blocks. `line.get_x1`,
+`line.get_y1`, `line.get_x2`, and `line.get_y2` read latest existing line
+coordinates from ordinary and independent while-loop control-flow blocks;
+`line.get_price` derives a host-neutral bar-index price from ordinary and
+independent while-loop control-flow blocks by interpolating or extrapolating
+across the latest existing x1/y1/x2/y2 snapshot. Box snapshots
 cover `left`, `top`,
 `right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, `borderStyle`,
 `extend`, `text`, `textColor`, `textSize`, `textHalign`, `textValign`,

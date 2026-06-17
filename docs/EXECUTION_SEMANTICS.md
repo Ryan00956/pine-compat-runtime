@@ -755,23 +755,28 @@ existing line snapshot into a new deterministic id, including when called from
 ordinary and independent while-loop control-flow blocks,
 returns `na` for `na` or deleted lines, and shares the line object limit.
 `line.all` returns currently existing line ids in creation order, including
-when read from ordinary control-flow blocks after line deletion.
+when read from ordinary and independent while-loop control-flow blocks after
+line deletion.
 `line.get_x1` reads the latest existing line x1 value, including when called
-from ordinary control-flow blocks, and returns `na` for `na` or deleted lines.
+from ordinary and independent while-loop control-flow blocks, and returns `na`
+for `na` or deleted lines.
 `line.get_y1` reads the latest existing line y1 value, including when called
-from ordinary control-flow blocks, and returns `na` for `na` or deleted lines.
+from ordinary and independent while-loop control-flow blocks, and returns `na`
+for `na` or deleted lines.
 `line.get_x2` reads the latest existing line x2 value, including when called
-from ordinary control-flow blocks, and returns `na` for `na` or deleted lines.
+from ordinary and independent while-loop control-flow blocks, and returns `na`
+for `na` or deleted lines.
 `line.get_y2` reads the latest existing line y2 value, including when called
-from ordinary control-flow blocks, and returns `na` for `na` or deleted lines.
+from ordinary and independent while-loop control-flow blocks, and returns `na`
+for `na` or deleted lines.
 `line.get_price` reads the latest existing bar-index line snapshot, including
-when called from ordinary control-flow blocks, applies x1/y1/x2/y2
-interpolation or extrapolation for the requested x value, and returns `na` for
-`na`, deleted, vertical, or nonnumeric lines; time-coordinate price lookup
-remains unsupported. `box.copy` clones the latest existing box
-snapshot into a new deterministic id, including when called from ordinary
-control-flow blocks, returns `na` for `na` or deleted boxes, and shares the box
-object limit. `box.all` returns currently existing box ids in
+when called from ordinary and independent while-loop control-flow blocks,
+applies x1/y1/x2/y2 interpolation or extrapolation for the requested x value,
+and returns `na` for `na`, deleted, vertical, or nonnumeric lines;
+time-coordinate price lookup remains unsupported. `box.copy` clones the latest
+existing box snapshot into a new deterministic id, including when called from
+ordinary control-flow blocks, returns `na` for `na` or deleted boxes, and
+shares the box object limit. `box.all` returns currently existing box ids in
 creation order, including when read from ordinary control-flow blocks after box
 deletion. `box.set_extend` records the selected
 horizontal extend constant in the host-neutral snapshot; visual extension
