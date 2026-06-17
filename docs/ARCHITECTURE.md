@@ -414,8 +414,9 @@ normalized Pine values, including `textAlign`, `textFontFamily`, and
 `label.new`, selected
 `label.set_*` mutators including x-location and y-location snapshot mutation
 from ordinary control-flow blocks,
-`label.copy` cloning from ordinary control-flow blocks, and `label.delete`
-deletion snapshots from ordinary control-flow blocks; `label.all` reads
+`label.copy` cloning from ordinary and independent while-loop control-flow
+blocks, and `label.delete` deletion snapshots from ordinary and independent
+while-loop control-flow blocks; `label.all` reads
 currently existing label ids, `label.get_x` reads latest label x-coordinates,
 `label.get_y` reads latest label y-coordinates, and `label.get_text` reads
 latest label text from ordinary and independent while-loop control-flow blocks.

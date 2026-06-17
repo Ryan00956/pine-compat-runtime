@@ -736,11 +736,13 @@ selected font-family constant. `label.new` can initialize `textalign`,
 `text.format_none`/`text.format_bold`/`text.format_italic` mask, including
 bold+italic combinations. Above/below-bar, time/index, glyph styling, and text
 layout remain host responsibilities. `label.delete` appends an `exists: false`
-label snapshot, including when called from ordinary control-flow blocks.
+label snapshot, including when called from ordinary and independent while-loop
+control-flow blocks.
 `label.copy` clones the latest existing label
-snapshot into a new deterministic id, including when called from ordinary
-control-flow blocks, returns `na` for `na` or deleted labels, and shares the
-label object limit. `label.get_x` reads the latest existing label x-coordinate,
+snapshot into a new deterministic id, including when called from ordinary and
+independent while-loop control-flow blocks, returns `na` for `na` or deleted
+labels, and shares the label object limit. `label.get_x` reads the latest
+existing label x-coordinate,
 including when called from ordinary and independent while-loop control-flow
 blocks, and returns `na` for `na` or deleted labels. `label.get_y` reads the
 latest existing label y-coordinate, including when called from ordinary and

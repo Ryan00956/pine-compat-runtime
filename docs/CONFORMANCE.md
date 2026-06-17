@@ -667,9 +667,10 @@ control-flow mutation coverage, text-alignment snapshot
 mutation for `label.set_textalign`, text font-family snapshot mutation for
 `label.set_text_font_family`, text-formatting snapshot mutation for
 `label.set_text_formatting`, `label.delete` deletion snapshots, including
-while-loop control-flow deletion coverage,
-fixture-backed cloning with `label.copy`, including while-loop control-flow
-cloning coverage, and the fixture-backed `label.get_x`, `label.get_y`, and
+ordinary and independent while-loop control-flow deletion coverage,
+fixture-backed cloning with `label.copy`, including ordinary and independent
+while-loop control-flow cloning coverage, and the fixture-backed `label.get_x`,
+`label.get_y`, and
 `label.get_text` getters over the latest existing label snapshot, including
 ordinary and independent while-loop control-flow read coverage for all three
 getters, plus `label.all` existing-label id reads, including ordinary and
@@ -788,11 +789,13 @@ family in label snapshots. `label.set_text_formatting` records a
 `text.format_none`/`text.format_bold`/`text.format_italic` bitmask, including
 bold+italic combinations, while actual glyph styling remains host-specific.
 Text layout remains host-specific. `label.delete` appends an `exists: false`
-label snapshot, including when called from ordinary control-flow blocks.
+label snapshot, including when called from ordinary and independent while-loop
+control-flow blocks.
 `label.copy` clones the latest existing label
-snapshot into a new deterministic id, including when called from ordinary
-control-flow blocks, returns `na` for `na` or deleted labels, and shares the
-label runtime limit. `label.get_x` reads the latest existing label x-coordinate,
+snapshot into a new deterministic id, including when called from ordinary and
+independent while-loop control-flow blocks, returns `na` for `na` or deleted
+labels, and shares the label runtime limit. `label.get_x` reads the latest
+existing label x-coordinate,
 including when called from ordinary and independent while-loop control-flow
 blocks, and returns `na` for `na` or deleted labels. `label.get_y` reads the
 latest existing label y-coordinate, including when called from ordinary and

@@ -35,6 +35,8 @@
   dedicated line lifecycle fixture path.
 - Added independent while-loop control-flow deletion coverage for `box.delete`.
 - Added independent while-loop control-flow cloning coverage for `label.copy`.
+- Synchronized label lifecycle documentation with independent while-loop
+  coverage.
 - Added independent while-loop control-flow cloning coverage for `line.copy`.
 - Strengthened `line.copy` independent while-loop cloning coverage with a
   dedicated line lifecycle fixture path.
