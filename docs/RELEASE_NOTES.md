@@ -21,6 +21,8 @@
   coverage.
 - Added independent while-loop control-flow `label.set_text_font_family`
   mutation coverage.
+- Added independent while-loop control-flow `label.set_text_formatting`
+  mutation coverage.
 - Added independent while-loop control-flow `label.set_xloc` mutation coverage.
 - Added independent while-loop control-flow `label.set_yloc` mutation coverage.
 - Added independent while-loop control-flow deletion coverage for
