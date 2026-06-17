@@ -730,8 +730,9 @@ independent while-loop control-flow mutation coverage,
 `table.set_border_color` final border-color mutations, including ordinary and
 independent while-loop control-flow mutation coverage,
 `table.set_border_width` final border-width mutations, including ordinary and
-independent while-loop control-flow mutation coverage, `table.delete` deletion snapshots, including
-while-loop control-flow deletion coverage, `table.clear` inclusive rectangular
+independent while-loop control-flow mutation coverage, `table.delete` deletion
+snapshots, including ordinary and independent while-loop control-flow deletion
+coverage, `table.clear` inclusive rectangular
 cell-content removal snapshots, including while-loop control-flow clearing
 coverage,
 `table.merge_cells` inclusive merged-cell rectangle snapshots, including
@@ -761,8 +762,8 @@ ordinary and independent while-loop control-flow mutation coverage, for previous
 with
 deterministic table dimensions, a 50-table runtime limit, and a 1000-cell
 per-table limit. `table.all` returns currently existing table ids in creation
-order, including when read from ordinary control-flow blocks after table
-deletion. Supported label, line, box, and table id-first drawing
+order, including when read from ordinary and independent while-loop control-flow
+blocks after table deletion. Supported label, line, box, and table id-first drawing
 functions can also use Pine method syntax, where the object receiver becomes
 the first function argument; for example, `id.set_text("x")` is analyzed and
 lowered as `label.set_text(id, "x")` when `id` is a label. This method syntax
@@ -837,7 +838,8 @@ control-flow blocks, with table layout left to hosts. `table.new` optional `bgco
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize only
 the table's final background-color, frame-color, frame-width, border-color, and
 border-width values.
-`table.delete` appends an `exists: false` table snapshot. `table.clear` removes
+`table.delete` appends an `exists: false` table snapshot, including when called
+from ordinary and independent while-loop control-flow blocks. `table.clear` removes
 already populated cells in the inclusive rectangular range from `start_column`,
 `start_row` to `end_column`, `end_row`, including when called from ordinary
 control-flow blocks; it also removes merged-cell records that intersect the

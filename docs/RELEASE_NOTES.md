@@ -77,6 +77,8 @@
 - Added independent while-loop control-flow merging coverage for
   `table.merge_cells`.
 - Added independent while-loop control-flow read coverage for `table.all`.
+- Synchronized table deletion and `table.all` documentation with independent
+  while-loop lifecycle coverage.
 - Added fixture-backed while-loop control-flow `table.set_position` mutation
   coverage.
 - Added independent while-loop control-flow `table.set_position` mutation

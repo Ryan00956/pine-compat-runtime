@@ -476,8 +476,8 @@ final border color, including when called from ordinary and independent
 while-loop control-flow blocks, `table.set_border_width` updates the table's
 final border width, including when called from ordinary and independent
 while-loop control-flow blocks, `table.delete` records an
-`exists: false` snapshot, including when called from ordinary control-flow
-blocks, while `table.cell_set_text`, `table.cell_set_bgcolor`,
+`exists: false` snapshot, including when called from ordinary and independent
+while-loop control-flow blocks, while `table.cell_set_text`, `table.cell_set_bgcolor`,
 `table.cell_set_text_color`, `table.cell_set_width`, `table.cell_set_height`,
 `table.cell_set_text_size`, `table.cell_set_text_halign`,
 `table.cell_set_text_valign`, `table.cell_set_text_wrap`,
@@ -490,9 +490,10 @@ populated by `table.cell`, `table.clear` removes populated cells in an
 inclusive rectangular range, including from ordinary control-flow blocks, and
 removes merged-cell records intersecting that range, `table.merge_cells`
 records inclusive host-neutral merge rectangles, including from ordinary
-control-flow blocks, and `table.delete` appends a deleted snapshot.
+control-flow blocks, and `table.delete` appends a deleted snapshot, including
+from ordinary and independent while-loop control-flow blocks.
 `table.all` reads currently existing table ids in creation order, including
-from ordinary control-flow blocks after deletion.
+from ordinary and independent while-loop control-flow blocks after deletion.
 Delete calls append an `exists: false`
 snapshot for families with deletion; deleting `na` or an already deleted
 drawing object is a no-op; ids are not reused. The historical runtime caps

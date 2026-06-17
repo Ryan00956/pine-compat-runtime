@@ -833,7 +833,8 @@ independent while-loop control-flow blocks. `table.new` optional
 table's final background-color, frame-color, frame-width, border-color, and
 border-width values.
 `table.delete` appends an `exists: false` table snapshot, including when called
-from ordinary control-flow blocks. `table.clear` removes already populated cells
+from ordinary and independent while-loop control-flow blocks. `table.clear`
+removes already populated cells
 in the inclusive rectangular range from `start_column`,
 `start_row` to `end_column`, `end_row`, including when called from ordinary
 control-flow blocks; it also removes merged-cell records that intersect the
@@ -846,7 +847,8 @@ errors, and out-of-bounds, reversed, or overlapping merge ranges are runtime
 errors. Later table-level or cell mutations of deleted
 tables are no-ops.
 `table.all` returns currently existing table ids in creation order, including
-when read from ordinary control-flow blocks after table deletion.
+when read from ordinary and independent while-loop control-flow blocks after
+table deletion.
 `table.set_bgcolor`, `table.set_frame_color`, `table.set_frame_width`,
 `table.set_border_color`, and `table.set_border_width` update the table's final
 style values; visual anchoring, border rendering, and layout remain host
