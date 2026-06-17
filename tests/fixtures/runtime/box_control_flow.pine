@@ -13,6 +13,7 @@ var border_width_box = box.new(bar_index - 9, high + 9, bar_index, low - 9)
 var border_style_box = box.new(bar_index - 10, high + 10, bar_index, low - 10)
 var extend_box = box.new(bar_index - 11, high + 11, bar_index, low - 11)
 var xloc_box = box.new(bar_index - 12, high + 12, bar_index, low - 12)
+var text_box = box.new(bar_index - 13, high + 13, bar_index, low - 13)
 if bar_index == 1
     left_i = 0
     while left_i < 1
@@ -87,6 +88,10 @@ if bar_index == 2
     while independent_xloc_i < 1
         box.set_xloc(xloc_box, bar_index - 4, bar_index + 5, xloc.bar_index)
         independent_xloc_i := independent_xloc_i + 1
+    independent_text_i = 0
+    while independent_text_i < 1
+        box.set_text(text_box, "independent text")
+        independent_text_i := independent_text_i + 1
 direction = close > open ? 1 : -1
 bg_i = 0
 while bg_i < 1
