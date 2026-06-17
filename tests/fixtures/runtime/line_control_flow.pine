@@ -65,4 +65,10 @@ while independent_get_x1_i < 1
     independent_get_x1_value := line.get_x1(line_id)
     independent_get_x1_i := independent_get_x1_i + 1
 plot(independent_get_x1_value)
+independent_get_y1_value = line.get_y1(line_id)
+independent_get_y1_i = 0
+while independent_get_y1_i < 1
+    independent_get_y1_value := line.get_y1(line_id)
+    independent_get_y1_i := independent_get_y1_i + 1
+plot(independent_get_y1_value)
 plot(close)
