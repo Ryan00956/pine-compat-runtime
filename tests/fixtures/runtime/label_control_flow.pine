@@ -143,4 +143,9 @@ while independent_set_textalign_i < 1
     if bar_index == 3
         label.set_textalign(label_id, text.align_center)
     independent_set_textalign_i := independent_set_textalign_i + 1
+independent_set_text_font_family_i = 0
+while independent_set_text_font_family_i < 1
+    if bar_index == 3
+        label.set_text_font_family(label_id, font.family_default)
+    independent_set_text_font_family_i := independent_set_text_font_family_i + 1
 plot(close)
