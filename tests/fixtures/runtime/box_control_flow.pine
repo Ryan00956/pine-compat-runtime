@@ -15,6 +15,7 @@ var extend_box = box.new(bar_index - 11, high + 11, bar_index, low - 11)
 var xloc_box = box.new(bar_index - 12, high + 12, bar_index, low - 12)
 var text_box = box.new(bar_index - 13, high + 13, bar_index, low - 13)
 var text_color_box = box.new(bar_index - 14, high + 14, bar_index, low - 14)
+var text_size_box = box.new(bar_index - 15, high + 15, bar_index, low - 15)
 if bar_index == 1
     left_i = 0
     while left_i < 1
@@ -97,6 +98,10 @@ if bar_index == 2
     while independent_text_color_i < 1
         box.set_text_color(text_color_box, color.white)
         independent_text_color_i := independent_text_color_i + 1
+    independent_text_size_i = 0
+    while independent_text_size_i < 1
+        box.set_text_size(text_size_box, size.large)
+        independent_text_size_i := independent_text_size_i + 1
 direction = close > open ? 1 : -1
 bg_i = 0
 while bg_i < 1
