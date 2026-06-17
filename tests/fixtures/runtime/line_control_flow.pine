@@ -89,4 +89,10 @@ while independent_get_price_i < 1
     independent_get_price_value := line.get_price(line_id, bar_index + 5)
     independent_get_price_i := independent_get_price_i + 1
 plot(independent_get_price_value)
+independent_line_all_count = array.size(line.all)
+independent_line_all_i = 0
+while independent_line_all_i < 1
+    independent_line_all_count := array.size(line.all)
+    independent_line_all_i := independent_line_all_i + 1
+plot(independent_line_all_count)
 plot(close)
