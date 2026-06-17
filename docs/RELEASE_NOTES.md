@@ -31,6 +31,8 @@
 - Added independent while-loop control-flow deletion coverage for
   `label.delete`.
 - Added independent while-loop control-flow deletion coverage for `line.delete`.
+- Strengthened `line.delete` independent while-loop deletion coverage with a
+  dedicated line lifecycle fixture path.
 - Added independent while-loop control-flow deletion coverage for `box.delete`.
 - Added independent while-loop control-flow cloning coverage for `label.copy`.
 - Added independent while-loop control-flow cloning coverage for `line.copy`.
