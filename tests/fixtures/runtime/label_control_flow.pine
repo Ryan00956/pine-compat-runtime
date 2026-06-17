@@ -74,4 +74,10 @@ while size_i < 1
     if bar_index == 3
         label.set_size(label_id, size.small)
     size_i := size_i + 1
+independent_get_x_value = label.get_x(label_id)
+independent_get_x_i = 0
+while independent_get_x_i < 1
+    independent_get_x_value := label.get_x(label_id)
+    independent_get_x_i := independent_get_x_i + 1
+plot(independent_get_x_value)
 plot(close)
