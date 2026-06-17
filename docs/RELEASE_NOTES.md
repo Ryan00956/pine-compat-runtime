@@ -37,6 +37,8 @@
   mutation coverage.
 - Added independent while-loop control-flow `table.cell_set_text_wrap`
   mutation coverage.
+- Added independent while-loop control-flow `table.cell_set_tooltip`
+  mutation coverage.
 - Added fixture-backed while-loop control-flow `table.set_position` mutation
   coverage.
 - Added independent while-loop control-flow `table.set_position` mutation
