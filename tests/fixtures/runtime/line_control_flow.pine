@@ -59,4 +59,10 @@ while xloc_i < 1
     if bar_index == 3
         line.set_xloc(line_id, bar_index - 2, bar_index + 3, xloc.bar_index)
     xloc_i := xloc_i + 1
+independent_get_x1_value = line.get_x1(line_id)
+independent_get_x1_i = 0
+while independent_get_x1_i < 1
+    independent_get_x1_value := line.get_x1(line_id)
+    independent_get_x1_i := independent_get_x1_i + 1
+plot(independent_get_x1_value)
 plot(close)
