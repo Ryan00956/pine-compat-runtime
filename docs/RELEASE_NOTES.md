@@ -30,6 +30,7 @@
   coverage.
 - Added fixture-backed while-loop control-flow `table.set_border_width` mutation
   coverage.
+- Added independent while-loop control-flow `box.set_left` mutation coverage.
 - Added fixture-backed while-loop control-flow `line.set_x1` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `line.set_y1` mutation
