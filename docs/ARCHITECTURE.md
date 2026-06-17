@@ -487,10 +487,11 @@ independent while-loop control-flow blocks, mutate only
 the stored text/background/text color/width/height/text size/text
 alignment/text wrap/tooltip/font-family/text-formatting for cells already
 populated by `table.cell`, `table.clear` removes populated cells in an
-inclusive rectangular range, including from ordinary control-flow blocks, and
-removes merged-cell records intersecting that range, `table.merge_cells`
-records inclusive host-neutral merge rectangles, including from ordinary
-control-flow blocks, and `table.delete` appends a deleted snapshot, including
+inclusive rectangular range, including from ordinary and independent while-loop
+control-flow blocks, and removes merged-cell records intersecting that range,
+`table.merge_cells` records inclusive host-neutral merge rectangles, including
+from ordinary and independent while-loop control-flow blocks, and `table.delete`
+appends a deleted snapshot, including
 from ordinary and independent while-loop control-flow blocks.
 `table.all` reads currently existing table ids in creation order, including
 from ordinary and independent while-loop control-flow blocks after deletion.

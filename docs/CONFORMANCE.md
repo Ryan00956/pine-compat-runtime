@@ -733,10 +733,10 @@ independent while-loop control-flow mutation coverage,
 independent while-loop control-flow mutation coverage, `table.delete` deletion
 snapshots, including ordinary and independent while-loop control-flow deletion
 coverage, `table.clear` inclusive rectangular
-cell-content removal snapshots, including while-loop control-flow clearing
-coverage,
+cell-content removal snapshots, including ordinary and independent while-loop
+control-flow clearing coverage,
 `table.merge_cells` inclusive merged-cell rectangle snapshots, including
-while-loop control-flow merge coverage, and
+ordinary and independent while-loop control-flow merge coverage, and
 `table.cell_set_text` text mutations, including ordinary and independent
 while-loop control-flow mutation coverage, plus `table.cell_set_bgcolor`
 background color mutations, including ordinary and independent while-loop
@@ -841,13 +841,15 @@ border-width values.
 `table.delete` appends an `exists: false` table snapshot, including when called
 from ordinary and independent while-loop control-flow blocks. `table.clear` removes
 already populated cells in the inclusive rectangular range from `start_column`,
-`start_row` to `end_column`, `end_row`, including when called from ordinary
-control-flow blocks; it also removes merged-cell records that intersect the
-cleared range, while preserving the table object and table-level style fields.
+`start_row` to `end_column`, `end_row`, including when called from ordinary and
+independent while-loop control-flow blocks; it also removes merged-cell records
+that intersect the cleared range, while preserving the table object and
+table-level style fields.
 `table.merge_cells` appends inclusive
 `start_column`/`start_row` to `end_column`/`end_row` merge rectangles to the
-host-neutral table snapshot, including when called from ordinary control-flow
-blocks; deleted or `na` table ids are no-ops, invalid non-`na` ids are runtime
+host-neutral table snapshot, including when called from ordinary and independent
+while-loop control-flow blocks; deleted or `na` table ids are no-ops, invalid
+non-`na` ids are runtime
 errors, and out-of-bounds, reversed, or overlapping merge ranges are runtime
 errors. Later table-level and cell mutations of
 deleted tables are no-ops.
