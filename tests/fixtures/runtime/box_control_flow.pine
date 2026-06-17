@@ -8,6 +8,7 @@ var bottom_box = box.new(bar_index - 4, high + 4, bar_index, low - 4)
 var lefttop_box = box.new(bar_index - 5, high + 5, bar_index, low - 5)
 var rightbottom_box = box.new(bar_index - 6, high + 6, bar_index, low - 6)
 var bgcolor_box = box.new(bar_index - 7, high + 7, bar_index, low - 7)
+var border_color_box = box.new(bar_index - 8, high + 8, bar_index, low - 8)
 if bar_index == 1
     left_i = 0
     while left_i < 1
@@ -62,6 +63,10 @@ if bar_index == 2
     while independent_bgcolor_i < 1
         box.set_bgcolor(bgcolor_box, color.blue)
         independent_bgcolor_i := independent_bgcolor_i + 1
+    independent_border_color_i = 0
+    while independent_border_color_i < 1
+        box.set_border_color(border_color_box, color.white)
+        independent_border_color_i := independent_border_color_i + 1
 direction = close > open ? 1 : -1
 bg_i = 0
 while bg_i < 1
