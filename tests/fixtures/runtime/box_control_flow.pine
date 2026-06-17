@@ -3,6 +3,7 @@ indicator("Box control flow")
 var box_id = box.new(bar_index, high, bar_index, low)
 var left_box = box.new(bar_index - 1, high + 1, bar_index, low - 1)
 var top_box = box.new(bar_index - 2, high + 2, bar_index, low - 2)
+var right_box = box.new(bar_index - 3, high + 3, bar_index, low - 3)
 if bar_index == 1
     left_i = 0
     while left_i < 1
@@ -37,6 +38,10 @@ if bar_index == 2
     while independent_top_i < 1
         box.set_top(top_box, close + 30)
         independent_top_i := independent_top_i + 1
+    independent_right_i = 0
+    while independent_right_i < 1
+        box.set_right(right_box, bar_index + 3)
+        independent_right_i := independent_right_i + 1
 direction = close > open ? 1 : -1
 bg_i = 0
 while bg_i < 1
