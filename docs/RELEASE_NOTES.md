@@ -117,6 +117,8 @@
   coverage.
 - Added independent while-loop control-flow `box.set_extend` mutation coverage.
 - Added independent while-loop control-flow `box.set_xloc` mutation coverage.
+- Synchronized box style and xloc mutator documentation with independent
+  while-loop mutation coverage.
 - Added independent while-loop control-flow `box.set_text` mutation coverage.
 - Added independent while-loop control-flow `box.set_text_color` mutation
   coverage.

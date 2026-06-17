@@ -785,11 +785,14 @@ control-flow blocks after box deletion. `box.set_left`, `box.set_top`,
 `box.set_right`, `box.set_bottom`, `box.set_lefttop`, and
 `box.set_rightbottom` update the host-neutral geometry snapshot, including when
 called from ordinary and independent while-loop control-flow blocks.
-`box.set_extend` records the selected
-horizontal extend constant in the host-neutral snapshot; visual extension
-remains a host responsibility. `box.set_xloc` with `xloc.bar_index` updates the
-box's left and right values in the host-neutral snapshot; time-coordinate box
-x-location remains unsupported. `box.set_text` records the box text string in the
+`box.set_bgcolor`, `box.set_border_color`, `box.set_border_width`,
+`box.set_border_style`, and `box.set_extend` update the host-neutral style
+snapshot, including when called from ordinary and independent while-loop
+control-flow blocks; visual extension remains a host responsibility.
+`box.set_xloc` with `xloc.bar_index` updates the box's left and right values in
+the host-neutral snapshot, including when called from ordinary and independent
+while-loop control-flow blocks; time-coordinate box x-location remains
+unsupported. `box.set_text` records the box text string in the
 host-neutral snapshot. `box.set_text_color` records the text color in the
 host-neutral snapshot. `box.set_text_size` records the selected size constant in
 the host-neutral snapshot. `box.set_text_halign` records the selected horizontal

@@ -700,10 +700,12 @@ text-wrap, font-family, and text-formatting initialization for existing
 host-neutral snapshot fields when `xloc` is omitted or `xloc.bar_index`;
 chart-point overloads and `xloc.bar_time` remain unsupported.
 It also covers selected geometry mutators from ordinary and independent
-while-loop control-flow blocks, selected background/border/extend/text/text-color/
-text-size/horizontal-alignment/vertical-alignment/text-wrap/font-family/
-text-formatting mutators,
-`box.set_xloc` for the `xloc.bar_index` subset that updates left and right snapshots,
+while-loop control-flow blocks, selected background/border/extend mutators from
+ordinary and independent while-loop control-flow blocks, selected
+text/text-color/text-size/horizontal-alignment/vertical-alignment/text-wrap/
+font-family/text-formatting mutators,
+`box.set_xloc` for the `xloc.bar_index` subset that updates left and right
+snapshots from ordinary and independent while-loop control-flow blocks,
 `box.delete` from ordinary and independent while-loop control-flow blocks, and
 fixture-backed cloning with `box.copy` over the latest existing box
 snapshot from ordinary and independent while-loop control-flow blocks, `box.all`
@@ -805,10 +807,13 @@ line deletion.
 `box.copy` clones the latest existing box
 snapshot into a new deterministic id, including when called from ordinary and
 independent while-loop control-flow blocks, returns `na` for `na` or deleted
-boxes, and shares the box runtime limit. `box.set_extend` records the selected
-horizontal extend constant in box snapshots. `box.set_xloc` with
-`xloc.bar_index` updates left and right values in box snapshots; time-coordinate
-box x-location remains unsupported. `box.set_left`, `box.set_top`,
+boxes, and shares the box runtime limit. `box.set_bgcolor`,
+`box.set_border_color`, `box.set_border_width`, `box.set_border_style`, and
+`box.set_extend` update box style snapshots, including when called from
+ordinary and independent while-loop control-flow blocks. `box.set_xloc` with
+`xloc.bar_index` updates left and right values in box snapshots, including when
+called from ordinary and independent while-loop control-flow blocks;
+time-coordinate box x-location remains unsupported. `box.set_left`, `box.set_top`,
 `box.set_right`, `box.set_bottom`, `box.set_lefttop`, and
 `box.set_rightbottom` update box geometry snapshots, including when called from
 ordinary and independent while-loop control-flow blocks. `box.set_text` records text in box
