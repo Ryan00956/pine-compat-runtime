@@ -43,6 +43,8 @@
   mutation coverage.
 - Added independent while-loop control-flow `table.cell_set_text_formatting`
   mutation coverage.
+- Added independent while-loop control-flow deletion coverage for
+  `table.delete`.
 - Added fixture-backed while-loop control-flow `table.set_position` mutation
   coverage.
 - Added independent while-loop control-flow `table.set_position` mutation

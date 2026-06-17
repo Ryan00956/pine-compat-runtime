@@ -20,6 +20,7 @@ var independent_cell_text_wrap_table = table.new(position.bottom_left, 1, 1)
 var independent_cell_tooltip_table = table.new(position.middle_left, 1, 1)
 var independent_cell_text_font_family_table = table.new(position.middle_right, 1, 1)
 var independent_cell_text_formatting_table = table.new(position.bottom_center, 1, 1)
+var independent_delete_table = table.new(position.top_left, 1, 1)
 if bar_index == 1
     table.cell(table_id, 0, 0, "if")
 direction = close > open ? 1 : -1
@@ -118,6 +119,10 @@ if bar_index == 2
     while independent_cell_text_formatting_i < 1
         table.cell_set_text_formatting(independent_cell_text_formatting_table, 0, 0, text.format_italic)
         independent_cell_text_formatting_i := independent_cell_text_formatting_i + 1
+    independent_delete_i = 0
+    while independent_delete_i < 1
+        table.delete(independent_delete_table)
+        independent_delete_i := independent_delete_i + 1
 cell_i = 0
 while cell_i < 1
     if bar_index == 3
