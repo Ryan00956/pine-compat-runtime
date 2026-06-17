@@ -86,4 +86,10 @@ while independent_get_y_i < 1
     independent_get_y_value := label.get_y(label_id)
     independent_get_y_i := independent_get_y_i + 1
 plot(independent_get_y_value)
+independent_get_text_length = str.length(label.get_text(label_id))
+independent_get_text_i = 0
+while independent_get_text_i < 1
+    independent_get_text_length := str.length(label.get_text(label_id))
+    independent_get_text_i := independent_get_text_i + 1
+plot(independent_get_text_length)
 plot(close)
