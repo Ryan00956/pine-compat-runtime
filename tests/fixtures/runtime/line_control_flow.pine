@@ -151,3 +151,9 @@ while independent_set_xloc_i < 1
         line.set_xloc(line_id, bar_index - 3, bar_index + 6, xloc.bar_index)
     independent_set_xloc_i := independent_set_xloc_i + 1
 plot(close)
+independent_new_i = 0
+while independent_new_i < 1
+    if bar_index == 3
+        line.new(bar_index + 20, close + 20, bar_index + 21, close + 25, extend=extend.right, color=color.yellow, style=line.style_dashed, width=2)
+    independent_new_i := independent_new_i + 1
+plot(array.size(line.all))
