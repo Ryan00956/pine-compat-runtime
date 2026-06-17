@@ -13,6 +13,7 @@ var independent_cell_bgcolor_table = table.new(position.middle_left, 1, 1)
 var independent_cell_text_color_table = table.new(position.middle_right, 1, 1)
 var independent_cell_width_table = table.new(position.bottom_center, 1, 1)
 var independent_cell_height_table = table.new(position.top_center, 1, 1)
+var independent_cell_text_size_table = table.new(position.middle_center, 1, 1)
 if bar_index == 1
     table.cell(table_id, 0, 0, "if")
 direction = close > open ? 1 : -1
@@ -76,6 +77,11 @@ if bar_index == 2
     while independent_cell_height_i < 1
         table.cell_set_height(independent_cell_height_table, 0, 0, 40)
         independent_cell_height_i := independent_cell_height_i + 1
+    table.cell(independent_cell_text_size_table, 0, 0, "size")
+    independent_cell_text_size_i = 0
+    while independent_cell_text_size_i < 1
+        table.cell_set_text_size(independent_cell_text_size_table, 0, 0, size.large)
+        independent_cell_text_size_i := independent_cell_text_size_i + 1
 cell_i = 0
 while cell_i < 1
     if bar_index == 3

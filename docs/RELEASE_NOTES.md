@@ -29,6 +29,8 @@
   coverage.
 - Added independent while-loop control-flow `table.cell_set_height` mutation
   coverage.
+- Added independent while-loop control-flow `table.cell_set_text_size` mutation
+  coverage.
 - Added fixture-backed while-loop control-flow `table.set_position` mutation
   coverage.
 - Added independent while-loop control-flow `table.set_position` mutation
