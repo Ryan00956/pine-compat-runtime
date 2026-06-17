@@ -144,6 +144,7 @@
 - Added independent while-loop control-flow `line.set_x2` mutation coverage.
 - Added independent while-loop control-flow `line.set_y2` mutation coverage.
 - Added independent while-loop control-flow `line.set_xy2` mutation coverage.
+- Added independent while-loop control-flow `line.set_color` mutation coverage.
 - Added fixture-backed while-loop control-flow `line.set_x1` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `line.set_y1` mutation
