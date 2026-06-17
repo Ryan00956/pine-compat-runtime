@@ -817,15 +817,17 @@ existing box bottom value, including when called from ordinary and independent
 while-loop control-flow blocks, and returns `na` for `na` or deleted boxes.
 `table.set_position`
 updates the table's final position value, including when called from ordinary
-control-flow blocks. `table.set_bgcolor` updates the table's final background
-color value, including when called from ordinary control-flow blocks.
-`table.set_frame_color` updates the table's final frame-color value, including
-when called from ordinary control-flow blocks. `table.set_frame_width` updates
-the table's final frame-width value, including when called from ordinary
-control-flow blocks. `table.set_border_color` updates the table's final
-border-color value, including when called from ordinary control-flow blocks.
-`table.set_border_width` updates the table's final border-width value,
-including when called from ordinary control-flow blocks. `table.new` optional
+and independent while-loop control-flow blocks. `table.set_bgcolor` updates the
+table's final background color value, including when called from ordinary and
+independent while-loop control-flow blocks. `table.set_frame_color` updates the
+table's final frame-color value, including when called from ordinary and
+independent while-loop control-flow blocks. `table.set_frame_width` updates the
+table's final frame-width value, including when called from ordinary and
+independent while-loop control-flow blocks. `table.set_border_color` updates
+the table's final border-color value, including when called from ordinary and
+independent while-loop control-flow blocks. `table.set_border_width` updates
+the table's final border-width value, including when called from ordinary and
+independent while-loop control-flow blocks. `table.new` optional
 `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize the
 table's final background-color, frame-color, frame-width, border-color, and
@@ -845,12 +847,9 @@ errors. Later table-level or cell mutations of deleted
 tables are no-ops.
 `table.all` returns currently existing table ids in creation order, including
 when read from ordinary control-flow blocks after table deletion.
-`table.set_bgcolor` updates the
-table's final background-color value. `table.set_frame_color` updates the
-table's final frame-color value. `table.set_frame_width` updates the table's
-final frame-width value. `table.set_border_color` updates the table's final
-border-color value. `table.set_border_width` updates the table's final
-border-width value; visual anchoring, border rendering, and layout remain host
+`table.set_bgcolor`, `table.set_frame_color`, `table.set_frame_width`,
+`table.set_border_color`, and `table.set_border_width` update the table's final
+style values; visual anchoring, border rendering, and layout remain host
 responsibilities. `table.cell_set_text`
 updates the target previously populated cell text in the host-neutral table
 snapshot, including when called from ordinary control-flow blocks, while

@@ -719,18 +719,18 @@ The executable table subset covers
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialization
 plus `table.cell` text/background/text-color/tooltip/font-family/text-formatting
 cell writes,
-`table.set_position` final-position mutations, including while-loop
-control-flow mutation coverage,
-`table.set_bgcolor` final background-color mutations, including while-loop
-control-flow mutation coverage,
-`table.set_frame_color` final frame-color mutations, including while-loop
-control-flow mutation coverage,
-`table.set_frame_width` final frame-width mutations, including while-loop
-control-flow mutation coverage,
-`table.set_border_color` final border-color mutations, including while-loop
-control-flow mutation coverage,
-`table.set_border_width` final border-width mutations, including while-loop
-control-flow mutation coverage, `table.delete` deletion snapshots, including
+`table.set_position` final-position mutations, including ordinary and
+independent while-loop control-flow mutation coverage,
+`table.set_bgcolor` final background-color mutations, including ordinary and
+independent while-loop control-flow mutation coverage,
+`table.set_frame_color` final frame-color mutations, including ordinary and
+independent while-loop control-flow mutation coverage,
+`table.set_frame_width` final frame-width mutations, including ordinary and
+independent while-loop control-flow mutation coverage,
+`table.set_border_color` final border-color mutations, including ordinary and
+independent while-loop control-flow mutation coverage,
+`table.set_border_width` final border-width mutations, including ordinary and
+independent while-loop control-flow mutation coverage, `table.delete` deletion snapshots, including
 while-loop control-flow deletion coverage, `table.clear` inclusive rectangular
 cell-content removal snapshots, including while-loop control-flow clearing
 coverage,
@@ -829,8 +829,9 @@ Richer box text layout remains unsupported. `box.get_left`,
 `box.get_right`, `box.get_top`, and `box.get_bottom` read the latest existing
 box snapshot, including when called from ordinary and independent while-loop
 control-flow blocks, and return `na` for `na` or deleted boxes; other box
-methods remain unsupported. `table.set_position` updates only the table's final position
-value, with table layout left to hosts. `table.new` optional `bgcolor`,
+methods remain unsupported. `table.set_position` updates only the table's final
+position value, including when called from ordinary and independent while-loop
+control-flow blocks, with table layout left to hosts. `table.new` optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialize only
 the table's final background-color, frame-color, frame-width, border-color, and
 border-width values.
@@ -846,12 +847,10 @@ blocks; deleted or `na` table ids are no-ops, invalid non-`na` ids are runtime
 errors, and out-of-bounds, reversed, or overlapping merge ranges are runtime
 errors. Later table-level and cell mutations of
 deleted tables are no-ops.
-`table.set_bgcolor` updates only the
-table's final background-color value. `table.set_frame_color` updates only the
-table's final frame-color value. `table.set_frame_width` updates only the
-table's final frame-width value. `table.set_border_color` updates only the
-table's final border-color value. `table.set_border_width` updates only the
-table's final border-width value; border rendering and table layout remain host
+`table.set_bgcolor`, `table.set_frame_color`, `table.set_frame_width`,
+`table.set_border_color`, and `table.set_border_width` update only the table's
+final style values, including when called from ordinary and independent
+while-loop control-flow blocks; border rendering and table layout remain host
 responsibilities. `table.cell_set_text` updates only the target cell text
 snapshot after `table.cell` has populated that cell, including when called from
 ordinary control-flow blocks; `table.cell_set_bgcolor` updates only the target
