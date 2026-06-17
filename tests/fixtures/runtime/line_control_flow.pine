@@ -145,4 +145,9 @@ while independent_set_extend_i < 1
     if bar_index == 3
         line.set_extend(line_id, extend.both)
     independent_set_extend_i := independent_set_extend_i + 1
+independent_set_xloc_i = 0
+while independent_set_xloc_i < 1
+    if bar_index == 3
+        line.set_xloc(line_id, bar_index - 3, bar_index + 6, xloc.bar_index)
+    independent_set_xloc_i := independent_set_xloc_i + 1
 plot(close)

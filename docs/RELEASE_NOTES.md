@@ -148,6 +148,8 @@
 - Added independent while-loop control-flow `line.set_style` mutation coverage.
 - Added independent while-loop control-flow `line.set_width` mutation coverage.
 - Added independent while-loop control-flow `line.set_extend` mutation coverage.
+- Added independent while-loop control-flow `line.set_xloc` mutation coverage
+  for the `xloc.bar_index` subset.
 - Added fixture-backed while-loop control-flow `line.set_x1` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `line.set_y1` mutation
