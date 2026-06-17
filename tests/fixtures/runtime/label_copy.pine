@@ -6,6 +6,7 @@ var loop_copy = label.copy(original)
 if bar_index == 1
     label.set_text(original, "changed")
     label.set_xy(copy, bar_index, low)
+if bar_index == 3
     copy_i = 0
     while copy_i < 1
         loop_copy := label.copy(original)
