@@ -47,6 +47,8 @@
 - Added independent while-loop control-flow `box.set_extend` mutation coverage.
 - Added independent while-loop control-flow `box.set_xloc` mutation coverage.
 - Added independent while-loop control-flow `box.set_text` mutation coverage.
+- Added independent while-loop control-flow `box.set_text_color` mutation
+  coverage.
 - Added fixture-backed while-loop control-flow `line.set_x1` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `line.set_y1` mutation
