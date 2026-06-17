@@ -51,3 +51,10 @@ while independent_index_i < 1
     independent_index_value := independent_indices.get(0) * 100 + independent_indices.get(1) * 10 + independent_indices.get(2)
     independent_index_i := independent_index_i + 1
 plot(independent_index_value == 21 and independent_index_source.get(0) == 40 ? 1 : 0)
+
+independent_reverse_values = array.from(9, 8, 7)
+independent_reverse_i = 0
+while independent_reverse_i < 1
+    array.reverse(independent_reverse_values)
+    independent_reverse_i := independent_reverse_i + 1
+plot(independent_reverse_values.get(0) * 100 + independent_reverse_values.get(1) * 10 + independent_reverse_values.get(2))
