@@ -110,6 +110,7 @@
 - Added independent while-loop control-flow `box.get_left` read coverage.
 - Added independent while-loop control-flow `box.get_right` read coverage.
 - Added independent while-loop control-flow `box.get_top` read coverage.
+- Added independent while-loop control-flow `box.get_bottom` read coverage.
 - Added fixture-backed while-loop control-flow `line.set_x1` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `line.set_y1` mutation

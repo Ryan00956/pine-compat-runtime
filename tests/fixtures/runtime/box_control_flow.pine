@@ -237,4 +237,10 @@ while independent_get_top_i < 1
     independent_get_top_value := box.get_top(top_box)
     independent_get_top_i := independent_get_top_i + 1
 plot(independent_get_top_value)
+independent_get_bottom_value = box.get_bottom(bottom_box)
+independent_get_bottom_i = 0
+while independent_get_bottom_i < 1
+    independent_get_bottom_value := box.get_bottom(bottom_box)
+    independent_get_bottom_i := independent_get_bottom_i + 1
+plot(independent_get_bottom_value)
 plot(close)
