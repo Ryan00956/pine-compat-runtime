@@ -802,8 +802,10 @@ the selected vertical alignment constant in the host-neutral snapshot.
 snapshot. `box.set_text_font_family` records the selected font-family constant
 in the host-neutral snapshot. `box.set_text_formatting` records the selected
 `text.format_none`/`text.format_bold`/`text.format_italic` mask, including
-bold+italic combinations; text rendering, glyph styling, and font layout remain
-host responsibilities. `box.get_left` reads the latest existing box left value,
+bold+italic combinations. These text snapshot setters apply when called from
+ordinary and independent while-loop control-flow blocks; text rendering, glyph
+styling, and font layout remain host responsibilities. `box.get_left` reads the
+latest existing box left value,
 including when called from ordinary and independent while-loop control-flow
 blocks, and returns `na` for `na` or deleted boxes. `box.get_right` reads the
 latest existing box right value, including when called from ordinary and

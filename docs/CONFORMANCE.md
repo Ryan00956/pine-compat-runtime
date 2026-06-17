@@ -703,7 +703,8 @@ It also covers selected geometry mutators from ordinary and independent
 while-loop control-flow blocks, selected background/border/extend mutators from
 ordinary and independent while-loop control-flow blocks, selected
 text/text-color/text-size/horizontal-alignment/vertical-alignment/text-wrap/
-font-family/text-formatting mutators,
+font-family/text-formatting mutators from ordinary and independent while-loop
+control-flow blocks,
 `box.set_xloc` for the `xloc.bar_index` subset that updates left and right
 snapshots from ordinary and independent while-loop control-flow blocks,
 `box.delete` from ordinary and independent while-loop control-flow blocks, and
@@ -816,15 +817,14 @@ called from ordinary and independent while-loop control-flow blocks;
 time-coordinate box x-location remains unsupported. `box.set_left`, `box.set_top`,
 `box.set_right`, `box.set_bottom`, `box.set_lefttop`, and
 `box.set_rightbottom` update box geometry snapshots, including when called from
-ordinary and independent while-loop control-flow blocks. `box.set_text` records text in box
-snapshots. `box.set_text_color` records text color in box snapshots.
-`box.set_text_size` records text size in box snapshots. `box.set_text_halign`
-records horizontal text alignment in box snapshots. `box.set_text_valign`
-records vertical text alignment in box snapshots. `box.set_text_wrap` records
-text wrapping in box snapshots. `box.set_text_font_family` records font family
-in box snapshots. `box.set_text_formatting` records a
-`text.format_none`/`text.format_bold`/`text.format_italic` bitmask, including
-bold+italic combinations, while actual glyph styling remains host-specific.
+ordinary and independent while-loop control-flow blocks. `box.set_text`,
+`box.set_text_color`, `box.set_text_size`, `box.set_text_halign`,
+`box.set_text_valign`, `box.set_text_wrap`, `box.set_text_font_family`, and
+`box.set_text_formatting` update box text snapshots, including when called from
+ordinary and independent while-loop control-flow blocks. `box.set_text_formatting`
+records a `text.format_none`/`text.format_bold`/`text.format_italic` bitmask,
+including bold+italic combinations, while actual glyph styling remains
+host-specific.
 Richer box text layout remains unsupported. `box.get_left`,
 `box.get_right`, `box.get_top`, and `box.get_bottom` read the latest existing
 box snapshot, including when called from ordinary and independent while-loop
