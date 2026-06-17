@@ -18,6 +18,7 @@
 - Added independent while-loop control-flow cloning coverage for `label.copy`.
 - Added independent while-loop control-flow cloning coverage for `line.copy`.
 - Added fixture-backed while-loop control-flow `table.cell` write coverage.
+- Added independent while-loop control-flow `table.cell` write coverage.
 - Added fixture-backed while-loop control-flow `table.set_position` mutation
   coverage.
 - Added independent while-loop control-flow `table.set_position` mutation
