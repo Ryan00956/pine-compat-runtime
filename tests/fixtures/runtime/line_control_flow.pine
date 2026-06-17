@@ -95,4 +95,9 @@ while independent_line_all_i < 1
     independent_line_all_count := array.size(line.all)
     independent_line_all_i := independent_line_all_i + 1
 plot(independent_line_all_count)
+independent_set_x1_i = 0
+while independent_set_x1_i < 1
+    if bar_index == 3
+        line.set_x1(line_id, bar_index - 1)
+    independent_set_x1_i := independent_set_x1_i + 1
 plot(close)
