@@ -138,4 +138,9 @@ while independent_set_style_i < 1
     if bar_index == 3
         label.set_style(label_id, label.style_label_right)
     independent_set_style_i := independent_set_style_i + 1
+independent_set_textalign_i = 0
+while independent_set_textalign_i < 1
+    if bar_index == 3
+        label.set_textalign(label_id, text.align_center)
+    independent_set_textalign_i := independent_set_textalign_i + 1
 plot(close)
