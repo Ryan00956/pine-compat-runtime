@@ -751,8 +751,8 @@ existing label ids in creation order, including when read from ordinary
 control-flow blocks after label deletion. `line.delete` appends an
 `exists: false` line snapshot, including when called from ordinary and
 independent while-loop control-flow blocks. `line.copy` clones the latest
-existing line snapshot into a new
-deterministic id, including when called from ordinary control-flow blocks,
+existing line snapshot into a new deterministic id, including when called from
+ordinary and independent while-loop control-flow blocks,
 returns `na` for `na` or deleted lines, and shares the line object limit.
 `line.all` returns currently existing line ids in creation order, including
 when read from ordinary control-flow blocks after line deletion.

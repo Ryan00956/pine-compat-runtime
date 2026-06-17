@@ -683,8 +683,8 @@ endpoint/color/width/style/extend mutators, `line.set_xloc` for the
 and independent while-loop control-flow mutation coverage, `line.delete`
 deletion snapshots, including ordinary and independent while-loop control-flow
 deletion coverage,
-fixture-backed cloning with `line.copy`, including while-loop control-flow
-cloning coverage, `line.all` reads from ordinary control-flow blocks,
+fixture-backed cloning with `line.copy`, including ordinary and independent
+while-loop control-flow cloning coverage, `line.all` reads from ordinary control-flow blocks,
 fixture-backed `line.get_x1`, `line.get_y1`, `line.get_x2`, and `line.get_y2`
 reads from ordinary control-flow blocks, and fixture-backed `line.get_price`
 getter over the latest existing line snapshot, including while-loop
@@ -796,8 +796,8 @@ existing label ids in creation order, including when read from ordinary
 control-flow blocks after label deletion. `line.delete` appends an
 `exists: false` line snapshot, including when called from ordinary and
 independent while-loop control-flow blocks. `line.copy` clones the latest
-existing line snapshot into a new
-deterministic id, including when called from ordinary control-flow blocks,
+existing line snapshot into a new deterministic id, including when called from
+ordinary and independent while-loop control-flow blocks,
 returns `na` for `na` or deleted lines, and shares the line runtime limit.
 `line.all` returns currently existing line ids in creation order, including
 when read from ordinary control-flow blocks after line deletion.

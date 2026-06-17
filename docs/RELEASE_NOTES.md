@@ -36,6 +36,8 @@
 - Added independent while-loop control-flow deletion coverage for `box.delete`.
 - Added independent while-loop control-flow cloning coverage for `label.copy`.
 - Added independent while-loop control-flow cloning coverage for `line.copy`.
+- Strengthened `line.copy` independent while-loop cloning coverage with a
+  dedicated line lifecycle fixture path.
 - Added independent while-loop control-flow `label.get_x` read coverage.
 - Added independent while-loop control-flow `label.get_y` read coverage.
 - Added independent while-loop control-flow `label.get_text` read coverage.
