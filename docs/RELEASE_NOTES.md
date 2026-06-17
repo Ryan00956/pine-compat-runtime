@@ -9,6 +9,7 @@
   coverage.
 - Added fixture-backed while-loop control-flow `label.set_size` mutation
   coverage.
+- Added independent while-loop control-flow `label.set_x` mutation coverage.
 - Added independent while-loop control-flow `label.set_xloc` mutation coverage.
 - Added independent while-loop control-flow `label.set_yloc` mutation coverage.
 - Added independent while-loop control-flow deletion coverage for
