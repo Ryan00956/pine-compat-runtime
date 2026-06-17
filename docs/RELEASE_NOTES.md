@@ -107,6 +107,7 @@
   mutation coverage.
 - Added independent while-loop control-flow cloning coverage for `box.copy`.
 - Added independent while-loop control-flow read coverage for `box.all`.
+- Added independent while-loop control-flow `box.get_left` read coverage.
 - Added fixture-backed while-loop control-flow `line.set_x1` mutation
   coverage.
 - Added fixture-backed while-loop control-flow `line.set_y1` mutation

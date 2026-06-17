@@ -219,4 +219,10 @@ while independent_box_all_i < 1
     independent_box_all_count := array.size(box.all)
     independent_box_all_i := independent_box_all_i + 1
 plot(independent_box_all_count)
+independent_get_left_value = box.get_left(left_box)
+independent_get_left_i = 0
+while independent_get_left_i < 1
+    independent_get_left_value := box.get_left(left_box)
+    independent_get_left_i := independent_get_left_i + 1
+plot(independent_get_left_value)
 plot(close)
