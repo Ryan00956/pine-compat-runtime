@@ -158,4 +158,9 @@ while independent_set_tooltip_i < 1
     if bar_index == 3
         label.set_tooltip(label_id, "loop-tip")
     independent_set_tooltip_i := independent_set_tooltip_i + 1
+independent_set_size_i = 0
+while independent_set_size_i < 1
+    if bar_index == 3
+        label.set_size(label_id, size.large)
+    independent_set_size_i := independent_set_size_i + 1
 plot(close)
