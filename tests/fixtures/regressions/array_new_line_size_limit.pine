@@ -1,0 +1,3 @@
+indicator("Array new line size limit")
+values = array.new_line(100001)
+plot(array.size(values))
