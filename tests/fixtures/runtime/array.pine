@@ -78,6 +78,16 @@ for i = 0 to 1
         loop_set_values.set(i + 1, 60)
 plot(loop_set_values.get(0) + loop_set_values.get(1) + loop_set_values.get(2))
 
+independent_set_values = array.from(4, 5, 6)
+independent_set_score = bar_index * 0
+independent_set_i = 0
+while independent_set_i < 1
+    array.set(independent_set_values, 0, 40)
+    independent_set_values.set(2, 60)
+    independent_set_score := independent_set_values.get(0) * 10 + independent_set_values.get(1) + independent_set_values.get(2)
+    independent_set_i := independent_set_i + 1
+plot(independent_set_score)
+
 branch_new_float_score = bar_index * 0.0
 if bar_index % 2 == 0
     branch_new_float_values = array.new_float(2, bar_index + 1)
