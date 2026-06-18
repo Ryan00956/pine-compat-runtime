@@ -75,3 +75,13 @@ for i = 0 to 1
         loop_insert_remove.insert(i, 30)
         loop_insert_remove_score := loop_insert_remove_score + array.remove(loop_insert_remove, 1)
 plot(loop_insert_remove_score * 10 + loop_insert_remove.size() + loop_insert_remove.get(0))
+
+independent_insert_values = array.from(1, 4)
+independent_insert_score = bar_index * 0
+independent_insert_i = 0
+while independent_insert_i < 1
+    array.insert(independent_insert_values, 1, 2)
+    independent_insert_values.insert(2, 3)
+    independent_insert_score := independent_insert_values.get(0) * 1000 + independent_insert_values.get(1) * 100 + independent_insert_values.get(2) * 10 + independent_insert_values.get(3)
+    independent_insert_i := independent_insert_i + 1
+plot(independent_insert_score)
