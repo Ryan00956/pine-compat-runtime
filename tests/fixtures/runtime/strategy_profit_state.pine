@@ -7,6 +7,12 @@ plot(strategy.max_runup)
 plot(strategy.max_runup_percent)
 plot(strategy.max_drawdown)
 plot(strategy.max_drawdown_percent)
+independent_openprofit = strategy.openprofit * 0
+openprofit_i = 0
+while openprofit_i < 1
+    independent_openprofit := strategy.openprofit
+    openprofit_i := openprofit_i + 1
+plot(independent_openprofit)
 if bar_index == 1
     strategy.entry("L", strategy.long, qty=2)
 if bar_index == 3
