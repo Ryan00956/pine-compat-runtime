@@ -1,5 +1,6 @@
 //@version=5
 strategy("Position state strategy", overlay=true)
+identity(value) => value
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
 if bar_index == 1
@@ -12,6 +13,7 @@ while position_avg_price_i < 1
     independent_position_avg_price := strategy.position_avg_price
     position_avg_price_i := position_avg_price_i + 1
 plot(independent_position_avg_price)
+plot(identity(strategy.position_avg_price))
 if bar_index == 2
     strategy.close("L")
 plot(strategy.position_size)
