@@ -189,6 +189,16 @@ for i = 0 to 1
 loop_push_score := loop_push_values.size() * 100 + loop_push_values.get(0) * 10 + loop_push_values.get(1)
 plot(loop_push_score)
 
+independent_push_values = array.new_int()
+independent_push_score = bar_index * 0
+independent_push_i = 0
+while independent_push_i < 1
+    array.push(independent_push_values, 7)
+    independent_push_values.push(9)
+    independent_push_score := independent_push_values.size() * 100 + independent_push_values.get(0) * 10 + independent_push_values.get(1)
+    independent_push_i := independent_push_i + 1
+plot(independent_push_score)
+
 branch_get_values = array.from(4, 5, 6)
 branch_get_score = bar_index * 0
 if bar_index % 2 == 0
