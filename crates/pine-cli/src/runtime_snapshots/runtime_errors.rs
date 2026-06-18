@@ -144,6 +144,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table merge range intersects existing merged cells",
     ),
     (
+        "tests/fixtures/regressions/table_cell_coordinate_bounds.pine",
+        "table cell coordinate out of bounds `2,0`",
+    ),
+    (
         "tests/fixtures/regressions/str_match_invalid_regex.pine",
         "str.match invalid regex",
     ),
