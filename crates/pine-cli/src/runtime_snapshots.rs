@@ -1306,6 +1306,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/regressions/str_format_unmatched_right_brace.pine",
         "str.format has unmatched `}`",
     ),
+    (
+        "tests/fixtures/regressions/str_format_time_unsupported_timezone.pine",
+        "str.format_time unsupported timezone `America/New_York`",
+    ),
 ];
 
 pub(crate) type RuntimeLibrarySnapshotFixture = (
