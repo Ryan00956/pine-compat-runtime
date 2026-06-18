@@ -233,6 +233,17 @@ while independent_median_i < 1
     independent_median_i := independent_median_i + 1
 plot(independent_median_score)
 
+independent_mode_ints = array.from(3, 1, 3, 1)
+independent_mode_floats = array.from(na, 2.5, 2.5, 4.5)
+independent_mode_score = bar_index * 0.0
+independent_mode_i = 0
+while independent_mode_i < 1
+    independent_mode_int = array.mode(independent_mode_ints)
+    independent_mode_float = independent_mode_floats.mode()
+    independent_mode_score := independent_mode_int * 10 + independent_mode_float + independent_mode_ints.size() - independent_mode_floats.size()
+    independent_mode_i := independent_mode_i + 1
+plot(independent_mode_score)
+
 branch_percentile_source = array.from(1, 3, 5, 7)
 branch_percentile_results = array.new_float()
 if bar_index % 2 == 0
