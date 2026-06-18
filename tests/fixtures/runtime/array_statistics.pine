@@ -390,3 +390,13 @@ for i = 0 to 1
     else
         loop_variance_stdev_results.push(loop_variance_stdev_source.variance(false) + loop_variance_stdev_source.stdev(false))
 plot(loop_variance_stdev_results.get(0) + loop_variance_stdev_results.get(1))
+
+independent_variance_source = array.from(2, 4, 6, na)
+independent_variance_score = bar_index * 0.0
+independent_variance_i = 0
+while independent_variance_i < 1
+    independent_variance_biased = array.variance(independent_variance_source)
+    independent_variance_unbiased = independent_variance_source.variance(false)
+    independent_variance_score := independent_variance_biased * 10 + independent_variance_unbiased + independent_variance_source.size()
+    independent_variance_i := independent_variance_i + 1
+plot(independent_variance_score)
