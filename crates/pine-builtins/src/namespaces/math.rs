@@ -87,7 +87,7 @@ const MATH_RANDOM_PARAMS: &[BuiltinParam] = &[
 const MATH_SUM_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "source",
-        accepts: Accepts::SeriesOrSimpleNumeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
     BuiltinParam {

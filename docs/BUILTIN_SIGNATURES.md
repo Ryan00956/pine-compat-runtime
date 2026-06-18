@@ -1477,7 +1477,7 @@ math.round(number: numeric|na) -> int with same qualifier
 math.round(number: numeric|na, precision: int|na) -> float with strongest qualifier
 math.round_to_mintick(number: numeric|na) -> float with same qualifier
 math.random(min?: numeric|na, max?: numeric|na, seed?: simple int) -> series float
-math.sum(source: series/simple numeric, length: simple int) -> series float
+math.sum(source: series/simple numeric|na, length: simple int) -> series float
 ```
 
 Each added math function must declare its coercion and `na` behavior.
@@ -1510,7 +1510,9 @@ Current Phase 4 behavior:
   per callsite. Omitted `min`/`max` default to `0` and `1`; seeded calls are
   reproducible for the same callsite and seed. Invalid or non-finite ranges
   return `na`; const-or-series `na` min/max inputs return `na`.
-- `math.sum` returns the rolling sum of `source` over a ready simple-int `length` window; it returns `na` for invalid lengths, until the window is ready, or when the window contains `na`.
+- `math.sum` returns the rolling sum of `source` over a ready simple-int
+  `length` window; it returns `na` for invalid lengths, until the window is
+  ready, or when the window contains const-or-series `na`.
 - `math.max` and `math.min` require at least two numeric-or-`na` args and
   accept variadic numeric-or-`na` args. Const-or-series `na` inputs return `na`.
 - `math.max` and `math.min` return int only when all args are int; otherwise they return float.

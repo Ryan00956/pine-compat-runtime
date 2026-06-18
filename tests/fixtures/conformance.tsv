@@ -287,7 +287,7 @@ math.hypot	supported	numeric hypotenuse with fixture-backed zero-leg absolute-va
 math.round	supported	single-argument integer rounding or precision decimal float rounding with ties rounding up and const-or-series number/precision na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.round_to_mintick	supported	default syminfo.mintick rounding with fixture-backed one-tick offset relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.random	supported	fixture-derived deterministic callsite PRNG subset with optional min/max/seed and const-or-series min/max na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.sum	supported	rolling non-na window sums; simple and computed integer length expressions	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/computed_lengths.pine
+math.sum	supported	rolling non-na window sums; simple and computed integer length expressions; const-or-series na source propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine;tests/fixtures/runtime/computed_lengths.pine
 na	supported	missing-value predicate with fixture-backed history fallback relation	tests/fixtures/runtime/na.pine
 nz	supported	missing-value replacement with fixture-backed history fallback relation	tests/fixtures/runtime/na.pine
 fixnan	supported	callsite last non-na numeric/color subset with fixture-backed numeric carry relation	tests/fixtures/runtime/na.pine
