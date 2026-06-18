@@ -20,6 +20,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array.unshift cannot exceed 100000 elements",
     ),
     (
+        "tests/fixtures/regressions/array_sort_unsupported_order.pine",
+        "unsupported array.sort order `sideways`",
+    ),
+    (
         "tests/fixtures/regressions/array_new_float_negative_size.pine",
         "array.new_float size cannot be negative",
     ),
