@@ -8108,6 +8108,7 @@ while avg_losing_trade_percent_i < 1
     avg_losing_trade_percent_i := avg_losing_trade_percent_i + 1
 plot(independent_avg_losing_trade_percent)
 plot(identity(strategy.grossprofit))
+plot(identity(strategy.grossloss))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8467,6 +8468,20 @@ plot(identity(strategy.grossprofit))
             PineValue::Float(1.0),
             PineValue::Float(1.0),
             PineValue::Float(1.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[24].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
         ]
     );
     let strategy = result.strategy.as_ref().expect("strategy result");
