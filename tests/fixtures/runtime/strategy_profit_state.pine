@@ -28,3 +28,9 @@ plot(strategy.max_runup)
 plot(strategy.max_runup_percent)
 plot(strategy.max_drawdown)
 plot(strategy.max_drawdown_percent)
+independent_netprofit = strategy.netprofit * 0
+netprofit_i = 0
+while netprofit_i < 1
+    independent_netprofit := strategy.netprofit
+    netprofit_i := netprofit_i + 1
+plot(independent_netprofit)
