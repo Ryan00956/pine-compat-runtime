@@ -57,3 +57,13 @@ for i = 0 to 1
     loop_clear_results.push(loop_clear_values.size())
 plot(loop_clear_results.get(0) + loop_clear_results.get(1))
 plot(loop_clear_values.get(0) == "y" ? 1 : 0)
+
+independent_clear_values = array.from(9, 10)
+independent_clear_score = bar_index * 0
+independent_clear_i = 0
+while independent_clear_i < 1
+    independent_clear_values.clear()
+    independent_clear_values.push(11)
+    independent_clear_score := independent_clear_values.size() * 100 + independent_clear_values.get(0)
+    independent_clear_i := independent_clear_i + 1
+plot(independent_clear_score)
