@@ -232,9 +232,9 @@ math.abs	supported	numeric absolute value with fixture-backed sign symmetry rela
 math.max	supported	variadic numeric maximum with fixture-backed offset relation	tests/fixtures/runtime/math.pine
 math.min	supported	variadic numeric minimum with fixture-backed offset relation	tests/fixtures/runtime/math.pine
 math.avg	supported	variadic numeric average with fixture-backed offset relation	tests/fixtures/runtime/math.pine
-math.floor	supported	integer rounding result with argument qualifier and na propagation	tests/fixtures/runtime/math.pine
-math.ceil	supported	integer rounding result with argument qualifier and na propagation	tests/fixtures/runtime/math.pine
-math.trunc	supported	integer truncation result with argument qualifier and na propagation	tests/fixtures/runtime/math.pine
+math.floor	supported	integer rounding result with argument qualifier and typed series na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.ceil	supported	integer rounding result with argument qualifier and typed series na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.trunc	supported	integer truncation result with argument qualifier and typed series na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.sqrt	supported	numeric square root with fixture-backed square/absolute-value relation and negative inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.cbrt	supported	numeric cube root with fixture-backed positive cube roundtrip relation	tests/fixtures/runtime/math.pine
 math.log	supported	natural logarithm with fixture-backed exp roundtrip and non-positive inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
@@ -284,7 +284,7 @@ math.cos	supported	trigonometric cosine with fixture-backed zero-angle identity 
 math.tan	supported	trigonometric tangent with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine
 math.pow	supported	numeric exponentiation with fixture-backed square relation and invalid fractional negative base returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.hypot	supported	numeric hypotenuse with fixture-backed zero-leg absolute-value relation	tests/fixtures/runtime/math.pine
-math.round	supported	single-argument integer rounding or precision decimal float rounding with ties rounding up and na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.round	supported	single-argument integer rounding or precision decimal float rounding with ties rounding up and typed series number/precision na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.round_to_mintick	supported	default syminfo.mintick rounding with fixture-backed one-tick offset relation	tests/fixtures/runtime/math.pine
 math.random	supported	fixture-derived deterministic callsite PRNG subset with optional min/max/seed	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.sum	supported	rolling non-na window sums; simple and computed integer length expressions	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/computed_lengths.pine

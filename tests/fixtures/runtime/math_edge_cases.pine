@@ -1,5 +1,7 @@
 //@version=5
 indicator("Math edge cases")
+missing_number = bar_index == 1 ? na : close
+missing_precision = bar_index == 1 ? na : 1
 plot(math.sqrt(-1))
 plot(math.log(0))
 plot(math.log10(0))
@@ -7,6 +9,11 @@ plot(math.exp(1000))
 plot(math.acos(2))
 plot(math.asin(2))
 plot(math.pow(-1, 0.5))
+plot(math.floor(missing_number))
+plot(math.ceil(missing_number))
+plot(math.trunc(missing_number))
+plot(math.round(missing_number))
+plot(math.round(close + 0.25, missing_precision))
 plot(math.random(5, 5, 7))
 plot(math.round(1.5))
 plot(math.round(-1.5))
