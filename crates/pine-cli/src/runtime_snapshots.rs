@@ -1371,6 +1371,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "str.format timestamp is out of range: 9223372036854775807",
     ),
     (
+        "tests/fixtures/regressions/str_format_result_limit.pine",
+        "str.format result cannot exceed 40960 characters",
+    ),
+    (
         "tests/fixtures/regressions/str_format_time_unsupported_timezone.pine",
         "str.format_time unsupported timezone `America/New_York`",
     ),
