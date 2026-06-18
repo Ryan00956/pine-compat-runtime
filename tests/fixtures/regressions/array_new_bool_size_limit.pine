@@ -1,0 +1,3 @@
+indicator("Array new bool size limit")
+values = array.new_bool(100001)
+plot(array.size(values))
