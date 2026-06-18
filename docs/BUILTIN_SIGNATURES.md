@@ -1450,7 +1450,7 @@ math.rphi -> const float
 Recommended first set:
 
 ```text
-math.abs(number: numeric) -> same numeric kind and qualifier
+math.abs(number: numeric|na) -> same numeric kind and qualifier for numeric args; na for na args
 math.max(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qualifier
 math.min(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qualifier
 math.avg(number: numeric, ...) -> float with strongest qualifier
@@ -1485,7 +1485,10 @@ Each added math function must declare its coercion and `na` behavior.
 Current Phase 4 behavior:
 
 - `math.e`, `math.pi`, `math.phi`, and `math.rphi` evaluate as const floats.
-- `math.abs` preserves int/float kind and qualifier.
+- `math.abs` preserves int/float kind and qualifier for numeric inputs.
+  Const-or-series `na` inputs return `na`; direct untyped `na` results still
+  need a typed numeric consumer such as `float(...)` before numeric-only output
+  calls.
 - `math.avg` accepts one or more numeric args and returns their average as a float.
 - `math.floor`, `math.ceil`, and `math.trunc` return int values with the
   argument qualifier; const-or-series `na`, non-finite, or out-of-range float

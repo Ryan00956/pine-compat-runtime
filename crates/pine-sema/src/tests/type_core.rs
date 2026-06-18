@@ -940,6 +940,34 @@ plot(math.round_to_mintick(na))
 }
 
 #[test]
+fn accepts_const_na_math_abs_input() {
+    let analysis = analyze(
+        r#"indicator("math abs na")
+plot(math.abs(na))
+"#,
+    );
+
+    assert!(
+        !analysis.diagnostics.is_empty(),
+        "direct untyped math.abs(na) should still require a typed consumer"
+    );
+
+    let analysis = analyze(
+        r#"indicator("math abs na")
+plot(float(math.abs(na)))
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_integer_rounding_math_functions_as_int_values() {
     let analysis = analyze(
         r#"indicator("integer rounding types")

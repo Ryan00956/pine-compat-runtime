@@ -2,12 +2,6 @@ use crate::signature::{Accepts, BuiltinParam, BuiltinPhase, BuiltinSignature, Re
 
 use super::types::*;
 
-const MATH_NUMBER_PARAMS: &[BuiltinParam] = &[BuiltinParam {
-    name: "number",
-    accepts: Accepts::Numeric,
-    optional: false,
-}];
-
 const MATH_NUMBER_COMPAT_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "number",
     accepts: Accepts::NumericCompatible,
@@ -107,7 +101,7 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "math.abs",
         phase: BuiltinPhase::Phase1Core,
-        params: MATH_NUMBER_PARAMS,
+        params: MATH_NUMBER_COMPAT_PARAMS,
         returns: ReturnSpec::SameAsArg(0),
         variadic: false,
     },
