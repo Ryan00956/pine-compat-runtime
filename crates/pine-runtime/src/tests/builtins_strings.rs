@@ -182,6 +182,8 @@ plot(formatted_time_week_of_month == "1 01" and formatted_time_week_of_month_lat
 plot(str.tostring(1.234567891, format.mintick) == text_price ? 1 : 0)
 string_values = array.from("head", "tail")
 plot(str.tostring(string_values) == "[head, tail]" ? 1 : 0)
+int_values = array.from(1, 2)
+plot(str.tostring(int_values) == "[1, 2]" ? 1 : 0)
 "##,
     );
     let analysis = analyze_source(&source);
