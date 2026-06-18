@@ -8512,6 +8512,7 @@ while grossloss_percent_i < 1
     independent_grossloss_percent := strategy.grossloss_percent
     grossloss_percent_i := grossloss_percent_i + 1
 plot(independent_grossloss_percent)
+plot(identity(strategy.grossprofit_percent))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8602,6 +8603,17 @@ plot(independent_grossloss_percent)
             PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.2),
+        ]
+    );
+    assert_eq!(
+        result.plots[7].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.1),
+            PineValue::Float(0.1),
+            PineValue::Float(0.1),
+            PineValue::Float(0.1),
         ]
     );
 }
