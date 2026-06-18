@@ -100,6 +100,17 @@ while independent_includes_i < 1
     independent_includes_i := independent_includes_i + 1
 plot(independent_includes_score)
 
+independent_every_truthy = array.from(1, 2, 3)
+independent_every_falsey = array.from(1, 0, 3)
+independent_every_score = bar_index * 0
+independent_every_i = 0
+while independent_every_i < 1
+    independent_every_all = array.every(independent_every_truthy)
+    independent_every_not_all = independent_every_falsey.every()
+    independent_every_score := (independent_every_all ? 100 : 0) + (independent_every_not_all ? 10 : 0) + independent_every_truthy.size()
+    independent_every_i := independent_every_i + 1
+plot(independent_every_score)
+
 branch_truth_source = array.from(true, bar_index % 2 == 0)
 branch_truth_results = array.new_int()
 if bar_index % 2 == 0
