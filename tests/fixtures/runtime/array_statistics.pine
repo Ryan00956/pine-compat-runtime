@@ -400,3 +400,13 @@ while independent_variance_i < 1
     independent_variance_score := independent_variance_biased * 10 + independent_variance_unbiased + independent_variance_source.size()
     independent_variance_i := independent_variance_i + 1
 plot(independent_variance_score)
+
+independent_stdev_source = array.from(2, 4, 6, na)
+independent_stdev_score = bar_index * 0.0
+independent_stdev_i = 0
+while independent_stdev_i < 1
+    independent_stdev_biased = array.stdev(independent_stdev_source)
+    independent_stdev_unbiased = independent_stdev_source.stdev(false)
+    independent_stdev_score := independent_stdev_biased * 10 + independent_stdev_unbiased + independent_stdev_source.size()
+    independent_stdev_i := independent_stdev_i + 1
+plot(independent_stdev_score)
