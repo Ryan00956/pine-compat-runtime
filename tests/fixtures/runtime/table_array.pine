@@ -79,3 +79,11 @@ for i = 0 to 1
     loop_new_table_values = array.new_table(i + 1, loop_table_seed)
     loop_new_table_score := loop_new_table_score + loop_new_table_values.size() * 10 + (loop_new_table_values.get(i) == loop_table_seed ? 1 : 0)
 plot(loop_new_table_score)
+
+independent_new_table_score = bar_index * 0
+independent_new_table_i = 0
+while independent_new_table_i < 1
+    independent_new_table_values = array.new_table(2, branch_table_seed)
+    independent_new_table_score := independent_new_table_values.size() * 100 + (not na(independent_new_table_values.get(0)) ? 10 : 0) + (independent_new_table_values.get(1) == branch_table_seed ? 1 : 0)
+    independent_new_table_i := independent_new_table_i + 1
+plot(independent_new_table_score)
