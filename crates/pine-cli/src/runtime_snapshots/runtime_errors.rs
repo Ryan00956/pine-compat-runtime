@@ -120,6 +120,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table cell count cannot exceed 1000",
     ),
     (
+        "tests/fixtures/regressions/table_new_positive_dimensions.pine",
+        "table dimensions must be positive",
+    ),
+    (
         "tests/fixtures/regressions/str_match_invalid_regex.pine",
         "str.match invalid regex",
     ),
