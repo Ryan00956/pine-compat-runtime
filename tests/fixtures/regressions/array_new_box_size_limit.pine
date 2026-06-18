@@ -1,0 +1,3 @@
+indicator("Array new box size limit")
+values = array.new_box(100001)
+plot(array.size(values))

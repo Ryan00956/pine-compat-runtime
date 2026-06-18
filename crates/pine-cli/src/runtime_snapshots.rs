@@ -1379,6 +1379,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array.new_box size cannot be negative",
     ),
     (
+        "tests/fixtures/regressions/array_new_box_size_limit.pine",
+        "array.new_box size cannot exceed 100000 elements",
+    ),
+    (
         "tests/fixtures/regressions/str_match_invalid_regex.pine",
         "str.match invalid regex",
     ),
