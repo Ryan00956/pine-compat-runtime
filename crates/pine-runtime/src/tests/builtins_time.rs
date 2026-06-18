@@ -416,6 +416,7 @@ plot(timeframe.from_seconds(timeframe.in_seconds("M")) == "M" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("3M")) == "3M" ? 1 : 0)
 plot(na(timeframe.from_seconds(na)) ? 1 : 0)
 plot(timeframe.change("1") ? 1 : 0)
+plot(timeframe.change("") ? 1 : 0)
 plot(timeframe.isminutes and timeframe.isintraday and not timeframe.isseconds and not timeframe.isdaily and not timeframe.isweekly and not timeframe.ismonthly and not timeframe.isdwm ? 1 : 0)
 plot(timeframe.multiplier)
 "#,
@@ -451,8 +452,9 @@ plot(timeframe.multiplier)
     assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[20].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[21].values, &[1.0, 0.0]);
     assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
 }
 
 #[test]
