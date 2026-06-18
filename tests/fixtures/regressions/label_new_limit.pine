@@ -1,0 +1,4 @@
+indicator("Label new limit")
+for i = 0 to 500
+    label.new(i, close, "x")
+plot(close)
