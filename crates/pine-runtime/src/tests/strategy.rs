@@ -7419,6 +7419,7 @@ while max_contracts_held_long_i < 1
     max_contracts_held_long_i := max_contracts_held_long_i + 1
 plot(independent_max_contracts_held_long)
 plot(strategy.max_contracts_held_short)
+plot(identity(strategy.max_contracts_held_short))
 independent_max_contracts_held_short = strategy.max_contracts_held_short * 0
 max_contracts_held_short_i = 0
 while max_contracts_held_short_i < 1
@@ -7572,6 +7573,15 @@ plot(independent_max_contracts_held_short)
     );
     assert_eq!(
         result.plots[15].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[16].values,
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
