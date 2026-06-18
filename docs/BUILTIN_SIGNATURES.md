@@ -1454,9 +1454,9 @@ math.abs(number: numeric) -> same numeric kind and qualifier
 math.max(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qualifier
 math.min(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qualifier
 math.avg(number: numeric, ...) -> float with strongest qualifier
-math.floor(number: numeric) -> int with same qualifier
-math.ceil(number: numeric) -> int with same qualifier
-math.trunc(number: numeric) -> int with same qualifier
+math.floor(number: numeric|na) -> int with same qualifier
+math.ceil(number: numeric|na) -> int with same qualifier
+math.trunc(number: numeric|na) -> int with same qualifier
 math.sqrt(number: numeric) -> float with same qualifier
 math.cbrt(number: numeric) -> float with same qualifier
 math.log(number: numeric) -> float with same qualifier
@@ -1473,8 +1473,8 @@ math.cos(number: numeric) -> float with same qualifier
 math.tan(number: numeric) -> float with same qualifier
 math.pow(base: numeric, exponent: numeric) -> float with strongest qualifier
 math.hypot(number1: numeric, number2: numeric) -> float with strongest qualifier
-math.round(number: numeric) -> int with same qualifier
-math.round(number: numeric, precision: int) -> float with strongest qualifier
+math.round(number: numeric|na) -> int with same qualifier
+math.round(number: numeric|na, precision: int|na) -> float with strongest qualifier
 math.round_to_mintick(number: numeric) -> float with same qualifier
 math.random(min?: numeric, max?: numeric, seed?: simple int) -> series float
 math.sum(source: series/simple numeric, length: simple int) -> series float
@@ -1488,10 +1488,12 @@ Current Phase 4 behavior:
 - `math.abs` preserves int/float kind and qualifier.
 - `math.avg` accepts one or more numeric args and returns their average as a float.
 - `math.floor`, `math.ceil`, and `math.trunc` return int values with the
-  argument qualifier; non-finite or out-of-range float results return `na`.
+  argument qualifier; const-or-series `na`, non-finite, or out-of-range float
+  results return `na`.
 - `math.sqrt`, `math.cbrt`, `math.log`, `math.log10`, `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`, `math.todegrees`, `math.toradians`, `math.sin`, `math.cos`, `math.tan`, `math.pow`, and `math.hypot` return float values and preserve or promote qualifiers from their arguments.
 - `math.round` returns an int when `precision` is omitted, with ties rounding
   up; with `precision`, it returns a float rounded to that many decimal places.
+  Const-or-series `na` number or precision inputs return `na`.
 - `math.round_to_mintick` rounds to the nearest multiple of the current
   `syminfo.mintick` subset value, with ties rounding up.
 - `math.random` returns a deterministic pseudorandom `series float` sequence

@@ -888,6 +888,27 @@ plot(y)
 }
 
 #[test]
+fn accepts_const_na_math_rounding_inputs() {
+    let analysis = analyze(
+        r#"indicator("math na rounding")
+plot(math.floor(na))
+plot(math.ceil(na))
+plot(math.trunc(na))
+plot(math.round(na))
+plot(math.round(close + 0.25, na))
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_integer_rounding_math_functions_as_int_values() {
     let analysis = analyze(
         r#"indicator("integer rounding types")

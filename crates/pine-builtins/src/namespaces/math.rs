@@ -1,5 +1,3 @@
-use pine_ir::ValueKind;
-
 use crate::signature::{Accepts, BuiltinParam, BuiltinPhase, BuiltinSignature, ReturnSpec};
 
 use super::types::*;
@@ -7,6 +5,12 @@ use super::types::*;
 const MATH_NUMBER_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "number",
     accepts: Accepts::Numeric,
+    optional: false,
+}];
+
+const MATH_NUMBER_COMPAT_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "number",
+    accepts: Accepts::NumericCompatible,
     optional: false,
 }];
 
@@ -58,12 +62,12 @@ const MATH_HYPOT_PARAMS: &[BuiltinParam] = &[
 const MATH_ROUND_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "number",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "precision",
-        accepts: Accepts::Kind(ValueKind::Int),
+        accepts: Accepts::IntCompatible,
         optional: true,
     },
 ];
@@ -131,21 +135,21 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
     BuiltinSignature {
         name: "math.floor",
         phase: BuiltinPhase::Phase1Core,
-        params: MATH_NUMBER_PARAMS,
+        params: MATH_NUMBER_COMPAT_PARAMS,
         returns: ReturnSpec::IntFromArg(0),
         variadic: false,
     },
     BuiltinSignature {
         name: "math.ceil",
         phase: BuiltinPhase::Phase1Core,
-        params: MATH_NUMBER_PARAMS,
+        params: MATH_NUMBER_COMPAT_PARAMS,
         returns: ReturnSpec::IntFromArg(0),
         variadic: false,
     },
     BuiltinSignature {
         name: "math.trunc",
         phase: BuiltinPhase::Phase1Core,
-        params: MATH_NUMBER_PARAMS,
+        params: MATH_NUMBER_COMPAT_PARAMS,
         returns: ReturnSpec::IntFromArg(0),
         variadic: false,
     },
