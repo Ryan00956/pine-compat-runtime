@@ -1,0 +1,3 @@
+indicator("String tostring zero padded format")
+text = str.tostring(12.3, "0000.00")
+plot(text == "0012.30" ? 1 : 0)
