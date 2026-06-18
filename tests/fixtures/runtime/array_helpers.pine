@@ -65,6 +65,16 @@ for i = 0 to 1
         loop_shift_unshift_score := loop_shift_unshift_score + array.shift(loop_shift_unshift)
 plot(loop_shift_unshift_score * 100 + loop_shift_unshift.size() * 10 + loop_shift_unshift.get(0))
 
+independent_shift_values = array.from(3, 4, 5)
+independent_shift_score = bar_index * 0
+independent_shift_i = 0
+while independent_shift_i < 1
+    independent_shift_first = array.shift(independent_shift_values)
+    independent_shift_second = independent_shift_values.shift()
+    independent_shift_score := independent_shift_first * 1000 + independent_shift_second * 100 + independent_shift_values.size() * 10 + independent_shift_values.get(0)
+    independent_shift_i := independent_shift_i + 1
+plot(independent_shift_score)
+
 branch_first_last = array.from(7, 8, 9)
 branch_first_last_score = bar_index * 0
 if bar_index % 2 == 0
