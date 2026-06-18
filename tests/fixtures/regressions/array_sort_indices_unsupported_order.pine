@@ -1,0 +1,4 @@
+indicator("Array sort_indices unsupported order")
+values = array.from(2, 1)
+indices = array.sort_indices(values, "sideways")
+plot(array.get(indices, 0))
