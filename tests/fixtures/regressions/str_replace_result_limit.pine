@@ -1,0 +1,4 @@
+indicator("String replace result limit")
+source = str.repeat("x", 40960)
+text = str.replace(source, "", ".")
+plot(str.length(text))

@@ -1327,6 +1327,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "str.repeat result cannot exceed 40960 characters",
     ),
     (
+        "tests/fixtures/regressions/str_replace_result_limit.pine",
+        "str.replace result cannot exceed 40960 characters",
+    ),
+    (
         "tests/fixtures/regressions/str_format_unmatched_left_brace.pine",
         "str.format has unmatched `{`",
     ),
