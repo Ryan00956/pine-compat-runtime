@@ -194,6 +194,17 @@ while independent_avg_i < 1
     independent_avg_i := independent_avg_i + 1
 plot(independent_avg_score)
 
+independent_range_ints = array.from(2, na, 8)
+independent_range_floats = array.from(na, 1.5, 4.5)
+independent_range_score = bar_index * 0.0
+independent_range_i = 0
+while independent_range_i < 1
+    independent_range_int = array.range(independent_range_ints)
+    independent_range_float = independent_range_floats.range()
+    independent_range_score := independent_range_int * 10 + independent_range_float + independent_range_ints.size() + independent_range_floats.size()
+    independent_range_i := independent_range_i + 1
+plot(independent_range_score)
+
 branch_median_mode_source = array.from(1, 2, 2, 4)
 branch_median_mode_results = array.new_float()
 if bar_index % 2 == 0
