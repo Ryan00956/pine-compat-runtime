@@ -19,6 +19,7 @@ if bar_index == 2
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
 plot(strategy.max_contracts_held_all)
+plot(identity(strategy.max_contracts_held_all))
 independent_max_contracts_held_all = strategy.max_contracts_held_all * 0
 max_contracts_held_all_i = 0
 while max_contracts_held_all_i < 1
