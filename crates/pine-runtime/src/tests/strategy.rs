@@ -7430,6 +7430,7 @@ plot(independent_max_contracts_held_short)
 plot(position_avg_price_history)
 plot(strategy.max_contracts_held_all[1])
 plot(strategy.max_contracts_held_long[1])
+plot(strategy.max_contracts_held_short[1])
 "#,
     );
     let analysis = analyze_source(&source);
@@ -7618,6 +7619,15 @@ plot(strategy.max_contracts_held_long[1])
             PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[20].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
         ]
     );
 }
