@@ -255,6 +255,17 @@ while independent_percentile_nearest_i < 1
     independent_percentile_nearest_i := independent_percentile_nearest_i + 1
 plot(independent_percentile_nearest_score)
 
+independent_percentile_linear_ints = array.from(na, 9, 1, 5, 7)
+independent_percentile_linear_floats = array.from(2.0, na, 4.0, 10.0)
+independent_percentile_linear_score = bar_index * 0.0
+independent_percentile_linear_i = 0
+while independent_percentile_linear_i < 1
+    independent_percentile_linear_int = array.percentile_linear_interpolation(independent_percentile_linear_ints, 50)
+    independent_percentile_linear_float = independent_percentile_linear_floats.percentile_linear_interpolation(75)
+    independent_percentile_linear_score := independent_percentile_linear_int * 10 + independent_percentile_linear_float + independent_percentile_linear_ints.size() - independent_percentile_linear_floats.size()
+    independent_percentile_linear_i := independent_percentile_linear_i + 1
+plot(independent_percentile_linear_score)
+
 branch_percentile_source = array.from(1, 3, 5, 7)
 branch_percentile_results = array.new_float()
 if bar_index % 2 == 0
