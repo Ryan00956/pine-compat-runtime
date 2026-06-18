@@ -6,6 +6,12 @@ if bar_index == 1
     strategy.entry("L", strategy.long, qty=2)
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
+independent_position_avg_price = strategy.position_avg_price * 0
+position_avg_price_i = 0
+while position_avg_price_i < 1
+    independent_position_avg_price := strategy.position_avg_price
+    position_avg_price_i := position_avg_price_i + 1
+plot(independent_position_avg_price)
 if bar_index == 2
     strategy.close("L")
 plot(strategy.position_size)

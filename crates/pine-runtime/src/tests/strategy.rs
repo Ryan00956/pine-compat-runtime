@@ -7390,6 +7390,12 @@ if bar_index == 1
     strategy.entry("L", strategy.long, qty=2)
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
+independent_position_avg_price = strategy.position_avg_price * 0
+position_avg_price_i = 0
+while position_avg_price_i < 1
+    independent_position_avg_price := strategy.position_avg_price
+    position_avg_price_i := position_avg_price_i + 1
+plot(independent_position_avg_price)
 if bar_index == 2
     strategy.close("L")
 plot(strategy.position_size)
@@ -7451,24 +7457,24 @@ plot(strategy.max_contracts_held_short)
     assert_eq!(
         result.plots[4].values,
         vec![
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
-            PineValue::Float(0.0),
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(3.0),
+            PineValue::Na,
         ]
     );
     assert_eq!(
         result.plots[5].values,
-        vec![PineValue::Na, PineValue::Na, PineValue::Na, PineValue::Na,]
-    );
-    assert_eq!(
-        result.plots[6].values,
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
-            PineValue::Float(2.0),
-            PineValue::Float(2.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
         ]
+    );
+    assert_eq!(
+        result.plots[6].values,
+        vec![PineValue::Na, PineValue::Na, PineValue::Na, PineValue::Na,]
     );
     assert_eq!(
         result.plots[7].values,
@@ -7481,6 +7487,15 @@ plot(strategy.max_contracts_held_short)
     );
     assert_eq!(
         result.plots[8].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[9].values,
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
