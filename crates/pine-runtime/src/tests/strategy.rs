@@ -8632,13 +8632,14 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
     assert_eq!(result.plots[7].values, open_profit);
     assert_eq!(result.plots[8].values, zero_series.clone());
     assert_eq!(result.plots[9].values, net_profit_after_close.clone());
-    assert_eq!(result.plots[10].values, equity);
+    assert_eq!(result.plots[10].values, equity.clone());
     assert_eq!(result.plots[11].values, zero_series.clone());
     assert_eq!(result.plots[12].values, zero_series);
     assert_eq!(result.plots[13].values, max_drawdown.clone());
     assert_eq!(result.plots[14].values, max_drawdown_percent);
     assert_eq!(result.plots[15].values, net_profit_after_close);
     assert_eq!(result.plots[16].values, max_drawdown);
+    assert_eq!(result.plots[17].values, equity);
 }
 
 #[test]
