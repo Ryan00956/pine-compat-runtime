@@ -1,0 +1,3 @@
+indicator("Array new label size limit")
+values = array.new_label(100001)
+plot(array.size(values))
