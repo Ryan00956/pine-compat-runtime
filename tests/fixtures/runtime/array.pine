@@ -218,3 +218,11 @@ while independent_new_int_i < 1
     independent_new_int_score := independent_new_int_values.size() * 100 + independent_new_int_values.get(0) * 10 + independent_new_int_values.get(2)
     independent_new_int_i := independent_new_int_i + 1
 plot(independent_new_int_score)
+
+independent_new_bool_score = bar_index * 0
+independent_new_bool_i = 0
+while independent_new_bool_i < 1
+    independent_new_bool_values = array.new_bool(2, true)
+    independent_new_bool_score := independent_new_bool_values.size() * 100 + (independent_new_bool_values.get(0) ? 10 : 0) + (independent_new_bool_values.get(1) ? 1 : 0)
+    independent_new_bool_i := independent_new_bool_i + 1
+plot(independent_new_bool_score)
