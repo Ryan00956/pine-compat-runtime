@@ -23,7 +23,7 @@ const TIMEFRAME_IN_SECONDS_PARAMS: &[BuiltinParam] = &[BuiltinParam {
 
 const TIMEFRAME_FROM_SECONDS_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "seconds",
-    accepts: Accepts::SimpleInt,
+    accepts: Accepts::SimpleIntCompatible,
     optional: false,
 }];
 

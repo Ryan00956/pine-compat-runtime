@@ -86,6 +86,10 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             qualifier_at_most(arg_type.qualifier, Qualifier::Simple)
                 && arg_type.kind == ValueKind::Int
         }
+        Accepts::SimpleIntCompatible => {
+            qualifier_at_most(arg_type.qualifier, Qualifier::Simple)
+                && matches!(arg_type.kind, ValueKind::Int | ValueKind::Na)
+        }
         Accepts::SimpleString => {
             qualifier_at_most(arg_type.qualifier, Qualifier::Simple)
                 && matches!(arg_type.kind, ValueKind::String | ValueKind::Na)

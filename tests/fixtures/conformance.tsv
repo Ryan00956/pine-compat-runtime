@@ -40,7 +40,7 @@ timestamp	supported	numeric calendar timestamp subset with optional UTC/GMT/nume
 timeframe.period	supported	fixed default chart timeframe string subset	tests/fixtures/runtime/timeframe.pine
 timeframe.main_period	supported	fixed default main chart timeframe string subset matching timeframe.period in the current single-timeframe runtime	tests/fixtures/runtime/timeframe.pine
 timeframe.in_seconds	supported	explicit seconds/minutes/days/weeks/months timeframe string to seconds subset plus omitted or empty-string fixed default chart timeframe and na timeframe propagation	tests/fixtures/runtime/timeframe.pine
-timeframe.from_seconds	supported	explicit seconds to seconds/minutes/days/weeks/months timeframe string subset	tests/fixtures/runtime/timeframe.pine
+timeframe.from_seconds	supported	explicit seconds to seconds/minutes/days/weeks/months timeframe string subset with na seconds propagation	tests/fixtures/runtime/timeframe.pine
 timeframe.change	supported	UTC bucket change detection over supported timeframe string subset with na timeframe propagation	tests/fixtures/runtime/timeframe.pine
 timeframe.isseconds	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine
 timeframe.isminutes	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine

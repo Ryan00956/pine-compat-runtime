@@ -368,7 +368,7 @@ Timeframe helpers:
 
 ```text
 timeframe.in_seconds(timeframe?: simple string) -> simple int
-timeframe.from_seconds(seconds: simple int) -> simple string
+timeframe.from_seconds(seconds: simple int|na) -> simple string
 timeframe.change(timeframe: simple string) -> series bool
 ```
 
@@ -443,10 +443,10 @@ errors in this subset, while a `na` timeframe argument returns `na`.
 `timeframe.from_seconds` supports the exact reverse conversion for values
 representable in that subset, preferring canonical strings such as `"1"`, `"D"`,
 `"W"`, and `"M"` over equivalent longer forms. Non-positive or otherwise
-unrepresentable second counts are runtime errors. `timeframe.change` uses the
-same supported timeframe string subset and returns `true` on the first executed
-bar or when the UTC timeframe bucket changes from the previous committed bar; a
-`na` timeframe argument returns `na`.
+unrepresentable second counts are runtime errors, while a `na` seconds argument
+returns `na`. `timeframe.change` uses the same supported timeframe string subset
+and returns `true` on the first executed bar or when the UTC timeframe bucket
+changes from the previous committed bar; a `na` timeframe argument returns `na`.
 
 Type casts:
 

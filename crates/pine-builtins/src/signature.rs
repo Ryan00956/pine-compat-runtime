@@ -34,6 +34,7 @@ pub enum Accepts {
     SeriesOrSimpleNumeric,
     SeriesOrSimpleNumericOrBool,
     SimpleInt,
+    SimpleIntCompatible,
     SimpleString,
     SimpleNumeric,
     SimpleBool,
