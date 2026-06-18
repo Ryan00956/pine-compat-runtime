@@ -1347,6 +1347,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "str.substring begin_pos -1 is outside string length 3",
     ),
     (
+        "tests/fixtures/regressions/str_substring_negative_end.pine",
+        "str.substring end_pos -1 is less than begin_pos 0",
+    ),
+    (
         "tests/fixtures/regressions/str_format_unmatched_left_brace.pine",
         "str.format has unmatched `{`",
     ),

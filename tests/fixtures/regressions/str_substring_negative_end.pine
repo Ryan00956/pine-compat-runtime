@@ -1,0 +1,3 @@
+indicator("String substring negative end")
+text = str.substring("SMA", 0, -1)
+plot(str.length(text))
