@@ -144,6 +144,17 @@ while independent_min_i < 1
     independent_min_i := independent_min_i + 1
 plot(independent_min_score)
 
+independent_max_ints = array.from(6, -2, 4)
+independent_max_floats = array.from(na, -1.5, 3.0)
+independent_max_score = bar_index * 0.0
+independent_max_i = 0
+while independent_max_i < 1
+    independent_max_int = array.max(independent_max_ints)
+    independent_max_float = independent_max_floats.max()
+    independent_max_score := independent_max_int * 10 + independent_max_float + independent_max_ints.size() + independent_max_floats.size()
+    independent_max_i := independent_max_i + 1
+plot(independent_max_score)
+
 branch_sumavg_source = array.from(2, 4, 6)
 branch_sumavg_results = array.new_float()
 if bar_index % 2 == 0
