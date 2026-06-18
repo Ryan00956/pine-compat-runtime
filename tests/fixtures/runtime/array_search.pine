@@ -111,6 +111,17 @@ while independent_every_i < 1
     independent_every_i := independent_every_i + 1
 plot(independent_every_score)
 
+independent_some_truthy = array.from(0, 2, 0)
+independent_some_falsey = array.from(false, false)
+independent_some_score = bar_index * 0
+independent_some_i = 0
+while independent_some_i < 1
+    independent_some_any = array.some(independent_some_truthy)
+    independent_some_none = independent_some_falsey.some()
+    independent_some_score := (independent_some_any ? 100 : 0) + (independent_some_none ? 10 : 0) + independent_some_truthy.size()
+    independent_some_i := independent_some_i + 1
+plot(independent_some_score)
+
 branch_truth_source = array.from(true, bar_index % 2 == 0)
 branch_truth_results = array.new_int()
 if bar_index % 2 == 0
