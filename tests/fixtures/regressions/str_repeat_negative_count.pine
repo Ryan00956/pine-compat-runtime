@@ -1,0 +1,3 @@
+indicator("String repeat negative count")
+text = str.repeat("x", -1)
+plot(str.length(text))
