@@ -40,3 +40,4 @@ while grossloss_percent_i < 1
     grossloss_percent_i := grossloss_percent_i + 1
 plot(independent_grossloss_percent)
 plot(identity(strategy.grossprofit_percent))
+plot(identity(strategy.grossloss_percent))
