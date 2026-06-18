@@ -408,6 +408,10 @@ plot(timeframe.in_seconds("1W") == timeframe.in_seconds("W") ? 1 : 0)
 plot(timeframe.in_seconds("1M") == timeframe.in_seconds("M") ? 1 : 0)
 plot(timeframe.in_seconds("2W"))
 plot(timeframe.in_seconds("3M"))
+plot(timeframe.in_seconds("1440"))
+plot(timeframe.in_seconds("365D"))
+plot(timeframe.in_seconds("52W"))
+plot(timeframe.in_seconds("12M"))
 plot(na(timeframe.in_seconds(na)) ? 1 : 0)
 plot(timeframe.from_seconds(60) == "1" ? 1 : 0)
 plot(timeframe.from_seconds(3600) == "60" ? 1 : 0)
@@ -448,21 +452,25 @@ plot(timeframe.multiplier)
     assert_values_close(&result.plots[10].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[11].values, &[1_209_600.0, 1_209_600.0]);
     assert_values_close(&result.plots[12].values, &[7_776_000.0, 7_776_000.0]);
-    assert_values_close(&result.plots[13].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[14].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[15].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[16].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[13].values, &[86_400.0, 86_400.0]);
+    assert_values_close(&result.plots[14].values, &[31_536_000.0, 31_536_000.0]);
+    assert_values_close(&result.plots[15].values, &[31_449_600.0, 31_449_600.0]);
+    assert_values_close(&result.plots[16].values, &[31_104_000.0, 31_104_000.0]);
     assert_values_close(&result.plots[17].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[18].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[19].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[20].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[21].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[22].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[23].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[24].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[25].values, &[1.0, 0.0]);
+    assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[26].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[27].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[27].values, &[1.0, 0.0]);
+    assert_values_close(&result.plots[28].values, &[1.0, 0.0]);
+    assert_values_close(&result.plots[29].values, &[1.0, 0.0]);
+    assert_values_close(&result.plots[30].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[31].values, &[1.0, 1.0]);
 }
 
 #[test]
