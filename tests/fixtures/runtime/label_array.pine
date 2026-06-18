@@ -79,3 +79,11 @@ for i = 0 to 1
     loop_new_label_values = array.new_label(i + 1, loop_label_seed)
     loop_new_label_score := loop_new_label_score + loop_new_label_values.size() * 10 + (loop_new_label_values.get(i) == loop_label_seed ? 1 : 0)
 plot(loop_new_label_score)
+
+independent_new_label_score = bar_index * 0
+independent_new_label_i = 0
+while independent_new_label_i < 1
+    independent_new_label_values = array.new_label(2, branch_label_seed)
+    independent_new_label_score := independent_new_label_values.size() * 100 + (not na(independent_new_label_values.get(0)) ? 10 : 0) + (independent_new_label_values.get(1) == branch_label_seed ? 1 : 0)
+    independent_new_label_i := independent_new_label_i + 1
+plot(independent_new_label_score)
