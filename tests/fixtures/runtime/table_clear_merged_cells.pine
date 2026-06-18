@@ -1,0 +1,9 @@
+//@version=5
+indicator("Table clear merged cells")
+var table_id = table.new(position.top_right, 2, 2)
+if bar_index == 1
+    table.cell(table_id, 0, 0, "A")
+    table.cell(table_id, 1, 1, "B")
+    table.merge_cells(table_id, 0, 0, 1, 0)
+    table.clear(table_id, 1, 0, 1, 1)
+plot(close)

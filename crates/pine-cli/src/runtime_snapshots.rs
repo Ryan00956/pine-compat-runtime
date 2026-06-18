@@ -402,6 +402,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/table_clear.pine",
     ),
     (
+        "runtime_table_clear_merged_cells.json",
+        "tests/fixtures/runtime/table_clear_merged_cells.pine",
+    ),
+    (
         "runtime_table_merge_cells.json",
         "tests/fixtures/runtime/table_merge_cells.pine",
     ),
