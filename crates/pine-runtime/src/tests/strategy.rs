@@ -7501,6 +7501,11 @@ if bar_index == 1
     strategy.entry("L", strategy.long, qty=2)
 plot(strategy.closedtrades)
 plot(strategy.opentrades)
+independent_opentrades = strategy.opentrades * 0
+opentrades_i = 0
+while opentrades_i < 1
+    independent_opentrades := strategy.opentrades
+    opentrades_i := opentrades_i + 1
 if bar_index == 2
     strategy.close("L")
 plot(strategy.closedtrades)
@@ -7511,6 +7516,7 @@ while closedtrades_i < 1
     independent_closedtrades := strategy.closedtrades
     closedtrades_i := closedtrades_i + 1
 plot(independent_closedtrades)
+plot(independent_opentrades)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -7587,6 +7593,15 @@ plot(independent_closedtrades)
             PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(1),
+        ]
+    );
+    assert_eq!(
+        result.plots[7].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(1),
+            PineValue::Int(0),
         ]
     );
 }

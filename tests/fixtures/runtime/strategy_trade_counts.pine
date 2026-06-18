@@ -9,6 +9,11 @@ if bar_index == 1
 
 plot(strategy.closedtrades)
 plot(strategy.opentrades)
+independent_opentrades = strategy.opentrades * 0
+opentrades_i = 0
+while opentrades_i < 1
+    independent_opentrades := strategy.opentrades
+    opentrades_i := opentrades_i + 1
 
 if bar_index == 2
     strategy.close("L")
@@ -24,5 +29,6 @@ while closedtrades_i < 1
     independent_closedtrades := strategy.closedtrades
     closedtrades_i := closedtrades_i + 1
 plot(independent_closedtrades)
+plot(independent_opentrades)
 plot(strategy.closedtrades[1])
 plot(strategy.opentrades[1])
