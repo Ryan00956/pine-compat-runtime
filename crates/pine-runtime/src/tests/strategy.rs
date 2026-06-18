@@ -7969,6 +7969,12 @@ while grossloss_i < 1
     independent_grossloss := strategy.grossloss
     grossloss_i := grossloss_i + 1
 plot(independent_grossloss)
+independent_avg_trade = strategy.avg_trade * 0
+avg_trade_i = 0
+while avg_trade_i < 1
+    independent_avg_trade := strategy.avg_trade
+    avg_trade_i := avg_trade_i + 1
+plot(independent_avg_trade)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8230,6 +8236,20 @@ plot(independent_grossloss)
             PineValue::Float(2.0),
             PineValue::Float(2.0),
             PineValue::Float(2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[17].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(-0.5),
+            PineValue::Float(-0.5),
+            PineValue::Float(-0.5),
+            PineValue::Float(-1.0 / 3.0),
         ]
     );
     let strategy = result.strategy.as_ref().expect("strategy result");

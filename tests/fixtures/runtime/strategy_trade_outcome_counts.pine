@@ -61,3 +61,9 @@ while grossloss_i < 1
     independent_grossloss := strategy.grossloss
     grossloss_i := grossloss_i + 1
 plot(independent_grossloss)
+independent_avg_trade = strategy.avg_trade * 0
+avg_trade_i = 0
+while avg_trade_i < 1
+    independent_avg_trade := strategy.avg_trade
+    avg_trade_i := avg_trade_i + 1
+plot(independent_avg_trade)
