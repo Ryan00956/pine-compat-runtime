@@ -39,7 +39,7 @@ second	supported	UTC bar time component variable plus UTC/GMT/numeric fixed-offs
 timestamp	supported	numeric calendar timestamp subset with optional UTC/GMT/numeric fixed-offset timezone tokens, named calendar arguments, and normalized zero/negative/overflow month/day/time offsets, plus const dateString subset for ISO dates, English month dates, optional time-of-day, and UTC/GMT/fixed-offset timezone tokens; IANA timezone conversion, broader date-string parsing, and exchange-timezone default semantics remain unsupported	tests/fixtures/runtime/time_components.pine
 timeframe.period	supported	fixed default chart timeframe string subset	tests/fixtures/runtime/timeframe.pine
 timeframe.main_period	supported	fixed default main chart timeframe string subset matching timeframe.period in the current single-timeframe runtime	tests/fixtures/runtime/timeframe.pine
-timeframe.in_seconds	supported	explicit seconds/minutes/days/weeks/months timeframe string to seconds subset plus fixed default chart timeframe	tests/fixtures/runtime/timeframe.pine
+timeframe.in_seconds	supported	explicit seconds/minutes/days/weeks/months timeframe string to seconds subset plus fixed default chart timeframe and na timeframe propagation	tests/fixtures/runtime/timeframe.pine
 timeframe.from_seconds	supported	explicit seconds to seconds/minutes/days/weeks/months timeframe string subset	tests/fixtures/runtime/timeframe.pine
 timeframe.change	supported	UTC bucket change detection over supported timeframe string subset with na timeframe propagation	tests/fixtures/runtime/timeframe.pine
 timeframe.isseconds	supported	fixed default chart timeframe metadata subset	tests/fixtures/runtime/timeframe.pine

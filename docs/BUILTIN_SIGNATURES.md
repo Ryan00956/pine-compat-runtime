@@ -439,13 +439,14 @@ Explicit timeframe strings support Pine-style seconds (`1S`, `5S`, `10S`,
 `15S`, `30S`, `45S`), minutes (`1` through `1440`), days (`D`/`1D` through
 `365D`), weeks (`W`/`1W` through `52W`), and months (`M`/`1M` through `12M`,
 using 30-day month seconds). Tick and invalid timeframe strings are runtime
-errors in this subset. `timeframe.from_seconds` supports the exact reverse
-conversion for values representable in that subset, preferring canonical
-strings such as `"1"`, `"D"`, `"W"`, and `"M"` over equivalent longer forms.
-Non-positive or otherwise unrepresentable second counts are runtime errors.
-`timeframe.change` uses the same supported timeframe string subset and returns
-`true` on the first executed bar or when the UTC timeframe bucket changes from
-the previous committed bar.
+errors in this subset, while a `na` timeframe argument returns `na`.
+`timeframe.from_seconds` supports the exact reverse conversion for values
+representable in that subset, preferring canonical strings such as `"1"`, `"D"`,
+`"W"`, and `"M"` over equivalent longer forms. Non-positive or otherwise
+unrepresentable second counts are runtime errors. `timeframe.change` uses the
+same supported timeframe string subset and returns `true` on the first executed
+bar or when the UTC timeframe bucket changes from the previous committed bar; a
+`na` timeframe argument returns `na`.
 
 Type casts:
 
