@@ -124,6 +124,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table dimensions must be positive",
     ),
     (
+        "tests/fixtures/regressions/table_clear_coordinate_order.pine",
+        "table clear start coordinate cannot exceed end coordinate",
+    ),
+    (
         "tests/fixtures/regressions/str_match_invalid_regex.pine",
         "str.match invalid regex",
     ),
