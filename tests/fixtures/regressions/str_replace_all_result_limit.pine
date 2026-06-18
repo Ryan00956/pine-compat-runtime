@@ -1,0 +1,4 @@
+indicator("String replace all result limit")
+source = str.repeat("x", 40960)
+text = str.replace_all(source, "", ".")
+plot(str.length(text))
