@@ -128,6 +128,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table clear start coordinate cannot exceed end coordinate",
     ),
     (
+        "tests/fixtures/regressions/table_clear_coordinate_bounds.pine",
+        "table clear coordinate out of bounds `0,0` to `2,0`",
+    ),
+    (
         "tests/fixtures/regressions/str_match_invalid_regex.pine",
         "str.match invalid regex",
     ),
