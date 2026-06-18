@@ -364,6 +364,16 @@ for i = 0 to 1
         loop_standardize_results.push(loop_standardized_method.get(0))
 plot(loop_standardize_results.get(0) * 10 + loop_standardize_results.get(1))
 
+independent_standardize_source = array.from(0, 10, na)
+independent_standardize_score = bar_index * 0.0
+independent_standardize_i = 0
+while independent_standardize_i < 1
+    independent_standardized_namespace = array.standardize(independent_standardize_source)
+    independent_standardized_method = independent_standardize_source.standardize()
+    independent_standardize_score := -independent_standardized_namespace.get(0) * 10 + independent_standardized_method.get(1) * 20 + (na(independent_standardized_namespace.get(2)) ? 100 : 0) + independent_standardize_source.get(1) + independent_standardized_namespace.size() - independent_standardize_source.size()
+    independent_standardize_i := independent_standardize_i + 1
+plot(independent_standardize_score)
+
 branch_variance_stdev_source = array.from(2, 4, 6)
 branch_variance_stdev_results = array.new_float()
 if bar_index % 2 == 0
