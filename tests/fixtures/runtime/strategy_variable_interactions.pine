@@ -27,10 +27,17 @@ while j < strategy.position_size
     while_value := while_value + 1
     j := j + 1
 
+independent_while_value = strategy.position_size * 0
+k = 0
+while k < 1
+    independent_while_value := strategy.position_size
+    k := k + 1
+
 plot(if_value)
 plot(switch_value)
 plot(for_value)
 plot(while_value)
+plot(independent_while_value)
 plot(as_tens(strategy.position_size))
 plot(strategy.position_size[1])
 plot(strategy.openprofit[1])

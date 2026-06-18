@@ -8569,12 +8569,21 @@ fn strategy_variables_work_in_supported_expression_contexts() {
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
-            PineValue::Float(20.0),
+            PineValue::Float(2.0),
             PineValue::Float(0.0),
         ]
     );
     assert_eq!(
         result.plots[5].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(20.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[6].values,
         vec![
             PineValue::Na,
             PineValue::Float(0.0),
@@ -8583,7 +8592,7 @@ fn strategy_variables_work_in_supported_expression_contexts() {
         ]
     );
     assert_eq!(
-        result.plots[6].values,
+        result.plots[7].values,
         vec![
             PineValue::Na,
             PineValue::Float(0.0),
