@@ -264,6 +264,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table cell coordinate out of bounds `2,0`",
     ),
     (
+        "tests/fixtures/regressions/table_cell_set_width_coordinate_row_bounds.pine",
+        "table cell coordinate out of bounds `0,1`",
+    ),
+    (
         "tests/fixtures/regressions/table_cell_set_width_coordinate_negative.pine",
         "table cell coordinate out of bounds `-1,0`",
     ),
