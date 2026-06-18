@@ -172,6 +172,17 @@ for i = 0 to 1
         loop_sumavg_results.push(loop_sumavg_source.avg() + array.range(loop_sumavg_source))
 plot(loop_sumavg_results.get(0) + loop_sumavg_results.get(1))
 
+independent_sum_ints = array.from(2, na, 5)
+independent_sum_floats = array.from(na, 1.5, 2.5)
+independent_sum_score = bar_index * 0.0
+independent_sum_i = 0
+while independent_sum_i < 1
+    independent_sum_int = array.sum(independent_sum_ints)
+    independent_sum_float = independent_sum_floats.sum()
+    independent_sum_score := independent_sum_int * 10 + independent_sum_float + independent_sum_ints.size() + independent_sum_floats.size()
+    independent_sum_i := independent_sum_i + 1
+plot(independent_sum_score)
+
 branch_median_mode_source = array.from(1, 2, 2, 4)
 branch_median_mode_results = array.new_float()
 if bar_index % 2 == 0
