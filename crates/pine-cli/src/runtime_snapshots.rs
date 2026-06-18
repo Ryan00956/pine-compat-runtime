@@ -1315,6 +1315,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array.concat cannot exceed 100000 elements",
     ),
     (
+        "tests/fixtures/regressions/array_join_result_limit.pine",
+        "array.join result cannot exceed 40960 characters",
+    ),
+    (
         "tests/fixtures/regressions/str_match_invalid_regex.pine",
         "str.match invalid regex",
     ),
