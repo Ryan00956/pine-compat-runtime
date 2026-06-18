@@ -1,0 +1,3 @@
+indicator("Array new float negative size")
+values = array.new_float(-1)
+plot(array.size(values))
