@@ -188,6 +188,7 @@ bool_values = array.from(true, false)
 plot(str.tostring(bool_values) == "[true, false]" ? 1 : 0)
 plot(str.format("Words {0}", string_values) == "Words [head, tail]" ? 1 : 0)
 plot(str.format("Ints {0}", int_values) == "Ints [1, 2]" ? 1 : 0)
+plot(str.format("Flags {0}", bool_values) == "Flags [true, false]" ? 1 : 0)
 "##,
     );
     let analysis = analyze_source(&source);
