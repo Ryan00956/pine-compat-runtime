@@ -1,5 +1,6 @@
 //@version=5
 strategy("Strategy profit percent state", initial_capital=1000)
+identity(value) => value
 
 if bar_index == 0
     strategy.entry("W", strategy.long, qty=1)
@@ -15,6 +16,7 @@ if bar_index == 5
 
 plot(strategy.netprofit)
 plot(strategy.netprofit_percent)
+plot(identity(strategy.netprofit_percent))
 plot(strategy.grossprofit)
 plot(strategy.grossprofit_percent)
 plot(strategy.grossloss)

@@ -8465,6 +8465,7 @@ fn strategy_profit_percent_variables_use_initial_capital_denominator() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"strategy("profit percent", initial_capital=1000)
+identity(value) => value
 if bar_index == 0
     strategy.entry("W", strategy.long, qty=1)
 if bar_index == 2
@@ -8474,6 +8475,7 @@ if bar_index == 3
 if bar_index == 5
     strategy.close("L")
 plot(strategy.netprofit_percent)
+plot(identity(strategy.netprofit_percent))
 plot(strategy.grossprofit_percent)
 plot(strategy.grossloss_percent)
 independent_netprofit_percent = strategy.netprofit_percent * 0
@@ -8528,11 +8530,22 @@ plot(independent_grossloss_percent)
             PineValue::Float(0.1),
             PineValue::Float(0.1),
             PineValue::Float(0.1),
-            PineValue::Float(0.1),
+            PineValue::Float(-0.1),
         ]
     );
     assert_eq!(
         result.plots[2].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.1),
+            PineValue::Float(0.1),
+            PineValue::Float(0.1),
+            PineValue::Float(0.1),
+        ]
+    );
+    assert_eq!(
+        result.plots[3].values,
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
@@ -8543,7 +8556,7 @@ plot(independent_grossloss_percent)
         ]
     );
     assert_eq!(
-        result.plots[3].values,
+        result.plots[4].values,
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
@@ -8554,7 +8567,7 @@ plot(independent_grossloss_percent)
         ]
     );
     assert_eq!(
-        result.plots[4].values,
+        result.plots[5].values,
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
@@ -8565,7 +8578,7 @@ plot(independent_grossloss_percent)
         ]
     );
     assert_eq!(
-        result.plots[5].values,
+        result.plots[6].values,
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
