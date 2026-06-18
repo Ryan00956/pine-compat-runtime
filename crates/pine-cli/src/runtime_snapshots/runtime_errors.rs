@@ -148,6 +148,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table cell coordinate out of bounds `2,0`",
     ),
     (
+        "tests/fixtures/regressions/table_cell_set_text_missing_cell.pine",
+        "table cell `0,0` has not been populated",
+    ),
+    (
         "tests/fixtures/regressions/str_match_invalid_regex.pine",
         "str.match invalid regex",
     ),
