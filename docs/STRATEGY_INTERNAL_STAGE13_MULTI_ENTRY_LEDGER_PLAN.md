@@ -1,12 +1,17 @@
 # Strategy Internal Stage 13 Multi-Entry Ledger Plan
 
-Status: design gate opened on 2026-06-05. Runtime behavior, conformance claims,
-fixtures, matrix output, and public JSON shape are unchanged in this slice.
+Status: closed through Slice 101 on 2026-06-06. Stage 13 now records the
+fixture-backed long-only multi-entry ledger and pyramiding subset described in
+the compatibility contract below. Support claims still come from
+`tests/fixtures/conformance.tsv`, snapshots, host-parity fixtures, and release
+verification; this plan does not claim shorts, reversals, `strategy.order()`,
+`close_entries_rule`, public pending-order output, or broader multi-entry
+reporting.
 
 Stage 12 closed the declaration-property boundary and explicitly warned against
-accepting another `strategy()` property as a no-op. Stage 13 designs the next
-broker-model foundation before any `pyramiding`, short, reversal,
-`close_entries_rule`, or generic order work is accepted.
+accepting another `strategy()` property as a no-op. Stage 13 designed and
+fixture-backed the long-only multi-entry ledger foundation before any short,
+reversal, `close_entries_rule`, or generic order work is accepted.
 
 Primary official reference:
 
@@ -113,7 +118,7 @@ Still out of scope for the first behavior target:
 
 ### Slice 0: Design Gate
 
-Status: this document. This slice does not change runtime behavior,
+Status: closed on 2026-06-05. This slice did not change runtime behavior,
 conformance, fixtures, snapshots, or public output.
 
 Goal:

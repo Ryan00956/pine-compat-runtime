@@ -448,20 +448,24 @@ Out of scope:
 
 ## Stage 13: Multi-Entry Ledger And Pyramiding Design
 
-Status: design gate opened on 2026-06-05. See
-`docs/STRATEGY_INTERNAL_STAGE13_MULTI_ENTRY_LEDGER_PLAN.md`.
+Status: closed through Slice 101 on 2026-06-06. See
+`docs/STRATEGY_INTERNAL_STAGE13_MULTI_ENTRY_LEDGER_PLAN.md` and
+`docs/RELEASE_NOTES.md`.
 
-Goal: design the next broker-model foundation before accepting `pyramiding`,
-multi-entry ledgers, short/reversal behavior, `close_entries_rule`, or generic
-`strategy.order()` support.
+Goal: design and fixture-back the long-only multi-entry ledger foundation before
+any short/reversal behavior, `close_entries_rule`, or generic `strategy.order()`
+support.
 
-Target first subset:
+Closed subset:
 
-- no runtime widening in the design slice;
 - official strategy-entry, pyramiding, close-all, FIFO, and generic-order
   dependencies recorded;
-- a long-only, aggregate-output first behavior target that preserves the current
-  public `StrategyResult` schema.
+- fixture-backed positive integer const `pyramiding` for long market entries and
+  same-tick long price-based entry exceptions;
+- long-only multi-entry `strategy.close`, `strategy.close_all`, and supported
+  `strategy.exit` allocation for the fixture-backed subset;
+- CLI, Python, and WASM host-parity coverage for the public JSON fixtures;
+- preserved public `StrategyResult` schema.
 
 Scope:
 
@@ -472,7 +476,8 @@ Scope:
 
 Out of scope:
 
-- Runtime acceptance of `pyramiding` or `close_entries_rule` in this slice.
+- `pyramiding` behavior beyond the closed long-only fixture-backed subset and
+  any runtime acceptance of `close_entries_rule`.
 - Short exposure, reversals, `strategy.order()`, OCA across order families,
   public pending-order/open-trade ledgers, realtime recalculation, and strategy
   order-fill alert delivery.
