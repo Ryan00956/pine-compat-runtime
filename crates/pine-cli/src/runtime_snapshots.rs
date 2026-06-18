@@ -1382,6 +1382,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/regressions/str_format_time_timestamp_out_of_range.pine",
         "str.format_time timestamp is out of range: 9223372036854775807",
     ),
+    (
+        "tests/fixtures/regressions/str_format_time_result_limit.pine",
+        "str.format_time result cannot exceed 40960 characters",
+    ),
 ];
 
 pub(crate) type RuntimeLibrarySnapshotFixture = (
