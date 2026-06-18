@@ -19,3 +19,9 @@ plot(strategy.grossprofit)
 plot(strategy.grossprofit_percent)
 plot(strategy.grossloss)
 plot(strategy.grossloss_percent)
+independent_netprofit_percent = strategy.netprofit_percent * 0
+netprofit_percent_i = 0
+while netprofit_percent_i < 1
+    independent_netprofit_percent := strategy.netprofit_percent
+    netprofit_percent_i := netprofit_percent_i + 1
+plot(independent_netprofit_percent)
