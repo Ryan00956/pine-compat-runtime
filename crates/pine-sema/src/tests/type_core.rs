@@ -909,6 +909,37 @@ plot(math.round(close + 0.25, na))
 }
 
 #[test]
+fn accepts_const_na_unary_math_inputs() {
+    let analysis = analyze(
+        r#"indicator("math unary na")
+plot(math.sqrt(na))
+plot(math.cbrt(na))
+plot(math.log(na))
+plot(math.log10(na))
+plot(math.exp(na))
+plot(math.acos(na))
+plot(math.asin(na))
+plot(math.atan(na))
+plot(math.sign(na))
+plot(math.todegrees(na))
+plot(math.toradians(na))
+plot(math.sin(na))
+plot(math.cos(na))
+plot(math.tan(na))
+plot(math.round_to_mintick(na))
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_integer_rounding_math_functions_as_int_values() {
     let analysis = analyze(
         r#"indicator("integer rounding types")

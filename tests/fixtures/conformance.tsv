@@ -235,17 +235,17 @@ math.avg	supported	variadic numeric average with fixture-backed offset relation	
 math.floor	supported	integer rounding result with argument qualifier and const-or-series na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.ceil	supported	integer rounding result with argument qualifier and const-or-series na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.trunc	supported	integer truncation result with argument qualifier and const-or-series na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.sqrt	supported	numeric square root with fixture-backed square/absolute-value relation and negative inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.cbrt	supported	numeric cube root with fixture-backed positive cube roundtrip relation	tests/fixtures/runtime/math.pine
-math.log	supported	natural logarithm with fixture-backed exp roundtrip and non-positive inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.log10	supported	base-10 logarithm with fixture-backed pow(10, x) roundtrip and non-positive inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.exp	supported	natural exponential with fixture-backed log roundtrip and overflow returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.acos	supported	inverse cosine with fixture-backed asin complement relation over bounded inputs and out-of-domain inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.asin	supported	inverse sine with fixture-backed acos complement relation over bounded inputs and out-of-domain inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.atan	supported	inverse tangent with fixture-backed atan(1)=pi/4 relation	tests/fixtures/runtime/math.pine
-math.sign	supported	numeric sign with fixture-backed odd symmetry relation	tests/fixtures/runtime/math.pine
-math.todegrees	supported	numeric radians-to-degrees conversion with fixture-backed toradians roundtrip	tests/fixtures/runtime/math.pine
-math.toradians	supported	numeric degrees-to-radians conversion with fixture-backed todegrees roundtrip	tests/fixtures/runtime/math.pine
+math.sqrt	supported	numeric square root with fixture-backed square/absolute-value relation and const-or-series na or negative inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.cbrt	supported	numeric cube root with fixture-backed positive cube roundtrip relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.log	supported	natural logarithm with fixture-backed exp roundtrip and const-or-series na or non-positive inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.log10	supported	base-10 logarithm with fixture-backed pow(10, x) roundtrip and const-or-series na or non-positive inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.exp	supported	natural exponential with fixture-backed log roundtrip and const-or-series na or overflow returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.acos	supported	inverse cosine with fixture-backed asin complement relation over bounded inputs and const-or-series na or out-of-domain inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.asin	supported	inverse sine with fixture-backed acos complement relation over bounded inputs and const-or-series na or out-of-domain inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.atan	supported	inverse tangent with fixture-backed atan(1)=pi/4 relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.sign	supported	numeric sign with fixture-backed odd symmetry relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.todegrees	supported	numeric radians-to-degrees conversion with fixture-backed toradians roundtrip and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.toradians	supported	numeric degrees-to-radians conversion with fixture-backed todegrees roundtrip and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.pi	supported	pi constant with fixture-backed todegrees(pi)=180 relation	tests/fixtures/runtime/math.pine
 math.e	supported	Euler's number constant with fixture-backed exp(1) relation	tests/fixtures/runtime/math.pine
 math.phi	supported	golden-ratio constant with fixture-backed rphi difference relation	tests/fixtures/runtime/math.pine
@@ -279,13 +279,13 @@ ticker.modify	partial	simple-string ticker ID identity subset, plus session.regu
 ticker.pointfigure	partial	simple-string Point & Figure ticker ID constructor subset for tickerid, source, style, numeric param, and reversal that preserves the standard symbol for ticker.standard(); actual Point & Figure OHLC data remains host/request-provider-owned	tests/fixtures/runtime/ticker.pine;tests/fixtures/sema/unsupported_ticker_constructors.pine
 ticker.renko	partial	simple-string Renko ticker ID constructor subset for tickerid, style, and numeric param that preserves the standard symbol for ticker.standard(); actual Renko OHLC data remains host/request-provider-owned	tests/fixtures/runtime/ticker.pine;tests/fixtures/sema/unsupported_ticker_constructors.pine
 ticker.standard	partial	simple-string standard ticker ID subset; plain PREFIX:TICKER values are returned unchanged and known ticker-id strings containing a quoted symbol field return that standard symbol, while other modifier encodings and ticker constructors remain unsupported	tests/fixtures/runtime/ticker.pine;tests/fixtures/sema/unsupported_ticker_constructors.pine
-math.sin	supported	trigonometric sine with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine
-math.cos	supported	trigonometric cosine with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine
-math.tan	supported	trigonometric tangent with fixture-backed zero-angle identity relation	tests/fixtures/runtime/math.pine
+math.sin	supported	trigonometric sine with fixture-backed zero-angle identity relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.cos	supported	trigonometric cosine with fixture-backed zero-angle identity relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.tan	supported	trigonometric tangent with fixture-backed zero-angle identity relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.pow	supported	numeric exponentiation with fixture-backed square relation and invalid fractional negative base returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.hypot	supported	numeric hypotenuse with fixture-backed zero-leg absolute-value relation	tests/fixtures/runtime/math.pine
 math.round	supported	single-argument integer rounding or precision decimal float rounding with ties rounding up and const-or-series number/precision na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.round_to_mintick	supported	default syminfo.mintick rounding with fixture-backed one-tick offset relation	tests/fixtures/runtime/math.pine
+math.round_to_mintick	supported	default syminfo.mintick rounding with fixture-backed one-tick offset relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.random	supported	fixture-derived deterministic callsite PRNG subset with optional min/max/seed	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.sum	supported	rolling non-na window sums; simple and computed integer length expressions	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/computed_lengths.pine
 na	supported	missing-value predicate with fixture-backed history fallback relation	tests/fixtures/runtime/na.pine

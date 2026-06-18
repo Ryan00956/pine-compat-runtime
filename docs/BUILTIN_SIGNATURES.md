@@ -1457,25 +1457,25 @@ math.avg(number: numeric, ...) -> float with strongest qualifier
 math.floor(number: numeric|na) -> int with same qualifier
 math.ceil(number: numeric|na) -> int with same qualifier
 math.trunc(number: numeric|na) -> int with same qualifier
-math.sqrt(number: numeric) -> float with same qualifier
-math.cbrt(number: numeric) -> float with same qualifier
-math.log(number: numeric) -> float with same qualifier
-math.log10(number: numeric) -> float with same qualifier
-math.exp(number: numeric) -> float with same qualifier
-math.acos(number: numeric) -> float with same qualifier
-math.asin(number: numeric) -> float with same qualifier
-math.atan(number: numeric) -> float with same qualifier
-math.sign(number: numeric) -> float with same qualifier
-math.todegrees(radians: numeric) -> float with same qualifier
-math.toradians(degrees: numeric) -> float with same qualifier
-math.sin(number: numeric) -> float with same qualifier
-math.cos(number: numeric) -> float with same qualifier
-math.tan(number: numeric) -> float with same qualifier
+math.sqrt(number: numeric|na) -> float with same qualifier
+math.cbrt(number: numeric|na) -> float with same qualifier
+math.log(number: numeric|na) -> float with same qualifier
+math.log10(number: numeric|na) -> float with same qualifier
+math.exp(number: numeric|na) -> float with same qualifier
+math.acos(number: numeric|na) -> float with same qualifier
+math.asin(number: numeric|na) -> float with same qualifier
+math.atan(number: numeric|na) -> float with same qualifier
+math.sign(number: numeric|na) -> float with same qualifier
+math.todegrees(radians: numeric|na) -> float with same qualifier
+math.toradians(degrees: numeric|na) -> float with same qualifier
+math.sin(number: numeric|na) -> float with same qualifier
+math.cos(number: numeric|na) -> float with same qualifier
+math.tan(number: numeric|na) -> float with same qualifier
 math.pow(base: numeric, exponent: numeric) -> float with strongest qualifier
 math.hypot(number1: numeric, number2: numeric) -> float with strongest qualifier
 math.round(number: numeric|na) -> int with same qualifier
 math.round(number: numeric|na, precision: int|na) -> float with strongest qualifier
-math.round_to_mintick(number: numeric) -> float with same qualifier
+math.round_to_mintick(number: numeric|na) -> float with same qualifier
 math.random(min?: numeric, max?: numeric, seed?: simple int) -> series float
 math.sum(source: series/simple numeric, length: simple int) -> series float
 ```
@@ -1490,7 +1490,13 @@ Current Phase 4 behavior:
 - `math.floor`, `math.ceil`, and `math.trunc` return int values with the
   argument qualifier; const-or-series `na`, non-finite, or out-of-range float
   results return `na`.
-- `math.sqrt`, `math.cbrt`, `math.log`, `math.log10`, `math.exp`, `math.acos`, `math.asin`, `math.atan`, `math.sign`, `math.todegrees`, `math.toradians`, `math.sin`, `math.cos`, `math.tan`, `math.pow`, and `math.hypot` return float values and preserve or promote qualifiers from their arguments.
+- `math.sqrt`, `math.cbrt`, `math.log`, `math.log10`, `math.exp`,
+  `math.acos`, `math.asin`, `math.atan`, `math.sign`, `math.todegrees`,
+  `math.toradians`, `math.sin`, `math.cos`, `math.tan`,
+  `math.round_to_mintick`, `math.pow`, and `math.hypot` return float values
+  and preserve or promote qualifiers from their arguments. The one-argument
+  helpers and `math.round_to_mintick` return `na` for const-or-series `na`
+  inputs.
 - `math.round` returns an int when `precision` is omitted, with ties rounding
   up; with `precision`, it returns a float rounded to that many decimal places.
   Const-or-series `na` number or precision inputs return `na`.
