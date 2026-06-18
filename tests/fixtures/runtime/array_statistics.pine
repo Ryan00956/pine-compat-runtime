@@ -330,6 +330,17 @@ for i = 0 to 1
         loop_covariance_results.push(loop_covariance_x.covariance(loop_covariance_y, false))
 plot(loop_covariance_results.get(0) * 10 + loop_covariance_results.get(1))
 
+independent_covariance_x = array.from(1, 2, 3, na)
+independent_covariance_y = array.from(2, 4, 8, 10)
+independent_covariance_score = bar_index * 0.0
+independent_covariance_i = 0
+while independent_covariance_i < 1
+    independent_covariance_biased = array.covariance(independent_covariance_x, independent_covariance_y)
+    independent_covariance_unbiased = independent_covariance_x.covariance(independent_covariance_y, false)
+    independent_covariance_score := independent_covariance_biased * 10 + independent_covariance_unbiased + independent_covariance_x.size() - independent_covariance_y.size()
+    independent_covariance_i := independent_covariance_i + 1
+plot(independent_covariance_score)
+
 branch_standardize_source = array.from(2, 4, 6)
 branch_standardize_results = array.new_float()
 if bar_index % 2 == 0
