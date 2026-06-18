@@ -1476,7 +1476,7 @@ math.hypot(number1: numeric, number2: numeric) -> float with strongest qualifier
 math.round(number: numeric|na) -> int with same qualifier
 math.round(number: numeric|na, precision: int|na) -> float with strongest qualifier
 math.round_to_mintick(number: numeric|na) -> float with same qualifier
-math.random(min?: numeric, max?: numeric, seed?: simple int) -> series float
+math.random(min?: numeric|na, max?: numeric|na, seed?: simple int) -> series float
 math.sum(source: series/simple numeric, length: simple int) -> series float
 ```
 
@@ -1508,7 +1508,7 @@ Current Phase 4 behavior:
 - `math.random` returns a deterministic pseudorandom `series float` sequence
   per callsite. Omitted `min`/`max` default to `0` and `1`; seeded calls are
   reproducible for the same callsite and seed. Invalid or non-finite ranges
-  return `na`.
+  return `na`; const-or-series `na` min/max inputs return `na`.
 - `math.sum` returns the rolling sum of `source` over a ready simple-int `length` window; it returns `na` for invalid lengths, until the window is ready, or when the window contains `na`.
 - `math.max` and `math.min` require at least two numeric args and accept variadic numeric args.
 - `math.max` and `math.min` return int only when all args are int; otherwise they return float.

@@ -968,6 +968,24 @@ plot(float(math.abs(na)))
 }
 
 #[test]
+fn accepts_const_na_math_random_bounds() {
+    let analysis = analyze(
+        r#"indicator("math random na bounds")
+plot(math.random(na, 1, 7))
+plot(math.random(0, na, 7))
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_integer_rounding_math_functions_as_int_values() {
     let analysis = analyze(
         r#"indicator("integer rounding types")

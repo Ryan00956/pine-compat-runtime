@@ -69,12 +69,12 @@ const MATH_ROUND_PARAMS: &[BuiltinParam] = &[
 const MATH_RANDOM_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "min",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
         name: "max",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: true,
     },
     BuiltinParam {
