@@ -79,3 +79,9 @@ while avg_winning_trade_i < 1
     independent_avg_winning_trade := strategy.avg_winning_trade
     avg_winning_trade_i := avg_winning_trade_i + 1
 plot(independent_avg_winning_trade)
+independent_avg_winning_trade_percent = strategy.avg_winning_trade_percent * 0
+avg_winning_trade_percent_i = 0
+while avg_winning_trade_percent_i < 1
+    independent_avg_winning_trade_percent := strategy.avg_winning_trade_percent
+    avg_winning_trade_percent_i := avg_winning_trade_percent_i + 1
+plot(independent_avg_winning_trade_percent)
