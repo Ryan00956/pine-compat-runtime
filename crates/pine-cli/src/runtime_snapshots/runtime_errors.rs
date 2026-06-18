@@ -172,6 +172,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table merge coordinate out of bounds `-1,0` to `1,0`",
     ),
     (
+        "tests/fixtures/regressions/table_merge_coordinate_row_negative.pine",
+        "table merge coordinate out of bounds `0,-1` to `1,0`",
+    ),
+    (
         "tests/fixtures/regressions/table_merge_overlap.pine",
         "table merge range intersects existing merged cells",
     ),
