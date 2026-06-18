@@ -1,0 +1,3 @@
+indicator("Array new float size limit")
+values = array.new_float(100001)
+plot(array.size(values))
