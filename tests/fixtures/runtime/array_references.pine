@@ -59,3 +59,15 @@ for i = 0 to 1
     loop_copy.push(i)
     loop_copy_results.push(loop_copy.size())
 plot(loop_copy_results.get(0) * 10 + loop_copy_results.get(1) + loop_copy_source.size())
+
+independent_copy_source = array.from(4, 5)
+independent_copy_score = bar_index * 0
+independent_copy_i = 0
+while independent_copy_i < 1
+    independent_copy_namespace = array.copy(independent_copy_source)
+    independent_copy_namespace.set(0, 40)
+    independent_copy_method = independent_copy_source.copy()
+    independent_copy_method.push(6)
+    independent_copy_score := independent_copy_namespace.get(0) * 100 + independent_copy_method.size() * 10 + independent_copy_source.get(0) + independent_copy_source.size()
+    independent_copy_i := independent_copy_i + 1
+plot(independent_copy_score)
