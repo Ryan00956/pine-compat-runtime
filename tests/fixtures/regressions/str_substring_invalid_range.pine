@@ -1,0 +1,3 @@
+indicator("String substring invalid range")
+text = str.substring("SMA", 2, 1)
+plot(str.length(text))
