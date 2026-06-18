@@ -101,3 +101,13 @@ for i = 0 to 1
     else
         loop_first_last_score := loop_first_last_score + loop_first_last.first() * 10 + array.last(loop_first_last)
 plot(loop_first_last_score)
+
+independent_first_values = array.from(6, 7, 8)
+independent_first_score = bar_index * 0
+independent_first_i = 0
+while independent_first_i < 1
+    independent_first_namespace = array.first(independent_first_values)
+    independent_first_method = independent_first_values.first()
+    independent_first_score := independent_first_namespace * 100 + independent_first_method * 10 + independent_first_values.size()
+    independent_first_i := independent_first_i + 1
+plot(independent_first_score)
