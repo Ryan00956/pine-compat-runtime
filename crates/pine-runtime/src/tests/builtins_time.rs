@@ -421,6 +421,9 @@ plot(timeframe.from_seconds(timeframe.in_seconds("W")) == "W" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("2W")) == "2W" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("M")) == "M" ? 1 : 0)
 plot(timeframe.from_seconds(timeframe.in_seconds("3M")) == "3M" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("365D")) == "365D" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("52W")) == "52W" ? 1 : 0)
+plot(timeframe.from_seconds(timeframe.in_seconds("12M")) == "12M" ? 1 : 0)
 plot(na(timeframe.from_seconds(na)) ? 1 : 0)
 plot(timeframe.change("1") ? 1 : 0)
 plot(timeframe.change("") ? 1 : 0)
@@ -466,11 +469,14 @@ plot(timeframe.multiplier)
     assert_values_close(&result.plots[24].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[26].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[27].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[28].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[29].values, &[1.0, 0.0]);
-    assert_values_close(&result.plots[30].values, &[1.0, 1.0]);
-    assert_values_close(&result.plots[31].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[27].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[28].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[29].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[30].values, &[1.0, 0.0]);
+    assert_values_close(&result.plots[31].values, &[1.0, 0.0]);
+    assert_values_close(&result.plots[32].values, &[1.0, 0.0]);
+    assert_values_close(&result.plots[33].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[34].values, &[1.0, 1.0]);
 }
 
 #[test]
