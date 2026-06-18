@@ -123,6 +123,16 @@ for i = 0 to 1
         loop_concat_target.concat(loop_concat_second)
 plot(loop_concat_target.get(0) * 10 + loop_concat_target.get(1) + loop_concat_first.size() + loop_concat_second.size())
 
+independent_concat_target = array.from(6)
+independent_concat_source = array.from(7, 8)
+independent_concat_score = bar_index * 0
+independent_concat_i = 0
+while independent_concat_i < 1
+    independent_concat_returned = independent_concat_target.concat(independent_concat_source)
+    independent_concat_score := independent_concat_returned.size() * 1000 + independent_concat_target.get(0) * 100 + independent_concat_target.get(1) * 10 + independent_concat_target.get(2) + independent_concat_source.size()
+    independent_concat_i := independent_concat_i + 1
+plot(independent_concat_score)
+
 branch_slice_source = array.from(10, 20, 30, 40)
 branch_slice_score = bar_index * 0
 if bar_index % 2 == 0
