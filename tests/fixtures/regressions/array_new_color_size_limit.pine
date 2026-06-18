@@ -1,0 +1,3 @@
+indicator("Array new color size limit")
+values = array.new_color(100001)
+plot(array.size(values))
