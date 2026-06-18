@@ -1314,6 +1314,22 @@ fn reports_unsupported_label_getter_fixture() {
 }
 
 #[test]
+fn reports_unsupported_str_tostring_color_array_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_str_tostring_color_array.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_str_format_color_array_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_str_format_color_array.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array.pine",
