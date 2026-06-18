@@ -1,0 +1,4 @@
+indicator("Table cell set text size missing cell")
+table_id = table.new(position.top_left, 1, 1)
+table.cell_set_text_size(table_id, 0, 0, size.small)
+plot(close)
