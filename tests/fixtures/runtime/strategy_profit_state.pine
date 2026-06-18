@@ -50,3 +50,4 @@ while equity_i < 1
 plot(independent_equity)
 plot(identity(strategy.max_drawdown))
 plot(identity(strategy.equity))
+plot(strategy.netprofit[1])

@@ -8856,6 +8856,14 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
         PineValue::Float(-4.0),
         PineValue::Float(-4.0),
     ];
+    let net_profit_after_close_history = vec![
+        PineValue::Na,
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(0.0),
+        PineValue::Float(-4.0),
+        PineValue::Float(-4.0),
+    ];
     let equity = vec![
         PineValue::Float(1000.0),
         PineValue::Float(1000.0),
@@ -8902,6 +8910,7 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
     assert_eq!(result.plots[18].values, equity.clone());
     assert_eq!(result.plots[19].values, max_drawdown);
     assert_eq!(result.plots[20].values, equity);
+    assert_eq!(result.plots[21].values, net_profit_after_close_history);
 }
 
 #[test]
