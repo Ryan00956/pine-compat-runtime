@@ -1,0 +1,3 @@
+indicator("Array new bool negative size")
+values = array.new_bool(-1)
+plot(array.size(values))
