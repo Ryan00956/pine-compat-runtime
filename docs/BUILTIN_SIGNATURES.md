@@ -1419,7 +1419,8 @@ placeholders such as `{0,date,yyyy-MM-dd}` and `{0,time,HH:mm:ssZ}`. Quoted
 literal sequences between apostrophes are not parsed as placeholders, and `''`
 emits one literal apostrophe. The UTC timestamp placeholder subset shares the
 same fixture-covered `D`, `E`, `w`, and `W` token behavior as
-`str.format_time`, but does not accept a timezone argument. Missing placeholder
+`str.format_time`, including fixture-covered 12-hour clock, millisecond, and
+AM/PM tokens, but does not accept a timezone argument. Missing placeholder
 indexes remain literal text. Unmatched braces are runtime errors. Non-numeric
 format modifiers outside the fixture-covered subset are not yet claimed.
 `str.match` uses Rust regex syntax for the fixture-covered subset. It returns
