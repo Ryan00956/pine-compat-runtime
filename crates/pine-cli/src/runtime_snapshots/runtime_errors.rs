@@ -144,6 +144,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table clear coordinate out of bounds `0,0` to `2,0`",
     ),
     (
+        "tests/fixtures/regressions/table_clear_coordinate_row_bounds.pine",
+        "table clear coordinate out of bounds `0,0` to `1,1`",
+    ),
+    (
         "tests/fixtures/regressions/table_clear_coordinate_negative.pine",
         "table clear coordinate out of bounds `-1,0` to `1,0`",
     ),
