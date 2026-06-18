@@ -11,12 +11,12 @@ const MATH_NUMBER_COMPAT_PARAMS: &[BuiltinParam] = &[BuiltinParam {
 const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "a",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "b",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
 ];

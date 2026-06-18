@@ -1451,8 +1451,8 @@ Recommended first set:
 
 ```text
 math.abs(number: numeric|na) -> same numeric kind and qualifier for numeric args; na for na args
-math.max(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qualifier
-math.min(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qualifier
+math.max(a: numeric|na, b: numeric|na, ...) -> promoted numeric kind and strongest qualifier
+math.min(a: numeric|na, b: numeric|na, ...) -> promoted numeric kind and strongest qualifier
 math.avg(number: numeric|na, ...) -> float with strongest qualifier
 math.floor(number: numeric|na) -> int with same qualifier
 math.ceil(number: numeric|na) -> int with same qualifier
@@ -1511,6 +1511,7 @@ Current Phase 4 behavior:
   reproducible for the same callsite and seed. Invalid or non-finite ranges
   return `na`; const-or-series `na` min/max inputs return `na`.
 - `math.sum` returns the rolling sum of `source` over a ready simple-int `length` window; it returns `na` for invalid lengths, until the window is ready, or when the window contains `na`.
-- `math.max` and `math.min` require at least two numeric args and accept variadic numeric args.
+- `math.max` and `math.min` require at least two numeric-or-`na` args and
+  accept variadic numeric-or-`na` args. Const-or-series `na` inputs return `na`.
 - `math.max` and `math.min` return int only when all args are int; otherwise they return float.
 - All selected math functions return `na` if any required numeric input is `na`.

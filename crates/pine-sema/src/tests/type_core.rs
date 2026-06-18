@@ -1008,6 +1008,26 @@ plot(math.hypot(close, na))
 }
 
 #[test]
+fn accepts_const_na_min_max_math_inputs() {
+    let analysis = analyze(
+        r#"indicator("math min max na")
+plot(math.max(na, 1))
+plot(math.max(close, na, high))
+plot(math.min(na, 1))
+plot(math.min(close, na, low))
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_integer_rounding_math_functions_as_int_values() {
     let analysis = analyze(
         r#"indicator("integer rounding types")

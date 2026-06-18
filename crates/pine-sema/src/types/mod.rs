@@ -278,17 +278,13 @@ pub(crate) fn promoted_numeric_type(arg_types: &[Option<PineType>]) -> Option<Pi
     let mut result: Option<PineType> = None;
     for arg_type in arg_types {
         let arg_type = (*arg_type)?;
-        if !is_numeric(arg_type.kind) {
+        if !is_numeric(arg_type.kind) && arg_type.kind != ValueKind::Na {
             return None;
         }
         result = Some(match result {
             Some(current) => PineType::new(
                 strongest_qualifier(current.qualifier, arg_type.qualifier),
-                if current.kind == ValueKind::Float || arg_type.kind == ValueKind::Float {
-                    ValueKind::Float
-                } else {
-                    ValueKind::Int
-                },
+                common_kind(current.kind, arg_type.kind)?,
             ),
             None => arg_type,
         });
