@@ -7981,6 +7981,12 @@ while avg_trade_percent_i < 1
     independent_avg_trade_percent := strategy.avg_trade_percent
     avg_trade_percent_i := avg_trade_percent_i + 1
 plot(independent_avg_trade_percent)
+independent_avg_winning_trade = strategy.avg_winning_trade * 0
+avg_winning_trade_i = 0
+while avg_winning_trade_i < 1
+    independent_avg_winning_trade := strategy.avg_winning_trade
+    avg_winning_trade_i := avg_winning_trade_i + 1
+plot(independent_avg_winning_trade)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8270,6 +8276,20 @@ plot(independent_avg_trade_percent)
             PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[19].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
         ]
     );
     let strategy = result.strategy.as_ref().expect("strategy result");
