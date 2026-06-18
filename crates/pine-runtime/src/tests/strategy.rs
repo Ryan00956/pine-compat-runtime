@@ -7633,6 +7633,76 @@ plot(strategy.max_contracts_held_short[1])
 }
 
 #[test]
+fn strategy_capital_held_history_reads_follow_margin_state() {
+    let source = SourceFile::new(
+        "strategy.pine",
+        r#"strategy("margin capital held", margin_long=50)
+identity(value) => value
+if bar_index == 0
+    strategy.entry("L", strategy.long, qty=2)
+if bar_index == 3
+    strategy.close("L")
+plot(strategy.opentrades.capital_held)
+independent_capital_held = strategy.opentrades.capital_held * 0
+capital_held_i = 0
+while capital_held_i < 1
+    independent_capital_held := strategy.opentrades.capital_held
+    capital_held_i := capital_held_i + 1
+plot(independent_capital_held)
+plot(identity(strategy.opentrades.capital_held))
+plot(strategy.opentrades.capital_held[1])
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(
+        &analysis.hir.expect("HIR"),
+        &[bar(1.0), bar(2.0), bar(3.0), bar(4.0)],
+    )
+    .expect("runtime result");
+
+    let current_values = vec![
+        PineValue::Float(0.0),
+        PineValue::Float(2.0),
+        PineValue::Float(3.0),
+        PineValue::Float(0.0),
+    ];
+    assert_eq!(result.plots[0].values, current_values);
+    assert_eq!(
+        result.plots[1].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(3.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[2].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(3.0),
+            PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[3].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(3.0),
+        ]
+    );
+}
+
+#[test]
 fn strategy_trade_count_variables_follow_entry_and_close_mutations() {
     let source = SourceFile::new(
         "strategy.pine",

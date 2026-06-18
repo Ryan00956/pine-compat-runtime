@@ -13,3 +13,4 @@ while capital_held_i < 1
     capital_held_i := capital_held_i + 1
 plot(independent_capital_held)
 plot(identity(strategy.opentrades.capital_held))
+plot(strategy.opentrades.capital_held[1])
