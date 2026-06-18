@@ -313,7 +313,7 @@ pub(crate) fn promoted_float_type(arg_types: &[Option<PineType>]) -> Option<Pine
     let mut qualifier: Option<Qualifier> = None;
     for arg_type in arg_types {
         let arg_type = (*arg_type)?;
-        if !is_numeric(arg_type.kind) {
+        if !is_numeric(arg_type.kind) && arg_type.kind != ValueKind::Na {
             return None;
         }
         qualifier = Some(match qualifier {

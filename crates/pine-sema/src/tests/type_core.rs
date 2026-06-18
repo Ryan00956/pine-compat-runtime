@@ -986,6 +986,28 @@ plot(math.random(0, na, 7))
 }
 
 #[test]
+fn accepts_const_na_promoted_float_math_inputs() {
+    let analysis = analyze(
+        r#"indicator("math promoted float na")
+plot(math.avg(na, 1))
+plot(math.avg(close, na, high))
+plot(math.pow(na, 2))
+plot(math.pow(2, na))
+plot(math.hypot(na, close))
+plot(math.hypot(close, na))
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_integer_rounding_math_functions_as_int_values() {
     let analysis = analyze(
         r#"indicator("integer rounding types")

@@ -23,19 +23,19 @@ const MATH_MIN_MAX_PARAMS: &[BuiltinParam] = &[
 
 const MATH_AVG_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "number",
-    accepts: Accepts::Numeric,
+    accepts: Accepts::NumericCompatible,
     optional: false,
 }];
 
 const MATH_POW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "base",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "exponent",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
 ];
@@ -43,12 +43,12 @@ const MATH_POW_PARAMS: &[BuiltinParam] = &[
 const MATH_HYPOT_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "number1",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
     BuiltinParam {
         name: "number2",
-        accepts: Accepts::Numeric,
+        accepts: Accepts::NumericCompatible,
         optional: false,
     },
 ];

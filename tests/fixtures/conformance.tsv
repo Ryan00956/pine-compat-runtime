@@ -231,7 +231,7 @@ str.format_time	supported	UTC/GMT/numeric fixed-offset timestamp formatting subs
 math.abs	supported	numeric absolute value with fixture-backed sign symmetry relation and const-or-series na inputs returning na when consumed in a typed numeric context	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.max	supported	variadic numeric maximum with fixture-backed offset relation	tests/fixtures/runtime/math.pine
 math.min	supported	variadic numeric minimum with fixture-backed offset relation	tests/fixtures/runtime/math.pine
-math.avg	supported	variadic numeric average with fixture-backed offset relation	tests/fixtures/runtime/math.pine
+math.avg	supported	variadic numeric average with fixture-backed offset relation and const-or-series na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.floor	supported	integer rounding result with argument qualifier and const-or-series na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.ceil	supported	integer rounding result with argument qualifier and const-or-series na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.trunc	supported	integer truncation result with argument qualifier and const-or-series na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
@@ -282,8 +282,8 @@ ticker.standard	partial	simple-string standard ticker ID subset; plain PREFIX:TI
 math.sin	supported	trigonometric sine with fixture-backed zero-angle identity relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.cos	supported	trigonometric cosine with fixture-backed zero-angle identity relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.tan	supported	trigonometric tangent with fixture-backed zero-angle identity relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.pow	supported	numeric exponentiation with fixture-backed square relation and invalid fractional negative base returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
-math.hypot	supported	numeric hypotenuse with fixture-backed zero-leg absolute-value relation	tests/fixtures/runtime/math.pine
+math.pow	supported	numeric exponentiation with fixture-backed square relation and invalid fractional negative base or const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
+math.hypot	supported	numeric hypotenuse with fixture-backed zero-leg absolute-value relation and const-or-series na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.round	supported	single-argument integer rounding or precision decimal float rounding with ties rounding up and const-or-series number/precision na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.round_to_mintick	supported	default syminfo.mintick rounding with fixture-backed one-tick offset relation and const-or-series na inputs returning na	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine
 math.random	supported	fixture-derived deterministic callsite PRNG subset with optional min/max/seed and const-or-series min/max na propagation	tests/fixtures/runtime/math.pine;tests/fixtures/runtime/math_edge_cases.pine

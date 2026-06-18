@@ -1453,7 +1453,7 @@ Recommended first set:
 math.abs(number: numeric|na) -> same numeric kind and qualifier for numeric args; na for na args
 math.max(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qualifier
 math.min(a: numeric, b: numeric, ...) -> promoted numeric kind and strongest qualifier
-math.avg(number: numeric, ...) -> float with strongest qualifier
+math.avg(number: numeric|na, ...) -> float with strongest qualifier
 math.floor(number: numeric|na) -> int with same qualifier
 math.ceil(number: numeric|na) -> int with same qualifier
 math.trunc(number: numeric|na) -> int with same qualifier
@@ -1471,8 +1471,8 @@ math.toradians(degrees: numeric|na) -> float with same qualifier
 math.sin(number: numeric|na) -> float with same qualifier
 math.cos(number: numeric|na) -> float with same qualifier
 math.tan(number: numeric|na) -> float with same qualifier
-math.pow(base: numeric, exponent: numeric) -> float with strongest qualifier
-math.hypot(number1: numeric, number2: numeric) -> float with strongest qualifier
+math.pow(base: numeric|na, exponent: numeric|na) -> float with strongest qualifier
+math.hypot(number1: numeric|na, number2: numeric|na) -> float with strongest qualifier
 math.round(number: numeric|na) -> int with same qualifier
 math.round(number: numeric|na, precision: int|na) -> float with strongest qualifier
 math.round_to_mintick(number: numeric|na) -> float with same qualifier
@@ -1489,7 +1489,8 @@ Current Phase 4 behavior:
   Const-or-series `na` inputs return `na`; direct untyped `na` results still
   need a typed numeric consumer such as `float(...)` before numeric-only output
   calls.
-- `math.avg` accepts one or more numeric args and returns their average as a float.
+- `math.avg` accepts one or more numeric-or-`na` args and returns their average
+  as a float. Const-or-series `na` inputs return `na`.
 - `math.floor`, `math.ceil`, and `math.trunc` return int values with the
   argument qualifier; const-or-series `na`, non-finite, or out-of-range float
   results return `na`.
@@ -1498,8 +1499,8 @@ Current Phase 4 behavior:
   `math.toradians`, `math.sin`, `math.cos`, `math.tan`,
   `math.round_to_mintick`, `math.pow`, and `math.hypot` return float values
   and preserve or promote qualifiers from their arguments. The one-argument
-  helpers and `math.round_to_mintick` return `na` for const-or-series `na`
-  inputs.
+  helpers, `math.round_to_mintick`, `math.pow`, and `math.hypot` return `na`
+  for const-or-series `na` inputs.
 - `math.round` returns an int when `precision` is omitted, with ties rounding
   up; with `precision`, it returns a float rounded to that many decimal places.
   Const-or-series `na` number or precision inputs return `na`.
