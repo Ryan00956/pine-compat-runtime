@@ -1,0 +1,3 @@
+indicator("Array new box negative size")
+values = array.new_box(-1)
+plot(array.size(values))
