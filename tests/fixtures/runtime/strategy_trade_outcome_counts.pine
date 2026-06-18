@@ -49,3 +49,9 @@ while eventrades_i < 1
     independent_eventrades := strategy.eventrades
     eventrades_i := eventrades_i + 1
 plot(independent_eventrades)
+independent_grossprofit = strategy.grossprofit * 0
+grossprofit_i = 0
+while grossprofit_i < 1
+    independent_grossprofit := strategy.grossprofit
+    grossprofit_i := grossprofit_i + 1
+plot(independent_grossprofit)

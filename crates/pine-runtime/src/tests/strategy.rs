@@ -7957,6 +7957,12 @@ while eventrades_i < 1
     independent_eventrades := strategy.eventrades
     eventrades_i := eventrades_i + 1
 plot(independent_eventrades)
+independent_grossprofit = strategy.grossprofit * 0
+grossprofit_i = 0
+while grossprofit_i < 1
+    independent_grossprofit := strategy.grossprofit
+    grossprofit_i := grossprofit_i + 1
+plot(independent_grossprofit)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8190,6 +8196,20 @@ plot(independent_eventrades)
             PineValue::Int(0),
             PineValue::Int(0),
             PineValue::Int(1),
+        ]
+    );
+    assert_eq!(
+        result.plots[15].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
         ]
     );
     let strategy = result.strategy.as_ref().expect("strategy result");
