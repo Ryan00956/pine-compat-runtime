@@ -1298,6 +1298,14 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/regressions/str_match_invalid_regex.pine",
         "str.match invalid regex",
     ),
+    (
+        "tests/fixtures/regressions/str_format_unmatched_left_brace.pine",
+        "str.format has unmatched `{`",
+    ),
+    (
+        "tests/fixtures/regressions/str_format_unmatched_right_brace.pine",
+        "str.format has unmatched `}`",
+    ),
 ];
 
 pub(crate) type RuntimeLibrarySnapshotFixture = (
