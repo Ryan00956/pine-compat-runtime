@@ -8016,6 +8016,7 @@ fn strategy_trade_outcome_count_variables_follow_closed_trade_profits() {
     let source = SourceFile::new(
         "strategy.pine",
         r#"strategy("trade outcome counts")
+identity(value) => value
 if bar_index == 0
     strategy.entry("W", strategy.long, qty=1)
 if bar_index == 2
@@ -8106,6 +8107,7 @@ while avg_losing_trade_percent_i < 1
     independent_avg_losing_trade_percent := strategy.avg_losing_trade_percent
     avg_losing_trade_percent_i := avg_losing_trade_percent_i + 1
 plot(independent_avg_losing_trade_percent)
+plot(identity(strategy.grossprofit))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8451,6 +8453,20 @@ plot(independent_avg_losing_trade_percent)
             PineValue::Float(50.0),
             PineValue::Float(50.0),
             PineValue::Float(50.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[23].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
         ]
     );
     let strategy = result.strategy.as_ref().expect("strategy result");
