@@ -8662,6 +8662,7 @@ plot(identity(strategy.grossprofit_percent))
 plot(identity(strategy.grossloss_percent))
 plot(strategy.netprofit_percent[1])
 plot(strategy.grossprofit_percent[1])
+plot(strategy.grossloss_percent[1])
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8796,6 +8797,17 @@ plot(strategy.grossprofit_percent[1])
             PineValue::Float(0.1),
             PineValue::Float(0.1),
             PineValue::Float(0.1),
+        ]
+    );
+    assert_eq!(
+        result.plots[11].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
         ]
     );
 }
