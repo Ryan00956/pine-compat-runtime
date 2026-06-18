@@ -34,3 +34,9 @@ while netprofit_i < 1
     independent_netprofit := strategy.netprofit
     netprofit_i := netprofit_i + 1
 plot(independent_netprofit)
+independent_max_drawdown = strategy.max_drawdown * 0
+max_drawdown_i = 0
+while max_drawdown_i < 1
+    independent_max_drawdown := strategy.max_drawdown
+    max_drawdown_i := max_drawdown_i + 1
+plot(independent_max_drawdown)
