@@ -1,0 +1,3 @@
+indicator("Array new table negative size")
+values = array.new_table(-1)
+plot(array.size(values))
