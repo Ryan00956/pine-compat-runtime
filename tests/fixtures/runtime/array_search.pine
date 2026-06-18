@@ -90,6 +90,16 @@ for i = 0 to 1
         loop_search_results.push(loop_search_source.lastindexof("a") + (array.includes(loop_search_source, "z") ? 100 : 0))
 plot(loop_search_results.get(0) + loop_search_results.get(1))
 
+independent_includes_source = array.from("a", "b", "c")
+independent_includes_score = bar_index * 0
+independent_includes_i = 0
+while independent_includes_i < 1
+    independent_includes_hit = array.includes(independent_includes_source, "b")
+    independent_includes_miss = independent_includes_source.includes("z")
+    independent_includes_score := (independent_includes_hit ? 100 : 0) + (independent_includes_miss ? 10 : 0) + independent_includes_source.size()
+    independent_includes_i := independent_includes_i + 1
+plot(independent_includes_score)
+
 branch_truth_source = array.from(true, bar_index % 2 == 0)
 branch_truth_results = array.new_int()
 if bar_index % 2 == 0
