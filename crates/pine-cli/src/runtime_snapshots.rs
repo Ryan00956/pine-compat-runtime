@@ -59,6 +59,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/str_format_grouped_number_format.pine",
     ),
     (
+        "runtime_str_format_default_number_format.json",
+        "tests/fixtures/runtime/str_format_default_number_format.pine",
+    ),
+    (
         "runtime_array_helpers.json",
         "tests/fixtures/runtime/array_helpers.pine",
     ),
