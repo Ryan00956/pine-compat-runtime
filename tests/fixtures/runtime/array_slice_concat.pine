@@ -147,3 +147,13 @@ for i = 0 to 1
         loop_slice_second.set(0, loop_slice_second.get(0) * 10)
         loop_slice_score := loop_slice_score + loop_slice_second.get(0) + loop_slice_second.get(1) + loop_slice_source.get(i)
 plot(loop_slice_score)
+
+independent_slice_source = array.from(7, 8, 9)
+independent_slice_score = bar_index * 0
+independent_slice_i = 0
+while independent_slice_i < 1
+    independent_slice_part = array.slice(independent_slice_source, 1, 3)
+    independent_slice_part.set(0, 80)
+    independent_slice_score := independent_slice_part.size() * 100 + independent_slice_part.get(0) + independent_slice_part.get(1) + independent_slice_source.get(1)
+    independent_slice_i := independent_slice_i + 1
+plot(independent_slice_score)
