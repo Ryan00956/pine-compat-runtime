@@ -434,7 +434,7 @@ declarations, array mutation, non-default barmerge behavior, and non-default
 explicit gaps/lookahead remain unsupported.
 `request.security_lower_tf` is unsupported; it returns arrays in Pine and is not
 claimed until typed array return semantics and host output shapes are designed.
-`timeframe.in_seconds()` returns `60`.
+`timeframe.in_seconds()` and `timeframe.in_seconds("")` return `60`.
 Explicit timeframe strings support Pine-style seconds (`1S`, `5S`, `10S`,
 `15S`, `30S`, `45S`), minutes (`1` through `1440`), days (`D`/`1D` through
 `365D`), weeks (`W`/`1W` through `52W`), and months (`M`/`1M` through `12M`,
