@@ -7401,6 +7401,12 @@ if bar_index == 2
 plot(strategy.position_size)
 plot(strategy.position_avg_price)
 plot(strategy.max_contracts_held_all)
+independent_max_contracts_held_all = strategy.max_contracts_held_all * 0
+max_contracts_held_all_i = 0
+while max_contracts_held_all_i < 1
+    independent_max_contracts_held_all := strategy.max_contracts_held_all
+    max_contracts_held_all_i := max_contracts_held_all_i + 1
+plot(independent_max_contracts_held_all)
 plot(strategy.max_contracts_held_long)
 plot(strategy.max_contracts_held_short)
 "#,
@@ -7496,6 +7502,15 @@ plot(strategy.max_contracts_held_short)
     );
     assert_eq!(
         result.plots[9].values,
+        vec![
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(2.0),
+            PineValue::Float(2.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[10].values,
         vec![
             PineValue::Float(0.0),
             PineValue::Float(0.0),
