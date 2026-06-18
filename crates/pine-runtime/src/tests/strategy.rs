@@ -8156,6 +8156,7 @@ plot(identity(strategy.avg_winning_trade))
 plot(identity(strategy.avg_winning_trade_percent))
 plot(identity(strategy.avg_losing_trade))
 plot(identity(strategy.avg_losing_trade_percent))
+plot(strategy.grossprofit[1])
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8613,6 +8614,20 @@ plot(identity(strategy.avg_losing_trade_percent))
             PineValue::Float(50.0),
             PineValue::Float(50.0),
             PineValue::Float(50.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[31].values,
+        vec![
+            PineValue::Na,
+            PineValue::Float(0.0),
+            PineValue::Float(0.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
+            PineValue::Float(1.0),
         ]
     );
     let strategy = result.strategy.as_ref().expect("strategy result");
