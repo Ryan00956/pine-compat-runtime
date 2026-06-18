@@ -79,3 +79,11 @@ for i = 0 to 1
     loop_new_line_values = array.new_line(i + 1, loop_line_seed)
     loop_new_line_score := loop_new_line_score + loop_new_line_values.size() * 10 + (loop_new_line_values.get(i) == loop_line_seed ? 1 : 0)
 plot(loop_new_line_score)
+
+independent_new_line_score = bar_index * 0
+independent_new_line_i = 0
+while independent_new_line_i < 1
+    independent_new_line_values = array.new_line(2, branch_line_seed)
+    independent_new_line_score := independent_new_line_values.size() * 100 + (not na(independent_new_line_values.get(0)) ? 10 : 0) + (independent_new_line_values.get(1) == branch_line_seed ? 1 : 0)
+    independent_new_line_i := independent_new_line_i + 1
+plot(independent_new_line_score)
