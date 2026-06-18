@@ -108,6 +108,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "line count cannot exceed 500",
     ),
     (
+        "tests/fixtures/regressions/box_new_limit.pine",
+        "box count cannot exceed 500",
+    ),
+    (
         "tests/fixtures/regressions/str_match_invalid_regex.pine",
         "str.match invalid regex",
     ),
