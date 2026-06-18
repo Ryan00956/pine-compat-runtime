@@ -1,0 +1,4 @@
+indicator("Table cell set text font family missing cell")
+table_id = table.new(position.top_left, 1, 1)
+table.cell_set_text_font_family(table_id, 0, 0, font.family_monospace)
+plot(close)
