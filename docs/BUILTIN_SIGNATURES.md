@@ -1414,8 +1414,9 @@ fixture-covered non-color array values. Numeric formatting supports the default
 custom patterns using `#`, `0`, `.`, `,`, and trailing `%` tokens.
 `str.format` supports indexed placeholders such as `{0}`, numeric placeholders
 such as `{0,number,#.00}`, and fixture-covered `integer`, `percent`, and
-`currency` number presets. It also supports fixture-covered UTC timestamp
-placeholders such as `{0,date,yyyy-MM-dd}` and `{0,time,HH:mm:ssZ}`. Quoted
+`currency` number presets, plus fixture-covered float- and string-array
+placeholders. It also supports fixture-covered UTC timestamp placeholders such
+as `{0,date,yyyy-MM-dd}` and `{0,time,HH:mm:ssZ}`. Quoted
 literal sequences between apostrophes are not parsed as placeholders, and `''`
 emits one literal apostrophe. The UTC timestamp placeholder subset shares the
 same fixture-covered `D`, `E`, `w`, and `W` token behavior as
