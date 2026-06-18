@@ -111,3 +111,13 @@ while independent_first_i < 1
     independent_first_score := independent_first_namespace * 100 + independent_first_method * 10 + independent_first_values.size()
     independent_first_i := independent_first_i + 1
 plot(independent_first_score)
+
+independent_last_values = array.from(6, 7, 8)
+independent_last_score = bar_index * 0
+independent_last_i = 0
+while independent_last_i < 1
+    independent_last_namespace = array.last(independent_last_values)
+    independent_last_method = independent_last_values.last()
+    independent_last_score := independent_last_namespace * 100 + independent_last_method * 10 + independent_last_values.size()
+    independent_last_i := independent_last_i + 1
+plot(independent_last_score)
