@@ -1,5 +1,6 @@
 //@version=5
 strategy("Strategy profit state", initial_capital=1000)
+identity(value) => value
 plot(strategy.openprofit)
 plot(strategy.netprofit)
 plot(strategy.equity)
@@ -23,6 +24,7 @@ if bar_index == 5
     strategy.close("L2")
 plot(strategy.openprofit)
 plot(strategy.netprofit)
+plot(identity(strategy.netprofit))
 plot(strategy.equity)
 plot(strategy.max_runup)
 plot(strategy.max_runup_percent)
