@@ -1,0 +1,3 @@
+indicator("String match invalid regex")
+matched = str.match("abc", "(")
+plot(str.length(matched))
