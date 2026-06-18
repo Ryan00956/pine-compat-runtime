@@ -7398,6 +7398,7 @@ while position_avg_price_i < 1
     position_avg_price_i := position_avg_price_i + 1
 plot(independent_position_avg_price)
 plot(identity(strategy.position_avg_price))
+position_avg_price_history = strategy.position_avg_price[1]
 if bar_index == 2
     strategy.close("L")
 plot(strategy.position_size)
@@ -7426,6 +7427,7 @@ while max_contracts_held_short_i < 1
     independent_max_contracts_held_short := strategy.max_contracts_held_short
     max_contracts_held_short_i := max_contracts_held_short_i + 1
 plot(independent_max_contracts_held_short)
+plot(position_avg_price_history)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -7587,6 +7589,15 @@ plot(independent_max_contracts_held_short)
             PineValue::Float(0.0),
             PineValue::Float(0.0),
             PineValue::Float(0.0),
+        ]
+    );
+    assert_eq!(
+        result.plots[17].values,
+        vec![
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Na,
+            PineValue::Float(3.0),
         ]
     );
 }
