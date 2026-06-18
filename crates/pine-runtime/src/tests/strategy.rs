@@ -7930,6 +7930,12 @@ while wintrades_i < 1
     independent_wintrades := strategy.wintrades
     wintrades_i := wintrades_i + 1
 plot(independent_wintrades)
+independent_losstrades = strategy.losstrades * 0
+losstrades_i = 0
+while losstrades_i < 1
+    independent_losstrades := strategy.losstrades
+    losstrades_i := losstrades_i + 1
+plot(independent_losstrades)
 "#,
     );
     let analysis = analyze_source(&source);
@@ -8131,6 +8137,20 @@ plot(independent_wintrades)
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(1),
+            PineValue::Int(1),
+        ]
+    );
+    assert_eq!(
+        result.plots[13].values,
+        vec![
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
+            PineValue::Int(0),
             PineValue::Int(1),
             PineValue::Int(1),
             PineValue::Int(1),
