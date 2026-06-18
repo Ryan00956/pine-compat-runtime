@@ -8,6 +8,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array.join result cannot exceed 40960 characters",
     ),
     (
+        "tests/fixtures/regressions/array_push_limit.pine",
+        "array.push cannot exceed 100000 elements",
+    ),
+    (
         "tests/fixtures/regressions/array_new_float_negative_size.pine",
         "array.new_float size cannot be negative",
     ),
