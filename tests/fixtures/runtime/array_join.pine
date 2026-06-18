@@ -56,3 +56,11 @@ for i = 0 to 1
     else
         loop_join_results.push(loop_join_values.join())
 plot(loop_join_results.get(0) == "1:2:3" and loop_join_results.get(1) == "1,2,3" ? 1 : 0)
+
+independent_join_values = array.from("left", "right")
+independent_join_results = array.new_string()
+independent_join_i = 0
+while independent_join_i < 1
+    independent_join_results.push(array.join(independent_join_values, "-"))
+    independent_join_i := independent_join_i + 1
+plot(independent_join_results.get(0) == "left-right" ? 1 : 0)
