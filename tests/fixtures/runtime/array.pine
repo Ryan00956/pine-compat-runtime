@@ -202,3 +202,11 @@ loop_get_score = bar_index * 0
 for i = 0 to 1
     loop_get_score := loop_get_score + (i == 0 ? array.get(loop_get_values, i) * 10 : loop_get_values.get(i))
 plot(loop_get_score)
+
+independent_new_float_score = bar_index * 0.0
+independent_new_float_i = 0
+while independent_new_float_i < 1
+    independent_new_float_values = array.new_float(2, 1.5)
+    independent_new_float_score := independent_new_float_values.size() * 100 + independent_new_float_values.get(0) * 10 + independent_new_float_values.get(1)
+    independent_new_float_i := independent_new_float_i + 1
+plot(independent_new_float_score)
