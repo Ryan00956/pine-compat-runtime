@@ -39,3 +39,11 @@ for i = 0 to 2
         loop_colors = array.from(color.red, color.green)
         loop_from_score := loop_from_score + (loop_colors.get(0) == color.red and loop_colors.get(1) == color.green ? 1 : 0)
 plot(loop_from_score)
+
+independent_from_score = bar_index * 0
+independent_from_i = 0
+while independent_from_i < 1
+    independent_from_ints = array.from(3, 4, bar_index)
+    independent_from_score := independent_from_ints.size() * 100 + independent_from_ints.get(0) * 10 + independent_from_ints.get(2)
+    independent_from_i := independent_from_i + 1
+plot(independent_from_score)
