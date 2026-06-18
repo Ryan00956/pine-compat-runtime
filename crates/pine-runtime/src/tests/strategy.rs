@@ -8900,6 +8900,7 @@ fn strategy_profit_state_variables_follow_realized_and_open_profit() {
     assert_eq!(result.plots[16].values, net_profit_after_close);
     assert_eq!(result.plots[17].values, max_drawdown);
     assert_eq!(result.plots[18].values, equity);
+    assert_eq!(result.plots[19].values, max_drawdown);
 }
 
 #[test]
