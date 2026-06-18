@@ -220,6 +220,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table cell `0,0` has not been populated",
     ),
     (
+        "tests/fixtures/regressions/table_cell_set_text_valign_coordinate_negative.pine",
+        "table cell coordinate out of bounds `-1,0`",
+    ),
+    (
         "tests/fixtures/regressions/table_cell_set_text_wrap_missing_cell.pine",
         "table cell `0,0` has not been populated",
     ),
