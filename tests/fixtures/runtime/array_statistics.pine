@@ -75,6 +75,17 @@ for i = 0 to 1
         loop_abs_results.push(loop_abs_float_values.get(0) + loop_abs_float_values.get(2) + (na(loop_abs_float_values.get(1)) ? 1 : 0))
 plot(loop_abs_results.get(0) * 10 + loop_abs_results.get(1))
 
+independent_abs_ints = array.from(-3, na, 4)
+independent_abs_floats = array.from(-2.0, na, 5.0)
+independent_abs_score = bar_index * 0.0
+independent_abs_i = 0
+while independent_abs_i < 1
+    independent_abs_values = array.abs(independent_abs_ints)
+    independent_abs_float_values = independent_abs_floats.abs()
+    independent_abs_score := independent_abs_values.get(0) * 100 + independent_abs_values.get(2) * 10 + (na(independent_abs_values.get(1)) ? 10 : 0) + (independent_abs_ints.get(0) == -3 ? 1 : 0) + independent_abs_float_values.get(0) + independent_abs_float_values.get(2) + (na(independent_abs_float_values.get(1)) ? 1000 : 0)
+    independent_abs_i := independent_abs_i + 1
+plot(independent_abs_score)
+
 standard_values = array.from(2, 4, 4, 4, 5, 5, 7, 9)
 standardized = standard_values.standardize()
 plot(standardized.get(0))
