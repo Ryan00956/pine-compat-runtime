@@ -300,6 +300,17 @@ for i = 0 to 1
         loop_percentrank_results.push(loop_percentrank_source.percentrank(3))
 plot(loop_percentrank_results.get(0) + loop_percentrank_results.get(1))
 
+independent_percentrank_ints = array.from(na, 2, 4, 4, 8)
+independent_percentrank_floats = array.from(1.5, na, 3.5, 7.5)
+independent_percentrank_score = bar_index * 0.0
+independent_percentrank_i = 0
+while independent_percentrank_i < 1
+    independent_percentrank_int = array.percentrank(independent_percentrank_ints, 2)
+    independent_percentrank_float = independent_percentrank_floats.percentrank(3)
+    independent_percentrank_score := independent_percentrank_int + independent_percentrank_float + independent_percentrank_ints.size() - independent_percentrank_floats.size()
+    independent_percentrank_i := independent_percentrank_i + 1
+plot(independent_percentrank_score)
+
 branch_covariance_x = array.from(1, 2, 3)
 branch_covariance_y = array.from(2, 4, 8)
 branch_covariance_results = array.new_float()
