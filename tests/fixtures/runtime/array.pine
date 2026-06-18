@@ -234,3 +234,11 @@ while independent_new_string_i < 1
     independent_new_string_score := independent_new_string_values.size() * 100 + (independent_new_string_values.get(0) == "loop" ? 10 : 0) + (independent_new_string_values.get(1) == "loop" ? 1 : 0)
     independent_new_string_i := independent_new_string_i + 1
 plot(independent_new_string_score)
+
+independent_new_color_score = bar_index * 0
+independent_new_color_i = 0
+while independent_new_color_i < 1
+    independent_new_color_values = array.new_color(2, color.red)
+    independent_new_color_score := independent_new_color_values.size() * 100 + (independent_new_color_values.get(0) == color.red ? 10 : 0) + (independent_new_color_values.get(1) == color.red ? 1 : 0)
+    independent_new_color_i := independent_new_color_i + 1
+plot(independent_new_color_score)
