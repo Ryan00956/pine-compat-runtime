@@ -1389,6 +1389,8 @@ str.format_time(time: int-compatible, format?: string-compatible, timezone?: str
 
 Supported `str.*` helpers return `na` for `na` inputs.
 `str.length` counts Unicode scalar values.
+`str.upper` and `str.lower` convert ASCII letters only and preserve non-ASCII
+characters unchanged in the current fixture-backed subset.
 `str.contains`, `str.startswith`, and `str.endswith` return `true` for empty
 substring arguments.
 `str.pos` returns `na` when no match is found or when the source is `na`;

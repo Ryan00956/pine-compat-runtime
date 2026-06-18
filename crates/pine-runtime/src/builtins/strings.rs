@@ -392,8 +392,8 @@ impl<'a> HistoricalRuntime<'a> {
         };
 
         let value = match string_case {
-            StringCase::Upper => value.to_uppercase(),
-            StringCase::Lower => value.to_lowercase(),
+            StringCase::Upper => value.to_ascii_uppercase(),
+            StringCase::Lower => value.to_ascii_lowercase(),
         };
         Ok(PineValue::String(value))
     }
