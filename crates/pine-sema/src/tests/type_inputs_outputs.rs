@@ -1159,6 +1159,26 @@ fn rejects_unimplemented_box_methods() {
 }
 
 #[test]
+fn rejects_box_arrow_border_styles() {
+    let analysis = analyze(
+        "created = box.new(bar_index, high, bar_index + 1, low, border_style=line.style_arrow_left)\nbox.set_border_style(created, line.style_arrow_right)\nplot(close)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"
+                && diagnostic.message.contains("line.style_solid")
+                && diagnostic.message.contains("line.style_dotted")
+                && diagnostic.message.contains("line.style_dashed")),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_invalid_box_text_formatting() {
     let analysis = analyze(
         "id = box.new(bar_index, high, bar_index, low)\nbox.set_text_formatting(id, text.format_bold + 4)\nplot(close)\n",

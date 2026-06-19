@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed semantic coverage that keeps box border styles limited to
+  the official `line.style_solid`, `line.style_dotted`, and
+  `line.style_dashed` subset while rejecting line arrow styles for
+  `box.new()` and `box.set_border_style()`.
 - Added fixture-backed coverage for the remaining official line style constants
   `line.style_arrow_left`, `line.style_arrow_right`, and
   `line.style_arrow_both` in `line.new()` creation and `line.set_style()`
