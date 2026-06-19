@@ -1,5 +1,0 @@
-//@version=5
-indicator("Unsupported drawing typed declaration")
-
-line id = na
-plot(close)

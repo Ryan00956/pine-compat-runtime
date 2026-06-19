@@ -344,6 +344,12 @@ impl Analyzer {
             Some("bool") => Some(PineType::new(Qualifier::Series, ValueKind::Bool)),
             Some("string") => Some(PineType::new(Qualifier::Series, ValueKind::String)),
             Some("color") => Some(PineType::new(Qualifier::Series, ValueKind::Color)),
+            Some("label") => Some(PineType::new(Qualifier::Series, ValueKind::Label)),
+            Some("line") => Some(PineType::new(Qualifier::Series, ValueKind::Line)),
+            Some("linefill") => Some(PineType::new(Qualifier::Series, ValueKind::LineFill)),
+            Some("polyline") => Some(PineType::new(Qualifier::Series, ValueKind::Polyline)),
+            Some("box") => Some(PineType::new(Qualifier::Series, ValueKind::Box)),
+            Some("table") => Some(PineType::new(Qualifier::Series, ValueKind::Table)),
             Some("chart.point") => Some(PineType::new(Qualifier::Series, ValueKind::ChartPoint)),
             Some(type_name) => {
                 self.diagnostics.push(Diagnostic::error(
@@ -451,6 +457,12 @@ fn typed_declaration_name(kind: ValueKind) -> &'static str {
         ValueKind::Bool => "bool",
         ValueKind::String => "string",
         ValueKind::Color => "color",
+        ValueKind::Label => "label",
+        ValueKind::Line => "line",
+        ValueKind::LineFill => "linefill",
+        ValueKind::Polyline => "polyline",
+        ValueKind::Box => "box",
+        ValueKind::Table => "table",
         ValueKind::ChartPoint => "chart.point",
         _ => "typed",
     }

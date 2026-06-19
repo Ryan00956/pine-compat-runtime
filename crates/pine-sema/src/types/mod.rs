@@ -259,6 +259,12 @@ fn can_assign_na_to_kind(kind: ValueKind) -> bool {
             | ValueKind::Bool
             | ValueKind::String
             | ValueKind::Color
+            | ValueKind::Label
+            | ValueKind::Line
+            | ValueKind::LineFill
+            | ValueKind::Polyline
+            | ValueKind::Box
+            | ValueKind::Table
             | ValueKind::ChartPoint
     )
 }

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array typed declaration")
+
+array values = array.new_float()
+plot(close)

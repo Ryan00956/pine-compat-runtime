@@ -1550,10 +1550,10 @@ fn reports_unsupported_scalar_typed_decl_initial_fixture() {
 }
 
 #[test]
-fn reports_unsupported_drawing_typed_decl_fixture() {
+fn reports_unsupported_array_typed_decl_fixture() {
     assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_drawing_typed_decl.pine",
-        &["typed declaration `line` is not supported"],
+        "tests/fixtures/sema/unsupported_array_typed_decl.pine",
+        &["typed declaration `array` is not supported"],
     );
 }
 
