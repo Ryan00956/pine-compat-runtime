@@ -593,6 +593,17 @@ fn run_script_csv_returns_array_table_slice_history_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_array_chart_point_slice_history_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_chart_point_slice_history.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("array chart point slice history fixture should run");
+
+    assert_snapshot("runtime_array_chart_point_slice_history.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_array_search_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_search.pine"),

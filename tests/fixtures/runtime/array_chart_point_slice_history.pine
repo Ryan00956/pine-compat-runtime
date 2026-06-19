@@ -1,0 +1,9 @@
+//@version=5
+indicator("Chart point array slice history")
+current = chart.point.from_index(bar_index, close)
+source = array.new<chart.point>(2)
+source.set(0, current)
+window = source.slice(0, 1)
+previous_window = window[1]
+previous_point = na(previous_window) ? na : previous_window.get(0)
+plot(na(previous_point) ? na : previous_point.index)
