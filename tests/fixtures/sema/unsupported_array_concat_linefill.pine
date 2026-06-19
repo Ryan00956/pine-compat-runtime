@@ -1,6 +1,0 @@
-//@version=5
-indicator("Unsupported array concat linefill")
-left = array.new_linefill(0)
-right = array.new_linefill(0)
-result = array.concat(left, right)
-plot(array.size(result))
