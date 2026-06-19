@@ -133,18 +133,20 @@ impl<'a> HistoricalRuntime<'a> {
         let column = self.eval_required_table_int_arg(args, 1, "column")?;
         let row = self.eval_required_table_int_arg(args, 2, "row")?;
         let text = self.eval_required_table_arg(args, 3, "text")?;
-        let bg_color = self.eval_table_option_value(args, 4, "bgcolor", PineValue::Na)?;
-        let text_color = self.eval_table_option_value(args, 5, "text_color", PineValue::Na)?;
+        let width = self.eval_table_option_value(args, 4, "width", PineValue::Na)?;
+        let height = self.eval_table_option_value(args, 5, "height", PineValue::Na)?;
+        let bg_color = self.eval_table_option_value(args, 6, "bgcolor", PineValue::Na)?;
+        let text_color = self.eval_table_option_value(args, 7, "text_color", PineValue::Na)?;
         let tooltip =
-            self.eval_table_option_value(args, 6, "tooltip", PineValue::String(String::new()))?;
+            self.eval_table_option_value(args, 8, "tooltip", PineValue::String(String::new()))?;
         let text_font_family = self.eval_table_option_value(
             args,
-            7,
+            9,
             "text_font_family",
             PineValue::String("font.family_default".to_owned()),
         )?;
         let text_formatting =
-            self.eval_table_text_formatting_option_value(args, 8, "text_formatting")?;
+            self.eval_table_text_formatting_option_value(args, 10, "text_formatting")?;
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
@@ -154,8 +156,8 @@ impl<'a> HistoricalRuntime<'a> {
             text,
             bg_color,
             text_color,
-            width: PineValue::Na,
-            height: PineValue::Na,
+            width,
+            height,
             text_size: PineValue::Na,
             text_halign: PineValue::Na,
             text_valign: PineValue::Na,
@@ -575,7 +577,7 @@ impl<'a> HistoricalRuntime<'a> {
         name: &str,
         default: PineValue,
     ) -> Result<PineValue, RuntimeError> {
-        match call_arg_expr(args, index, name) {
+        match optional_table_arg_expr(args, index, name) {
             Some(expr) => self.eval_expr(expr),
             None => Ok(default),
         }
@@ -587,7 +589,7 @@ impl<'a> HistoricalRuntime<'a> {
         index: usize,
         name: &str,
     ) -> Result<PineValue, RuntimeError> {
-        let Some(arg) = call_arg_expr(args, index, name) else {
+        let Some(arg) = optional_table_arg_expr(args, index, name) else {
             return Ok(PineValue::Int(0));
         };
         self.eval_table_text_formatting_expr(arg, name)
@@ -831,6 +833,17 @@ impl<'a> HistoricalRuntime<'a> {
         }
         Ok(())
     }
+}
+
+fn optional_table_arg_expr<'a>(
+    args: &'a [HirCallArg],
+    index: usize,
+    name: &str,
+) -> Option<&'a pine_ir::HirExpr> {
+    args.iter()
+        .find(|arg| arg.name.as_deref() == Some(name))
+        .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
+        .map(|arg| &arg.value)
 }
 
 fn rectangles_intersect(left: (i64, i64, i64, i64), right: (i64, i64, i64, i64)) -> bool {

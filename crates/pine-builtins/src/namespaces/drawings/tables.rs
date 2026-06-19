@@ -88,6 +88,16 @@ const TABLE_CELL_PARAMS: &[BuiltinParam] = &[
         optional: false,
     },
     BuiltinParam {
+        name: "width",
+        accepts: Accepts::NumericCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "height",
+        accepts: Accepts::NumericCompatible,
+        optional: true,
+    },
+    BuiltinParam {
         name: "bgcolor",
         accepts: Accepts::ColorCompatible,
         optional: true,

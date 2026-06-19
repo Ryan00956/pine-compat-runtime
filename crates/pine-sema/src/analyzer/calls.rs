@@ -990,11 +990,11 @@ impl Analyzer {
                 self.validate_label_string_arg(
                     signature,
                     args,
-                    7,
+                    9,
                     "text_font_family",
                     TEXT_FONT_FAMILIES,
                 );
-                self.validate_text_formatting_arg(signature, args, 8, "text_formatting");
+                self.validate_text_formatting_arg(signature, args, 10, "text_formatting");
             }
             "table.cell_set_text_font_family" => {
                 self.validate_label_string_arg(
