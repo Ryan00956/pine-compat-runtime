@@ -1,0 +1,10 @@
+//@version=5
+indicator("Table array slice history")
+current = table.new(position.top_right, 1, 1)
+source = array.new_table(2)
+source.set(0, current)
+window = source.slice(0, 1)
+previous_window = window[1]
+previous_id = na(previous_window) ? na : previous_window.get(0)
+visible = table.all
+plot(na(previous_id) ? na : array.indexof(visible, previous_id))
