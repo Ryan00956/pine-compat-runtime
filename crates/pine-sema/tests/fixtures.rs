@@ -1196,12 +1196,7 @@ fn reports_unsupported_polyline_all_fixture() {
 fn reports_unsupported_label_new_modes_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_label_new_modes.pine",
-        &[
-            "xloc.bar_index",
-            "yloc.price",
-            "label.style_label_down",
-            "size.normal",
-        ],
+        &["yloc.price", "label.style_label_down", "size.normal"],
     );
 }
 

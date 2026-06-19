@@ -860,7 +860,7 @@ impl Analyzer {
     ) {
         match signature.name {
             "label.new" => {
-                self.validate_label_string_arg(signature, args, 3, "xloc", &["xloc.bar_index"]);
+                self.validate_label_string_arg(signature, args, 3, "xloc", LABEL_XLOCS);
                 self.validate_label_string_arg(signature, args, 4, "yloc", &["yloc.price"]);
                 self.validate_label_string_arg(signature, args, 6, "style", LABEL_STYLES);
                 self.validate_text_size_arg(signature, args, 8, "size");

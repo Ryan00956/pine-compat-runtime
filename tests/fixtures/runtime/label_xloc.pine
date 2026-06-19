@@ -2,6 +2,7 @@
 indicator("Label xloc")
 var label_id = label.new(bar_index, high, "start")
 var independent_label = label.new(bar_index, low, "independent")
+var time_label = label.new(time, close, "time", xloc=xloc.bar_time)
 if bar_index == 1
     label.set_xloc(label_id, time, xloc.bar_time)
 if bar_index == 2

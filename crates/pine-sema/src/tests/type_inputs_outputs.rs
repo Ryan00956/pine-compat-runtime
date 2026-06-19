@@ -547,7 +547,7 @@ fn accepts_plotcandle() {
 #[test]
 fn accepts_minimal_label_new() {
     let analysis = analyze(
-        "id = label.new(bar_index, high, \"High\")\nother = label.new(x=1, y=close, text=\"Close\", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, textalign=text.align_right, tooltip=\"Tip\", text_font_family=font.family_monospace, text_formatting=text.format_bold)\nplot(close)\n",
+        "id = label.new(bar_index, high, \"High\")\nother = label.new(x=1, y=close, text=\"Close\", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, textalign=text.align_right, tooltip=\"Tip\", text_font_family=font.family_monospace, text_formatting=text.format_bold)\ntime_label = label.new(time, close, \"Time\", xloc=xloc.bar_time)\nplot(close)\n",
     );
 
     assert!(
@@ -571,14 +571,6 @@ fn rejects_unsupported_label_new_modes() {
         "label.new(bar_index, high, \"High\", xloc=xloc.bar_time, yloc=yloc.abovebar, style=\"label.style_unknown\", size=\"size.massive\")\nplot(close)\n",
     );
 
-    assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("xloc.bar_index")),
-        "{:?}",
-        analysis.diagnostics
-    );
     assert!(
         analysis
             .diagnostics
