@@ -2426,6 +2426,14 @@ fn reports_unsupported_array_covariance_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_covariance_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_covariance_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentrank_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentrank_bool.pine",
@@ -2495,6 +2503,14 @@ fn reports_unsupported_array_percentrank_polyline_fixture() {
         "tests/fixtures/sema/unsupported_array_percentrank_polyline.pine",
         "array.new_polyline",
         "array function",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentrank_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentrank_chart_point.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2572,6 +2588,14 @@ fn reports_unsupported_array_percentile_linear_interpolation_polyline_fixture() 
 }
 
 #[test]
+fn reports_unsupported_array_percentile_linear_interpolation_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentile_nearest_rank_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_bool.pine",
@@ -2641,6 +2665,14 @@ fn reports_unsupported_array_percentile_nearest_rank_polyline_fixture() {
         "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_polyline.pine",
         "array.new_polyline",
         "array function",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_percentile_nearest_rank_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_chart_point.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2718,6 +2750,14 @@ fn reports_unsupported_array_mode_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_mode_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_mode_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_median_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_median_bool.pine",
@@ -2787,6 +2827,14 @@ fn reports_unsupported_array_median_polyline_fixture() {
         "tests/fixtures/sema/unsupported_array_median_polyline.pine",
         "array.new_polyline",
         "array function",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_median_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_median_chart_point.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -3517,6 +3565,14 @@ fn reports_unsupported_array_standardize_polyline_fixture() {
         "tests/fixtures/sema/unsupported_array_standardize_polyline.pine",
         "array.new_polyline",
         "array function",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_standardize_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_standardize_chart_point.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
