@@ -271,6 +271,11 @@ fn can_assign_na_to_kind(kind: ValueKind) -> bool {
             | ValueKind::BoolArray
             | ValueKind::StringArray
             | ValueKind::ColorArray
+            | ValueKind::LabelArray
+            | ValueKind::LineArray
+            | ValueKind::LineFillArray
+            | ValueKind::BoxArray
+            | ValueKind::TableArray
             | ValueKind::ChartPointArray
     )
 }

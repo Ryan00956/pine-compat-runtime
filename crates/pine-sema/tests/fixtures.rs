@@ -1574,10 +1574,10 @@ fn reports_unsupported_array_typed_decl_initial_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_line_typed_decl_fixture() {
+fn reports_unsupported_array_polyline_typed_decl_fixture() {
     assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_array_line_typed_decl.pine",
-        &["typed declaration `array<line>` is not supported"],
+        "tests/fixtures/sema/unsupported_array_polyline_typed_decl.pine",
+        &["typed declaration `array<polyline>` is not supported"],
     );
 }
 

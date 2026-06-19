@@ -356,6 +356,13 @@ impl Analyzer {
             Some("array<bool>") => Some(PineType::new(Qualifier::Series, ValueKind::BoolArray)),
             Some("array<string>") => Some(PineType::new(Qualifier::Series, ValueKind::StringArray)),
             Some("array<color>") => Some(PineType::new(Qualifier::Series, ValueKind::ColorArray)),
+            Some("array<label>") => Some(PineType::new(Qualifier::Series, ValueKind::LabelArray)),
+            Some("array<line>") => Some(PineType::new(Qualifier::Series, ValueKind::LineArray)),
+            Some("array<linefill>") => {
+                Some(PineType::new(Qualifier::Series, ValueKind::LineFillArray))
+            }
+            Some("array<box>") => Some(PineType::new(Qualifier::Series, ValueKind::BoxArray)),
+            Some("array<table>") => Some(PineType::new(Qualifier::Series, ValueKind::TableArray)),
             Some("array<chart.point>") => {
                 Some(PineType::new(Qualifier::Series, ValueKind::ChartPointArray))
             }
@@ -477,6 +484,11 @@ fn typed_declaration_name(kind: ValueKind) -> &'static str {
         ValueKind::BoolArray => "array<bool>",
         ValueKind::StringArray => "array<string>",
         ValueKind::ColorArray => "array<color>",
+        ValueKind::LabelArray => "array<label>",
+        ValueKind::LineArray => "array<line>",
+        ValueKind::LineFillArray => "array<linefill>",
+        ValueKind::BoxArray => "array<box>",
+        ValueKind::TableArray => "array<table>",
         ValueKind::ChartPointArray => "array<chart.point>",
         _ => "typed",
     }
