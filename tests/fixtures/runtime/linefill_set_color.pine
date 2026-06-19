@@ -9,6 +9,7 @@ if bar_index == 2
     replacement = linefill.new(upper, lower, color.blue)
     linefill.set_color(channel, color.yellow)
     linefill.set_color(replacement, color.new(color.green, 80))
+    replacement.set_color(color.new(color.blue, 80))
 if bar_index == 3
     linefill.set_color(na, color.red)
 plot(close)
