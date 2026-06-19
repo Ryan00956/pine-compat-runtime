@@ -1135,9 +1135,10 @@ bodies. `array.sort_indices` returns a new int array containing original indexes
 in sorted order without modifying the source array. `array.reverse` supports
 every supported typed array and is fixture-backed in branch and loop bodies for
 scalar array values.
-`array.join` supports every supported typed array, defaults the
-separator to `,`, uses the default numeric string format, and renders colors as
-their normalized integer color values. Array assignment passes the runtime array
+`array.join` supports supported scalar typed arrays only, defaults the separator
+to `,`, uses the default numeric string format, and renders colors as their
+normalized integer color values. Drawing-id, chart.point, UDT, map, and matrix
+arrays remain outside the join subset. Array assignment passes the runtime array
 id by reference; use `array.copy` to allocate an independent array with the same
 current element values.
 
