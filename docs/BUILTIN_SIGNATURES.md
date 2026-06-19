@@ -1503,8 +1503,9 @@ targets replace zero-width character boundaries. Replacement results over
 sign, at most one decimal point, and optional scientific notation exponent. It
 returns `na` for invalid formats, `na` inputs, and non-finite parsed results.
 `str.tostring` supports scalar int, float, bool, string, `na`, and
-fixture-covered float-, int-, bool-, and string-array values. UDT values plus
-color, drawing-id, chart.point, UDT, map, and matrix arrays remain outside the
+fixture-covered float-, int-, bool-, and string-array values. UDT and tuple
+values plus color, drawing-id, chart.point, UDT, map, and matrix arrays remain
+outside the
 `str.tostring` argument subset. Numeric formatting supports the default
 `#.########`, `format.mintick` and `format.price` as the default format,
 `format.volume` as `#.##`, `format.percent` as `#.##%`, and fixture-covered

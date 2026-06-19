@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported str tostring tuple")
+value = [close, open]
+text = str.tostring(value)
+plot(close)
