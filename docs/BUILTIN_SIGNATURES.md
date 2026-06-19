@@ -1470,9 +1470,9 @@ str.replace(source: string-compatible, target: string-compatible, replacement: s
 str.replace_all(source: string-compatible, target: string-compatible, replacement: string-compatible)
   -> string with strongest qualifier
 str.tonumber(string: string-compatible) -> float with same qualifier
-str.tostring(value: int|float|bool|string|non-color-supported-array|na, format?: string-compatible)
+str.tostring(value: int|float|bool|string|float-array|int-array|bool-array|string-array|na, format?: string-compatible)
   -> string with strongest qualifier
-str.format(formatString: string-compatible, arg0?: int|float|bool|string|non-color-supported-array|na, ...)
+str.format(formatString: string-compatible, arg0?: int|float|bool|string|float-array|int-array|bool-array|string-array|na, ...)
   -> string with strongest qualifier
 str.match(source: string-compatible, regex: string-compatible)
   -> string with strongest qualifier
@@ -1509,8 +1509,10 @@ fixture-covered non-color array values. Numeric formatting supports the default
 custom patterns using `#`, `0`, `.`, `,`, and trailing `%` tokens.
 `str.format` supports indexed placeholders such as `{0}`, numeric placeholders
 such as `{0,number,#.00}`, and fixture-covered `integer`, `percent`, and
-`currency` number presets, plus fixture-covered float-, int-, bool-, and string-array
-placeholders. It also supports fixture-covered UTC timestamp placeholders such
+`currency` number presets, plus fixture-covered float-, int-, bool-, and
+string-array placeholders. Color, drawing-id, chart.point, UDT, map, and matrix
+arrays remain outside the `str.format` argument subset. It also supports
+fixture-covered UTC timestamp placeholders such
 as `{0,date,yyyy-MM-dd}` and `{0,time,HH:mm:ssZ}`. Quoted
 literal sequences between apostrophes are not parsed as placeholders, and `''`
 emits one literal apostrophe. The UTC timestamp placeholder subset shares the
