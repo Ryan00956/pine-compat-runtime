@@ -1,5 +1,0 @@
-//@version=5
-indicator("Unsupported array from chart point")
-point = chart.point.now(close)
-values = array.from(point)
-plot(close)

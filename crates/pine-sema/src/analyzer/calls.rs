@@ -1274,6 +1274,11 @@ impl Analyzer {
             {
                 return;
             }
+            ValueKind::ChartPointArray
+                if matches!(value_type.kind, ValueKind::ChartPoint | ValueKind::Na) =>
+            {
+                return;
+            }
             ValueKind::FloatArray => "float arrays",
             ValueKind::IntArray => "int arrays",
             ValueKind::BoolArray => "bool arrays",
@@ -1284,6 +1289,7 @@ impl Analyzer {
             ValueKind::LineFillArray => "linefill arrays",
             ValueKind::BoxArray => "box arrays",
             ValueKind::TableArray => "table arrays",
+            ValueKind::ChartPointArray => "chart.point arrays",
             _ => return,
         };
 

@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported array abs chart point")
+point = chart.point.now(close)
+values = array.from(point)
+result = array.abs(values)
+plot(result.size())

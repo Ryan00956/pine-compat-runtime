@@ -180,8 +180,8 @@ host-neutral.
 
 Good next slices:
 
-- Continue the polyline prerequisite path with typed `array<chart.point>`
-  construction fixtures before adding any `polyline.new` support.
+- Continue the polyline prerequisite path with `array.new<chart.point>()`
+  parser/semantic fixtures before adding any `polyline.new` support.
 - More `label.*`, `line.*`, `box.*`, and `table.*` methods.
 - More deletion, mutation, no-op, and runtime-limit fixtures.
 - More realtime rollback fixtures for already-supported drawing families.
@@ -189,8 +189,8 @@ Good next slices:
 
 Keep out of scope until separately designed:
 
-- Runtime `polyline.*` support until chart-point and point-array semantics are
-  implemented and fixture-backed.
+- Runtime `polyline.*` support until `array.new<chart.point>()`, snapshot
+  semantics, and lifecycle behavior are implemented and fixture-backed.
 - Host-specific visual layout, drag behavior, or chart interaction.
 - Drawing behavior that cannot be represented in the current JSON contract.
 

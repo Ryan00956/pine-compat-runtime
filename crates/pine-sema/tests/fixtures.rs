@@ -1433,10 +1433,10 @@ fn reports_unsupported_array_from_linefill_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_from_chart_point_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_array_from_chart_point.pine",
-        &["`array.from` arguments must infer one supported array element kind"],
+fn reports_unsupported_array_abs_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_abs_chart_point.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 

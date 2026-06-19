@@ -27,19 +27,22 @@ polylines also expose only creation, deletion, and the read-only `polyline.all`
 collection; they do not have setter or getter methods, so redraws happen by
 deleting and creating a new polyline.
 
-This runtime now has fixture-backed `chart.point` constructor, field read, and
-top-level field mutation support, but it still has no typed point-array carrier
-or polyline snapshot schema that can safely carry point lists through semantic
-analysis, historical execution, incremental append, and realtime rollback.
+This runtime now has fixture-backed `chart.point` constructor, field read,
+top-level field mutation, and `array.from(chart.point, ...)` point-array
+storage/read/mutation support. It still has no `array.new<chart.point>()`
+parser path or polyline snapshot schema that can safely carry point lists
+through semantic analysis, historical execution, incremental append, and
+realtime rollback.
 
 Adding a narrow `polyline.new(na)` or ad hoc tuple-based point list would create
 a different language surface from Pine and would bypass the array/type model
 that conformance relies on. The implementation order is therefore:
 
 1. Point-list array slice:
-   add `array.new<chart.point>()`, `array.from(chart.point, ...)`, and the
-   existing array mutation/read subset needed to build fixture-backed point
-   lists without widening unrelated numeric, sort, or join array behavior.
+   add `array.new<chart.point>()` parser/semantic lowering while preserving the
+   current `array.from(chart.point, ...)` and generic array mutation/read subset
+   needed to build fixture-backed point lists without widening unrelated
+   numeric, sort, or join array behavior.
 2. `polyline.new` slice:
    add runtime-owned polyline ids and host-neutral snapshots containing the
    copied point list, `curved`, `closed`, `xloc`, `line_color`, `fill_color`,
@@ -51,10 +54,10 @@ that conformance relies on. The implementation order is therefore:
    expose the same snapshot shape through CLI, Python, and WASM hosts, then add
    conformance rows and matrix gates for the partial polyline claim.
 
-The runtime must not mark `polyline.*` supported before the point-array and
-polyline snapshot slices are fixture-backed. `array.new_polyline` also remains
-out of scope until polyline ids exist; point arrays are the prerequisite for
-`polyline.new`.
+The runtime must not mark `polyline.*` supported before `array.new<chart.point>()`
+and polyline snapshot slices are fixture-backed. `array.new_polyline` also
+remains out of scope until polyline ids exist; official point-list arrays are
+the prerequisite for `polyline.new`.
 
 Until then, `polyline.*` remains an explicit unsupported conformance row backed
 by `tests/fixtures/sema/unsupported_polyline.pine`, with `polyline.all`

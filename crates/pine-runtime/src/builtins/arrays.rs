@@ -1061,6 +1061,9 @@ impl<'a> HistoricalRuntime<'a> {
             (ArrayElementKind::LineFill, PineValue::LineFill(value)) => PineValue::LineFill(value),
             (ArrayElementKind::Box, PineValue::Box(value)) => PineValue::Box(value),
             (ArrayElementKind::Table, PineValue::Table(value)) => PineValue::Table(value),
+            (ArrayElementKind::ChartPoint, PineValue::ChartPoint(value)) => {
+                PineValue::ChartPoint(value)
+            }
             (_, PineValue::Na) => PineValue::Na,
             _ => PineValue::Na,
         })

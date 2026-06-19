@@ -403,6 +403,7 @@ pub(crate) fn array_element_return_type(
         ValueKind::LineFillArray => ValueKind::LineFill,
         ValueKind::BoxArray => ValueKind::Box,
         ValueKind::TableArray => ValueKind::Table,
+        ValueKind::ChartPointArray => ValueKind::ChartPoint,
         _ => return None,
     };
     Some(PineType::new(Qualifier::Series, kind))
@@ -435,6 +436,7 @@ pub(crate) fn array_from_return_type(arg_types: &[Option<PineType>]) -> Option<P
             ValueKind::LineFill => ValueKind::LineFillArray,
             ValueKind::Box => ValueKind::BoxArray,
             ValueKind::Table => ValueKind::TableArray,
+            ValueKind::ChartPoint => ValueKind::ChartPointArray,
             _ => return None,
         };
         inferred_kind = Some(match (inferred_kind, next_kind) {
@@ -470,6 +472,7 @@ pub(crate) fn is_array_kind(kind: ValueKind) -> bool {
             | ValueKind::LineFillArray
             | ValueKind::BoxArray
             | ValueKind::TableArray
+            | ValueKind::ChartPointArray
     )
 }
 pub(crate) fn is_numeric_array_kind(kind: ValueKind) -> bool {
