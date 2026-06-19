@@ -196,6 +196,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "label.set_xloc"
             | "label.set_y"
             | "label.set_xy"
+            | "label.set_point"
             | "label.set_yloc"
             | "label.set_text"
             | "label.set_color"

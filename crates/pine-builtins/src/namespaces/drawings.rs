@@ -147,6 +147,11 @@ const LABEL_SET_XY_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const LABEL_SET_POINT_PARAMS: &[BuiltinParam] = &[
+    param("id", Accepts::LabelCompatible, false),
+    param("point", Accepts::ChartPointCompatible, false),
+];
+
 const LABEL_SET_YLOC_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -900,6 +905,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "label.set_xy",
         phase: BuiltinPhase::Phase1Core,
         params: LABEL_SET_XY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "label.set_point",
+        phase: BuiltinPhase::Phase1Core,
+        params: LABEL_SET_POINT_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

@@ -98,6 +98,7 @@ chart.point.now(price: numeric-compatible) -> series chart.point
 chart.point.from_index(index: int-compatible, price: numeric-compatible) -> series chart.point
 chart.point.from_time(time: int-compatible, price: numeric-compatible) -> series chart.point
 chart.point.copy(id: chart.point-compatible) -> series chart.point
+label.set_point(id: label-compatible, point: chart.point-compatible) -> void
 line.new(x1: int-compatible, y1: numeric-compatible, x2: int-compatible, y2: numeric-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
 line.new(first_point: chart.point-compatible, second_point: chart.point-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
 line.set_first_point(id: line-compatible, point: chart.point-compatible) -> void
@@ -139,12 +140,12 @@ appearance are not implemented by this fixed chart metadata subset.
 `chart.point` supports fixture-backed construction through `new`, `now`,
 `from_index`, `from_time`, and `copy`, plus top-level `time`, `index`, and
 `price` field reads/mutation. `line.new`, `line.set_first_point`,
-`line.set_second_point`, `box.new`, `box.set_top_left_point`, and
-`box.set_bottom_right_point` can consume `chart.point` values, and point arrays
-can feed the partial `polyline.new` snapshot subset. `polyline.delete` and
-`polyline.all` cover the historical and forming-bar rollback lifecycle subset;
-remaining drawing point overloads, typed declarations, general polyline arrays,
-and runtime use of
+`line.set_second_point`, `box.new`, `box.set_top_left_point`,
+`box.set_bottom_right_point`, and `label.set_point` can consume `chart.point`
+values, and point arrays can feed the partial `polyline.new` snapshot subset.
+`polyline.delete` and `polyline.all` cover the historical and forming-bar
+rollback lifecycle subset; remaining drawing point overloads, typed
+declarations, general polyline arrays, and runtime use of
 declaration-driven polyline max-count/eviction parity remain separately gated.
 
 Bar state:

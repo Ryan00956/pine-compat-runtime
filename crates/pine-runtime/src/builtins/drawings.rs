@@ -22,6 +22,7 @@ impl<'a> HistoricalRuntime<'a> {
             "label.set_xloc" => self.eval_label_set_xloc(args),
             "label.set_y" => self.eval_label_set_y(args),
             "label.set_xy" => self.eval_label_set_xy(args),
+            "label.set_point" => self.eval_label_set_point(args),
             "label.set_yloc" => self.eval_label_set_yloc(args),
             "label.set_text" => self.eval_label_set_text(args),
             "label.set_color" => self.eval_label_set_color(args),

@@ -732,6 +732,29 @@ fn rejects_unsupported_label_set_xloc_values() {
 }
 
 #[test]
+fn accepts_label_set_point() {
+    let analysis = analyze(
+        "index_id = label.new(bar_index, high, \"index\")\ntime_id = label.new(time, high, \"time\", xloc=xloc.bar_time)\nfirst = chart.point.from_index(bar_index + 1, low)\nsecond = chart.point.from_time(time + 60000, close)\nlabel.set_point(index_id, first)\ntime_id.set_point(second)\nplot(close)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "label.set_point"),
+        "{:?}",
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn rejects_unsupported_label_set_yloc_values() {
     let analysis = analyze(
         "id = label.new(bar_index, high, \"High\")\nlabel.set_yloc(id, \"yloc.middle\")\nplot(close)\n",
@@ -789,14 +812,14 @@ fn rejects_label_side_effects_inside_functions() {
 
 #[test]
 fn rejects_unimplemented_label_methods() {
-    let analysis = analyze("label.set_point(na, na)\nplot(close)\n");
+    let analysis = analyze("label.set_text_wrap(na, na)\nplot(close)\n");
 
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "label.set_point"),
+            .any(|feature| feature.feature == "label.set_text_wrap"),
         "{:?}",
         analysis.compatibility.unsupported
     );
@@ -806,7 +829,7 @@ fn rejects_unimplemented_label_methods() {
 #[test]
 fn accepts_drawing_object_method_syntax() {
     let analysis = analyze(
-        "label_id = label.new(bar_index, high, \"start\")\nline_id = line.new(bar_index, low, bar_index + 1, high)\nbox_id = box.new(bar_index, high, bar_index + 1, low)\ntable_id = table.new(position.top_right, 1, 1)\nlabel_id.set_text(\"method\")\nlabel_id.set_xy(bar_index, close)\nline_id.set_xy1(bar_index, low)\nline_id.set_color(color.green)\nbox_id.set_lefttop(bar_index, high)\nbox_id.set_xloc(bar_index - 1, bar_index + 1, xloc.bar_index)\ntable_id.cell(0, 0, \"A\")\ntable_id.set_bgcolor(color.green)\nplot(str.length(label_id.get_text()))\nplot(line_id.get_x1())\nplot(box_id.get_right())\nplot(close)\n",
+        "label_id = label.new(bar_index, high, \"start\")\nline_id = line.new(bar_index, low, bar_index + 1, high)\nbox_id = box.new(bar_index, high, bar_index + 1, low)\ntable_id = table.new(position.top_right, 1, 1)\nlabel_id.set_text(\"method\")\nlabel_id.set_xy(bar_index, close)\nlabel_id.set_point(chart.point.from_index(bar_index + 1, low))\nline_id.set_xy1(bar_index, low)\nline_id.set_color(color.green)\nbox_id.set_lefttop(bar_index, high)\nbox_id.set_xloc(bar_index - 1, bar_index + 1, xloc.bar_index)\ntable_id.cell(0, 0, \"A\")\ntable_id.set_bgcolor(color.green)\nplot(str.length(label_id.get_text()))\nplot(line_id.get_x1())\nplot(box_id.get_right())\nplot(close)\n",
     );
 
     assert!(
@@ -847,7 +870,7 @@ fn accepts_drawing_object_method_syntax() {
 
 #[test]
 fn rejects_unknown_drawing_object_method_syntax() {
-    let analysis = analyze("id = label.new(bar_index, high, \"start\")\nid.set_point(na)\n");
+    let analysis = analyze("id = label.new(bar_index, high, \"start\")\nid.set_text_wrap(na)\n");
 
     assert!(
         analysis
@@ -1052,14 +1075,14 @@ fn accepts_minimal_linefill_new() {
 
 #[test]
 fn rejects_unimplemented_label_point_methods() {
-    let analysis = analyze("label.set_point(na, na)\nplot(close)\n");
+    let analysis = analyze("label.set_text_wrap(na, na)\nplot(close)\n");
 
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "label.set_point"),
+            .any(|feature| feature.feature == "label.set_text_wrap"),
         "{:?}",
         analysis.compatibility.unsupported
     );

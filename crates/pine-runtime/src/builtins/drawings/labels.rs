@@ -117,6 +117,20 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_label_set_point(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_label_id_arg(args)?;
+        let point = self.eval_required_label_arg(args, 1, "point")?;
+        self.mutate_label(id, |snapshot| {
+            if let Some((x, y)) = label_point_coordinates(point, &snapshot.xloc) {
+                snapshot.x = x;
+                snapshot.y = y;
+            }
+        })
+    }
+
     pub(super) fn eval_label_set_yloc(
         &mut self,
         args: &[HirCallArg],
@@ -537,4 +551,15 @@ fn label_call_arg_expr<'a>(
         .find(|arg| arg.name.as_deref() == Some(name))
         .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
         .map(|arg| &arg.value)
+}
+
+fn label_point_coordinates(point: PineValue, xloc: &PineValue) -> Option<(PineValue, PineValue)> {
+    let PineValue::ChartPoint(point) = point else {
+        return None;
+    };
+    let x = match xloc {
+        PineValue::String(value) if value == "xloc.bar_time" => point.field(0),
+        _ => point.field(1),
+    };
+    Some((x, point.field(2)))
 }

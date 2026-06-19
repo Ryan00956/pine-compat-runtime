@@ -1,4 +1,4 @@
 //@version=5
 indicator("Unsupported label method")
-label.set_point(na, na)
+label.set_text_wrap(na, na)
 plot(close)

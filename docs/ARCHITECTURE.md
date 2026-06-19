@@ -416,9 +416,13 @@ normalized Pine values, including `textAlign`, `textFontFamily`, and
 bar-index or bar-time x locations, price/abovebar/belowbar y locations,
 official label styles, string and integer sizes, tooltip, text alignment,
 font-family, and text-formatting snapshot fields. Supported `label.set_*`
-mutators include coordinate, x-location, y-location, text, size, color, style,
-tooltip, alignment, font-family, and text-formatting snapshot mutation from
-ordinary and independent while-loop control-flow blocks. `label.copy` cloning
+mutators include coordinate, `label.set_point` chart-point coordinate mutation,
+x-location, y-location, text, size, color, style, tooltip, alignment,
+font-family, and text-formatting snapshot mutation from ordinary and
+independent while-loop control-flow blocks. `label.set_point` uses
+`point.index` for `xloc.bar_index` labels and `point.time` for
+`xloc.bar_time` labels, while always using `point.price` for `y`.
+`label.copy` cloning
 from ordinary and independent while-loop control-flow blocks, and
 `label.delete` deletion snapshots from ordinary and independent while-loop
 control-flow blocks also use the label snapshot model; `label.all` reads

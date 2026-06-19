@@ -724,8 +724,8 @@ Pine method-call syntax. The semantic analyzer and HIR lowering rewrite the
 receiver into the first function argument, so `id.set_text("x")` has the same
 runtime behavior as `label.set_text(id, "x")` when `id` is a label. This is an
 alias for the already supported function subset only; unsupported drawing
-methods, chart-point overloads, and unsupported xloc/time variants remain
-unsupported.
+methods, remaining chart-point overloads, and unsupported xloc/time variants
+remain unsupported.
 `*.delete(na)`, mutation of `na`, mutation after deletion, and deleting an
 already deleted drawing object are no-ops where deletion exists; invalid
 non-`na` ids are runtime errors. Labels, lines, boxes, and polylines use the
@@ -733,9 +733,12 @@ runtime default 50-object display limit unless their declaration sets a supporte
 `max_*_count` value; labels, lines, and boxes accept 1 through 500, while
 polylines accept 1 through 100. Tables have a 50-object limit and 1000-cell
 per-table limit. `label.set_x`, `label.set_y`, `label.set_xy`,
-`label.set_text`, and `label.set_size` update the latest existing label
+`label.set_point`, `label.set_text`, and `label.set_size` update the latest existing label
 snapshot, including when called from ordinary and independent while-loop
-control-flow blocks. `label.set_color`, `label.set_textcolor`,
+control-flow blocks. `label.set_point` selects `point.index` when the label's
+current `xloc` is `xloc.bar_index`, selects `point.time` when it is
+`xloc.bar_time`, and sets `y` from `point.price`. `label.set_color`,
+`label.set_textcolor`,
 `label.set_style`, `label.set_tooltip`, `label.set_textalign`,
 `label.set_text_font_family`, and `label.set_text_formatting` update their
 host-neutral snapshot fields, including when called from ordinary and
@@ -1145,7 +1148,10 @@ retaining the existing box style, text, and fill snapshot fields.
 using the line's current `xloc` to choose `point.index` or `point.time` for the
 x-coordinate. `box.set_top_left_point` and `box.set_bottom_right_point` update
 the selected corner from a `chart.point`, using the box's current `xloc` to
-choose `point.index` or `point.time` for the x-coordinate. `polyline.new`
+choose `point.index` or `point.time` for the x-coordinate. `label.set_point`
+updates a label's x/y coordinates from a `chart.point`, using the label's
+current `xloc` to choose `point.index` or `point.time` for x and `point.price`
+for y. `polyline.new`
 creates runtime-owned polyline ids from an
 `array<chart.point>` input, copies the current point-list values into a
 host-neutral `polylines[].snapshots[]` entry, and records `curved`, `closed`,

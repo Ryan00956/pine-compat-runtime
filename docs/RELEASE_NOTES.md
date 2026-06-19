@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed `label.set_point()` chart-point coordinate mutation
+  support: point-based label snapshots use `point.index` for `xloc.bar_index`
+  labels and `point.time` for `xloc.bar_time` labels, with namespace-call and
+  method-call coverage.
 - Added fixture-backed `box.new(top_left, bottom_right, ...)` chart-point
   overload support: point-based box snapshots use `point.index` for
   `xloc.bar_index` and `point.time` for `xloc.bar_time`, while preserving the

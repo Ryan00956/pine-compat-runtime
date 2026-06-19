@@ -1396,7 +1396,7 @@ fn reports_unsupported_strategy_local_declaration_fixture() {
 fn reports_unsupported_drawing_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_drawing.pine",
-        "label.set_point",
+        "label.set_text_wrap",
         "drawing object",
     );
 }
@@ -1487,7 +1487,7 @@ fn reports_unsupported_switch_statement_block_fixture() {
 fn reports_unsupported_label_method_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_label_method.pine",
-        "label.set_point",
+        "label.set_text_wrap",
         "drawing object",
     );
 }
