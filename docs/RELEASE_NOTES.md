@@ -8,6 +8,8 @@
 - Added Python host `input_overrides` support for `Program.run()` and
   `run_script()`, keyed by analysis `inputs[].callSiteId` and wired to the
   runtime `InputOverrides` path for scalar `input.*` execution values.
+- Added CLI `run --input-override CALL_SITE_ID=value` support, including
+  profiled runs, with values parsed against the analyzed `input.*` call type.
 - Added a Rust runtime `InputOverrides` path for call-site keyed `input.*`
   execution values, while keeping existing default-`defval` behavior when no
   override is supplied.

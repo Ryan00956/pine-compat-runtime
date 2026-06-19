@@ -165,6 +165,20 @@ pub fn run_historical_profiled_with_request_environment(
     HistoricalRuntime::with_request_environment(program, request_environment).run_profiled(bars)
 }
 
+pub fn run_historical_profiled_with_request_environment_and_input_overrides(
+    program: &HirProgram,
+    bars: &[Bar],
+    request_environment: RequestEnvironment,
+    input_overrides: InputOverrides,
+) -> Result<RuntimeProfiledResult, RuntimeError> {
+    HistoricalRuntime::with_request_environment_and_input_overrides(
+        program,
+        request_environment,
+        input_overrides,
+    )
+    .run_profiled(bars)
+}
+
 impl<'a> HistoricalRuntime<'a> {
     #[must_use]
     pub fn new(program: &'a HirProgram) -> Self {

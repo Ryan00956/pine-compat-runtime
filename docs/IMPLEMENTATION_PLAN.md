@@ -136,8 +136,9 @@ Exit criteria:
 - CLI can run fixture-covered TA, math, string, array, input, and output
   examples.
 - Output includes normalized series, annotations, fills, diagnostics, and
-  compatibility reports. Input calls currently execute their `defval` values;
-  host-side input override APIs are later work.
+  compatibility reports. Input calls execute their `defval` values unless the
+  Rust runtime, CLI, or Python host supplies call-site keyed overrides; WASM
+  input override APIs remain later work.
 
 ## Phase 5: Python Binding
 

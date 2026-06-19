@@ -1,10 +1,11 @@
-use std::{fs, sync::Arc};
+use std::{collections::HashMap, fs, sync::Arc};
 
 use pine_runtime::{
     ChartContext, InMemoryRequestDataProvider, RequestEnvironment, RequestKey, RequestTimeframe,
-    RunningAlertConfig, RuntimeResult, public_runtime_profiled_result_json,
-    public_runtime_result_json, run_historical_profiled_with_request_environment,
-    run_historical_with_request_environment,
+    RunningAlertConfig, RuntimeResult, input_calls, public_runtime_profiled_result_json,
+    public_runtime_result_json,
+    run_historical_profiled_with_request_environment_and_input_overrides,
+    run_historical_with_request_environment_and_input_overrides,
 };
 use pine_sema::analyze_input;
 
@@ -13,6 +14,10 @@ use crate::library_sources::{
     LibrarySourceSpec, analysis_input_from_paths, parse_library_source_spec,
 };
 use crate::usage;
+
+mod input_overrides;
+
+use input_overrides::{InputOverrideSpec, input_overrides_from_specs, parse_input_override_spec};
 
 pub(crate) fn run(args: Vec<String>) -> Result<(), String> {
     let options = parse_options(&args)?;
@@ -26,6 +31,7 @@ struct RunOptions {
     profile: bool,
     request_bars: Vec<RequestBarsSpec>,
     library_sources: Vec<LibrarySourceSpec>,
+    input_overrides: Vec<InputOverrideSpec>,
     strategy_alert_template: Option<StrategyAlertTemplateOptions>,
     strategy_running_alert: Option<StrategyRunningAlertOptions>,
 }
@@ -104,8 +110,18 @@ fn run_profiled_json_with_options(options: &RunOptions) -> Result<String, String
         .map_err(|err| format!("failed to read {}: {err}", options.bars_path))?;
     let bars = parse_bars_csv(&bars_text)?;
     let request_environment = request_environment_from_specs(&options.request_bars)?;
-    let result = run_historical_profiled_with_request_environment(&hir, &bars, request_environment)
-        .map_err(|err| format!("runtime failed: {}", err.message))?;
+    let input_names = input_calls(&hir)
+        .into_iter()
+        .map(|input| (input.call_site_id, input.name))
+        .collect::<HashMap<_, _>>();
+    let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_names)?;
+    let result = run_historical_profiled_with_request_environment_and_input_overrides(
+        &hir,
+        &bars,
+        request_environment,
+        input_overrides,
+    )
+    .map_err(|err| format!("runtime failed: {}", err.message))?;
     Ok(public_runtime_profiled_result_json(
         &result.result,
         &result.profile,
@@ -138,8 +154,18 @@ fn run_result_with_options(options: &RunOptions) -> Result<RuntimeResult, String
         .map_err(|err| format!("failed to read {}: {err}", options.bars_path))?;
     let bars = parse_bars_csv(&bars_text)?;
     let request_environment = request_environment_from_specs(&options.request_bars)?;
-    run_historical_with_request_environment(&hir, &bars, request_environment)
-        .map_err(|err| format!("runtime failed: {}", err.message))
+    let input_names = input_calls(&hir)
+        .into_iter()
+        .map(|input| (input.call_site_id, input.name))
+        .collect::<HashMap<_, _>>();
+    let input_overrides = input_overrides_from_specs(&options.input_overrides, &input_names)?;
+    run_historical_with_request_environment_and_input_overrides(
+        &hir,
+        &bars,
+        request_environment,
+        input_overrides,
+    )
+    .map_err(|err| format!("runtime failed: {}", err.message))
 }
 
 fn render_strategy_alert_template(
@@ -190,6 +216,7 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
         profile: false,
         request_bars: Vec::new(),
         library_sources: Vec::new(),
+        input_overrides: Vec::new(),
         strategy_alert_template: None,
         strategy_running_alert: None,
     };
@@ -269,6 +296,15 @@ fn parse_options(args: &[String]) -> Result<RunOptions, String> {
                 options
                     .library_sources
                     .push(parse_library_source_spec(value)?);
+            }
+            "--input-override" => {
+                index += 1;
+                let Some(value) = args.get(index) else {
+                    return Err(usage());
+                };
+                options
+                    .input_overrides
+                    .push(parse_input_override_spec(value)?);
             }
             _ => return Err(usage()),
         }
@@ -411,8 +447,29 @@ mod tests {
         assert_eq!(options.library_sources.len(), 1);
         assert_eq!(options.library_sources[0].key, "user/lib/1");
         assert_eq!(options.library_sources[0].path, "lib.pine");
+        assert!(options.input_overrides.is_empty());
         assert!(options.strategy_alert_template.is_none());
         assert!(options.strategy_running_alert.is_none());
+    }
+
+    #[test]
+    fn parses_run_options_with_input_overrides() {
+        let options = parse_options(&[
+            "script.pine".to_owned(),
+            "--bars".to_owned(),
+            "bars.csv".to_owned(),
+            "--input-override".to_owned(),
+            "12=5".to_owned(),
+            "--input-override".to_owned(),
+            "13=#4CAF50".to_owned(),
+        ])
+        .expect("run options");
+
+        assert_eq!(options.input_overrides.len(), 2);
+        assert_eq!(options.input_overrides[0].call_site_id, 12);
+        assert_eq!(options.input_overrides[0].value, "5");
+        assert_eq!(options.input_overrides[1].call_site_id, 13);
+        assert_eq!(options.input_overrides[1].value, "#4CAF50");
     }
 
     #[test]
@@ -573,6 +630,85 @@ mod tests {
     }
 
     #[test]
+    fn runs_input_overrides_integration_fixture() {
+        let script = std::env::temp_dir().join(format!(
+            "pine-input-overrides-{}-{}.pine",
+            std::process::id(),
+            line!()
+        ));
+        fs::write(
+            &script,
+            r##"indicator("input overrides")
+length = input.int(2, "Length")
+scale = input.float(1.0, "Scale")
+enabled = input.bool(true, "Enabled")
+mode = input.string("SMA", "Mode")
+shade = input.color(color.red, "Shade")
+base = enabled and mode == "SMA" ? ta.sma(close, length) * scale : open
+plot(base)
+plot(color.r(shade))
+"##,
+        )
+        .expect("write input override script");
+        let input = analysis_input_from_paths(&script.to_string_lossy(), &[])
+            .expect("analysis input from script");
+        let analysis = analyze_input(&input);
+        let hir = analysis.hir.expect("HIR");
+        let input_ids = input_calls(&hir)
+            .into_iter()
+            .filter_map(|input| input.title.map(|title| (title, input.call_site_id)))
+            .collect::<HashMap<_, _>>();
+        let input_override_specs = vec![
+            parse_input_override_spec(&format!("{}=1", input_ids["Length"]))
+                .expect("length override"),
+            parse_input_override_spec(&format!("{}=2.0", input_ids["Scale"]))
+                .expect("scale override"),
+            parse_input_override_spec(&format!("{}=true", input_ids["Enabled"]))
+                .expect("enabled override"),
+            parse_input_override_spec(&format!("{}=SMA", input_ids["Mode"]))
+                .expect("mode override"),
+            parse_input_override_spec(&format!("{}=#4CAF50", input_ids["Shade"]))
+                .expect("shade override"),
+        ];
+        let options = RunOptions {
+            path: script.to_string_lossy().into_owned(),
+            bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+            profile: false,
+            request_bars: Vec::new(),
+            library_sources: Vec::new(),
+            input_overrides: input_override_specs,
+            strategy_alert_template: None,
+            strategy_running_alert: None,
+        };
+
+        let output = run_json_with_options(&options).expect("input override output");
+
+        assert!(output.contains("\"values\":[2,4,6,8]"));
+        assert!(output.contains("\"values\":[76,76,76,76]"));
+
+        let profile_options = RunOptions {
+            path: script.to_string_lossy().into_owned(),
+            bars_path: workspace_path("tests/fixtures/runtime/bars.csv"),
+            profile: true,
+            request_bars: Vec::new(),
+            library_sources: Vec::new(),
+            input_overrides: vec![
+                parse_input_override_spec(&format!("{}=1", input_ids["Length"]))
+                    .expect("length override"),
+                parse_input_override_spec(&format!("{}=2.0", input_ids["Scale"]))
+                    .expect("scale override"),
+            ],
+            strategy_alert_template: None,
+            strategy_running_alert: None,
+        };
+        let profile_output =
+            run_json_with_options(&profile_options).expect("profile input override output");
+
+        assert!(profile_output.contains("\"values\":[2,4,6,8]"));
+        let _ = fs::remove_file(script);
+    }
+
+    #[test]
     fn runs_request_bars_integration_fixture() {
         let options = RunOptions {
             path: workspace_path("tests/fixtures/request/request_security_host.pine"),
@@ -591,6 +727,7 @@ mod tests {
                 ))
                 .expect("higher timeframe request bars"),
             ],
+            input_overrides: Vec::new(),
             strategy_alert_template: None,
             strategy_running_alert: None,
         };
@@ -1096,6 +1233,7 @@ mod tests {
                 key: "user/lib/1".to_owned(),
                 path: workspace_path("tests/fixtures/libraries/import_lib.pine"),
             }],
+            input_overrides: Vec::new(),
             strategy_alert_template: None,
             strategy_running_alert: None,
         };
@@ -1127,6 +1265,7 @@ mod tests {
             profile: false,
             request_bars: Vec::new(),
             library_sources: Vec::new(),
+            input_overrides: Vec::new(),
             strategy_alert_template: None,
             strategy_running_alert: None,
         };
@@ -1152,6 +1291,7 @@ mod tests {
             profile: false,
             request_bars: Vec::new(),
             library_sources: Vec::new(),
+            input_overrides: Vec::new(),
             strategy_alert_template: Some(StrategyAlertTemplateOptions {
                 template: "Order: {{strategy.order.alert_message}}".to_owned(),
                 index: 1,
@@ -1172,6 +1312,7 @@ mod tests {
             profile: false,
             request_bars: Vec::new(),
             library_sources: Vec::new(),
+            input_overrides: Vec::new(),
             strategy_alert_template: Some(StrategyAlertTemplateOptions {
                 template: "{{close}}".to_owned(),
                 index: 1,
@@ -1192,6 +1333,7 @@ mod tests {
             profile: false,
             request_bars: Vec::new(),
             library_sources: Vec::new(),
+            input_overrides: Vec::new(),
             strategy_alert_template: None,
             strategy_running_alert: Some(StrategyRunningAlertOptions {
                 config: RunningAlertConfig::new_strategy_order_fills(
@@ -1217,6 +1359,7 @@ mod tests {
             profile: false,
             request_bars: Vec::new(),
             library_sources: Vec::new(),
+            input_overrides: Vec::new(),
             strategy_alert_template: None,
             strategy_running_alert: Some(StrategyRunningAlertOptions {
                 config: RunningAlertConfig::new_strategy_order_fills(
@@ -1242,6 +1385,7 @@ mod tests {
             profile: false,
             request_bars: Vec::new(),
             library_sources: Vec::new(),
+            input_overrides: Vec::new(),
             strategy_alert_template: None,
             strategy_running_alert: None,
         };
