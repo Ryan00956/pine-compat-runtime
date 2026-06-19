@@ -1847,6 +1847,14 @@ fn reports_unsupported_array_join_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_join_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_join_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_join_udt_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_join_udt.pine",
@@ -2288,6 +2296,14 @@ fn reports_unsupported_array_every_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_every_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_every_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_some_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_some_string.pine",
@@ -2349,6 +2365,14 @@ fn reports_unsupported_array_some_polyline_fixture() {
         "tests/fixtures/sema/unsupported_array_some_polyline.pine",
         "array.new_polyline",
         "array function",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_some_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_some_chart_point.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -3390,6 +3414,14 @@ fn reports_unsupported_array_binary_search_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_leftmost_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_leftmost_bool.pine",
@@ -3463,6 +3495,14 @@ fn reports_unsupported_array_binary_search_leftmost_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_leftmost_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_leftmost_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_rightmost_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_rightmost_bool.pine",
@@ -3532,6 +3572,14 @@ fn reports_unsupported_array_binary_search_rightmost_polyline_fixture() {
         "tests/fixtures/sema/unsupported_array_binary_search_rightmost_polyline.pine",
         "array.new_polyline",
         "array function",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_binary_search_rightmost_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_chart_point.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
