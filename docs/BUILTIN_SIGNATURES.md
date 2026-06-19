@@ -1075,8 +1075,10 @@ parameters pass the array id; array mutation inside user-defined functions
 remains unsupported. `array.from` infers the array
 kind from its arguments, requires at least one non-`na` supported typed value,
 allows `na` in otherwise typed arrays, and promotes mixed int/float arguments
-to a float array. `array.join` and `str.tostring(array)` remain limited to
-scalar typed arrays; linefill arrays are supported for generic
+to a float array. `array.join` remains limited to scalar typed arrays, while
+`str.tostring(array)` remains limited to non-color scalar typed arrays. Color,
+linefill, drawing-id, and chart-point arrays remain outside the
+`str.tostring(array)` subset. Linefill arrays are supported for generic
 object-array storage and search, chart-point arrays are supported for generic
 point-list storage and search, and `polyline.all` exposes a read-only snapshot
 polyline id array. General polyline array construction and mutation remain
