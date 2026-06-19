@@ -1,0 +1,29 @@
+//@version=5
+indicator("Array typed declarations")
+
+array<float> prices = na
+array<int> counts = array.new_int()
+array<bool> flags = array.new_bool()
+array<string> words = array.new_string()
+array<color> colors = array.new_color()
+var array<float> persistent = array.new_float()
+
+prices := array.new_float()
+prices.push(close)
+prices.push(high)
+counts.push(bar_index)
+flags.push(close >= open)
+words.push("typed")
+colors.push(color.green)
+
+persistent.push(close)
+prices := na
+prices := array.from(1.0, close)
+
+plot(prices.size())
+plot(prices.get(0) + prices.get(1))
+plot(counts.get(0))
+plot(flags.get(0) ? 1 : 0)
+plot(str.length(words.get(0)))
+plot(colors.get(0) == color.green ? 1 : 0)
+plot(persistent.size())

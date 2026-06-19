@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported line array typed declaration")
+
+array<line> ids = array.new_line()
+plot(close)

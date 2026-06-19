@@ -1558,6 +1558,22 @@ fn reports_unsupported_array_typed_decl_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_typed_decl_initial_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_typed_decl_initial.pine",
+        &["cannot initialize `prices` of type array<float> with Simple StringArray"],
+    );
+}
+
+#[test]
+fn reports_unsupported_array_line_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_line_typed_decl.pine",
+        &["typed declaration `array<line>` is not supported"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_new_int_initial_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_new_int_initial.pine",

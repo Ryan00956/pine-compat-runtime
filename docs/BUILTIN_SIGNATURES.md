@@ -571,11 +571,13 @@ be accepted in Phase 1. `max_bars_back` must be non-negative when provided.
 Unsupported named arguments should produce compatibility diagnostics.
 Typed variable declarations are fixture-backed for `int`, `float`, `bool`,
 `string`, `color`, `chart.point`, and drawing-id `label`, `line`, `linefill`,
-`box`, `table`, and `polyline` values with compatible or `na` initializers.
-These declarations assign the declared value kind to the symbol, so later
-compatible reassignment works after `na` initialization. Array, UDT, map,
-matrix, and other typed declarations remain unsupported with semantic
-diagnostics unless covered by a narrower fixture-backed row.
+`box`, `table`, and `polyline` values, plus scalar `array<int>`,
+`array<float>`, `array<bool>`, `array<string>`, and `array<color>` values,
+with compatible or `na` initializers. These declarations assign the declared
+value kind to the symbol, so later compatible reassignment works after `na`
+initialization. Bare `array`, non-scalar array element types, UDT, map, matrix,
+and other typed declarations remain unsupported with semantic diagnostics
+unless covered by a narrower fixture-backed row.
 `indicator(..., scale=...)` accepts the fixture-backed `scale.left`,
 `scale.right`, and `scale.none` named constants as declaration metadata. The
 runtime rejects other const string scale values and does not emit chart axis

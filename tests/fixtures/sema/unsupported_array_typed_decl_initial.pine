@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array typed declaration initial value")
+
+array<float> prices = array.new_string()
+plot(close)

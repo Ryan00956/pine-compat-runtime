@@ -226,6 +226,10 @@ impl Parser {
     }
 
     fn try_parse_typed_decl_name(&mut self) -> Option<(String, String, Span)> {
+        if let Some(parsed) = self.try_parse_array_typed_decl_name() {
+            return Some(parsed);
+        }
+
         if let TokenKind::Identifier(type_name) = self.current().kind.clone()
             && self.nth_at(2, TokenKind::Eq)
         {
@@ -262,6 +266,35 @@ impl Parser {
         self.bump();
         self.bump();
         Some(("chart.point".to_owned(), name, start))
+    }
+
+    fn try_parse_array_typed_decl_name(&mut self) -> Option<(String, String, Span)> {
+        let TokenKind::Identifier(container) = self.current().kind.clone() else {
+            return None;
+        };
+        if container != "array"
+            || !self.nth_at(1, TokenKind::Lt)
+            || !self.nth_at(3, TokenKind::Gt)
+            || !self.nth_at(5, TokenKind::Eq)
+        {
+            return None;
+        }
+
+        let TokenKind::Identifier(element_type) = self.tokens.get(self.pos + 2)?.kind.clone()
+        else {
+            return None;
+        };
+        let TokenKind::Identifier(name) = self.tokens.get(self.pos + 4)?.kind.clone() else {
+            return None;
+        };
+
+        let start = self.current().span;
+        self.bump();
+        self.bump();
+        self.bump();
+        self.bump();
+        self.bump();
+        Some((format!("array<{element_type}>"), name, start))
     }
 
     fn parse_tuple_decl(&mut self) -> Option<Stmt> {
@@ -1100,6 +1133,25 @@ mod tests {
         assert_eq!(*mode, DeclMode::Normal);
         assert_eq!(declared_type.as_deref(), Some("float"));
         assert_eq!(name, "price");
+    }
+
+    #[test]
+    fn parses_array_typed_declaration() {
+        let parsed = parse("array<float> prices = array.new_float()\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl {
+            mode,
+            declared_type,
+            name,
+            ..
+        } = &parsed.program.statements[0].kind
+        else {
+            panic!("expected declaration");
+        };
+        assert_eq!(*mode, DeclMode::Normal);
+        assert_eq!(declared_type.as_deref(), Some("array<float>"));
+        assert_eq!(name, "prices");
     }
 
     #[test]
