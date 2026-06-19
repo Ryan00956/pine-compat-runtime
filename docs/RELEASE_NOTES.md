@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed coverage for the remaining official line style constants
+  `line.style_arrow_left`, `line.style_arrow_right`, and
+  `line.style_arrow_both` in `line.new()` creation and `line.set_style()`
+  mutation snapshots.
 - Added host-neutral `label.new()` creation coverage for `xloc.bar_time` and
   `yloc.abovebar`/`yloc.belowbar` snapshot fields.
 - Added the remaining official label style constants

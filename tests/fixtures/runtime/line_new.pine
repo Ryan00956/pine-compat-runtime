@@ -6,4 +6,8 @@ if bar_index == 2
     second = line.new(x1=bar_index, y1=open, x2=bar_index, y2=close)
 if bar_index == 3
     styled = line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)
+if bar_index == 3
+    arrow_left = line.new(x1=bar_index, y1=low + 1, x2=bar_index + 1, y2=high + 1, style=line.style_arrow_left)
+    arrow_right = line.new(x1=bar_index, y1=low + 2, x2=bar_index + 1, y2=high + 2, style=line.style_arrow_right)
+    arrow_both = line.new(x1=bar_index, y1=low + 3, x2=bar_index + 1, y2=high + 3, style=line.style_arrow_both)
 plot(close)
