@@ -183,7 +183,7 @@ Maps and matrices:
 
 History and snapshots:
 
-- Scalar array, scalar slice, label-array, line-array, and box-array variable history snapshots are
+- Scalar array, scalar slice, label-array, line-array, linefill-array, and box-array variable history snapshots are
   fixture-backed for the official
   `previous = a[1]; na(previous) ? na : previous.get(0)` read path: runtime
   commits retained array values as independent snapshots and returns a fresh
