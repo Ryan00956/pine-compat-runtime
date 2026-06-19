@@ -1,14 +1,16 @@
+use std::collections::HashMap;
+
 use pine_ir::HirProgram;
 use pine_runtime::{
-    Bar, ChartContext, InMemoryRequestDataProvider, PUBLIC_ANALYSIS_SCHEMA_VERSION,
-    RequestEnvironment, RequestKey, RequestTimeframe, input_calls,
-    run_historical_with_request_environment,
+    Bar, ChartContext, InMemoryRequestDataProvider, InputOverrides, PUBLIC_ANALYSIS_SCHEMA_VERSION,
+    PineValue, RequestEnvironment, RequestKey, RequestTimeframe, input_calls,
+    run_historical_with_request_environment_and_input_overrides,
 };
 use pine_sema::{Analysis, AnalysisInput, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::{PyAny, PyDict, PyList, PyModule, PySequence};
+use pyo3::types::{PyAny, PyBool, PyDict, PyList, PyModule, PySequence};
 mod alerts;
 mod diagnostics;
 mod outputs;
@@ -27,17 +29,24 @@ struct PyProgram {
 
 #[pymethods]
 impl PyProgram {
-    #[pyo3(signature = (bars, request_bars=None))]
+    #[pyo3(signature = (bars, request_bars=None, input_overrides=None))]
     fn run(
         &self,
         py: Python<'_>,
         bars: &Bound<'_, PyAny>,
         request_bars: Option<&Bound<'_, PyAny>>,
+        input_overrides: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Py<PyAny>> {
         let bars = parse_bars(bars)?;
         let request_environment = parse_request_environment(request_bars)?;
-        let result = run_historical_with_request_environment(&self.hir, &bars, request_environment)
-            .map_err(|err| PyValueError::new_err(err.message))?;
+        let input_overrides = parse_input_overrides(input_overrides, &self.hir)?;
+        let result = run_historical_with_request_environment_and_input_overrides(
+            &self.hir,
+            &bars,
+            request_environment,
+            input_overrides,
+        )
+        .map_err(|err| PyValueError::new_err(err.message))?;
         runtime_result_to_py(py, &result)
     }
 }
@@ -71,16 +80,17 @@ fn analyze_script(
     analysis_to_py(py, &source_file, &analysis)
 }
 
-#[pyfunction(signature = (source, bars, request_bars=None, library_sources=None))]
+#[pyfunction(signature = (source, bars, request_bars=None, library_sources=None, input_overrides=None))]
 fn run_script(
     py: Python<'_>,
     source: &str,
     bars: &Bound<'_, PyAny>,
     request_bars: Option<&Bound<'_, PyAny>>,
     library_sources: Option<&Bound<'_, PyAny>>,
+    input_overrides: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Py<PyAny>> {
     let program = compile_script(source, library_sources)?;
-    program.run(py, bars, request_bars)
+    program.run(py, bars, request_bars, input_overrides)
 }
 
 #[pymodule]
@@ -172,6 +182,140 @@ fn parse_request_key(key: &str) -> PyResult<RequestKey> {
     let timeframe =
         RequestTimeframe::parse(timeframe).map_err(|err| PyValueError::new_err(err.to_string()))?;
     Ok(RequestKey::new(symbol.trim(), timeframe))
+}
+
+fn parse_input_overrides(
+    input_overrides: Option<&Bound<'_, PyAny>>,
+    hir: &HirProgram,
+) -> PyResult<InputOverrides> {
+    let Some(input_overrides) = input_overrides else {
+        return Ok(InputOverrides::new());
+    };
+    let dict = input_overrides.cast::<PyDict>().map_err(|_| {
+        PyValueError::new_err("input_overrides must be a dict mapping input callSiteId to values")
+    })?;
+    let input_names = input_calls(hir)
+        .into_iter()
+        .map(|input| (input.call_site_id, input.name))
+        .collect::<HashMap<_, _>>();
+    let mut overrides = InputOverrides::new();
+    for (key, value) in dict {
+        let call_site_id = parse_input_override_key(&key)?;
+        let Some(input_name) = input_names.get(&call_site_id) else {
+            return Err(PyValueError::new_err(format!(
+                "input_overrides contains unknown callSiteId {call_site_id}"
+            )));
+        };
+        let value = parse_input_override_value(input_name, &value)?;
+        overrides.insert(call_site_id, value);
+    }
+    Ok(overrides)
+}
+
+fn parse_input_override_key(key: &Bound<'_, PyAny>) -> PyResult<u32> {
+    if key.is_instance_of::<PyBool>() {
+        return Err(PyValueError::new_err(
+            "input_overrides keys must be input callSiteId integers",
+        ));
+    }
+    if let Ok(value) = key.extract::<u32>() {
+        return Ok(value);
+    }
+    if let Ok(value) = key.extract::<String>() {
+        return value.parse::<u32>().map_err(|_| {
+            PyValueError::new_err("input_overrides keys must be input callSiteId integers")
+        });
+    }
+    Err(PyValueError::new_err(
+        "input_overrides keys must be input callSiteId integers",
+    ))
+}
+
+fn parse_input_override_value(input_name: &str, value: &Bound<'_, PyAny>) -> PyResult<PineValue> {
+    match input_name {
+        "input" => parse_generic_input_override(value),
+        "input.int" | "input.time" => Ok(PineValue::Int(parse_int_override(input_name, value)?)),
+        "input.float" | "input.price" => {
+            Ok(PineValue::Float(parse_float_override(input_name, value)?))
+        }
+        "input.bool" => Ok(PineValue::Bool(value.extract().map_err(|_| {
+            PyValueError::new_err(format!("{input_name} override must be a bool"))
+        })?)),
+        "input.color" => Ok(PineValue::Color(parse_color_override(value)?)),
+        "input.string" | "input.symbol" | "input.timeframe" | "input.session"
+        | "input.text_area" => Ok(PineValue::String(value.extract().map_err(|_| {
+            PyValueError::new_err(format!("{input_name} override must be a string"))
+        })?)),
+        "input.source" => Err(PyValueError::new_err(
+            "input.source overrides are not supported",
+        )),
+        _ => Err(PyValueError::new_err(format!(
+            "input_overrides cannot override unsupported input call {input_name}"
+        ))),
+    }
+}
+
+fn parse_generic_input_override(value: &Bound<'_, PyAny>) -> PyResult<PineValue> {
+    if let Ok(value) = value.extract::<bool>() {
+        return Ok(PineValue::Bool(value));
+    }
+    if let Ok(value) = value.extract::<i64>() {
+        return Ok(PineValue::Int(value));
+    }
+    if let Ok(value) = value.extract::<f64>() {
+        if value.is_finite() {
+            return Ok(PineValue::Float(value));
+        }
+        return Err(PyValueError::new_err("input override float must be finite"));
+    }
+    if let Ok(value) = value.extract::<String>() {
+        return Ok(PineValue::String(value));
+    }
+    Err(PyValueError::new_err(
+        "input override value must be a bool, int, finite float, or string",
+    ))
+}
+
+fn parse_int_override(input_name: &str, value: &Bound<'_, PyAny>) -> PyResult<i64> {
+    if value.is_instance_of::<PyBool>() {
+        return Err(PyValueError::new_err(format!(
+            "{input_name} override must be an int"
+        )));
+    }
+    value
+        .extract()
+        .map_err(|_| PyValueError::new_err(format!("{input_name} override must be an int")))
+}
+
+fn parse_float_override(input_name: &str, value: &Bound<'_, PyAny>) -> PyResult<f64> {
+    if value.is_instance_of::<PyBool>() {
+        return Err(PyValueError::new_err(format!(
+            "{input_name} override must be a finite float"
+        )));
+    }
+    let value = value
+        .extract::<f64>()
+        .map_err(|_| PyValueError::new_err(format!("{input_name} override must be a float")))?;
+    if value.is_finite() {
+        return Ok(value);
+    }
+    Err(PyValueError::new_err(format!(
+        "{input_name} override must be a finite float"
+    )))
+}
+
+fn parse_color_override(value: &Bound<'_, PyAny>) -> PyResult<u32> {
+    if value.is_instance_of::<PyBool>() {
+        return Err(PyValueError::new_err(
+            "input.color override must be an unsigned 32-bit integer",
+        ));
+    }
+    let value = value.extract::<i64>().map_err(|_| {
+        PyValueError::new_err("input.color override must be an unsigned 32-bit integer")
+    })?;
+    u32::try_from(value).map_err(|_| {
+        PyValueError::new_err("input.color override must be an unsigned 32-bit integer")
+    })
 }
 
 fn parse_bar(item: &Bound<'_, PyAny>) -> PyResult<Bar> {

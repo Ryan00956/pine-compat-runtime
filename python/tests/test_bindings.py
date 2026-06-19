@@ -121,6 +121,58 @@ def test_analyze_script_reports_input_call_sites():
     assert all(isinstance(item["callSiteId"], int) for item in report["inputs"])
 
 
+def test_program_run_accepts_call_site_keyed_input_overrides():
+    source = (
+        'indicator("input overrides")\n'
+        'length = input.int(2, "Length")\n'
+        'scale = input.float(1.0, "Scale")\n'
+        'enabled = input.bool(true, "Enabled")\n'
+        'mode = input.string("SMA", "Mode")\n'
+        'shade = input.color(color.red, "Shade")\n'
+        'base = enabled and mode == "SMA" ? ta.sma(close, length) * scale : open\n'
+        'plot(base)\n'
+        'plot(color.r(shade))\n'
+    )
+    report = pine_compat.analyze_script(source)
+    input_ids = {
+        item["title"]: item["callSiteId"]
+        for item in report["inputs"]
+    }
+    program = pine_compat.compile_script(source)
+
+    default = program.run(BARS)
+    assert default["plots"][0]["values"] == [None, 1.5, 2.5]
+
+    overrides = {
+        input_ids["Length"]: 1,
+        input_ids["Scale"]: 2.0,
+        input_ids["Enabled"]: True,
+        input_ids["Mode"]: "SMA",
+        input_ids["Shade"]: 0x4CAF50,
+    }
+    result = program.run(BARS, input_overrides=overrides)
+    assert result["plots"][0]["values"] == [2.0, 4.0, 6.0]
+    assert result["plots"][1]["values"] == [76.0, 76.0, 76.0]
+
+    script_result = pine_compat.run_script(source, BARS, input_overrides=overrides)
+    assert script_result["plots"][0]["values"] == [2.0, 4.0, 6.0]
+
+
+def test_program_run_rejects_unknown_input_override_call_site():
+    program = pine_compat.compile_script(
+        'indicator("inputs")\n'
+        'length = input.int(2, "Length")\n'
+        'plot(ta.sma(close, length))\n'
+    )
+
+    try:
+        program.run(BARS, input_overrides={999999: 1})
+    except ValueError as error:
+        assert "unknown callSiteId 999999" in str(error)
+    else:
+        raise AssertionError("unknown input override callSiteId should fail")
+
+
 def test_compile_script_returns_program_with_run_method():
     program = pine_compat.compile_script('indicator("demo")\nplot(close)\n')
     result = program.run(BARS)

@@ -1079,8 +1079,10 @@ start = input.time(0, "Start")
 
 The analyzer accepts the supported input metadata subset and inputs carry the
 `input` qualifier. Runtime execution evaluates each input's `defval` unless the
-Rust runtime is run with call-site keyed `InputOverrides`; CLI, Python, and WASM
-host input override parameters are not implemented yet.
+Rust runtime is run with call-site keyed `InputOverrides` or the Python host
+supplies a call-site keyed `input_overrides` dictionary to `Program.run()` or
+`run_script()`. CLI and WASM host input override parameters, and host-side
+`input.source` overrides, are not implemented yet.
 
 ## Built-In OHLCV Series
 

@@ -825,15 +825,18 @@ Rules:
 
 - Input metadata is accepted and validated during analysis.
 - Runtime execution uses each input's `defval` unless the Rust runtime is run
-  with call-site keyed `InputOverrides`. CLI, Python, and WASM host input
-  override parameters are not implemented yet.
+  with call-site keyed `InputOverrides` or the Python host supplies a
+  call-site keyed `input_overrides` dictionary to `Program.run()` or
+  `run_script()`. CLI and WASM host input override parameters are not
+  implemented yet.
 - The supported metadata subset validates common option names and types, then
   ignores metadata at runtime; call-site keyed overrides provide the executable
-  value only when explicitly supplied by the Rust host.
+  value only when explicitly supplied by the Rust or Python host.
 - `input.session` and `input.text_area` currently execute their `defval`
-  strings and accept metadata parameters without host-side override behavior.
+  strings unless a Python or Rust host override is supplied.
 - `input.source` returns the selected source series. Phase 1 may restrict this
-  to known OHLCV-derived series.
+  to known OHLCV-derived series. Host-side `input.source` overrides remain
+  unsupported.
 
 ## Plotting
 

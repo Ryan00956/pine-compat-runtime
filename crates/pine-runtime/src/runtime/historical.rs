@@ -136,6 +136,20 @@ pub fn run_historical_with_input_overrides(
     HistoricalRuntime::with_input_overrides(program, input_overrides).run(bars)
 }
 
+pub fn run_historical_with_request_environment_and_input_overrides(
+    program: &HirProgram,
+    bars: &[Bar],
+    request_environment: RequestEnvironment,
+    input_overrides: InputOverrides,
+) -> Result<RuntimeResult, RuntimeError> {
+    HistoricalRuntime::with_request_environment_and_input_overrides(
+        program,
+        request_environment,
+        input_overrides,
+    )
+    .run(bars)
+}
+
 pub fn run_historical_profiled(
     program: &HirProgram,
     bars: &[Bar],
