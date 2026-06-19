@@ -1169,7 +1169,7 @@ fn reports_unsupported_linefill_all_fixture() {
 fn reports_unsupported_linefill_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_linefill.pine",
-        "linefill.new",
+        "linefill.set_color",
         "drawing object",
     );
 }

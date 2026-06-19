@@ -43,6 +43,7 @@ fn runs_script_from_csv_to_json() {
     assert_eq!(parsed["plotCandles"], serde_json::json!([]));
     assert_eq!(parsed["labels"], serde_json::json!([]));
     assert_eq!(parsed["lines"], serde_json::json!([]));
+    assert_eq!(parsed["lineFills"], serde_json::json!([]));
     assert_eq!(parsed["boxes"], serde_json::json!([]));
     assert_eq!(parsed["tables"], serde_json::json!([]));
     assert_eq!(parsed["alerts"], serde_json::json!([]));
@@ -588,6 +589,16 @@ fn run_script_csv_returns_line_array_fixture_contract() {
     .expect("line array fixture should run");
 
     assert_snapshot("runtime_line_array.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_linefill_new_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/linefill_new.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("linefill new fixture should run");
+    assert_snapshot("runtime_linefill_new.json", &output);
 }
 
 #[test]

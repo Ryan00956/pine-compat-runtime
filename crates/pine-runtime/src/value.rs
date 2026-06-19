@@ -9,6 +9,7 @@ pub enum PineValue {
     HLine(u32),
     Label(u32),
     Line(u32),
+    LineFill(u32),
     Box(u32),
     Table(u32),
     Array(u32),

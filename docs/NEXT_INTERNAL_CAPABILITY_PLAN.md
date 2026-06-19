@@ -187,8 +187,8 @@ Good next slices:
 
 Keep out of scope until separately designed:
 
-- `linefill.*` until linefill object storage, line-id binding, and collection
-  semantics are designed.
+- Remaining linefill support beyond `linefill.new`, including `linefill.all`,
+  mutation/getter/delete methods, and linefill arrays.
 - `polyline.*` until chart-point and point-array semantics are designed.
 - Host-specific visual layout, drag behavior, or chart interaction.
 - Drawing behavior that cannot be represented in the current JSON contract.

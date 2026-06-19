@@ -340,6 +340,24 @@ const LINE_NEW_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const LINEFILL_NEW_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "line1",
+        accepts: Accepts::LineCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "line2",
+        accepts: Accepts::LineCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "color",
+        accepts: Accepts::ColorCompatible,
+        optional: false,
+    },
+];
+
 const LINE_SET_X_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -975,6 +993,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: LINE_NEW_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_LINE),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "linefill.new",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINEFILL_NEW_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_LINE_FILL),
         variadic: false,
     },
     BuiltinSignature {

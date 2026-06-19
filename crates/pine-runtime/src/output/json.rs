@@ -1,7 +1,7 @@
 use crate::{HistoryRetentionMode, PineValue, RuntimeProfile};
 
 use super::alerts::AlertEvent;
-use super::drawings::{BoxOutput, LabelOutput, LineOutput, TableOutput};
+use super::drawings::{BoxOutput, LabelOutput, LineFillOutput, LineOutput, TableOutput};
 use super::model::{
     ColorSeries, FillOutput, HLineOutput, PUBLIC_RUNTIME_SCHEMA_VERSION, PlotArrowSeries,
     PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeResult,
@@ -34,6 +34,8 @@ pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
     output.push_str(&labels_json(&result.labels));
     output.push_str(",\"lines\":");
     output.push_str(&lines_json(&result.lines));
+    output.push_str(",\"lineFills\":");
+    output.push_str(&line_fills_json(&result.line_fills));
     output.push_str(",\"boxes\":");
     output.push_str(&boxes_json(&result.boxes));
     output.push_str(",\"tables\":");
@@ -135,6 +137,10 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"lineSnapshots\":{},",
             "\"lineCapacity\":{},",
             "\"lineSnapshotCapacity\":{},",
+            "\"lineFills\":{},",
+            "\"lineFillSnapshots\":{},",
+            "\"lineFillCapacity\":{},",
+            "\"lineFillSnapshotCapacity\":{},",
             "\"boxes\":{},",
             "\"boxSnapshots\":{},",
             "\"boxCapacity\":{},",
@@ -215,6 +221,10 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.line_snapshots,
         profile.line_capacity,
         profile.line_snapshot_capacity,
+        profile.line_fills,
+        profile.line_fill_snapshots,
+        profile.line_fill_capacity,
+        profile.line_fill_snapshot_capacity,
         profile.boxes,
         profile.box_snapshots,
         profile.box_capacity,
@@ -504,6 +514,37 @@ fn lines_json(lines: &[LineOutput]) -> String {
                 output.push_str(&value_json(&snapshot.style));
                 output.push_str(",\"extend\":");
                 output.push_str(&value_json(&snapshot.extend));
+            }
+            output.push('}');
+        }
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
+fn line_fills_json(line_fills: &[LineFillOutput]) -> String {
+    let mut output = String::from("[");
+    for (index, line_fill) in line_fills.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"snapshots\":[", line_fill.id));
+        for (snapshot_index, snapshot) in line_fill.snapshots.iter().enumerate() {
+            if snapshot_index > 0 {
+                output.push(',');
+            }
+            output.push_str(&format!(
+                "{{\"barIndex\":{},\"exists\":{}",
+                snapshot.bar_index, snapshot.exists
+            ));
+            if snapshot.exists {
+                output.push_str(",\"line1\":");
+                output.push_str(&snapshot.line1.to_string());
+                output.push_str(",\"line2\":");
+                output.push_str(&snapshot.line2.to_string());
+                output.push_str(",\"color\":");
+                output.push_str(&value_json(&snapshot.color));
             }
             output.push('}');
         }
@@ -840,6 +881,7 @@ fn value_json(value: &PineValue) -> String {
         | PineValue::HLine(value)
         | PineValue::Label(value)
         | PineValue::Line(value)
+        | PineValue::LineFill(value)
         | PineValue::Box(value)
         | PineValue::Table(value) => value.to_string(),
         PineValue::UserType(values) | PineValue::Tuple(values) => {
@@ -899,6 +941,7 @@ mod tests {
             fills: Vec::new(),
             labels: Vec::new(),
             lines: Vec::new(),
+            line_fills: Vec::new(),
             boxes: Vec::new(),
             tables: Vec::new(),
             alerts: Vec::new(),

@@ -150,6 +150,7 @@ pub(crate) fn drawing_method_builtin_name(
     let namespace = match receiver_kind {
         ValueKind::Label => "label",
         ValueKind::Line => "line",
+        ValueKind::LineFill => "linefill",
         ValueKind::Box => "box",
         ValueKind::Table => "table",
         _ => return None,
@@ -160,6 +161,7 @@ pub(crate) fn drawing_method_builtin_name(
     let accepts_receiver = match receiver_kind {
         ValueKind::Label => first_param.accepts == Accepts::LabelCompatible,
         ValueKind::Line => first_param.accepts == Accepts::LineCompatible,
+        ValueKind::LineFill => first_param.accepts == Accepts::LineFillCompatible,
         ValueKind::Box => first_param.accepts == Accepts::BoxCompatible,
         ValueKind::Table => first_param.accepts == Accepts::TableCompatible,
         _ => false,
@@ -457,7 +459,11 @@ impl Analyzer {
 
         if matches!(
             receiver_type.kind,
-            ValueKind::Label | ValueKind::Line | ValueKind::Box | ValueKind::Table
+            ValueKind::Label
+                | ValueKind::Line
+                | ValueKind::LineFill
+                | ValueKind::Box
+                | ValueKind::Table
         ) {
             self.diagnostics.push(Diagnostic::error(
                 "E_UNKNOWN_METHOD",

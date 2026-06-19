@@ -949,6 +949,26 @@ fn accepts_minimal_line_new() {
 }
 
 #[test]
+fn accepts_minimal_linefill_new() {
+    let analysis = analyze(
+        "upper = line.new(bar_index, high, bar_index + 1, high)\nlower = line.new(bar_index, low, bar_index + 1, low)\nfill = linefill.new(upper, lower, color.new(color.green, 80))\nmissing = linefill.new(na, lower, color.red)\nplot(close)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "linefill.new")
+    );
+}
+
+#[test]
 fn rejects_unimplemented_line_methods() {
     let analysis = analyze("line.set_first_point(na, na)\nplot(close)\n");
 

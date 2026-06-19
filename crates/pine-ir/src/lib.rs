@@ -51,6 +51,7 @@ pub enum ValueKind {
     HLine,
     Label,
     Line,
+    LineFill,
     Box,
     Table,
     FloatArray,

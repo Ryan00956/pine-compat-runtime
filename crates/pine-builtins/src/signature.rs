@@ -55,6 +55,7 @@ pub enum Accepts {
     BoolCompatible,
     LabelCompatible,
     LineCompatible,
+    LineFillCompatible,
     BoxCompatible,
     TableCompatible,
     PlotOrHLine,

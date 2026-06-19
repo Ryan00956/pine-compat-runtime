@@ -155,6 +155,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "line.set_xy2",
     "line.set_y1",
     "line.set_y2",
+    "linefill.new",
     "math.abs",
     "math.acos",
     "math.asin",

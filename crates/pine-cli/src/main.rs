@@ -123,9 +123,17 @@ mod tests {
     }
 
     fn expected_partial_builtin(name: &str) -> bool {
-        ["array.", "label.", "line.", "box.", "table.", "strategy."]
-            .iter()
-            .any(|prefix| name.starts_with(prefix))
+        [
+            "array.",
+            "label.",
+            "line.",
+            "linefill.",
+            "box.",
+            "table.",
+            "strategy.",
+        ]
+        .iter()
+        .any(|prefix| name.starts_with(prefix))
             || matches!(
                 name,
                 "request.security"
@@ -312,7 +320,7 @@ mod tests {
             "matrix.*",
             "unsupported label/line/box/table methods",
             "linefill.all",
-            "linefill.*",
+            "unsupported linefill methods",
             "polyline.all",
             "polyline.*",
             "non-int history offsets",
@@ -409,6 +417,7 @@ mod tests {
             fills: vec![],
             labels: vec![],
             lines: vec![],
+            line_fills: vec![],
             boxes: vec![],
             tables: vec![],
             alerts: vec![],
@@ -424,6 +433,7 @@ mod tests {
         )));
         assert!(output.contains(r#""labels":[]"#));
         assert!(output.contains(r#""lines":[]"#));
+        assert!(output.contains(r#""lineFills":[]"#));
         assert!(output.contains(r#""boxes":[]"#));
         assert!(output.contains(r#""tables":[]"#));
         assert!(output.contains(r#""alerts":[]"#));
@@ -449,6 +459,7 @@ mod tests {
             fills: vec![],
             labels: vec![],
             lines: vec![],
+            line_fills: vec![],
             boxes: vec![],
             tables: vec![],
             alerts: vec![],
@@ -476,6 +487,7 @@ mod tests {
             fills: vec![],
             labels: vec![],
             lines: vec![],
+            line_fills: vec![],
             boxes: vec![],
             tables: vec![],
             alerts: vec![],
@@ -505,6 +517,7 @@ mod tests {
             fills: vec![],
             labels: vec![],
             lines: vec![],
+            line_fills: vec![],
             boxes: vec![],
             tables: vec![],
             alerts: vec![],
@@ -581,6 +594,10 @@ mod tests {
             line_snapshots: 0,
             line_capacity: 0,
             line_snapshot_capacity: 0,
+            line_fills: 0,
+            line_fill_snapshots: 0,
+            line_fill_capacity: 0,
+            line_fill_snapshot_capacity: 0,
             boxes: 0,
             box_snapshots: 0,
             box_capacity: 0,
@@ -618,6 +635,8 @@ mod tests {
         assert!(output.contains(r#""labelSnapshots":0"#));
         assert!(output.contains(r#""lines":0"#));
         assert!(output.contains(r#""lineSnapshots":0"#));
+        assert!(output.contains(r#""lineFills":0"#));
+        assert!(output.contains(r#""lineFillSnapshots":0"#));
         assert!(output.contains(r#""boxes":0"#));
         assert!(output.contains(r#""boxSnapshots":0"#));
         assert!(output.contains(r#""tables":0"#));

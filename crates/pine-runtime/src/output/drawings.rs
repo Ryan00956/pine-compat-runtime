@@ -46,6 +46,21 @@ pub struct LineSnapshot {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct LineFillOutput {
+    pub id: u32,
+    pub snapshots: Vec<LineFillSnapshot>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct LineFillSnapshot {
+    pub bar_index: usize,
+    pub exists: bool,
+    pub line1: u32,
+    pub line2: u32,
+    pub color: PineValue,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct BoxOutput {
     pub id: u32,
     pub snapshots: Vec<BoxSnapshot>,

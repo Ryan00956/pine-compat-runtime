@@ -383,6 +383,10 @@ fn is_supported_varip_array(kind: ValueKind) -> bool {
 fn is_drawing_id_value(kind: ValueKind) -> bool {
     matches!(
         kind,
-        ValueKind::Label | ValueKind::Line | ValueKind::Box | ValueKind::Table
+        ValueKind::Label
+            | ValueKind::Line
+            | ValueKind::LineFill
+            | ValueKind::Box
+            | ValueKind::Table
     )
 }

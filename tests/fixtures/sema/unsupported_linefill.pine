@@ -1,3 +1,3 @@
 //@version=5
 indicator("Unsupported linefill")
-linefill.new(na, na)
+linefill.set_color(na, color.red)

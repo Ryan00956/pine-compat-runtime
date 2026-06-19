@@ -1,5 +1,6 @@
 mod boxes;
 mod labels;
+mod linefills;
 mod lines;
 mod tables;
 
@@ -54,6 +55,7 @@ impl<'a> HistoricalRuntime<'a> {
             "line.get_y1" => self.eval_line_get_y1(args),
             "line.get_x2" => self.eval_line_get_x2(args),
             "line.get_y2" => self.eval_line_get_y2(args),
+            "linefill.new" => self.eval_linefill_new(args),
             "box.new" => self.eval_box_new(args),
             "box.set_left" => self.eval_box_set_left(args),
             "box.set_top" => self.eval_box_set_top(args),

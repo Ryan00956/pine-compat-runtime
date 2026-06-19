@@ -191,6 +191,10 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             matches!(arg_type.kind, ValueKind::Line | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::LineFillCompatible => {
+            matches!(arg_type.kind, ValueKind::LineFill | ValueKind::Na)
+                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::BoxCompatible => {
             matches!(arg_type.kind, ValueKind::Box | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)

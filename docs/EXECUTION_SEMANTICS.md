@@ -1099,10 +1099,13 @@ rendering metadata:
 
 Accepted metadata such as `offset`, `show_last`, `display`, `force_overlay`,
 and `editable` does not yet transform, filter, or annotate these output series.
-`linefill.*` remains unsupported until linefill objects have a runtime store
-that binds supported line ids and collection semantics. `polyline.*` remains
-unsupported until `chart.point` values and point-list arrays have a
-fixture-backed execution model.
+`linefill.new` creates runtime-owned linefill ids over supported line ids,
+emits sparse color snapshots, and replaces the previous linefill for the same
+line pair. `linefill.all`, linefill mutation/getter/delete methods, and
+linefill arrays remain unsupported until collection and richer object-method
+semantics are fixture-backed. `polyline.*` remains unsupported until
+`chart.point` values and point-list arrays have a fixture-backed execution
+model.
 
 ## Determinism
 
