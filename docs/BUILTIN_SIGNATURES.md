@@ -144,10 +144,10 @@ appearance are not implemented by this fixed chart metadata subset.
 `line.set_second_point`, `box.new`, `box.set_top_left_point`,
 `box.set_bottom_right_point`, `label.new`, and `label.set_point` can consume
 `chart.point` values, and point arrays can feed the partial `polyline.new`
-snapshot subset. `polyline.delete` and `polyline.all` cover the historical and
-forming-bar rollback lifecycle subset; remaining drawing point overloads,
-typed declarations, general polyline arrays, and runtime use of
-declaration-driven polyline max-count/eviction parity remain separately gated.
+snapshot subset. `polyline.delete`, `polyline.all`, and declaration-driven
+polyline max-count eviction cover the historical and forming-bar rollback
+lifecycle subset; typed declarations and general polyline arrays remain
+separately gated.
 
 Bar state:
 
