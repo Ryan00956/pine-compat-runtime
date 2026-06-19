@@ -327,6 +327,35 @@ plot(na(previous_line) ? na : line.get_x1(previous_line))
 }
 
 #[test]
+fn reads_previous_table_array_instance_history() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("table array history")
+current = table.new(position.top_right, 1, 1)
+ids = array.new_table(1)
+ids.set(0, current)
+previous_ids = ids[1]
+previous_id = na(previous_ids) ? na : previous_ids.get(0)
+visible = table.all
+plot(na(previous_id) ? na : array.indexof(visible, previous_id))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[0.0, 1.0, 2.0]);
+}
+
+#[test]
 fn reads_previous_array_slice_instance_history() {
     let source = SourceFile::new(
         "test.pine",
