@@ -494,9 +494,9 @@ ohlc4 = (open + high + low + close) / 4
 ## Declarations
 
 ```text
-indicator(title: const string, shorttitle?: const string, overlay?: const bool, format?: const string, precision?: const int, scale?: const string, max_bars_back?: const int, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, ...)
+indicator(title: const string, shorttitle?: const string, overlay?: const bool, format?: const string, precision?: const int, scale?: const string, max_bars_back?: const int, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, max_labels_count?: const int named-only subset, max_boxes_count?: const int named-only subset, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset)
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
   -> void
@@ -565,6 +565,8 @@ placement or price-scale layout fields; those remain host-owned.
 values from 0 through 16. The runtime rejects other const string format values
 and out-of-range precision values. Declaration formatting remains host-owned and
 does not add runtime JSON fields.
+`indicator(..., max_labels_count=N)` accepts named const integer values from
+1 through 500 and stores them in HIR for label runtime eviction.
 `indicator(..., max_boxes_count=N)` accepts named const integer values from
 1 through 500 and stores them in HIR for box runtime eviction.
 `indicator(..., max_lines_count=N)` accepts named const integer values from
@@ -608,6 +610,8 @@ same-direction long `strategy.entry()` market entries to that many open trades
 for the current position. The default remains `1`. Short entries, reversals,
 `strategy.order()`, same-tick price-based entry exceptions, and broader
 multi-entry exit/reporting semantics remain unsupported unless fixture-backed.
+`strategy(..., max_labels_count=N)` accepts named const integer values from
+1 through 500 and stores them in HIR for label runtime eviction.
 `strategy(..., max_boxes_count=N)` accepts named const integer values from
 1 through 500 and stores them in HIR for box runtime eviction.
 `strategy(..., max_lines_count=N)` accepts named const integer values from
@@ -892,8 +896,9 @@ Current normalized output fields are:
 - `plotcandle`: open, high, low, close, body color, wick color, and border
   color series.
 - `label.all`: a snapshot label-array of currently existing label ids in
-  creation order. Deleted labels are omitted from subsequent reads. Mutating the
-  returned array does not mutate the underlying label store.
+  creation order. Deleted or max-count evicted labels are omitted from
+  subsequent reads. Mutating the returned array does not mutate the underlying
+  label store.
 - `line.all`: a snapshot line-array of currently existing line ids in creation
   order. Deleted or max-count evicted lines are omitted from subsequent reads.
   Mutating the returned array does not mutate the underlying line store.

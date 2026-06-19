@@ -38,11 +38,7 @@ impl<'a> HistoricalRuntime<'a> {
             self.eval_label_option(args, 11, "text_font_family", "font.family_default")?;
         let text_formatting =
             self.eval_label_text_formatting_option_value(args, 13, "text_formatting")?;
-        if self.labels.len() >= MAX_LABELS {
-            return Err(RuntimeError {
-                message: format!("label count cannot exceed {MAX_LABELS}"),
-            });
-        }
+        self.evict_oldest_labels_at_limit()?;
         let id = self.next_label_id;
         self.next_label_id = self
             .next_label_id
@@ -267,11 +263,6 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(id) = id else {
             return Ok(PineValue::Na);
         };
-        if self.labels.len() >= MAX_LABELS {
-            return Err(RuntimeError {
-                message: format!("label count cannot exceed {MAX_LABELS}"),
-            });
-        }
         let Some(label) = self.labels.iter().find(|label| label.id == id) else {
             return Err(RuntimeError {
                 message: format!("invalid label id `{id}`"),
@@ -285,6 +276,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !latest.exists {
             return Ok(PineValue::Na);
         }
+        self.evict_oldest_labels_at_limit()?;
         let copied_id = self.next_label_id;
         self.next_label_id = self
             .next_label_id
@@ -299,6 +291,50 @@ impl<'a> HistoricalRuntime<'a> {
             snapshots: vec![copied],
         });
         Ok(PineValue::Label(copied_id))
+    }
+
+    fn evict_oldest_labels_at_limit(&mut self) -> Result<(), RuntimeError> {
+        let limit = self.max_label_count();
+        while self.active_label_count() >= limit {
+            let Some(label) = self.labels.iter_mut().find(|label| {
+                label
+                    .snapshots
+                    .last()
+                    .is_some_and(|snapshot| snapshot.exists)
+            }) else {
+                break;
+            };
+            let Some(latest) = label.snapshots.last().cloned() else {
+                return Err(RuntimeError {
+                    message: format!("label `{}` has no snapshots", label.id),
+                });
+            };
+            let mut next = latest;
+            next.bar_index = self.bars;
+            next.exists = false;
+            label.snapshots.push(next);
+        }
+        Ok(())
+    }
+
+    fn active_label_count(&self) -> usize {
+        self.labels
+            .iter()
+            .filter(|label| {
+                label
+                    .snapshots
+                    .last()
+                    .is_some_and(|snapshot| snapshot.exists)
+            })
+            .count()
+    }
+
+    fn max_label_count(&self) -> usize {
+        self.program
+            .drawing_settings
+            .max_labels_count
+            .map_or(DEFAULT_MAX_LABELS, |value| value as usize)
+            .clamp(1, MAX_LABELS)
     }
 
     pub(super) fn eval_label_get_x(

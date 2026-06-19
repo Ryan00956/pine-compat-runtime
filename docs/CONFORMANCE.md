@@ -84,7 +84,7 @@ Phase G marks `strategy` as partial. The executable subset accepts
 `strategy(title, shorttitle, overlay, max_bars_back, initial_capital,
 default_qty_type, default_qty_value, commission_type, commission_value,
 slippage, backtest_fill_limits_assumption, margin_long, margin_short,
-pyramiding, named max_boxes_count, named max_lines_count, named max_polylines_count)` where
+pyramiding, named max_labels_count, named max_boxes_count, named max_lines_count, named max_polylines_count)` where
 `initial_capital` must be a positive const numeric value when provided. Phase L
 accepts `default_qty_type=strategy.fixed` with positive const numeric
 `default_qty_value`; Strategy Internal Stage 12 accepts
@@ -686,8 +686,8 @@ while-loop control-flow cloning coverage, and the fixture-backed `label.get_x`,
 `label.get_text` getters over the latest existing label snapshot, including
 ordinary and independent while-loop control-flow read coverage for all three
 getters, plus `label.all` existing-label id reads, including ordinary and
-independent while-loop control-flow read coverage, with a 500-label runtime
-limit. The
+independent while-loop control-flow read coverage, with default 50/named 1-500
+`max_labels_count` oldest-active label eviction before new creation. The
 executable line subset covers `line.new` x1/y1/x2/y2 creation with optional
 extend, color, style, and width initialization for existing host-neutral
 snapshot fields when `xloc` is omitted or `xloc.bar_index`; chart-point
@@ -820,7 +820,7 @@ control-flow blocks.
 `label.copy` clones the latest existing label
 snapshot into a new deterministic id, including when called from ordinary and
 independent while-loop control-flow blocks, returns `na` for `na` or deleted
-labels, and shares the label runtime limit. `label.get_x` reads the latest
+labels, and shares the effective label limit. `label.get_x` reads the latest
 existing label x-coordinate,
 including when called from ordinary and independent while-loop control-flow
 blocks, and returns `na` for `na` or deleted labels. `label.get_y` reads the
@@ -831,7 +831,8 @@ labels.
 from ordinary and independent while-loop control-flow blocks, and returns `na`
 for `na` or deleted labels. `label.all` returns currently existing label ids in
 creation order, including when read from ordinary and independent while-loop
-control-flow blocks after label deletion. Selected `line.set_*` mutators update
+control-flow blocks after label deletion or max-count eviction. Selected
+`line.set_*` mutators update
 endpoint/color/width/style/extend snapshots, and `line.set_xloc` with
 `xloc.bar_index` updates x1 and x2 snapshot values, including when called from
 ordinary and independent while-loop control-flow blocks. `line.delete` appends an

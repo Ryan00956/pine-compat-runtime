@@ -206,6 +206,24 @@ fn accepts_supported_indicator_max_lines_count_fixture() {
 }
 
 #[test]
+fn accepts_supported_indicator_max_labels_count_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_indicator_max_labels_count.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    let hir = analysis.hir.expect("indicator declaration should lower");
+    assert_eq!(hir.drawing_settings.max_labels_count, Some(75));
+}
+
+#[test]
 fn accepts_supported_indicator_max_boxes_count_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/supported_indicator_max_boxes_count.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
@@ -259,6 +277,25 @@ fn accepts_supported_strategy_max_lines_count_fixture() {
     let hir = analysis.hir.expect("strategy declaration should lower");
     assert_eq!(hir.script_mode, pine_ir::ScriptMode::Strategy);
     assert_eq!(hir.drawing_settings.max_lines_count, Some(75));
+}
+
+#[test]
+fn accepts_supported_strategy_max_labels_count_fixture() {
+    let path = workspace_fixture("tests/fixtures/sema/supported_strategy_max_labels_count.pine");
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let analysis = analyze_source(&source);
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
+    assert!(analysis.compatibility.unsupported.is_empty());
+    let hir = analysis.hir.expect("strategy declaration should lower");
+    assert_eq!(hir.script_mode, pine_ir::ScriptMode::Strategy);
+    assert_eq!(hir.drawing_settings.max_labels_count, Some(75));
 }
 
 #[test]
@@ -595,6 +632,18 @@ fn reports_unsupported_indicator_max_lines_count_fixture() {
 }
 
 #[test]
+fn reports_unsupported_indicator_max_labels_count_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_indicator_max_labels_count.pine",
+        "E_CALL_ARG_VALUE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_indicator_max_labels_count.pine",
+        &["max_labels_count"],
+    );
+}
+
+#[test]
 fn reports_unsupported_indicator_max_boxes_count_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_indicator_max_boxes_count.pine",
@@ -627,6 +676,18 @@ fn reports_unsupported_strategy_max_lines_count_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_strategy_max_lines_count.pine",
         &["max_lines_count"],
+    );
+}
+
+#[test]
+fn reports_unsupported_strategy_max_labels_count_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_strategy_max_labels_count.pine",
+        "E_CALL_ARG_VALUE",
+    );
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_strategy_max_labels_count.pine",
+        &["max_labels_count"],
     );
 }
 

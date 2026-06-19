@@ -1,0 +1,3 @@
+//@version=6
+indicator("Supported indicator max labels count", max_labels_count=75)
+plot(close)

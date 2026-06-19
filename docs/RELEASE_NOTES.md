@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added fixture-backed `label.new`/`label.copy` max-count eviction: omitted
+  declarations use the runtime's default 50-label limit, while named
+  `max_labels_count` values from 1 through 500 are consumed from
+  indicator/strategy HIR and evict the oldest active label snapshots before new
+  creation.
 - Added fixture-backed `box.new`/`box.copy` max-count eviction: omitted
   declarations use the runtime's default 50-box limit, while named
   `max_boxes_count` values from 1 through 500 are consumed from
@@ -3223,10 +3228,10 @@
   tooltip metadata.
 - Added sparse mutation snapshots for the initial `label.set_*` subset covering
   x/y/text/color/style/size/tooltip fields.
-- Added `label.delete` lifecycle snapshots and a deterministic 500-label
-  runtime limit. Label creation, mutation, and deletion now have fixture-backed
-  realtime rollback, and drawing side effects inside user-defined functions are
-  rejected under the existing side-effect policy. Unsupported coordinate modes
+- Added `label.delete` lifecycle snapshots. Label creation, mutation, and
+  deletion now have fixture-backed realtime rollback, and drawing side effects
+  inside user-defined functions are rejected under the existing side-effect
+  policy. Unsupported coordinate modes
   and advanced label methods remain unsupported.
 - Added the initial `line.*` lifecycle: deterministic line ids, sparse public
   `lines` snapshots for creation/mutation/deletion, selected endpoint/color/

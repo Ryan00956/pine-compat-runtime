@@ -8,6 +8,7 @@ impl Analyzer {
         index: usize,
     ) -> bool {
         let drawing_count = [
+            ("max_labels_count", 500),
             ("max_boxes_count", 500),
             ("max_lines_count", 500),
             ("max_polylines_count", 100),
@@ -43,6 +44,9 @@ impl Analyzer {
                 ));
             } else {
                 match name {
+                    "max_labels_count" => {
+                        self.drawing_settings.max_labels_count = Some(value as u32);
+                    }
                     "max_boxes_count" => {
                         self.drawing_settings.max_boxes_count = Some(value as u32);
                     }

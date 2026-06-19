@@ -1733,6 +1733,19 @@ fn accepts_indicator_max_lines_count_named_arg() {
 }
 
 #[test]
+fn accepts_indicator_max_labels_count_named_arg() {
+    let analysis = analyze("indicator(\"Demo\", max_labels_count=75)\nplot(close)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    assert_eq!(hir.drawing_settings.max_labels_count, Some(75));
+}
+
+#[test]
 fn accepts_indicator_max_boxes_count_named_arg() {
     let analysis = analyze("indicator(\"Demo\", max_boxes_count=75)\nplot(close)\n");
 
@@ -1746,7 +1759,7 @@ fn accepts_indicator_max_boxes_count_named_arg() {
 }
 
 #[test]
-fn rejects_indicator_max_boxes_count_positional_subset() {
+fn rejects_indicator_max_labels_count_positional_subset() {
     let analysis =
         analyze("indicator(\"Demo\", \"D\", true, format.price, 2, scale.right, 10, 75)\n");
 
@@ -1762,7 +1775,7 @@ fn rejects_indicator_max_boxes_count_positional_subset() {
 }
 
 #[test]
-fn rejects_indicator_max_lines_count_positional_subset() {
+fn rejects_indicator_max_boxes_count_positional_subset() {
     let analysis =
         analyze("indicator(\"Demo\", \"D\", true, format.price, 2, scale.right, 10, 75, 75)\n");
 
@@ -1778,7 +1791,7 @@ fn rejects_indicator_max_lines_count_positional_subset() {
 }
 
 #[test]
-fn rejects_indicator_max_polylines_count_positional_subset() {
+fn rejects_indicator_max_lines_count_positional_subset() {
     let analysis =
         analyze("indicator(\"Demo\", \"D\", true, format.price, 2, scale.right, 10, 75, 75, 75)\n");
 
@@ -1787,6 +1800,38 @@ fn rejects_indicator_max_polylines_count_positional_subset() {
             .diagnostics
             .iter()
             .any(|diagnostic| diagnostic.code == "E_CALL_ARG_NAME"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_indicator_max_polylines_count_positional_subset() {
+    let analysis = analyze(
+        "indicator(\"Demo\", \"D\", true, format.price, 2, scale.right, 10, 75, 75, 75, 75)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_NAME"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
+fn rejects_indicator_max_labels_count_out_of_range() {
+    let analysis = analyze("indicator(\"Demo\", max_labels_count=501)\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"),
         "{:?}",
         analysis.diagnostics
     );

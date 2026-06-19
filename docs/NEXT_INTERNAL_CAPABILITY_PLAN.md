@@ -180,8 +180,9 @@ host-neutral.
 
 Good next slices:
 
-- Extend declaration-driven drawing object-count eviction beyond the now-backed
-  box, line, and polyline lifecycle subsets.
+- Finish declaration-driven drawing object-count eviction beyond the now-backed
+  label, box, line, and polyline lifecycle subsets if another drawable family is
+  added.
 - More `label.*`, `line.*`, `box.*`, and `table.*` methods.
 - More deletion, mutation, no-op, and runtime-limit fixtures.
 - More realtime rollback fixtures for already-supported drawing families.

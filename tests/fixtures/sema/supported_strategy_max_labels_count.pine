@@ -1,0 +1,3 @@
+//@version=6
+strategy("Supported strategy max labels count", max_labels_count=75)
+plot(close)

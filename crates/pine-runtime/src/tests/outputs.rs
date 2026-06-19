@@ -1345,11 +1345,11 @@ plot(close)
 }
 
 #[test]
-fn rejects_label_creation_past_limit() {
+fn evicts_oldest_label_after_default_limit() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("label limit")
-for i = 0 to 500
+for i = 0 to 50
     label.new(i, close, "x")
 plot(close)
 "#,
@@ -1361,10 +1361,46 @@ plot(close)
         analysis.diagnostics
     );
 
-    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
-        .expect_err("expected label limit error");
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect("runtime should evict oldest label");
 
-    assert!(error.message.contains("label count cannot exceed"));
+    assert_eq!(result.labels.len(), 51);
+    assert_eq!(result.labels[0].id, 1);
+    assert_eq!(result.labels[0].snapshots.len(), 2);
+    assert!(!result.labels[0].snapshots[1].exists);
+    assert_eq!(result.labels[0].snapshots[1].bar_index, 0);
+    assert_eq!(result.labels[50].id, 51);
+    assert!(result.labels[50].snapshots[0].exists);
+}
+
+#[test]
+fn evicts_oldest_label_when_creation_exceeds_declared_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("label limit", max_labels_count=2)
+for i = 0 to 2
+    label.new(i, close, "x")
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect("runtime should evict oldest label");
+
+    assert_eq!(result.labels.len(), 3);
+    assert_eq!(result.labels[0].id, 1);
+    assert_eq!(result.labels[0].snapshots.len(), 2);
+    assert!(!result.labels[0].snapshots[1].exists);
+    assert_eq!(result.labels[1].id, 2);
+    assert!(result.labels[1].snapshots[0].exists);
+    assert_eq!(result.labels[2].id, 3);
+    assert!(result.labels[2].snapshots[0].exists);
 }
 
 #[test]

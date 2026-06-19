@@ -100,10 +100,6 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array.new_table size cannot exceed 100000 elements",
     ),
     (
-        "tests/fixtures/regressions/label_new_limit.pine",
-        "label count cannot exceed 500",
-    ),
-    (
         "tests/fixtures/regressions/table_new_count_limit.pine",
         "table count cannot exceed 50",
     ),

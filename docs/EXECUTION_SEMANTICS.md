@@ -679,10 +679,10 @@ Supported drawing-object calls currently cover the initial `label.*`, `line.*`,
 lifecycle snapshots, creation snapshots with bar-index or bar-time x locations,
 price/abovebar/belowbar y locations, official style constants, selected
 x-location and y-location snapshot mutation, snapshot cloning, non-reused ids,
-and a 500-object runtime limit. Lines use the same lifecycle rules with
+and declaration-driven max-count eviction. Lines use the same lifecycle rules with
 bar-index x coordinates, price y coordinates,
 selected color/width/style and extend fields, snapshot cloning, non-reused ids,
-and a 500-object runtime limit. `line.new` can initialize existing line
+and declaration-driven max-count eviction. `line.new` can initialize existing line
 snapshot fields for extend, color, style, and width when `xloc` is omitted or
 `xloc.bar_index`; `force_overlay` is accepted but remains a host display
 responsibility. The chart-point overload, `xloc.bar_time` coordinate semantics,
@@ -694,7 +694,7 @@ control-flow blocks. Boxes use
 the same lifecycle rules with bar-index left/right coordinates, price top/bottom
 coordinates,
 selected background/border fields, snapshot cloning, non-reused ids, and a
-500-object runtime limit. `box.new` can initialize existing box snapshot fields
+declaration-driven max-count eviction. `box.new` can initialize existing box snapshot fields
 for background, border, extend, text, text color, text size, text alignment,
 text wrap, font family, and text formatting when `xloc` is omitted or
 `xloc.bar_index`; `force_overlay` is accepted but remains a host display
@@ -727,8 +727,10 @@ methods, chart-point overloads, and unsupported xloc/time variants remain
 unsupported.
 `*.delete(na)`, mutation of `na`, mutation after deletion, and deleting an
 already deleted drawing object are no-ops where deletion exists; invalid
-non-`na` ids are runtime errors. Labels, lines, and boxes each have a
-500-object runtime limit; tables have a 50-object limit and 1000-cell
+non-`na` ids are runtime errors. Labels, lines, boxes, and polylines use the
+runtime default 50-object display limit unless their declaration sets a supported
+`max_*_count` value; labels, lines, and boxes accept 1 through 500, while
+polylines accept 1 through 100. Tables have a 50-object limit and 1000-cell
 per-table limit. `label.set_x`, `label.set_y`, `label.set_xy`,
 `label.set_text`, and `label.set_size` update the latest existing label
 snapshot, including when called from ordinary and independent while-loop
@@ -757,7 +759,11 @@ from ordinary and independent while-loop control-flow blocks.
 `label.copy` clones the latest existing label
 snapshot into a new deterministic id, including when called from ordinary and
 independent while-loop control-flow blocks, returns `na` for `na` or deleted
-labels, and shares the label object limit. `label.get_x` reads the latest
+labels, and shares the effective label limit. `label.new` and `label.copy` use
+the default 50-label runtime limit when declarations omit `max_labels_count`, or
+the named declaration value from 1 through 500, and evict the oldest active
+label by appending a deletion snapshot before creating the new label.
+`label.get_x` reads the latest
 existing label x-coordinate,
 including when called from ordinary and independent while-loop control-flow
 blocks, and returns `na` for `na` or deleted labels. `label.get_y` reads the
@@ -768,7 +774,7 @@ labels.
 from ordinary and independent while-loop control-flow blocks, and returns `na`
 for `na` or deleted labels. `label.all` returns currently existing label ids in
 creation order, including when read from ordinary and independent while-loop
-control-flow blocks after label deletion. `line.delete` appends an
+control-flow blocks after label deletion or max-count eviction. `line.delete` appends an
 `exists: false` line snapshot, including when called from ordinary and
 independent while-loop control-flow blocks. `line.copy` clones the latest
 existing line snapshot into a new deterministic id, including when called from
