@@ -155,6 +155,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "line.set_xy2",
     "line.set_y1",
     "line.set_y2",
+    "linefill.delete",
     "linefill.get_line1",
     "linefill.get_line2",
     "linefill.new",

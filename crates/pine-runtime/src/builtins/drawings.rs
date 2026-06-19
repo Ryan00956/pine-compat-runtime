@@ -59,6 +59,7 @@ impl<'a> HistoricalRuntime<'a> {
             "linefill.set_color" => self.eval_linefill_set_color(args),
             "linefill.get_line1" => self.eval_linefill_get_line1(args),
             "linefill.get_line2" => self.eval_linefill_get_line2(args),
+            "linefill.delete" => self.eval_linefill_delete(args),
             "box.new" => self.eval_box_new(args),
             "box.set_left" => self.eval_box_set_left(args),
             "box.set_top" => self.eval_box_set_top(args),

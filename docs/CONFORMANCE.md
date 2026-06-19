@@ -905,7 +905,9 @@ coverage. `linefill.new` and `linefill.set_color` are partial: they create
 runtime-owned linefill ids over supported line ids, emit sparse color snapshots,
 mutate colors, return referenced line ids through `linefill.get_line1` and
 `linefill.get_line2`, and replace the previous linefill for the same line pair.
-`linefill.all` returns currently existing linefill ids in creation order.
+`linefill.delete` appends deletion snapshots, including while-loop
+control-flow deletes, and `linefill.all` returns currently existing linefill ids
+in creation order while omitting replaced or deleted linefills.
 `array.new_linefill` and broader linefill array construction remain explicitly
 unsupported. `polyline.*`
 remains explicitly unsupported because it needs a
@@ -1190,7 +1192,8 @@ linefill.new         partial      linefill object creation between existing line
 linefill.set_color   partial      linefill color mutation for existing linefill ids, including namespace-call and method-call dispatch, na id no-op behavior, and no-op behavior after the linefill has been replaced/deleted by a same-pair linefill.new call
 linefill.get_line1   partial      returns the first line id referenced by an existing linefill, including namespace-call dispatch; na ids and replaced linefill ids return na
 linefill.get_line2   partial      returns the second line id referenced by an existing linefill, including method-call dispatch; na ids and replaced linefill ids return na
-linefill.all         partial      snapshot array of currently existing linefill ids in creation order, including ordinary and while-loop control-flow reads; replaced linefills are omitted from subsequent reads while array.new_linefill and broader linefill array construction remain unsupported
+linefill.delete      partial      linefill id deletion snapshots, including ordinary and independent while-loop control-flow deletion; deleting replaced, deleted, or na linefills is no-op; ids are not reused
+linefill.all         partial      snapshot array of currently existing linefill ids in creation order, including ordinary and while-loop control-flow reads; replaced or deleted linefills are omitted from subsequent reads while array.new_linefill and broader linefill array construction remain unsupported
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
 import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only

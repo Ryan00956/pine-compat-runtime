@@ -377,6 +377,8 @@ const LINEFILL_GET_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const LINEFILL_DELETE_PARAMS: &[BuiltinParam] = LINEFILL_GET_PARAMS;
+
 const LINE_SET_X_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1040,6 +1042,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: LINEFILL_GET_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_LINE),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "linefill.delete",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINEFILL_DELETE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
     BuiltinSignature {

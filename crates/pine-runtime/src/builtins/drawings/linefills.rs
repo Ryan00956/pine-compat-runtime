@@ -92,6 +92,16 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_linefill_delete(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_linefill_id_arg(args)?;
+        self.mutate_linefill(id, |snapshot| {
+            snapshot.exists = false;
+        })
+    }
+
     fn eval_linefill_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = linefill_call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {

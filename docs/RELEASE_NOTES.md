@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `linefill.delete` support with deletion
+  snapshots and `.all` omission of deleted linefills.
 - Added fixture-backed partial `linefill.all` support for exposing a snapshot
   array of currently existing linefill ids while omitting replaced linefills.
 - Added fixture-backed `linefill.get_line1()` and `linefill.get_line2()`

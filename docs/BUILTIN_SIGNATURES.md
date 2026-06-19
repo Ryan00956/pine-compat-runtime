@@ -869,8 +869,9 @@ Current normalized output fields are:
   order. Deleted lines are omitted from subsequent reads. Mutating the returned
   array does not mutate the underlying line store.
 - `linefill.all`: a snapshot linefill-array of currently existing linefill ids
-  in creation order. Replaced linefills are omitted from subsequent reads.
-  Mutating the returned array does not mutate the underlying linefill store.
+  in creation order. Replaced or deleted linefills are omitted from subsequent
+  reads. Mutating the returned array does not mutate the underlying linefill
+  store.
 - `box.all`: a snapshot box-array of currently existing box ids in creation
   order. Deleted boxes are omitted from subsequent reads. Mutating the returned
   array does not mutate the underlying box store.

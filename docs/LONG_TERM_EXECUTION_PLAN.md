@@ -330,8 +330,8 @@ claimed method subsets. `linefill.new` has initial runtime-owned object ids,
 color snapshots, and same-pair replacement semantics, and `linefill.set_color`
 can mutate existing linefill colors. `linefill.get_line1` and
 `linefill.get_line2` can return referenced line ids. `linefill.all` can return
-currently existing linefill ids; `linefill.delete` and broader linefill array
-construction remain unsupported. `polyline.*` remains
+currently existing linefill ids, and `linefill.delete` can append deletion
+snapshots; broader linefill array construction remains unsupported. `polyline.*` remains
 unsupported pending `chart.point` and point-list array design.
 
 Object families:
@@ -341,8 +341,8 @@ Object families:
 - `box.*`
 - `table.*`
 - `linefill.new`, `linefill.set_color`, `linefill.get_line1`, and
-  `linefill.get_line2` partial; `linefill.all` partial; remaining linefill
-  lifecycle and array construction pending
+  `linefill.get_line2` partial; `linefill.all` and `linefill.delete` partial;
+  remaining linefill array construction pending
 - `polyline.*`
 
 Required design:
