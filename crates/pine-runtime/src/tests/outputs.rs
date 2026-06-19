@@ -574,13 +574,13 @@ plot(close)
 }
 
 #[test]
-fn rejects_polyline_creation_past_limit() {
+fn evicts_oldest_polyline_after_default_limit() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("polyline limit")
+        r#"indicator("polyline default limit")
 points = array.new<chart.point>()
 array.push(points, chart.point.from_index(bar_index, close))
-for i = 0 to 100
+for i = 0 to 50
     polyline.new(points)
 plot(close)
 "#,
@@ -592,10 +592,48 @@ plot(close)
         analysis.diagnostics
     );
 
-    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
-        .expect_err("expected polyline limit error");
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
 
-    assert!(error.message.contains("polyline count cannot exceed"));
+    assert_eq!(result.polylines.len(), 51);
+    assert_eq!(result.polylines[0].snapshots.len(), 2);
+    assert!(!result.polylines[0].snapshots.last().unwrap().exists);
+    assert_eq!(
+        result
+            .polylines
+            .iter()
+            .filter(|polyline| polyline.snapshots.last().unwrap().exists)
+            .count(),
+        50
+    );
+}
+
+#[test]
+fn evicts_oldest_polyline_when_creation_exceeds_declared_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("polyline limit", max_polylines_count=2)
+points = array.new<chart.point>()
+array.push(points, chart.point.from_index(bar_index, close))
+for i = 0 to 2
+    polyline.new(points)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(result.polylines.len(), 3);
+    assert_eq!(result.polylines[0].snapshots.len(), 2);
+    assert!(!result.polylines[0].snapshots.last().unwrap().exists);
+    assert_eq!(result.polylines[0].snapshots.last().unwrap().bar_index, 0);
+    assert!(result.polylines[1].snapshots.last().unwrap().exists);
+    assert!(result.polylines[2].snapshots.last().unwrap().exists);
 }
 
 #[test]

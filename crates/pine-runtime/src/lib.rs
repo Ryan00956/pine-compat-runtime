@@ -101,6 +101,7 @@ const MAX_SERIES_HISTORY_VALUES: usize = 1_000_000;
 const MAX_LABELS: usize = 500;
 const MAX_LINES: usize = 500;
 const MAX_LINEFILLS: usize = 500;
+const DEFAULT_MAX_POLYLINES: usize = 50;
 const MAX_POLYLINES: usize = 100;
 const MAX_BOXES: usize = 500;
 const MAX_TABLES: usize = 50;

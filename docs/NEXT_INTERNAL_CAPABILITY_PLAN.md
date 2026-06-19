@@ -180,9 +180,8 @@ host-neutral.
 
 Good next slices:
 
-- Add runtime use of parsed drawing object-count settings plus eviction parity
-  fixtures for the now-supported `polyline.new` / `polyline.delete` /
-  `polyline.all` lifecycle subset.
+- Extend declaration-driven drawing object-count eviction beyond the now-backed
+  `polyline.new` / `polyline.delete` / `polyline.all` lifecycle subset.
 - More `label.*`, `line.*`, `box.*`, and `table.*` methods.
 - More deletion, mutation, no-op, and runtime-limit fixtures.
 - More realtime rollback fixtures for already-supported drawing families.
@@ -190,8 +189,8 @@ Good next slices:
 
 Keep out of scope until separately designed:
 
-- General polyline arrays plus runtime use of parsed max-count settings and
-  eviction parity until each behavior is fixture-backed.
+- General polyline arrays until the id-array behavior is deliberately designed
+  and fixture-backed.
 - Host-specific visual layout, drag behavior, or chart interaction.
 - Drawing behavior that cannot be represented in the current JSON contract.
 

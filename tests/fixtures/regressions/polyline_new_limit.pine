@@ -1,6 +1,0 @@
-indicator("Polyline new limit")
-points = array.new<chart.point>()
-array.push(points, chart.point.from_index(bar_index, close))
-for i = 0 to 100
-    polyline.new(points)
-plot(close)

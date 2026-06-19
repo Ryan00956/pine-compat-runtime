@@ -386,6 +386,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/polyline_lifecycle.pine",
     ),
     (
+        "runtime_polyline_limit_eviction.json",
+        "tests/fixtures/runtime/polyline_limit_eviction.pine",
+    ),
+    (
         "runtime_box_new.json",
         "tests/fixtures/runtime/box_new.pine",
     ),

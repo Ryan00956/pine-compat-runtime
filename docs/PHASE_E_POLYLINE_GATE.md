@@ -37,11 +37,11 @@ top-level field mutation, and `array.new<chart.point>()` plus
 snapshots in runtime `schemaVersion: 7`. `polyline.delete` appends deletion
 snapshots and `polyline.all` returns currently existing ids. Realtime rollback
 is fixture-backed for creation, deletion, copied point lists, and `polyline.all`
-reads. `polyline.new` also has fixture-backed fixed 100-polyline runtime-limit
-coverage. Named `max_polylines_count` declaration parsing is fixture-backed and
-stored in HIR, but runtime eviction does not consume it yet. General polyline
-arrays plus declaration-driven max-count eviction parity remain outside this
-lifecycle slice.
+reads. `polyline.new` also has fixture-backed runtime max-count eviction:
+omitted declarations use the runtime's default polyline count, while named
+`max_polylines_count` declaration values from 1 through 100 are consumed by the
+historical runtime and evict the oldest active polyline snapshots before new
+creation. General polyline arrays remain outside this lifecycle slice.
 
 Adding a narrow `polyline.new(na)` or ad hoc tuple-based point list would create
 a different language surface from Pine and would bypass the array/type model
@@ -59,20 +59,19 @@ that conformance relies on. The implementation order is therefore:
    conformance rows and matrix gates for the partial polyline claim.
 4. Realtime rollback slice: done.
    add forming-bar creation/deletion rollback and `polyline.all` evidence.
-5. Fixed runtime-limit slice: done.
-   add fixture-backed rejection past the runtime's fixed 100-polyline creation
-   limit.
+5. Runtime max-count eviction slice: done.
+   add fixture-backed oldest-active-object eviction for the runtime's default
+   polyline limit and declaration-driven `max_polylines_count` values.
 
-The runtime must not mark general polyline arrays or declaration-driven
-`max_polylines_count` garbage-collection/eviction parity supported before those
-slices are fixture-backed. `array.new_polyline` remains out of scope until
-polyline id arrays have a deliberate storage and mutation model.
+The runtime must not mark general polyline arrays supported before those slices
+are fixture-backed. `array.new_polyline` remains out of scope until polyline id
+arrays have a deliberate storage and mutation model.
 
 `polyline.new` is backed by `tests/fixtures/runtime/polyline_new.pine`.
 `polyline.delete`, method-call deletion, and `polyline.all` collection reads are
 backed by `tests/fixtures/runtime/polyline_lifecycle.pine`, with forming-bar
-rollback backed by `tests/fixtures/realtime/polyline_rollback.pine`. The fixed
-100-polyline runtime limit is backed by
-`tests/fixtures/regressions/polyline_new_limit.pine`. General polyline arrays
+rollback backed by `tests/fixtures/realtime/polyline_rollback.pine`. The
+polyline max-count eviction path is backed by
+`tests/fixtures/runtime/polyline_limit_eviction.pine`. General polyline arrays
 remain explicitly unsupported through the existing `array.new_polyline` boundary
 fixtures.

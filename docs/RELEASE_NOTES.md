@@ -2,13 +2,11 @@
 
 ## Unreleased
 
-- Added fixture-backed named `max_polylines_count` declaration parsing for
-  indicators and strategies, storing 1-100 values in HIR while keeping runtime
-  eviction parity separately gated.
-- Added fixture-backed runtime-error coverage for the fixed 100-polyline
-  `polyline.new` creation limit; runtime use of declaration-driven
-  `max_polylines_count` eviction parity and general polyline arrays remain
-  unsupported.
+- Added fixture-backed `polyline.new` max-count eviction: omitted declarations
+  use the runtime's default 50-polyline limit, while named
+  `max_polylines_count` values from 1 through 100 are consumed from
+  indicator/strategy HIR and evict the oldest active polyline snapshots before
+  new creation. General polyline arrays remain unsupported.
 - Added fixture-backed realtime rollback coverage for the supported
   `polyline.new` / `polyline.delete` / `polyline.all` lifecycle subset,
   proving abandoned forming-bar creation, deletion, copied point lists, and

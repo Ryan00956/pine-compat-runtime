@@ -21,11 +21,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(points) = points else {
             return Ok(PineValue::Na);
         };
-        if self.polylines.len() >= MAX_POLYLINES {
-            return Err(RuntimeError {
-                message: format!("polyline count cannot exceed {MAX_POLYLINES}"),
-            });
-        }
+        self.evict_oldest_polylines_at_limit()?;
         let id = self.next_polyline_id;
         self.next_polyline_id =
             self.next_polyline_id
@@ -78,6 +74,50 @@ impl<'a> HistoricalRuntime<'a> {
         next.exists = false;
         polyline.snapshots.push(next);
         Ok(PineValue::Void)
+    }
+
+    fn evict_oldest_polylines_at_limit(&mut self) -> Result<(), RuntimeError> {
+        let limit = self.max_polyline_count();
+        while self.active_polyline_count() >= limit {
+            let Some(polyline) = self.polylines.iter_mut().find(|polyline| {
+                polyline
+                    .snapshots
+                    .last()
+                    .is_some_and(|snapshot| snapshot.exists)
+            }) else {
+                break;
+            };
+            let Some(latest) = polyline.snapshots.last().cloned() else {
+                return Err(RuntimeError {
+                    message: format!("polyline `{}` has no snapshots", polyline.id),
+                });
+            };
+            let mut next = latest;
+            next.bar_index = self.bars;
+            next.exists = false;
+            polyline.snapshots.push(next);
+        }
+        Ok(())
+    }
+
+    fn active_polyline_count(&self) -> usize {
+        self.polylines
+            .iter()
+            .filter(|polyline| {
+                polyline
+                    .snapshots
+                    .last()
+                    .is_some_and(|snapshot| snapshot.exists)
+            })
+            .count()
+    }
+
+    fn max_polyline_count(&self) -> usize {
+        self.program
+            .drawing_settings
+            .max_polylines_count
+            .map_or(DEFAULT_MAX_POLYLINES, |value| value as usize)
+            .clamp(1, MAX_POLYLINES)
     }
 
     fn eval_polyline_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {

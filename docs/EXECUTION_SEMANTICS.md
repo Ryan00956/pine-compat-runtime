@@ -1127,12 +1127,13 @@ existing id and treats `na` or already-deleted ids as no-ops. `polyline.all`
 returns currently existing polyline ids in creation order. Realtime forming-bar
 updates roll back abandoned polyline creations, deletions, copied point lists,
 and `polyline.all` reads from the last confirmed drawing state. The historical
-runtime rejects `polyline.new` creation past the fixed 100-polyline limit.
-Named `max_polylines_count` declaration arguments from 1 through 100 are parsed
-into HIR for indicators and strategies, but runtime eviction does not consume
-that setting yet. General polyline arrays plus declaration-driven
-`max_polylines_count` eviction parity remain outside the supported runtime
-subset until host-surface parity is fixture-backed.
+runtime keeps at most the effective polyline limit active by appending
+`exists: false` snapshots to the oldest active polylines before creating new
+ones. Omitted declarations use the runtime's default 50-polyline display limit;
+named `max_polylines_count` declaration arguments from 1 through 100 are parsed
+into HIR for indicators and strategies and consumed by this polyline eviction
+path. General polyline arrays remain outside the supported runtime subset until
+host-surface parity is fixture-backed.
 
 ## Determinism
 

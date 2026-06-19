@@ -337,10 +337,10 @@ arrays for generic object-array storage, reads, mutation, and search.
 point-array support. `polyline.new` can copy point arrays into host-neutral
 runtime snapshots; `polyline.delete` appends lifecycle deletion snapshots, and
 `polyline.all` reads currently existing ids. Realtime rollback is fixture-backed
-for the supported lifecycle subset, the fixed 100-polyline creation limit has
-runtime-error coverage, and named `max_polylines_count` declarations are stored
-in HIR. General polyline arrays plus runtime use of parsed max-count settings
-and eviction parity remain unsupported pending host-surface parity.
+for the supported lifecycle subset, and `polyline.new` consumes the default
+polyline display limit plus named `max_polylines_count` declarations to evict
+oldest active polyline snapshots before creating new ones. General polyline
+arrays remain unsupported pending host-surface parity.
 
 Object families:
 
