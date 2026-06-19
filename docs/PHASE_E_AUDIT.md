@@ -74,8 +74,9 @@ truth for supported drawing claims.
   supported line ids, emits sparse color snapshots, and replaces the previous
   linefill for the same line pair. `linefill.set_color` is partial for sparse
   color mutation snapshots. `linefill.get_line1` and `linefill.get_line2`
-  return referenced line ids. `linefill.all` and linefill arrays remain
-  unsupported.
+  return referenced line ids. `linefill.all` returns currently existing
+  linefill ids in creation order. `array.new_linefill` and broader linefill
+  array construction remain unsupported.
 - `polyline.*` is unsupported and has a dedicated design note in
   `docs/PHASE_E_POLYLINE_GATE.md`.
 
@@ -158,10 +159,10 @@ dispatch module is 58 lines, and family modules are 164-280 lines.
 
 These are not blockers for closing Phase E:
 
-- Remaining linefill support is limited to `linefill.all` and linefill arrays
-  now that `linefill.new` has an initial runtime object store,
-  `linefill.set_color` has color mutation snapshots, and linefill getters
-  return referenced line ids.
+- Remaining linefill support is limited to `linefill.delete` and broader
+  linefill array construction now that `linefill.new` has an initial runtime
+  object store, `linefill.set_color` has color mutation snapshots, linefill
+  getters return referenced line ids, and `linefill.all` returns current ids.
 - `polyline.*` remains unsupported until the runtime has `chart.point` values
   and typed point-list arrays.
 - Advanced label, line, box, and table methods remain diagnostic-only until

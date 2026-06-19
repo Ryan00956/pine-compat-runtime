@@ -396,6 +396,7 @@ pub(crate) fn array_element_return_type(
         ValueKind::ColorArray => ValueKind::Color,
         ValueKind::LabelArray => ValueKind::Label,
         ValueKind::LineArray => ValueKind::Line,
+        ValueKind::LineFillArray => ValueKind::LineFill,
         ValueKind::BoxArray => ValueKind::Box,
         ValueKind::TableArray => ValueKind::Table,
         _ => return None,
@@ -461,6 +462,7 @@ pub(crate) fn is_array_kind(kind: ValueKind) -> bool {
             | ValueKind::ColorArray
             | ValueKind::LabelArray
             | ValueKind::LineArray
+            | ValueKind::LineFillArray
             | ValueKind::BoxArray
             | ValueKind::TableArray
     )

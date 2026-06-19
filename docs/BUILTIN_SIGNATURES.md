@@ -868,6 +868,9 @@ Current normalized output fields are:
 - `line.all`: a snapshot line-array of currently existing line ids in creation
   order. Deleted lines are omitted from subsequent reads. Mutating the returned
   array does not mutate the underlying line store.
+- `linefill.all`: a snapshot linefill-array of currently existing linefill ids
+  in creation order. Replaced linefills are omitted from subsequent reads.
+  Mutating the returned array does not mutate the underlying linefill store.
 - `box.all`: a snapshot box-array of currently existing box ids in creation
   order. Deleted boxes are omitted from subsequent reads. Mutating the returned
   array does not mutate the underlying box store.

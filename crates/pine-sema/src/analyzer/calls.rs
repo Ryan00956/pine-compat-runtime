@@ -1256,6 +1256,11 @@ impl Analyzer {
             ValueKind::LineArray if matches!(value_type.kind, ValueKind::Line | ValueKind::Na) => {
                 return;
             }
+            ValueKind::LineFillArray
+                if matches!(value_type.kind, ValueKind::LineFill | ValueKind::Na) =>
+            {
+                return;
+            }
             ValueKind::LabelArray
                 if matches!(value_type.kind, ValueKind::Label | ValueKind::Na) =>
             {
@@ -1276,6 +1281,7 @@ impl Analyzer {
             ValueKind::ColorArray => "color arrays",
             ValueKind::LabelArray => "label arrays",
             ValueKind::LineArray => "line arrays",
+            ValueKind::LineFillArray => "linefill arrays",
             ValueKind::BoxArray => "box arrays",
             ValueKind::TableArray => "table arrays",
             _ => return,

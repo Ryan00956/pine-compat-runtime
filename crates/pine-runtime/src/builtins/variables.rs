@@ -204,6 +204,20 @@ impl<'a> HistoricalRuntime<'a> {
                 .collect();
             return self.new_array_from_values(ArrayElementKind::Line, lines);
         }
+        if name == "linefill.all" {
+            let line_fills = self
+                .line_fills
+                .iter()
+                .filter(|line_fill| {
+                    line_fill
+                        .snapshots
+                        .last()
+                        .is_some_and(|snapshot| snapshot.exists)
+                })
+                .map(|line_fill| PineValue::LineFill(line_fill.id))
+                .collect();
+            return self.new_array_from_values(ArrayElementKind::LineFill, line_fills);
+        }
         if name == "box.all" {
             let boxes = self
                 .boxes

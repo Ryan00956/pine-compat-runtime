@@ -1105,10 +1105,11 @@ line pair. `linefill.set_color` appends sparse color mutation snapshots for
 existing linefill ids, while `na` ids and already-replaced linefill ids are
 no-ops. `linefill.get_line1` and `linefill.get_line2` return the referenced
 line ids for existing linefill ids; `na` ids and already-replaced linefill ids
-return `na`. `linefill.all` and linefill arrays remain unsupported until
-collection semantics are fixture-backed. `polyline.*` remains unsupported until
-`chart.point` values and point-list arrays have a fixture-backed execution
-model.
+return `na`. `linefill.all` returns a snapshot array of currently existing
+linefill ids in creation order and omits linefills replaced by later
+same-pair creations. `array.new_linefill` and broader linefill array
+construction remain unsupported. `polyline.*` remains unsupported until
+`chart.point` values and point-list arrays have a fixture-backed execution model.
 
 ## Determinism
 

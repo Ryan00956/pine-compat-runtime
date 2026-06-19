@@ -1058,6 +1058,7 @@ impl<'a> HistoricalRuntime<'a> {
             (ArrayElementKind::Color, PineValue::Color(value)) => PineValue::Color(value),
             (ArrayElementKind::Label, PineValue::Label(value)) => PineValue::Label(value),
             (ArrayElementKind::Line, PineValue::Line(value)) => PineValue::Line(value),
+            (ArrayElementKind::LineFill, PineValue::LineFill(value)) => PineValue::LineFill(value),
             (ArrayElementKind::Box, PineValue::Box(value)) => PineValue::Box(value),
             (ArrayElementKind::Table, PineValue::Table(value)) => PineValue::Table(value),
             (_, PineValue::Na) => PineValue::Na,

@@ -319,7 +319,6 @@ mod tests {
             "map.*",
             "matrix.*",
             "unsupported label/line/box/table methods",
-            "linefill.all",
             "polyline.all",
             "polyline.*",
             "non-int history offsets",

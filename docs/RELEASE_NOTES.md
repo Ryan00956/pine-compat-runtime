@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `linefill.all` support for exposing a snapshot
+  array of currently existing linefill ids while omitting replaced linefills.
 - Added fixture-backed `linefill.get_line1()` and `linefill.get_line2()`
   support for returning referenced line ids from runtime-owned linefill objects.
 - Synchronized drawing-object architecture documentation with current
@@ -534,12 +536,11 @@
 - Added fixture-backed local UDT scalar field mutation coverage inside branch
   and for-loop bodies while keeping mutation inside UDFs and methods
   unsupported.
-- Added fixture-backed unsupported coverage for the remaining `linefill.all`
-  collection boundary.
+- Added fixture-backed unsupported coverage for the remaining
+  `array.new_linefill` construction boundary.
 - Added fixture-backed unsupported coverage for `polyline.all`, keeping the
   remaining polyline object collection boundary explicit.
-- Added fixture-backed unsupported coverage for `linefill.all`, keeping the
-  remaining linefill object collection boundary explicit.
+- Added fixture-backed coverage for earlier linefill collection gating.
 - Added fixture-backed partial `table.all` support for exposing a snapshot
   array of currently existing table ids while omitting deleted tables.
 - Added fixture-backed partial `box.all` support for exposing a snapshot array

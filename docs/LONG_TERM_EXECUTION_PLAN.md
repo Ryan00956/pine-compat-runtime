@@ -329,8 +329,9 @@ limits, incremental append coverage, and realtime rollback coverage for their
 claimed method subsets. `linefill.new` has initial runtime-owned object ids,
 color snapshots, and same-pair replacement semantics, and `linefill.set_color`
 can mutate existing linefill colors. `linefill.get_line1` and
-`linefill.get_line2` can return referenced line ids; `linefill.all` and
-linefill arrays remain unsupported. `polyline.*` remains
+`linefill.get_line2` can return referenced line ids. `linefill.all` can return
+currently existing linefill ids; `linefill.delete` and broader linefill array
+construction remain unsupported. `polyline.*` remains
 unsupported pending `chart.point` and point-list array design.
 
 Object families:
@@ -340,7 +341,8 @@ Object families:
 - `box.*`
 - `table.*`
 - `linefill.new`, `linefill.set_color`, `linefill.get_line1`, and
-  `linefill.get_line2` partial; remaining linefill collections pending
+  `linefill.get_line2` partial; `linefill.all` partial; remaining linefill
+  lifecycle and array construction pending
 - `polyline.*`
 
 Required design:
