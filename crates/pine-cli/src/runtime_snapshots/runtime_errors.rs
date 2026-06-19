@@ -164,6 +164,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "table merge start coordinate cannot exceed end coordinate",
     ),
     (
+        "tests/fixtures/regressions/table_merge_coordinate_row_order.pine",
+        "table merge start coordinate cannot exceed end coordinate",
+    ),
+    (
         "tests/fixtures/regressions/table_merge_coordinate_bounds.pine",
         "table merge coordinate out of bounds `0,0` to `2,0`",
     ),

@@ -1,0 +1,4 @@
+indicator("Table merge coordinate row order")
+table_id = table.new(position.top_left, 1, 2)
+table.merge_cells(table_id, 0, 1, 0, 0)
+plot(close)
