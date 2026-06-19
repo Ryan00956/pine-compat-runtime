@@ -67,8 +67,9 @@ pub use request::{
 };
 pub use retention::HistoryRetentionMode;
 pub use runtime::historical::{
-    HistoricalRuntime, run_historical, run_historical_profiled,
-    run_historical_profiled_with_request_environment, run_historical_with_request_environment,
+    HistoricalRuntime, InputOverrides, run_historical, run_historical_profiled,
+    run_historical_profiled_with_request_environment, run_historical_with_input_overrides,
+    run_historical_with_request_environment,
 };
 pub use runtime::realtime::RealtimeRuntime;
 pub use series::SeriesStore;

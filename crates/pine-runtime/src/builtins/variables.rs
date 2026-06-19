@@ -29,7 +29,7 @@ impl<'a> HistoricalRuntime<'a> {
             "input" | "input.int" | "input.float" | "input.bool" | "input.color"
             | "input.string" | "input.price" | "input.time" | "input.symbol"
             | "input.timeframe" | "input.session" | "input.text_area" | "input.source" => {
-                self.eval_input(args)
+                self.eval_input(call_site_id, args)
             }
             "na" => self.eval_na(args),
             "nz" => self.eval_nz(args),
@@ -38,7 +38,14 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
-    pub(crate) fn eval_input(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+    pub(crate) fn eval_input(
+        &mut self,
+        call_site_id: CallSiteId,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        if let Some(value) = self.input_overrides.get(call_site_id) {
+            return Ok(value.clone());
+        }
         self.eval_expr(&args[0].value)
     }
 

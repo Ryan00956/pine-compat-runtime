@@ -824,11 +824,12 @@ input.source(defval: series float, title?: const string, tooltip?: const string,
 Rules:
 
 - Input metadata is accepted and validated during analysis.
-- Runtime execution currently uses each input's `defval`; host-provided input
-  override APIs are not implemented yet.
+- Runtime execution uses each input's `defval` unless the Rust runtime is run
+  with call-site keyed `InputOverrides`. CLI, Python, and WASM host input
+  override parameters are not implemented yet.
 - The supported metadata subset validates common option names and types, then
-  ignores metadata at runtime; `defval` remains the executable value until
-  host-side input override APIs are implemented.
+  ignores metadata at runtime; call-site keyed overrides provide the executable
+  value only when explicitly supplied by the Rust host.
 - `input.session` and `input.text_area` currently execute their `defval`
   strings and accept metadata parameters without host-side override behavior.
 - `input.source` returns the selected source series. Phase 1 may restrict this

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added a Rust runtime `InputOverrides` path for call-site keyed `input.*`
+  execution values, while keeping existing default-`defval` behavior when no
+  override is supplied.
 - Added fixture-backed scalar array, scalar slice, label-array, label-slice,
   line-array, line-slice, box-slice, linefill-array, linefill-slice, box-array,
   table-array, table-slice, chart.point-array, and chart.point-slice variable history snapshots for Pine-style `previous = a[1]` and

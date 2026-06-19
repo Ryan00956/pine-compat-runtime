@@ -4,9 +4,42 @@ use pine_ir::{HirProgram, ScriptMode};
 
 use crate::*;
 
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct InputOverrides {
+    values: HashMap<u32, PineValue>,
+}
+
+impl InputOverrides {
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn insert(&mut self, call_site_id: u32, value: PineValue) -> Option<PineValue> {
+        self.values.insert(call_site_id, value)
+    }
+
+    #[must_use]
+    pub fn with_value(mut self, call_site_id: u32, value: PineValue) -> Self {
+        self.insert(call_site_id, value);
+        self
+    }
+
+    #[must_use]
+    pub fn get(&self, call_site_id: CallSiteId) -> Option<&PineValue> {
+        self.values.get(&call_site_id.0)
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.values.is_empty()
+    }
+}
+
 #[derive(Clone)]
 pub struct HistoricalRuntime<'a> {
     pub(crate) program: &'a HirProgram,
+    pub(crate) input_overrides: InputOverrides,
     pub(crate) bars: usize,
     pub(crate) historical_end: Option<usize>,
     pub(crate) current_bar_update_kind: BarUpdateKind,
@@ -95,6 +128,14 @@ pub fn run_historical_with_request_environment(
     HistoricalRuntime::with_request_environment(program, request_environment).run(bars)
 }
 
+pub fn run_historical_with_input_overrides(
+    program: &HirProgram,
+    bars: &[Bar],
+    input_overrides: InputOverrides,
+) -> Result<RuntimeResult, RuntimeError> {
+    HistoricalRuntime::with_input_overrides(program, input_overrides).run(bars)
+}
+
 pub fn run_historical_profiled(
     program: &HirProgram,
     bars: &[Bar],
@@ -123,6 +164,7 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Self {
         Self {
             program,
+            input_overrides: InputOverrides::new(),
             bars: 0,
             historical_end: None,
             current_bar_update_kind: BarUpdateKind::Historical,
@@ -208,6 +250,24 @@ impl<'a> HistoricalRuntime<'a> {
             next_box_id: 1,
             next_table_id: 1,
         }
+    }
+
+    #[must_use]
+    pub fn with_input_overrides(program: &'a HirProgram, input_overrides: InputOverrides) -> Self {
+        let mut runtime = Self::new(program);
+        runtime.input_overrides = input_overrides;
+        runtime
+    }
+
+    #[must_use]
+    pub fn with_request_environment_and_input_overrides(
+        program: &'a HirProgram,
+        request_environment: RequestEnvironment,
+        input_overrides: InputOverrides,
+    ) -> Self {
+        let mut runtime = Self::with_request_environment(program, request_environment);
+        runtime.input_overrides = input_overrides;
+        runtime
     }
 
     #[must_use]
