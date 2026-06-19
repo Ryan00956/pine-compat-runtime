@@ -179,3 +179,34 @@ plot(values.get(0))
     assert_values_close(&result.plots[0].values[1..], &[1.0, 2.0, 3.0]);
     assert_values_close(&result.plots[1].values, &[1.0, 2.0, 3.0, 4.0]);
 }
+
+#[test]
+fn runs_official_array_history_example_shape() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("History referencing")
+a = array.new<float>(1)
+array.set(a, 0, close)
+previous = a[1]
+previousClose1 = na(previous) ? na : previous.get(0)
+previousClose2 = close[1]
+plot(previousClose1)
+plot(previousClose2)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_eq!(result.plots[1].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[1.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[1].values[1..], &[1.0, 2.0, 3.0]);
+}

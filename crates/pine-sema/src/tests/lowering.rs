@@ -63,7 +63,7 @@ fn infers_implicit_builtin_history_requirements() {
 #[test]
 fn infers_array_history_requirements() {
     let analysis = analyze(
-        "var values = array.new_float(1)\nvalues.set(0, close)\nprevious = values[1]\nplot(bar_index == 0 ? na : previous.get(0))\n",
+        "values = array.new_float(1)\nvalues.set(0, close)\nprevious = values[1]\nplot(na(previous) ? na : previous.get(0))\n",
     );
 
     assert!(
