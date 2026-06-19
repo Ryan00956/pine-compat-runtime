@@ -128,6 +128,7 @@ mod tests {
             "label.",
             "line.",
             "linefill.",
+            "polyline.",
             "box.",
             "table.",
             "chart.point.",
@@ -412,6 +413,7 @@ mod tests {
             labels: vec![],
             lines: vec![],
             line_fills: vec![],
+            polylines: vec![],
             boxes: vec![],
             tables: vec![],
             alerts: vec![],
@@ -428,6 +430,7 @@ mod tests {
         assert!(output.contains(r#""labels":[]"#));
         assert!(output.contains(r#""lines":[]"#));
         assert!(output.contains(r#""lineFills":[]"#));
+        assert!(output.contains(r#""polylines":[]"#));
         assert!(output.contains(r#""boxes":[]"#));
         assert!(output.contains(r#""tables":[]"#));
         assert!(output.contains(r#""alerts":[]"#));
@@ -454,6 +457,7 @@ mod tests {
             labels: vec![],
             lines: vec![],
             line_fills: vec![],
+            polylines: vec![],
             boxes: vec![],
             tables: vec![],
             alerts: vec![],
@@ -482,6 +486,7 @@ mod tests {
             labels: vec![],
             lines: vec![],
             line_fills: vec![],
+            polylines: vec![],
             boxes: vec![],
             tables: vec![],
             alerts: vec![],
@@ -512,6 +517,7 @@ mod tests {
             labels: vec![],
             lines: vec![],
             line_fills: vec![],
+            polylines: vec![],
             boxes: vec![],
             tables: vec![],
             alerts: vec![],
@@ -592,6 +598,12 @@ mod tests {
             line_fill_snapshots: 0,
             line_fill_capacity: 0,
             line_fill_snapshot_capacity: 0,
+            polylines: 0,
+            polyline_snapshots: 0,
+            polyline_points: 0,
+            polyline_capacity: 0,
+            polyline_snapshot_capacity: 0,
+            polyline_point_capacity: 0,
             boxes: 0,
             box_snapshots: 0,
             box_capacity: 0,

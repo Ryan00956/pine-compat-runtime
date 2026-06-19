@@ -1118,9 +1118,13 @@ join helpers remain limited to their existing scalar-compatible array families.
 `chart.point` values have a fixture-backed execution model for constructors,
 `copy`, `time`/`index`/`price` field reads, top-level field mutation, and
 `array.new<chart.point>()` plus `array.from(chart.point, ...)` point-array
-storage/read/mutation/search. `polyline.*` remains unsupported until polyline
-snapshots, deletion, `.all`, rollback, and host-surface parity have
-fixture-backed coverage.
+storage/read/mutation/search. `polyline.new` creates runtime-owned polyline ids
+from an `array<chart.point>` input, copies the current point-list values into a
+host-neutral `polylines[].snapshots[]` entry, and records `curved`, `closed`,
+`xloc`, `lineColor`, `fillColor`, `lineStyle`, `lineWidth`, and
+`forceOverlay`. `polyline.delete`, `polyline.all`, realtime rollback fixtures,
+and polyline arrays remain unsupported until lifecycle behavior and host
+surface parity are fixture-backed.
 
 ## Determinism
 

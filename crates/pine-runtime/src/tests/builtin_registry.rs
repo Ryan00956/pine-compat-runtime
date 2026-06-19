@@ -167,6 +167,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "linefill.get_line2",
     "linefill.new",
     "linefill.set_color",
+    "polyline.new",
     "math.abs",
     "math.acos",
     "math.asin",

@@ -98,6 +98,7 @@ chart.point.now(price: numeric-compatible) -> series chart.point
 chart.point.from_index(index: int-compatible, price: numeric-compatible) -> series chart.point
 chart.point.from_time(time: int-compatible, price: numeric-compatible) -> series chart.point
 chart.point.copy(id: chart.point-compatible) -> series chart.point
+polyline.new(points: simple array<chart.point>, curved?: bool-compatible, closed?: bool-compatible, xloc?: const string, line_color?: color-compatible, fill_color?: color-compatible, line_style?: const string, line_width?: int-compatible, force_overlay?: const bool) -> series polyline
 ```
 
 `year`, `month`, `weekofyear`, `dayofmonth`, `dayofweek`, `hour`, `minute`,
@@ -128,8 +129,9 @@ are `false`. Host-owned scroll/zoom viewport changes and configurable chart
 appearance are not implemented by this fixed chart metadata subset.
 `chart.point` supports fixture-backed construction through `new`, `now`,
 `from_index`, `from_time`, and `copy`, plus top-level `time`, `index`, and
-`price` field reads/mutation. Point arrays, drawing point overloads, typed
-declarations, and `polyline.*` remain separately gated.
+`price` field reads/mutation. Point arrays can feed the partial
+`polyline.new` snapshot subset; drawing point overloads, typed declarations,
+and broader polyline lifecycle APIs remain separately gated.
 
 Bar state:
 
@@ -1001,8 +1003,9 @@ string values. Color arrays accept color values. Label, line, linefill, box, and
 their matching drawing ids or `na` and keep reference elements shallow across
 `array.copy`. `array.new<chart.point>()` and `array.from(chart.point, ...)`
 can construct chart-point arrays, and the generic storage/read/mutation/search
-subset can carry `chart.point` values; numeric, truth, sort, and join helpers
-still reject chart-point arrays. Array
+subset can carry `chart.point` values; `polyline.new` consumes these arrays
+as its point-list input and copies the values into runtime snapshots. Numeric,
+truth, sort, and join helpers still reject chart-point arrays. Array
 assignment and side-effect-free user-defined function
 parameters pass the array id; array mutation inside user-defined functions
 remains unsupported. `array.from` infers the array

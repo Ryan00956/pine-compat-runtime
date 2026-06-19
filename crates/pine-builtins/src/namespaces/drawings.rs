@@ -358,6 +358,54 @@ const LINEFILL_NEW_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const POLYLINE_NEW_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "points",
+        accepts: Accepts::Exact(SIMPLE_CHART_POINT_ARRAY),
+        optional: false,
+    },
+    BuiltinParam {
+        name: "curved",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "closed",
+        accepts: Accepts::BoolCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "xloc",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "line_color",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "fill_color",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "line_style",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "line_width",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "force_overlay",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+];
+
 const LINEFILL_SET_COLOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1021,6 +1069,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: LINEFILL_NEW_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_LINE_FILL),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "polyline.new",
+        phase: BuiltinPhase::Phase1Core,
+        params: POLYLINE_NEW_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_POLYLINE),
         variadic: false,
     },
     BuiltinSignature {

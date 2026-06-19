@@ -333,9 +333,10 @@ can mutate existing linefill colors. `linefill.get_line1` and
 currently existing linefill ids, and `linefill.delete` can append deletion
 snapshots. `array.new_linefill` and `array.from` can construct linefill id
 arrays for generic object-array storage, reads, mutation, and search.
-`chart.point` has fixture-backed constructor/copy and top-level field access
-support. `polyline.*` remains unsupported pending point-list array and
-polyline snapshot/lifecycle design.
+`chart.point` has fixture-backed constructor/copy, top-level field access, and
+point-array support. `polyline.new` can copy point arrays into host-neutral
+runtime snapshots; broader polyline lifecycle APIs remain unsupported pending
+deletion, `.all`, rollback, and host-surface parity.
 
 Object families:
 

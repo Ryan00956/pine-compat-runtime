@@ -1,7 +1,9 @@
 use crate::{HistoryRetentionMode, PineValue, RuntimeProfile};
 
 use super::alerts::AlertEvent;
-use super::drawings::{BoxOutput, LabelOutput, LineFillOutput, LineOutput, TableOutput};
+use super::drawings::{
+    BoxOutput, LabelOutput, LineFillOutput, LineOutput, PolylineOutput, TableOutput,
+};
 use super::model::{
     ColorSeries, FillOutput, HLineOutput, PUBLIC_RUNTIME_SCHEMA_VERSION, PlotArrowSeries,
     PlotBarSeries, PlotCandleSeries, PlotCharSeries, PlotSeries, PlotShapeSeries, RuntimeResult,
@@ -36,6 +38,8 @@ pub fn public_runtime_result_json(result: &RuntimeResult) -> String {
     output.push_str(&lines_json(&result.lines));
     output.push_str(",\"lineFills\":");
     output.push_str(&line_fills_json(&result.line_fills));
+    output.push_str(",\"polylines\":");
+    output.push_str(&polylines_json(&result.polylines));
     output.push_str(",\"boxes\":");
     output.push_str(&boxes_json(&result.boxes));
     output.push_str(",\"tables\":");
@@ -141,6 +145,12 @@ fn profile_json(profile: &RuntimeProfile) -> String {
             "\"lineFillSnapshots\":{},",
             "\"lineFillCapacity\":{},",
             "\"lineFillSnapshotCapacity\":{},",
+            "\"polylines\":{},",
+            "\"polylineSnapshots\":{},",
+            "\"polylinePoints\":{},",
+            "\"polylineCapacity\":{},",
+            "\"polylineSnapshotCapacity\":{},",
+            "\"polylinePointCapacity\":{},",
             "\"boxes\":{},",
             "\"boxSnapshots\":{},",
             "\"boxCapacity\":{},",
@@ -225,6 +235,12 @@ fn profile_json(profile: &RuntimeProfile) -> String {
         profile.line_fill_snapshots,
         profile.line_fill_capacity,
         profile.line_fill_snapshot_capacity,
+        profile.polylines,
+        profile.polyline_snapshots,
+        profile.polyline_points,
+        profile.polyline_capacity,
+        profile.polyline_snapshot_capacity,
+        profile.polyline_point_capacity,
         profile.boxes,
         profile.box_snapshots,
         profile.box_capacity,
@@ -554,6 +570,49 @@ fn line_fills_json(line_fills: &[LineFillOutput]) -> String {
     output
 }
 
+fn polylines_json(polylines: &[PolylineOutput]) -> String {
+    let mut output = String::from("[");
+    for (index, polyline) in polylines.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!("{{\"id\":{},\"snapshots\":[", polyline.id));
+        for (snapshot_index, snapshot) in polyline.snapshots.iter().enumerate() {
+            if snapshot_index > 0 {
+                output.push(',');
+            }
+            output.push_str(&format!(
+                "{{\"barIndex\":{},\"exists\":{}",
+                snapshot.bar_index, snapshot.exists
+            ));
+            if snapshot.exists {
+                output.push_str(",\"points\":");
+                output.push_str(&values_json(&snapshot.points));
+                output.push_str(",\"curved\":");
+                output.push_str(&value_json(&snapshot.curved));
+                output.push_str(",\"closed\":");
+                output.push_str(&value_json(&snapshot.closed));
+                output.push_str(",\"xloc\":");
+                output.push_str(&value_json(&snapshot.xloc));
+                output.push_str(",\"lineColor\":");
+                output.push_str(&value_json(&snapshot.line_color));
+                output.push_str(",\"fillColor\":");
+                output.push_str(&value_json(&snapshot.fill_color));
+                output.push_str(",\"lineStyle\":");
+                output.push_str(&value_json(&snapshot.line_style));
+                output.push_str(",\"lineWidth\":");
+                output.push_str(&value_json(&snapshot.line_width));
+                output.push_str(",\"forceOverlay\":");
+                output.push_str(&value_json(&snapshot.force_overlay));
+            }
+            output.push('}');
+        }
+        output.push_str("]}");
+    }
+    output.push(']');
+    output
+}
+
 fn boxes_json(boxes: &[BoxOutput]) -> String {
     let mut output = String::from("[");
     for (index, box_output) in boxes.iter().enumerate() {
@@ -870,6 +929,18 @@ fn runtime_diagnostics_json(diagnostics: &[crate::RuntimeDiagnostic]) -> String 
     output
 }
 
+fn values_json(values: &[PineValue]) -> String {
+    let mut output = String::from("[");
+    for (index, value) in values.iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&value_json(value));
+    }
+    output.push(']');
+    output
+}
+
 fn value_json(value: &PineValue) -> String {
     match value {
         PineValue::Int(value) => value.to_string(),
@@ -882,6 +953,7 @@ fn value_json(value: &PineValue) -> String {
         | PineValue::Label(value)
         | PineValue::Line(value)
         | PineValue::LineFill(value)
+        | PineValue::Polyline(value)
         | PineValue::Box(value)
         | PineValue::Table(value) => value.to_string(),
         PineValue::ChartPoint(point) => format!(
@@ -948,6 +1020,7 @@ mod tests {
             labels: Vec::new(),
             lines: Vec::new(),
             line_fills: Vec::new(),
+            polylines: Vec::new(),
             boxes: Vec::new(),
             tables: Vec::new(),
             alerts: Vec::new(),

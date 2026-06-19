@@ -68,6 +68,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) labels: Vec<LabelOutput>,
     pub(crate) lines: Vec<LineOutput>,
     pub(crate) line_fills: Vec<LineFillOutput>,
+    pub(crate) polylines: Vec<PolylineOutput>,
     pub(crate) boxes: Vec<BoxOutput>,
     pub(crate) tables: Vec<TableOutput>,
     pub(crate) alerts: Vec<AlertEvent>,
@@ -76,6 +77,7 @@ pub struct HistoricalRuntime<'a> {
     pub(crate) next_label_id: u32,
     pub(crate) next_line_id: u32,
     pub(crate) next_line_fill_id: u32,
+    pub(crate) next_polyline_id: u32,
     pub(crate) next_box_id: u32,
     pub(crate) next_table_id: u32,
 }
@@ -181,6 +183,7 @@ impl<'a> HistoricalRuntime<'a> {
             labels: Vec::new(),
             lines: Vec::new(),
             line_fills: Vec::new(),
+            polylines: Vec::new(),
             boxes: Vec::new(),
             tables: Vec::new(),
             alerts: Vec::new(),
@@ -199,6 +202,7 @@ impl<'a> HistoricalRuntime<'a> {
             next_label_id: 1,
             next_line_id: 1,
             next_line_fill_id: 1,
+            next_polyline_id: 1,
             next_box_id: 1,
             next_table_id: 1,
         }
@@ -347,6 +351,7 @@ impl<'a> HistoricalRuntime<'a> {
             labels: self.labels.clone(),
             lines: self.lines.clone(),
             line_fills: self.line_fills.clone(),
+            polylines: self.polylines.clone(),
             boxes: self.boxes.clone(),
             tables: self.tables.clone(),
             alerts: self.alerts.clone(),
@@ -535,6 +540,28 @@ impl<'a> HistoricalRuntime<'a> {
             .iter()
             .map(|line_fill| line_fill.snapshots.capacity())
             .sum::<usize>();
+        let polyline_snapshots = self
+            .polylines
+            .iter()
+            .map(|polyline| polyline.snapshots.len())
+            .sum::<usize>();
+        let polyline_snapshot_capacity = self
+            .polylines
+            .iter()
+            .map(|polyline| polyline.snapshots.capacity())
+            .sum::<usize>();
+        let polyline_points = self
+            .polylines
+            .iter()
+            .flat_map(|polyline| polyline.snapshots.iter())
+            .map(|snapshot| snapshot.points.len())
+            .sum::<usize>();
+        let polyline_point_capacity = self
+            .polylines
+            .iter()
+            .flat_map(|polyline| polyline.snapshots.iter())
+            .map(|snapshot| snapshot.points.capacity())
+            .sum::<usize>();
         let box_snapshots = self
             .boxes
             .iter()
@@ -637,6 +664,12 @@ impl<'a> HistoricalRuntime<'a> {
             line_fill_snapshots,
             line_fill_capacity: self.line_fills.capacity(),
             line_fill_snapshot_capacity,
+            polylines: self.polylines.len(),
+            polyline_snapshots,
+            polyline_points,
+            polyline_capacity: self.polylines.capacity(),
+            polyline_snapshot_capacity,
+            polyline_point_capacity,
             boxes: self.boxes.len(),
             box_snapshots,
             box_capacity: self.boxes.capacity(),

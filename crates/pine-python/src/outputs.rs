@@ -22,6 +22,7 @@ pub(crate) fn runtime_result_to_py(
     output.set_item("labels", labels_to_py(py, &result.labels)?)?;
     output.set_item("lines", lines_to_py(py, &result.lines)?)?;
     output.set_item("lineFills", line_fills_to_py(py, &result.line_fills)?)?;
+    output.set_item("polylines", polylines_to_py(py, &result.polylines)?)?;
     output.set_item("boxes", boxes_to_py(py, &result.boxes)?)?;
     output.set_item("tables", tables_to_py(py, &result.tables)?)?;
     output.set_item("alerts", alerts_to_py(py, &result.alerts)?)?;
@@ -421,6 +422,48 @@ fn line_fill_snapshots_to_py(
     Ok(output.into_any().unbind())
 }
 
+fn polylines_to_py(
+    py: Python<'_>,
+    polylines: &[pine_runtime::PolylineOutput],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for polyline in polylines {
+        let item = PyDict::new(py);
+        item.set_item("id", polyline.id)?;
+        item.set_item(
+            "snapshots",
+            polyline_snapshots_to_py(py, &polyline.snapshots)?,
+        )?;
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
+fn polyline_snapshots_to_py(
+    py: Python<'_>,
+    snapshots: &[pine_runtime::PolylineSnapshot],
+) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    for snapshot in snapshots {
+        let item = PyDict::new(py);
+        item.set_item("barIndex", snapshot.bar_index)?;
+        item.set_item("exists", snapshot.exists)?;
+        if snapshot.exists {
+            item.set_item("points", values_to_py(py, &snapshot.points)?)?;
+            item.set_item("curved", value_to_py(py, &snapshot.curved)?)?;
+            item.set_item("closed", value_to_py(py, &snapshot.closed)?)?;
+            item.set_item("xloc", value_to_py(py, &snapshot.xloc)?)?;
+            item.set_item("lineColor", value_to_py(py, &snapshot.line_color)?)?;
+            item.set_item("fillColor", value_to_py(py, &snapshot.fill_color)?)?;
+            item.set_item("lineStyle", value_to_py(py, &snapshot.line_style)?)?;
+            item.set_item("lineWidth", value_to_py(py, &snapshot.line_width)?)?;
+            item.set_item("forceOverlay", value_to_py(py, &snapshot.force_overlay)?)?;
+        }
+        output.append(item)?;
+    }
+    Ok(output.into_any().unbind())
+}
+
 fn boxes_to_py(py: Python<'_>, boxes: &[pine_runtime::BoxOutput]) -> PyResult<Py<PyAny>> {
     let output = PyList::empty(py);
     for box_output in boxes {
@@ -512,6 +555,7 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
         | PineValue::Label(value)
         | PineValue::Line(value)
         | PineValue::LineFill(value)
+        | PineValue::Polyline(value)
         | PineValue::Box(value)
         | PineValue::Table(value) => output.append(*value),
         PineValue::ChartPoint(point) => {

@@ -2,15 +2,21 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `polyline.new` support over
+  `array<chart.point>` inputs, with runtime-owned polyline ids, copied point
+  lists, style fields, CLI/Python/WASM `polylines` output, and runtime
+  `schemaVersion: 7`; `polyline.delete`, `polyline.all`, rollback fixtures,
+  and polyline arrays remain unsupported.
 - Added fixture-backed `array.new<chart.point>()` parsing, semantic validation,
   and runtime construction for chart-point arrays, including optional
   `initial_value` handling.
 - Added fixture-backed `array.from(chart.point, ...)` point-array inference and
   generic chart-point array storage/read/mutation/search support while keeping
-  `polyline.*` unsupported.
+  polyline lifecycle APIs beyond `polyline.new` unsupported.
 - Added fixture-backed partial `chart.point` constructor, copy, field read, and
   top-level field mutation support as the first executable prerequisite for
-  future polyline work; `polyline.*` remains unsupported.
+  future polyline work; polyline lifecycle APIs beyond `polyline.new` remain
+  unsupported.
 - Refreshed the `polyline.*` implementation gate with an official-semantics
   sequence covering `chart.point`, `array<chart.point>`, polyline snapshots,
   deletion, `.all`, rollback, and host parity before support is claimed.

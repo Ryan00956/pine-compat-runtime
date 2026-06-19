@@ -36,8 +36,8 @@ pub use output::delivery::{
 };
 pub use output::drawings::{
     BoxOutput, BoxSnapshot, LabelOutput, LabelSnapshot, LineFillOutput, LineFillSnapshot,
-    LineOutput, LineSnapshot, TableCellSnapshot, TableMergedCellSnapshot, TableOutput,
-    TableSnapshot,
+    LineOutput, LineSnapshot, PolylineOutput, PolylineSnapshot, TableCellSnapshot,
+    TableMergedCellSnapshot, TableOutput, TableSnapshot,
 };
 pub use output::json::{public_runtime_profiled_result_json, public_runtime_result_json};
 pub use output::model::{
@@ -101,6 +101,7 @@ const MAX_SERIES_HISTORY_VALUES: usize = 1_000_000;
 const MAX_LABELS: usize = 500;
 const MAX_LINES: usize = 500;
 const MAX_LINEFILLS: usize = 500;
+const MAX_POLYLINES: usize = 100;
 const MAX_BOXES: usize = 500;
 const MAX_TABLES: usize = 50;
 const MAX_TABLE_CELLS: i64 = 1_000;

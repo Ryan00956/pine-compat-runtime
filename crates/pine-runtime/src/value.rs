@@ -47,6 +47,7 @@ pub enum PineValue {
     Label(u32),
     Line(u32),
     LineFill(u32),
+    Polyline(u32),
     Box(u32),
     Table(u32),
     ChartPoint(ChartPointValue),

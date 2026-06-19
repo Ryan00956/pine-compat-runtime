@@ -1,10 +1,12 @@
 use crate::PineValue;
 
 use super::alerts::AlertEvent;
-use super::drawings::{BoxOutput, LabelOutput, LineFillOutput, LineOutput, TableOutput};
+use super::drawings::{
+    BoxOutput, LabelOutput, LineFillOutput, LineOutput, PolylineOutput, TableOutput,
+};
 use super::strategy::StrategyResult;
 
-pub const PUBLIC_RUNTIME_SCHEMA_VERSION: u32 = 6;
+pub const PUBLIC_RUNTIME_SCHEMA_VERSION: u32 = 7;
 pub const PUBLIC_ANALYSIS_SCHEMA_VERSION: u32 = 2;
 pub const PUBLIC_MATRIX_SCHEMA_VERSION: u32 = 2;
 pub const PUBLIC_OUTPUT_SCHEMA_VERSION: u32 = PUBLIC_RUNTIME_SCHEMA_VERSION;
@@ -24,6 +26,7 @@ pub struct RuntimeResult {
     pub labels: Vec<LabelOutput>,
     pub lines: Vec<LineOutput>,
     pub line_fills: Vec<LineFillOutput>,
+    pub polylines: Vec<PolylineOutput>,
     pub boxes: Vec<BoxOutput>,
     pub tables: Vec<TableOutput>,
     pub alerts: Vec<AlertEvent>,

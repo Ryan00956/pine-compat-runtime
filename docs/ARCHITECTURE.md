@@ -396,7 +396,8 @@ message, source}` for the narrow `alertcondition` and `alert` subsets. For
 payloads under `strategy.alerts` without changing the top-level `alerts[]`
 callsite event shape. `schemaVersion: 5` adds host-neutral table cell
 `textWrap` snapshots. `schemaVersion: 6` adds top-level `lineFills` snapshots
-for the supported linefill subset. Host integrations can adapt this model into
+for the supported linefill subset. `schemaVersion: 7` adds top-level
+`polylines` snapshots for the supported `polyline.new` subset. Host integrations can adapt this model into
 their charting or API format, but should preserve the runtime schema version
 when they forward machine-readable runtime results.
 

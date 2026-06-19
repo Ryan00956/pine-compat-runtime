@@ -61,6 +61,27 @@ pub struct LineFillSnapshot {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct PolylineOutput {
+    pub id: u32,
+    pub snapshots: Vec<PolylineSnapshot>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PolylineSnapshot {
+    pub bar_index: usize,
+    pub exists: bool,
+    pub points: Vec<PineValue>,
+    pub curved: PineValue,
+    pub closed: PineValue,
+    pub xloc: PineValue,
+    pub line_color: PineValue,
+    pub fill_color: PineValue,
+    pub line_style: PineValue,
+    pub line_width: PineValue,
+    pub force_overlay: PineValue,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct BoxOutput {
     pub id: u32,
     pub snapshots: Vec<BoxSnapshot>,

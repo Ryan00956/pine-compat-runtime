@@ -52,6 +52,7 @@ pub enum ValueKind {
     Label,
     Line,
     LineFill,
+    Polyline,
     Box,
     Table,
     ChartPoint,

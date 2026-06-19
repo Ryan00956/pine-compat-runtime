@@ -400,6 +400,7 @@ fn is_drawing_id_value(kind: ValueKind) -> bool {
         ValueKind::Label
             | ValueKind::Line
             | ValueKind::LineFill
+            | ValueKind::Polyline
             | ValueKind::Box
             | ValueKind::Table
     )

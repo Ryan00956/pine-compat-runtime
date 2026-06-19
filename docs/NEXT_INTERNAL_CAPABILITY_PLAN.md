@@ -180,8 +180,8 @@ host-neutral.
 
 Good next slices:
 
-- Add the first `polyline.new` runtime/snapshot fixture now that
-  `array.new<chart.point>()` can build point-list arrays.
+- Add the `polyline.delete` / `polyline.all` lifecycle slice now that
+  `polyline.new` creation snapshots exist.
 - More `label.*`, `line.*`, `box.*`, and `table.*` methods.
 - More deletion, mutation, no-op, and runtime-limit fixtures.
 - More realtime rollback fixtures for already-supported drawing families.
@@ -189,8 +189,9 @@ Good next slices:
 
 Keep out of scope until separately designed:
 
-- Broader `polyline.*` support until snapshot semantics and lifecycle behavior
-  are implemented and fixture-backed.
+- Broader `polyline.*` support beyond the lifecycle slice, including polyline
+  arrays and richer rollback/limit coverage, until each behavior is
+  fixture-backed.
 - Host-specific visual layout, drag behavior, or chart interaction.
 - Drawing behavior that cannot be represented in the current JSON contract.
 
