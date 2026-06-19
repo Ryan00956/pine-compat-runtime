@@ -659,7 +659,9 @@ dictionaries, so its binding tests assert the same top-level runtime keys and
 representative nested output families such as `plotShapes` and `plotCandles`.
 The Phase E drawing-object scaffold adds `labels`, `lines`, `boxes`, and
 `tables` as top-level runtime keys in `schemaVersion: 2`. The executable label
-subset covers `label.new`, selected `label.set_*` mutators including
+subset covers `label.new` creation snapshots with bar-index or bar-time x
+locations, price/abovebar/belowbar y locations, official label styles, and
+host-neutral text metadata, selected `label.set_*` mutators including
 fixture-backed `label.set_x`, `label.set_y`, `label.set_xy`, `label.set_text`,
 and `label.set_size` mutations from ordinary and independent while-loop
 control-flow blocks, fixture-backed `label.set_color`, `label.set_textcolor`,
@@ -783,8 +785,11 @@ mutating `na`, or mutating an already deleted
 drawing object is a no-op where deletion exists; supported label getters return
 `na` for `na` or deleted label ids; invalid non-`na` ids are runtime errors; ids
 are stable and not reused. `label.new` can initialize host-neutral label
-`textalign`, `text_font_family`, and `text_formatting` snapshot fields; its
-`force_overlay` argument is accepted but left to the host display layer.
+`xloc` values `xloc.bar_index`/`xloc.bar_time`, `yloc` values `yloc.price`,
+`yloc.abovebar`, and `yloc.belowbar`, color/text-color fields, official
+`label.style_*` values, size constants or integer sizes, `textalign`,
+`text_font_family`, and `text_formatting` snapshot fields; its `force_overlay`
+argument is accepted but left to the host display layer.
 `label.set_x`, `label.set_y`, `label.set_xy`, `label.set_text`, and
 `label.set_size` update the latest existing label snapshot, including when
 called from ordinary and independent while-loop control-flow blocks.
@@ -792,6 +797,8 @@ called from ordinary and independent while-loop control-flow blocks.
 `label.set_tooltip`, `label.set_textalign`, `label.set_text_font_family`, and
 `label.set_text_formatting` update their host-neutral snapshot fields, including
 when called from ordinary and independent while-loop control-flow blocks.
+`label.set_style` accepts the official label style constants and stores the
+selected constant in the latest label snapshot.
 `label.set_xloc` records `xloc.bar_index` or `xloc.bar_time` plus the new `x`
 value in label snapshots, including when called from ordinary and independent
 while-loop control-flow blocks; `label.set_yloc` records `yloc.price`,

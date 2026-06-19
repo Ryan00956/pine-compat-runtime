@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added host-neutral `label.new()` creation coverage for `xloc.bar_time` and
+  `yloc.abovebar`/`yloc.belowbar` snapshot fields.
+- Added the remaining official label style constants
+  `label.style_square`, `label.style_diamond`, and
+  `label.style_label_center` for label creation and style mutation snapshots.
+- Synchronized label drawing documentation with current `label.new` location,
+  y-location, and official style support.
 - Added fixture-backed while-loop control-flow `label.set_x` mutation coverage.
 - Added fixture-backed while-loop control-flow `label.set_y` mutation coverage.
 - Added fixture-backed while-loop control-flow `label.set_xy` mutation coverage.

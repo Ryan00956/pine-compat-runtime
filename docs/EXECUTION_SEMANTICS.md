@@ -674,9 +674,11 @@ user-defined functions is rejected as a function side-effect boundary.
 
 Supported drawing-object calls currently cover the initial `label.*`, `line.*`,
 `box.*`, and `table.*` lifecycles. Labels use deterministic ids, sparse
-lifecycle snapshots, selected x-location and y-location snapshot mutation,
-snapshot cloning, non-reused ids, and a 500-object runtime limit. Lines use the
-same lifecycle rules with bar-index x coordinates, price y coordinates,
+lifecycle snapshots, creation snapshots with bar-index or bar-time x locations,
+price/abovebar/belowbar y locations, official style constants, selected
+x-location and y-location snapshot mutation, snapshot cloning, non-reused ids,
+and a 500-object runtime limit. Lines use the same lifecycle rules with
+bar-index x coordinates, price y coordinates,
 selected color/width/style and extend fields, snapshot cloning, non-reused ids,
 and a 500-object runtime limit. `line.new` can initialize existing line
 snapshot fields for extend, color, style, and width when `xloc` is omitted or
@@ -740,15 +742,16 @@ from ordinary and independent while-loop control-flow blocks.
 from ordinary and independent while-loop control-flow blocks.
 `label.set_textalign` stores the selected
 horizontal text alignment constant. `label.set_text_font_family` stores the
-selected font-family constant. `label.new` can initialize `textalign`,
-`text_font_family`, and a `text_formatting` mask in the host-neutral snapshot;
-`force_overlay` is accepted but remains a host display responsibility.
+selected font-family constant. `label.new` can initialize `xloc`, `yloc`,
+color, official style, text color, size, `textalign`, `text_font_family`, and a
+`text_formatting` mask in the host-neutral snapshot; `force_overlay` is
+accepted but remains a host display responsibility.
 `label.set_text_formatting` stores the selected
 `text.format_none`/`text.format_bold`/`text.format_italic` mask, including
-bold+italic combinations. Above/below-bar, time/index, glyph styling, and text
-layout remain host responsibilities. `label.delete` appends an `exists: false`
-label snapshot, including when called from ordinary and independent while-loop
-control-flow blocks.
+bold+italic combinations. Visual placement for above/below-bar and time/index
+coordinates, glyph styling, and text layout remain host responsibilities.
+`label.delete` appends an `exists: false` label snapshot, including when called
+from ordinary and independent while-loop control-flow blocks.
 `label.copy` clones the latest existing label
 snapshot into a new deterministic id, including when called from ordinary and
 independent while-loop control-flow blocks, returns `na` for `na` or deleted
