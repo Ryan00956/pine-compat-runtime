@@ -41,6 +41,11 @@ const INDICATOR_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
     BuiltinParam {
+        name: "max_lines_count",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
+        optional: true,
+    },
+    BuiltinParam {
         name: "max_polylines_count",
         accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
         optional: true,
@@ -116,6 +121,11 @@ const STRATEGY_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "pyramiding",
         accepts: Accepts::ConstNumeric,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "max_lines_count",
+        accepts: Accepts::Exact(PineType::new(Qualifier::Const, ValueKind::Int)),
         optional: true,
     },
     BuiltinParam {

@@ -494,9 +494,9 @@ ohlc4 = (open + high + low + close) / 4
 ## Declarations
 
 ```text
-indicator(title: const string, shorttitle?: const string, overlay?: const bool, format?: const string, precision?: const int, scale?: const string, max_bars_back?: const int, max_polylines_count?: const int named-only subset, ...)
+indicator(title: const string, shorttitle?: const string, overlay?: const bool, format?: const string, precision?: const int, scale?: const string, max_bars_back?: const int, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, max_polylines_count?: const int named-only subset)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, max_lines_count?: const int named-only subset, max_polylines_count?: const int named-only subset)
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
   -> void
@@ -565,10 +565,11 @@ placement or price-scale layout fields; those remain host-owned.
 values from 0 through 16. The runtime rejects other const string format values
 and out-of-range precision values. Declaration formatting remains host-owned and
 does not add runtime JSON fields.
+`indicator(..., max_lines_count=N)` accepts named const integer values from
+1 through 500 and stores them in HIR for line runtime eviction.
 `indicator(..., max_polylines_count=N)` accepts named const integer values from
-1 through 100 and stores them in HIR for the future drawing GC runtime slice.
-The positional declaration slot and runtime eviction behavior remain outside the
-current subset.
+1 through 100 and stores them in HIR for polyline runtime eviction.
+Both positional declaration slots remain outside the current subset.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
 use the configured or default fixed quantity.
@@ -605,10 +606,11 @@ same-direction long `strategy.entry()` market entries to that many open trades
 for the current position. The default remains `1`. Short entries, reversals,
 `strategy.order()`, same-tick price-based entry exceptions, and broader
 multi-entry exit/reporting semantics remain unsupported unless fixture-backed.
+`strategy(..., max_lines_count=N)` accepts named const integer values from
+1 through 500 and stores them in HIR for line runtime eviction.
 `strategy(..., max_polylines_count=N)` accepts named const integer values from
-1 through 100 and stores them in HIR for the future drawing GC runtime slice.
-The positional declaration slot and runtime eviction behavior remain outside the
-current subset.
+1 through 100 and stores them in HIR for polyline runtime eviction.
+Both positional declaration slots remain outside the current subset.
 `strategy.close(id)` can close a requested pyramided long entry id; multi-entry
 `strategy.close_all()` can flatten all accepted open long entries. Fixture-backed
 absolute stop/limit `strategy.exit` calls can target a requested open pyramided
@@ -889,8 +891,8 @@ Current normalized output fields are:
   creation order. Deleted labels are omitted from subsequent reads. Mutating the
   returned array does not mutate the underlying label store.
 - `line.all`: a snapshot line-array of currently existing line ids in creation
-  order. Deleted lines are omitted from subsequent reads. Mutating the returned
-  array does not mutate the underlying line store.
+  order. Deleted or max-count evicted lines are omitted from subsequent reads.
+  Mutating the returned array does not mutate the underlying line store.
 - `linefill.all`: a snapshot linefill-array of currently existing linefill ids
   in creation order. Replaced or deleted linefills are omitted from subsequent
   reads. Mutating the returned array does not mutate the underlying linefill

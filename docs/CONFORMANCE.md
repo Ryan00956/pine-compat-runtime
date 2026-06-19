@@ -84,7 +84,7 @@ Phase G marks `strategy` as partial. The executable subset accepts
 `strategy(title, shorttitle, overlay, max_bars_back, initial_capital,
 default_qty_type, default_qty_value, commission_type, commission_value,
 slippage, backtest_fill_limits_assumption, margin_long, margin_short,
-pyramiding, named max_polylines_count)` where
+pyramiding, named max_lines_count, named max_polylines_count)` where
 `initial_capital` must be a positive const numeric value when provided. Phase L
 accepts `default_qty_type=strategy.fixed` with positive const numeric
 `default_qty_value`; Strategy Internal Stage 12 accepts
@@ -704,7 +704,8 @@ independent while-loop control-flow blocks, fixture-backed `line.get_x1`,
 independent while-loop control-flow blocks, and fixture-backed
 `line.get_price` getter over the latest existing line snapshot, including
 ordinary and independent while-loop control-flow reads, with sparse snapshots
-and a 500-line runtime limit.
+and default 50/named 1-500 `max_lines_count` eviction that appends deletion
+snapshots to the oldest active line before creating new ones.
 `line.get_price` uses bar-index x1/y1/x2/y2 interpolation and extrapolation and
 returns `na` for `na`, deleted, vertical, or nonnumeric lines; time-coordinate
 price lookup remains unsupported. The executable box subset covers
@@ -837,10 +838,11 @@ ordinary and independent while-loop control-flow blocks. `line.delete` appends a
 independent while-loop control-flow blocks. `line.copy` clones the latest
 existing line snapshot into a new deterministic id, including when called from
 ordinary and independent while-loop control-flow blocks,
-returns `na` for `na` or deleted lines, and shares the line runtime limit.
+returns `na` for `na` or deleted lines, and shares the effective line runtime
+limit.
 `line.all` returns currently existing line ids in creation order, including
 when read from ordinary and independent while-loop control-flow blocks after
-line deletion.
+line deletion or max-count eviction.
 `box.copy` clones the latest existing box
 snapshot into a new deterministic id, including when called from ordinary and
 independent while-loop control-flow blocks, returns `na` for `na` or deleted

@@ -233,11 +233,11 @@ plot(close)
 }
 
 #[test]
-fn rejects_line_creation_past_limit() {
+fn evicts_oldest_line_after_default_limit() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("line limit")
-for i = 0 to 500
+        r#"indicator("line default limit")
+for i = 0 to 50
     line.new(i, close, i, open)
 plot(close)
 "#,
@@ -249,10 +249,46 @@ plot(close)
         analysis.diagnostics
     );
 
-    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
-        .expect_err("expected line limit error");
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
 
-    assert!(error.message.contains("line count cannot exceed"));
+    assert_eq!(result.lines.len(), 51);
+    assert_eq!(result.lines[0].snapshots.len(), 2);
+    assert!(!result.lines[0].snapshots.last().unwrap().exists);
+    assert_eq!(
+        result
+            .lines
+            .iter()
+            .filter(|line| line.snapshots.last().unwrap().exists)
+            .count(),
+        50
+    );
+}
+
+#[test]
+fn evicts_oldest_line_when_creation_exceeds_declared_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("line limit", max_lines_count=2)
+for i = 0 to 2
+    line.new(i, close, i, open)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(result.lines.len(), 3);
+    assert_eq!(result.lines[0].snapshots.len(), 2);
+    assert!(!result.lines[0].snapshots.last().unwrap().exists);
+    assert_eq!(result.lines[0].snapshots.last().unwrap().bar_index, 0);
+    assert!(result.lines[1].snapshots.last().unwrap().exists);
+    assert!(result.lines[2].snapshots.last().unwrap().exists);
 }
 
 #[test]

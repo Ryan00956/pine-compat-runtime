@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.new`/`line.copy` max-count eviction: omitted
+  declarations use the runtime's default 50-line limit, while named
+  `max_lines_count` values from 1 through 500 are consumed from
+  indicator/strategy HIR and evict the oldest active line snapshots before new
+  creation.
 - Added fixture-backed `polyline.new` max-count eviction: omitted declarations
   use the runtime's default 50-polyline limit, while named
   `max_polylines_count` values from 1 through 100 are consumed from
@@ -3220,8 +3225,9 @@
   and advanced label methods remain unsupported.
 - Added the initial `line.*` lifecycle: deterministic line ids, sparse public
   `lines` snapshots for creation/mutation/deletion, selected endpoint/color/
-  width/style/extend mutators, realtime rollback coverage, and a deterministic
-  500-line runtime limit. Advanced line methods remain unsupported.
+  width/style/extend mutators, realtime rollback coverage, and an effective
+  default/declaration-driven max-count eviction path. Advanced line methods
+  remain unsupported.
 - Added the initial `box.*` lifecycle: deterministic box ids, sparse public
   `boxes` snapshots for creation/mutation/deletion, selected geometry/
   background/border mutators, realtime rollback coverage, and a deterministic

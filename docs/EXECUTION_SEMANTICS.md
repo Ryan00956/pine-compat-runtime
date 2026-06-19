@@ -773,10 +773,15 @@ control-flow blocks after label deletion. `line.delete` appends an
 independent while-loop control-flow blocks. `line.copy` clones the latest
 existing line snapshot into a new deterministic id, including when called from
 ordinary and independent while-loop control-flow blocks,
-returns `na` for `na` or deleted lines, and shares the line object limit.
+returns `na` for `na` or deleted lines, and shares the effective line limit.
 `line.all` returns currently existing line ids in creation order, including
 when read from ordinary and independent while-loop control-flow blocks after
-line deletion.
+line deletion or max-count eviction. `line.new` and `line.copy` keep at most
+the effective line limit active by appending `exists: false` snapshots to the
+oldest active lines before creating new ones. Omitted declarations use the
+runtime's default 50-line display limit; named `max_lines_count` declaration
+arguments from 1 through 500 are parsed into HIR for indicators and strategies
+and consumed by this line eviction path.
 `line.get_x1` reads the latest existing line x1 value, including when called
 from ordinary and independent while-loop control-flow blocks, and returns `na`
 for `na` or deleted lines.

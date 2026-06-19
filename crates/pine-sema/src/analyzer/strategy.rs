@@ -183,6 +183,7 @@ impl Analyzer {
                     "margin_long",
                     "margin_short",
                     "pyramiding",
+                    "max_lines_count",
                     "max_polylines_count",
                 ]
                 .get(index)
@@ -368,6 +369,28 @@ impl Analyzer {
                         continue;
                     }
                     self.strategy_settings.pyramiding_limit = value as usize;
+                }
+                "max_lines_count" => {
+                    if arg.name.is_none() {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_NAME",
+                            "`strategy` argument `max_lines_count` must be named in the current subset",
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    let Some(value) = const_int_value(&arg.value) else {
+                        continue;
+                    };
+                    if !(1..=500).contains(&value) {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`strategy` argument `max_lines_count` must be between 1 and 500",
+                            arg.span,
+                        ));
+                        continue;
+                    }
+                    self.drawing_settings.max_lines_count = Some(value as u32);
                 }
                 "max_polylines_count" => {
                     if arg.name.is_none() {

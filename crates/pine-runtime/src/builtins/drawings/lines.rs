@@ -15,11 +15,7 @@ impl<'a> HistoricalRuntime<'a> {
         let width = self.eval_line_option_value(args, 8, "width", PineValue::Int(1))?;
         let _force_overlay =
             self.eval_line_option_value(args, 9, "force_overlay", PineValue::Bool(false))?;
-        if self.lines.len() >= MAX_LINES {
-            return Err(RuntimeError {
-                message: format!("line count cannot exceed {MAX_LINES}"),
-            });
-        }
+        self.evict_oldest_lines_at_limit()?;
         let id = self.next_line_id;
         self.next_line_id = self
             .next_line_id
@@ -222,11 +218,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !latest.exists {
             return Ok(PineValue::Na);
         }
-        if self.lines.len() >= MAX_LINES {
-            return Err(RuntimeError {
-                message: format!("line count cannot exceed {MAX_LINES}"),
-            });
-        }
+        self.evict_oldest_lines_at_limit()?;
         let copied_id = self.next_line_id;
         self.next_line_id = self
             .next_line_id
@@ -241,6 +233,48 @@ impl<'a> HistoricalRuntime<'a> {
             snapshots: vec![copied],
         });
         Ok(PineValue::Line(copied_id))
+    }
+
+    fn evict_oldest_lines_at_limit(&mut self) -> Result<(), RuntimeError> {
+        let limit = self.max_line_count();
+        while self.active_line_count() >= limit {
+            let Some(line) = self.lines.iter_mut().find(|line| {
+                line.snapshots
+                    .last()
+                    .is_some_and(|snapshot| snapshot.exists)
+            }) else {
+                break;
+            };
+            let Some(latest) = line.snapshots.last().cloned() else {
+                return Err(RuntimeError {
+                    message: format!("line `{}` has no snapshots", line.id),
+                });
+            };
+            let mut next = latest;
+            next.bar_index = self.bars;
+            next.exists = false;
+            line.snapshots.push(next);
+        }
+        Ok(())
+    }
+
+    fn active_line_count(&self) -> usize {
+        self.lines
+            .iter()
+            .filter(|line| {
+                line.snapshots
+                    .last()
+                    .is_some_and(|snapshot| snapshot.exists)
+            })
+            .count()
+    }
+
+    fn max_line_count(&self) -> usize {
+        self.program
+            .drawing_settings
+            .max_lines_count
+            .map_or(DEFAULT_MAX_LINES, |value| value as usize)
+            .clamp(1, MAX_LINES)
     }
 
     pub(super) fn eval_line_get_x1(

@@ -1,0 +1,3 @@
+//@version=5
+strategy("Supported strategy max lines count", max_lines_count=75)
+plot(close)

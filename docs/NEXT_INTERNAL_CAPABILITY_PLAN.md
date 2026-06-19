@@ -181,7 +181,7 @@ host-neutral.
 Good next slices:
 
 - Extend declaration-driven drawing object-count eviction beyond the now-backed
-  `polyline.new` / `polyline.delete` / `polyline.all` lifecycle subset.
+  line and polyline lifecycle subsets.
 - More `label.*`, `line.*`, `box.*`, and `table.*` methods.
 - More deletion, mutation, no-op, and runtime-limit fixtures.
 - More realtime rollback fixtures for already-supported drawing families.

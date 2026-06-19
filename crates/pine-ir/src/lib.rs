@@ -34,6 +34,7 @@ pub enum ScriptMode {
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct DrawingSettings {
+    pub max_lines_count: Option<u32>,
     pub max_polylines_count: Option<u32>,
 }
 
