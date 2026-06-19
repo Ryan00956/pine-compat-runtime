@@ -1,0 +1,4 @@
+indicator("Table cell set tooltip coordinate row negative")
+table_id = table.new(position.top_left, 2, 1)
+table.cell_set_tooltip(table_id, 0, -1, "row negative")
+plot(close)
