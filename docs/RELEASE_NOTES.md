@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed coverage for the official `extend.left`,
+  `extend.right`, `extend.both`, and `extend.none` constants in `line.new()`,
+  `line.set_extend()`, `box.new()`, and `box.set_extend()` snapshots.
 - Added fixture-backed semantic coverage that keeps box border styles limited to
   the official `line.style_solid`, `line.style_dotted`, and
   `line.style_dashed` subset while rejecting line arrow styles for

@@ -10,4 +10,8 @@ if bar_index == 3
     arrow_left = line.new(x1=bar_index, y1=low + 1, x2=bar_index + 1, y2=high + 1, style=line.style_arrow_left)
     arrow_right = line.new(x1=bar_index, y1=low + 2, x2=bar_index + 1, y2=high + 2, style=line.style_arrow_right)
     arrow_both = line.new(x1=bar_index, y1=low + 3, x2=bar_index + 1, y2=high + 3, style=line.style_arrow_both)
+if bar_index == 3
+    extend_left = line.new(x1=bar_index, y1=low + 4, x2=bar_index + 1, y2=high + 4, extend=extend.left)
+    extend_both = line.new(x1=bar_index, y1=low + 5, x2=bar_index + 1, y2=high + 5, extend=extend.both)
+    extend_none = line.new(x1=bar_index, y1=low + 6, x2=bar_index + 1, y2=high + 6, extend=extend.none)
 plot(close)
