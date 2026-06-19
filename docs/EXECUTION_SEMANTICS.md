@@ -1139,7 +1139,10 @@ storage/read/mutation/search. `line.new` can create line snapshots from two
 extend, color, and width snapshot fields. `line.set_first_point` and
 `line.set_second_point` update the selected endpoint from a `chart.point`,
 using the line's current `xloc` to choose `point.index` or `point.time` for the
-x-coordinate. `polyline.new` creates runtime-owned polyline ids from an
+x-coordinate. `box.set_top_left_point` and `box.set_bottom_right_point` update
+the selected corner from a `chart.point`, using the box's current `xloc` to
+choose `point.index` or `point.time` for the x-coordinate. `polyline.new`
+creates runtime-owned polyline ids from an
 `array<chart.point>` input, copies the current point-list values into a
 host-neutral `polylines[].snapshots[]` entry, and records `curved`, `closed`,
 `xloc`, `lineColor`, `fillColor`, `lineStyle`, `lineWidth`, and

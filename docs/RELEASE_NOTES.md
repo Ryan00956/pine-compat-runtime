@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.set_top_left_point()` and
+  `box.set_bottom_right_point()` chart-point corner mutation support:
+  point-based corner snapshots use `point.index` for `xloc.bar_index` boxes
+  and `point.time` for `xloc.bar_time` boxes, with namespace-call and
+  method-call coverage.
 - Added fixture-backed `line.set_first_point()` and
   `line.set_second_point()` chart-point endpoint mutation support: point-based
   endpoint snapshots use `point.index` for `xloc.bar_index` lines and

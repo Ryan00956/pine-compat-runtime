@@ -460,7 +460,9 @@ left/top/right/bottom overload when `xloc` is omitted or `xloc.bar_index`;
 overloads remain outside the current runtime output contract. Supported
 `box.set_*` mutators include geometry, background, border
 color/width/style, official extend, text and text-layout snapshot setters from
-ordinary and independent while-loop control-flow blocks, and the
+ordinary and independent while-loop control-flow blocks,
+`box.set_top_left_point`/`box.set_bottom_right_point` for `chart.point` values,
+and the
 `box.set_xloc` subset for `xloc.bar_index`/`xloc.bar_time` that rewrites left,
 right, and xloc from ordinary and independent while-loop control-flow blocks.
 `box.copy` cloning

@@ -121,6 +121,20 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_box_set_top_left_point(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let point = self.eval_required_box_arg(args, 1, "point")?;
+        self.mutate_box(id, |snapshot| {
+            if let Some((x, y)) = box_point_coordinates(point, &snapshot.xloc) {
+                snapshot.left = x;
+                snapshot.top = y;
+            }
+        })
+    }
+
     pub(super) fn eval_box_set_rightbottom(
         &mut self,
         args: &[HirCallArg],
@@ -131,6 +145,20 @@ impl<'a> HistoricalRuntime<'a> {
         self.mutate_box(id, |snapshot| {
             snapshot.right = right;
             snapshot.bottom = bottom;
+        })
+    }
+
+    pub(super) fn eval_box_set_bottom_right_point(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_box_id_arg(args)?;
+        let point = self.eval_required_box_arg(args, 1, "point")?;
+        self.mutate_box(id, |snapshot| {
+            if let Some((x, y)) = box_point_coordinates(point, &snapshot.xloc) {
+                snapshot.right = x;
+                snapshot.bottom = y;
+            }
         })
     }
 
@@ -600,4 +628,15 @@ fn box_call_arg_expr<'a>(args: &'a [HirCallArg], index: usize, name: &str) -> Op
         .find(|arg| arg.name.as_deref() == Some(name))
         .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
         .map(|arg| &arg.value)
+}
+
+fn box_point_coordinates(point: PineValue, xloc: &PineValue) -> Option<(PineValue, PineValue)> {
+    let PineValue::ChartPoint(point) = point else {
+        return None;
+    };
+    let x = match xloc {
+        PineValue::String(value) if value == "xloc.bar_time" => point.field(0),
+        _ => point.field(1),
+    };
+    Some((x, point.field(2)))
 }

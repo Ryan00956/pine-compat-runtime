@@ -706,47 +706,24 @@ const BOX_NEW_PARAMS: &[BuiltinParam] = &[
 ];
 
 const BOX_SET_X_PARAMS: &[BuiltinParam] = &[
-    BuiltinParam {
-        name: "id",
-        accepts: Accepts::BoxCompatible,
-        optional: false,
-    },
-    BuiltinParam {
-        name: "x",
-        accepts: Accepts::IntCompatible,
-        optional: false,
-    },
+    param("id", Accepts::BoxCompatible, false),
+    param("x", Accepts::IntCompatible, false),
 ];
 
 const BOX_SET_Y_PARAMS: &[BuiltinParam] = &[
-    BuiltinParam {
-        name: "id",
-        accepts: Accepts::BoxCompatible,
-        optional: false,
-    },
-    BuiltinParam {
-        name: "y",
-        accepts: Accepts::NumericCompatible,
-        optional: false,
-    },
+    param("id", Accepts::BoxCompatible, false),
+    param("y", Accepts::NumericCompatible, false),
 ];
 
 const BOX_SET_XY_PARAMS: &[BuiltinParam] = &[
-    BuiltinParam {
-        name: "id",
-        accepts: Accepts::BoxCompatible,
-        optional: false,
-    },
-    BuiltinParam {
-        name: "x",
-        accepts: Accepts::IntCompatible,
-        optional: false,
-    },
-    BuiltinParam {
-        name: "y",
-        accepts: Accepts::NumericCompatible,
-        optional: false,
-    },
+    param("id", Accepts::BoxCompatible, false),
+    param("x", Accepts::IntCompatible, false),
+    param("y", Accepts::NumericCompatible, false),
+];
+
+const BOX_SET_POINT_PARAMS: &[BuiltinParam] = &[
+    param("id", Accepts::BoxCompatible, false),
+    param("point", Accepts::ChartPointCompatible, false),
 ];
 
 const BOX_SET_XLOC_PARAMS: &[BuiltinParam] = &[
@@ -1333,9 +1310,23 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "box.set_top_left_point",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_POINT_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "box.set_rightbottom",
         phase: BuiltinPhase::Phase1Core,
         params: BOX_SET_XY_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.set_bottom_right_point",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_SET_POINT_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

@@ -1396,7 +1396,7 @@ fn reports_unsupported_strategy_local_declaration_fixture() {
 fn reports_unsupported_drawing_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_drawing.pine",
-        "box.set_top_left_point",
+        "label.set_point",
         "drawing object",
     );
 }

@@ -1051,15 +1051,15 @@ fn accepts_minimal_linefill_new() {
 }
 
 #[test]
-fn rejects_unimplemented_line_methods() {
-    let analysis = analyze("box.set_top_left_point(na, na)\nplot(close)\n");
+fn rejects_unimplemented_label_point_methods() {
+    let analysis = analyze("label.set_point(na, na)\nplot(close)\n");
 
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "box.set_top_left_point"),
+            .any(|feature| feature.feature == "label.set_point"),
         "{:?}",
         analysis.compatibility.unsupported
     );
@@ -1242,19 +1242,31 @@ fn accepts_minimal_box_new() {
 }
 
 #[test]
-fn rejects_unimplemented_box_methods() {
-    let analysis = analyze("box.set_top_left_point(na, na)\nplot(close)\n");
+fn accepts_box_point_setters() {
+    let analysis = analyze(
+        "id = box.new(bar_index, high, bar_index + 1, low)\ntop_left = chart.point.from_index(bar_index - 1, open)\nbottom_right = chart.point.from_index(bar_index + 2, close)\nbox.set_top_left_point(id, top_left)\nid.set_bottom_right_point(bottom_right)\ntime_id = box.new(left=time, top=high, right=time + 60000, bottom=low, xloc=xloc.bar_time)\ntime_top_left = chart.point.from_time(time - 60000, open)\ntime_bottom_right = chart.point.from_time(time + 120000, close)\nbox.set_top_left_point(time_id, time_top_left)\ntime_id.set_bottom_right_point(time_bottom_right)\nplot(box.get_left(id) + box.get_right(time_id))\n",
+    );
 
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
     assert!(
         analysis
             .compatibility
-            .unsupported
+            .supported
             .iter()
-            .any(|feature| feature.feature == "box.set_top_left_point"),
-        "{:?}",
-        analysis.compatibility.unsupported
+            .any(|feature| feature.feature == "box.set_top_left_point")
     );
-    assert!(analysis.hir.is_none());
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "box.set_bottom_right_point")
+    );
+    assert!(analysis.hir.is_some());
 }
 
 #[test]
