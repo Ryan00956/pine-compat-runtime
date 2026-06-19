@@ -5,3 +5,11 @@ if bar_index == 1
 if bar_index == 2
     second = table.new(position.bottom_left, 1, 1, bgcolor=color.yellow, frame_color=color.black, frame_width=2, border_color=color.white, border_width=1)
 plot(close)
+if bar_index == 3
+    top_left = table.new(position.top_left, 1, 1)
+    top_center = table.new(position.top_center, 1, 1)
+    middle_left = table.new(position.middle_left, 1, 1)
+    middle_center = table.new(position.middle_center, 1, 1)
+    middle_right = table.new(position.middle_right, 1, 1)
+    bottom_center = table.new(position.bottom_center, 1, 1)
+    bottom_right = table.new(position.bottom_right, 1, 1)

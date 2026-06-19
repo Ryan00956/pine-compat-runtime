@@ -989,6 +989,8 @@
   unsupported richer table cell layout methods.
 - Added fixture-backed `table.cell_set_text_halign` boundary coverage for
   unsupported richer table cell layout methods.
+- Added explicit `table.new` fixture coverage for all nine official
+  `position.*` table anchors.
 - Added fixture-backed `table.cell_set_text_valign` boundary coverage for
   unsupported richer table cell layout methods.
 - Corrected the `ta.vwap` conformance status to `partial` because
