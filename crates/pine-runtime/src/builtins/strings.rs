@@ -728,9 +728,10 @@ impl<'a> HistoricalRuntime<'a> {
             PineValue::Bool(value) => value.to_string(),
             PineValue::String(value) => value.clone(),
             PineValue::Array(id) => self
-                .array_store
-                .get(id)
-                .map(|values| stringify_array(values, format))
+                .array_values_clone(*id)
+                .ok()
+                .flatten()
+                .map(|values| stringify_array(&values, format))
                 .unwrap_or_else(|| "NaN".to_owned()),
             PineValue::Na => "NaN".to_owned(),
             _ => "NaN".to_owned(),

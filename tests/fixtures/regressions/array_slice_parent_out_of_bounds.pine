@@ -1,0 +1,6 @@
+indicator("Array slice parent out of bounds")
+
+values = array.new_int(5, 0)
+window = values.slice(3, 5)
+values.remove(0)
+plot(window.indexof(2))

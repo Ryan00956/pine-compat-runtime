@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed Pine-style shallow `array.slice` window semantics:
+  slice reads/writes mirror the parent window, slice insertions widen the
+  window and insert into the parent, and parent shrinkage that leaves the
+  window out of bounds now reports a runtime error.
 - Added fixture-backed object `array.new<type>` constructor syntax for label,
   line, linefill, box, and table arrays, normalized onto the existing
   `array.new_*` runtime paths.
@@ -576,8 +580,7 @@
   `array.shift` and `array.unshift`.
 - Added fixture-backed branch and loop control-flow mutation coverage for
   `array.insert` and `array.remove`.
-- Added fixture-backed branch and loop control-flow coverage for
-  `array.slice` while preserving copied-array mutation independence.
+- Added fixture-backed branch and loop control-flow coverage for `array.slice`.
 - Added fixture-backed branch and loop control-flow mutation coverage for
   `array.clear`.
 - Added fixture-backed branch and loop control-flow coverage for `array.join`.
@@ -611,8 +614,7 @@
   `array.concat` while preserving source-array non-mutation.
 - Added fixture-backed branch and loop control-flow coverage for
   `array.sort_indices` while preserving source-array non-mutation.
-- Added fixture-backed computed-bound coverage for `array.slice` while keeping
-  Pine's shallow parent-window slice semantics unsupported.
+- Added fixture-backed computed-bound coverage for `array.slice`.
 - Added fixture-backed computed-index and computed-range coverage for
   `array.insert`, `array.remove`, and `array.fill` scalar-array operands.
 - Added fixture-backed computed-size constructor coverage for label, line, box,

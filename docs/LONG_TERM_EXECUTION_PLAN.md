@@ -26,16 +26,16 @@ Implemented or partially implemented:
 - Partial `for` and `while` loops.
 - Constant non-negative history offsets and guarded dynamic integer offsets,
   including `series int`.
-- Partial float/int/bool/string/color/label/line/box/table arrays, reference assignment,
-  `array.from`, `array.copy`, negative indexes for
+- Partial float/int/bool/string/color/label/line/linefill/box/table/chart.point
+  arrays, reference assignment, `array.from`, `array.copy`, negative indexes for
   `array.get`/`array.set`/`array.insert`/`array.remove`, `array.slice`,
   `array.concat`, `array.fill`, search/binary search helpers, truth helpers,
   numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev
   helpers, queue/end helpers, numeric/string ordering helpers including
   `array.sort_indices`, `array.join`, and supported array method calls. The
   current scalar array pass is closed in `docs/ARRAY_STAGE_AUDIT.md`; `array.*`
-  remains partial because generic, object, UDT, matrix/map, history, and Pine
-  shallow-slice semantics are still out of scope.
+  remains partial because general generic, polyline, UDT, matrix/map, history,
+  and advanced aliasing semantics are still out of scope.
 - A fixture-covered set of `input.*`, output calls, color helpers, math
   helpers, and `ta.*` functions. The main built-in coverage pass is closed in
   `docs/PHASE_D_AUDIT.md`; further built-in work should be maintenance unless

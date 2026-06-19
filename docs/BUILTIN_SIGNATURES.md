@@ -1089,8 +1089,11 @@ the requested index; greater-than-size or otherwise invalid indexes are no-ops.
 `array.remove` removes and returns an element, or returns `na` for an invalid
 index. `array.fill` fills the whole array by default or the half-open
 `[index_from, index_to)` window when bounds are supplied; invalid ranges are
-no-ops. `array.slice` allocates a same-kind array containing the half-open
-`[index_from, index_to)` window; invalid bounds return `na` at runtime.
+no-ops. `array.slice` returns a same-kind shallow window over the parent
+array's half-open `[index_from, index_to)` range; slice reads and writes mirror
+the parent window, slice insertions widen the window and insert into the parent,
+invalid creation bounds return `na`, and later parent mutations that move the
+window out of bounds are runtime errors.
 `array.concat` requires two arrays of the same kind,
 appends `id2` values to `id` in place, and returns `id`. Numeric array
 `binary_search/binary_search_leftmost/binary_search_rightmost/abs/min/max/sum/avg/range/median/mode/percentile_nearest_rank/percentile_linear_interpolation/percentrank/covariance/standardize/variance/stdev`

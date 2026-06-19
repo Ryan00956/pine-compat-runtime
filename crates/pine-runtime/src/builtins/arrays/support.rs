@@ -19,6 +19,13 @@ pub(crate) enum ArrayElementKind {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct ArraySlice {
+    pub(crate) parent_id: u32,
+    pub(crate) start: usize,
+    pub(crate) len: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ArraySearchMode {
     First,
     Last,

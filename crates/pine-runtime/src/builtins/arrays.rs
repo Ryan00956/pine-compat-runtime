@@ -12,6 +12,215 @@ mod support;
 pub(crate) use support::*;
 
 impl<'a> HistoricalRuntime<'a> {
+    pub(crate) fn array_values_clone(
+        &self,
+        id: u32,
+    ) -> Result<Option<Vec<PineValue>>, RuntimeError> {
+        if let Some(slice) = self.array_slices.get(&id).copied() {
+            self.validate_array_slice(slice)?;
+            let end = slice.start + slice.len;
+            return Ok(self
+                .array_store
+                .get(&slice.parent_id)
+                .map(|values| values[slice.start..end].to_vec()));
+        }
+
+        Ok(self.array_store.get(&id).cloned())
+    }
+
+    fn array_len(&self, id: u32) -> Result<Option<usize>, RuntimeError> {
+        if let Some(slice) = self.array_slices.get(&id).copied() {
+            self.validate_array_slice(slice)?;
+            return Ok(Some(slice.len));
+        }
+
+        Ok(self.array_store.get(&id).map(Vec::len))
+    }
+
+    fn validate_array_slice(&self, slice: ArraySlice) -> Result<(), RuntimeError> {
+        let Some(values) = self.array_store.get(&slice.parent_id) else {
+            return Err(RuntimeError {
+                message: "array slice parent is not available".to_owned(),
+            });
+        };
+        let Some(end) = slice.start.checked_add(slice.len) else {
+            return Err(RuntimeError {
+                message: "array slice is out of bounds of the parent array".to_owned(),
+            });
+        };
+        if end > values.len() {
+            return Err(RuntimeError {
+                message: "array slice is out of bounds of the parent array".to_owned(),
+            });
+        }
+        Ok(())
+    }
+
+    fn array_read_index(&self, id: u32, index: i64) -> Result<Option<(u32, usize)>, RuntimeError> {
+        if let Some(slice) = self.array_slices.get(&id).copied() {
+            self.validate_array_slice(slice)?;
+            return Ok(normalize_array_index(index, slice.len)
+                .map(|index| (slice.parent_id, slice.start + index)));
+        }
+
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(None);
+        };
+        Ok(normalize_array_index(index, values.len()).map(|index| (id, index)))
+    }
+
+    fn array_insert_index(
+        &self,
+        id: u32,
+        index: i64,
+    ) -> Result<Option<(u32, usize)>, RuntimeError> {
+        if let Some(slice) = self.array_slices.get(&id).copied() {
+            self.validate_array_slice(slice)?;
+            return Ok(normalize_array_insert_index(index, slice.len)
+                .map(|index| (slice.parent_id, slice.start + index)));
+        }
+
+        let Some(values) = self.array_store.get(&id) else {
+            return Ok(None);
+        };
+        Ok(normalize_array_insert_index(index, values.len()).map(|index| (id, index)))
+    }
+
+    fn array_parent_len_for_insert(&self, id: u32) -> Option<usize> {
+        let target_id = self
+            .array_slices
+            .get(&id)
+            .map_or(id, |slice| slice.parent_id);
+        self.array_store.get(&target_id).map(Vec::len)
+    }
+
+    fn array_get_cloned(&self, id: u32, index: i64) -> Result<Option<PineValue>, RuntimeError> {
+        let Some((target_id, index)) = self.array_read_index(id, index)? else {
+            return Ok(None);
+        };
+        Ok(self
+            .array_store
+            .get(&target_id)
+            .and_then(|values| values.get(index))
+            .cloned())
+    }
+
+    fn array_set_value(
+        &mut self,
+        id: u32,
+        index: i64,
+        value: PineValue,
+    ) -> Result<(), RuntimeError> {
+        let Some((target_id, index)) = self.array_read_index(id, index)? else {
+            return Ok(());
+        };
+        if let Some(slot) = self
+            .array_store
+            .get_mut(&target_id)
+            .and_then(|values| values.get_mut(index))
+        {
+            *slot = value;
+        }
+        Ok(())
+    }
+
+    fn array_insert_value(
+        &mut self,
+        id: u32,
+        index: i64,
+        value: PineValue,
+    ) -> Result<(), RuntimeError> {
+        let Some((target_id, index)) = self.array_insert_index(id, index)? else {
+            return Ok(());
+        };
+        let Some(parent_len) = self.array_parent_len_for_insert(id) else {
+            return Ok(());
+        };
+        if parent_len >= MAX_ARRAY_ELEMENTS {
+            return Err(RuntimeError {
+                message: format!("array.insert cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+            });
+        }
+        if let Some(values) = self.array_store.get_mut(&target_id) {
+            values.insert(index, value);
+        }
+        if let Some(slice) = self.array_slices.get_mut(&id) {
+            slice.len += 1;
+        }
+        Ok(())
+    }
+
+    fn array_remove_value(
+        &mut self,
+        id: u32,
+        index: i64,
+    ) -> Result<Option<PineValue>, RuntimeError> {
+        let Some((target_id, index)) = self.array_read_index(id, index)? else {
+            return Ok(None);
+        };
+        let removed = self
+            .array_store
+            .get_mut(&target_id)
+            .map(|values| values.remove(index));
+        if removed.is_some()
+            && let Some(slice) = self.array_slices.get_mut(&id)
+        {
+            slice.len = slice.len.saturating_sub(1);
+        }
+        Ok(removed)
+    }
+
+    fn array_replace_values(
+        &mut self,
+        id: u32,
+        replacement: Vec<PineValue>,
+    ) -> Result<(), RuntimeError> {
+        if let Some(slice) = self.array_slices.get(&id).copied() {
+            self.validate_array_slice(slice)?;
+            for (offset, value) in replacement.into_iter().enumerate() {
+                if offset >= slice.len {
+                    break;
+                }
+                if let Some(slot) = self
+                    .array_store
+                    .get_mut(&slice.parent_id)
+                    .and_then(|values| values.get_mut(slice.start + offset))
+                {
+                    *slot = value;
+                }
+            }
+            return Ok(());
+        }
+
+        if let Some(values) = self.array_store.get_mut(&id) {
+            *values = replacement;
+        }
+        Ok(())
+    }
+
+    fn new_array_slice(&mut self, source_id: u32, index_from: usize, index_to: usize) -> PineValue {
+        let id = self.next_array_id;
+        self.next_array_id += 1;
+        let Some(kind) = self.array_kinds.get(&source_id).copied() else {
+            return PineValue::Na;
+        };
+        let (parent_id, start) = if let Some(parent) = self.array_slices.get(&source_id).copied() {
+            (parent.parent_id, parent.start + index_from)
+        } else {
+            (source_id, index_from)
+        };
+        self.array_kinds.insert(id, kind);
+        self.array_slices.insert(
+            id,
+            ArraySlice {
+                parent_id,
+                start,
+                len: index_to - index_from,
+            },
+        );
+        PineValue::Array(id)
+    }
+
     pub(crate) fn eval_array_size(
         &mut self,
         args: &[HirCallArg],
@@ -20,10 +229,10 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Na);
         };
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(len) = self.array_len(id)? else {
             return Ok(PineValue::Na);
         };
-        Ok(PineValue::Int(values.len() as i64))
+        Ok(PineValue::Int(len as i64))
     }
 
     pub(crate) fn eval_array_push(
@@ -40,14 +249,18 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         let value = self.eval_array_value(&args[1].value, kind)?;
-        if let Some(values) = self.array_store.get_mut(&id) {
-            if values.len() >= MAX_ARRAY_ELEMENTS {
-                return Err(RuntimeError {
-                    message: format!("array.push cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
-                });
-            }
-            values.push(value);
+        let Some(len) = self.array_len(id)? else {
+            return Ok(PineValue::Void);
+        };
+        let Some(parent_len) = self.array_parent_len_for_insert(id) else {
+            return Ok(PineValue::Void);
+        };
+        if parent_len >= MAX_ARRAY_ELEMENTS {
+            return Err(RuntimeError {
+                message: format!("array.push cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+            });
         }
+        self.array_insert_value(id, len as i64, value)?;
         Ok(PineValue::Void)
     }
 
@@ -60,14 +273,7 @@ impl<'a> HistoricalRuntime<'a> {
         let (PineValue::Array(id), Some(index)) = (id, index) else {
             return Ok(PineValue::Na);
         };
-        Ok(self
-            .array_store
-            .get(&id)
-            .and_then(|values| {
-                normalize_array_index(index, values.len()).and_then(|index| values.get(index))
-            })
-            .cloned()
-            .unwrap_or(PineValue::Na))
+        Ok(self.array_get_cloned(id, index)?.unwrap_or(PineValue::Na))
     }
 
     pub(crate) fn eval_array_set(
@@ -85,11 +291,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         let value = self.eval_array_value(&args[2].value, kind)?;
-        if let Some(slot) = self.array_store.get_mut(&id).and_then(|values| {
-            normalize_array_index(index, values.len()).and_then(|index| values.get_mut(index))
-        }) {
-            *slot = value;
-        }
+        self.array_set_value(id, index, value)?;
         Ok(PineValue::Void)
     }
 
@@ -108,17 +310,15 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         let value = self.eval_array_value(&args[2].value, kind)?;
-        if let Some(values) = self.array_store.get_mut(&id) {
-            let Some(index) = normalize_array_insert_index(index, values.len()) else {
-                return Ok(PineValue::Void);
-            };
-            if values.len() >= MAX_ARRAY_ELEMENTS {
-                return Err(RuntimeError {
-                    message: format!("array.insert cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
-                });
-            }
-            values.insert(index, value);
+        let Some(parent_len) = self.array_parent_len_for_insert(id) else {
+            return Ok(PineValue::Void);
+        };
+        if parent_len >= MAX_ARRAY_ELEMENTS {
+            return Err(RuntimeError {
+                message: format!("array.insert cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+            });
         }
+        self.array_insert_value(id, index, value)?;
         Ok(PineValue::Void)
     }
 
@@ -130,10 +330,14 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Na);
         };
+        let Some(len) = self.array_len(id)? else {
+            return Ok(PineValue::Na);
+        };
+        if len == 0 {
+            return Ok(PineValue::Na);
+        }
         Ok(self
-            .array_store
-            .get_mut(&id)
-            .and_then(Vec::pop)
+            .array_remove_value(id, (len - 1) as i64)?
             .unwrap_or(PineValue::Na))
     }
 
@@ -146,13 +350,7 @@ impl<'a> HistoricalRuntime<'a> {
         let (PineValue::Array(id), Some(index)) = (id, index) else {
             return Ok(PineValue::Na);
         };
-        Ok(self
-            .array_store
-            .get_mut(&id)
-            .and_then(|values| {
-                normalize_array_index(index, values.len()).map(|index| values.remove(index))
-            })
-            .unwrap_or(PineValue::Na))
+        Ok(self.array_remove_value(id, index)?.unwrap_or(PineValue::Na))
     }
 
     pub(crate) fn eval_array_shift(
@@ -163,17 +361,7 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Na);
         };
-        Ok(self
-            .array_store
-            .get_mut(&id)
-            .and_then(|values| {
-                if values.is_empty() {
-                    None
-                } else {
-                    Some(values.remove(0))
-                }
-            })
-            .unwrap_or(PineValue::Na))
+        Ok(self.array_remove_value(id, 0)?.unwrap_or(PineValue::Na))
     }
 
     pub(crate) fn eval_array_unshift(
@@ -190,14 +378,15 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Void);
         };
         let value = self.eval_array_value(&args[1].value, kind)?;
-        if let Some(values) = self.array_store.get_mut(&id) {
-            if values.len() >= MAX_ARRAY_ELEMENTS {
-                return Err(RuntimeError {
-                    message: format!("array.unshift cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
-                });
-            }
-            values.insert(0, value);
+        let Some(parent_len) = self.array_parent_len_for_insert(id) else {
+            return Ok(PineValue::Void);
+        };
+        if parent_len >= MAX_ARRAY_ELEMENTS {
+            return Err(RuntimeError {
+                message: format!("array.unshift cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
+            });
         }
+        self.array_insert_value(id, 0, value)?;
         Ok(PineValue::Void)
     }
 
@@ -238,7 +427,7 @@ impl<'a> HistoricalRuntime<'a> {
         let index_to = if let Some(index_to) = args.get(3) {
             self.eval_expr(&index_to.value)?.as_i64()
         } else {
-            self.array_store.get(&id).map(|values| values.len() as i64)
+            self.array_len(id)?.map(|len| len as i64)
         };
         let Some(index_to) = index_to else {
             return Ok(PineValue::Void);
@@ -248,12 +437,12 @@ impl<'a> HistoricalRuntime<'a> {
         }
         let index_from = index_from as usize;
         let index_to = index_to as usize;
-        if let Some(values) = self.array_store.get_mut(&id) {
-            if index_to > values.len() {
+        if let Some(len) = self.array_len(id)? {
+            if index_to > len {
                 return Ok(PineValue::Void);
             }
-            for item in &mut values[index_from..index_to] {
-                *item = value.clone();
+            for index in index_from..index_to {
+                self.array_set_value(id, index as i64, value.clone())?;
             }
         }
         Ok(PineValue::Void)
@@ -267,12 +456,7 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Na);
         };
-        Ok(self
-            .array_store
-            .get(&id)
-            .and_then(|values| values.first())
-            .cloned()
-            .unwrap_or(PineValue::Na))
+        Ok(self.array_get_cloned(id, 0)?.unwrap_or(PineValue::Na))
     }
 
     pub(crate) fn eval_array_last(
@@ -283,11 +467,14 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Na);
         };
+        let Some(len) = self.array_len(id)? else {
+            return Ok(PineValue::Na);
+        };
+        if len == 0 {
+            return Ok(PineValue::Na);
+        }
         Ok(self
-            .array_store
-            .get(&id)
-            .and_then(|values| values.last())
-            .cloned()
+            .array_get_cloned(id, (len - 1) as i64)?
             .unwrap_or(PineValue::Na))
     }
 
@@ -302,7 +489,7 @@ impl<'a> HistoricalRuntime<'a> {
         let Some(kind) = self.array_kinds.get(&id).copied() else {
             return Ok(PineValue::Na);
         };
-        let Some(values) = self.array_store.get(&id).cloned() else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
         Ok(self.new_array_from_values(kind, values))
@@ -323,20 +510,19 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
 
-        let Some(kind) = self.array_kinds.get(&id).copied() else {
+        if !self.array_kinds.contains_key(&id) {
             return Ok(PineValue::Na);
-        };
-        let Some(values) = self.array_store.get(&id) else {
+        }
+        let Some(len) = self.array_len(id)? else {
             return Ok(PineValue::Na);
         };
         let index_from = index_from as usize;
         let index_to = index_to as usize;
-        if index_to > values.len() {
+        if index_to > len {
             return Ok(PineValue::Na);
         }
-        let values = values[index_from..index_to].to_vec();
 
-        Ok(self.new_array_from_values(kind, values))
+        Ok(self.new_array_slice(id, index_from, index_to))
     }
 
     pub(crate) fn eval_array_concat(
@@ -357,18 +543,23 @@ impl<'a> HistoricalRuntime<'a> {
         if target_kind != source_kind {
             return Ok(PineValue::Na);
         }
-        let Some(source_values) = self.array_store.get(&source_id).cloned() else {
+        let Some(source_values) = self.array_values_clone(source_id)? else {
             return Ok(PineValue::Na);
         };
-        let Some(target_values) = self.array_store.get_mut(&target_id) else {
+        let Some(target_len) = self.array_len(target_id)? else {
             return Ok(PineValue::Na);
         };
-        if target_values.len() + source_values.len() > MAX_ARRAY_ELEMENTS {
+        let Some(parent_len) = self.array_parent_len_for_insert(target_id) else {
+            return Ok(PineValue::Na);
+        };
+        if parent_len + source_values.len() > MAX_ARRAY_ELEMENTS {
             return Err(RuntimeError {
                 message: format!("array.concat cannot exceed {MAX_ARRAY_ELEMENTS} elements"),
             });
         }
-        target_values.extend(source_values);
+        for (offset, value) in source_values.into_iter().enumerate() {
+            self.array_insert_value(target_id, (target_len + offset) as i64, value)?;
+        }
         Ok(PineValue::Array(target_id))
     }
 
@@ -398,7 +589,7 @@ impl<'a> HistoricalRuntime<'a> {
         ) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
         let result = match mode {
@@ -443,7 +634,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(None);
         };
         let value = self.eval_array_value(&args[1].value, kind)?;
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(None);
         };
         let index = match mode {
@@ -472,14 +663,14 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Int(-1));
         }
         let value = self.eval_array_value(&args[1].value, kind)?;
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Int(-1));
         };
         if values.is_empty() {
             return Ok(PineValue::Int(-1));
         }
 
-        let lower = array_numeric_lower_bound(values, &value);
+        let lower = array_numeric_lower_bound(&values, &value);
         let exact_match =
             lower < values.len() && compare_array_numeric_values(&values[lower], &value).is_eq();
         let index = match mode {
@@ -493,7 +684,7 @@ impl<'a> HistoricalRuntime<'a> {
             }
             ArrayBinarySearchMode::Rightmost => {
                 if exact_match {
-                    Some(array_numeric_upper_bound(values, &value) - 1)
+                    Some(array_numeric_upper_bound(&values, &value) - 1)
                 } else {
                     Some(lower.min(values.len() - 1))
                 }
@@ -519,7 +710,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
 
@@ -634,7 +825,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
 
@@ -681,7 +872,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
         let mut numeric_values: Vec<_> = values.iter().filter_map(PineValue::as_f64).collect();
@@ -734,7 +925,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
         let Some(target) = values.get(index as usize).and_then(PineValue::as_f64) else {
@@ -767,7 +958,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
 
@@ -830,7 +1021,7 @@ impl<'a> HistoricalRuntime<'a> {
             return Ok(PineValue::Na);
         }
         let (Some(values1), Some(values2)) =
-            (self.array_store.get(&id1), self.array_store.get(&id2))
+            (self.array_values_clone(id1)?, self.array_values_clone(id2)?)
         else {
             return Ok(PineValue::Na);
         };
@@ -877,7 +1068,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !matches!(kind, ArrayElementKind::Float | ArrayElementKind::Int) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
 
@@ -923,8 +1114,9 @@ impl<'a> HistoricalRuntime<'a> {
         ) {
             return Ok(PineValue::Void);
         }
-        if let Some(values) = self.array_store.get_mut(&id) {
+        if let Some(mut values) = self.array_values_clone(id)? {
             values.sort_by(|left, right| compare_array_sort_values(kind, left, right, descending));
+            self.array_replace_values(id, values)?;
         }
         Ok(PineValue::Void)
     }
@@ -947,7 +1139,7 @@ impl<'a> HistoricalRuntime<'a> {
         ) {
             return Ok(PineValue::Na);
         }
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
 
@@ -990,8 +1182,9 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Void);
         };
-        if let Some(values) = self.array_store.get_mut(&id) {
+        if let Some(mut values) = self.array_values_clone(id)? {
             values.reverse();
+            self.array_replace_values(id, values)?;
         }
         Ok(PineValue::Void)
     }
@@ -1016,7 +1209,7 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             ",".to_owned()
         };
-        let Some(values) = self.array_store.get(&id) else {
+        let Some(values) = self.array_values_clone(id)? else {
             return Ok(PineValue::Na);
         };
         let mut result = String::new();
@@ -1037,8 +1230,10 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Void);
         };
-        if let Some(values) = self.array_store.get_mut(&id) {
-            values.clear();
+        if let Some(len) = self.array_len(id)? {
+            for _ in 0..len {
+                let _ = self.array_remove_value(id, 0)?;
+            }
         }
         Ok(PineValue::Void)
     }

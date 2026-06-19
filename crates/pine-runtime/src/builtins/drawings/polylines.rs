@@ -151,9 +151,7 @@ impl<'a> HistoricalRuntime<'a> {
                         message: "polyline.new expected array<chart.point>".to_owned(),
                     });
                 }
-                Ok(Some(
-                    self.array_store.get(&array_id).cloned().unwrap_or_default(),
-                ))
+                Ok(Some(self.array_values_clone(array_id)?.unwrap_or_default()))
             }
             PineValue::Na => Ok(None),
             value => Err(RuntimeError {

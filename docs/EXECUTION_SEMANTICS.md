@@ -660,8 +660,12 @@ an empty string for empty arrays. Color elements render as normalized integer
 color values. Label and line arrays are intentionally not accepted by
 `array.join` or array string conversion in this subset. Joined results over 40,960 characters
 are runtime errors.
-`array.slice` returns a same-kind array with the half-open `[index_from,
-index_to)` window; negative, reversed, or out-of-range bounds return `na`.
+`array.slice` returns a same-kind shallow window over the parent array's
+half-open `[index_from, index_to)` range; reads and writes through the slice
+mirror the parent window, inserting through the slice widens that window and
+inserts into the parent, negative/reversed/out-of-range creation bounds return
+`na`, and later parent mutations that move the window out of bounds are runtime
+errors.
 `array.concat` appends the second same-kind array to the first array in place
 and returns the first array id. A negative array size is a runtime error.
 Runtime execution limits each supported array to 100,000 elements; oversized

@@ -1320,7 +1320,7 @@ flags = array.from(true, false, true)
 flag_tail = flags.slice(1, 3)
 flag_tail.set(0, true)
 plot(flag_tail.size())
-plot(flag_tail.get(0) and flag_tail.get(1) and not flags.get(1) ? 1 : 0)
+plot(flag_tail.get(0) and flag_tail.get(1) and flags.get(1) ? 1 : 0)
 bool_more = array.from(false)
 flags.concat(bool_more)
 plot(flags.size() == 4 and not flags.get(3) and bool_more.size() == 1 ? 1 : 0)
@@ -1334,6 +1334,12 @@ plot(empty_bool_target.size() == 1 and not empty_bool_target.get(0) and bool_mor
 empty_window = ints.slice(2, 2)
 plot(empty_window.size())
 plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(ints, 2, 1)) ? 1 : 0)
+
+window_source = array.from(0, 1, 2, 3)
+window = window_source.slice(0, 3)
+window_source.remove(0)
+window.push(4)
+plot(window.size() * 1000 + window_source.size() * 100 + window.get(0) * 10 + window_source.get(3))
 "#,
     );
     let analysis = analyze_source(&source);
@@ -1346,10 +1352,10 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     let bars = vec![bar(1.0), bar(2.0)];
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
 
-    assert_eq!(result.plots.len(), 26);
+    assert_eq!(result.plots.len(), 27);
     assert_values_close(&result.plots[0].values, &[2.0, 2.0]);
     assert_values_close(&result.plots[1].values, &[23.0, 23.0]);
-    assert_values_close(&result.plots[2].values, &[2.0, 2.0]);
+    assert_values_close(&result.plots[2].values, &[20.0, 20.0]);
     assert_values_close(&result.plots[3].values, &[4.0, 4.0]);
     assert_values_close(&result.plots[4].values, &[4.0, 4.0]);
     assert_values_close(&result.plots[5].values, &[4.0, 4.0]);
@@ -1373,6 +1379,7 @@ plot(na(array.slice(ints, -1, 1)) and na(ints.slice(1, 5)) and na(array.slice(in
     assert_values_close(&result.plots[23].values, &[1.0, 1.0]);
     assert_values_close(&result.plots[24].values, &[0.0, 0.0]);
     assert_values_close(&result.plots[25].values, &[1.0, 1.0]);
+    assert_values_close(&result.plots[26].values, &[4414.0, 4414.0]);
 }
 
 #[test]

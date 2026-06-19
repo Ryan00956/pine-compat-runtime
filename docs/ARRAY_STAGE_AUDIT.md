@@ -26,8 +26,8 @@ general object array families.
 The project should keep `array.*` marked `partial`, not `supported`, because the
 current implementation deliberately excludes general generic arrays, polyline
 arrays, UDT arrays, maps, matrices, `varip` value families outside the
-fixture-backed scalar typed-array subset, Pine's shallow slice/window semantics,
-and several advanced sorting forms.
+fixture-backed scalar typed-array subset, array history snapshots, and several
+advanced sorting forms.
 
 The next implementation work should not continue adding random array helpers.
 Future array work should be chosen from the explicit gap list below and should
@@ -189,12 +189,13 @@ History and snapshots:
 
 Slice semantics:
 
-- The current `array.slice` implementation returns a same-kind copied array for
-  the requested window.
-- Pine documents slice as shallow window-like behavior over the parent array.
-- Treat this as a known compatibility limitation. A future fix needs a design
-  for shared backing storage, mutation mirroring, bounds invalidation, rollback,
-  and incremental execution.
+- `array.slice` returns a same-kind shallow window over the parent array.
+- Reads and writes through the slice mirror the parent window.
+- Inserting through the slice widens the window and inserts into the parent.
+- Later parent mutations that move the window outside parent bounds are runtime
+  errors when the slice is accessed.
+- Keep this row partial until array history snapshots, future element families,
+  and any remaining nested/advanced aliasing cases are fixture-backed.
 
 Loops over arrays:
 
@@ -243,7 +244,6 @@ storage or host integration model.
 
 Only take these when they are explicitly selected as the next work item:
 
-- Design Pine-compatible `array.slice` shallow window semantics.
 - Design remaining generic `array.new<type>()` parsing and type checking for
   UDT/polyline/map/matrix or other future element families.
 - Design array history snapshots and aliasing behavior.

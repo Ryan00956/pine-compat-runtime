@@ -16,6 +16,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array.insert cannot exceed 100000 elements",
     ),
     (
+        "tests/fixtures/regressions/array_slice_parent_out_of_bounds.pine",
+        "array slice is out of bounds of the parent array",
+    ),
+    (
         "tests/fixtures/regressions/array_unshift_limit.pine",
         "array.unshift cannot exceed 100000 elements",
     ),

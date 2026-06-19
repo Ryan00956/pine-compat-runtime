@@ -80,7 +80,7 @@ use algorithms::rolling_window::{
     RisingFallingMode, RollingWindowKey, RollingWindowState, WindowExtreme,
 };
 use builtins::args::output_id;
-use builtins::arrays::{ArrayElementKind, ArrayPercentileMode};
+use builtins::arrays::{ArrayElementKind, ArrayPercentileMode, ArraySlice};
 use builtins::ta::{MacdState, PivotPointState, RsiState, VwapState};
 use output::align::finalize_bar_aligned_outputs;
 use output::collect::finalize_series_values;

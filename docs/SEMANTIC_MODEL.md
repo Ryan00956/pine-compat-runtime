@@ -498,11 +498,14 @@ Other array
 constructors and unsupported `array.*` functions are rejected. Array assignment
 and UDF argument binding pass the runtime array id by reference. `array.copy`
 allocates a new array id with the same current element values, so later
-mutations do not affect the source. `array.slice` allocates a same-kind array
-containing the half-open `[index_from, index_to)` window; invalid bounds return
-`na` at runtime. `array.concat` requires two arrays of the same kind, appends
-the second array's current values to the first array in place, and returns the
-first array id. `array.get`, `array.set`, `array.insert`, and `array.remove`
+mutations do not affect the source. `array.slice` returns a same-kind shallow
+window over the parent array's half-open `[index_from, index_to)` range; slice
+mutations mirror the parent window, slice insertions widen the window, invalid
+creation bounds return `na`, and later parent mutations that move the window
+out of bounds are runtime errors. `array.concat` requires two arrays of the
+same kind, appends the second array's current values to the first array in
+place, and returns the first array id. `array.get`, `array.set`, `array.insert`,
+and `array.remove`
 support negative indexes from the array end. `array.insert` inserts before a
 valid index, appends when the positive index equals the current size, and is a
 no-op for invalid indexes. `array.remove` removes and returns a valid indexed

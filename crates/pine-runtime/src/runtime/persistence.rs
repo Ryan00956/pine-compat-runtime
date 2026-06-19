@@ -70,6 +70,15 @@ impl<'a> HistoricalRuntime<'a> {
 
     fn seed_intrabar_array_from(&mut self, previous: &Self, id: u32) {
         self.next_array_id = self.next_array_id.max(id.saturating_add(1));
+        if let Some(slice) = previous.array_slices.get(&id).copied() {
+            let Some(kind) = previous.array_kinds.get(&id).copied() else {
+                return;
+            };
+            self.array_slices.insert(id, slice);
+            self.array_kinds.insert(id, kind);
+            self.seed_intrabar_array_from(previous, slice.parent_id);
+            return;
+        }
         let (Some(values), Some(kind)) = (
             previous.array_store.get(&id).cloned(),
             previous.array_kinds.get(&id).copied(),
