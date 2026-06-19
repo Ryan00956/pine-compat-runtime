@@ -11,6 +11,8 @@ for i = 0 to 0
     if bar_index == 3
         box.set_border_color(box_id, color.white)
         box.set_border_width(box_id, 2)
+        box.set_border_style(box_id, line.style_solid)
+        box.set_border_style(box_id, line.style_dotted)
         box.set_border_style(box_id, line.style_dashed)
         box.set_extend(box_id, extend.right)
         box.set_extend(box_id, extend.left)

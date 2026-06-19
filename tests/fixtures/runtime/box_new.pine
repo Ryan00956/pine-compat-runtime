@@ -7,6 +7,9 @@ if bar_index == 2
 if bar_index == 3
     styled = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=19, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)
 if bar_index == 3
+    border_solid = box.new(left=bar_index, top=high - 1, right=bar_index + 1, bottom=low - 1, border_style=line.style_solid)
+    border_dotted = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_style=line.style_dotted)
+if bar_index == 3
     extend_left = box.new(left=bar_index, top=high + 1, right=bar_index + 1, bottom=low + 1, extend=extend.left)
     extend_both = box.new(left=bar_index, top=high + 2, right=bar_index + 1, bottom=low + 2, extend=extend.both)
     extend_none = box.new(left=bar_index, top=high + 3, right=bar_index + 1, bottom=low + 3, extend=extend.none)

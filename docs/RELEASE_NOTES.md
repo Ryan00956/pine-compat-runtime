@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added explicit creation and mutation snapshot coverage for the base drawing
+  style constants `line.style_solid`, `line.style_dotted`, and
+  `line.style_dashed` across line styles and box border styles.
 - Added fixture-backed coverage for the official `extend.left`,
   `extend.right`, `extend.both`, and `extend.none` constants in `line.new()`,
   `line.set_extend()`, `box.new()`, and `box.set_extend()` snapshots.
