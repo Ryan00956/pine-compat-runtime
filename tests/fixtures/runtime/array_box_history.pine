@@ -1,0 +1,8 @@
+//@version=5
+indicator("Box array history")
+current = box.new(bar_index, high, bar_index + 1, low)
+ids = array.new_box(1)
+ids.set(0, current)
+previous_ids = ids[1]
+previous_id = na(previous_ids) ? na : previous_ids.get(0)
+plot(na(previous_id) ? na : box.get_left(previous_id))

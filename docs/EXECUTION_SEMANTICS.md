@@ -1044,7 +1044,7 @@ expression that needs history must have stable series storage assigned before
 runtime execution. See [`SERIES_MODEL.md`](SERIES_MODEL.md).
 
 Array variable history is supported for the fixture-backed scalar array,
-scalar slice, label-array, and line-array read paths, including the official
+scalar slice, label-array, line-array, and box-array read paths, including the official
 `previous = a[1]` and `na(previous) ? na : previous.get(0)` pattern. When a
 retained series value is an array id, runtime stores an independent array
 snapshot for history and returns a fresh copy from positive-offset history
