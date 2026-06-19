@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf};
 
-use pine_sema::analyze_source;
+use pine_sema::{AnalysisInput, analyze_input, analyze_source};
 use pine_syntax::SourceFile;
 
 fn workspace_fixture(path: &str) -> PathBuf {
@@ -3768,6 +3768,22 @@ fn reports_import_fixture_missing_host_library() {
 }
 
 #[test]
+fn reports_unsupported_imported_udt_constructor_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_udt_constructor.pine",
+        "E_IMPORT_UNKNOWN_EXPORT",
+    );
+}
+
+#[test]
+fn reports_unsupported_imported_method_fixture() {
+    assert_import_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_imported_method.pine",
+        "E_UNKNOWN_METHOD",
+    );
+}
+
+#[test]
 fn reports_unsupported_library_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_library.pine",
@@ -4224,6 +4240,33 @@ fn assert_diagnostic_messages(path: &str, messages: &[&str]) {
             analysis.diagnostics
         );
     }
+    assert!(analysis.hir.is_none());
+}
+
+fn assert_import_diagnostic_fixture(path: &str, code: &str) {
+    let path = workspace_fixture(path);
+    let text = fs::read_to_string(&path).expect("fixture should be readable");
+    let source = SourceFile::new(path.display().to_string(), text);
+    let library_path = workspace_fixture("tests/fixtures/libraries/import_udt_lib.pine");
+    let library_text =
+        fs::read_to_string(&library_path).expect("library fixture should be readable");
+    let library_source = SourceFile::new(library_path.display().to_string(), library_text);
+    let input = AnalysisInput::with_library_sources(
+        source,
+        vec![("user/udt/1".to_owned(), library_source)],
+    )
+    .expect("library fixture input should be valid");
+    let analysis = analyze_input(&input);
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == code),
+        "{} diagnostics: {:?}",
+        path.display(),
+        analysis.diagnostics
+    );
     assert!(analysis.hir.is_none());
 }
 
