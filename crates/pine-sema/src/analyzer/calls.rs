@@ -987,14 +987,17 @@ impl Analyzer {
                 self.validate_label_string_arg(signature, args, 3, "text_wrap", TEXT_WRAPS);
             }
             "table.cell" => {
+                self.validate_label_string_arg(signature, args, 7, "text_halign", TEXT_HALIGNS);
+                self.validate_label_string_arg(signature, args, 8, "text_valign", TEXT_VALIGNS);
+                self.validate_label_string_arg(signature, args, 9, "text_size", LABEL_SIZES);
                 self.validate_label_string_arg(
                     signature,
                     args,
-                    9,
+                    12,
                     "text_font_family",
                     TEXT_FONT_FAMILIES,
                 );
-                self.validate_text_formatting_arg(signature, args, 10, "text_formatting");
+                self.validate_text_formatting_arg(signature, args, 13, "text_formatting");
             }
             "table.cell_set_text_font_family" => {
                 self.validate_label_string_arg(

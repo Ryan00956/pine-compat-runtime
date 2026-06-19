@@ -135,18 +135,21 @@ impl<'a> HistoricalRuntime<'a> {
         let text = self.eval_required_table_arg(args, 3, "text")?;
         let width = self.eval_table_option_value(args, 4, "width", PineValue::Na)?;
         let height = self.eval_table_option_value(args, 5, "height", PineValue::Na)?;
-        let bg_color = self.eval_table_option_value(args, 6, "bgcolor", PineValue::Na)?;
-        let text_color = self.eval_table_option_value(args, 7, "text_color", PineValue::Na)?;
+        let text_color = self.eval_table_option_value(args, 6, "text_color", PineValue::Na)?;
+        let text_halign = self.eval_table_option_value(args, 7, "text_halign", PineValue::Na)?;
+        let text_valign = self.eval_table_option_value(args, 8, "text_valign", PineValue::Na)?;
+        let text_size = self.eval_table_option_value(args, 9, "text_size", PineValue::Na)?;
+        let bg_color = self.eval_table_option_value(args, 10, "bgcolor", PineValue::Na)?;
         let tooltip =
-            self.eval_table_option_value(args, 8, "tooltip", PineValue::String(String::new()))?;
+            self.eval_table_option_value(args, 11, "tooltip", PineValue::String(String::new()))?;
         let text_font_family = self.eval_table_option_value(
             args,
-            9,
+            12,
             "text_font_family",
             PineValue::String("font.family_default".to_owned()),
         )?;
         let text_formatting =
-            self.eval_table_text_formatting_option_value(args, 10, "text_formatting")?;
+            self.eval_table_text_formatting_option_value(args, 13, "text_formatting")?;
         let Some(id) = id else {
             return Ok(PineValue::Void);
         };
@@ -158,9 +161,9 @@ impl<'a> HistoricalRuntime<'a> {
             text_color,
             width,
             height,
-            text_size: PineValue::Na,
-            text_halign: PineValue::Na,
-            text_valign: PineValue::Na,
+            text_size,
+            text_halign,
+            text_valign,
             text_wrap: PineValue::String("text.wrap_none".to_owned()),
             tooltip,
             text_font_family,

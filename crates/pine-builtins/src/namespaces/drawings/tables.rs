@@ -98,12 +98,27 @@ const TABLE_CELL_PARAMS: &[BuiltinParam] = &[
         optional: true,
     },
     BuiltinParam {
-        name: "bgcolor",
+        name: "text_color",
         accepts: Accepts::ColorCompatible,
         optional: true,
     },
     BuiltinParam {
-        name: "text_color",
+        name: "text_halign",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_valign",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "text_size",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "bgcolor",
         accepts: Accepts::ColorCompatible,
         optional: true,
     },
