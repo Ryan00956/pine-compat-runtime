@@ -162,6 +162,33 @@ mod tests {
     }
 
     #[test]
+    fn runtime_fixture_files_are_referenced_by_rust_gates() {
+        let workspace = workspace_dir();
+        let fixture_paths = pine_fixture_paths(&workspace, "tests/fixtures/runtime")
+            .into_iter()
+            .chain(pine_fixture_paths(&workspace, "tests/fixtures/regressions"))
+            .collect::<Vec<_>>();
+        let rust_sources = rust_source_files(&workspace.join("crates"))
+            .into_iter()
+            .chain(rust_source_files(&workspace.join("tests")))
+            .map(|path| {
+                fs::read_to_string(&path)
+                    .unwrap_or_else(|err| panic!("failed to read {}: {err}", path.display()))
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        let untracked_fixtures: Vec<_> = fixture_paths
+            .into_iter()
+            .filter(|fixture| !rust_sources.contains(fixture))
+            .collect();
+        assert!(
+            untracked_fixtures.is_empty(),
+            "runtime and regression fixture files must be referenced by Rust test gates: {untracked_fixtures:?}"
+        );
+    }
+
+    #[test]
     fn diagnostic_reference_documents_emitted_codes() {
         let workspace = workspace_dir();
         let mut emitted = BTreeSet::new();
@@ -1337,6 +1364,37 @@ mod tests {
     }
     fn workspace_dir() -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..")
+    }
+    fn pine_fixture_paths(workspace: &Path, relative_dir: &str) -> BTreeSet<String> {
+        let fixture_dir = workspace.join(relative_dir);
+        fs::read_dir(&fixture_dir)
+            .unwrap_or_else(|err| panic!("failed to read {}: {err}", fixture_dir.display()))
+            .map(|entry| {
+                entry
+                    .unwrap_or_else(|err| {
+                        panic!(
+                            "failed to read fixture entry in {}: {err}",
+                            fixture_dir.display()
+                        )
+                    })
+                    .path()
+            })
+            .filter(|path| {
+                path.extension().and_then(|extension| extension.to_str()) == Some("pine")
+            })
+            .map(|path| {
+                path.strip_prefix(workspace)
+                    .unwrap_or_else(|err| {
+                        panic!(
+                            "fixture path {} should be under {}: {err}",
+                            path.display(),
+                            workspace.display()
+                        )
+                    })
+                    .to_string_lossy()
+                    .replace('\\', "/")
+            })
+            .collect()
     }
     fn rust_source_files(root: &Path) -> Vec<PathBuf> {
         let mut files = Vec::new();
