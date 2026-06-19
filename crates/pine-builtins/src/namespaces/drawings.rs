@@ -607,102 +607,46 @@ const LINE_GET_PRICE_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const BOX_NEW_POINT_PARAMS: &[BuiltinParam] = &[
+    param("top_left", Accepts::ChartPointCompatible, false),
+    param("bottom_right", Accepts::ChartPointCompatible, false),
+    param("border_color", Accepts::ColorCompatible, true),
+    param("border_width", Accepts::IntCompatible, true),
+    param("border_style", Accepts::ConstString, true),
+    param("extend", Accepts::ConstString, true),
+    param("xloc", Accepts::ConstString, true),
+    param("bgcolor", Accepts::ColorCompatible, true),
+    param("text", Accepts::StringCompatible, true),
+    param("text_size", Accepts::StringOrIntCompatible, true),
+    param("text_color", Accepts::ColorCompatible, true),
+    param("text_halign", Accepts::ConstString, true),
+    param("text_valign", Accepts::ConstString, true),
+    param("text_wrap", Accepts::ConstString, true),
+    param("text_font_family", Accepts::ConstString, true),
+    param("force_overlay", Accepts::ConstBool, true),
+    param("text_formatting", Accepts::IntCompatible, true),
+];
+
 const BOX_NEW_PARAMS: &[BuiltinParam] = &[
-    BuiltinParam {
-        name: "left",
-        accepts: Accepts::IntCompatible,
-        optional: false,
-    },
-    BuiltinParam {
-        name: "top",
-        accepts: Accepts::NumericCompatible,
-        optional: false,
-    },
-    BuiltinParam {
-        name: "right",
-        accepts: Accepts::IntCompatible,
-        optional: false,
-    },
-    BuiltinParam {
-        name: "bottom",
-        accepts: Accepts::NumericCompatible,
-        optional: false,
-    },
-    BuiltinParam {
-        name: "border_color",
-        accepts: Accepts::ColorCompatible,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "border_width",
-        accepts: Accepts::IntCompatible,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "border_style",
-        accepts: Accepts::ConstString,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "extend",
-        accepts: Accepts::ConstString,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "xloc",
-        accepts: Accepts::ConstString,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "bgcolor",
-        accepts: Accepts::ColorCompatible,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "text",
-        accepts: Accepts::StringCompatible,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "text_size",
-        accepts: Accepts::StringOrIntCompatible,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "text_color",
-        accepts: Accepts::ColorCompatible,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "text_halign",
-        accepts: Accepts::ConstString,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "text_valign",
-        accepts: Accepts::ConstString,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "text_wrap",
-        accepts: Accepts::ConstString,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "text_font_family",
-        accepts: Accepts::ConstString,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "force_overlay",
-        accepts: Accepts::ConstBool,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "text_formatting",
-        accepts: Accepts::IntCompatible,
-        optional: true,
-    },
+    param("left", Accepts::IntCompatible, false),
+    param("top", Accepts::NumericCompatible, false),
+    param("right", Accepts::IntCompatible, false),
+    param("bottom", Accepts::NumericCompatible, false),
+    param("border_color", Accepts::ColorCompatible, true),
+    param("border_width", Accepts::IntCompatible, true),
+    param("border_style", Accepts::ConstString, true),
+    param("extend", Accepts::ConstString, true),
+    param("xloc", Accepts::ConstString, true),
+    param("bgcolor", Accepts::ColorCompatible, true),
+    param("text", Accepts::StringCompatible, true),
+    param("text_size", Accepts::StringOrIntCompatible, true),
+    param("text_color", Accepts::ColorCompatible, true),
+    param("text_halign", Accepts::ConstString, true),
+    param("text_valign", Accepts::ConstString, true),
+    param("text_wrap", Accepts::ConstString, true),
+    param("text_font_family", Accepts::ConstString, true),
+    param("force_overlay", Accepts::ConstBool, true),
+    param("text_formatting", Accepts::IntCompatible, true),
 ];
 
 const BOX_SET_X_PARAMS: &[BuiltinParam] = &[
@@ -1271,6 +1215,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "box.new",
         phase: BuiltinPhase::Phase1Core,
         params: BOX_NEW_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_BOX),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box.new",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_NEW_POINT_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_BOX),
         variadic: false,
     },

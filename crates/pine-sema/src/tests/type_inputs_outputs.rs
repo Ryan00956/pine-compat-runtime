@@ -1242,6 +1242,27 @@ fn accepts_minimal_box_new() {
 }
 
 #[test]
+fn accepts_box_new_chart_point_overload() {
+    let analysis = analyze(
+        "top_left = chart.point.now(high)\nbottom_right = chart.point.from_index(bar_index + 1, low)\nid = box.new(top_left, bottom_right, color.purple, 2, bgcolor=color.green)\ntime_top_left = chart.point.from_time(time, high)\ntime_bottom_right = chart.point.from_time(time + 60000, low)\ntime_id = box.new(top_left=time_top_left, bottom_right=time_bottom_right, xloc=xloc.bar_time, border_style=line.style_dotted, text=\"time box\")\nempty = box.new(na, na, na, na, color.white, 1, xloc=xloc.bar_time)\nmissing = box.new(top_left=na, bottom_right=time_bottom_right, xloc=xloc.bar_time)\nplot(box.get_left(id) + box.get_right(time_id) + nz(box.get_left(empty), 0) + nz(box.get_left(missing), 0))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "box.new")
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn accepts_box_point_setters() {
     let analysis = analyze(
         "id = box.new(bar_index, high, bar_index + 1, low)\ntop_left = chart.point.from_index(bar_index - 1, open)\nbottom_right = chart.point.from_index(bar_index + 2, close)\nbox.set_top_left_point(id, top_left)\nid.set_bottom_right_point(bottom_right)\ntime_id = box.new(left=time, top=high, right=time + 60000, bottom=low, xloc=xloc.bar_time)\ntime_top_left = chart.point.from_time(time - 60000, open)\ntime_bottom_right = chart.point.from_time(time + 120000, close)\nbox.set_top_left_point(time_id, time_top_left)\ntime_id.set_bottom_right_point(time_bottom_right)\nplot(box.get_left(id) + box.get_right(time_id))\n",

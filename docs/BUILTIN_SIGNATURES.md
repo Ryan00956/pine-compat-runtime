@@ -102,6 +102,7 @@ line.new(x1: int-compatible, y1: numeric-compatible, x2: int-compatible, y2: num
 line.new(first_point: chart.point-compatible, second_point: chart.point-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
 line.set_first_point(id: line-compatible, point: chart.point-compatible) -> void
 line.set_second_point(id: line-compatible, point: chart.point-compatible) -> void
+box.new(top_left: chart.point-compatible, bottom_right: chart.point-compatible, border_color?: color-compatible, border_width?: int-compatible, border_style?: const string, extend?: const string, xloc?: const string, bgcolor?: color-compatible, text?: string-compatible, text_size?: string-or-int-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_wrap?: const string, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series box
 box.set_top_left_point(id: box-compatible, point: chart.point-compatible) -> void
 box.set_bottom_right_point(id: box-compatible, point: chart.point-compatible) -> void
 polyline.new(points: simple array<chart.point>, curved?: bool-compatible, closed?: bool-compatible, xloc?: const string, line_color?: color-compatible, fill_color?: color-compatible, line_style?: const string, line_width?: int-compatible, force_overlay?: const bool) -> series polyline
@@ -138,7 +139,7 @@ appearance are not implemented by this fixed chart metadata subset.
 `chart.point` supports fixture-backed construction through `new`, `now`,
 `from_index`, `from_time`, and `copy`, plus top-level `time`, `index`, and
 `price` field reads/mutation. `line.new`, `line.set_first_point`,
-`line.set_second_point`, `box.set_top_left_point`, and
+`line.set_second_point`, `box.new`, `box.set_top_left_point`, and
 `box.set_bottom_right_point` can consume `chart.point` values, and point arrays
 can feed the partial `polyline.new` snapshot subset. `polyline.delete` and
 `polyline.all` cover the historical and forming-bar rollback lifecycle subset;

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.new(top_left, bottom_right, ...)` chart-point
+  overload support: point-based box snapshots use `point.index` for
+  `xloc.bar_index` and `point.time` for `xloc.bar_time`, while preserving the
+  existing box style, text, fill, and border snapshot fields.
 - Added fixture-backed `box.set_top_left_point()` and
   `box.set_bottom_right_point()` chart-point corner mutation support:
   point-based corner snapshots use `point.index` for `xloc.bar_index` boxes

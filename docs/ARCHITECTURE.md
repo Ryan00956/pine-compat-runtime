@@ -455,9 +455,10 @@ cover `left`, `top`,
 `textWrap`, `textFontFamily`, and `textFormatting`. `box.new` can initialize
 those host-neutral style and text snapshot fields, including
 solid/dotted/dashed border styles and official extend constants, for the
-left/top/right/bottom overload when `xloc` is omitted or `xloc.bar_index`;
-`xloc.bar_time` stores time-coordinate left/right values, while chart-point
-overloads remain outside the current runtime output contract. Supported
+left/top/right/bottom overload and the `chart.point` top-left/bottom-right
+overload when `xloc` is omitted or `xloc.bar_index`; `xloc.bar_time` stores
+time-coordinate left/right values and uses `point.time` for point-overload
+boxes. Supported
 `box.set_*` mutators include geometry, background, border
 color/width/style, official extend, text and text-layout snapshot setters from
 ordinary and independent while-loop control-flow blocks,

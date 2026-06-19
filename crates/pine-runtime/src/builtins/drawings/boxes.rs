@@ -4,7 +4,13 @@ use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
     pub(super) fn eval_box_new(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        if box_has_named_point_args(args) {
+            return self.eval_box_new_from_points(args, PineValue::Na);
+        }
         let left = self.eval_required_box_arg(args, 0, "left")?;
+        if matches!(left, PineValue::ChartPoint(_)) {
+            return self.eval_box_new_from_points(args, left);
+        }
         let top = self.eval_required_box_arg(args, 1, "top")?;
         let right = self.eval_required_box_arg(args, 2, "right")?;
         let bottom = self.eval_required_box_arg(args, 3, "bottom")?;
@@ -28,6 +34,87 @@ impl<'a> HistoricalRuntime<'a> {
             self.eval_box_option_value(args, 17, "force_overlay", PineValue::Bool(false))?;
         let text_formatting =
             self.eval_box_text_formatting_option_value(args, 18, "text_formatting")?;
+        self.create_box(BoxFields {
+            left,
+            top,
+            right,
+            bottom,
+            xloc,
+            bg_color,
+            border_color,
+            border_width,
+            border_style,
+            extend,
+            text,
+            text_color,
+            text_size,
+            text_halign,
+            text_valign,
+            text_wrap,
+            text_font_family,
+            text_formatting,
+        })
+    }
+
+    fn eval_box_new_from_points(
+        &mut self,
+        args: &[HirCallArg],
+        top_left: PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        let top_left = if box_has_named_point_args(args) {
+            self.eval_required_box_arg(args, 0, "top_left")?
+        } else {
+            top_left
+        };
+        let bottom_right = self.eval_required_box_arg(args, 1, "bottom_right")?;
+        let border_color = self.eval_box_option_value(args, 2, "border_color", PineValue::Na)?;
+        let border_width =
+            self.eval_box_option_value(args, 3, "border_width", PineValue::Int(1))?;
+        let border_style = self.eval_box_option(args, 4, "border_style", "line.style_solid")?;
+        let extend = self.eval_box_option(args, 5, "extend", "extend.none")?;
+        let xloc = self.eval_box_option(args, 6, "xloc", "xloc.bar_index")?;
+        let bg_color = self.eval_box_option_value(args, 7, "bgcolor", PineValue::Na)?;
+        let text = self.eval_box_option_value(args, 8, "text", PineValue::String(String::new()))?;
+        let text_size = self.eval_box_option(args, 9, "text_size", "size.normal")?;
+        let text_color = self.eval_box_option_value(args, 10, "text_color", PineValue::Na)?;
+        let text_halign = self.eval_box_option(args, 11, "text_halign", "text.align_center")?;
+        let text_valign = self.eval_box_option(args, 12, "text_valign", "text.align_center")?;
+        let text_wrap = self.eval_box_option(args, 13, "text_wrap", "text.wrap_none")?;
+        let text_font_family =
+            self.eval_box_option(args, 14, "text_font_family", "font.family_default")?;
+        let _force_overlay =
+            self.eval_box_option_value(args, 15, "force_overlay", PineValue::Bool(false))?;
+        let text_formatting =
+            self.eval_box_text_formatting_option_value(args, 16, "text_formatting")?;
+        let Some((left, top)) = box_point_coordinates(top_left, &xloc) else {
+            return Ok(PineValue::Na);
+        };
+        let Some((right, bottom)) = box_point_coordinates(bottom_right, &xloc) else {
+            return Ok(PineValue::Na);
+        };
+        self.create_box(BoxFields {
+            left,
+            top,
+            right,
+            bottom,
+            xloc,
+            bg_color,
+            border_color,
+            border_width,
+            border_style,
+            extend,
+            text,
+            text_color,
+            text_size,
+            text_halign,
+            text_valign,
+            text_wrap,
+            text_font_family,
+            text_formatting,
+        })
+    }
+
+    fn create_box(&mut self, fields: BoxFields) -> Result<PineValue, RuntimeError> {
         self.evict_oldest_boxes_at_limit()?;
         let id = self.next_box_id;
         self.next_box_id = self
@@ -41,24 +128,24 @@ impl<'a> HistoricalRuntime<'a> {
             snapshots: vec![BoxSnapshot {
                 bar_index: self.bars,
                 exists: true,
-                left,
-                top,
-                right,
-                bottom,
-                xloc,
-                bg_color,
-                border_color,
-                border_width,
-                border_style,
-                extend,
-                text,
-                text_color,
-                text_size,
-                text_halign,
-                text_valign,
-                text_wrap,
-                text_font_family,
-                text_formatting,
+                left: fields.left,
+                top: fields.top,
+                right: fields.right,
+                bottom: fields.bottom,
+                xloc: fields.xloc,
+                bg_color: fields.bg_color,
+                border_color: fields.border_color,
+                border_width: fields.border_width,
+                border_style: fields.border_style,
+                extend: fields.extend,
+                text: fields.text,
+                text_color: fields.text_color,
+                text_size: fields.text_size,
+                text_halign: fields.text_halign,
+                text_valign: fields.text_valign,
+                text_wrap: fields.text_wrap,
+                text_font_family: fields.text_font_family,
+                text_formatting: fields.text_formatting,
             }],
         });
         Ok(PineValue::Box(id))
@@ -621,6 +708,32 @@ impl<'a> HistoricalRuntime<'a> {
             }),
         }
     }
+}
+
+struct BoxFields {
+    left: PineValue,
+    top: PineValue,
+    right: PineValue,
+    bottom: PineValue,
+    xloc: PineValue,
+    bg_color: PineValue,
+    border_color: PineValue,
+    border_width: PineValue,
+    border_style: PineValue,
+    extend: PineValue,
+    text: PineValue,
+    text_color: PineValue,
+    text_size: PineValue,
+    text_halign: PineValue,
+    text_valign: PineValue,
+    text_wrap: PineValue,
+    text_font_family: PineValue,
+    text_formatting: PineValue,
+}
+
+fn box_has_named_point_args(args: &[HirCallArg]) -> bool {
+    args.iter()
+        .any(|arg| matches!(arg.name.as_deref(), Some("top_left" | "bottom_right")))
 }
 
 fn box_call_arg_expr<'a>(args: &'a [HirCallArg], index: usize, name: &str) -> Option<&'a HirExpr> {

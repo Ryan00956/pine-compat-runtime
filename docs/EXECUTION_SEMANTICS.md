@@ -684,9 +684,9 @@ bar-index x coordinates, price y coordinates,
 selected color/width/style and extend fields, snapshot cloning, non-reused ids,
 and declaration-driven max-count eviction. `line.new` can initialize existing line
 snapshot fields for xloc, extend, color, style, and width when `xloc` is
-omitted, `xloc.bar_index`, or `xloc.bar_time`; `force_overlay` is accepted but
-remains a host display responsibility. The chart-point overload remains
-unsupported; selected `line.set_*` mutators update
+omitted, `xloc.bar_index`, or `xloc.bar_time`; the chart-point overload uses
+`point.index` or `point.time` according to `xloc`; `force_overlay` is accepted
+but remains a host display responsibility. Selected `line.set_*` mutators update
 endpoint/color/width/style/extend snapshots, and `line.set_xloc` with
 `xloc.bar_index` or `xloc.bar_time` updates the line's x1, x2, and xloc
 snapshot values, including when called from ordinary and independent while-loop
@@ -697,8 +697,9 @@ selected background/border fields, snapshot cloning, non-reused ids, and a
 declaration-driven max-count eviction. `box.new` can initialize existing box snapshot fields
 for xloc, background, border, extend, text, text color, text size, text
 alignment, text wrap, font family, and text formatting when `xloc` is omitted,
-`xloc.bar_index`, or `xloc.bar_time`; `force_overlay` is accepted but remains a
-host display responsibility. The chart-point overload remains unsupported;
+`xloc.bar_index`, or `xloc.bar_time`; the chart-point overload uses
+`point.index` or `point.time` according to `xloc`; `force_overlay` is accepted
+but remains a host display responsibility.
 `box.set_xloc` with `xloc.bar_index` or `xloc.bar_time` updates the box's left,
 right, and xloc snapshot values. Tables use deterministic ids,
 fixed positive
@@ -1136,7 +1137,10 @@ join helpers remain limited to their existing scalar-compatible array families.
 storage/read/mutation/search. `line.new` can create line snapshots from two
 `chart.point` values, selecting `point.index` for `xloc.bar_index` and
 `point.time` for `xloc.bar_time`, while retaining the existing line style,
-extend, color, and width snapshot fields. `line.set_first_point` and
+extend, color, and width snapshot fields. `box.new` can create box snapshots
+from two `chart.point` values using the same `xloc` coordinate selection while
+retaining the existing box style, text, and fill snapshot fields.
+`line.set_first_point` and
 `line.set_second_point` update the selected endpoint from a `chart.point`,
 using the line's current `xloc` to choose `point.index` or `point.time` for the
 x-coordinate. `box.set_top_left_point` and `box.set_bottom_right_point` update

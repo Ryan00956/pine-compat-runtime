@@ -2,6 +2,20 @@ use crate::prelude::*;
 
 const LINE_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
 const LINE_EXTENDS: &[&str] = &["extend.none", "extend.right", "extend.left", "extend.both"];
+const BOX_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
+const BOX_BORDER_STYLES: &[&str] = &["line.style_solid", "line.style_dotted", "line.style_dashed"];
+const TEXT_HALIGNS: &[&str] = &["text.align_left", "text.align_center", "text.align_right"];
+const TEXT_VALIGNS: &[&str] = &["text.align_top", "text.align_center", "text.align_bottom"];
+const TEXT_WRAPS: &[&str] = &["text.wrap_none", "text.wrap_auto"];
+const TEXT_FONT_FAMILIES: &[&str] = &["font.family_default", "font.family_monospace"];
+const TEXT_SIZES: &[&str] = &[
+    "size.auto",
+    "size.tiny",
+    "size.small",
+    "size.normal",
+    "size.large",
+    "size.huge",
+];
 const LINE_STYLES: &[&str] = &[
     "line.style_solid",
     "line.style_dotted",
@@ -13,6 +27,13 @@ const LINE_STYLES: &[&str] = &[
 
 #[derive(Clone, Copy)]
 struct LineNewParam {
+    name: &'static str,
+    accepts: Accepts,
+    optional: bool,
+}
+
+#[derive(Clone, Copy)]
+struct BoxNewParam {
     name: &'static str,
     accepts: Accepts,
     optional: bool,
@@ -114,6 +135,56 @@ const LINE_NEW_POINT_PARAMS: &[LineNewParam] = &[
     },
 ];
 
+const BOX_NEW_SCALAR_PARAMS: &[BoxNewParam] = &[
+    box_param("left", Accepts::IntCompatible, false),
+    box_param("top", Accepts::NumericCompatible, false),
+    box_param("right", Accepts::IntCompatible, false),
+    box_param("bottom", Accepts::NumericCompatible, false),
+    box_param("border_color", Accepts::ColorCompatible, true),
+    box_param("border_width", Accepts::IntCompatible, true),
+    box_param("border_style", Accepts::ConstString, true),
+    box_param("extend", Accepts::ConstString, true),
+    box_param("xloc", Accepts::ConstString, true),
+    box_param("bgcolor", Accepts::ColorCompatible, true),
+    box_param("text", Accepts::StringCompatible, true),
+    box_param("text_size", Accepts::StringOrIntCompatible, true),
+    box_param("text_color", Accepts::ColorCompatible, true),
+    box_param("text_halign", Accepts::ConstString, true),
+    box_param("text_valign", Accepts::ConstString, true),
+    box_param("text_wrap", Accepts::ConstString, true),
+    box_param("text_font_family", Accepts::ConstString, true),
+    box_param("force_overlay", Accepts::ConstBool, true),
+    box_param("text_formatting", Accepts::IntCompatible, true),
+];
+
+const BOX_NEW_POINT_PARAMS: &[BoxNewParam] = &[
+    box_param("top_left", Accepts::ChartPointCompatible, false),
+    box_param("bottom_right", Accepts::ChartPointCompatible, false),
+    box_param("border_color", Accepts::ColorCompatible, true),
+    box_param("border_width", Accepts::IntCompatible, true),
+    box_param("border_style", Accepts::ConstString, true),
+    box_param("extend", Accepts::ConstString, true),
+    box_param("xloc", Accepts::ConstString, true),
+    box_param("bgcolor", Accepts::ColorCompatible, true),
+    box_param("text", Accepts::StringCompatible, true),
+    box_param("text_size", Accepts::StringOrIntCompatible, true),
+    box_param("text_color", Accepts::ColorCompatible, true),
+    box_param("text_halign", Accepts::ConstString, true),
+    box_param("text_valign", Accepts::ConstString, true),
+    box_param("text_wrap", Accepts::ConstString, true),
+    box_param("text_font_family", Accepts::ConstString, true),
+    box_param("force_overlay", Accepts::ConstBool, true),
+    box_param("text_formatting", Accepts::IntCompatible, true),
+];
+
+const fn box_param(name: &'static str, accepts: Accepts, optional: bool) -> BoxNewParam {
+    BoxNewParam {
+        name,
+        accepts,
+        optional,
+    }
+}
+
 impl Analyzer {
     pub(crate) fn validate_line_new_args(
         &mut self,
@@ -130,6 +201,24 @@ impl Analyzer {
             LINE_NEW_SCALAR_PARAMS
         };
         self.validate_line_new_overload(args, arg_types, params);
+        true
+    }
+
+    pub(crate) fn validate_box_new_args(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> bool {
+        if signature.name != "box.new" {
+            return false;
+        }
+        let params = if box_new_uses_point_overload(args, arg_types) {
+            BOX_NEW_POINT_PARAMS
+        } else {
+            BOX_NEW_SCALAR_PARAMS
+        };
+        self.validate_box_new_overload(args, arg_types, params);
         true
     }
 
@@ -214,6 +303,139 @@ impl Analyzer {
             }
         }
     }
+
+    fn validate_box_new_overload(
+        &mut self,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+        params: &[BoxNewParam],
+    ) {
+        let required_count = params.iter().filter(|param| !param.optional).count();
+        if args.len() < required_count {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!(
+                    "`box.new` expects at least {required_count} argument(s), got {}",
+                    args.len()
+                ),
+                args.first().map_or(Span::default(), |arg| arg.span),
+            ));
+            return;
+        }
+        if args.len() > params.len() {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!(
+                    "`box.new` expects at most {} argument(s), got {}",
+                    params.len(),
+                    args.len()
+                ),
+                args[params.len()].span,
+            ));
+        }
+        for (index, arg) in args.iter().enumerate() {
+            let Some(param) = box_new_param(params, index, arg, &mut self.diagnostics) else {
+                continue;
+            };
+            let Some(arg_type) = arg_types.get(index).copied().flatten() else {
+                continue;
+            };
+            if !accepts_type(param.accepts, arg_type) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_TYPE",
+                    format!(
+                        "`box.new` argument `{}` does not accept {:?} {:?}",
+                        param.name, arg_type.qualifier, arg_type.kind
+                    ),
+                    arg.span,
+                ));
+            }
+        }
+        self.validate_box_new_string_arg(args, params, "border_style", BOX_BORDER_STYLES);
+        self.validate_box_new_string_arg(args, params, "extend", LINE_EXTENDS);
+        self.validate_box_new_string_arg(args, params, "xloc", BOX_XLOCS);
+        self.validate_box_new_string_arg(args, params, "text_halign", TEXT_HALIGNS);
+        self.validate_box_new_string_arg(args, params, "text_valign", TEXT_VALIGNS);
+        self.validate_box_new_string_arg(args, params, "text_wrap", TEXT_WRAPS);
+        self.validate_box_new_string_arg(args, params, "text_font_family", TEXT_FONT_FAMILIES);
+        self.validate_box_new_text_size_arg(args, params);
+        self.validate_box_new_text_formatting_arg(args, params);
+    }
+
+    fn validate_box_new_string_arg(
+        &mut self,
+        args: &[CallArg],
+        params: &[BoxNewParam],
+        name: &str,
+        supported: &[&str],
+    ) {
+        for (index, arg) in args.iter().enumerate() {
+            let Some(param) = box_new_param(params, index, arg, &mut Vec::new()) else {
+                continue;
+            };
+            if param.name != name {
+                continue;
+            }
+            let supported_value = const_string_value(&arg.value)
+                .as_deref()
+                .is_some_and(|value| supported.contains(&value));
+            if !supported_value {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    format!(
+                        "`box.new` argument `{name}` only supports {}",
+                        supported.join(", ")
+                    ),
+                    arg.span,
+                ));
+            }
+        }
+    }
+
+    fn validate_box_new_text_size_arg(&mut self, args: &[CallArg], params: &[BoxNewParam]) {
+        for (index, arg) in args.iter().enumerate() {
+            let Some(param) = box_new_param(params, index, arg, &mut Vec::new()) else {
+                continue;
+            };
+            if param.name != "text_size" {
+                continue;
+            }
+            let Some(value) = const_string_value(&arg.value) else {
+                continue;
+            };
+            if !TEXT_SIZES.iter().any(|allowed| *allowed == value) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    format!(
+                        "`box.new` argument `text_size` only supports {} or int sizes",
+                        TEXT_SIZES.join(", ")
+                    ),
+                    arg.span,
+                ));
+            }
+        }
+    }
+
+    fn validate_box_new_text_formatting_arg(&mut self, args: &[CallArg], params: &[BoxNewParam]) {
+        for (index, arg) in args.iter().enumerate() {
+            let Some(param) = box_new_param(params, index, arg, &mut Vec::new()) else {
+                continue;
+            };
+            if param.name != "text_formatting" {
+                continue;
+            }
+            let Some(value) = const_int_value(&arg.value) else {
+                continue;
+            };
+            if !(0..=3).contains(&value) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`box.new` argument `text_formatting` only supports text.format_none, text.format_bold, text.format_italic, or text.format_bold + text.format_italic",
+                    arg.span,
+                ));
+            }
+        }
+    }
 }
 
 fn line_new_uses_point_overload(args: &[CallArg], arg_types: &[Option<PineType>]) -> bool {
@@ -238,6 +460,37 @@ fn line_new_param<'a>(
             diagnostics.push(Diagnostic::error(
                 "E_CALL_ARG_NAME",
                 format!("`line.new` has no argument named `{name}`"),
+                arg.span,
+            ));
+        }
+        param
+    } else {
+        params.get(index)
+    }
+}
+
+fn box_new_uses_point_overload(args: &[CallArg], arg_types: &[Option<PineType>]) -> bool {
+    args.iter()
+        .any(|arg| matches!(arg.name.as_deref(), Some("top_left" | "bottom_right")))
+        || arg_types
+            .first()
+            .copied()
+            .flatten()
+            .is_some_and(|arg_type| arg_type.kind == ValueKind::ChartPoint)
+}
+
+fn box_new_param<'a>(
+    params: &'a [BoxNewParam],
+    index: usize,
+    arg: &CallArg,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Option<&'a BoxNewParam> {
+    if let Some(name) = &arg.name {
+        let param = params.iter().find(|param| param.name == name);
+        if param.is_none() {
+            diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_NAME",
+                format!("`box.new` has no argument named `{name}`"),
                 arg.span,
             ));
         }
