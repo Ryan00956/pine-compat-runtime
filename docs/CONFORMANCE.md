@@ -64,7 +64,9 @@ because the top-level `alerts` array is reserved, strategy order-fill alert
 payloads are exposed under `strategy.alerts`, table cell snapshots include
 host-neutral `textWrap`, linefill snapshots are exposed under `lineFills`, and
 polyline creation and lifecycle snapshots are exposed under `polylines`;
-analysis and matrix JSON remain `schemaVersion: 2`.
+analysis JSON is currently `schemaVersion: 3` because it exposes top-level
+`inputs` metadata with input call-site ids, names, and titles; matrix JSON
+remains `schemaVersion: 2`.
 The contracts are separate so runtime-only fields do not force analysis or
 matrix schema changes. The text-only CLI `analyze` output is
 diagnostic console output and is not part of the machine-readable schema until

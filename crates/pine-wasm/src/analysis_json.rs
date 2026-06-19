@@ -1,4 +1,4 @@
-use pine_runtime::PUBLIC_ANALYSIS_SCHEMA_VERSION;
+use pine_runtime::{PUBLIC_ANALYSIS_SCHEMA_VERSION, input_calls};
 use pine_sema::{Analysis, AnalysisInput, analyze_input};
 use pine_syntax::{Diagnostic, Severity, SourceFile, Span};
 
@@ -23,6 +23,8 @@ fn analysis_json(source: &SourceFile, analysis: &Analysis) -> String {
     });
     output.push_str(",\"diagnostics\":");
     output.push_str(&diagnostics_json(source, &analysis.diagnostics));
+    output.push_str(",\"inputs\":");
+    output.push_str(&inputs_json(analysis));
     output.push_str(",\"compatibility\":{");
     output.push_str("\"supported\":");
     output.push_str(&features_json(
@@ -48,10 +50,34 @@ fn analysis_json(source: &SourceFile, analysis: &Analysis) -> String {
 
 pub(crate) fn analysis_error_json(message: &str) -> String {
     format!(
-        "{{\"schemaVersion\":{},\"languageVersion\":null,\"executable\":false,\"diagnostics\":[{{\"code\":\"E_HOST_INPUT\",\"severity\":\"error\",\"message\":\"{}\",\"span\":{{\"start\":0,\"end\":0,\"line\":1,\"column\":1}}}}],\"compatibility\":{{\"supported\":[],\"unsupported\":[]}}}}",
+        "{{\"schemaVersion\":{},\"languageVersion\":null,\"executable\":false,\"diagnostics\":[{{\"code\":\"E_HOST_INPUT\",\"severity\":\"error\",\"message\":\"{}\",\"span\":{{\"start\":0,\"end\":0,\"line\":1,\"column\":1}}}}],\"inputs\":[],\"compatibility\":{{\"supported\":[],\"unsupported\":[]}}}}",
         PUBLIC_ANALYSIS_SCHEMA_VERSION,
         json_escape(message)
     )
+}
+
+fn inputs_json(analysis: &Analysis) -> String {
+    let Some(hir) = &analysis.hir else {
+        return "[]".to_owned();
+    };
+    let mut output = String::from("[");
+    for (index, input) in input_calls(hir).into_iter().enumerate() {
+        if index > 0 {
+            output.push(',');
+        }
+        output.push_str(&format!(
+            "{{\"callSiteId\":{},\"name\":\"{}\",\"title\":",
+            input.call_site_id,
+            json_escape(&input.name)
+        ));
+        match input.title {
+            Some(title) => output.push_str(&format!("\"{}\"", json_escape(&title))),
+            None => output.push_str("null"),
+        }
+        output.push('}');
+    }
+    output.push(']');
+    output
 }
 
 fn features_json<'a>(

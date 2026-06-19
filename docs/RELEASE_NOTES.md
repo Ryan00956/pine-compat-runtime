@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Bumped machine-readable analysis reports to `schemaVersion: 3` and added
+  top-level `inputs` metadata for executable scripts, exposing each `input*`
+  call's call-site id, function name, and literal title when available.
 - Added a Rust runtime `InputOverrides` path for call-site keyed `input.*`
   execution values, while keeping existing default-`defval` behavior when no
   override is supplied.

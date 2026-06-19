@@ -1,7 +1,8 @@
 use pine_ir::HirProgram;
 use pine_runtime::{
     Bar, ChartContext, InMemoryRequestDataProvider, PUBLIC_ANALYSIS_SCHEMA_VERSION,
-    RequestEnvironment, RequestKey, RequestTimeframe, run_historical_with_request_environment,
+    RequestEnvironment, RequestKey, RequestTimeframe, input_calls,
+    run_historical_with_request_environment,
 };
 use pine_sema::{Analysis, AnalysisInput, analyze_input};
 use pine_syntax::{Diagnostic, SourceFile, Span};
@@ -240,6 +241,21 @@ fn analysis_to_py(py: Python<'_>, source: &SourceFile, analysis: &Analysis) -> P
     )?;
     output.set_item("compatibility", compatibility_to_py(py, source, analysis)?)?;
     output.set_item("executable", analysis.hir.is_some())?;
+    output.set_item("inputs", inputs_to_py(py, analysis)?)?;
+    Ok(output.into_any().unbind())
+}
+
+fn inputs_to_py(py: Python<'_>, analysis: &Analysis) -> PyResult<Py<PyAny>> {
+    let output = PyList::empty(py);
+    if let Some(hir) = &analysis.hir {
+        for input in input_calls(hir) {
+            let item = PyDict::new(py);
+            item.set_item("callSiteId", input.call_site_id)?;
+            item.set_item("name", input.name)?;
+            item.set_item("title", input.title)?;
+            output.append(item)?;
+        }
+    }
     Ok(output.into_any().unbind())
 }
 

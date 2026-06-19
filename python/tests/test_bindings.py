@@ -91,13 +91,34 @@ def fixture_bars(path):
 def test_analyze_script_reports_executable_script():
     report = pine_compat.analyze_script('indicator("demo")\nplot(close)\n')
 
-    assert report["schemaVersion"] == 2
+    assert report["schemaVersion"] == 3
     assert report["executable"] is True
     assert report["diagnostics"] == []
+    assert report["inputs"] == []
     assert any(
         feature["feature"] == "plot"
         for feature in report["compatibility"]["supported"]
     )
+
+
+def test_analyze_script_reports_input_call_sites():
+    report = pine_compat.analyze_script(
+        'indicator("inputs")\n'
+        'length = input.int(2, "Length")\n'
+        'mode = input.string("SMA", title="Mode")\n'
+        'plot(close)\n'
+    )
+
+    assert report["schemaVersion"] == 3
+    assert report["diagnostics"] == []
+    assert [
+        {"name": item["name"], "title": item["title"]}
+        for item in report["inputs"]
+    ] == [
+        {"name": "input.int", "title": "Length"},
+        {"name": "input.string", "title": "Mode"},
+    ]
+    assert all(isinstance(item["callSiteId"], int) for item in report["inputs"])
 
 
 def test_compile_script_returns_program_with_run_method():

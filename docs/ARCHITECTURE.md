@@ -403,9 +403,10 @@ when they forward machine-readable runtime results.
 
 Machine-readable analysis and matrix outputs use separate schema ownership:
 `PUBLIC_ANALYSIS_SCHEMA_VERSION` for WASM/Python analysis reports and
-`PUBLIC_MATRIX_SCHEMA_VERSION` for CLI matrix JSON. Runtime is currently `6`;
-analysis and matrix remain `2`. These contracts can evolve independently when a
-runtime-only output field does not affect analysis or matrix contracts.
+`PUBLIC_MATRIX_SCHEMA_VERSION` for CLI matrix JSON. Runtime is currently `7`;
+analysis is currently `3` after adding top-level input call-site metadata, and
+matrix remains `2`. These contracts can evolve independently when a runtime-only
+output field does not affect analysis or matrix contracts.
 
 Drawing-object outputs use sparse snapshot families. The Phase E drawing
 contract reserves `labels`, `lines`, `boxes`, and `tables`, whose entries have

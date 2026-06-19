@@ -13,6 +13,7 @@ fn analyzes_script_to_json() {
     );
     assert_eq!(parsed["executable"], serde_json::json!(true));
     assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(parsed["inputs"], serde_json::json!([]));
     assert!(
         parsed["compatibility"]["supported"]
             .as_array()
@@ -20,6 +21,29 @@ fn analyzes_script_to_json() {
             .iter()
             .any(|feature| feature["feature"] == serde_json::json!("plot"))
     );
+}
+
+#[test]
+fn analyzes_script_input_call_sites_to_json() {
+    let output = analyze_script(
+        "indicator(\"inputs\")\nlength = input.int(2, \"Length\")\nmode = input.string(\"SMA\", title=\"Mode\")\nplot(close)\n",
+    );
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    assert_eq!(
+        parsed["schemaVersion"],
+        serde_json::json!(PUBLIC_ANALYSIS_SCHEMA_VERSION)
+    );
+    assert_eq!(parsed["diagnostics"], serde_json::json!([]));
+    assert_eq!(parsed["inputs"][0]["name"], serde_json::json!("input.int"));
+    assert_eq!(parsed["inputs"][0]["title"], serde_json::json!("Length"));
+    assert!(parsed["inputs"][0]["callSiteId"].as_u64().is_some());
+    assert_eq!(
+        parsed["inputs"][1]["name"],
+        serde_json::json!("input.string")
+    );
+    assert_eq!(parsed["inputs"][1]["title"], serde_json::json!("Mode"));
+    assert!(parsed["inputs"][1]["callSiteId"].as_u64().is_some());
 }
 
 #[test]
