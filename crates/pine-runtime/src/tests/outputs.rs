@@ -648,7 +648,7 @@ if bar_index == 2
     table.cell_set_text_color(id, 1, 0, color.blue)
     table.cell_set_width(id, 1, 0, 25)
     table.cell_set_height(id, 1, 0, 40)
-    table.cell_set_text_size(id, 1, 0, size.small)
+    table.cell_set_text_size(id, 1, 0, 21)
     table.cell_set_text_halign(id, 1, 0, text.align_left)
     table.cell_set_text_valign(id, 1, 0, text.align_top)
     table.cell_set_text_wrap(id, 1, 0, text.wrap_auto)
@@ -759,10 +759,7 @@ plot(close)
     );
     assert_eq!(table.snapshots[7].cells[1].width, PineValue::Int(25));
     assert_eq!(table.snapshots[8].cells[1].height, PineValue::Int(40));
-    assert_eq!(
-        table.snapshots[9].cells[1].text_size,
-        PineValue::String("size.small".to_owned())
-    );
+    assert_eq!(table.snapshots[9].cells[1].text_size, PineValue::Int(21));
     assert_eq!(
         table.snapshots[10].cells[1].text_halign,
         PineValue::String("text.align_left".to_owned())

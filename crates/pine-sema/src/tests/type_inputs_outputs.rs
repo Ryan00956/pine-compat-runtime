@@ -1381,6 +1381,37 @@ fn rejects_invalid_table_cell_text_size() {
 }
 
 #[test]
+fn accepts_table_cell_set_int_text_size() {
+    let analysis = analyze(
+        "id = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"A\")\ntable.cell_set_text_size(id, 0, 0, 19)\nplot(close)\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_invalid_table_cell_set_text_size() {
+    let analysis = analyze(
+        "id = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"A\")\ntable.cell_set_text_size(id, 0, 0, \"size.bad\")\nplot(close)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_invalid_table_text_formatting() {
     let analysis = analyze(
         "id = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"A\", text_formatting=text.format_bold + 4)\nplot(close)\n",

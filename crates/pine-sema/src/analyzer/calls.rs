@@ -986,6 +986,9 @@ impl Analyzer {
             "table.cell_set_text_wrap" => {
                 self.validate_label_string_arg(signature, args, 3, "text_wrap", TEXT_WRAPS);
             }
+            "table.cell_set_text_size" => {
+                self.validate_text_size_arg(signature, args, 3, "text_size");
+            }
             "table.cell" => {
                 self.validate_label_string_arg(signature, args, 7, "text_halign", TEXT_HALIGNS);
                 self.validate_label_string_arg(signature, args, 8, "text_valign", TEXT_VALIGNS);
