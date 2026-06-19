@@ -1547,6 +1547,23 @@ fn rejects_invalid_table_cell_set_text_size() {
 }
 
 #[test]
+fn rejects_table_cell_set_float_text_size() {
+    let analysis = analyze(
+        "id = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"A\")\ntable.cell_set_text_size(id, 0, 0, 19.5)\nplot(close)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_invalid_table_text_formatting() {
     let analysis = analyze(
         "id = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"A\", text_formatting=text.format_bold + 4)\nplot(close)\n",

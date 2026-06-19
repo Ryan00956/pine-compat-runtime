@@ -350,7 +350,7 @@ const TABLE_CELL_SET_TEXT_SIZE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "text_size",
-        accepts: Accepts::StringCastScalar,
+        accepts: Accepts::StringOrIntCompatible,
         optional: false,
     },
 ];
