@@ -318,7 +318,7 @@ if bar_index == 1
 if bar_index == 2
     box.new(left=bar_index, top=open, right=bar_index, bottom=close)
 if bar_index == 3
-    box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)
+    box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text="styled", text_size=19, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)
 plot(close)
 "#,
     );
@@ -401,10 +401,7 @@ plot(close)
     );
     assert_eq!(snapshot.text, PineValue::String("styled".to_owned()));
     assert_eq!(snapshot.text_color, PineValue::Color(0xFFFFFF));
-    assert_eq!(
-        snapshot.text_size,
-        PineValue::String("size.small".to_owned())
-    );
+    assert_eq!(snapshot.text_size, PineValue::Int(19));
     assert_eq!(
         snapshot.text_halign,
         PineValue::String("text.align_left".to_owned())

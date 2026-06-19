@@ -1127,6 +1127,36 @@ fn rejects_invalid_box_text_formatting() {
 }
 
 #[test]
+fn accepts_box_new_int_text_size() {
+    let analysis =
+        analyze("id = box.new(bar_index, high, bar_index, low, text_size=19)\nplot(close)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_invalid_box_new_text_size() {
+    let analysis = analyze(
+        "id = box.new(bar_index, high, bar_index, low, text_size=\"size.bad\")\nplot(close)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_VALUE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_unsupported_box_set_xloc_values() {
     let analysis = analyze(
         "id = box.new(bar_index, high, bar_index + 1, low)\nbox.set_xloc(id, time, time + 60000, xloc.bar_time)\nplot(close)\n",

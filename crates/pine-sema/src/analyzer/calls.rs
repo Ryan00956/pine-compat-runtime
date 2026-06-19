@@ -916,7 +916,7 @@ impl Analyzer {
                 );
                 self.validate_label_string_arg(signature, args, 7, "extend", LINE_EXTENDS);
                 self.validate_label_string_arg(signature, args, 8, "xloc", &["xloc.bar_index"]);
-                self.validate_label_string_arg(signature, args, 11, "text_size", LABEL_SIZES);
+                self.validate_text_size_arg(signature, args, 11, "text_size");
                 self.validate_label_string_arg(signature, args, 13, "text_halign", TEXT_HALIGNS);
                 self.validate_label_string_arg(signature, args, 14, "text_valign", TEXT_VALIGNS);
                 self.validate_label_string_arg(signature, args, 15, "text_wrap", TEXT_WRAPS);
