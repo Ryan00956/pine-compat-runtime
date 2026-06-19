@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported str tostring chart point array")
+points = array.new<chart.point>()
+text = str.tostring(points)
+plot(close)
