@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array stdev chart point")
+points = array.new<chart.point>()
+plot(array.stdev(points))
