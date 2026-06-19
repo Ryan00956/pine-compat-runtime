@@ -947,6 +947,7 @@ array.new_line(size?: simple int, initial_value?: line-compatible) -> simple lin
 array.new_linefill(size?: simple int, initial_value?: linefill-compatible) -> simple linefill-array
 array.new_box(size?: simple int, initial_value?: box-compatible) -> simple box-array
 array.new_table(size?: simple int, initial_value?: table-compatible) -> simple table-array
+array.new<chart.point>(size?: simple int, initial_value?: chart-point-compatible) -> simple chart-point-array
 array.from(value, ...) -> simple inferred scalar-or-object-array
 array.size(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|box-array|table-array|chart-point-array) -> simple int
 array.push(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|box-array|table-array|chart-point-array, value: element-compatible) -> void
@@ -998,10 +999,10 @@ arrays. Float arrays accept int or float values and store them as floats. Int
 arrays accept int values. Bool arrays accept bool values. String arrays accept
 string values. Color arrays accept color values. Label, line, linefill, box, and table arrays accept
 their matching drawing ids or `na` and keep reference elements shallow across
-`array.copy`. `array.from(chart.point, ...)` can infer a chart-point array, and
-the generic storage/read/mutation/search subset can carry `chart.point` values;
-numeric, truth, sort, and join helpers still reject chart-point arrays, and
-the generic `array.new<chart.point>()` syntax is not parsed yet. Array
+`array.copy`. `array.new<chart.point>()` and `array.from(chart.point, ...)`
+can construct chart-point arrays, and the generic storage/read/mutation/search
+subset can carry `chart.point` values; numeric, truth, sort, and join helpers
+still reject chart-point arrays. Array
 assignment and side-effect-free user-defined function
 parameters pass the array id; array mutation inside user-defined functions
 remains unsupported. `array.from` infers the array

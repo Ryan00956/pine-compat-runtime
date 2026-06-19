@@ -350,9 +350,9 @@ Object families:
 
 Required design:
 
-- `array<chart.point>` construction is a prerequisite for any `polyline.new`
-  runtime claim; `chart.point` value semantics are now fixture-backed only for
-  constructor/copy and top-level field access/mutation.
+- `array.new<chart.point>()` and `array.from(chart.point, ...)` point-list
+  construction are fixture-backed prerequisites for `polyline.new`; the next
+  runtime claim still needs polyline object state and snapshots.
 - Runtime object ids and lifetime rules.
 - Per-bar creation, mutation, and deletion semantics.
 - Rollback behavior for forming bars.

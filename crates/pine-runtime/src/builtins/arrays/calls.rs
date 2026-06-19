@@ -21,6 +21,7 @@ impl<'a> HistoricalRuntime<'a> {
             "array.new_label" => self.eval_array_new_label(args),
             "array.new_box" => self.eval_array_new_box(args),
             "array.new_table" => self.eval_array_new_table(args),
+            "array.new<chart.point>" => self.eval_array_new_chart_point(args),
             "array.from" => self.eval_array_from(args),
             "array.size" => self.eval_array_size(args),
             "array.push" => self.eval_array_push(args),

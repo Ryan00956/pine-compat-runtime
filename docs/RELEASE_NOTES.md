@@ -2,13 +2,15 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.new<chart.point>()` parsing, semantic validation,
+  and runtime construction for chart-point arrays, including optional
+  `initial_value` handling.
 - Added fixture-backed `array.from(chart.point, ...)` point-array inference and
   generic chart-point array storage/read/mutation/search support while keeping
-  `array.new<chart.point>()` syntax and `polyline.*` unsupported.
+  `polyline.*` unsupported.
 - Added fixture-backed partial `chart.point` constructor, copy, field read, and
   top-level field mutation support as the first executable prerequisite for
-  future polyline work; generic `array.new<chart.point>()` syntax and
-  `polyline.*` remain unsupported.
+  future polyline work; `polyline.*` remains unsupported.
 - Refreshed the `polyline.*` implementation gate with an official-semantics
   sequence covering `chart.point`, `array<chart.point>`, polyline snapshots,
   deletion, `.all`, rollback, and host parity before support is claimed.

@@ -1117,9 +1117,9 @@ arrays with shallow reference elements. Numeric, truth, sorting, and string
 join helpers remain limited to their existing scalar-compatible array families.
 `chart.point` values have a fixture-backed execution model for constructors,
 `copy`, `time`/`index`/`price` field reads, top-level field mutation, and
-`array.from(chart.point, ...)` point-array storage/read/mutation/search.
-`polyline.*` remains unsupported until `array.new<chart.point>()` syntax,
-polyline snapshots, deletion, `.all`, rollback, and host-surface parity have
+`array.new<chart.point>()` plus `array.from(chart.point, ...)` point-array
+storage/read/mutation/search. `polyline.*` remains unsupported until polyline
+snapshots, deletion, `.all`, rollback, and host-surface parity have
 fixture-backed coverage.
 
 ## Determinism

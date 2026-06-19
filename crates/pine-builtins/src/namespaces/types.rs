@@ -42,3 +42,5 @@ pub(crate) const SIMPLE_LINE_FILL_ARRAY: PineType =
 pub(crate) const SIMPLE_BOX_ARRAY: PineType = PineType::new(Qualifier::Simple, ValueKind::BoxArray);
 pub(crate) const SIMPLE_TABLE_ARRAY: PineType =
     PineType::new(Qualifier::Simple, ValueKind::TableArray);
+pub(crate) const SIMPLE_CHART_POINT_ARRAY: PineType =
+    PineType::new(Qualifier::Simple, ValueKind::ChartPointArray);

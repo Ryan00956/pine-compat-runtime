@@ -505,6 +505,10 @@ impl Parser {
             if matches!(left.kind, ExprKind::For { .. } | ExprKind::Switch { .. }) {
                 break;
             }
+            if let Some(template_callee) = self.parse_array_new_chart_point_template_callee(&left) {
+                left = self.finish_call(template_callee)?;
+                continue;
+            }
             if self.at(TokenKind::LParen) {
                 left = self.finish_call(left)?;
                 continue;
@@ -816,6 +820,36 @@ impl Parser {
         })
     }
 
+    fn parse_array_new_chart_point_template_callee(&mut self, callee: &Expr) -> Option<Expr> {
+        if !matches!(
+            &callee.kind,
+            ExprKind::QualifiedName(parts) if parts.as_slice() == ["array", "new"]
+        ) {
+            return None;
+        }
+        if !self.at(TokenKind::Lt)
+            || !self.nth_identifier_is(1, "chart")
+            || !self.nth_at(2, TokenKind::Dot)
+            || !self.nth_identifier_is(3, "point")
+            || !self.nth_at(4, TokenKind::Gt)
+            || !self.nth_at(5, TokenKind::LParen)
+        {
+            return None;
+        }
+
+        self.bump();
+        self.bump();
+        self.bump();
+        self.bump();
+        let end = self.current().span;
+        self.bump();
+
+        Some(Expr {
+            span: callee.span.merge(end),
+            kind: ExprKind::Identifier("array.new<chart.point>".to_owned()),
+        })
+    }
+
     fn finish_history(&mut self, expr: Expr) -> Option<Expr> {
         self.expect(TokenKind::LBracket, "expected `[`")?;
         let offset = self.parse_expr(0)?;
@@ -886,6 +920,12 @@ impl Parser {
         })
     }
 
+    fn nth_identifier_is(&self, offset: usize, expected: &str) -> bool {
+        self.tokens.get(self.pos + offset).is_some_and(
+            |token| matches!(&token.kind, TokenKind::Identifier(name) if name == expected),
+        )
+    }
+
     fn current(&self) -> &Token {
         &self.tokens[self.pos]
     }
@@ -930,6 +970,41 @@ mod tests {
         assert!(matches!(
             parsed.program.statements[0].kind,
             StmtKind::Decl { .. }
+        ));
+    }
+
+    #[test]
+    fn parses_chart_point_array_new_template_call() {
+        let parsed = parse("points = array.new<chart.point>(2, chart.point.now(close))\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration");
+        };
+        let ExprKind::Call { callee, args } = &value.kind else {
+            panic!("expected call");
+        };
+        assert_eq!(
+            callee.kind,
+            ExprKind::Identifier("array.new<chart.point>".to_owned())
+        );
+        assert_eq!(args.len(), 2);
+    }
+
+    #[test]
+    fn parses_array_new_comparison_without_template_rewrite() {
+        let parsed = parse("is_less = array.new < close\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+            panic!("expected declaration");
+        };
+        assert!(matches!(
+            value.kind,
+            ExprKind::Binary {
+                op: BinaryOp::Lt,
+                ..
+            }
         ));
     }
 

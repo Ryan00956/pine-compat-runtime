@@ -71,6 +71,13 @@ impl<'a> HistoricalRuntime<'a> {
         self.eval_array_new_with_kind(args, "array.new_table", ArrayElementKind::Table)
     }
 
+    pub(crate) fn eval_array_new_chart_point(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_array_new_with_kind(args, "array.new<chart.point>", ArrayElementKind::ChartPoint)
+    }
+
     pub(crate) fn eval_array_from(
         &mut self,
         args: &[HirCallArg],

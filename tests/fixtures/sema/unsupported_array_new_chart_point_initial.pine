@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array new chart point initial")
+points = array.new<chart.point>(1, close)
+plot(array.size(points))

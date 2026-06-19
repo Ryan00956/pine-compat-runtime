@@ -1323,6 +1323,14 @@ fn reports_unsupported_array_new_float_initial_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_new_chart_point_initial_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_new_chart_point_initial.pine",
+        &["`array.new<chart.point>` argument `initial_value` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_new_int_initial_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_new_int_initial.pine",

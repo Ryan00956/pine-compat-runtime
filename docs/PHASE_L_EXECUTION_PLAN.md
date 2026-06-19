@@ -53,8 +53,8 @@ cargo test -p pine-wasm strategy
 
 The request subsystem is not the primary Phase L target. Lower-timeframe
 requests still need typed array return semantics and host output/data-shape
-design. Drawing `polyline.*` still needs `array.new<chart.point>()` and
-polyline runtime state beyond the current partial `chart.point` value subset.
+design. Drawing `polyline.*` still needs polyline runtime state and snapshots
+beyond the current partial `chart.point` value and point-array subset.
 
 ## Rules for Every Slice
 

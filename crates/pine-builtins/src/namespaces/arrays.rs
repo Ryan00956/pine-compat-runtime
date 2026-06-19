@@ -132,6 +132,19 @@ const ARRAY_NEW_TABLE_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_NEW_CHART_POINT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "size",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "initial_value",
+        accepts: Accepts::ChartPointCompatible,
+        optional: true,
+    },
+];
+
 const ARRAY_FROM_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "value",
     accepts: Accepts::Any,
@@ -419,6 +432,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_NEW_TABLE_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_TABLE_ARRAY),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.new<chart.point>",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NEW_CHART_POINT_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_CHART_POINT_ARRAY),
         variadic: false,
     },
     BuiltinSignature {

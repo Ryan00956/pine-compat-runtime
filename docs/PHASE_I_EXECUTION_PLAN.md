@@ -378,8 +378,8 @@ Recommended initial policy:
   label, line, box, and table lifecycles interact with intrabar persistence.
 - Reject `varip` declarations whose inferred value kind is `Label`, `Line`,
   `Box`, or `Table` with a precise diagnostic.
-- Keep `polyline.*` unsupported for its existing `chart.point` and point-array
-  reasons.
+- Keep `polyline.*` unsupported until polyline object state, snapshots, and
+  lifecycle behavior are fixture-backed.
 
 Steps:
 
