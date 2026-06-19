@@ -2912,6 +2912,14 @@ fn reports_unsupported_array_range_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_range_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_range_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_avg_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_avg_bool.pine",
@@ -2981,6 +2989,14 @@ fn reports_unsupported_array_avg_polyline_fixture() {
         "tests/fixtures/sema/unsupported_array_avg_polyline.pine",
         "array.new_polyline",
         "array function",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_avg_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_avg_chart_point.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -3058,6 +3074,14 @@ fn reports_unsupported_array_sum_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sum_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sum_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_max_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_max_bool.pine",
@@ -3131,6 +3155,14 @@ fn reports_unsupported_array_max_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_max_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_max_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_min_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_min_bool.pine",
@@ -3200,6 +3232,14 @@ fn reports_unsupported_array_min_polyline_fixture() {
         "tests/fixtures/sema/unsupported_array_min_polyline.pine",
         "array.new_polyline",
         "array function",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_min_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_min_chart_point.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
