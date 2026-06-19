@@ -388,3 +388,32 @@ plot(source.get(0))
     assert_values_close(&result.plots[1].values, &[1.0, 2.0, 3.0, 4.0]);
     assert_values_close(&result.plots[2].values, &[1.0, 2.0, 3.0, 4.0]);
 }
+
+#[test]
+fn reads_previous_label_array_slice_instance_history() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("label array slice history")
+current = label.new(bar_index, close, "id")
+source = array.new_label(2)
+source.set(0, current)
+window = source.slice(0, 1)
+previous_window = window[1]
+previous_id = na(previous_window) ? na : previous_window.get(0)
+plot(na(previous_id) ? na : label.get_x(previous_id))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 1);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[0.0, 1.0, 2.0]);
+}

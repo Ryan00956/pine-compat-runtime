@@ -183,14 +183,14 @@ Maps and matrices:
 
 History and snapshots:
 
-- Scalar array, scalar slice, label-array, line-array, linefill-array,
-  box-array, and table-array variable history snapshots are
+- Scalar array, scalar slice, label-array, label-slice, line-array,
+  linefill-array, box-array, and table-array variable history snapshots are
   fixture-backed for the official
   `previous = a[1]; na(previous) ? na : previous.get(0)` read path: runtime
   commits retained array values as independent snapshots and returns a fresh
   copy on history reads.
 - Remaining array history behavior still needs design for polyline arrays,
-  non-scalar slice history, and broader mutation/aliasing semantics.
+  non-label object slice history, and broader mutation/aliasing semantics.
 
 Slice semantics:
 
@@ -252,8 +252,8 @@ Only take these when they are explicitly selected as the next work item:
 
 - Design remaining generic `array.new<type>()` parsing and type checking for
   UDT/polyline/map/matrix or other future element families.
-- Design remaining array history aliasing behavior, including non-label object
-  arrays, non-scalar slice snapshots, and mutation of historical copies.
+- Design remaining array history aliasing behavior, including polyline arrays,
+  non-label object slice snapshots, and mutation of historical copies.
 - Add `for...in` array iteration syntax and runtime behavior.
 - Add additional object arrays after their object ids and lifetimes exist.
 - Add UDT arrays and `sort_field` after user-defined types exist.

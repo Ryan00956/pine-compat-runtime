@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- Added fixture-backed scalar array, scalar slice, label-array, line-array,
-  linefill-array, box-array, and table-array variable
+- Added fixture-backed scalar array, scalar slice, label-array, label-slice,
+  line-array, linefill-array, box-array, and table-array variable
   history snapshots for Pine-style `previous = a[1]` and
   `na(previous) ? na : previous.get(0)` reads, with retained array values copied
   into history and positive-offset history reads returning a fresh array copy.
