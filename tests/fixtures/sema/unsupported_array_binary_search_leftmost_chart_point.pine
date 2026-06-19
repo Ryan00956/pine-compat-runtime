@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array binary search leftmost chart point")
+points = array.new<chart.point>()
+point = chart.point.now(close)
+plot(array.binary_search_leftmost(points, point))
