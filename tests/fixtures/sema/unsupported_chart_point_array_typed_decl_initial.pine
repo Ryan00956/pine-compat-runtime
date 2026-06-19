@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported chart point array typed declaration initial value")
+
+array<chart.point> points = array.new_float()
+plot(close)

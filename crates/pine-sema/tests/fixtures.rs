@@ -1542,6 +1542,14 @@ fn reports_unsupported_chart_point_typed_decl_initial_fixture() {
 }
 
 #[test]
+fn reports_unsupported_chart_point_array_typed_decl_initial_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_chart_point_array_typed_decl_initial.pine",
+        &["cannot initialize `points` of type array<chart.point> with Simple FloatArray"],
+    );
+}
+
+#[test]
 fn reports_unsupported_scalar_typed_decl_initial_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_scalar_typed_decl_initial.pine",

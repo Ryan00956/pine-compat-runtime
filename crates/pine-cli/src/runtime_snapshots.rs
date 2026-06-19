@@ -16,6 +16,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/array_typed_declarations.pine",
     ),
     (
+        "runtime_chart_point_array_typed_declarations.json",
+        "tests/fixtures/runtime/chart_point_array_typed_declarations.pine",
+    ),
+    (
         "runtime_drawing_typed_declarations.json",
         "tests/fixtures/runtime/drawing_typed_declarations.pine",
     ),

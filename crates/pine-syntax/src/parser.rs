@@ -272,28 +272,45 @@ impl Parser {
         let TokenKind::Identifier(container) = self.current().kind.clone() else {
             return None;
         };
-        if container != "array"
-            || !self.nth_at(1, TokenKind::Lt)
-            || !self.nth_at(3, TokenKind::Gt)
-            || !self.nth_at(5, TokenKind::Eq)
-        {
+        if container != "array" || !self.nth_at(1, TokenKind::Lt) {
             return None;
         }
 
-        let TokenKind::Identifier(element_type) = self.tokens.get(self.pos + 2)?.kind.clone()
-        else {
+        let start_pos = self.pos;
+        let (element_type, name_offset, eq_offset) = if self.nth_at(3, TokenKind::Gt)
+            && self.nth_at(5, TokenKind::Eq)
+        {
+            let TokenKind::Identifier(element_type) = self.tokens.get(self.pos + 2)?.kind.clone()
+            else {
+                return None;
+            };
+            (element_type, 4, 5)
+        } else if self.nth_at(3, TokenKind::Dot)
+            && self.nth_at(5, TokenKind::Gt)
+            && self.nth_at(7, TokenKind::Eq)
+        {
+            let TokenKind::Identifier(namespace) = self.tokens.get(self.pos + 2)?.kind.clone()
+            else {
+                return None;
+            };
+            let TokenKind::Identifier(type_name) = self.tokens.get(self.pos + 4)?.kind.clone()
+            else {
+                return None;
+            };
+            (format!("{namespace}.{type_name}"), 6, 7)
+        } else {
             return None;
         };
-        let TokenKind::Identifier(name) = self.tokens.get(self.pos + 4)?.kind.clone() else {
+
+        let TokenKind::Identifier(name) = self.tokens.get(self.pos + name_offset)?.kind.clone()
+        else {
             return None;
         };
 
         let start = self.current().span;
-        self.bump();
-        self.bump();
-        self.bump();
-        self.bump();
-        self.bump();
+        while self.pos < start_pos + eq_offset {
+            self.bump();
+        }
         Some((format!("array<{element_type}>"), name, start))
     }
 
@@ -1152,6 +1169,25 @@ mod tests {
         assert_eq!(*mode, DeclMode::Normal);
         assert_eq!(declared_type.as_deref(), Some("array<float>"));
         assert_eq!(name, "prices");
+    }
+
+    #[test]
+    fn parses_dotted_array_typed_declaration() {
+        let parsed = parse("array<chart.point> points = array.new<chart.point>()\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl {
+            mode,
+            declared_type,
+            name,
+            ..
+        } = &parsed.program.statements[0].kind
+        else {
+            panic!("expected declaration");
+        };
+        assert_eq!(*mode, DeclMode::Normal);
+        assert_eq!(declared_type.as_deref(), Some("array<chart.point>"));
+        assert_eq!(name, "points");
     }
 
     #[test]

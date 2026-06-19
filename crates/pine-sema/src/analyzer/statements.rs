@@ -356,6 +356,9 @@ impl Analyzer {
             Some("array<bool>") => Some(PineType::new(Qualifier::Series, ValueKind::BoolArray)),
             Some("array<string>") => Some(PineType::new(Qualifier::Series, ValueKind::StringArray)),
             Some("array<color>") => Some(PineType::new(Qualifier::Series, ValueKind::ColorArray)),
+            Some("array<chart.point>") => {
+                Some(PineType::new(Qualifier::Series, ValueKind::ChartPointArray))
+            }
             Some(type_name) => {
                 self.diagnostics.push(Diagnostic::error(
                     "E_DECL_TYPE",
@@ -474,6 +477,7 @@ fn typed_declaration_name(kind: ValueKind) -> &'static str {
         ValueKind::BoolArray => "array<bool>",
         ValueKind::StringArray => "array<string>",
         ValueKind::ColorArray => "array<color>",
+        ValueKind::ChartPointArray => "array<chart.point>",
         _ => "typed",
     }
 }

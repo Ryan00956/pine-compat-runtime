@@ -271,6 +271,7 @@ fn can_assign_na_to_kind(kind: ValueKind) -> bool {
             | ValueKind::BoolArray
             | ValueKind::StringArray
             | ValueKind::ColorArray
+            | ValueKind::ChartPointArray
     )
 }
 pub(crate) fn qualifier_at_most(actual: Qualifier, max: Qualifier) -> bool {

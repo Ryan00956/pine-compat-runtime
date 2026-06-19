@@ -1,0 +1,32 @@
+//@version=5
+indicator("Chart point array typed declarations")
+
+current = chart.point.now(close)
+indexed = chart.point.from_index(bar_index + 1, high)
+timed = chart.point.from_time(time + 10, low)
+
+array<chart.point> points = na
+array<chart.point> seeded = array.new<chart.point>(2, timed)
+var array<chart.point> persistent = array.new<chart.point>()
+
+points := array.new<chart.point>()
+points.push(current)
+points.push(indexed)
+seeded.set(1, chart.point.copy(indexed))
+persistent.push(current)
+
+points := na
+points := array.from(current, seeded.get(1))
+
+first = points.first()
+last = points.last()
+persisted = persistent.first()
+
+plot(points.size())
+plot(first.time)
+plot(first.index)
+plot(first.price)
+plot(last.index)
+plot(last.price)
+plot(seeded.size())
+plot(persisted.price)
