@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array standardize chart point")
+points = array.new<chart.point>()
+standardized = array.standardize(points)
+plot(close)
