@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentile_nearest_rank chart point")
+points = array.new<chart.point>()
+plot(array.percentile_nearest_rank(points, 50))
