@@ -85,6 +85,22 @@ const LABEL_NEW_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const LABEL_NEW_POINT_PARAMS: &[BuiltinParam] = &[
+    param("point", Accepts::ChartPointCompatible, false),
+    param("text", Accepts::StringCompatible, false),
+    param("xloc", Accepts::ConstString, true),
+    param("yloc", Accepts::ConstString, true),
+    param("color", Accepts::ColorCompatible, true),
+    param("style", Accepts::ConstString, true),
+    param("textcolor", Accepts::ColorCompatible, true),
+    param("size", Accepts::StringOrIntCompatible, true),
+    param("textalign", Accepts::ConstString, true),
+    param("tooltip", Accepts::StringCompatible, true),
+    param("text_font_family", Accepts::ConstString, true),
+    param("force_overlay", Accepts::ConstBool, true),
+    param("text_formatting", Accepts::IntCompatible, true),
+];
+
 const LABEL_SET_X_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -877,6 +893,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "label.new",
         phase: BuiltinPhase::Phase1Core,
         params: LABEL_NEW_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_LABEL),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "label.new",
+        phase: BuiltinPhase::Phase1Core,
+        params: LABEL_NEW_POINT_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_LABEL),
         variadic: false,
     },

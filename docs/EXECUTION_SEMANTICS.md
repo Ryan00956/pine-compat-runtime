@@ -752,8 +752,10 @@ from ordinary and independent while-loop control-flow blocks.
 horizontal text alignment constant. `label.set_text_font_family` stores the
 selected font-family constant. `label.new` can initialize `xloc`, `yloc`,
 color, official style, text color, size, `textalign`, `text_font_family`, and a
-`text_formatting` mask in the host-neutral snapshot; `force_overlay` is
-accepted but remains a host display responsibility.
+`text_formatting` mask in the host-neutral snapshot; its chart-point overload
+uses `point.index` for `xloc.bar_index`, `point.time` for `xloc.bar_time`, and
+`point.price` for y. `force_overlay` is accepted but remains a host display
+responsibility.
 `label.set_text_formatting` stores the selected
 `text.format_none`/`text.format_bold`/`text.format_italic` mask, including
 bold+italic combinations. Visual placement for above/below-bar and time/index
@@ -1142,7 +1144,10 @@ storage/read/mutation/search. `line.new` can create line snapshots from two
 `point.time` for `xloc.bar_time`, while retaining the existing line style,
 extend, color, and width snapshot fields. `box.new` can create box snapshots
 from two `chart.point` values using the same `xloc` coordinate selection while
-retaining the existing box style, text, and fill snapshot fields.
+retaining the existing box style, text, and fill snapshot fields. `label.new`
+can create label snapshots from one `chart.point`, selecting `point.index` for
+`xloc.bar_index` and `point.time` for `xloc.bar_time`, while using
+`point.price` for y and retaining the existing label text/style fields.
 `line.set_first_point` and
 `line.set_second_point` update the selected endpoint from a `chart.point`,
 using the line's current `xloc` to choose `point.index` or `point.time` for the

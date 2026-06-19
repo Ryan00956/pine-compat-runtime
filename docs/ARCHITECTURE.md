@@ -413,9 +413,11 @@ an object `id` and a `snapshots` array. Label snapshots use `barIndex`,
 `exists`, and, while `exists` is true, the mutable label fields represented by
 normalized Pine values, including `textAlign`, `textFontFamily`, and
 `textFormatting` for host-side text layout. `label.new` can initialize
-bar-index or bar-time x locations, price/abovebar/belowbar y locations,
-official label styles, string and integer sizes, tooltip, text alignment,
-font-family, and text-formatting snapshot fields. Supported `label.set_*`
+bar-index or bar-time x locations directly or from a `chart.point` using
+`point.index` for `xloc.bar_index` and `point.time` for `xloc.bar_time`,
+price/abovebar/belowbar y locations, official label styles, string and integer
+sizes, tooltip, text alignment, font-family, and text-formatting snapshot
+fields. Supported `label.set_*`
 mutators include coordinate, `label.set_point` chart-point coordinate mutation,
 x-location, y-location, text, size, color, style, tooltip, alignment,
 font-family, and text-formatting snapshot mutation from ordinary and

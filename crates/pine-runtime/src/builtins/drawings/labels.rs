@@ -1,16 +1,39 @@
 use crate::*;
 use pine_ir::{HirCallArg, HirExpr};
 
+struct LabelFields {
+    x: PineValue,
+    y: PineValue,
+    text: PineValue,
+    xloc: PineValue,
+    yloc: PineValue,
+    color: PineValue,
+    style: PineValue,
+    text_color: PineValue,
+    size: PineValue,
+    tooltip: PineValue,
+    text_align: PineValue,
+    text_font_family: PineValue,
+    text_formatting: PineValue,
+}
+
 impl<'a> HistoricalRuntime<'a> {
     pub(super) fn eval_label_new(
         &mut self,
         args: &[HirCallArg],
     ) -> Result<PineValue, RuntimeError> {
+        if label_has_named_point_args(args) {
+            return self.eval_label_new_from_point(args, PineValue::Na);
+        }
         let Some(x_arg) = label_call_arg_expr(args, 0, "x") else {
             return Err(RuntimeError {
                 message: "label.new missing x argument".to_owned(),
             });
         };
+        let x = self.eval_expr(x_arg)?;
+        if matches!(x, PineValue::ChartPoint(_)) {
+            return self.eval_label_new_from_point(args, x);
+        }
         let Some(y_arg) = label_call_arg_expr(args, 1, "y") else {
             return Err(RuntimeError {
                 message: "label.new missing y argument".to_owned(),
@@ -22,7 +45,6 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
 
-        let x = self.eval_expr(x_arg)?;
         let y = self.eval_expr(y_arg)?;
         let text = self.eval_expr(text_arg)?;
         let xloc = self.eval_label_option(args, 3, "xloc", "xloc.bar_index")?;
@@ -38,6 +60,70 @@ impl<'a> HistoricalRuntime<'a> {
             self.eval_label_option(args, 11, "text_font_family", "font.family_default")?;
         let text_formatting =
             self.eval_label_text_formatting_option_value(args, 13, "text_formatting")?;
+        self.create_label(LabelFields {
+            x,
+            y,
+            text,
+            xloc,
+            yloc,
+            color,
+            style,
+            text_color,
+            size,
+            tooltip,
+            text_align,
+            text_font_family,
+            text_formatting,
+        })
+    }
+
+    fn eval_label_new_from_point(
+        &mut self,
+        args: &[HirCallArg],
+        point: PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        let point = if label_has_named_point_args(args) {
+            self.eval_required_label_arg(args, 0, "point")?
+        } else {
+            point
+        };
+        let text = self.eval_required_label_arg(args, 1, "text")?;
+        let xloc = self.eval_label_option(args, 2, "xloc", "xloc.bar_index")?;
+        let yloc = self.eval_label_option(args, 3, "yloc", "yloc.price")?;
+        let color = self.eval_label_option_value(args, 4, "color", PineValue::Na)?;
+        let style = self.eval_label_option(args, 5, "style", "label.style_label_down")?;
+        let text_color = self.eval_label_option_value(args, 6, "textcolor", PineValue::Na)?;
+        let size = self.eval_label_option(args, 7, "size", "size.normal")?;
+        let text_align = self.eval_label_option(args, 8, "textalign", "text.align_center")?;
+        let tooltip =
+            self.eval_label_option_value(args, 9, "tooltip", PineValue::String(String::new()))?;
+        let text_font_family =
+            self.eval_label_option(args, 10, "text_font_family", "font.family_default")?;
+        let _force_overlay =
+            self.eval_label_option_value(args, 11, "force_overlay", PineValue::Bool(false))?;
+        let text_formatting =
+            self.eval_label_text_formatting_option_value(args, 12, "text_formatting")?;
+        let Some((x, y)) = label_point_coordinates(point, &xloc) else {
+            return Ok(PineValue::Na);
+        };
+        self.create_label(LabelFields {
+            x,
+            y,
+            text,
+            xloc,
+            yloc,
+            color,
+            style,
+            text_color,
+            size,
+            tooltip,
+            text_align,
+            text_font_family,
+            text_formatting,
+        })
+    }
+
+    fn create_label(&mut self, fields: LabelFields) -> Result<PineValue, RuntimeError> {
         self.evict_oldest_labels_at_limit()?;
         let id = self.next_label_id;
         self.next_label_id = self
@@ -51,19 +137,19 @@ impl<'a> HistoricalRuntime<'a> {
             snapshots: vec![LabelSnapshot {
                 bar_index: self.bars,
                 exists: true,
-                x,
-                y,
-                text,
-                xloc,
-                yloc,
-                color,
-                style,
-                text_color,
-                size,
-                tooltip,
-                text_align,
-                text_font_family,
-                text_formatting,
+                x: fields.x,
+                y: fields.y,
+                text: fields.text,
+                xloc: fields.xloc,
+                yloc: fields.yloc,
+                color: fields.color,
+                style: fields.style,
+                text_color: fields.text_color,
+                size: fields.size,
+                tooltip: fields.tooltip,
+                text_align: fields.text_align,
+                text_font_family: fields.text_font_family,
+                text_formatting: fields.text_formatting,
             }],
         });
         Ok(PineValue::Label(id))
@@ -551,6 +637,10 @@ fn label_call_arg_expr<'a>(
         .find(|arg| arg.name.as_deref() == Some(name))
         .or_else(|| args.get(index).filter(|arg| arg.name.is_none()))
         .map(|arg| &arg.value)
+}
+
+fn label_has_named_point_args(args: &[HirCallArg]) -> bool {
+    args.iter().any(|arg| arg.name.as_deref() == Some("point"))
 }
 
 fn label_point_coordinates(point: PineValue, xloc: &PineValue) -> Option<(PineValue, PineValue)> {

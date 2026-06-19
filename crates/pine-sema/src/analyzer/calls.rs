@@ -545,6 +545,9 @@ impl Analyzer {
             self.validate_timestamp_args(signature, args, arg_types);
             return;
         }
+        if self.validate_label_new_args(signature, args, arg_types) {
+            return;
+        }
         if self.validate_line_new_args(signature, args, arg_types) {
             return;
         }
@@ -675,7 +678,7 @@ impl Analyzer {
         self.validate_array_from_args(signature, args, arg_types);
         self.validate_indicator_args(signature, args);
         self.validate_alert_args(signature, args);
-        self.validate_label_new_args(signature, args);
+        self.validate_drawing_option_args(signature, args);
     }
 
     fn validate_time_function_args(
@@ -881,7 +884,7 @@ impl Analyzer {
         Some(("timeframe_bars_back", Accepts::IntCompatible))
     }
 
-    pub(crate) fn validate_label_new_args(
+    pub(crate) fn validate_drawing_option_args(
         &mut self,
         signature: &BuiltinSignature,
         args: &[CallArg],

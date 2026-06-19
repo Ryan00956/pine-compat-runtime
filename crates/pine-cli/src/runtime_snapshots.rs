@@ -290,6 +290,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/label_new.pine",
     ),
     (
+        "runtime_label_new_points.json",
+        "tests/fixtures/runtime/label_new_points.pine",
+    ),
+    (
         "runtime_label_limit_eviction.json",
         "tests/fixtures/runtime/label_limit_eviction.pine",
     ),

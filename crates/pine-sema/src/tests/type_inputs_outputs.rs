@@ -566,6 +566,29 @@ fn accepts_minimal_label_new() {
 }
 
 #[test]
+fn accepts_label_new_chart_point_overload() {
+    let analysis = analyze(
+        "index_point = chart.point.from_index(bar_index + 1, high)\nid = label.new(index_point, \"index\", color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, textalign=text.align_left, tooltip=\"Tip\", text_font_family=font.family_monospace, text_formatting=text.format_bold)\ntime_point = chart.point.from_time(time + 60000, low)\ntime_id = label.new(point=time_point, text=\"time\", xloc=xloc.bar_time, yloc=yloc.belowbar)\nmissing = label.new(point=na, text=\"missing\")\nplot(label.get_x(id) + label.get_x(time_id) + nz(label.get_x(missing), 0))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "label.new"),
+        "{:?}",
+        analysis.compatibility.supported
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
 fn rejects_unsupported_label_new_modes() {
     let analysis = analyze(
         "label.new(bar_index, high, \"High\", xloc=xloc.bar_time, yloc=\"yloc.middle\", style=\"label.style_unknown\", size=\"size.massive\")\nplot(close)\n",

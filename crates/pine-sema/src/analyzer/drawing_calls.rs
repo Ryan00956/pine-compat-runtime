@@ -25,6 +25,36 @@ const LINE_STYLES: &[&str] = &[
     "line.style_arrow_both",
 ];
 
+const LABEL_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
+const LABEL_YLOCS: &[&str] = &["yloc.price", "yloc.abovebar", "yloc.belowbar"];
+const LABEL_STYLES: &[&str] = &[
+    "label.style_label_down",
+    "label.style_label_up",
+    "label.style_label_left",
+    "label.style_label_right",
+    "label.style_label_lower_left",
+    "label.style_label_lower_right",
+    "label.style_label_upper_left",
+    "label.style_label_upper_right",
+    "label.style_label_center",
+    "label.style_square",
+    "label.style_diamond",
+    "label.style_circle",
+    "label.style_flag",
+    "label.style_arrowup",
+    "label.style_arrowdown",
+    "label.style_cross",
+    "label.style_xcross",
+    "label.style_none",
+];
+
+#[derive(Clone, Copy)]
+struct LabelNewParam {
+    name: &'static str,
+    accepts: Accepts,
+    optional: bool,
+}
+
 #[derive(Clone, Copy)]
 struct LineNewParam {
     name: &'static str,
@@ -37,6 +67,47 @@ struct BoxNewParam {
     name: &'static str,
     accepts: Accepts,
     optional: bool,
+}
+
+const LABEL_NEW_SCALAR_PARAMS: &[LabelNewParam] = &[
+    label_param("x", Accepts::IntCompatible, false),
+    label_param("y", Accepts::NumericCompatible, false),
+    label_param("text", Accepts::StringCompatible, false),
+    label_param("xloc", Accepts::ConstString, true),
+    label_param("yloc", Accepts::ConstString, true),
+    label_param("color", Accepts::ColorCompatible, true),
+    label_param("style", Accepts::ConstString, true),
+    label_param("textcolor", Accepts::ColorCompatible, true),
+    label_param("size", Accepts::StringOrIntCompatible, true),
+    label_param("textalign", Accepts::ConstString, true),
+    label_param("tooltip", Accepts::StringCompatible, true),
+    label_param("text_font_family", Accepts::ConstString, true),
+    label_param("force_overlay", Accepts::ConstBool, true),
+    label_param("text_formatting", Accepts::IntCompatible, true),
+];
+
+const LABEL_NEW_POINT_PARAMS: &[LabelNewParam] = &[
+    label_param("point", Accepts::ChartPointCompatible, false),
+    label_param("text", Accepts::StringCompatible, false),
+    label_param("xloc", Accepts::ConstString, true),
+    label_param("yloc", Accepts::ConstString, true),
+    label_param("color", Accepts::ColorCompatible, true),
+    label_param("style", Accepts::ConstString, true),
+    label_param("textcolor", Accepts::ColorCompatible, true),
+    label_param("size", Accepts::StringOrIntCompatible, true),
+    label_param("textalign", Accepts::ConstString, true),
+    label_param("tooltip", Accepts::StringCompatible, true),
+    label_param("text_font_family", Accepts::ConstString, true),
+    label_param("force_overlay", Accepts::ConstBool, true),
+    label_param("text_formatting", Accepts::IntCompatible, true),
+];
+
+const fn label_param(name: &'static str, accepts: Accepts, optional: bool) -> LabelNewParam {
+    LabelNewParam {
+        name,
+        accepts,
+        optional,
+    }
 }
 
 const LINE_NEW_SCALAR_PARAMS: &[LineNewParam] = &[
@@ -186,6 +257,24 @@ const fn box_param(name: &'static str, accepts: Accepts, optional: bool) -> BoxN
 }
 
 impl Analyzer {
+    pub(crate) fn validate_label_new_args(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+    ) -> bool {
+        if signature.name != "label.new" {
+            return false;
+        }
+        let params = if label_new_uses_point_overload(args, arg_types) {
+            LABEL_NEW_POINT_PARAMS
+        } else {
+            LABEL_NEW_SCALAR_PARAMS
+        };
+        self.validate_label_new_overload(args, arg_types, params);
+        true
+    }
+
     pub(crate) fn validate_line_new_args(
         &mut self,
         signature: &BuiltinSignature,
@@ -220,6 +309,141 @@ impl Analyzer {
         };
         self.validate_box_new_overload(args, arg_types, params);
         true
+    }
+
+    fn validate_label_new_overload(
+        &mut self,
+        args: &[CallArg],
+        arg_types: &[Option<PineType>],
+        params: &[LabelNewParam],
+    ) {
+        let required_count = params.iter().filter(|param| !param.optional).count();
+        if args.len() < required_count {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!(
+                    "`label.new` expects at least {required_count} argument(s), got {}",
+                    args.len()
+                ),
+                args.first().map_or(Span::default(), |arg| arg.span),
+            ));
+            return;
+        }
+        if args.len() > params.len() {
+            self.diagnostics.push(Diagnostic::error(
+                "E_CALL_ARITY",
+                format!(
+                    "`label.new` expects at most {} argument(s), got {}",
+                    params.len(),
+                    args.len()
+                ),
+                args[params.len()].span,
+            ));
+        }
+        for (index, arg) in args.iter().enumerate() {
+            let Some(param) = label_new_param(params, index, arg, &mut self.diagnostics) else {
+                continue;
+            };
+            let Some(arg_type) = arg_types.get(index).copied().flatten() else {
+                continue;
+            };
+            if !accepts_type(param.accepts, arg_type) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_TYPE",
+                    format!(
+                        "`label.new` argument `{}` does not accept {:?} {:?}",
+                        param.name, arg_type.qualifier, arg_type.kind
+                    ),
+                    arg.span,
+                ));
+            }
+        }
+        self.validate_label_new_string_arg(args, params, "xloc", LABEL_XLOCS);
+        self.validate_label_new_string_arg(args, params, "yloc", LABEL_YLOCS);
+        self.validate_label_new_string_arg(args, params, "style", LABEL_STYLES);
+        self.validate_label_new_string_arg(args, params, "textalign", TEXT_HALIGNS);
+        self.validate_label_new_string_arg(args, params, "text_font_family", TEXT_FONT_FAMILIES);
+        self.validate_label_new_text_size_arg(args, params);
+        self.validate_label_new_text_formatting_arg(args, params);
+    }
+
+    fn validate_label_new_string_arg(
+        &mut self,
+        args: &[CallArg],
+        params: &[LabelNewParam],
+        name: &str,
+        supported: &[&str],
+    ) {
+        for (index, arg) in args.iter().enumerate() {
+            let Some(param) = label_new_param(params, index, arg, &mut Vec::new()) else {
+                continue;
+            };
+            if param.name != name {
+                continue;
+            }
+            let supported_value = const_string_value(&arg.value)
+                .as_deref()
+                .is_some_and(|value| supported.contains(&value));
+            if !supported_value {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    format!(
+                        "`label.new` argument `{name}` only supports {}",
+                        supported.join(", ")
+                    ),
+                    arg.span,
+                ));
+            }
+        }
+    }
+
+    fn validate_label_new_text_size_arg(&mut self, args: &[CallArg], params: &[LabelNewParam]) {
+        for (index, arg) in args.iter().enumerate() {
+            let Some(param) = label_new_param(params, index, arg, &mut Vec::new()) else {
+                continue;
+            };
+            if param.name != "size" {
+                continue;
+            }
+            let Some(value) = const_string_value(&arg.value) else {
+                continue;
+            };
+            if !TEXT_SIZES.iter().any(|allowed| *allowed == value) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    format!(
+                        "`label.new` argument `size` only supports {} or int sizes",
+                        TEXT_SIZES.join(", ")
+                    ),
+                    arg.span,
+                ));
+            }
+        }
+    }
+
+    fn validate_label_new_text_formatting_arg(
+        &mut self,
+        args: &[CallArg],
+        params: &[LabelNewParam],
+    ) {
+        for (index, arg) in args.iter().enumerate() {
+            let Some(param) = label_new_param(params, index, arg, &mut Vec::new()) else {
+                continue;
+            };
+            if param.name != "text_formatting" {
+                continue;
+            }
+            let Some(value) = const_int_value(&arg.value) else {
+                continue;
+            };
+            if !(0..=3).contains(&value) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    "`label.new` argument `text_formatting` only supports text.format_none, text.format_bold, text.format_italic, or text.format_bold + text.format_italic",
+                    arg.span,
+                ));
+            }
+        }
     }
 
     fn validate_line_new_overload(
@@ -435,6 +659,36 @@ impl Analyzer {
                 ));
             }
         }
+    }
+}
+
+fn label_new_uses_point_overload(args: &[CallArg], arg_types: &[Option<PineType>]) -> bool {
+    args.iter().any(|arg| arg.name.as_deref() == Some("point"))
+        || arg_types
+            .first()
+            .copied()
+            .flatten()
+            .is_some_and(|arg_type| arg_type.kind == ValueKind::ChartPoint)
+}
+
+fn label_new_param<'a>(
+    params: &'a [LabelNewParam],
+    index: usize,
+    arg: &CallArg,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> Option<&'a LabelNewParam> {
+    if let Some(name) = &arg.name {
+        let param = params.iter().find(|param| param.name == name);
+        if param.is_none() {
+            diagnostics.push(Diagnostic::error(
+                "E_CALL_ARG_NAME",
+                format!("`label.new` has no argument named `{name}`"),
+                arg.span,
+            ));
+        }
+        param
+    } else {
+        params.get(index)
     }
 }
 
