@@ -27,37 +27,33 @@ polylines also expose only creation, deletion, and the read-only `polyline.all`
 collection; they do not have setter or getter methods, so redraws happen by
 deleting and creating a new polyline.
 
-This runtime currently has no `chart.point` value kind, no point snapshot
-schema, and no typed point-array carrier that can safely carry point lists
-through semantic analysis, historical execution, incremental append, and
-realtime rollback.
+This runtime now has fixture-backed `chart.point` constructor, field read, and
+top-level field mutation support, but it still has no typed point-array carrier
+or polyline snapshot schema that can safely carry point lists through semantic
+analysis, historical execution, incremental append, and realtime rollback.
 
 Adding a narrow `polyline.new(na)` or ad hoc tuple-based point list would create
 a different language surface from Pine and would bypass the array/type model
 that conformance relies on. The implementation order is therefore:
 
-1. `chart.point` design slice:
-   add the point value model and constructor semantics for
-   `chart.point.now`, `chart.point.from_index`, `chart.point.from_time`, and
-   compatible field access/mutation for `index`, `time`, and `price`.
-2. Point-list array slice:
+1. Point-list array slice:
    add `array.new<chart.point>()`, `array.from(chart.point, ...)`, and the
    existing array mutation/read subset needed to build fixture-backed point
    lists without widening unrelated numeric, sort, or join array behavior.
-3. `polyline.new` slice:
+2. `polyline.new` slice:
    add runtime-owned polyline ids and host-neutral snapshots containing the
    copied point list, `curved`, `closed`, `xloc`, `line_color`, `fill_color`,
    `line_style`, `line_width`, and `force_overlay`.
-4. Lifecycle slice:
+3. Lifecycle slice:
    add `polyline.delete` and `polyline.all`, including deletion snapshots,
    active-object filtering, max-count behavior, and realtime rollback coverage.
-5. Release-contract slice:
+4. Release-contract slice:
    expose the same snapshot shape through CLI, Python, and WASM hosts, then add
    conformance rows and matrix gates for the partial polyline claim.
 
-The runtime must not mark `polyline.*` supported before the point value and
-point-array slices are fixture-backed. `array.new_polyline` also remains out of
-scope until polyline ids exist; point arrays are the prerequisite for
+The runtime must not mark `polyline.*` supported before the point-array and
+polyline snapshot slices are fixture-backed. `array.new_polyline` also remains
+out of scope until polyline ids exist; point arrays are the prerequisite for
 `polyline.new`.
 
 Until then, `polyline.*` remains an explicit unsupported conformance row backed

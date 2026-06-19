@@ -884,6 +884,12 @@ fn value_json(value: &PineValue) -> String {
         | PineValue::LineFill(value)
         | PineValue::Box(value)
         | PineValue::Table(value) => value.to_string(),
+        PineValue::ChartPoint(point) => format!(
+            "{{\"time\":{},\"index\":{},\"price\":{}}}",
+            value_json(&point.time),
+            value_json(&point.index),
+            value_json(&point.price)
+        ),
         PineValue::UserType(values) | PineValue::Tuple(values) => {
             let mut output = String::from("[");
             for (index, value) in values.iter().enumerate() {

@@ -332,8 +332,10 @@ can mutate existing linefill colors. `linefill.get_line1` and
 `linefill.get_line2` can return referenced line ids. `linefill.all` can return
 currently existing linefill ids, and `linefill.delete` can append deletion
 snapshots. `array.new_linefill` and `array.from` can construct linefill id
-arrays for generic object-array storage, reads, mutation, and search. `polyline.*` remains
-unsupported pending `chart.point` and point-list array design.
+arrays for generic object-array storage, reads, mutation, and search.
+`chart.point` has fixture-backed constructor/copy and top-level field access
+support. `polyline.*` remains unsupported pending point-list array and
+polyline snapshot/lifecycle design.
 
 Object families:
 
@@ -348,8 +350,9 @@ Object families:
 
 Required design:
 
-- `chart.point` value semantics and `array<chart.point>` construction are
-  prerequisites for any `polyline.new` runtime claim.
+- `array<chart.point>` construction is a prerequisite for any `polyline.new`
+  runtime claim; `chart.point` value semantics are now fixture-backed only for
+  constructor/copy and top-level field access/mutation.
 - Runtime object ids and lifetime rules.
 - Per-bar creation, mutation, and deletion semantics.
 - Rollback behavior for forming bars.

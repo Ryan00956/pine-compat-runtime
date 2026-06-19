@@ -137,6 +137,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
     ),
     ("runtime_chart.json", "tests/fixtures/runtime/chart.pine"),
     (
+        "runtime_chart_point.json",
+        "tests/fixtures/runtime/chart_point.pine",
+    ),
+    (
         "runtime_time_components.json",
         "tests/fixtures/runtime/time_components.pine",
     ),

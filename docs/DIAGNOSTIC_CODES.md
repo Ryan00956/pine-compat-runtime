@@ -71,6 +71,8 @@ improved over time, but codes should remain stable once published.
   supported local user-defined type.
 - `E_UDT_UNKNOWN_FIELD`: field read references a field not declared on the
   receiver's user-defined type.
+- `E_CHART_POINT_UNKNOWN_FIELD`: field read or mutation references a field not
+  declared on `chart.point`.
 - `E_METHOD_ARG_TYPE`: user-defined method argument type does not match the
   declared parameter.
 - `E_METHOD_DECL_LOCATION`: user-defined method declaration is not top-level.

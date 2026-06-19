@@ -27,6 +27,9 @@ impl Analyzer {
                 self.resolve_symbol(name, expr.span)
             }
             ExprKind::QualifiedName(parts) => {
+                if let Some(field_type) = self.resolve_chart_point_field_access(parts, expr.span) {
+                    return Some(field_type);
+                }
                 if let Some(field_type) = self.resolve_user_type_field_access(parts, expr.span) {
                     return Some(field_type);
                 }
@@ -572,6 +575,14 @@ impl Analyzer {
                 })
                 .or_else(|| self.scope.resolve(name).map(|symbol| symbol.pine_type)),
             ExprKind::QualifiedName(parts) => {
+                if let Some(pine_type) =
+                    self.type_of_bound_chart_point_field_access(parts, expr.span)
+                {
+                    return Some(pine_type);
+                }
+                if let Some(pine_type) = self.type_of_chart_point_field_access(parts) {
+                    return Some(pine_type);
+                }
                 if let Some(pine_type) = self.type_of_bound_user_type_field_access(parts, expr.span)
                 {
                     return Some(pine_type);

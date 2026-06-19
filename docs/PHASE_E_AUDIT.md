@@ -36,7 +36,9 @@ small, fixture-backed way.
 - Slice 11, polyline design gate:
   `fd35d7a Document polyline design gate`.
   `polyline.*` remains explicitly unsupported because executable support needs
-  `chart.point` values and point-list arrays.
+  `chart.point` values and point-list arrays. A later slice added
+  fixture-backed `chart.point` constructor/copy and top-level field access, but
+  point-list arrays and polyline runtime state remain unsupported.
 - Slice 12, structure closeout:
   `a64dd12 Split drawing runtime builtins by family`.
   Runtime drawing dispatch is separated from family-specific label, line, box,
@@ -162,11 +164,11 @@ dispatch module is 58 lines, and family modules are 164-280 lines.
 These are not blockers for closing Phase E:
 
 - Remaining drawing collection support is now concentrated on `polyline.*` and
-  chart-point/point-array semantics; the current linefill object lifecycle and
-  object-array construction/read/mutation/search subset is fixture-backed.
-- `polyline.*` remains unsupported until the runtime has fixture-backed
-  `chart.point` values, typed point-list arrays, polyline snapshots, deletion,
-  `.all`, and host-surface parity.
+  point-array semantics; the current linefill object lifecycle,
+  object-array construction/read/mutation/search subset, and partial
+  `chart.point` constructor/copy/field subset are fixture-backed.
+- `polyline.*` remains unsupported until the runtime has typed point-list
+  arrays, polyline snapshots, deletion, `.all`, and host-surface parity.
 - Advanced label, line, box, and table methods remain diagnostic-only until
   they have semantic signatures, runtime behavior, public snapshots, fixtures,
   and conformance rows.

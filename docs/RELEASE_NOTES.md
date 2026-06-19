@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `chart.point` constructor, copy, field read, and
+  top-level field mutation support as the first executable prerequisite for
+  future polyline work; point arrays and `polyline.*` remain unsupported.
 - Refreshed the `polyline.*` implementation gate with an official-semantics
   sequence covering `chart.point`, `array<chart.point>`, polyline snapshots,
   deletion, `.all`, rollback, and host parity before support is claimed.

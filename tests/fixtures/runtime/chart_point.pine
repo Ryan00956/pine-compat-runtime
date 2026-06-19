@@ -1,0 +1,19 @@
+//@version=5
+indicator("Chart points")
+
+current = chart.point.now(close)
+indexed = chart.point.from_index(bar_index - 1, high)
+timed = chart.point.from_time(time + 10, low)
+full = chart.point.new(time + 20, bar_index + 2, close + 0.5)
+copy = chart.point.copy(full)
+copy.price := copy.price + 1
+
+plot(current.time)
+plot(current.index)
+plot(current.price)
+plot(indexed.time)
+plot(indexed.index)
+plot(timed.index)
+plot(timed.time)
+plot(full.price)
+plot(copy.price)

@@ -93,6 +93,11 @@ chart.is_linebreak -> simple bool
 chart.is_pnf -> simple bool
 chart.is_range -> simple bool
 chart.is_renko -> simple bool
+chart.point.new(time: int-compatible, index: int-compatible, price: numeric-compatible) -> series chart.point
+chart.point.now(price: numeric-compatible) -> series chart.point
+chart.point.from_index(index: int-compatible, price: numeric-compatible) -> series chart.point
+chart.point.from_time(time: int-compatible, price: numeric-compatible) -> series chart.point
+chart.point.copy(id: chart.point-compatible) -> series chart.point
 ```
 
 `year`, `month`, `weekofyear`, `dayofmonth`, `dayofweek`, `hour`, `minute`,
@@ -121,6 +126,10 @@ with a fixed full-dataset viewport and a fixed light appearance:
 `chart.is_linebreak`, `chart.is_pnf`, `chart.is_range`, and `chart.is_renko`
 are `false`. Host-owned scroll/zoom viewport changes and configurable chart
 appearance are not implemented by this fixed chart metadata subset.
+`chart.point` supports fixture-backed construction through `new`, `now`,
+`from_index`, `from_time`, and `copy`, plus top-level `time`, `index`, and
+`price` field reads/mutation. Point arrays, drawing point overloads, typed
+declarations, and `polyline.*` remain separately gated.
 
 Bar state:
 

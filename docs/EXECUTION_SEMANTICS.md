@@ -1115,8 +1115,11 @@ deleted by `linefill.delete`. `array.new_linefill`, `array.from` over linefill
 ids, and generic object-array mutation/search/read helpers support linefill
 arrays with shallow reference elements. Numeric, truth, sorting, and string
 join helpers remain limited to their existing scalar-compatible array families.
-`polyline.*` remains unsupported until
-`chart.point` values and point-list arrays have a fixture-backed execution model.
+`chart.point` values have a fixture-backed execution model for constructors,
+`copy`, and `time`/`index`/`price` field reads plus top-level field mutation.
+`polyline.*` remains unsupported until point-list arrays, polyline snapshots,
+deletion, `.all`, rollback, and host-surface parity have fixture-backed
+coverage.
 
 ## Determinism
 

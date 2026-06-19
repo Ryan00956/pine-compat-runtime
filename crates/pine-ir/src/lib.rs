@@ -54,6 +54,7 @@ pub enum ValueKind {
     LineFill,
     Box,
     Table,
+    ChartPoint,
     FloatArray,
     IntArray,
     BoolArray,

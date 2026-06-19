@@ -82,10 +82,11 @@ impl<'a> HistoricalRuntime<'a> {
             ),
             HirExprKind::FieldAccess { value, index } => match self.eval_expr(value)? {
                 PineValue::UserType(fields) => fields.get(*index).cloned().unwrap_or(PineValue::Na),
+                PineValue::ChartPoint(point) => point.field(*index),
                 PineValue::Na => PineValue::Na,
                 _ => {
                     return Err(RuntimeError {
-                        message: "field access receiver is not a user-defined value".to_owned(),
+                        message: "field access receiver is not an object value".to_owned(),
                     });
                 }
             },

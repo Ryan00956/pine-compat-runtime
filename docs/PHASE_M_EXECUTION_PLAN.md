@@ -63,7 +63,8 @@ python3 -m pytest python/tests
 
 The request subsystem is not the primary Phase M target. Lower-timeframe
 requests still need typed array return semantics and host output/data-shape
-design. Drawing `polyline.*` still needs `chart.point` values and point arrays.
+design. Drawing `polyline.*` still needs point arrays and polyline runtime
+state beyond the current partial `chart.point` value subset.
 
 ## Rules for Every Slice
 

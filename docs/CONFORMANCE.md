@@ -45,6 +45,7 @@ Runtime snapshots should be normalized JSON:
   "fills": [],
   "labels": [],
   "lines": [],
+  "lineFills": [],
   "boxes": [],
   "tables": [],
   "alerts": [],
@@ -57,10 +58,11 @@ The snapshot format should avoid host-specific charting details.
 Every machine-readable public output must include top-level `schemaVersion`.
 Runtime outputs use `PUBLIC_RUNTIME_SCHEMA_VERSION`; analysis outputs use
 `PUBLIC_ANALYSIS_SCHEMA_VERSION`; matrix JSON uses
-`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is currently `schemaVersion: 5`
+`PUBLIC_MATRIX_SCHEMA_VERSION`. Runtime output is currently `schemaVersion: 6`
 because the top-level `alerts` array is reserved, strategy order-fill alert
-payloads are exposed under `strategy.alerts`, and table cell snapshots include
-host-neutral `textWrap`; analysis and matrix JSON remain `schemaVersion: 2`.
+payloads are exposed under `strategy.alerts`, table cell snapshots include
+host-neutral `textWrap`, and linefill snapshots are exposed under `lineFills`;
+analysis and matrix JSON remain `schemaVersion: 2`.
 The contracts are separate so runtime-only fields do not force analysis or
 matrix schema changes. The text-only CLI `analyze` output is
 diagnostic console output and is not part of the machine-readable schema until
@@ -910,9 +912,14 @@ control-flow deletes, and `linefill.all` returns currently existing linefill ids
 in creation order while omitting replaced or deleted linefills.
 `array.new_linefill` and `array.from` support linefill id arrays for generic
 object-array storage, mutation, reads, and search; numeric, truth, sorting, and
-join helpers still reject linefill arrays with type diagnostics. `polyline.*`
-remains explicitly unsupported because it needs a
-fixture-backed point-object and point-array design; see
+join helpers still reject linefill arrays with type diagnostics. `chart.point`
+is partial: `chart.point.new`, `chart.point.now`,
+`chart.point.from_index`, `chart.point.from_time`, and `chart.point.copy`
+construct/copy point values, and top-level `time`, `index`, and `price` field
+reads and mutation are fixture-backed. Typed declarations, point arrays,
+drawing point overloads, and `polyline.*` remain outside the supported subset.
+`polyline.*` remains explicitly unsupported because it still needs
+fixture-backed point-array and snapshot/lifecycle design; see
 `docs/PHASE_E_POLYLINE_GATE.md`.
 
 Phase H reserves `alerts` as a top-level runtime key in `schemaVersion: 3`.
@@ -952,9 +959,10 @@ fixture-backed.
 
 Runtime `schemaVersion: 4` added strategy order-fill alert payloads under
 `strategy.alerts` for supported strategy fills. Runtime `schemaVersion: 5` adds
-host-neutral `textWrap` to table cell snapshots. The top-level `alerts[]` array
-remains limited to reached `alert()` and `alertcondition()` callsites. Explicit
-Python, CLI, and WASM host helpers can render
+host-neutral `textWrap` to table cell snapshots. Runtime `schemaVersion: 6`
+adds top-level `lineFills` snapshots for the supported linefill subset. The
+top-level `alerts[]` array remains limited to reached `alert()` and
+`alertcondition()` callsites. Explicit Python, CLI, and WASM host helpers can render
 `{{strategy.order.alert_message}}` from selected public strategy fill events,
 while external alert delivery remains unsupported.
 
@@ -1187,6 +1195,7 @@ strategy.opentrades.max_drawdown partial current open-trade max drawdown field f
 strategy.exit       partial      stop-only, limit-only, profit-only, loss-only, one-downside/one-upside bracket, trailing, and optional fixed-qty or qty-percent long exits; absolute stop/limit exits can match a requested open pyramided long entry id by `from_entry`, and omitted-`from_entry` absolute stop/limit exits can close all currently open pyramided long entries and persist for later open long entries until the position closes; single-trigger and bracket profit/loss tick exits plus trailing trail_points activation for an open pyramided long entry convert from the matched entry price; omitted-`from_entry` full profit/loss-tick exits and full stop+limit, stop+profit, loss+limit, or loss+profit brackets can close currently open pyramided long entries with unique entry ids using each entry price for relative legs when present; omitted-`from_entry` current full profit/loss-tick exits, full trail_points+trail_offset and trail_price+trail_offset trailing exits, plus full loss+profit, stop+profit, loss+limit, and stop+limit brackets can also close same-entry-id pyramided long trades using each open trade entry price; omitted-`from_entry` full profit/loss-tick exits, full trail_points+trail_offset and trail_price+trail_offset trailing exits, plus full loss+profit, stop+profit, loss+limit, and stop+limit brackets can also persist for later same-entry-id pyramided long trades using each later open trade entry price for relative legs when present; omitted-`from_entry` full profit/loss-tick exits and full loss+profit, stop+profit, and loss+limit brackets can also persist for later open long entries with unique entry ids until the position closes; omitted-`from_entry` full stop+limit brackets can also persist for later open long entries until the position closes; omitted-`from_entry` full trail_price+trail_offset trailing exits can close currently open pyramided long entries and persist for later open long entries until the position closes, and full trail_points+trail_offset trailing exits can do the same for currently open unique entry ids and persist for later open long entries with unique entry ids using each entry price for activation; exits matching multiple open trades with the same entry id emit one public exit order and one closed trade per matched ledger allocation; single-trigger same-calculation absolute stop/limit/trail_price attachment and single-trigger same-calculation entry-relative profit/loss/trail_points attachment to a pending entry are supported for the active entry id; active-entry relative bracket forms remain unsupported until Stage 10 behavior slices resolve deferred bracket legs; bracket forms are stop+limit, stop+profit, loss+limit, and loss+profit for the current one-net-long entry; trailing forms are trail_price+trail_offset and trail_points+trail_offset; profit/loss/trailing ticks convert with fixed syminfo.mintick; configured limit verification requires long limit/profit exit fills to move beyond the limit/profit price while preserving the original limit/profit fill price; qty is placement-time finite positive absolute quantity; qty_percent is placement-time finite positive percent resolved to an absolute quantity against current position size, matching open pyramided entry quantity, or matching pending entry quantity; when qty and qty_percent are both supplied, qty determines the reserved or filled quantity; omitted qty and qty_percent keep full-position one-effective-pending replacement behavior; explicit fixed-qty or qty-percent single-trigger, bracket, and trailing calls can keep multiple reserved pending exits; comment, comment_profit, comment_loss, comment_trailing, alert_message, alert_profit, alert_loss, alert_trailing, and disable_alert metadata syntax is semantically accepted and stored internally on pending and deferred exits; supported fill payloads are exposed in `strategy.alerts`; explicit Python, CLI, and WASM host helpers can render `{{strategy.order.alert_message}}` for selected public fill events, while external alert delivery remains unsupported; fills clamp to current position size, leave remaining long position open when partial, expose only absolute filled qty, and apply configured slippage to the long exit fill price after trigger selection; later-bar low <= stop/loss/active trailing stop or high >= verified limit/profit/activation price drives fills/activation; same-side touched exits fill in placement order; mixed downside/upside same-bar touches fill downside candidates only; bracket both-leg touches contribute the downside candidate; trailing activation bars do not fill; branch/switch/loop/state/history/incremental/host interactions fixture-backed
 strategy.*           unsupported  strategy order functions beyond strategy.entry/strategy.close/strategy.close_all/strategy.cancel/strategy.cancel_all and the supported single-trigger, one-downside/one-upside bracket, trailing, optional fixed-qty and qty-percent strategy.exit subset, and fixed-qty or qty-percent single-trigger/bracket/trailing multiple-exit reservation subset; strategy.exit same-side pairs stop+loss and limit+profit, 3+ trigger/invalid trailing/multiple-pending outside that subset/omitted-quantity multiple reservations/reservation outside that subset/arbitrary future binding for unmatched `from_entry` ids; rich order types, cash/contracts sizing, mutable strategy state, margin behavior beyond long-entry affordability, long-only capital_held, and long-only forced liquidation, open-trade namespace functions outside entry_price/entry_comment/entry_id/entry_bar_index/entry_time/size/profit/commission/max_runup/max_drawdown/capital_held, closed-trade namespace functions outside entry_price/entry_comment/entry_id/exit_price/exit_comment/exit_id/entry_bar_index/exit_bar_index/entry_time/exit_time/commission/size/profit/max_runup/max_drawdown, commission modes outside strategy.commission.cash_per_contract, strategy.commission.cash_per_order, and strategy.commission.percent, fill models beyond fixed-tick slippage and fixed-tick limit verification on supported long fills, rich reporting metrics, and strategy reporting helpers beyond the supported position/profit/equity/count/held-quantity/runup/drawdown and supported trade field variables are not implemented
 array.*              partial      float/int/bool/string/color/label/line/linefill/box/table creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search including linefill object-array search, binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, branch/loop sort and reverse mutation fixtures, scalar-array join, mutation, and helper fixture subset only; polyline arrays remain unsupported
+chart.point          partial      chart.point.new/now/from_index/from_time/copy constructors, time/index/price field reads, and top-level field mutation are fixture-backed; typed declarations, point arrays, drawing point overloads, and polyline construction remain unsupported
 map.*                unsupported  map collections require a dedicated key/value storage model and are not implemented
 matrix.*             unsupported  matrix collections require a dedicated two-dimensional storage model and are not implemented
 linefill.new         partial      linefill object creation between existing line ids with color snapshots and official same-pair replacement semantics; na or deleted line ids return na; linefill array construction is supported through array.new_linefill and array.from for linefill ids

@@ -130,6 +130,7 @@ mod tests {
             "linefill.",
             "box.",
             "table.",
+            "chart.point.",
             "strategy.",
         ]
         .iter()

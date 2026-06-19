@@ -1,4 +1,41 @@
 #[derive(Debug, Clone, PartialEq)]
+pub struct ChartPointValue {
+    pub time: Box<PineValue>,
+    pub index: Box<PineValue>,
+    pub price: Box<PineValue>,
+}
+
+impl ChartPointValue {
+    #[must_use]
+    pub fn new(time: PineValue, index: PineValue, price: PineValue) -> Self {
+        Self {
+            time: Box::new(time),
+            index: Box::new(index),
+            price: Box::new(price),
+        }
+    }
+
+    #[must_use]
+    pub fn field(&self, index: usize) -> PineValue {
+        match index {
+            0 => (*self.time).clone(),
+            1 => (*self.index).clone(),
+            2 => (*self.price).clone(),
+            _ => PineValue::Na,
+        }
+    }
+
+    pub fn set_field(&mut self, index: usize, value: PineValue) {
+        match index {
+            0 => *self.time = value,
+            1 => *self.index = value,
+            2 => *self.price = value,
+            _ => {}
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum PineValue {
     Int(i64),
     Float(f64),
@@ -12,6 +49,7 @@ pub enum PineValue {
     LineFill(u32),
     Box(u32),
     Table(u32),
+    ChartPoint(ChartPointValue),
     Array(u32),
     UserType(Vec<PineValue>),
     Tuple(Vec<PineValue>),

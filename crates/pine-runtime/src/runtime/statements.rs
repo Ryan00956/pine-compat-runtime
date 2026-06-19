@@ -61,20 +61,30 @@ impl<'a> HistoricalRuntime<'a> {
                 value,
             } => {
                 let value = self.eval_expr(value)?;
-                let mut fields = match self.current_symbols.get(symbol).cloned() {
-                    Some(PineValue::UserType(fields)) => fields,
+                let updated = match self.current_symbols.get(symbol).cloned() {
+                    Some(PineValue::UserType(mut fields)) => {
+                        if *field_index < fields.len() {
+                            fields[*field_index] = value;
+                        }
+                        PineValue::UserType(fields)
+                    }
+                    Some(PineValue::ChartPoint(mut point)) => {
+                        point.set_field(
+                            *field_index,
+                            crate::builtins::chart_points::normalize_chart_point_field(
+                                *field_index,
+                                value,
+                            ),
+                        );
+                        PineValue::ChartPoint(point)
+                    }
                     Some(PineValue::Na) | None => return Ok(StmtControl::None),
                     Some(_) => {
                         return Err(RuntimeError {
-                            message: "field mutation receiver is not a user-defined value"
-                                .to_owned(),
+                            message: "field mutation receiver is not an object value".to_owned(),
                         });
                     }
                 };
-                if *field_index < fields.len() {
-                    fields[*field_index] = value;
-                }
-                let updated = PineValue::UserType(fields);
                 self.assign_persistent_symbol(*symbol, updated.clone());
                 self.set_symbol_value(*symbol, updated);
             }

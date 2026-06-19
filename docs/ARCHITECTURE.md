@@ -395,13 +395,14 @@ message, source}` for the narrow `alertcondition` and `alert` subsets. For
 `alert`. `schemaVersion: 4` adds broker-owned strategy order-fill alert
 payloads under `strategy.alerts` without changing the top-level `alerts[]`
 callsite event shape. `schemaVersion: 5` adds host-neutral table cell
-`textWrap` snapshots. Host integrations can adapt this model into their
-charting or API format, but should preserve the runtime schema version when
-they forward machine-readable runtime results.
+`textWrap` snapshots. `schemaVersion: 6` adds top-level `lineFills` snapshots
+for the supported linefill subset. Host integrations can adapt this model into
+their charting or API format, but should preserve the runtime schema version
+when they forward machine-readable runtime results.
 
 Machine-readable analysis and matrix outputs use separate schema ownership:
 `PUBLIC_ANALYSIS_SCHEMA_VERSION` for WASM/Python analysis reports and
-`PUBLIC_MATRIX_SCHEMA_VERSION` for CLI matrix JSON. Runtime is currently `5`;
+`PUBLIC_MATRIX_SCHEMA_VERSION` for CLI matrix JSON. Runtime is currently `6`;
 analysis and matrix remain `2`. These contracts can evolve independently when a
 runtime-only output field does not affect analysis or matrix contracts.
 

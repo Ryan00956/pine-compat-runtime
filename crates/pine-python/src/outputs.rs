@@ -514,6 +514,13 @@ fn append_value(py: Python<'_>, output: &Bound<'_, PyList>, value: &PineValue) -
         | PineValue::LineFill(value)
         | PineValue::Box(value)
         | PineValue::Table(value) => output.append(*value),
+        PineValue::ChartPoint(point) => {
+            let item = PyDict::new(py);
+            item.set_item("time", value_to_py(py, &point.time)?)?;
+            item.set_item("index", value_to_py(py, &point.index)?)?;
+            item.set_item("price", value_to_py(py, &point.price)?)?;
+            output.append(item)
+        }
         PineValue::UserType(values) | PineValue::Tuple(values) => {
             output.append(values_to_py(py, values)?)
         }

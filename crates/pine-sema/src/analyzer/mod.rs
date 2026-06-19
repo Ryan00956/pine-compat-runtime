@@ -1,5 +1,6 @@
 pub(crate) mod alerts;
 pub(crate) mod calls;
+pub(crate) mod chart_points;
 pub(crate) mod context;
 pub(crate) mod expressions;
 pub(crate) mod functions;

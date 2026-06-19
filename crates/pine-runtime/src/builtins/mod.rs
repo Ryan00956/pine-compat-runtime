@@ -2,6 +2,7 @@ pub(crate) mod alerts;
 pub(crate) mod args;
 pub(crate) mod arrays;
 pub(crate) mod casts;
+pub(crate) mod chart_points;
 pub(crate) mod colors;
 pub(crate) mod drawings;
 pub(crate) mod math;

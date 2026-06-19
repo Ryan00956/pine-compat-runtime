@@ -180,9 +180,8 @@ host-neutral.
 
 Good next slices:
 
-- Start the polyline prerequisite path with a `chart.point` design/runtime
-  slice, then typed `array<chart.point>` construction fixtures, before adding
-  any `polyline.new` support.
+- Continue the polyline prerequisite path with typed `array<chart.point>`
+  construction fixtures before adding any `polyline.new` support.
 - More `label.*`, `line.*`, `box.*`, and `table.*` methods.
 - More deletion, mutation, no-op, and runtime-limit fixtures.
 - More realtime rollback fixtures for already-supported drawing families.

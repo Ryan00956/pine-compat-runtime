@@ -271,10 +271,16 @@ impl Analyzer {
                 value,
             } => {
                 let parts = vec![receiver.clone(), field.clone()];
-                let access = self.user_type_field_access_for_lowering(&parts, statement.span)?;
+                let access = self
+                    .chart_point_field_access_for_lowering(&parts, statement.span)
+                    .map(|access| (access.receiver, access.index))
+                    .or_else(|| {
+                        self.user_type_field_access_for_lowering(&parts, statement.span)
+                            .map(|access| (access.receiver, access.index))
+                    })?;
                 HirStmtKind::FieldReassign {
-                    symbol: self.bound_symbol(receiver, statement.span)?.id,
-                    field_index: access.index,
+                    symbol: self.bound_symbol(&access.0, statement.span)?.id,
+                    field_index: access.1,
                     value: self.lower_expr_with_params(value, param_exprs, param_types)?,
                 }
             }
@@ -339,6 +345,29 @@ impl Analyzer {
                 HirExprKind::Symbol(self.bound_symbol(name, expr.span)?.id)
             }
             ExprKind::QualifiedName(parts) => {
+                if let Some(field) = self
+                    .type_of_bound_chart_point_field_access(parts, expr.span)
+                    .or_else(|| self.type_of_chart_point_field_access(parts))
+                {
+                    let access = self.chart_point_field_access_for_lowering(parts, expr.span)?;
+                    let receiver_symbol = self
+                        .bound_symbol(&access.receiver, expr.span)
+                        .or_else(|| self.scope.resolve(&access.receiver))?;
+                    return Some(HirExpr {
+                        pine_type: field,
+                        series_id,
+                        kind: HirExprKind::FieldAccess {
+                            value: Box::new(param_exprs.get(&access.receiver).cloned().unwrap_or(
+                                HirExpr {
+                                    kind: HirExprKind::Symbol(receiver_symbol.id),
+                                    pine_type: receiver_symbol.pine_type,
+                                    series_id: receiver_symbol.series_id,
+                                },
+                            )),
+                            index: access.index,
+                        },
+                    });
+                }
                 if let Some(field) = self
                     .type_of_bound_user_type_field_access(parts, expr.span)
                     .or_else(|| self.type_of_user_type_field_access(parts))

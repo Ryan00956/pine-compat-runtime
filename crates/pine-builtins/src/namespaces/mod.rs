@@ -1,5 +1,6 @@
 pub(crate) mod alerts;
 pub(crate) mod arrays;
+pub(crate) mod chart;
 pub(crate) mod colors;
 pub(crate) mod core;
 pub(crate) mod drawings;
