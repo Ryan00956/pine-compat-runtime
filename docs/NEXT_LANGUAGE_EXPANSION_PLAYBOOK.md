@@ -289,8 +289,10 @@ Resolved implementation choices:
 Remaining array work is deferred rather than part of this stage:
 
 - Pine-compatible shallow `array.slice` window semantics.
-- Generic `array.new<type>()` syntax and type checking.
-- Object, drawing, UDT, matrix, and map arrays.
+- Remaining generic `array.new<type>()` syntax and type checking for future
+  UDT/polyline/map/matrix element families.
+- Additional object, drawing, UDT, matrix, and map arrays outside the current
+  fixture-backed scalar, drawing-id, and chart.point subset.
 - Array history snapshots and dynamic history offsets.
 - `for...in` array iteration.
 - UDT `sort_field` support for `array.sort` and `array.sort_indices`.

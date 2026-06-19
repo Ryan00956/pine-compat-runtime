@@ -9,12 +9,12 @@ box range_box = box.new(bar_index, high, bar_index + 1, low)
 table info = table.new(position.top_right, 1, 1)
 
 array<label> labels = na
-array<line> lines = array.new_line()
-array<linefill> fills = array.new_linefill()
-array<box> boxes = array.new_box()
-array<table> tables = array.new_table()
+array<line> lines = array.new<line>()
+array<linefill> fills = array.new<linefill>()
+array<box> boxes = array.new<box>()
+array<table> tables = array.new<table>()
 
-labels := array.new_label()
+labels := array.new<label>()
 labels.push(marker)
 lines.push(upper)
 lines.push(lower)

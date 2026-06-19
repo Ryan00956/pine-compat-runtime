@@ -999,10 +999,15 @@ array.new<string>(size?: simple int, initial_value?: string-compatible) -> simpl
 array.new_color(size?: simple int, initial_value?: color-compatible) -> simple color-array
 array.new<color>(size?: simple int, initial_value?: color-compatible) -> simple color-array
 array.new_label(size?: simple int, initial_value?: label-compatible) -> simple label-array
+array.new<label>(size?: simple int, initial_value?: label-compatible) -> simple label-array
 array.new_line(size?: simple int, initial_value?: line-compatible) -> simple line-array
+array.new<line>(size?: simple int, initial_value?: line-compatible) -> simple line-array
 array.new_linefill(size?: simple int, initial_value?: linefill-compatible) -> simple linefill-array
+array.new<linefill>(size?: simple int, initial_value?: linefill-compatible) -> simple linefill-array
 array.new_box(size?: simple int, initial_value?: box-compatible) -> simple box-array
+array.new<box>(size?: simple int, initial_value?: box-compatible) -> simple box-array
 array.new_table(size?: simple int, initial_value?: table-compatible) -> simple table-array
+array.new<table>(size?: simple int, initial_value?: table-compatible) -> simple table-array
 array.new<chart.point>(size?: simple int, initial_value?: chart-point-compatible) -> simple chart-point-array
 array.from(value, ...) -> simple inferred scalar-or-object-array
 array.size(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|box-array|table-array|chart-point-array) -> simple int
@@ -1050,16 +1055,18 @@ array.join(id: float-array|int-array|bool-array|string-array|color-array, separa
 array.clear(id: float-array|int-array|bool-array|string-array|color-array|label-array|line-array|linefill-array|box-array|table-array|chart-point-array) -> void
 ```
 
-The supported typed-array subset covers float, int, bool, string, color, label, line, box, and table
-arrays. Scalar arrays can be constructed through the supported type-specific
-`array.new_*` calls or the official `array.new<type>` syntax for float, int,
-bool, string, and color. Float arrays accept int or float values and store them
-as floats. Int arrays accept int values. Bool arrays accept bool values. String
-arrays accept string values. Color arrays accept color values. Label, line,
-linefill, box, and table arrays accept their matching drawing ids or `na` and
-keep reference elements shallow across `array.copy`. `array.new<chart.point>()`
-and `array.from(chart.point, ...)` can construct chart-point arrays, and the
-generic storage/read/mutation/search subset can carry `chart.point` values;
+The supported typed-array subset covers float, int, bool, string, color, label,
+line, linefill, box, table, and chart.point arrays. Scalar and drawing-object
+arrays can be constructed through the supported type-specific `array.new_*`
+calls or the official `array.new<type>`
+syntax for float, int, bool, string, color, label, line, linefill, box, and
+table. Float arrays accept int or float values and store them as floats. Int
+arrays accept int values. Bool arrays accept bool values. String arrays accept
+string values. Color arrays accept color values. Label, line, linefill, box,
+and table arrays accept their matching drawing ids or `na` and keep reference
+elements shallow across `array.copy`. `array.new<chart.point>()` and
+`array.from(chart.point, ...)` can construct chart-point arrays, and the generic
+storage/read/mutation/search subset can carry `chart.point` values;
 `polyline.new` consumes these arrays as its point-list input and copies the
 values into runtime snapshots. Numeric, truth, sort, and join helpers still
 reject chart-point arrays. Array

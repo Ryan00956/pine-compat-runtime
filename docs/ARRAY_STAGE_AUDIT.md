@@ -17,15 +17,17 @@ Primary references:
 
 Stage 3 arrays are complete for the current fixture-backed scalar subset. Later
 compatibility slices added fixture-backed `array.new_label` label-id arrays,
-`array.new_line` line-id arrays, `array.new_box` box-id arrays, and
-`array.new_table` table-id arrays on top of that scalar baseline without
-opening other drawing array families.
+`array.new_line` line-id arrays, `array.new_linefill` linefill-id arrays,
+`array.new_box` box-id arrays, `array.new_table` table-id arrays, and official
+`array.new<type>` constructor syntax for the supported scalar and drawing-object
+array element types on top of that scalar baseline without opening polyline or
+general object array families.
 
 The project should keep `array.*` marked `partial`, not `supported`, because the
-current implementation deliberately excludes generic arrays, object arrays, UDT
-arrays, maps, matrices, `varip` value families outside the fixture-backed scalar
-typed-array subset, Pine's shallow slice/window semantics, and several advanced
-sorting forms.
+current implementation deliberately excludes general generic arrays, polyline
+arrays, UDT arrays, maps, matrices, `varip` value families outside the
+fixture-backed scalar typed-array subset, Pine's shallow slice/window semantics,
+and several advanced sorting forms.
 
 The next implementation work should not continue adding random array helpers.
 Future array work should be chosen from the explicit gap list below and should
@@ -55,8 +57,10 @@ Element kinds:
 - `color`
 - `label` ids
 - `line` ids
+- `linefill` ids
 - `box` ids
 - `table` ids
+- `chart.point`
 
 Creation and inference:
 
@@ -65,10 +69,12 @@ Creation and inference:
 - `array.new_bool` / `array.new<bool>`
 - `array.new_string` / `array.new<string>`
 - `array.new_color` / `array.new<color>`
-- `array.new_label`
-- `array.new_line`
-- `array.new_box`
-- `array.new_table`
+- `array.new_label` / `array.new<label>`
+- `array.new_line` / `array.new<line>`
+- `array.new_linefill` / `array.new<linefill>`
+- `array.new_box` / `array.new<box>`
+- `array.new_table` / `array.new<table>`
+- `array.new<chart.point>`
 - `array.from`
 
 General operations:
@@ -140,17 +146,18 @@ are designed and fixture-backed.
 
 Generic arrays:
 
-- `array.new<type>()` is not supported.
+- `array.new<type>()` is supported only for the scalar, drawing-object, and
+  chart.point element kinds listed above.
 - Type-template array declarations such as `array<float>` are not a general
-  parser or semantic feature in the current subset.
-- `array.from` only infers the scalar element kinds and drawing ids listed
+  parser or semantic feature outside the current fixture-backed element kinds.
+- `array.from` only infers the scalar, chart.point, and drawing ids listed
   above.
 
 Reference and object arrays:
 
-- Arrays of `linefill`, `polyline`, and other drawing/object ids are not
-  supported. Label-id, line-id, box-id, and table-id arrays are the only
-  fixture-backed drawing-object array families.
+- Arrays of `polyline` and other object ids outside the listed drawing families
+  are not supported. Label-id, line-id, linefill-id, box-id, and table-id arrays
+  are the fixture-backed drawing-object array families.
 - Additional drawing-object arrays should wait for explicit object id lifetime,
   rollback, and host-output semantics.
 
@@ -237,10 +244,11 @@ storage or host integration model.
 Only take these when they are explicitly selected as the next work item:
 
 - Design Pine-compatible `array.slice` shallow window semantics.
-- Design generic `array.new<type>()` parsing and type checking.
+- Design remaining generic `array.new<type>()` parsing and type checking for
+  UDT/polyline/map/matrix or other future element families.
 - Design array history snapshots and aliasing behavior.
 - Add `for...in` array iteration syntax and runtime behavior.
-- Add object arrays after drawing object ids exist.
+- Add additional object arrays after their object ids and lifetimes exist.
 - Add UDT arrays and `sort_field` after user-defined types exist.
 - Expand diagnostics for unsupported generic/object/UDT array syntax once those
   syntaxes are parsed precisely.

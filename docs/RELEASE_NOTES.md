@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed object `array.new<type>` constructor syntax for label,
+  line, linefill, box, and table arrays, normalized onto the existing
+  `array.new_*` runtime paths.
 - Added fixture-backed scalar `array.new<type>` constructor syntax for float,
   int, bool, string, and color arrays, normalized onto the existing
   `array.new_*` runtime paths.

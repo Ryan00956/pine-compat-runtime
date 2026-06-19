@@ -1008,6 +1008,21 @@ impl Parser {
                 TokenKind::Identifier(type_name) if type_name == "color" => {
                     Some(("array.new_color", 2))
                 }
+                TokenKind::Identifier(type_name) if type_name == "label" => {
+                    Some(("array.new_label", 2))
+                }
+                TokenKind::Identifier(type_name) if type_name == "line" => {
+                    Some(("array.new_line", 2))
+                }
+                TokenKind::Identifier(type_name) if type_name == "linefill" => {
+                    Some(("array.new_linefill", 2))
+                }
+                TokenKind::Identifier(type_name) if type_name == "box" => {
+                    Some(("array.new_box", 2))
+                }
+                TokenKind::Identifier(type_name) if type_name == "table" => {
+                    Some(("array.new_table", 2))
+                }
                 _ => None,
             };
         }
