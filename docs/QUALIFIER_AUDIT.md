@@ -54,9 +54,9 @@ Important current rules:
 - History offsets accept non-negative integer literals plus integer expressions
   at any implemented qualifier, including `series int`.
 - Scalar array, scalar slice, label-array, label-slice, line-array,
-  line-slice, box-slice, linefill-array, box-array, and table-array ids can now receive series storage
+  line-slice, box-slice, linefill-array, linefill-slice, box-array, and table-array ids can now receive series storage
   for fixture-backed array history snapshots. Polyline arrays, remaining
-  non-label/line/box object slice history, map/matrix values, and broader aliasing rules remain
+  non-label/line/box/linefill object slice history, map/matrix values, and broader aliasing rules remain
   undesigned.
 
 ## Impact On Dynamic History
