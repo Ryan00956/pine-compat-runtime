@@ -229,6 +229,9 @@ impl Parser {
         if let Some(parsed) = self.try_parse_array_typed_decl_name() {
             return Some(parsed);
         }
+        if let Some(parsed) = self.try_parse_array_type_alias_decl_name() {
+            return Some(parsed);
+        }
 
         if let TokenKind::Identifier(type_name) = self.current().kind.clone()
             && self.nth_at(2, TokenKind::Eq)
@@ -308,6 +311,43 @@ impl Parser {
         };
 
         let start = self.current().span;
+        while self.pos < start_pos + eq_offset {
+            self.bump();
+        }
+        Some((format!("array<{element_type}>"), name, start))
+    }
+
+    fn try_parse_array_type_alias_decl_name(&mut self) -> Option<(String, String, Span)> {
+        let TokenKind::Identifier(first_type_name) = self.current().kind.clone() else {
+            return None;
+        };
+
+        let (element_type, name_offset, eq_offset) = if self.nth_at(1, TokenKind::LBracket)
+            && self.nth_at(2, TokenKind::RBracket)
+            && self.nth_at(4, TokenKind::Eq)
+        {
+            (first_type_name, 3, 4)
+        } else if self.nth_at(1, TokenKind::Dot)
+            && self.nth_at(3, TokenKind::LBracket)
+            && self.nth_at(4, TokenKind::RBracket)
+            && self.nth_at(6, TokenKind::Eq)
+        {
+            let TokenKind::Identifier(type_name) = self.tokens.get(self.pos + 2)?.kind.clone()
+            else {
+                return None;
+            };
+            (format!("{first_type_name}.{type_name}"), 5, 6)
+        } else {
+            return None;
+        };
+
+        let TokenKind::Identifier(name) = self.tokens.get(self.pos + name_offset)?.kind.clone()
+        else {
+            return None;
+        };
+
+        let start = self.current().span;
+        let start_pos = self.pos;
         while self.pos < start_pos + eq_offset {
             self.bump();
         }

@@ -575,11 +575,12 @@ Typed variable declarations are fixture-backed for `int`, `float`, `bool`,
 `array<float>`, `array<bool>`, `array<string>`, `array<color>`, and
 object-id `array<label>`, `array<line>`, `array<linefill>`, `array<box>`,
 `array<table>`, and `array<chart.point>` values, with compatible or `na`
-initializers. These declarations assign the declared value kind to the symbol,
-so later compatible reassignment works after `na` initialization. Bare
-`array`, `array<polyline>`, UDT, map, matrix, and other typed declarations
-remain unsupported with semantic diagnostics unless covered by a narrower
-fixture-backed row.
+initializers. The equivalent `type[]` aliases are fixture-backed for the same
+supported array element types. These declarations assign the declared value kind
+to the symbol, so later compatible reassignment works after `na`
+initialization. Bare `array`, `array<polyline>`/`polyline[]`, UDT, map, matrix,
+and other typed declarations remain unsupported with semantic diagnostics
+unless covered by a narrower fixture-backed row.
 `indicator(..., scale=...)` accepts the fixture-backed `scale.left`,
 `scale.right`, and `scale.none` named constants as declaration metadata. The
 runtime rejects other const string scale values and does not emit chart axis

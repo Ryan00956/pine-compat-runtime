@@ -144,6 +144,44 @@ fn parses_dotted_array_typed_declaration() {
 }
 
 #[test]
+fn parses_array_type_alias_declaration() {
+    let parsed = parse("float[] prices = array.new_float()\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl {
+        mode,
+        declared_type,
+        name,
+        ..
+    } = &parsed.program.statements[0].kind
+    else {
+        panic!("expected declaration");
+    };
+    assert_eq!(*mode, DeclMode::Normal);
+    assert_eq!(declared_type.as_deref(), Some("array<float>"));
+    assert_eq!(name, "prices");
+}
+
+#[test]
+fn parses_dotted_array_type_alias_declaration() {
+    let parsed = parse("chart.point[] points = array.new<chart.point>()\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl {
+        mode,
+        declared_type,
+        name,
+        ..
+    } = &parsed.program.statements[0].kind
+    else {
+        panic!("expected declaration");
+    };
+    assert_eq!(*mode, DeclMode::Normal);
+    assert_eq!(declared_type.as_deref(), Some("array<chart.point>"));
+    assert_eq!(name, "points");
+}
+
+#[test]
 fn parses_unknown_typed_declaration_for_semantic_diagnostic() {
     let parsed = parse("line id = na\n");
 

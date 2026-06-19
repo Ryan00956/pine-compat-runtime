@@ -1,5 +1,5 @@
 //@version=5
 indicator("Unsupported polyline array typed declaration")
 
-array<polyline> ids = na
+polyline[] ids = na
 plot(close)
