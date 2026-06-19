@@ -238,3 +238,37 @@ plot(na(previous_id) ? na : label.get_x(previous_id))
     assert_eq!(result.plots[0].values[0], PineValue::Na);
     assert_values_close(&result.plots[0].values[1..], &[0.0, 1.0, 2.0]);
 }
+
+#[test]
+fn reads_previous_array_slice_instance_history() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("array slice history")
+source = array.new_float(2)
+source.set(0, close)
+source.set(1, high)
+window = source.slice(0, 1)
+previous_window = window[1]
+plot(na(previous_window) ? na : previous_window.get(0))
+if not na(previous_window)
+    previous_window.set(0, 100)
+plot(window.get(0))
+plot(source.get(0))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 3);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[1.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[1.0, 2.0, 3.0, 4.0]);
+    assert_values_close(&result.plots[2].values, &[1.0, 2.0, 3.0, 4.0]);
+}

@@ -1,0 +1,12 @@
+//@version=5
+indicator("Array slice history")
+source = array.new_float(2)
+source.set(0, close)
+source.set(1, high)
+window = source.slice(0, 1)
+previous_window = window[1]
+plot(na(previous_window) ? na : previous_window.get(0))
+if not na(previous_window)
+    previous_window.set(0, 100)
+plot(window.get(0))
+plot(source.get(0))

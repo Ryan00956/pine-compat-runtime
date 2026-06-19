@@ -2,11 +2,10 @@
 
 ## Unreleased
 
-- Added fixture-backed scalar and label-array variable history snapshots for
-  Pine-style `previous = a[1]` and
-  `na(previous) ? na : previous.get(0)` reads, with retained array values
-  copied into history and positive-offset history reads returning a fresh array
-  copy.
+- Added fixture-backed scalar array, scalar slice, and label-array variable
+  history snapshots for Pine-style `previous = a[1]` and
+  `na(previous) ? na : previous.get(0)` reads, with retained array values copied
+  into history and positive-offset history reads returning a fresh array copy.
 - Added fixture-backed Pine-style shallow `array.slice` window semantics:
   slice reads/writes mirror the parent window, slice insertions widen the
   window and insert into the parent, and parent shrinkage that leaves the
