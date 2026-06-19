@@ -2,8 +2,8 @@ use pine_ir::{PineType, Qualifier, ValueKind};
 
 use crate::namespaces::types::{
     SERIES_BOOL, SERIES_INT, SIMPLE_BOOL, SIMPLE_BOX_ARRAY, SIMPLE_COLOR, SIMPLE_INT,
-    SIMPLE_LABEL_ARRAY, SIMPLE_LINE_ARRAY, SIMPLE_LINE_FILL_ARRAY, SIMPLE_STRING,
-    SIMPLE_TABLE_ARRAY,
+    SIMPLE_LABEL_ARRAY, SIMPLE_LINE_ARRAY, SIMPLE_LINE_FILL_ARRAY, SIMPLE_POLYLINE_ARRAY,
+    SIMPLE_STRING, SIMPLE_TABLE_ARRAY,
 };
 
 const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
@@ -184,6 +184,7 @@ const BUILTIN_SERIES_VALUES: &[(&str, PineType)] = &[
     ("label.all", SIMPLE_LABEL_ARRAY),
     ("line.all", SIMPLE_LINE_ARRAY),
     ("linefill.all", SIMPLE_LINE_FILL_ARRAY),
+    ("polyline.all", SIMPLE_POLYLINE_ARRAY),
     ("box.all", SIMPLE_BOX_ARRAY),
     ("table.all", SIMPLE_TABLE_ARRAY),
     (
@@ -314,6 +315,10 @@ mod tests {
         assert_eq!(
             builtin_series_value_type("linefill.all"),
             Some(SIMPLE_LINE_FILL_ARRAY)
+        );
+        assert_eq!(
+            builtin_series_value_type("polyline.all"),
+            Some(SIMPLE_POLYLINE_ARRAY)
         );
         assert_eq!(builtin_series_value_type("box.all"), Some(SIMPLE_BOX_ARRAY));
         assert_eq!(

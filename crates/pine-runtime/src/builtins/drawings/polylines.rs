@@ -52,6 +52,49 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::Polyline(id))
     }
 
+    pub(super) fn eval_polyline_delete(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_polyline_id_arg(args)?;
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        let Some(polyline) = self.polylines.iter_mut().find(|polyline| polyline.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid polyline id `{id}`"),
+            });
+        };
+        let Some(latest) = polyline.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("polyline `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Void);
+        }
+        let mut next = latest;
+        next.bar_index = self.bars;
+        next.exists = false;
+        polyline.snapshots.push(next);
+        Ok(PineValue::Void)
+    }
+
+    fn eval_polyline_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
+        let Some(arg) = polyline_call_arg_expr(args, 0, "id") else {
+            return Err(RuntimeError {
+                message: "polyline id argument is required".to_owned(),
+            });
+        };
+        match self.eval_expr(arg)? {
+            PineValue::Polyline(id) => Ok(Some(id)),
+            PineValue::Na => Ok(None),
+            value => Err(RuntimeError {
+                message: format!("expected polyline id, got {value:?}"),
+            }),
+        }
+    }
+
     fn eval_polyline_points_arg(
         &mut self,
         args: &[HirCallArg],

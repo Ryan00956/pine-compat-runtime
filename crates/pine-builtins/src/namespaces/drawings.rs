@@ -406,6 +406,12 @@ const POLYLINE_NEW_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const POLYLINE_DELETE_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "id",
+    accepts: Accepts::PolylineCompatible,
+    optional: false,
+}];
+
 const LINEFILL_SET_COLOR_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "id",
@@ -1076,6 +1082,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: POLYLINE_NEW_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_POLYLINE),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "polyline.delete",
+        phase: BuiltinPhase::Phase1Core,
+        params: POLYLINE_DELETE_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },
     BuiltinSignature {

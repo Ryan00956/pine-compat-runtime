@@ -1122,9 +1122,11 @@ storage/read/mutation/search. `polyline.new` creates runtime-owned polyline ids
 from an `array<chart.point>` input, copies the current point-list values into a
 host-neutral `polylines[].snapshots[]` entry, and records `curved`, `closed`,
 `xloc`, `lineColor`, `fillColor`, `lineStyle`, `lineWidth`, and
-`forceOverlay`. `polyline.delete`, `polyline.all`, realtime rollback fixtures,
-and polyline arrays remain unsupported until lifecycle behavior and host
-surface parity are fixture-backed.
+`forceOverlay`. `polyline.delete` appends an `exists: false` snapshot for an
+existing id and treats `na` or already-deleted ids as no-ops. `polyline.all`
+returns currently existing polyline ids in creation order. Realtime rollback
+fixtures and general polyline arrays remain outside the supported subset until
+host-surface parity is fixture-backed.
 
 ## Determinism
 

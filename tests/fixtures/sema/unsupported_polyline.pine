@@ -1,3 +1,0 @@
-//@version=5
-indicator("Unsupported polyline")
-polyline.delete(na)

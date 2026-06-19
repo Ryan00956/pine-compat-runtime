@@ -725,6 +725,25 @@ def test_run_script_returns_polyline_new_fixture_contract():
     }
 
 
+def test_run_script_returns_polyline_lifecycle_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/polyline_lifecycle.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_polyline_lifecycle.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+    assert [snapshot["exists"] for snapshot in result["polylines"][0]["snapshots"]] == [
+        True,
+        False,
+    ]
+    assert result["plots"][0]["values"][-1] == 0
+
+
 def test_run_script_returns_box_new_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/box_new.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_box_new.json").read_text())

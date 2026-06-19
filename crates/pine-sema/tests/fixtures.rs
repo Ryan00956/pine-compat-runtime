@@ -1157,24 +1157,6 @@ fn reports_unsupported_drawing_fixture() {
 }
 
 #[test]
-fn reports_unsupported_polyline_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_polyline.pine",
-        "polyline.delete",
-        "drawing object",
-    );
-}
-
-#[test]
-fn reports_unsupported_polyline_all_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_polyline_all.pine",
-        "polyline.all",
-        "drawing object",
-    );
-}
-
-#[test]
 fn reports_unsupported_label_new_modes_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_label_new_modes.pine",

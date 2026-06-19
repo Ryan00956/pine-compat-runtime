@@ -335,8 +335,9 @@ snapshots. `array.new_linefill` and `array.from` can construct linefill id
 arrays for generic object-array storage, reads, mutation, and search.
 `chart.point` has fixture-backed constructor/copy, top-level field access, and
 point-array support. `polyline.new` can copy point arrays into host-neutral
-runtime snapshots; broader polyline lifecycle APIs remain unsupported pending
-deletion, `.all`, rollback, and host-surface parity.
+runtime snapshots; `polyline.delete` appends lifecycle deletion snapshots, and
+`polyline.all` reads currently existing ids. Realtime rollback fixtures and
+general polyline arrays remain unsupported pending host-surface parity.
 
 Object families:
 
@@ -353,7 +354,8 @@ Required design:
 
 - `array.new<chart.point>()` and `array.from(chart.point, ...)` point-list
   construction are fixture-backed prerequisites for `polyline.new`; the next
-  runtime claim still needs polyline object state and snapshots.
+  runtime claim should focus on rollback and limit parity for the supported
+  polyline lifecycle subset.
 - Runtime object ids and lifetime rules.
 - Per-bar creation, mutation, and deletion semantics.
 - Rollback behavior for forming bars.

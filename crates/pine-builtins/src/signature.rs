@@ -56,6 +56,7 @@ pub enum Accepts {
     LabelCompatible,
     LineCompatible,
     LineFillCompatible,
+    PolylineCompatible,
     BoxCompatible,
     TableCompatible,
     ChartPointCompatible,

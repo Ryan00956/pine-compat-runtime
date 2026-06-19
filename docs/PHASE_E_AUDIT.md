@@ -163,13 +163,14 @@ dispatch module is 58 lines, and family modules are 164-280 lines.
 
 These are not blockers for closing Phase E:
 
-- Remaining drawing collection support is now concentrated on polyline
-  lifecycle state; the current linefill object lifecycle, object-array
-  construction/read/mutation/search subset, partial `chart.point`
-  constructor/copy/field/point-array subset, and `polyline.new` snapshots are
-  fixture-backed.
-- Polyline lifecycle APIs beyond `polyline.new` remain unsupported until the
-  runtime has deletion, `.all`, rollback, and host-surface parity.
+- Remaining drawing collection support is now concentrated on polyline rollback
+  and general array behavior; the current linefill object lifecycle,
+  object-array construction/read/mutation/search subset, partial `chart.point`
+  constructor/copy/field/point-array subset, and `polyline.new`,
+  `polyline.delete`, and `polyline.all` snapshots are fixture-backed for the
+  historical runtime subset.
+- Polyline realtime rollback fixtures and general polyline arrays remain
+  unsupported until dedicated slices implement and verify them.
 - Advanced label, line, box, and table methods remain diagnostic-only until
   they have semantic signatures, runtime behavior, public snapshots, fixtures,
   and conformance rows.

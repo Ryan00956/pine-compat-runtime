@@ -195,6 +195,10 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
             matches!(arg_type.kind, ValueKind::LineFill | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::PolylineCompatible => {
+            matches!(arg_type.kind, ValueKind::Polyline | ValueKind::Na)
+                && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::BoxCompatible => {
             matches!(arg_type.kind, ValueKind::Box | ValueKind::Na)
                 && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
@@ -401,6 +405,7 @@ pub(crate) fn array_element_return_type(
         ValueKind::LabelArray => ValueKind::Label,
         ValueKind::LineArray => ValueKind::Line,
         ValueKind::LineFillArray => ValueKind::LineFill,
+        ValueKind::PolylineArray => ValueKind::Polyline,
         ValueKind::BoxArray => ValueKind::Box,
         ValueKind::TableArray => ValueKind::Table,
         ValueKind::ChartPointArray => ValueKind::ChartPoint,
@@ -434,6 +439,7 @@ pub(crate) fn array_from_return_type(arg_types: &[Option<PineType>]) -> Option<P
             ValueKind::Label => ValueKind::LabelArray,
             ValueKind::Line => ValueKind::LineArray,
             ValueKind::LineFill => ValueKind::LineFillArray,
+            ValueKind::Polyline => ValueKind::PolylineArray,
             ValueKind::Box => ValueKind::BoxArray,
             ValueKind::Table => ValueKind::TableArray,
             ValueKind::ChartPoint => ValueKind::ChartPointArray,
@@ -470,6 +476,7 @@ pub(crate) fn is_array_kind(kind: ValueKind) -> bool {
             | ValueKind::LabelArray
             | ValueKind::LineArray
             | ValueKind::LineFillArray
+            | ValueKind::PolylineArray
             | ValueKind::BoxArray
             | ValueKind::TableArray
             | ValueKind::ChartPointArray

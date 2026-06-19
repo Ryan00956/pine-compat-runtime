@@ -64,6 +64,7 @@ pub enum ValueKind {
     LabelArray,
     LineArray,
     LineFillArray,
+    PolylineArray,
     BoxArray,
     TableArray,
     ChartPointArray,

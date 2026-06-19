@@ -151,6 +151,7 @@ pub(crate) fn drawing_method_builtin_name(
         ValueKind::Label => "label",
         ValueKind::Line => "line",
         ValueKind::LineFill => "linefill",
+        ValueKind::Polyline => "polyline",
         ValueKind::Box => "box",
         ValueKind::Table => "table",
         _ => return None,
@@ -162,6 +163,7 @@ pub(crate) fn drawing_method_builtin_name(
         ValueKind::Label => first_param.accepts == Accepts::LabelCompatible,
         ValueKind::Line => first_param.accepts == Accepts::LineCompatible,
         ValueKind::LineFill => first_param.accepts == Accepts::LineFillCompatible,
+        ValueKind::Polyline => first_param.accepts == Accepts::PolylineCompatible,
         ValueKind::Box => first_param.accepts == Accepts::BoxCompatible,
         ValueKind::Table => first_param.accepts == Accepts::TableCompatible,
         _ => false,
@@ -217,6 +219,7 @@ pub(crate) fn is_output_or_declaration_builtin(name: &str) -> bool {
             | "line.delete"
             | "line.copy"
             | "polyline.new"
+            | "polyline.delete"
             | "box.new"
             | "box.set_left"
             | "box.set_top"
@@ -1262,6 +1265,11 @@ impl Analyzer {
             {
                 return;
             }
+            ValueKind::PolylineArray
+                if matches!(value_type.kind, ValueKind::Polyline | ValueKind::Na) =>
+            {
+                return;
+            }
             ValueKind::LabelArray
                 if matches!(value_type.kind, ValueKind::Label | ValueKind::Na) =>
             {
@@ -1288,6 +1296,7 @@ impl Analyzer {
             ValueKind::LabelArray => "label arrays",
             ValueKind::LineArray => "line arrays",
             ValueKind::LineFillArray => "linefill arrays",
+            ValueKind::PolylineArray => "polyline arrays",
             ValueKind::BoxArray => "box arrays",
             ValueKind::TableArray => "table arrays",
             ValueKind::ChartPointArray => "chart.point arrays",

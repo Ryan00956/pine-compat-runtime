@@ -99,6 +99,8 @@ chart.point.from_index(index: int-compatible, price: numeric-compatible) -> seri
 chart.point.from_time(time: int-compatible, price: numeric-compatible) -> series chart.point
 chart.point.copy(id: chart.point-compatible) -> series chart.point
 polyline.new(points: simple array<chart.point>, curved?: bool-compatible, closed?: bool-compatible, xloc?: const string, line_color?: color-compatible, fill_color?: color-compatible, line_style?: const string, line_width?: int-compatible, force_overlay?: const bool) -> series polyline
+polyline.delete(id: polyline-compatible) -> void
+polyline.all -> simple array<polyline>
 ```
 
 `year`, `month`, `weekofyear`, `dayofmonth`, `dayofweek`, `hour`, `minute`,
@@ -130,8 +132,10 @@ appearance are not implemented by this fixed chart metadata subset.
 `chart.point` supports fixture-backed construction through `new`, `now`,
 `from_index`, `from_time`, and `copy`, plus top-level `time`, `index`, and
 `price` field reads/mutation. Point arrays can feed the partial
-`polyline.new` snapshot subset; drawing point overloads, typed declarations,
-and broader polyline lifecycle APIs remain separately gated.
+`polyline.new` snapshot subset. `polyline.delete` and `polyline.all` cover the
+historical lifecycle subset; drawing point overloads, typed declarations,
+realtime rollback fixtures, and general polyline arrays remain separately
+gated.
 
 Bar state:
 
@@ -1014,7 +1018,9 @@ allows `na` in otherwise typed arrays, and promotes mixed int/float arguments
 to a float array. `array.join` and `str.tostring(array)` remain limited to
 scalar typed arrays; linefill arrays are supported for generic
 object-array storage and search, chart-point arrays are supported for generic
-point-list storage and search, while polyline arrays remain unsupported.
+point-list storage and search, and `polyline.all` exposes a read-only snapshot
+polyline id array. General polyline array construction and mutation remain
+unsupported.
 `size/get/set/insert/push/pop/remove/shift/unshift/fill/first/last/copy/slice/concat/includes/indexof/lastindexof/clear`
 may also be called with method syntax on a supported array receiver.
 `array.get`, `array.set`, `array.insert`, and `array.remove` support negative

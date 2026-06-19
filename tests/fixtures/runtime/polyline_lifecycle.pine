@@ -1,0 +1,28 @@
+//@version=5
+indicator("Polyline lifecycle", overlay=true)
+
+var points = array.new<chart.point>()
+array.push(points, chart.point.from_index(bar_index, close))
+
+var deleted_polyline = polyline.new(points, line_color=color.red)
+var loop_polyline = polyline.new(points, line_color=color.green)
+var independent_polyline = polyline.new(points, line_color=color.blue)
+
+if bar_index == 1
+    polyline.delete(deleted_polyline)
+
+if bar_index == 3
+    delete_i = 0
+    while delete_i < 1
+        polyline.delete(loop_polyline)
+        delete_i := delete_i + 1
+
+independent_delete_i = 0
+while independent_delete_i < 1
+    if bar_index == 3
+        independent_polyline.delete()
+    independent_delete_i := independent_delete_i + 1
+
+polyline.delete(na)
+plot(array.size(polyline.all))
+plot(close)
