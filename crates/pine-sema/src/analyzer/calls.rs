@@ -8,6 +8,8 @@ const LABEL_STYLES: &[&str] = &[
     "label.style_triangledown",
     "label.style_flag",
     "label.style_circle",
+    "label.style_square",
+    "label.style_diamond",
     "label.style_arrowup",
     "label.style_arrowdown",
     "label.style_label_up",
@@ -18,6 +20,7 @@ const LABEL_STYLES: &[&str] = &[
     "label.style_label_lower_right",
     "label.style_label_upper_left",
     "label.style_label_upper_right",
+    "label.style_label_center",
 ];
 
 const LABEL_SIZES: &[&str] = &[

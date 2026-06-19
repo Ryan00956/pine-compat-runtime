@@ -547,7 +547,7 @@ fn accepts_plotcandle() {
 #[test]
 fn accepts_minimal_label_new() {
     let analysis = analyze(
-        "id = label.new(bar_index, high, \"High\")\nother = label.new(x=1, y=close, text=\"Close\", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, textalign=text.align_right, tooltip=\"Tip\", text_font_family=font.family_monospace, text_formatting=text.format_bold)\ntime_label = label.new(time, close, \"Time\", xloc=xloc.bar_time)\nabove = label.new(bar_index, high, \"Above\", yloc=yloc.abovebar)\nbelow = label.new(bar_index, low, \"Below\", yloc=yloc.belowbar)\nplot(close)\n",
+        "id = label.new(bar_index, high, \"High\")\nother = label.new(x=1, y=close, text=\"Close\", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, textalign=text.align_right, tooltip=\"Tip\", text_font_family=font.family_monospace, text_formatting=text.format_bold)\ntime_label = label.new(time, close, \"Time\", xloc=xloc.bar_time)\nabove = label.new(bar_index, high, \"Above\", yloc=yloc.abovebar)\nbelow = label.new(bar_index, low, \"Below\", yloc=yloc.belowbar)\nsquare = label.new(bar_index, high, \"Square\", style=label.style_square)\ndiamond = label.new(bar_index, high, \"Diamond\", style=label.style_diamond)\ncenter = label.new(bar_index, high, \"Center\", style=label.style_label_center)\nplot(close)\n",
     );
 
     assert!(
@@ -658,7 +658,7 @@ fn rejects_label_set_non_int_size() {
 #[test]
 fn accepts_label_mutation_methods() {
     let analysis = analyze(
-        "id = label.new(bar_index, high, \"High\")\ncopy = label.copy(id)\nlabel.set_x(id, bar_index)\nlabel.set_xloc(id, time, xloc.bar_time)\nlabel.set_y(id, low)\nlabel.set_xy(id, bar_index, close)\nlabel.set_yloc(id, yloc.abovebar)\nlabel.set_text(id, \"Close\")\nlabel.set_color(id, color.green)\nlabel.set_textcolor(id, color.white)\nlabel.set_style(id, label.style_label_up)\nlabel.set_size(id, size.small)\nlabel.set_tooltip(id, \"Tip\")\nlabel.set_textalign(id, text.align_left)\nlabel.set_text_font_family(id, font.family_monospace)\nlabel.set_text_formatting(id, text.format_bold + text.format_italic)\nlabel.set_text_formatting(na, text.format_italic)\nlabel.set_text(na, \"noop\")\nlabel.delete(na)\nlabel.delete(id)\nplot(label.get_x(copy))\nplot(close)\n",
+        "id = label.new(bar_index, high, \"High\")\ncopy = label.copy(id)\nlabel.set_x(id, bar_index)\nlabel.set_xloc(id, time, xloc.bar_time)\nlabel.set_y(id, low)\nlabel.set_xy(id, bar_index, close)\nlabel.set_yloc(id, yloc.abovebar)\nlabel.set_text(id, \"Close\")\nlabel.set_color(id, color.green)\nlabel.set_textcolor(id, color.white)\nlabel.set_style(id, label.style_label_up)\nlabel.set_style(id, label.style_square)\nlabel.set_style(id, label.style_diamond)\nlabel.set_style(id, label.style_label_center)\nlabel.set_size(id, size.small)\nlabel.set_tooltip(id, \"Tip\")\nlabel.set_textalign(id, text.align_left)\nlabel.set_text_font_family(id, font.family_monospace)\nlabel.set_text_formatting(id, text.format_bold + text.format_italic)\nlabel.set_text_formatting(na, text.format_italic)\nlabel.set_text(na, \"noop\")\nlabel.delete(na)\nlabel.delete(id)\nplot(label.get_x(copy))\nplot(close)\n",
     );
 
     assert!(
