@@ -689,11 +689,12 @@ getters, plus `label.all` existing-label id reads, including ordinary and
 independent while-loop control-flow read coverage, with default 50/named 1-500
 `max_labels_count` oldest-active label eviction before new creation. The
 executable line subset covers `line.new` x1/y1/x2/y2 creation with optional
-extend, color, style, and width initialization for existing host-neutral
-snapshot fields when `xloc` is omitted or `xloc.bar_index`; chart-point
-overloads and `xloc.bar_time` remain unsupported. It also covers selected
+xloc, extend, color, style, and width initialization for existing host-neutral
+snapshot fields when `xloc` is omitted, `xloc.bar_index`, or `xloc.bar_time`;
+chart-point overloads remain unsupported. It also covers selected
 endpoint/color/width/style/extend mutators and `line.set_xloc` for the
-`xloc.bar_index` subset that updates x1 and x2 snapshots, all including ordinary
+`xloc.bar_index`/`xloc.bar_time` subset that updates x1, x2, and xloc
+snapshots, all including ordinary
 and independent while-loop control-flow mutation coverage, `line.delete`
 deletion snapshots, including ordinary and independent while-loop control-flow
 deletion coverage,
@@ -707,8 +708,8 @@ ordinary and independent while-loop control-flow reads, with sparse snapshots
 and default 50/named 1-500 `max_lines_count` eviction that appends deletion
 snapshots to the oldest active line before creating new ones.
 `line.get_price` uses bar-index x1/y1/x2/y2 interpolation and extrapolation and
-returns `na` for `na`, deleted, vertical, or nonnumeric lines; time-coordinate
-price lookup remains unsupported. The executable box subset covers
+returns `na` for `na`, deleted, vertical, nonnumeric, or time-coordinate lines;
+timestamp interpolation remains unsupported. The executable box subset covers
 `box.new` left/top/right/bottom creation with optional background, border,
 extend, text, text-color, text-size, horizontal-alignment, vertical-alignment,
 text-wrap, font-family, and text-formatting initialization for existing
@@ -834,8 +835,9 @@ creation order, including when read from ordinary and independent while-loop
 control-flow blocks after label deletion or max-count eviction. Selected
 `line.set_*` mutators update
 endpoint/color/width/style/extend snapshots, and `line.set_xloc` with
-`xloc.bar_index` updates x1 and x2 snapshot values, including when called from
-ordinary and independent while-loop control-flow blocks. `line.delete` appends an
+`xloc.bar_index` or `xloc.bar_time` updates x1, x2, and xloc snapshot values,
+including when called from ordinary and independent while-loop control-flow
+blocks. `line.delete` appends an
 `exists: false` line snapshot, including when called from ordinary and
 independent while-loop control-flow blocks. `line.copy` clones the latest
 existing line snapshot into a new deterministic id, including when called from

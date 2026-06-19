@@ -20,5 +20,6 @@ for i = 0 to 0
         line.set_extend(line_id, extend.both)
         line.set_extend(line_id, extend.none)
         line.set_xloc(line_id, bar_index - 2, bar_index + 2, xloc.bar_index)
-line.set_xloc(na, bar_index, bar_index, xloc.bar_index)
+        line.set_xloc(line_id, time, time + 60000, xloc.bar_time)
+line.set_xloc(na, time, time + 60000, xloc.bar_time)
 plot(close)

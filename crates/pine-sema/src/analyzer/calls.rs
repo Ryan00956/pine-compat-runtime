@@ -34,6 +34,8 @@ const LABEL_SIZES: &[&str] = &[
 
 const LABEL_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
 
+const LINE_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
+
 const LABEL_YLOCS: &[&str] = &["yloc.price", "yloc.abovebar", "yloc.belowbar"];
 
 const LINE_STYLES: &[&str] = &[
@@ -915,7 +917,7 @@ impl Analyzer {
                 self.validate_label_string_arg(signature, args, 1, "yloc", LABEL_YLOCS);
             }
             "line.new" => {
-                self.validate_label_string_arg(signature, args, 4, "xloc", &["xloc.bar_index"]);
+                self.validate_label_string_arg(signature, args, 4, "xloc", LINE_XLOCS);
                 self.validate_label_string_arg(signature, args, 5, "extend", LINE_EXTENDS);
                 self.validate_label_string_arg(signature, args, 7, "style", LINE_STYLES);
             }
@@ -949,7 +951,7 @@ impl Analyzer {
                 self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
             }
             "line.set_xloc" => {
-                self.validate_label_string_arg(signature, args, 3, "xloc", &["xloc.bar_index"]);
+                self.validate_label_string_arg(signature, args, 3, "xloc", LINE_XLOCS);
             }
             "box.set_extend" => {
                 self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);

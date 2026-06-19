@@ -2,6 +2,7 @@
 indicator("Line getters")
 var id = line.new(bar_index, low, bar_index + 1, high)
 var deleted_line = line.new(bar_index, high, bar_index + 1, low)
+var time_line = line.new(time, close, time + 60000, close + 1, xloc=xloc.bar_time)
 if bar_index == 1
     line.set_x1(id, bar_index - 10)
     line.set_x2(id, bar_index + 10)
@@ -27,6 +28,7 @@ missing_x2 = nz(line.get_x2(na), -1)
 missing_y1 = nz(line.get_y1(na), -1)
 missing_y2 = nz(line.get_y2(na), -1)
 missing_price = nz(line.get_price(na, bar_index), -1)
+time_price = nz(line.get_price(time_line, time), -1)
 if bar_index == 1
     get_x1_i = 0
     while get_x1_i < 1
@@ -77,6 +79,7 @@ plot(missing_x2)
 plot(missing_y1)
 plot(missing_y2)
 plot(missing_price)
+plot(time_price)
 plot(deleted_x1)
 plot(deleted_x2)
 plot(deleted_y1)

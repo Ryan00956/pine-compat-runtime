@@ -1413,23 +1413,7 @@ fn reports_unsupported_label_new_modes_fixture() {
 fn reports_unsupported_line_new_modes_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_line_new_modes.pine",
-        &["xloc.bar_index", "line.style_"],
-    );
-}
-
-#[test]
-fn reports_unsupported_line_set_xloc_values_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_line_set_xloc_values.pine",
-        &["xloc.bar_index"],
-    );
-}
-
-#[test]
-fn reports_unsupported_line_get_price_time_coordinates_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_line_get_price_time_coordinates.pine",
-        &["xloc.bar_index"],
+        &["line.style_"],
     );
 }
 

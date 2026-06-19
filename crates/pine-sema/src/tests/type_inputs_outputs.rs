@@ -881,7 +881,7 @@ fn rejects_drawing_object_method_side_effects_inside_functions() {
 #[test]
 fn accepts_minimal_line_new() {
     let analysis = analyze(
-        "id = line.new(bar_index - 1, low, bar_index, high)\nother = line.new(x1=0, y1=open, x2=bar_index, y2=close)\nstyled = line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)\nextend_left = line.new(bar_index, low, bar_index + 1, high, extend=extend.left)\nextend_both = line.new(bar_index, low, bar_index + 1, high, extend=extend.both)\nextend_none = line.new(bar_index, low, bar_index + 1, high, extend=extend.none)\nstyle_solid = line.new(bar_index, low, bar_index + 1, high, style=line.style_solid)\nstyle_dotted = line.new(bar_index, low, bar_index + 1, high, style=line.style_dotted)\narrow_left = line.new(bar_index, low, bar_index + 1, high, style=line.style_arrow_left)\narrow_right = line.new(bar_index, low, bar_index + 1, high, style=line.style_arrow_right)\narrow_both = line.new(bar_index, low, bar_index + 1, high, style=line.style_arrow_both)\ncopy = line.copy(id)\nline.set_x1(id, bar_index)\nline.set_y1(id, low)\nline.set_xy1(id, bar_index, open)\nline.set_x2(id, bar_index)\nline.set_y2(id, high)\nline.set_xy2(id, bar_index, close)\nline.set_xloc(id, bar_index - 2, bar_index + 2, xloc.bar_index)\nline.set_color(id, color.green)\nline.set_width(id, 2)\nline.set_style(id, line.style_solid)\nline.set_style(id, line.style_dotted)\nline.set_style(id, line.style_dashed)\nline.set_style(id, line.style_arrow_left)\nline.set_style(id, line.style_arrow_right)\nline.set_style(id, line.style_arrow_both)\nline.set_extend(id, extend.right)\nline.set_extend(id, extend.left)\nline.set_extend(id, extend.both)\nline.set_extend(id, extend.none)\nplot(line.get_price(copy, bar_index))\nplot(line.get_x1(copy))\nplot(line.get_y1(copy))\nplot(line.get_x2(copy))\nplot(line.get_y2(copy))\nline.delete(na)\nline.delete(id)\nplot(close)\n",
+        "id = line.new(bar_index - 1, low, bar_index, high)\nother = line.new(x1=0, y1=open, x2=bar_index, y2=close)\nstyled = line.new(x1=bar_index, y1=low, x2=bar_index + 1, y2=high, xloc=xloc.bar_index, extend=extend.right, color=color.green, style=line.style_dashed, width=2, force_overlay=false)\ntime_line = line.new(x1=time, y1=low, x2=time + 60000, y2=high, xloc=xloc.bar_time)\nextend_left = line.new(bar_index, low, bar_index + 1, high, extend=extend.left)\nextend_both = line.new(bar_index, low, bar_index + 1, high, extend=extend.both)\nextend_none = line.new(bar_index, low, bar_index + 1, high, extend=extend.none)\nstyle_solid = line.new(bar_index, low, bar_index + 1, high, style=line.style_solid)\nstyle_dotted = line.new(bar_index, low, bar_index + 1, high, style=line.style_dotted)\narrow_left = line.new(bar_index, low, bar_index + 1, high, style=line.style_arrow_left)\narrow_right = line.new(bar_index, low, bar_index + 1, high, style=line.style_arrow_right)\narrow_both = line.new(bar_index, low, bar_index + 1, high, style=line.style_arrow_both)\ncopy = line.copy(id)\nline.set_x1(id, bar_index)\nline.set_y1(id, low)\nline.set_xy1(id, bar_index, open)\nline.set_x2(id, bar_index)\nline.set_y2(id, high)\nline.set_xy2(id, bar_index, close)\nline.set_xloc(id, bar_index - 2, bar_index + 2, xloc.bar_index)\nline.set_xloc(time_line, time, time + 60000, xloc.bar_time)\nline.set_color(id, color.green)\nline.set_width(id, 2)\nline.set_style(id, line.style_solid)\nline.set_style(id, line.style_dotted)\nline.set_style(id, line.style_dashed)\nline.set_style(id, line.style_arrow_left)\nline.set_style(id, line.style_arrow_right)\nline.set_style(id, line.style_arrow_both)\nline.set_extend(id, extend.right)\nline.set_extend(id, extend.left)\nline.set_extend(id, extend.both)\nline.set_extend(id, extend.none)\nplot(line.get_price(copy, bar_index))\nplot(line.get_x1(copy))\nplot(line.get_y1(copy))\nplot(line.get_x2(copy))\nplot(line.get_y2(copy))\nline.delete(na)\nline.delete(id)\nplot(close)\n",
     );
 
     assert!(
@@ -1020,20 +1020,17 @@ fn rejects_unimplemented_line_methods() {
 }
 
 #[test]
-fn rejects_unsupported_line_set_xloc_values() {
+fn accepts_line_set_xloc_bar_time() {
     let analysis = analyze(
         "id = line.new(bar_index, low, bar_index + 1, high)\nline.set_xloc(id, time, time + 60000, xloc.bar_time)\nplot(close)\n",
     );
 
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("xloc.bar_index")),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

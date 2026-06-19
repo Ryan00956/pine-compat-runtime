@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.new()` and `line.set_xloc()` `xloc.bar_time`
+  snapshot support: line snapshots now retain `xloc`, time-coordinate x1/x2
+  values are exposed to JSON/Python outputs, and `line.get_price()` continues
+  to return `na` for time-coordinate lines because timestamp interpolation
+  remains outside the supported getter subset.
 - Added fixture-backed `label.new`/`label.copy` max-count eviction: omitted
   declarations use the runtime's default 50-label limit, while named
   `max_labels_count` values from 1 through 500 are consumed from
@@ -1129,8 +1134,8 @@
   line methods.
 - Added fixture-backed `line.get_x1` boundary coverage for unsupported rich
   line methods.
-- Added fixture-backed `line.get_price` boundary coverage for unsupported
-  `xloc.bar_time` line coordinates.
+- Added fixture-backed `line.get_price` boundary coverage for time-coordinate
+  lines.
 - Added fixture-backed `line.delete` boundary coverage for unsupported later
   line methods.
 - Added fixture-backed `line.set_extend` boundary coverage for unsupported
@@ -1142,7 +1147,7 @@
 - Added fixture-backed `line.set_color` boundary coverage for unsupported later
   line methods.
 - Added fixture-backed `line.set_xloc` boundary coverage for unsupported
-  `xloc.bar_time` and chart-point line methods.
+  chart-point line methods.
 - Added fixture-backed `line.set_xy2` boundary coverage for unsupported later
   line methods.
 - Added fixture-backed `line.set_y2` boundary coverage for unsupported later
@@ -2219,7 +2224,7 @@
   `na` and deleted boxes remain no-ops, and `xloc.bar_time` stays unsupported.
 - Added fixture-backed `line.set_xloc()` support for the `xloc.bar_index`
   subset. It updates the latest existing line snapshot's x1 and x2 values;
-  `na` and deleted lines remain no-ops, and `xloc.bar_time` stays unsupported.
+  `na` and deleted lines remain no-ops.
 - Added fixture-backed `line.get_price()` support over the latest existing
   bar-index line snapshot. It uses x1/y1/x2/y2 interpolation or extrapolation
   and returns `na` for `na`, deleted, vertical, or nonnumeric lines.

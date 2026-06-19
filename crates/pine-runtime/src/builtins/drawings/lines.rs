@@ -8,7 +8,7 @@ impl<'a> HistoricalRuntime<'a> {
         let y1 = self.eval_required_line_arg(args, 1, "y1")?;
         let x2 = self.eval_required_line_arg(args, 2, "x2")?;
         let y2 = self.eval_required_line_arg(args, 3, "y2")?;
-        let _xloc = self.eval_line_option(args, 4, "xloc", "xloc.bar_index")?;
+        let xloc = self.eval_line_option(args, 4, "xloc", "xloc.bar_index")?;
         let extend = self.eval_line_option(args, 5, "extend", "extend.none")?;
         let color = self.eval_line_option_value(args, 6, "color", PineValue::Na)?;
         let style = self.eval_line_option(args, 7, "style", "line.style_solid")?;
@@ -32,6 +32,7 @@ impl<'a> HistoricalRuntime<'a> {
                 y1,
                 x2,
                 y2,
+                xloc,
                 color,
                 width,
                 style,
@@ -118,10 +119,11 @@ impl<'a> HistoricalRuntime<'a> {
         let id = self.eval_line_id_arg(args)?;
         let x1 = self.eval_required_line_arg(args, 1, "x1")?;
         let x2 = self.eval_required_line_arg(args, 2, "x2")?;
-        let _xloc = self.eval_required_line_arg(args, 3, "xloc")?;
+        let xloc = self.eval_required_line_arg(args, 3, "xloc")?;
         self.mutate_line(id, |snapshot| {
             snapshot.x1 = x1;
             snapshot.x2 = x2;
+            snapshot.xloc = xloc;
         })
     }
 
@@ -339,6 +341,9 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         if !latest.exists {
+            return Ok(PineValue::Na);
+        }
+        if latest.xloc == PineValue::String("xloc.bar_time".to_owned()) {
             return Ok(PineValue::Na);
         }
         let Some(x1) = latest.x1.as_f64() else {

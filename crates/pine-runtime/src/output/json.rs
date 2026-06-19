@@ -522,6 +522,8 @@ fn lines_json(lines: &[LineOutput]) -> String {
                 output.push_str(&value_json(&snapshot.x2));
                 output.push_str(",\"y2\":");
                 output.push_str(&value_json(&snapshot.y2));
+                output.push_str(",\"xloc\":");
+                output.push_str(&value_json(&snapshot.xloc));
                 output.push_str(",\"color\":");
                 output.push_str(&value_json(&snapshot.color));
                 output.push_str(",\"width\":");

@@ -683,13 +683,13 @@ and declaration-driven max-count eviction. Lines use the same lifecycle rules wi
 bar-index x coordinates, price y coordinates,
 selected color/width/style and extend fields, snapshot cloning, non-reused ids,
 and declaration-driven max-count eviction. `line.new` can initialize existing line
-snapshot fields for extend, color, style, and width when `xloc` is omitted or
-`xloc.bar_index`; `force_overlay` is accepted but remains a host display
-responsibility. The chart-point overload, `xloc.bar_time` coordinate semantics,
-and time-coordinate `line.set_xloc` remain unsupported; selected `line.set_*`
-mutators update endpoint/color/width/style/extend snapshots, and
-`line.set_xloc` with `xloc.bar_index` updates the line's x1 and x2 snapshot
-values, including when called from ordinary and independent while-loop
+snapshot fields for xloc, extend, color, style, and width when `xloc` is
+omitted, `xloc.bar_index`, or `xloc.bar_time`; `force_overlay` is accepted but
+remains a host display responsibility. The chart-point overload remains
+unsupported; selected `line.set_*` mutators update
+endpoint/color/width/style/extend snapshots, and `line.set_xloc` with
+`xloc.bar_index` or `xloc.bar_time` updates the line's x1, x2, and xloc
+snapshot values, including when called from ordinary and independent while-loop
 control-flow blocks. Boxes use
 the same lifecycle rules with bar-index left/right coordinates, price top/bottom
 coordinates,
@@ -803,8 +803,8 @@ for `na` or deleted lines.
 `line.get_price` reads the latest existing bar-index line snapshot, including
 when called from ordinary and independent while-loop control-flow blocks,
 applies x1/y1/x2/y2 interpolation or extrapolation for the requested x value,
-and returns `na` for `na`, deleted, vertical, or nonnumeric lines;
-time-coordinate price lookup remains unsupported. `box.copy` clones the latest
+and returns `na` for `na`, deleted, vertical, nonnumeric, or time-coordinate
+lines; timestamp interpolation remains unsupported. `box.copy` clones the latest
 existing box snapshot into a new deterministic id, including when called from
 ordinary and independent while-loop control-flow blocks, returns `na` for `na`
 or deleted boxes, and shares the effective box limit. `box.new` and `box.copy`

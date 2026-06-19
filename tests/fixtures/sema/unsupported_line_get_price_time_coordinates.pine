@@ -1,4 +1,0 @@
-//@version=5
-indicator("Unsupported line.get_price time coordinates")
-id = line.new(x1=time, y1=low, x2=time + 60000, y2=high, xloc=xloc.bar_time)
-plot(line.get_price(id, time))

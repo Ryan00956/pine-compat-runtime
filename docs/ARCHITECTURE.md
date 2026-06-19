@@ -426,14 +426,14 @@ currently existing label ids, `label.get_x` reads latest label x-coordinates,
 `label.get_y` reads latest label y-coordinates, and `label.get_text` reads
 latest label text from ordinary and independent while-loop control-flow blocks.
 Line snapshots cover `x1`, `y1`,
-`x2`, `y2`, `color`, `width`, `style`, and `extend`. `line.new` can initialize
-those host-neutral style snapshot fields, including official line style and
-extend constants, for the x1/y1/x2/y2 overload when `xloc` is omitted or
-`xloc.bar_index`; chart-point overloads and
-`xloc.bar_time` coordinate semantics remain outside the current runtime output
-contract. Supported `line.set_*` mutators include geometry, color, width,
-official style, official extend, and the `xloc.bar_index` `line.set_xloc`
-subset that rewrites x1 and x2 from ordinary and independent while-loop
+`x2`, `y2`, `xloc`, `color`, `width`, `style`, and `extend`. `line.new` can
+initialize those host-neutral style snapshot fields, including official line
+style and extend constants, for the x1/y1/x2/y2 overload when `xloc` is omitted
+or `xloc.bar_index`, or when `xloc.bar_time` stores time-coordinate x values;
+chart-point overloads remain outside the current runtime output contract.
+Supported `line.set_*` mutators include geometry, color, width, official style,
+official extend, and `line.set_xloc` for `xloc.bar_index`/`xloc.bar_time`,
+which rewrites x1, x2, and xloc from ordinary and independent while-loop
 control-flow blocks; they reuse the same snapshot model.
 `line.copy` cloning from ordinary and independent while-loop control-flow
 blocks and `line.delete` deletion from ordinary and independent while-loop
@@ -443,7 +443,9 @@ ordinary and independent while-loop control-flow blocks. `line.get_x1`,
 coordinates from ordinary and independent while-loop control-flow blocks;
 `line.get_price` derives a host-neutral bar-index price from ordinary and
 independent while-loop control-flow blocks by interpolating or extrapolating
-across the latest existing x1/y1/x2/y2 snapshot. Box snapshots
+across the latest existing x1/y1/x2/y2 snapshot; time-coordinate lines return
+`na` because timestamp interpolation remains outside the supported getter
+subset. Box snapshots
 cover `left`, `top`,
 `right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, `borderStyle`,
 `extend`, `text`, `textColor`, `textSize`, `textHalign`, `textValign`,
