@@ -2134,6 +2134,14 @@ fn reports_unsupported_array_stdev_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_stdev_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_stdev_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_variance_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_variance_bool.pine",
@@ -2203,6 +2211,14 @@ fn reports_unsupported_array_variance_polyline_fixture() {
         "tests/fixtures/sema/unsupported_array_variance_polyline.pine",
         "array.new_polyline",
         "array function",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_variance_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_variance_chart_point.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
