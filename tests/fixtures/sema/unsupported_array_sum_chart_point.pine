@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array sum chart point")
+points = array.new<chart.point>()
+plot(array.sum(points))
