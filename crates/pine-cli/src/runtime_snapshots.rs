@@ -8,6 +8,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/snapshot_plot.pine",
     ),
     (
+        "runtime_scalar_typed_declarations.json",
+        "tests/fixtures/runtime/scalar_typed_declarations.pine",
+    ),
+    (
         "runtime_plotchar.json",
         "tests/fixtures/runtime/plotchar.pine",
     ),

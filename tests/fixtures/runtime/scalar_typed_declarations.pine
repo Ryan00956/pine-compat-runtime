@@ -1,0 +1,25 @@
+//@version=5
+indicator("Scalar typed declarations")
+
+int count = na
+float price = close
+bool rising = na
+string label_text = na
+color accent = na
+
+count := bar_index
+price := na
+price := high + 0.5
+rising := close >= open
+label_text := "bar"
+label_text := na
+label_text := "typed"
+accent := color.green
+accent := na
+accent := color.red
+
+plot(count)
+plot(price)
+plot(rising ? 1 : 0)
+plot(str.length(label_text))
+plot(na(accent) ? 0 : 1)

@@ -135,8 +135,7 @@ impl Parser {
             None
         };
 
-        if let Some((declared_type, name)) = self.try_parse_chart_point_typed_decl_name() {
-            let start = self.tokens[self.pos - 4].span;
+        if let Some((declared_type, name, start)) = self.try_parse_typed_decl_name() {
             self.expect(TokenKind::Eq, "expected `=` in variable declaration")?;
             let value = self.parse_expr(0)?;
             return Some(Stmt {
@@ -226,7 +225,19 @@ impl Parser {
         })
     }
 
-    fn try_parse_chart_point_typed_decl_name(&mut self) -> Option<(String, String)> {
+    fn try_parse_typed_decl_name(&mut self) -> Option<(String, String, Span)> {
+        if let TokenKind::Identifier(type_name) = self.current().kind.clone()
+            && self.nth_at(2, TokenKind::Eq)
+        {
+            let TokenKind::Identifier(name) = self.tokens.get(self.pos + 1)?.kind.clone() else {
+                return None;
+            };
+            let start = self.current().span;
+            self.bump();
+            self.bump();
+            return Some((type_name, name, start));
+        }
+
         if !self.nth_at(1, TokenKind::Dot) || !self.nth_at(4, TokenKind::Eq) {
             return None;
         }
@@ -245,11 +256,12 @@ impl Parser {
             return None;
         }
 
+        let start = self.current().span;
         self.bump();
         self.bump();
         self.bump();
         self.bump();
-        Some(("chart.point".to_owned(), name))
+        Some(("chart.point".to_owned(), name, start))
     }
 
     fn parse_tuple_decl(&mut self) -> Option<Stmt> {
@@ -1069,6 +1081,42 @@ mod tests {
         assert_eq!(*mode, DeclMode::Var);
         assert_eq!(declared_type.as_deref(), Some("chart.point"));
         assert_eq!(name, "p");
+    }
+
+    #[test]
+    fn parses_scalar_typed_declaration() {
+        let parsed = parse("float price = close\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl {
+            mode,
+            declared_type,
+            name,
+            ..
+        } = &parsed.program.statements[0].kind
+        else {
+            panic!("expected declaration");
+        };
+        assert_eq!(*mode, DeclMode::Normal);
+        assert_eq!(declared_type.as_deref(), Some("float"));
+        assert_eq!(name, "price");
+    }
+
+    #[test]
+    fn parses_unknown_typed_declaration_for_semantic_diagnostic() {
+        let parsed = parse("line id = na\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl {
+            declared_type,
+            name,
+            ..
+        } = &parsed.program.statements[0].kind
+        else {
+            panic!("expected declaration");
+        };
+        assert_eq!(declared_type.as_deref(), Some("line"));
+        assert_eq!(name, "id");
     }
 
     #[test]

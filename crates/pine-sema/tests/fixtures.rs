@@ -1542,6 +1542,22 @@ fn reports_unsupported_chart_point_typed_decl_initial_fixture() {
 }
 
 #[test]
+fn reports_unsupported_scalar_typed_decl_initial_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_scalar_typed_decl_initial.pine",
+        &["cannot initialize `count` of type int with Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_drawing_typed_decl_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_drawing_typed_decl.pine",
+        &["typed declaration `line` is not supported"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_new_int_initial_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_new_int_initial.pine",

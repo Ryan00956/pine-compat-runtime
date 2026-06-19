@@ -240,15 +240,27 @@ pub(crate) fn can_assign(target: PineType, value: PineType) -> bool {
         return qualifier_at_most(value.qualifier, target.qualifier)
             || target.qualifier == Qualifier::Series;
     }
+    if value.kind == ValueKind::Na && can_assign_na_to_kind(target.kind) {
+        return qualifier_at_most(value.qualifier, target.qualifier)
+            || target.qualifier == Qualifier::Series;
+    }
 
     target.kind == ValueKind::Float
         && value.kind == ValueKind::Int
         && (qualifier_at_most(value.qualifier, target.qualifier)
             || target.qualifier == Qualifier::Series)
-        || target.kind == ValueKind::ChartPoint
-            && value.kind == ValueKind::Na
-            && (qualifier_at_most(value.qualifier, target.qualifier)
-                || target.qualifier == Qualifier::Series)
+}
+
+fn can_assign_na_to_kind(kind: ValueKind) -> bool {
+    matches!(
+        kind,
+        ValueKind::Int
+            | ValueKind::Float
+            | ValueKind::Bool
+            | ValueKind::String
+            | ValueKind::Color
+            | ValueKind::ChartPoint
+    )
 }
 pub(crate) fn qualifier_at_most(actual: Qualifier, max: Qualifier) -> bool {
     qualifier_rank(actual) <= qualifier_rank(max)

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported scalar typed declaration initial value")
+
+int count = "bad"
+plot(close)

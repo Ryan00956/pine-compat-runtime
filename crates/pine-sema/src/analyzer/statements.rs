@@ -339,6 +339,11 @@ impl Analyzer {
 
     fn declared_pine_type(&mut self, declared_type: Option<&str>, span: Span) -> Option<PineType> {
         match declared_type {
+            Some("int") => Some(PineType::new(Qualifier::Series, ValueKind::Int)),
+            Some("float") => Some(PineType::new(Qualifier::Series, ValueKind::Float)),
+            Some("bool") => Some(PineType::new(Qualifier::Series, ValueKind::Bool)),
+            Some("string") => Some(PineType::new(Qualifier::Series, ValueKind::String)),
+            Some("color") => Some(PineType::new(Qualifier::Series, ValueKind::Color)),
             Some("chart.point") => Some(PineType::new(Qualifier::Series, ValueKind::ChartPoint)),
             Some(type_name) => {
                 self.diagnostics.push(Diagnostic::error(
@@ -359,21 +364,20 @@ impl Analyzer {
         value_type: PineType,
         span: Span,
     ) {
-        if target_type.kind == ValueKind::ChartPoint {
-            if !accepts_type(Accepts::ChartPointCompatible, value_type) {
-                self.diagnostics.push(Diagnostic::error(
-                    "E_ASSIGN_TYPE",
-                    format!(
-                        "cannot initialize `{name}` of type chart.point with {:?} {:?}",
-                        value_type.qualifier, value_type.kind
-                    ),
-                    span,
-                ));
-            }
+        if can_assign(target_type, value_type) || value_type.kind == ValueKind::Na {
             return;
         }
 
-        self.validate_assignment(name, target_type, value_type, span);
+        self.diagnostics.push(Diagnostic::error(
+            "E_ASSIGN_TYPE",
+            format!(
+                "cannot initialize `{name}` of type {} with {:?} {:?}",
+                typed_declaration_name(target_type.kind),
+                value_type.qualifier,
+                value_type.kind
+            ),
+            span,
+        ));
     }
 
     pub(crate) fn analyze_tuple_decl(&mut self, statement: &pine_syntax::Stmt) {
@@ -438,6 +442,18 @@ fn reassigned_symbol_type(target_type: PineType, value_type: PineType) -> PineTy
         strongest_qualifier(target_type.qualifier, value_type.qualifier),
         common_kind(target_type.kind, value_type.kind).unwrap_or(target_type.kind),
     )
+}
+
+fn typed_declaration_name(kind: ValueKind) -> &'static str {
+    match kind {
+        ValueKind::Int => "int",
+        ValueKind::Float => "float",
+        ValueKind::Bool => "bool",
+        ValueKind::String => "string",
+        ValueKind::Color => "color",
+        ValueKind::ChartPoint => "chart.point",
+        _ => "typed",
+    }
 }
 
 fn is_supported_varip_array(kind: ValueKind) -> bool {
