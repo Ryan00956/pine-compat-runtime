@@ -989,7 +989,7 @@ impl Analyzer {
             "table.cell" => {
                 self.validate_label_string_arg(signature, args, 7, "text_halign", TEXT_HALIGNS);
                 self.validate_label_string_arg(signature, args, 8, "text_valign", TEXT_VALIGNS);
-                self.validate_label_string_arg(signature, args, 9, "text_size", LABEL_SIZES);
+                self.validate_text_size_arg(signature, args, 9, "text_size");
                 self.validate_label_string_arg(
                     signature,
                     args,
@@ -1076,6 +1076,43 @@ impl Analyzer {
                         "`{}` argument `{name}` only supports {}",
                         signature.name,
                         allowed.join(", ")
+                    ),
+                    arg.span,
+                ));
+            }
+        }
+    }
+
+    fn validate_text_size_arg(
+        &mut self,
+        signature: &BuiltinSignature,
+        args: &[CallArg],
+        index: usize,
+        name: &str,
+    ) {
+        for (arg_index, arg) in args.iter().enumerate() {
+            let is_target = arg.name.as_deref() == Some(name)
+                || (arg.name.is_none()
+                    && signature
+                        .params
+                        .get(arg_index)
+                        .is_some_and(|param| param.name == name && index == arg_index));
+            if !is_target {
+                continue;
+            }
+            let Some(value) = const_string_value(&arg.value) else {
+                continue;
+            };
+            if !LABEL_SIZES
+                .iter()
+                .any(|allowed_value| *allowed_value == value)
+            {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_CALL_ARG_VALUE",
+                    format!(
+                        "`{}` argument `{name}` only supports {} or int text sizes",
+                        signature.name,
+                        LABEL_SIZES.join(", ")
                     ),
                     arg.span,
                 ));

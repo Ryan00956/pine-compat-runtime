@@ -9,7 +9,7 @@ if bar_index == 1
     if array.size(visible_tables) > 0
         table.cell(array.get(visible_tables, 0), 0, 1, "from_all")
 if bar_index == 2
-    table.cell(table_id, column=1, row=0, text="B", width=12, height=34, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_size=size.normal, bgcolor=color.green, tooltip="initial", text_font_family=font.family_monospace, text_formatting=text.format_bold)
+    table.cell(table_id, column=1, row=0, text="B", width=12, height=34, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_size=19, bgcolor=color.green, tooltip="initial", text_font_family=font.family_monospace, text_formatting=text.format_bold)
     table.cell(table_id, 0, 0, "C")
     table.cell_set_text(table_id, 1, 0, "B2")
     text_i = 0
