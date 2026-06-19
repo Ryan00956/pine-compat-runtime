@@ -445,8 +445,9 @@ top-level scalar `int`/`float`/`bool`/`string`/`color` fields. `Type.new(...)`
 constructs runtime values, field reads are typed from the local UDT
 declaration, and ordinary variables, local for-expression constructor results,
 plus `var` may hold those values. Local scalar fields can be reassigned with
-`value.field := expr` outside UDF/method bodies; the assigned expression must be
-compatible with the declared field type. UDF parameter passthrough is supported
+`value.field := expr` outside UDF/method bodies, including branch, `for` loop,
+and `while` loop bodies; the assigned expression must be compatible with the
+declared field type. UDF parameter passthrough is supported
 when the function returns the UDT
 parameter itself, when a block-bodied function returns a local alias chain that
 starts from that parameter, or when a nested passthrough UDF call maps back to

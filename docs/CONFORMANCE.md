@@ -632,9 +632,9 @@ parameters, block-local scalar aliases of those fields, inferred scalar
 parameters, or block-local scalar aliases of those scalar parameters using
 positional or named constructor field arguments.
 Local scalar fields can be reassigned outside UDF/method bodies, including in
-branch and `for` loop bodies. Field mutation inside UDFs or methods, `varip`,
-history references on UDT values, UDT fields, UDT arrays, and imported UDTs
-remain outside the supported matrix.
+branch, `for` loop, and `while` loop bodies. Field mutation inside UDFs or
+methods, `varip`, history references on UDT values, UDT fields, UDT arrays, and
+imported UDTs remain outside the supported matrix.
 User-defined methods are partial for pure methods on local UDT receivers with
 scalar or local UDT parameters and direct UDT passthrough returns, block-local
 receiver or local UDT parameter alias passthrough returns, final if/else or

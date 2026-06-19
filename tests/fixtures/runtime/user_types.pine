@@ -18,6 +18,12 @@ loop_mutated = Point.new(close, open)
 for i = 0 to 1
     loop_mutated.x := loop_mutated.x + i
 plot(loop_mutated.x + loop_mutated.y)
+while_mutated = Point.new(close, open)
+while_i = 0
+while while_i < 2
+    while_mutated.y := while_mutated.y + while_i
+    while_i := while_i + 1
+plot(while_mutated.x + while_mutated.y)
 looped = for i = 0 to 1
     Point.new(p.x + i, p.y)
 plot(looped.x + looped.y)
