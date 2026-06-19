@@ -816,6 +816,64 @@ fn table_fixture_rolls_back_forming_cell_changes() {
     );
 }
 
+#[test]
+fn polyline_fixture_rolls_back_forming_lifecycle_changes() {
+    let mut runtime = runtime_for_fixture("tests/fixtures/realtime/polyline_rollback.pine");
+
+    let result = runtime
+        .update(BarUpdate::historical(bar(1.0)))
+        .expect("historical update should run");
+    assert_eq!(result.polylines.len(), 1);
+    assert_eq!(result.polylines[0].id, 1);
+    assert_eq!(result.polylines[0].snapshots.len(), 1);
+    assert_eq!(result.polylines[0].snapshots[0].points.len(), 1);
+    assert!(result.polylines[0].snapshots[0].exists);
+    assert_values(&result.plots[0].values, &[1.0]);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(2.0)))
+        .expect("forming update should run");
+    assert_eq!(result.polylines.len(), 2);
+    assert_eq!(result.polylines[0].id, 1);
+    assert_eq!(result.polylines[0].snapshots.len(), 1);
+    assert!(result.polylines[0].snapshots[0].exists);
+    assert_eq!(result.polylines[1].id, 2);
+    assert_eq!(result.polylines[1].snapshots.len(), 2);
+    assert_eq!(result.polylines[1].snapshots[0].points.len(), 2);
+    assert_eq!(
+        result.polylines[1].snapshots[0].line_color,
+        PineValue::Color(0x4CAF50)
+    );
+    assert!(!result.polylines[1].snapshots[1].exists);
+    assert_values(&result.plots[0].values, &[1.0, 1.0]);
+    assert_eq!(runtime.confirmed_result().polylines.len(), 1);
+    assert_eq!(runtime.confirmed_result().polylines[0].snapshots.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::forming(bar(3.0)))
+        .expect("second forming update should roll back polylines");
+    assert_eq!(result.polylines.len(), 2);
+    assert_eq!(result.polylines[0].id, 1);
+    assert_eq!(result.polylines[0].snapshots.len(), 2);
+    assert!(!result.polylines[0].snapshots[1].exists);
+    assert_eq!(result.polylines[1].id, 2);
+    assert_eq!(result.polylines[1].snapshots.len(), 2);
+    assert_eq!(result.polylines[1].snapshots[0].points.len(), 2);
+    assert!(!result.polylines[1].snapshots[1].exists);
+    assert_values(&result.plots[0].values, &[1.0, 0.0]);
+    assert_eq!(runtime.confirmed_result().polylines.len(), 1);
+    assert_eq!(runtime.confirmed_result().polylines[0].snapshots.len(), 1);
+
+    let result = runtime
+        .update(BarUpdate::confirmed(bar(4.0)))
+        .expect("confirmed update should commit from confirmed polyline state");
+    assert_eq!(result.polylines.len(), 1);
+    assert_eq!(result.polylines[0].id, 1);
+    assert_eq!(result.polylines[0].snapshots.len(), 1);
+    assert!(result.polylines[0].snapshots[0].exists);
+    assert_values(&result.plots[0].values, &[1.0, 1.0]);
+}
+
 fn runtime_for_fixture(path: &str) -> RealtimeRuntime<'static> {
     let hir = hir_for_fixture(path);
     RealtimeRuntime::new(Box::leak(Box::new(hir)))

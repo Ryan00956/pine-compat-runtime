@@ -2,14 +2,18 @@
 
 ## Unreleased
 
+- Added fixture-backed realtime rollback coverage for the supported
+  `polyline.new` / `polyline.delete` / `polyline.all` lifecycle subset,
+  proving abandoned forming-bar creation, deletion, copied point lists, and
+  current-id reads do not leak into confirmed runtime state.
 - Added fixture-backed partial `polyline.delete` and `polyline.all` lifecycle
   support, including deletion snapshots, namespace and method-call deletion,
-  `na` no-op behavior, and current-id filtering in `polyline.all`; realtime
-  rollback fixtures and general polyline arrays remain unsupported.
+  `na` no-op behavior, and current-id filtering in `polyline.all`; general
+  polyline arrays and richer limit parity remain unsupported.
 - Added fixture-backed partial `polyline.new` support over
   `array<chart.point>` inputs, with runtime-owned polyline ids, copied point
   lists, style fields, CLI/Python/WASM `polylines` output, and runtime
-  `schemaVersion: 7`; rollback fixtures and general polyline arrays remain
+  `schemaVersion: 7`; general polyline arrays and richer limit parity remain
   unsupported.
 - Added fixture-backed `array.new<chart.point>()` parsing, semantic validation,
   and runtime construction for chart-point arrays, including optional
@@ -19,8 +23,8 @@
   historical polyline lifecycle subset.
 - Added fixture-backed partial `chart.point` constructor, copy, field read, and
   top-level field mutation support as the first executable prerequisite for
-  future polyline work; realtime rollback fixtures and general polyline arrays
-  remain unsupported.
+  future polyline work; general polyline arrays and richer limit parity remain
+  unsupported.
 - Refreshed the `polyline.*` implementation gate with an official-semantics
   sequence covering `chart.point`, `array<chart.point>`, polyline snapshots,
   deletion, `.all`, rollback, and host parity before support is claimed.

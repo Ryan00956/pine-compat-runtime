@@ -133,9 +133,9 @@ appearance are not implemented by this fixed chart metadata subset.
 `from_index`, `from_time`, and `copy`, plus top-level `time`, `index`, and
 `price` field reads/mutation. Point arrays can feed the partial
 `polyline.new` snapshot subset. `polyline.delete` and `polyline.all` cover the
-historical lifecycle subset; drawing point overloads, typed declarations,
-realtime rollback fixtures, and general polyline arrays remain separately
-gated.
+historical and forming-bar rollback lifecycle subset; drawing point overloads,
+typed declarations, general polyline arrays, and richer limit parity remain
+separately gated.
 
 Bar state:
 

@@ -336,8 +336,9 @@ arrays for generic object-array storage, reads, mutation, and search.
 `chart.point` has fixture-backed constructor/copy, top-level field access, and
 point-array support. `polyline.new` can copy point arrays into host-neutral
 runtime snapshots; `polyline.delete` appends lifecycle deletion snapshots, and
-`polyline.all` reads currently existing ids. Realtime rollback fixtures and
-general polyline arrays remain unsupported pending host-surface parity.
+`polyline.all` reads currently existing ids. Realtime rollback is fixture-backed
+for the supported lifecycle subset. General polyline arrays and richer limit
+parity remain unsupported pending host-surface parity.
 
 Object families:
 
@@ -354,8 +355,8 @@ Required design:
 
 - `array.new<chart.point>()` and `array.from(chart.point, ...)` point-list
   construction are fixture-backed prerequisites for `polyline.new`; the next
-  runtime claim should focus on rollback and limit parity for the supported
-  polyline lifecycle subset.
+  runtime claim should focus on limit parity and general array boundaries for
+  the supported polyline lifecycle subset.
 - Runtime object ids and lifetime rules.
 - Per-bar creation, mutation, and deletion semantics.
 - Rollback behavior for forming bars.

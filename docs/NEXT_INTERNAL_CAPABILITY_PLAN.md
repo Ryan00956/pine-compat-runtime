@@ -180,7 +180,7 @@ host-neutral.
 
 Good next slices:
 
-- Add realtime rollback and limit fixtures for the now-supported
+- Add limit and object-count parity fixtures for the now-supported
   `polyline.new` / `polyline.delete` / `polyline.all` lifecycle subset.
 - More `label.*`, `line.*`, `box.*`, and `table.*` methods.
 - More deletion, mutation, no-op, and runtime-limit fixtures.
@@ -189,8 +189,8 @@ Good next slices:
 
 Keep out of scope until separately designed:
 
-- General polyline arrays and broader rollback/limit coverage until each
-  behavior is fixture-backed.
+- General polyline arrays and broader limit coverage until each behavior is
+  fixture-backed.
 - Host-specific visual layout, drag behavior, or chart interaction.
 - Drawing behavior that cannot be represented in the current JSON contract.
 

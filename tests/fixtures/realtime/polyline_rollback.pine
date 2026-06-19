@@ -1,0 +1,16 @@
+//@version=5
+indicator("Realtime polyline rollback", overlay=true)
+
+var points = array.new<chart.point>()
+array.push(points, chart.point.from_index(bar_index, close))
+
+var base = polyline.new(points, line_color=color.red)
+
+if barstate.isrealtime and not barstate.isconfirmed
+    if close > 2.5
+        polyline.delete(base)
+    temp = polyline.new(points, line_color=color.green)
+    polyline.delete(temp)
+
+plot(array.size(polyline.all))
+plot(close)

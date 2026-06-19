@@ -36,7 +36,9 @@ top-level field mutation, and `array.new<chart.point>()` plus
 `polyline.new` now copies those point arrays into host-neutral `polylines`
 snapshots in runtime `schemaVersion: 7`. `polyline.delete` appends deletion
 snapshots and `polyline.all` returns currently existing ids. Realtime rollback
-fixtures and general polyline arrays remain outside this lifecycle slice.
+is fixture-backed for creation, deletion, copied point lists, and `polyline.all`
+reads. General polyline arrays and richer limit parity remain outside this
+lifecycle slice.
 
 Adding a narrow `polyline.new(na)` or ad hoc tuple-based point list would create
 a different language surface from Pine and would bypass the array/type model
@@ -52,15 +54,19 @@ that conformance relies on. The implementation order is therefore:
 3. Release-contract slice: done for creation snapshots.
    expose the same snapshot shape through CLI, Python, and WASM hosts, then add
    conformance rows and matrix gates for the partial polyline claim.
-4. Realtime/limit parity slice:
-   add rollback fixtures and richer limit/garbage-collection parity evidence.
+4. Realtime rollback slice: done.
+   add forming-bar creation/deletion rollback and `polyline.all` evidence.
+5. Limit parity slice:
+   add richer limit/garbage-collection parity evidence.
 
-The runtime must not mark general polyline arrays or realtime parity supported
-before those slices are fixture-backed. `array.new_polyline` remains out of
-scope until polyline id arrays have a deliberate storage and mutation model.
+The runtime must not mark general polyline arrays or richer limit parity
+supported before those slices are fixture-backed. `array.new_polyline` remains
+out of scope until polyline id arrays have a deliberate storage and mutation
+model.
 
 `polyline.new` is backed by `tests/fixtures/runtime/polyline_new.pine`.
 `polyline.delete`, method-call deletion, and `polyline.all` collection reads are
-backed by `tests/fixtures/runtime/polyline_lifecycle.pine`. General polyline
-arrays remain explicitly unsupported through the existing `array.new_polyline`
-boundary fixtures.
+backed by `tests/fixtures/runtime/polyline_lifecycle.pine`, with forming-bar
+rollback backed by `tests/fixtures/realtime/polyline_rollback.pine`. General
+polyline arrays remain explicitly unsupported through the existing
+`array.new_polyline` boundary fixtures.

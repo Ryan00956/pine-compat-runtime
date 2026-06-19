@@ -129,8 +129,8 @@ Runtime limits are deterministic:
 - `crates/pine-runtime/tests/incremental.rs` checks every runtime fixture
   against incremental append execution, so the drawing fixtures participate in
   full-vs-append equivalence.
-- Realtime fixtures cover forming-bar rollback for labels, lines, boxes, and
-  tables.
+- Realtime fixtures cover forming-bar rollback for labels, lines, boxes,
+  tables, and the supported polyline lifecycle subset.
 - Python binding tests assert representative `labels`, `lines`, `boxes`, and
   `tables` dictionary output. WASM tests assert the top-level drawing keys.
 - The matrix JSON snapshot includes separate rows for every supported drawing
@@ -163,14 +163,14 @@ dispatch module is 58 lines, and family modules are 164-280 lines.
 
 These are not blockers for closing Phase E:
 
-- Remaining drawing collection support is now concentrated on polyline rollback
-  and general array behavior; the current linefill object lifecycle,
+- Remaining drawing collection support is now concentrated on polyline general
+  array and limit behavior; the current linefill object lifecycle,
   object-array construction/read/mutation/search subset, partial `chart.point`
   constructor/copy/field/point-array subset, and `polyline.new`,
   `polyline.delete`, and `polyline.all` snapshots are fixture-backed for the
-  historical runtime subset.
-- Polyline realtime rollback fixtures and general polyline arrays remain
-  unsupported until dedicated slices implement and verify them.
+  historical and realtime rollback runtime subset.
+- General polyline arrays and richer polyline limit parity remain unsupported
+  until dedicated slices implement and verify them.
 - Advanced label, line, box, and table methods remain diagnostic-only until
   they have semantic signatures, runtime behavior, public snapshots, fixtures,
   and conformance rows.

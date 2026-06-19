@@ -1124,9 +1124,11 @@ host-neutral `polylines[].snapshots[]` entry, and records `curved`, `closed`,
 `xloc`, `lineColor`, `fillColor`, `lineStyle`, `lineWidth`, and
 `forceOverlay`. `polyline.delete` appends an `exists: false` snapshot for an
 existing id and treats `na` or already-deleted ids as no-ops. `polyline.all`
-returns currently existing polyline ids in creation order. Realtime rollback
-fixtures and general polyline arrays remain outside the supported subset until
-host-surface parity is fixture-backed.
+returns currently existing polyline ids in creation order. Realtime forming-bar
+updates roll back abandoned polyline creations, deletions, copied point lists,
+and `polyline.all` reads from the last confirmed drawing state. General
+polyline arrays and richer limit parity remain outside the supported subset
+until host-surface parity is fixture-backed.
 
 ## Determinism
 
