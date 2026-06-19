@@ -39,7 +39,7 @@ indicator-level `max_bars_back` support.
 - Non-integer dynamic offsets such as `close[close]` are rejected with
   `dynamic_history_offset`.
 - Scalar array, scalar slice, label-array, label-slice, line-array,
-  linefill-array, box-array, and table-array variable history snapshots are
+  line-slice, linefill-array, box-array, and table-array variable history snapshots are
   fixture-backed for the official `previous = a[1]` and
   `na(previous) ? na : previous.get(0)` pattern. Polyline arrays, map, matrix,
   drawing-object collection, and remaining non-scalar slice-history snapshots
@@ -82,7 +82,7 @@ Completed:
 Deferred:
 
 - Per-variable `max_bars_back` declarations and inference.
-- Remaining polyline, map, matrix, drawing-object collection, and non-label
+- Remaining polyline, map, matrix, drawing-object collection, and non-label/line
   object slice-history snapshots.
 - More precise diagnostics when a dynamic offset asks for history beyond an
   explicit retention bound.
