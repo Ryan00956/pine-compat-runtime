@@ -441,7 +441,7 @@ box.set_border_style(id, line.style_dashed)
 box.set_extend(id, extend.right)
 box.set_text(id, "box text")
 box.set_text_color(id, color.white)
-box.set_text_size(id, size.small)
+box.set_text_size(id, 19)
 box.set_text_halign(id, text.align_left)
 box.set_text_valign(id, text.align_top)
 box.set_text_wrap(id, text.wrap_auto)
@@ -496,10 +496,7 @@ plot(close)
         box_output.snapshots[14].text_color,
         PineValue::Color(0xFFFFFF)
     );
-    assert_eq!(
-        box_output.snapshots[15].text_size,
-        PineValue::String("size.small".to_owned())
-    );
+    assert_eq!(box_output.snapshots[15].text_size, PineValue::Int(19));
     assert_eq!(
         box_output.snapshots[16].text_halign,
         PineValue::String("text.align_left".to_owned())

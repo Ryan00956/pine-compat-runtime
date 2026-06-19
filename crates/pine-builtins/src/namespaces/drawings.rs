@@ -741,7 +741,7 @@ const BOX_SET_TEXT_SIZE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "text_size",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringCastScalar,
         optional: false,
     },
 ];
