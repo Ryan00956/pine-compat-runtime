@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Synchronized drawing-object architecture documentation with current
+  fixture-backed label, line, and box style, location, and extend support.
 - Added explicit creation and mutation snapshot coverage for the base drawing
   style constants `line.style_solid`, `line.style_dotted`, and
   `line.style_dashed` across line styles and box border styles.

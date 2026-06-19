@@ -410,26 +410,29 @@ contract reserves `labels`, `lines`, `boxes`, and `tables`, whose entries have
 an object `id` and a `snapshots` array. Label snapshots use `barIndex`,
 `exists`, and, while `exists` is true, the mutable label fields represented by
 normalized Pine values, including `textAlign`, `textFontFamily`, and
-`textFormatting` for host-side text layout. The label lifecycle covers
-`label.new`, selected
-`label.set_*` mutators including coordinate, text, size, color, style, tooltip,
-alignment, font-family, and text-formatting snapshot mutation from ordinary and
-independent while-loop control-flow blocks plus x-location and y-location
-snapshot mutation from ordinary and independent while-loop control-flow blocks,
-`label.copy` cloning from ordinary and independent while-loop control-flow
-blocks, and `label.delete` deletion snapshots from ordinary and independent
-while-loop control-flow blocks; `label.all` reads
+`textFormatting` for host-side text layout. `label.new` can initialize
+bar-index or bar-time x locations, price/abovebar/belowbar y locations,
+official label styles, string and integer sizes, tooltip, text alignment,
+font-family, and text-formatting snapshot fields. Supported `label.set_*`
+mutators include coordinate, x-location, y-location, text, size, color, style,
+tooltip, alignment, font-family, and text-formatting snapshot mutation from
+ordinary and independent while-loop control-flow blocks. `label.copy` cloning
+from ordinary and independent while-loop control-flow blocks, and
+`label.delete` deletion snapshots from ordinary and independent while-loop
+control-flow blocks also use the label snapshot model; `label.all` reads
 currently existing label ids, `label.get_x` reads latest label x-coordinates,
 `label.get_y` reads latest label y-coordinates, and `label.get_text` reads
 latest label text from ordinary and independent while-loop control-flow blocks.
 Line snapshots cover `x1`, `y1`,
 `x2`, `y2`, `color`, `width`, `style`, and `extend`. `line.new` can initialize
-those host-neutral style snapshot fields for the x1/y1/x2/y2 overload when
-`xloc` is omitted or `xloc.bar_index`; chart-point overloads and
+those host-neutral style snapshot fields, including official line style and
+extend constants, for the x1/y1/x2/y2 overload when `xloc` is omitted or
+`xloc.bar_index`; chart-point overloads and
 `xloc.bar_time` coordinate semantics remain outside the current runtime output
-contract. Selected `line.set_*` mutators, including the `xloc.bar_index`
-`line.set_xloc` subset that rewrites x1 and x2 from ordinary and independent
-while-loop control-flow blocks, reuse the same snapshot model;
+contract. Supported `line.set_*` mutators include geometry, color, width,
+official style, official extend, and the `xloc.bar_index` `line.set_xloc`
+subset that rewrites x1 and x2 from ordinary and independent while-loop
+control-flow blocks; they reuse the same snapshot model.
 `line.copy` cloning from ordinary and independent while-loop control-flow
 blocks and `line.delete` deletion from ordinary and independent while-loop
 control-flow blocks also use that model. `line.all` reads current line ids from
@@ -443,14 +446,17 @@ cover `left`, `top`,
 `right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, `borderStyle`,
 `extend`, `text`, `textColor`, `textSize`, `textHalign`, `textValign`,
 `textWrap`, `textFontFamily`, and `textFormatting`. `box.new` can initialize
-those host-neutral style and text snapshot fields for the left/top/right/bottom
-overload when `xloc` is omitted or `xloc.bar_index`; chart-point overloads and
+those host-neutral style and text snapshot fields, including
+solid/dotted/dashed border styles and official extend constants, for the
+left/top/right/bottom overload when `xloc` is omitted or `xloc.bar_index`;
+chart-point overloads and
 `xloc.bar_time` coordinate semantics remain outside the current runtime output
-contract. Selected `box.set_*` mutators, including geometry, style, and text
-snapshot setters from ordinary and independent while-loop control-flow blocks
-and the `xloc.bar_index` `box.set_xloc` subset that rewrites left and right
-from ordinary and independent while-loop control-flow blocks, `box.copy`
-cloning from ordinary and independent while-loop control-flow blocks, and `box.delete`
+contract. Supported `box.set_*` mutators include geometry, background, border
+color/width/style, official extend, text and text-layout snapshot setters from
+ordinary and independent while-loop control-flow blocks, and the
+`xloc.bar_index` `box.set_xloc` subset that rewrites left and right from
+ordinary and independent while-loop control-flow blocks. `box.copy` cloning
+from ordinary and independent while-loop control-flow blocks and `box.delete`
 deletion from ordinary and independent while-loop control-flow blocks reuse the
 same snapshot model;
 `box.all` reads current box ids from ordinary and independent while-loop
