@@ -153,6 +153,8 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "line.new",
     "line.set_color",
     "line.set_extend",
+    "line.set_first_point",
+    "line.set_second_point",
     "line.set_style",
     "line.set_width",
     "line.set_x1",

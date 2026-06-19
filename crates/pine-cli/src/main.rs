@@ -315,7 +315,7 @@ mod tests {
             "alert placeholders",
             "map.*",
             "matrix.*",
-            "unsupported label/line/box/table methods",
+            "unsupported label/box/table methods",
             "non-int history offsets",
             "negative history offsets",
         ] {

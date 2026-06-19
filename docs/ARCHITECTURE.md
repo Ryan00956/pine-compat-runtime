@@ -433,9 +433,11 @@ or `xloc.bar_index`, when `xloc.bar_time` stores time-coordinate x values, or
 from two `chart.point` values using `point.index` for `xloc.bar_index` and
 `point.time` for `xloc.bar_time`.
 Supported `line.set_*` mutators include geometry, color, width, official style,
-official extend, and `line.set_xloc` for `xloc.bar_index`/`xloc.bar_time`,
-which rewrites x1, x2, and xloc from ordinary and independent while-loop
-control-flow blocks; they reuse the same snapshot model.
+official extend, `line.set_first_point`/`line.set_second_point` for
+`chart.point` values, and `line.set_xloc` for
+`xloc.bar_index`/`xloc.bar_time`, which rewrites x1, x2, and xloc from
+ordinary and independent while-loop control-flow blocks; they reuse the same
+snapshot model.
 `line.copy` cloning from ordinary and independent while-loop control-flow
 blocks and `line.delete` deletion from ordinary and independent while-loop
 control-flow blocks also use that model. `line.all` reads current line ids from

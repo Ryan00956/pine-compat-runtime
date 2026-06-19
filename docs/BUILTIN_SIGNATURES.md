@@ -100,6 +100,8 @@ chart.point.from_time(time: int-compatible, price: numeric-compatible) -> series
 chart.point.copy(id: chart.point-compatible) -> series chart.point
 line.new(x1: int-compatible, y1: numeric-compatible, x2: int-compatible, y2: numeric-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
 line.new(first_point: chart.point-compatible, second_point: chart.point-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
+line.set_first_point(id: line-compatible, point: chart.point-compatible) -> void
+line.set_second_point(id: line-compatible, point: chart.point-compatible) -> void
 polyline.new(points: simple array<chart.point>, curved?: bool-compatible, closed?: bool-compatible, xloc?: const string, line_color?: color-compatible, fill_color?: color-compatible, line_style?: const string, line_width?: int-compatible, force_overlay?: const bool) -> series polyline
 polyline.delete(id: polyline-compatible) -> void
 polyline.all -> simple array<polyline>
@@ -133,10 +135,11 @@ are `false`. Host-owned scroll/zoom viewport changes and configurable chart
 appearance are not implemented by this fixed chart metadata subset.
 `chart.point` supports fixture-backed construction through `new`, `now`,
 `from_index`, `from_time`, and `copy`, plus top-level `time`, `index`, and
-`price` field reads/mutation. `line.new` can consume two `chart.point` values
-for its point overload, and point arrays can feed the partial `polyline.new`
-snapshot subset. `polyline.delete` and `polyline.all` cover the historical and
-forming-bar rollback lifecycle subset; other drawing point overloads, typed
+`price` field reads/mutation. `line.new`, `line.set_first_point`, and
+`line.set_second_point` can consume `chart.point` values, and point arrays can
+feed the partial `polyline.new` snapshot subset. `polyline.delete` and
+`polyline.all` cover the historical and forming-bar rollback lifecycle subset;
+non-line drawing point overloads, typed
 declarations, general polyline arrays, and runtime use of
 declaration-driven polyline max-count/eviction parity remain separately gated.
 

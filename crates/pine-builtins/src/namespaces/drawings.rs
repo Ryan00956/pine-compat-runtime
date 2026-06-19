@@ -4,6 +4,14 @@ use super::types::*;
 
 pub(crate) mod tables;
 
+const fn param(name: &'static str, accepts: Accepts, optional: bool) -> BuiltinParam {
+    BuiltinParam {
+        name,
+        accepts,
+        optional,
+    }
+}
+
 const LABEL_NEW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "x",
@@ -341,46 +349,14 @@ const LINE_NEW_PARAMS: &[BuiltinParam] = &[
 ];
 
 const LINE_NEW_POINT_PARAMS: &[BuiltinParam] = &[
-    BuiltinParam {
-        name: "first_point",
-        accepts: Accepts::ChartPointCompatible,
-        optional: false,
-    },
-    BuiltinParam {
-        name: "second_point",
-        accepts: Accepts::ChartPointCompatible,
-        optional: false,
-    },
-    BuiltinParam {
-        name: "xloc",
-        accepts: Accepts::ConstString,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "extend",
-        accepts: Accepts::ConstString,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "color",
-        accepts: Accepts::ColorCompatible,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "style",
-        accepts: Accepts::ConstString,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "width",
-        accepts: Accepts::IntCompatible,
-        optional: true,
-    },
-    BuiltinParam {
-        name: "force_overlay",
-        accepts: Accepts::ConstBool,
-        optional: true,
-    },
+    param("first_point", Accepts::ChartPointCompatible, false),
+    param("second_point", Accepts::ChartPointCompatible, false),
+    param("xloc", Accepts::ConstString, true),
+    param("extend", Accepts::ConstString, true),
+    param("color", Accepts::ColorCompatible, true),
+    param("style", Accepts::ConstString, true),
+    param("width", Accepts::IntCompatible, true),
+    param("force_overlay", Accepts::ConstBool, true),
 ];
 
 const LINEFILL_NEW_PARAMS: &[BuiltinParam] = &[
@@ -518,6 +494,11 @@ const LINE_SET_XY_PARAMS: &[BuiltinParam] = &[
         accepts: Accepts::NumericCompatible,
         optional: false,
     },
+];
+
+const LINE_SET_POINT_PARAMS: &[BuiltinParam] = &[
+    param("id", Accepts::LineCompatible, false),
+    param("point", Accepts::ChartPointCompatible, false),
 ];
 
 const LINE_SET_XLOC_PARAMS: &[BuiltinParam] = &[
@@ -1177,6 +1158,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         variadic: false,
     },
     BuiltinSignature {
+        name: "line.set_first_point",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_POINT_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
         name: "line.set_y1",
         phase: BuiltinPhase::Phase1Core,
         params: LINE_SET_Y_PARAMS,
@@ -1194,6 +1182,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "line.set_x2",
         phase: BuiltinPhase::Phase1Core,
         params: LINE_SET_X_PARAMS,
+        returns: ReturnSpec::Fixed(VOID),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.set_second_point",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_SET_POINT_PARAMS,
         returns: ReturnSpec::Fixed(VOID),
         variadic: false,
     },

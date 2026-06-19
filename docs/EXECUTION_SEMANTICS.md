@@ -1136,12 +1136,15 @@ join helpers remain limited to their existing scalar-compatible array families.
 storage/read/mutation/search. `line.new` can create line snapshots from two
 `chart.point` values, selecting `point.index` for `xloc.bar_index` and
 `point.time` for `xloc.bar_time`, while retaining the existing line style,
-extend, color, and width snapshot fields. `polyline.new` creates runtime-owned
-polyline ids from an `array<chart.point>` input, copies the current point-list
-values into a host-neutral `polylines[].snapshots[]` entry, and records
-`curved`, `closed`, `xloc`, `lineColor`, `fillColor`, `lineStyle`,
-`lineWidth`, and `forceOverlay`. `polyline.delete` appends an `exists: false`
-snapshot for an existing id and treats `na` or already-deleted ids as no-ops.
+extend, color, and width snapshot fields. `line.set_first_point` and
+`line.set_second_point` update the selected endpoint from a `chart.point`,
+using the line's current `xloc` to choose `point.index` or `point.time` for the
+x-coordinate. `polyline.new` creates runtime-owned polyline ids from an
+`array<chart.point>` input, copies the current point-list values into a
+host-neutral `polylines[].snapshots[]` entry, and records `curved`, `closed`,
+`xloc`, `lineColor`, `fillColor`, `lineStyle`, `lineWidth`, and
+`forceOverlay`. `polyline.delete` appends an `exists: false` snapshot for an
+existing id and treats `na` or already-deleted ids as no-ops.
 `polyline.all`
 returns currently existing polyline ids in creation order. Realtime forming-bar
 updates roll back abandoned polyline creations, deletions, copied point lists,

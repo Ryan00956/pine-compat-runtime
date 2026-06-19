@@ -1,5 +1,4 @@
 //@version=5
 indicator("Unsupported drawing")
 label.set_point(na, na)
-line.set_first_point(na, na)
 box.set_top_left_point(na, na)

@@ -110,6 +110,20 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_line_set_first_point(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_line_id_arg(args)?;
+        let point = self.eval_required_line_arg(args, 1, "point")?;
+        self.mutate_line(id, |snapshot| {
+            if let Some((x, y)) = line_point_coordinates(point, &snapshot.xloc) {
+                snapshot.x1 = x;
+                snapshot.y1 = y;
+            }
+        })
+    }
+
     pub(super) fn eval_line_set_y1(
         &mut self,
         args: &[HirCallArg],
@@ -142,6 +156,20 @@ impl<'a> HistoricalRuntime<'a> {
         let x = self.eval_required_line_arg(args, 1, "x")?;
         self.mutate_line(id, |snapshot| {
             snapshot.x2 = x;
+        })
+    }
+
+    pub(super) fn eval_line_set_second_point(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_line_id_arg(args)?;
+        let point = self.eval_required_line_arg(args, 1, "point")?;
+        self.mutate_line(id, |snapshot| {
+            if let Some((x, y)) = line_point_coordinates(point, &snapshot.xloc) {
+                snapshot.x2 = x;
+                snapshot.y2 = y;
+            }
         })
     }
 

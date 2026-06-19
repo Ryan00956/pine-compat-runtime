@@ -969,6 +969,33 @@ fn accepts_line_new_chart_point_overload() {
 }
 
 #[test]
+fn accepts_line_point_setters() {
+    let analysis = analyze(
+        "id = line.new(bar_index, low, bar_index + 1, high)\nfirst = chart.point.from_index(bar_index - 1, open)\nsecond = chart.point.from_index(bar_index + 2, close)\nline.set_first_point(id, first)\nid.set_second_point(second)\ntime_id = line.new(x1=time, y1=low, x2=time + 60000, y2=high, xloc=xloc.bar_time)\ntime_first = chart.point.from_time(time - 60000, open)\ntime_second = chart.point.from_time(time + 120000, close)\nline.set_first_point(time_id, time_first)\ntime_id.set_second_point(time_second)\nplot(line.get_x1(id) + line.get_x2(time_id))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "line.set_first_point")
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "line.set_second_point")
+    );
+}
+
+#[test]
 fn accepts_minimal_linefill_new() {
     let analysis = analyze(
         "upper = line.new(bar_index, high, bar_index + 1, high)\nlower = line.new(bar_index, low, bar_index + 1, low)\nfill = linefill.new(upper, lower, color.new(color.green, 80))\nlinefill.set_color(fill, color.red)\nfill.set_color(color.blue)\nlinefill.set_color(na, color.yellow)\nfirst = linefill.get_line1(fill)\nsecond = fill.get_line2()\nall_fills = linefill.all\nfirst_fill = array.get(all_fills, 0)\nmissing_first = linefill.get_line1(na)\nmissing = linefill.new(na, lower, color.red)\nlinefill.delete(na)\nlinefill.delete(missing)\nlinefill.delete(fill)\nplot(line.get_x1(first) + line.get_x2(second) + line.get_x1(linefill.get_line1(first_fill)) + array.size(all_fills) + nz(line.get_x1(missing_first), 0))\n",
@@ -1025,14 +1052,14 @@ fn accepts_minimal_linefill_new() {
 
 #[test]
 fn rejects_unimplemented_line_methods() {
-    let analysis = analyze("line.set_first_point(na, na)\nplot(close)\n");
+    let analysis = analyze("box.set_top_left_point(na, na)\nplot(close)\n");
 
     assert!(
         analysis
             .compatibility
             .unsupported
             .iter()
-            .any(|feature| feature.feature == "line.set_first_point"),
+            .any(|feature| feature.feature == "box.set_top_left_point"),
         "{:?}",
         analysis.compatibility.unsupported
     );

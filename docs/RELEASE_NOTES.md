@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.set_first_point()` and
+  `line.set_second_point()` chart-point endpoint mutation support: point-based
+  endpoint snapshots use `point.index` for `xloc.bar_index` lines and
+  `point.time` for `xloc.bar_time` lines, with namespace-call and method-call
+  coverage.
 - Added fixture-backed `line.new(first_point, second_point, ...)` chart-point
   overload support: point-based line snapshots use `point.index` for
   `xloc.bar_index` and `point.time` for `xloc.bar_time`, while preserving the
