@@ -1,5 +1,0 @@
-//@version=5
-indicator("Unsupported array unshift linefill")
-a = array.new_linefill(0)
-a.unshift(na)
-plot(close)

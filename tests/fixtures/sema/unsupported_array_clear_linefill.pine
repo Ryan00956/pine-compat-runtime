@@ -1,5 +1,0 @@
-//@version=5
-indicator("Unsupported array clear linefill")
-a = array.new_linefill(0)
-a.clear()
-plot(close)

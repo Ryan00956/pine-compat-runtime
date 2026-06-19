@@ -1,5 +1,0 @@
-//@version=5
-indicator("Unsupported array reverse linefill")
-a = array.new_linefill(0)
-a.reverse()
-plot(close)

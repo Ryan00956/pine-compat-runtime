@@ -1,4 +1,0 @@
-//@version=5
-indicator("Unsupported array indexof linefill")
-a = array.new_linefill(0)
-plot(a.indexof(na))

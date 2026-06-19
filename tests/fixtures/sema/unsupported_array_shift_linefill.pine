@@ -1,5 +1,0 @@
-//@version=5
-indicator("Unsupported array shift linefill")
-a = array.new_linefill(0)
-value = a.shift()
-plot(close)

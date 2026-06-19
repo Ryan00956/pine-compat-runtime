@@ -1,5 +1,0 @@
-//@version=5
-indicator("Unsupported array first linefill")
-a = array.new_linefill(0)
-value = a.first()
-plot(close)

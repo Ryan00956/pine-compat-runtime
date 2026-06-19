@@ -1,4 +1,0 @@
-//@version=5
-indicator("Unsupported array includes linefill")
-a = array.new_linefill(0)
-plot(a.includes(na) ? 1 : 0)

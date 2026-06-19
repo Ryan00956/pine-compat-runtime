@@ -1,5 +1,0 @@
-//@version=5
-indicator("Unsupported array slice linefill")
-a = array.new_linefill(0)
-part = a.slice(0, 1)
-plot(close)
