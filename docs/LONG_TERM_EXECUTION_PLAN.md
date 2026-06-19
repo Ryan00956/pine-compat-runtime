@@ -279,9 +279,9 @@ Closed coverage:
   `ohlc4` as bar-local OHLC price series.
 - Initial `input.*` metadata coverage accepts common min/max/step, `options`,
   `tooltip`, `inline`, `group`, `confirm`, and `display` parameters while
-  executing the `defval` value unless the Rust runtime, CLI, or Python host
-  supplies call-site keyed input overrides. Additional string-like input coverage
-  includes `input.session` and `input.text_area`.
+  executing the `defval` value unless the Rust runtime, CLI, Python, or WASM
+  host supplies call-site keyed input overrides. Additional string-like input
+  coverage includes `input.session` and `input.text_area`.
 - Initial output metadata coverage accepts common style/display/editability
   parameters on `plot`, `hline`, `fill`, `bgcolor`, and `barcolor` without
   changing the normalized runtime output schemas. Direct `display.*` constant
@@ -298,8 +298,8 @@ Maintenance tails:
 
 - `ta.vwap` session-derived anchoring remains future work.
 - `color.*` named constants are a common registry, not an exhaustive claim.
-- WASM input override APIs remain future work; CLI and Python expose call-site
-  keyed scalar overrides.
+- Rust, CLI, Python, and WASM input override APIs expose call-site keyed scalar
+  overrides.
 - More plot options, visibility controls, styles, and display-driven renderer
   behavior remain future work.
 

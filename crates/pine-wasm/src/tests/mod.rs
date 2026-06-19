@@ -1,6 +1,6 @@
 use super::*;
 use pine_runtime::{PUBLIC_ANALYSIS_SCHEMA_VERSION, PUBLIC_RUNTIME_SCHEMA_VERSION};
-use std::{env, fs, path::PathBuf};
+use std::{collections::HashMap, env, fs, path::PathBuf};
 
 #[test]
 fn analyzes_script_to_json() {
@@ -72,6 +72,76 @@ fn runs_script_from_csv_to_json() {
     assert_eq!(parsed["boxes"], serde_json::json!([]));
     assert_eq!(parsed["tables"], serde_json::json!([]));
     assert_eq!(parsed["alerts"], serde_json::json!([]));
+}
+
+#[test]
+fn runs_script_from_csv_with_input_overrides_to_json() {
+    let source = r##"indicator("input overrides")
+length = input.int(2, "Length")
+scale = input.float(1.0, "Scale")
+enabled = input.bool(true, "Enabled")
+mode = input.string("SMA", "Mode")
+shade = input.color(color.red, "Shade")
+base = enabled and mode == "SMA" ? ta.sma(close, length) * scale : open
+plot(base)
+plot(color.r(shade))
+"##;
+    let bars = "time,open,high,low,close,volume\n0,1,1,1,1,1\n1,2,2,2,2,1\n2,3,3,3,3,1\n";
+    let input_ids = input_call_ids_by_title(source);
+    let overrides_json = input_overrides_json(&[
+        (input_ids["Length"], serde_json::json!(1)),
+        (input_ids["Scale"], serde_json::json!(2.0)),
+        (input_ids["Enabled"], serde_json::json!(true)),
+        (input_ids["Mode"], serde_json::json!("SMA")),
+        (input_ids["Shade"], serde_json::json!("#4CAF50")),
+    ]);
+
+    let outputs = [
+        run_script_csv_with_input_overrides(source, bars, &overrides_json)
+            .expect("input override output"),
+        run_script_csv_with_request_bars_and_input_overrides(source, bars, "{}", &overrides_json)
+            .expect("request bars and input override output"),
+        run_script_csv_with_libraries_and_input_overrides(source, bars, "{}", &overrides_json)
+            .expect("libraries and input override output"),
+        run_script_csv_with_libraries_and_request_bars_and_input_overrides(
+            source,
+            bars,
+            "{}",
+            "{}",
+            &overrides_json,
+        )
+        .expect("libraries, request bars, and input override output"),
+        compile_script(source)
+            .expect("program")
+            .run_csv_with_input_overrides(bars, &overrides_json)
+            .expect("program input override output"),
+        compile_script(source)
+            .expect("program")
+            .run_csv_with_request_bars_and_input_overrides(bars, "{}", &overrides_json)
+            .expect("program request bars and input override output"),
+    ];
+
+    for output in outputs {
+        let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+        assert_eq!(parsed["plots"][0]["values"], serde_json::json!([2, 4, 6]));
+        assert_eq!(
+            parsed["plots"][1]["values"],
+            serde_json::json!([76, 76, 76])
+        );
+    }
+}
+
+#[test]
+fn input_overrides_report_unknown_call_site() {
+    let message = run_script_csv_with_input_overrides_internal(
+        "indicator(\"inputs\")\nlength = input.int(2, \"Length\")\nplot(ta.sma(close, length))\n",
+        "time,open,high,low,close,volume\n0,1,1,1,1,1\n",
+        r#"{"999999":1}"#,
+    )
+    .expect_err("unknown input override callSiteId should fail");
+
+    assert!(message.contains("unknown callSiteId 999999"));
 }
 
 #[test]
@@ -7733,6 +7803,36 @@ fn assert_snapshot(name: &str, actual: &str) {
     let expected = fs::read_to_string(&snapshot_path)
         .unwrap_or_else(|err| panic!("failed to read {}: {err}", snapshot_path.display()));
     assert_eq!(actual.trim_end(), expected.trim_end(), "{name} changed");
+}
+
+fn input_call_ids_by_title(source: &str) -> HashMap<String, u64> {
+    let output = analyze_script(source);
+    let parsed: serde_json::Value = serde_json::from_str(&output).expect("strict JSON output");
+
+    parsed["inputs"]
+        .as_array()
+        .expect("inputs should be an array")
+        .iter()
+        .map(|input| {
+            (
+                input["title"]
+                    .as_str()
+                    .expect("input title should be a string")
+                    .to_owned(),
+                input["callSiteId"]
+                    .as_u64()
+                    .expect("input callSiteId should be an integer"),
+            )
+        })
+        .collect()
+}
+
+fn input_overrides_json(overrides: &[(u64, serde_json::Value)]) -> String {
+    let object = overrides
+        .iter()
+        .map(|(call_site_id, value)| (call_site_id.to_string(), value.clone()))
+        .collect::<serde_json::Map<_, _>>();
+    serde_json::Value::Object(object).to_string()
 }
 
 fn workspace_dir() -> PathBuf {

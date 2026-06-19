@@ -137,8 +137,7 @@ Exit criteria:
   examples.
 - Output includes normalized series, annotations, fills, diagnostics, and
   compatibility reports. Input calls execute their `defval` values unless the
-  Rust runtime, CLI, or Python host supplies call-site keyed overrides; WASM
-  input override APIs remain later work.
+  Rust runtime, CLI, Python, or WASM host supplies call-site keyed overrides.
 
 ## Phase 5: Python Binding
 

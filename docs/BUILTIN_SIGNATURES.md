@@ -828,12 +828,13 @@ Rules:
   with call-site keyed `InputOverrides`, the CLI supplies
   `--input-override CALL_SITE_ID=value`, or the Python host supplies a
   call-site keyed `input_overrides` dictionary to `Program.run()` or
-  `run_script()`. WASM host input override parameters are not implemented yet.
+  `run_script()`, or the WASM host supplies an `inputOverridesJson` object to a
+  `*WithInputOverrides` run API.
 - The supported metadata subset validates common option names and types, then
   ignores metadata at runtime; call-site keyed overrides provide the executable
-  value only when explicitly supplied by the Rust, CLI, or Python host.
+  value only when explicitly supplied by the Rust, CLI, Python, or WASM host.
 - `input.session` and `input.text_area` currently execute their `defval`
-  strings unless a Rust, CLI, or Python host override is supplied.
+  strings unless a Rust, CLI, Python, or WASM host override is supplied.
 - `input.source` returns the selected source series. Phase 1 may restrict this
   to known OHLCV-derived series. Host-side `input.source` overrides remain
   unsupported.

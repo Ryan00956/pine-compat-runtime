@@ -359,6 +359,16 @@ mapping `SYMBOL:TIMEFRAME` keys to arrays of `{time, open, high, low, close,
 volume}` bar objects. This is explicit host-provided data; the WASM crate does
 not fetch network data, read files, or discover symbols.
 
+WASM input overrides are exposed through `runScriptCsvWithInputOverrides`,
+`runScriptCsvWithRequestBarsAndInputOverrides`,
+`runScriptCsvWithLibrariesAndInputOverrides`,
+`runScriptCsvWithLibrariesAndRequestBarsAndInputOverrides`,
+`Program.runCsvWithInputOverrides`, and
+`Program.runCsvWithRequestBarsAndInputOverrides`. The `inputOverridesJson`
+value is an object keyed by analysis `inputs[].callSiteId`; values are parsed
+against the analyzed `input.*` call type. Host-side `input.source` overrides
+remain unsupported.
+
 ## Output Model
 
 The core output must remain host-neutral:
