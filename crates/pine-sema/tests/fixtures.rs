@@ -1964,6 +1964,14 @@ fn reports_unsupported_array_sort_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_chart_point.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_udt_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_udt.pine",
@@ -2025,6 +2033,14 @@ fn reports_unsupported_array_sort_indices_polyline_fixture() {
         "tests/fixtures/sema/unsupported_array_sort_indices_polyline.pine",
         "array.new_polyline",
         "array function",
+    );
+}
+
+#[test]
+fn reports_unsupported_array_sort_indices_chart_point_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_array_sort_indices_chart_point.pine",
+        "E_CALL_ARG_TYPE",
     );
 }
 
