@@ -285,13 +285,8 @@ mod tests {
     fn rejects_array_unsupported_type_claims_without_matching_fixtures() {
         for (unsupported_type, fixture, expected) in [
             (
-                "linefill arrays remain unsupported",
-                "tests/fixtures/runtime/array_clear.pine;tests/fixtures/sema/unsupported_array_clear_polyline.pine",
-                "must reference linefill fixture coverage",
-            ),
-            (
                 "polyline arrays remain unsupported",
-                "tests/fixtures/runtime/array_clear.pine;tests/fixtures/sema/unsupported_array_clear_linefill.pine",
+                "tests/fixtures/runtime/array_clear.pine;tests/fixtures/sema/unsupported_array_clear_udt.pine",
                 "must reference polyline fixture coverage",
             ),
             (

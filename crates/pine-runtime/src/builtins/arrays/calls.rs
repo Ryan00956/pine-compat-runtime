@@ -17,6 +17,7 @@ impl<'a> HistoricalRuntime<'a> {
             "array.new_string" => self.eval_array_new_string(args),
             "array.new_color" => self.eval_array_new_color(args),
             "array.new_line" => self.eval_array_new_line(args),
+            "array.new_linefill" => self.eval_array_new_linefill(args),
             "array.new_label" => self.eval_array_new_label(args),
             "array.new_box" => self.eval_array_new_box(args),
             "array.new_table" => self.eval_array_new_table(args),

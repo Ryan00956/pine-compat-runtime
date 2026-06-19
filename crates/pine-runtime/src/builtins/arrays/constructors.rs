@@ -43,6 +43,13 @@ impl<'a> HistoricalRuntime<'a> {
         self.eval_array_new_with_kind(args, "array.new_line", ArrayElementKind::Line)
     }
 
+    pub(crate) fn eval_array_new_linefill(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_array_new_with_kind(args, "array.new_linefill", ArrayElementKind::LineFill)
+    }
+
     pub(crate) fn eval_array_new_label(
         &mut self,
         args: &[HirCallArg],

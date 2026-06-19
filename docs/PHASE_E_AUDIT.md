@@ -76,8 +76,9 @@ truth for supported drawing claims.
   color mutation snapshots. `linefill.get_line1` and `linefill.get_line2`
   return referenced line ids. `linefill.delete` appends deletion snapshots, and
   `linefill.all` returns currently existing linefill ids in creation order.
-  `array.new_linefill` and broader linefill array construction remain
-  unsupported.
+  `array.new_linefill` and `array.from` support linefill id arrays for generic
+  object-array storage, mutation, reads, and search while numeric/truth/sort/join
+  helpers reject linefill arrays with type diagnostics.
 - `polyline.*` is unsupported and has a dedicated design note in
   `docs/PHASE_E_POLYLINE_GATE.md`.
 
@@ -160,11 +161,9 @@ dispatch module is 58 lines, and family modules are 164-280 lines.
 
 These are not blockers for closing Phase E:
 
-- Remaining linefill support is limited to broader linefill array construction
-  now that `linefill.new` has an initial runtime object store,
-  `linefill.set_color` has color mutation snapshots, linefill getters return
-  referenced line ids, `linefill.all` returns current ids, and
-  `linefill.delete` appends deletion snapshots.
+- Remaining drawing collection support is now concentrated on `polyline.*` and
+  chart-point/point-array semantics; the current linefill object lifecycle and
+  object-array construction/read/mutation/search subset is fixture-backed.
 - `polyline.*` remains unsupported until the runtime has `chart.point` values
   and typed point-list arrays.
 - Advanced label, line, box, and table methods remain diagnostic-only until

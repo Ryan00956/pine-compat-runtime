@@ -506,13 +506,15 @@ per-bar locals.
 
 For arrays, the stored value is a runtime-owned array id. A normal
 `array.new_float`, `array.new_int`, `array.new_bool`, `array.new_string`,
-`array.new_color`, `array.new_label`, `array.new_line`, `array.new_box`, or
-`array.new_table` declaration allocates a fresh array each time it executes.
-`array.new_label`, `array.new_line`, `array.new_box`, and `array.new_table`
-create drawing-id arrays filled with `na` when no initial id is supplied.
+`array.new_color`, `array.new_label`, `array.new_line`,
+`array.new_linefill`, `array.new_box`, or `array.new_table` declaration
+allocates a fresh array each time it executes. `array.new_label`,
+`array.new_line`, `array.new_linefill`, `array.new_box`, and
+`array.new_table` create drawing-id arrays filled with `na` when no initial id
+is supplied.
 `array.from` also allocates a fresh inferred typed array and requires at least
-one non-`na` supported typed value, including label, line, box, and table ids
-for drawing-id arrays. A `var` array declaration keeps the same id
+one non-`na` supported typed value, including label, line, linefill, box, and
+table ids for drawing-id arrays. A `var` array declaration keeps the same id
 and backing storage across bars, so mutations such as `array.push` or
 `values.push(...)` persist.
 Assigning an array to another variable copies the id, not the backing values;
@@ -1109,8 +1111,11 @@ return `na`. `linefill.delete` appends an `exists: false` snapshot for existing
 linefill ids and is a no-op for `na`, replaced, or already deleted ids.
 `linefill.all` returns a snapshot array of currently existing linefill ids in
 creation order and omits linefills replaced by later same-pair creations or
-deleted by `linefill.delete`. `array.new_linefill` and broader linefill array
-construction remain unsupported. `polyline.*` remains unsupported until
+deleted by `linefill.delete`. `array.new_linefill`, `array.from` over linefill
+ids, and generic object-array mutation/search/read helpers support linefill
+arrays with shallow reference elements. Numeric, truth, sorting, and string
+join helpers remain limited to their existing scalar-compatible array families.
+`polyline.*` remains unsupported until
 `chart.point` values and point-list arrays have a fixture-backed execution model.
 
 ## Determinism

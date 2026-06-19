@@ -34,6 +34,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "array.new_int",
     "array.new_label",
     "array.new_line",
+    "array.new_linefill",
     "array.new_string",
     "array.new_table",
     "array.percentile_linear_interpolation",

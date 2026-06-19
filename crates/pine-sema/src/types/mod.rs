@@ -428,6 +428,7 @@ pub(crate) fn array_from_return_type(arg_types: &[Option<PineType>]) -> Option<P
             ValueKind::Color => ValueKind::ColorArray,
             ValueKind::Label => ValueKind::LabelArray,
             ValueKind::Line => ValueKind::LineArray,
+            ValueKind::LineFill => ValueKind::LineFillArray,
             ValueKind::Box => ValueKind::BoxArray,
             ValueKind::Table => ValueKind::TableArray,
             _ => return None,

@@ -1079,17 +1079,22 @@ fn rejects_unknown_float_array_method() {
 }
 
 #[test]
-fn rejects_unsupported_array_function() {
-    let analysis = analyze("values = array.new_linefill(0)\nplot(close)\n");
+fn accepts_linefill_array_constructor() {
+    let analysis = analyze(
+        "upper = line.new(bar_index, high, bar_index + 1, high)\nlower = line.new(bar_index, low, bar_index + 1, low)\nfill = linefill.new(upper, lower, color.green)\nvalues = array.new_linefill(1, fill)\nfrom_values = array.from(fill)\narray.push(values, na)\nfirst = array.get(values, 0)\nplot(line.get_x1(linefill.get_line1(first)) + array.size(values) + array.size(from_values))\n",
+    );
 
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
     assert!(
         analysis
             .compatibility
-            .unsupported
+            .supported
             .iter()
-            .any(|feature| feature.feature == "array.new_linefill"),
-        "{:?}",
-        analysis.compatibility.unsupported
+            .any(|feature| feature.feature == "array.new_linefill")
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }

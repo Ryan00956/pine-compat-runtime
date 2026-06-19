@@ -70,7 +70,7 @@ pub(crate) fn infer_array_from_kind(values: &[PineValue]) -> Option<ArrayElement
             PineValue::Color(_) => ArrayElementKind::Color,
             PineValue::Label(_) => ArrayElementKind::Label,
             PineValue::Line(_) => ArrayElementKind::Line,
-            PineValue::LineFill(_) => return None,
+            PineValue::LineFill(_) => ArrayElementKind::LineFill,
             PineValue::Box(_) => ArrayElementKind::Box,
             PineValue::Table(_) => ArrayElementKind::Table,
             _ => return None,

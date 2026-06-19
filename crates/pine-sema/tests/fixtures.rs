@@ -1315,15 +1315,6 @@ fn reports_unsupported_str_format_color_array_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_new_float_initial_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_new_float_initial.pine",
@@ -1364,28 +1355,10 @@ fn reports_unsupported_array_new_color_initial_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_new_linefill_constructor_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_new_linefill_constructor.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_new_polyline_constructor_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_new_polyline_constructor.pine",
         "array.new_polyline",
-        "array function",
-    );
-}
-
-#[test]
-fn reports_unsupported_array_clear_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_clear_linefill.pine",
-        "array.new_linefill",
         "array function",
     );
 }
@@ -1408,15 +1381,6 @@ fn reports_unsupported_array_clear_udt_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_reverse_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_reverse_linefill.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_reverse_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_reverse_polyline.pine",
@@ -1434,15 +1398,6 @@ fn reports_unsupported_array_reverse_udt_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_copy_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_copy_linefill.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_copy_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_copy_polyline.pine",
@@ -1452,28 +1407,10 @@ fn reports_unsupported_array_copy_polyline_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_first_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_first_linefill.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_first_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_first_polyline.pine",
         "array.new_polyline",
-        "array function",
-    );
-}
-
-#[test]
-fn reports_unsupported_array_last_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_last_linefill.pine",
-        "array.new_linefill",
         "array function",
     );
 }
@@ -1489,9 +1426,9 @@ fn reports_unsupported_array_last_polyline_fixture() {
 
 #[test]
 fn reports_unsupported_array_from_linefill_fixture() {
-    assert_diagnostic_messages(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_from_linefill.pine",
-        &["`array.from` arguments must infer one supported array element kind"],
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -1504,28 +1441,10 @@ fn reports_unsupported_array_from_polyline_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_size_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_size_linefill.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_size_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_size_polyline.pine",
         "array.new_polyline",
-        "array function",
-    );
-}
-
-#[test]
-fn reports_unsupported_array_shift_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_shift_linefill.pine",
-        "array.new_linefill",
         "array function",
     );
 }
@@ -1540,28 +1459,10 @@ fn reports_unsupported_array_shift_polyline_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_insert_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_insert_linefill.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_insert_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_insert_polyline.pine",
         "array.new_polyline",
-        "array function",
-    );
-}
-
-#[test]
-fn reports_unsupported_array_set_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_set_linefill.pine",
-        "array.new_linefill",
         "array function",
     );
 }
@@ -1576,28 +1477,10 @@ fn reports_unsupported_array_set_polyline_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_get_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_get_linefill.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_get_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_get_polyline.pine",
         "array.new_polyline",
-        "array function",
-    );
-}
-
-#[test]
-fn reports_unsupported_array_push_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_push_linefill.pine",
-        "array.new_linefill",
         "array function",
     );
 }
@@ -1612,28 +1495,10 @@ fn reports_unsupported_array_push_polyline_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_pop_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_pop_linefill.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_pop_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_pop_polyline.pine",
         "array.new_polyline",
-        "array function",
-    );
-}
-
-#[test]
-fn reports_unsupported_array_remove_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_remove_linefill.pine",
-        "array.new_linefill",
         "array function",
     );
 }
@@ -1648,28 +1513,10 @@ fn reports_unsupported_array_remove_polyline_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_unshift_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_unshift_linefill.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_unshift_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_unshift_polyline.pine",
         "array.new_polyline",
-        "array function",
-    );
-}
-
-#[test]
-fn reports_unsupported_array_fill_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_fill_linefill.pine",
-        "array.new_linefill",
         "array function",
     );
 }
@@ -1717,10 +1564,9 @@ fn reports_unsupported_array_join_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_join_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_join_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -1742,15 +1588,6 @@ fn reports_unsupported_array_join_udt_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_slice_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_slice_linefill.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_slice_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_slice_polyline.pine",
@@ -1768,15 +1605,6 @@ fn reports_unsupported_array_slice_udt_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_includes_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_includes_linefill.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_includes_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_includes_polyline.pine",
@@ -1786,28 +1614,10 @@ fn reports_unsupported_array_includes_polyline_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_indexof_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_indexof_linefill.pine",
-        "array.new_linefill",
-        "array function",
-    );
-}
-
-#[test]
 fn reports_unsupported_array_indexof_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_indexof_polyline.pine",
         "array.new_polyline",
-        "array function",
-    );
-}
-
-#[test]
-fn reports_unsupported_array_lastindexof_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_lastindexof_linefill.pine",
-        "array.new_linefill",
         "array function",
     );
 }
@@ -1871,10 +1681,9 @@ fn reports_unsupported_array_sort_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_sort_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -1937,10 +1746,9 @@ fn reports_unsupported_array_sort_indices_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_sort_indices_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2027,10 +1835,9 @@ fn reports_unsupported_array_stdev_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_stdev_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_stdev_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2101,10 +1908,9 @@ fn reports_unsupported_array_variance_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_variance_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_variance_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2167,10 +1973,9 @@ fn reports_unsupported_array_every_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_every_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_every_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2233,10 +2038,9 @@ fn reports_unsupported_array_some_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_some_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_some_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2307,10 +2111,9 @@ fn reports_unsupported_array_covariance_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_covariance_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_covariance_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2381,10 +2184,9 @@ fn reports_unsupported_array_percentrank_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_percentrank_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentrank_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2455,10 +2257,9 @@ fn reports_unsupported_array_percentile_linear_interpolation_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_percentile_linear_interpolation_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_linear_interpolation_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2529,10 +2330,9 @@ fn reports_unsupported_array_percentile_nearest_rank_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_percentile_nearest_rank_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2603,10 +2403,9 @@ fn reports_unsupported_array_mode_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_mode_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_mode_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2677,10 +2476,9 @@ fn reports_unsupported_array_median_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_median_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_median_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2751,10 +2549,9 @@ fn reports_unsupported_array_range_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_range_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_range_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2825,10 +2622,9 @@ fn reports_unsupported_array_avg_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_avg_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_avg_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2899,10 +2695,9 @@ fn reports_unsupported_array_sum_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_sum_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sum_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -2973,10 +2768,9 @@ fn reports_unsupported_array_max_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_max_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_max_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -3047,10 +2841,9 @@ fn reports_unsupported_array_min_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_min_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_min_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -3121,10 +2914,9 @@ fn reports_unsupported_array_abs_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_abs_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_abs_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -3195,10 +2987,9 @@ fn reports_unsupported_array_binary_search_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_binary_search_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -3269,10 +3060,9 @@ fn reports_unsupported_array_binary_search_leftmost_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_binary_search_leftmost_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_leftmost_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -3343,10 +3133,9 @@ fn reports_unsupported_array_binary_search_rightmost_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_binary_search_rightmost_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_rightmost_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -3417,10 +3206,9 @@ fn reports_unsupported_array_standardize_table_fixture() {
 
 #[test]
 fn reports_unsupported_array_standardize_linefill_fixture() {
-    assert_unsupported_fixture(
+    assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_standardize_linefill.pine",
-        "array.new_linefill",
-        "array function",
+        "E_CALL_ARG_TYPE",
     );
 }
 
@@ -3438,15 +3226,6 @@ fn reports_unsupported_array_concat_mismatch_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_concat_mismatch.pine",
         "E_CALL_ARG_TYPE",
-    );
-}
-
-#[test]
-fn reports_unsupported_array_concat_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_array_concat_linefill.pine",
-        "array.new_linefill",
-        "array function",
     );
 }
 

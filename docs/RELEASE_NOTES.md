@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed partial `array.new_linefill` and `array.from(linefill)`
+  support for linefill id arrays plus generic object-array mutation, read, and
+  search helpers.
 - Added fixture-backed partial `linefill.delete` support with deletion
   snapshots and `.all` omission of deleted linefills.
 - Added fixture-backed partial `linefill.all` support for exposing a snapshot
@@ -2147,19 +2150,19 @@
 - Added fixture-backed `array.new_table()` and table-id array support for the
   existing generic array operations, including `array.from` inference and
   shallow `array.copy`. String conversion, `array.join`, `varip` table arrays,
-  and linefill/polyline arrays remain unsupported.
+  and polyline arrays remain unsupported.
 - Added fixture-backed `array.new_box()` and box-id array support for the
   existing generic array operations, including `array.from` inference and
   shallow `array.copy`. String conversion, `array.join`, `varip` box arrays,
-  and linefill/polyline arrays remain unsupported.
+  and polyline arrays remain unsupported.
 - Added fixture-backed `array.new_label()` and label-id array support for the
   existing generic array operations, including `array.from` inference and
   shallow `array.copy`. String conversion, `array.join`, `varip` label arrays,
-  and linefill/polyline arrays remain unsupported.
+  and polyline arrays remain unsupported.
 - Added fixture-backed `array.new_line()` and line-id array support for the
   existing generic array operations, including `array.from` inference and
   shallow `array.copy`. String conversion, `array.join`, `varip` line arrays,
-  and linefill/polyline arrays remain unsupported.
+  and polyline arrays remain unsupported.
 - Added fixture-backed drawing object method-call syntax for supported
   label/line/box/table id-first functions. Method calls lower to the existing
   namespace-call runtime paths, so this does not widen unsupported drawing

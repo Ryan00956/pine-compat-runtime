@@ -592,6 +592,16 @@ fn run_script_csv_returns_line_array_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_linefill_array_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/linefill_array.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("linefill array fixture should run");
+    assert_snapshot("runtime_linefill_array.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_linefill_new_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/linefill_new.pine"),
