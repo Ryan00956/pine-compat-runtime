@@ -649,7 +649,7 @@ impl Parser {
             if matches!(left.kind, ExprKind::For { .. } | ExprKind::Switch { .. }) {
                 break;
             }
-            if let Some(template_callee) = self.parse_array_new_chart_point_template_callee(&left) {
+            if let Some(template_callee) = self.parse_array_new_template_callee(&left) {
                 left = self.finish_call(template_callee)?;
                 continue;
             }
@@ -964,34 +964,64 @@ impl Parser {
         })
     }
 
-    fn parse_array_new_chart_point_template_callee(&mut self, callee: &Expr) -> Option<Expr> {
+    fn parse_array_new_template_callee(&mut self, callee: &Expr) -> Option<Expr> {
         if !matches!(
             &callee.kind,
             ExprKind::QualifiedName(parts) if parts.as_slice() == ["array", "new"]
         ) {
             return None;
         }
-        if !self.at(TokenKind::Lt)
-            || !self.nth_identifier_is(1, "chart")
-            || !self.nth_at(2, TokenKind::Dot)
-            || !self.nth_identifier_is(3, "point")
-            || !self.nth_at(4, TokenKind::Gt)
-            || !self.nth_at(5, TokenKind::LParen)
-        {
-            return None;
-        }
 
-        self.bump();
-        self.bump();
-        self.bump();
-        self.bump();
+        let (builtin_name, close_offset) = self.parse_supported_array_new_template()?;
+
+        for _ in 0..close_offset {
+            self.bump();
+        }
         let end = self.current().span;
         self.bump();
 
         Some(Expr {
             span: callee.span.merge(end),
-            kind: ExprKind::Identifier("array.new<chart.point>".to_owned()),
+            kind: ExprKind::Identifier(builtin_name.to_owned()),
         })
+    }
+
+    fn parse_supported_array_new_template(&self) -> Option<(&'static str, usize)> {
+        if !self.at(TokenKind::Lt) {
+            return None;
+        }
+
+        if self.nth_at(2, TokenKind::Gt) && self.nth_at(3, TokenKind::LParen) {
+            return match &self.tokens.get(self.pos + 1)?.kind {
+                TokenKind::Identifier(type_name) if type_name == "float" => {
+                    Some(("array.new_float", 2))
+                }
+                TokenKind::Identifier(type_name) if type_name == "int" => {
+                    Some(("array.new_int", 2))
+                }
+                TokenKind::Identifier(type_name) if type_name == "bool" => {
+                    Some(("array.new_bool", 2))
+                }
+                TokenKind::Identifier(type_name) if type_name == "string" => {
+                    Some(("array.new_string", 2))
+                }
+                TokenKind::Identifier(type_name) if type_name == "color" => {
+                    Some(("array.new_color", 2))
+                }
+                _ => None,
+            };
+        }
+
+        if self.nth_identifier_is(1, "chart")
+            && self.nth_at(2, TokenKind::Dot)
+            && self.nth_identifier_is(3, "point")
+            && self.nth_at(4, TokenKind::Gt)
+            && self.nth_at(5, TokenKind::LParen)
+        {
+            return Some(("array.new<chart.point>", 4));
+        }
+
+        None
     }
 
     fn finish_history(&mut self, expr: Expr) -> Option<Expr> {

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed scalar `array.new<type>` constructor syntax for float,
+  int, bool, string, and color arrays, normalized onto the existing
+  `array.new_*` runtime paths.
 - Added fixture-backed `type[]` array declaration alias coverage for `var`
   declarations and the scalar typed-array `varip` subset, aligned with Pine's
   `[var/varip ][array<type>/<type[]> ]` declaration syntax.

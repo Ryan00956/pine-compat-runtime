@@ -49,6 +49,24 @@ fn parses_chart_point_array_new_template_call() {
 }
 
 #[test]
+fn parses_scalar_array_new_template_call() {
+    let parsed = parse("values = array.new<float>(2, close)\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::Identifier("array.new_float".to_owned())
+    );
+    assert_eq!(args.len(), 2);
+}
+
+#[test]
 fn parses_chart_point_typed_declaration() {
     let parsed = parse("chart.point p = chart.point.now(close)\n");
 
