@@ -183,9 +183,11 @@ Maps and matrices:
 
 History and snapshots:
 
-- Scalar dynamic integer history offsets are supported, but array history
-  behavior and historical array snapshots have not been designed.
-- Any future support must define storage retention and aliasing rules.
+- Scalar array variable history snapshots are fixture-backed for the
+  `values[1].get(0)` read path: runtime commits retained array values as
+  independent snapshots and returns a fresh copy on history reads.
+- Remaining array history behavior still needs design for object arrays, slice
+  history, `na(array)` checks, and broader mutation/aliasing semantics.
 
 Slice semantics:
 
@@ -194,8 +196,9 @@ Slice semantics:
 - Inserting through the slice widens the window and inserts into the parent.
 - Later parent mutations that move the window outside parent bounds are runtime
   errors when the slice is accessed.
-- Keep this row partial until array history snapshots, future element families,
-  and any remaining nested/advanced aliasing cases are fixture-backed.
+- Keep this row partial until remaining array history edge cases, future
+  element families, and any remaining nested/advanced aliasing cases are
+  fixture-backed.
 
 Loops over arrays:
 
@@ -246,7 +249,8 @@ Only take these when they are explicitly selected as the next work item:
 
 - Design remaining generic `array.new<type>()` parsing and type checking for
   UDT/polyline/map/matrix or other future element families.
-- Design array history snapshots and aliasing behavior.
+- Design remaining array history aliasing behavior, including object arrays,
+  slice snapshots, `na(array)` checks, and mutation of historical copies.
 - Add `for...in` array iteration syntax and runtime behavior.
 - Add additional object arrays after their object ids and lifetimes exist.
 - Add UDT arrays and `sort_field` after user-defined types exist.

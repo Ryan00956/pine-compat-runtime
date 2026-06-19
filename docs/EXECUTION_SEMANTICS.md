@@ -1043,6 +1043,13 @@ History can apply to variables, built-in series, and accepted expressions. Any
 expression that needs history must have stable series storage assigned before
 runtime execution. See [`SERIES_MODEL.md`](SERIES_MODEL.md).
 
+Array variable history is supported for the fixture-backed scalar array read
+path. When a retained series value is an array id, runtime stores an independent
+array snapshot for history and returns a fresh copy from positive-offset history
+reads, so reading or mutating the historical copy does not alias the current
+array id. Broader array-history edges, including object arrays, slice history,
+and `na(array)` checks, remain outside the current contract.
+
 ## `na`
 
 `na` must be a first-class runtime value.

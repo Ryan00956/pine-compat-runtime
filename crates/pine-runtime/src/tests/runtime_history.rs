@@ -149,3 +149,33 @@ plot(close[length])
     assert_eq!(result.plots[0].values[1], PineValue::Na);
     assert_values_close(&result.plots[0].values[2..], &[1.0, 2.0]);
 }
+
+#[test]
+fn reads_previous_array_instance_history() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("array history")
+var values = array.new_float(1)
+values.set(0, close)
+previous = values[1]
+plot(bar_index == 0 ? na : previous.get(0))
+if bar_index > 0
+    previous.set(0, 100)
+plot(values.get(0))
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let bars = vec![bar(1.0), bar(2.0), bar(3.0), bar(4.0)];
+    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+
+    assert_eq!(result.plots.len(), 2);
+    assert_eq!(result.plots[0].values[0], PineValue::Na);
+    assert_values_close(&result.plots[0].values[1..], &[1.0, 2.0, 3.0]);
+    assert_values_close(&result.plots[1].values, &[1.0, 2.0, 3.0, 4.0]);
+}

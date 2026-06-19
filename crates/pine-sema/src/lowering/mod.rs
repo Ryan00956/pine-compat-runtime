@@ -328,17 +328,19 @@ impl Analyzer {
         }
 
         let pine_type = self.type_of_expr_with_params(expr, param_types)?;
-        let series_id =
-            if pine_type.qualifier == Qualifier::Series && pine_type.kind != ValueKind::Tuple {
-                match &expr.kind {
-                    ExprKind::Identifier(name) => self
-                        .bound_symbol(name, expr.span)
-                        .and_then(|symbol| symbol.series_id),
-                    _ => Some(self.alloc_series()),
-                }
-            } else {
-                None
-            };
+        let series_id = if (pine_type.qualifier == Qualifier::Series
+            || is_array_kind(pine_type.kind))
+            && pine_type.kind != ValueKind::Tuple
+        {
+            match &expr.kind {
+                ExprKind::Identifier(name) => self
+                    .bound_symbol(name, expr.span)
+                    .and_then(|symbol| symbol.series_id),
+                _ => Some(self.alloc_series()),
+            }
+        } else {
+            None
+        };
 
         let kind = match &expr.kind {
             ExprKind::Literal(literal) => HirExprKind::Literal(lower_literal(literal)),

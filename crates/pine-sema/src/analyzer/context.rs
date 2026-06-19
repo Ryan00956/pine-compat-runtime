@@ -10,6 +10,7 @@ use crate::analysis::Analysis;
 use crate::compatibility::CompatibilityReport;
 use crate::prelude::UserTypeInfo;
 use crate::resolver::{BindingKey, ScopeResolver, SymbolInfo};
+use crate::types::is_array_kind;
 
 pub(crate) const MAX_SEMA_EXPR_DEPTH: u32 = 128;
 pub(crate) const MAX_FUNCTION_CALL_DEPTH: usize = 64;
@@ -221,7 +222,7 @@ impl Analyzer {
     }
 
     pub(crate) fn series_id_for_type(&mut self, pine_type: PineType) -> Option<SeriesId> {
-        if pine_type.qualifier == Qualifier::Series {
+        if pine_type.qualifier == Qualifier::Series || is_array_kind(pine_type.kind) {
             Some(self.alloc_series())
         } else {
             None

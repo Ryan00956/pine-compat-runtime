@@ -1,0 +1,9 @@
+//@version=5
+indicator("Array history")
+var values = array.new_float(1)
+values.set(0, close)
+previous = values[1]
+plot(bar_index == 0 ? na : previous.get(0))
+if bar_index > 0
+    previous.set(0, 100)
+plot(values.get(0))

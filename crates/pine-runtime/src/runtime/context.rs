@@ -328,15 +328,17 @@ impl<'a> HistoricalRuntime<'a> {
 
         for raw_series_id in 0..self.program.next_series_id {
             let series_id = SeriesId(raw_series_id);
+            let max_depth = self.series_retention.max_depth_for(series_id);
             let value = self
                 .current_series
                 .remove(&series_id)
                 .unwrap_or(PineValue::Na);
-            self.series_store.commit(
-                series_id,
-                value,
-                self.series_retention.max_depth_for(series_id),
-            );
+            let value = if matches!(max_depth, Some(0)) {
+                value
+            } else {
+                self.clone_array_history_value(value)?
+            };
+            self.series_store.commit(series_id, value, max_depth);
         }
         Ok(())
     }

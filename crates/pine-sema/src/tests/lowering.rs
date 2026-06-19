@@ -61,6 +61,35 @@ fn infers_implicit_builtin_history_requirements() {
 }
 
 #[test]
+fn infers_array_history_requirements() {
+    let analysis = analyze(
+        "var values = array.new_float(1)\nvalues.set(0, close)\nprevious = values[1]\nplot(bar_index == 0 ? na : previous.get(0))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    let hir = analysis.hir.expect("HIR");
+    let values = hir
+        .symbols
+        .iter()
+        .find(|symbol| symbol.name == "values")
+        .expect("values symbol should exist");
+    let series_id = values
+        .series_id
+        .expect("array symbol should be tracked as a series");
+    assert!(
+        hir.series_history.iter().any(|requirement| {
+            requirement.series_id == series_id && requirement.max_constant_offset == 1
+        }),
+        "{:?}",
+        hir.series_history
+    );
+}
+
+#[test]
 fn lowers_if_statement_to_hir() {
     let analysis = analyze("if close > open\n    plot(close)\nelse\n    plot(open)\n");
 

@@ -18,7 +18,8 @@ impl<'a> HistoricalRuntime<'a> {
 
         self.eval_expr(expr)?;
         if let Some(series_id) = expr.series_id {
-            Ok(self.series_store.read(series_id, offset))
+            let value = self.series_store.read(series_id, offset);
+            self.clone_array_history_value(value)
         } else {
             Ok(PineValue::Na)
         }
@@ -59,5 +60,21 @@ impl<'a> HistoricalRuntime<'a> {
                 message: "history offset must be an int".to_owned(),
             }),
         }
+    }
+
+    pub(crate) fn clone_array_history_value(
+        &mut self,
+        value: PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        let PineValue::Array(id) = value else {
+            return Ok(value);
+        };
+        let Some(kind) = self.array_kinds.get(&id).copied() else {
+            return Ok(PineValue::Na);
+        };
+        let Some(values) = self.array_values_clone(id)? else {
+            return Ok(PineValue::Na);
+        };
+        Ok(self.new_array_from_values(kind, values))
     }
 }
