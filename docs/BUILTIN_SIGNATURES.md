@@ -1505,17 +1505,16 @@ returns `na` for invalid formats, `na` inputs, and non-finite parsed results.
 `str.tostring` supports scalar int, float, bool, string, `na`, and
 fixture-covered float-, int-, bool-, and string-array values. UDT and tuple
 values plus color, drawing-id, chart.point, UDT, map, and matrix arrays remain
-outside the
-`str.tostring` argument subset. Numeric formatting supports the default
-`#.########`, `format.mintick` and `format.price` as the default format,
+outside the `str.tostring` argument subset. Numeric formatting supports the
+default `#.########`, `format.mintick` and `format.price` as the default format,
 `format.volume` as `#.##`, `format.percent` as `#.##%`, and fixture-covered
 custom patterns using `#`, `0`, `.`, `,`, and trailing `%` tokens.
 `str.format` supports indexed placeholders such as `{0}`, numeric placeholders
 such as `{0,number,#.00}`, and fixture-covered `integer`, `percent`, and
 `currency` number presets, plus fixture-covered float-, int-, bool-, and
-string-array placeholders. UDT values plus color, drawing-id, chart.point, UDT,
-map, and matrix arrays remain outside the `str.format` argument subset. It also
-supports fixture-covered UTC timestamp placeholders such
+string-array placeholders. UDT and tuple values plus color, drawing-id,
+chart.point, UDT, map, and matrix arrays remain outside the `str.format`
+argument subset. It also supports fixture-covered UTC timestamp placeholders such
 as `{0,date,yyyy-MM-dd}` and `{0,time,HH:mm:ssZ}`. Quoted
 literal sequences between apostrophes are not parsed as placeholders, and `''`
 emits one literal apostrophe. The UTC timestamp placeholder subset shares the
