@@ -74,6 +74,24 @@ impl<'a> HistoricalRuntime<'a> {
         })
     }
 
+    pub(super) fn eval_linefill_get_line1(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_linefill_get(args, "linefill.get_line1", |snapshot| {
+            PineValue::Line(snapshot.line1)
+        })
+    }
+
+    pub(super) fn eval_linefill_get_line2(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_linefill_get(args, "linefill.get_line2", |snapshot| {
+            PineValue::Line(snapshot.line2)
+        })
+    }
+
     fn eval_linefill_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
         let Some(id_arg) = linefill_call_arg_expr(args, 0, "id") else {
             return Err(RuntimeError {
@@ -121,6 +139,51 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         self.eval_expr(arg)
+    }
+
+    fn eval_linefill_get(
+        &mut self,
+        args: &[HirCallArg],
+        function_name: &str,
+        get_value: impl FnOnce(&LineFillSnapshot) -> PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_linefill_get_id_arg(args, function_name)?;
+        let Some(id) = id else {
+            return Ok(PineValue::Na);
+        };
+        let Some(line_fill) = self.line_fills.iter().find(|line_fill| line_fill.id == id) else {
+            return Err(RuntimeError {
+                message: format!("invalid linefill id `{id}`"),
+            });
+        };
+        let Some(latest) = line_fill.snapshots.last() else {
+            return Err(RuntimeError {
+                message: format!("linefill `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Na);
+        }
+        Ok(get_value(latest))
+    }
+
+    fn eval_linefill_get_id_arg(
+        &mut self,
+        args: &[HirCallArg],
+        function_name: &str,
+    ) -> Result<Option<u32>, RuntimeError> {
+        let Some(id_arg) = linefill_call_arg_expr(args, 0, "id") else {
+            return Err(RuntimeError {
+                message: format!("{function_name} missing id argument"),
+            });
+        };
+        match self.eval_expr(id_arg)? {
+            PineValue::LineFill(id) => Ok(Some(id)),
+            PineValue::Na => Ok(None),
+            value => Err(RuntimeError {
+                message: format!("{function_name} expected linefill id, got {value:?}"),
+            }),
+        }
     }
 
     fn line_exists(&self, id: u32) -> Result<bool, RuntimeError> {

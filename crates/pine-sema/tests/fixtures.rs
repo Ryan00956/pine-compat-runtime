@@ -1166,15 +1166,6 @@ fn reports_unsupported_linefill_all_fixture() {
 }
 
 #[test]
-fn reports_unsupported_linefill_fixture() {
-    assert_unsupported_fixture(
-        "tests/fixtures/sema/unsupported_linefill.pine",
-        "linefill.get_line1",
-        "drawing object",
-    );
-}
-
-#[test]
 fn reports_unsupported_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_polyline.pine",

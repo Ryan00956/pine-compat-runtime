@@ -1,3 +1,0 @@
-//@version=5
-indicator("Unsupported linefill")
-plot(linefill.get_line1(na))

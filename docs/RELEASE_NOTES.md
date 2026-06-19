@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed `linefill.get_line1()` and `linefill.get_line2()`
+  support for returning referenced line ids from runtime-owned linefill objects.
 - Synchronized drawing-object architecture documentation with current
   fixture-backed label, line, and box style, location, and extend support.
 - Added explicit creation and mutation snapshot coverage for the base drawing
@@ -532,9 +534,8 @@
 - Added fixture-backed local UDT scalar field mutation coverage inside branch
   and for-loop bodies while keeping mutation inside UDFs and methods
   unsupported.
-- Added fixture-backed unsupported coverage for `linefill.*`, keeping the
-  linefill object namespace boundary explicit beyond the `linefill.all`
-  collection variable.
+- Added fixture-backed unsupported coverage for the remaining `linefill.all`
+  collection boundary.
 - Added fixture-backed unsupported coverage for `polyline.all`, keeping the
   remaining polyline object collection boundary explicit.
 - Added fixture-backed unsupported coverage for `linefill.all`, keeping the

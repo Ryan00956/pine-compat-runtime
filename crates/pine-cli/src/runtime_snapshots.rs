@@ -354,6 +354,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "tests/fixtures/runtime/linefill_set_color.pine",
     ),
     (
+        "runtime_linefill_getters.json",
+        "tests/fixtures/runtime/linefill_getters.pine",
+    ),
+    (
         "runtime_box_new.json",
         "tests/fixtures/runtime/box_new.pine",
     ),

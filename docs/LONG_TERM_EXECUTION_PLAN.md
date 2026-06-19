@@ -328,8 +328,9 @@ lines, boxes, and tables have public sparse snapshots, deterministic ids,
 limits, incremental append coverage, and realtime rollback coverage for their
 claimed method subsets. `linefill.new` has initial runtime-owned object ids,
 color snapshots, and same-pair replacement semantics, and `linefill.set_color`
-can mutate existing linefill colors; `linefill.all`, remaining getter methods,
-and linefill arrays remain unsupported. `polyline.*` remains
+can mutate existing linefill colors. `linefill.get_line1` and
+`linefill.get_line2` can return referenced line ids; `linefill.all` and
+linefill arrays remain unsupported. `polyline.*` remains
 unsupported pending `chart.point` and point-list array design.
 
 Object families:
@@ -338,8 +339,8 @@ Object families:
 - `line.*`
 - `box.*`
 - `table.*`
-- `linefill.new` and `linefill.set_color` partial; remaining linefill getters
-  and collections pending
+- `linefill.new`, `linefill.set_color`, `linefill.get_line1`, and
+  `linefill.get_line2` partial; remaining linefill collections pending
 - `polyline.*`
 
 Required design:

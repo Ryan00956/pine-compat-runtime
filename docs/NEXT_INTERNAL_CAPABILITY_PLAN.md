@@ -187,8 +187,9 @@ Good next slices:
 
 Keep out of scope until separately designed:
 
-- Remaining linefill support beyond `linefill.new` and `linefill.set_color`,
-  including `linefill.all`, getter methods, and linefill arrays.
+- Remaining linefill collection support beyond `linefill.new`,
+  `linefill.set_color`, `linefill.get_line1`, and `linefill.get_line2`,
+  including `linefill.all` and linefill arrays.
 - `polyline.*` until chart-point and point-array semantics are designed.
 - Host-specific visual layout, drag behavior, or chart interaction.
 - Drawing behavior that cannot be represented in the current JSON contract.

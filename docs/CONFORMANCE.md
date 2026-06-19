@@ -903,9 +903,9 @@ under the existing side-effect policy. Keep unsupported coordinate modes and adv
 methods out of the supported matrix until they have fixtures and public-output
 coverage. `linefill.new` and `linefill.set_color` are partial: they create
 runtime-owned linefill ids over supported line ids, emit sparse color snapshots,
-mutate colors, and replace the previous linefill for the same line pair.
-`linefill.all`, linefill getter methods, and linefill arrays remain explicitly
-unsupported. `polyline.*`
+mutate colors, return referenced line ids through `linefill.get_line1` and
+`linefill.get_line2`, and replace the previous linefill for the same line pair.
+`linefill.all` and linefill arrays remain explicitly unsupported. `polyline.*`
 remains explicitly unsupported because it needs a
 fixture-backed point-object and point-array design; see
 `docs/PHASE_E_POLYLINE_GATE.md`.
@@ -1184,10 +1184,11 @@ strategy.*           unsupported  strategy order functions beyond strategy.entry
 array.*              partial      float/int/bool/string/color/label/line/box/table creation and from inference, reference, copy, get/set/insert/remove with negative indexes, fill, slice/concat, search/binary search, float/int/bool truth helpers, numeric abs/statistics/range/median/mode/percentile/covariance/standardize/variance/stdev, numeric/string sort and sort_indices, branch/loop sort and reverse mutation fixtures, scalar-array join, mutation, and helper fixture subset only; linefill/polyline arrays remain unsupported
 map.*                unsupported  map collections require a dedicated key/value storage model and are not implemented
 matrix.*             unsupported  matrix collections require a dedicated two-dimensional storage model and are not implemented
-linefill.new         partial      linefill object creation between existing line ids with color snapshots and official same-pair replacement semantics; na or deleted line ids return na; linefill.all, getter methods, and linefill arrays remain unsupported
+linefill.new         partial      linefill object creation between existing line ids with color snapshots and official same-pair replacement semantics; na or deleted line ids return na; linefill.all and linefill arrays remain unsupported
 linefill.set_color   partial      linefill color mutation for existing linefill ids, including namespace-call and method-call dispatch, na id no-op behavior, and no-op behavior after the linefill has been replaced/deleted by a same-pair linefill.new call
+linefill.get_line1   partial      returns the first line id referenced by an existing linefill, including namespace-call dispatch; na ids and replaced linefill ids return na
+linefill.get_line2   partial      returns the second line id referenced by an existing linefill, including method-call dispatch; na ids and replaced linefill ids return na
 linefill.all         unsupported  linefill collection variable and linefill arrays remain unsupported while linefill.new has a dedicated runtime-owned object store
-unsupported linefill methods unsupported linefill methods beyond linefill.new and linefill.set_color, including linefill.get_line* helpers, are not implemented yet
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
 import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only

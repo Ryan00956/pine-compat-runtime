@@ -652,6 +652,20 @@ def test_run_script_returns_linefill_set_color_fixture_contract():
     assert result == expected
 
 
+def test_run_script_returns_linefill_getters_fixture_contract():
+    source = (ROOT / "tests/fixtures/runtime/linefill_getters.pine").read_text()
+    expected = json.loads(
+        (ROOT / "tests/snapshots/runtime_linefill_getters.json").read_text()
+    )
+
+    result = pine_compat.run_script(
+        source,
+        fixture_bars("tests/fixtures/runtime/bars.csv"),
+    )
+
+    assert result == expected
+
+
 def test_run_script_returns_box_new_fixture_contract():
     source = (ROOT / "tests/fixtures/runtime/box_new.pine").read_text()
     expected = json.loads((ROOT / "tests/snapshots/runtime_box_new.json").read_text())
