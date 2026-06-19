@@ -72,8 +72,9 @@ truth for supported drawing claims.
   method-call syntax as aliases for their namespace-call forms.
 - `linefill.new` is partial: it creates runtime-owned linefill ids over
   supported line ids, emits sparse color snapshots, and replaces the previous
-  linefill for the same line pair. `linefill.all`, mutation/getter/delete
-  methods, and linefill arrays remain unsupported.
+  linefill for the same line pair. `linefill.set_color` is partial for sparse
+  color mutation snapshots. `linefill.all`, getter methods, and linefill arrays
+  remain unsupported.
 - `polyline.*` is unsupported and has a dedicated design note in
   `docs/PHASE_E_POLYLINE_GATE.md`.
 
@@ -127,8 +128,8 @@ Runtime limits are deterministic:
 - Python binding tests assert representative `labels`, `lines`, `boxes`, and
   `tables` dictionary output. WASM tests assert the top-level drawing keys.
 - The matrix JSON snapshot includes separate rows for every supported drawing
-  method group, `linefill.new` partial support, remaining unsupported linefill
-  collections/methods, and `polyline.*`.
+  method group, `linefill.new`/`linefill.set_color` partial support, remaining
+  unsupported linefill collections/methods, and `polyline.*`.
 
 ## Verification Results
 
@@ -156,9 +157,9 @@ dispatch module is 58 lines, and family modules are 164-280 lines.
 
 These are not blockers for closing Phase E:
 
-- Remaining linefill support is limited to `linefill.all`, mutation/getter/
-  delete methods, and linefill arrays now that `linefill.new` has an initial
-  runtime object store.
+- Remaining linefill support is limited to `linefill.all`, getter methods, and
+  linefill arrays now that `linefill.new` has an initial runtime object store
+  and `linefill.set_color` has color mutation snapshots.
 - `polyline.*` remains unsupported until the runtime has `chart.point` values
   and typed point-list arrays.
 - Advanced label, line, box, and table methods remain diagnostic-only until

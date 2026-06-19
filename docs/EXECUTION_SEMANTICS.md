@@ -1101,9 +1101,11 @@ Accepted metadata such as `offset`, `show_last`, `display`, `force_overlay`,
 and `editable` does not yet transform, filter, or annotate these output series.
 `linefill.new` creates runtime-owned linefill ids over supported line ids,
 emits sparse color snapshots, and replaces the previous linefill for the same
-line pair. `linefill.all`, linefill mutation/getter/delete methods, and
-linefill arrays remain unsupported until collection and richer object-method
-semantics are fixture-backed. `polyline.*` remains unsupported until
+line pair. `linefill.set_color` appends sparse color mutation snapshots for
+existing linefill ids, while `na` ids and already-replaced linefill ids are
+no-ops. `linefill.all`, linefill getter methods, and linefill arrays remain
+unsupported until collection and richer object-method semantics are
+fixture-backed. `polyline.*` remains unsupported until
 `chart.point` values and point-list arrays have a fixture-backed execution
 model.
 

@@ -327,8 +327,9 @@ Status: closed for the current fixture-backed partial drawing platform. Labels,
 lines, boxes, and tables have public sparse snapshots, deterministic ids,
 limits, incremental append coverage, and realtime rollback coverage for their
 claimed method subsets. `linefill.new` has initial runtime-owned object ids,
-color snapshots, and same-pair replacement semantics; `linefill.all`, remaining
-linefill methods, and linefill arrays remain unsupported. `polyline.*` remains
+color snapshots, and same-pair replacement semantics, and `linefill.set_color`
+can mutate existing linefill colors; `linefill.all`, remaining getter methods,
+and linefill arrays remain unsupported. `polyline.*` remains
 unsupported pending `chart.point` and point-list array design.
 
 Object families:
@@ -337,7 +338,8 @@ Object families:
 - `line.*`
 - `box.*`
 - `table.*`
-- `linefill.new` partial; remaining linefill methods and collections pending
+- `linefill.new` and `linefill.set_color` partial; remaining linefill getters
+  and collections pending
 - `polyline.*`
 
 Required design:

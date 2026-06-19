@@ -63,6 +63,32 @@ impl<'a> HistoricalRuntime<'a> {
         Ok(PineValue::LineFill(id))
     }
 
+    pub(super) fn eval_linefill_set_color(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        let id = self.eval_linefill_id_arg(args)?;
+        let color = self.eval_required_linefill_arg(args, 1, "color")?;
+        self.mutate_linefill(id, |snapshot| {
+            snapshot.color = color;
+        })
+    }
+
+    fn eval_linefill_id_arg(&mut self, args: &[HirCallArg]) -> Result<Option<u32>, RuntimeError> {
+        let Some(id_arg) = linefill_call_arg_expr(args, 0, "id") else {
+            return Err(RuntimeError {
+                message: "linefill mutation missing id argument".to_owned(),
+            });
+        };
+        match self.eval_expr(id_arg)? {
+            PineValue::LineFill(id) => Ok(Some(id)),
+            PineValue::Na => Ok(None),
+            value => Err(RuntimeError {
+                message: format!("linefill mutation expected linefill id, got {value:?}"),
+            }),
+        }
+    }
+
     fn eval_linefill_line_arg(
         &mut self,
         args: &[HirCallArg],
@@ -109,6 +135,40 @@ impl<'a> HistoricalRuntime<'a> {
             });
         };
         Ok(latest.exists)
+    }
+
+    fn mutate_linefill(
+        &mut self,
+        id: Option<u32>,
+        mutate: impl FnOnce(&mut LineFillSnapshot),
+    ) -> Result<PineValue, RuntimeError> {
+        let Some(id) = id else {
+            return Ok(PineValue::Void);
+        };
+        let Some(line_fill) = self
+            .line_fills
+            .iter_mut()
+            .find(|line_fill| line_fill.id == id)
+        else {
+            return Err(RuntimeError {
+                message: format!("invalid linefill id `{id}`"),
+            });
+        };
+        let Some(latest) = line_fill.snapshots.last().cloned() else {
+            return Err(RuntimeError {
+                message: format!("linefill `{id}` has no snapshots"),
+            });
+        };
+        if !latest.exists {
+            return Ok(PineValue::Void);
+        }
+        let mut next = latest.clone();
+        mutate(&mut next);
+        if next != latest {
+            next.bar_index = self.bars;
+            line_fill.snapshots.push(next);
+        }
+        Ok(PineValue::Void)
     }
 }
 

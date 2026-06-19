@@ -602,6 +602,16 @@ fn run_script_csv_returns_linefill_new_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_linefill_set_color_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/linefill_set_color.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("linefill set color fixture should run");
+    assert_snapshot("runtime_linefill_set_color.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_box_new_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/box_new.pine"),

@@ -991,6 +991,8 @@
   unsupported richer table cell layout methods.
 - Added initial `linefill.new` support with runtime-owned linefill output
   snapshots, including same-pair replacement semantics.
+- Added `linefill.set_color` support with sparse color mutation snapshots for
+  existing linefill ids.
 - Added explicit `table.new` fixture coverage for all nine official
   `position.*` table anchors.
 - Added fixture-backed `table.cell_set_text_valign` boundary coverage for

@@ -951,7 +951,7 @@ fn accepts_minimal_line_new() {
 #[test]
 fn accepts_minimal_linefill_new() {
     let analysis = analyze(
-        "upper = line.new(bar_index, high, bar_index + 1, high)\nlower = line.new(bar_index, low, bar_index + 1, low)\nfill = linefill.new(upper, lower, color.new(color.green, 80))\nmissing = linefill.new(na, lower, color.red)\nplot(close)\n",
+        "upper = line.new(bar_index, high, bar_index + 1, high)\nlower = line.new(bar_index, low, bar_index + 1, low)\nfill = linefill.new(upper, lower, color.new(color.green, 80))\nlinefill.set_color(fill, color.red)\nfill.set_color(color.blue)\nlinefill.set_color(na, color.yellow)\nmissing = linefill.new(na, lower, color.red)\nplot(close)\n",
     );
 
     assert!(
@@ -965,6 +965,13 @@ fn accepts_minimal_linefill_new() {
             .supported
             .iter()
             .any(|feature| feature.feature == "linefill.new")
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "linefill.set_color")
     );
 }
 
