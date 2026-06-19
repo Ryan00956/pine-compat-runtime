@@ -1,10 +1,10 @@
 indicator("varip array realtime")
 
-varip values = array.new_int()
+varip int[] values = array.new_int()
 values.push(1)
 plot(values.size())
 
-var normal = array.new_int()
+var int[] normal = array.new_int()
 normal.push(1)
 plot(normal.size())
 
@@ -13,7 +13,7 @@ copy.push(10)
 plot(copy.size())
 plot(values.size())
 
-varip open_copy = array.new_int()
+varip int[] open_copy = array.new_int()
 if barstate.isnew
     open_copy := array.copy(values)
 open_copy.push(7)

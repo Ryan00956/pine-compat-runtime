@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed `type[]` array declaration alias coverage for `var`
+  declarations and the scalar typed-array `varip` subset, aligned with Pine's
+  `[var/varip ][array<type>/<type[]> ]` declaration syntax.
 - Added fixture-backed `label.new(point, text, ...)` chart-point overload
   support: point-based label snapshots use `point.index` for `xloc.bar_index`
   labels and `point.time` for `xloc.bar_time` labels, while preserving label

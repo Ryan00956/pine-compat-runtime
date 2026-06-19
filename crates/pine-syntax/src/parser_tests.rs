@@ -163,6 +163,44 @@ fn parses_array_type_alias_declaration() {
 }
 
 #[test]
+fn parses_var_array_type_alias_declaration() {
+    let parsed = parse("var float[] prices = array.new_float()\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl {
+        mode,
+        declared_type,
+        name,
+        ..
+    } = &parsed.program.statements[0].kind
+    else {
+        panic!("expected declaration");
+    };
+    assert_eq!(*mode, DeclMode::Var);
+    assert_eq!(declared_type.as_deref(), Some("array<float>"));
+    assert_eq!(name, "prices");
+}
+
+#[test]
+fn parses_varip_array_type_alias_declaration() {
+    let parsed = parse("varip int[] counts = array.new_int()\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl {
+        mode,
+        declared_type,
+        name,
+        ..
+    } = &parsed.program.statements[0].kind
+    else {
+        panic!("expected declaration");
+    };
+    assert_eq!(*mode, DeclMode::Varip);
+    assert_eq!(declared_type.as_deref(), Some("array<int>"));
+    assert_eq!(name, "counts");
+}
+
+#[test]
 fn parses_dotted_array_type_alias_declaration() {
     let parsed = parse("chart.point[] points = array.new<chart.point>()\n");
 

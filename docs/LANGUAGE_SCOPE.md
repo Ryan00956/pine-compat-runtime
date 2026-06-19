@@ -64,10 +64,11 @@ Phase 1 executable subset:
 - normal and tuple declarations scoped to an `if`/`else` branch
 - global and local scalar `varip` declarations for int, float, bool, string,
   color, and `na`, plus scalar typed-array `varip` declarations for float, int,
-  bool, string, and color arrays; scalar declarations have local declaration-site
-  storage, UDF callsite-local storage, and realtime intrabar persistence, while
-  supported array ids retain their backing contents across repeated forming
-  updates; the closed Phase I boundary is summarized in
+  bool, string, and color arrays using either `array<type>` or `type[]`
+  declaration syntax; scalar declarations have local declaration-site storage,
+  UDF callsite-local storage, and realtime intrabar persistence, while supported
+  array ids retain their backing contents across repeated forming updates; the
+  closed Phase I boundary is summarized in
   `docs/PHASE_I_AUDIT.md`
 - user-defined functions lowered by inlining
 - arithmetic, comparison, logical, and ternary expressions

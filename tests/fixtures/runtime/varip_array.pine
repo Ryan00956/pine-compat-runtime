@@ -1,22 +1,22 @@
 indicator("varip array")
 
-varip floats = array.new_float()
+varip float[] floats = array.new_float()
 floats.push(close)
 plot(floats.size())
 
-varip ints = array.from(1, 2)
+varip int[] ints = array.from(1, 2)
 ints.push(3)
 plot(ints.size())
 
-varip flags = array.new_bool()
+varip bool[] flags = array.new_bool()
 flags.push(close > open)
 plot(flags.size())
 
-varip words = array.new_string()
+varip string[] words = array.new_string()
 words.push("tick")
 plot(words.size())
 
-varip colors = array.new_color()
+varip color[] colors = array.new_color()
 colors.push(color.red)
 plot(colors.size())
 

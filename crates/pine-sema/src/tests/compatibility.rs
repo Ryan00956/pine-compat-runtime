@@ -122,11 +122,11 @@ fn accepts_local_scalar_varip_declaration() {
 #[test]
 fn accepts_scalar_array_varip_declarations() {
     let analysis = analyze(
-        r#"varip floats = array.new_float(0)
-varip ints = array.new_int(0)
-varip flags = array.new_bool(0)
-varip words = array.new_string(0)
-varip colors = array.new_color(0)
+        r#"varip float[] floats = array.new_float(0)
+varip int[] ints = array.new_int(0)
+varip bool[] flags = array.new_bool(0)
+varip string[] words = array.new_string(0)
+varip color[] colors = array.new_color(0)
 plot(array.size(floats) + array.size(ints) + array.size(flags) + array.size(words) + array.size(colors))
 "#,
     );
