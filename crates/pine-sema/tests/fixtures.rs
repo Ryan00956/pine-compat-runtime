@@ -1510,9 +1510,33 @@ fn reports_unsupported_str_tostring_color_array_fixture() {
 }
 
 #[test]
+fn reports_unsupported_str_tostring_label_array_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_str_tostring_label_array.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_str_tostring_chart_point_array_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_str_tostring_chart_point_array.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_str_tostring_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_str_tostring_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_str_tostring_tuple_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_str_tostring_tuple.pine",
         "E_CALL_ARG_TYPE",
     );
 }
@@ -1526,9 +1550,33 @@ fn reports_unsupported_str_format_color_array_fixture() {
 }
 
 #[test]
+fn reports_unsupported_str_format_label_array_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_str_format_label_array.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_str_format_chart_point_array_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_str_format_chart_point_array.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_str_format_udt_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_str_format_udt.pine",
+        "E_CALL_ARG_TYPE",
+    );
+}
+
+#[test]
+fn reports_unsupported_str_format_tuple_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_str_format_tuple.pine",
         "E_CALL_ARG_TYPE",
     );
 }
