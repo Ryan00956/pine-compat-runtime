@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array percentrank chart point")
+points = array.new<chart.point>()
+plot(array.percentrank(points, 0))
