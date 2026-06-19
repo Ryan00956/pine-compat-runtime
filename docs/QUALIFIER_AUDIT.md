@@ -55,7 +55,7 @@ Important current rules:
   at any implemented qualifier, including `series int`.
 - Scalar array, scalar slice, label-array, label-slice, line-array,
   line-slice, box-slice, linefill-array, linefill-slice, box-array,
-  table-array, table-slice, and chart.point-slice ids can now receive series storage
+  table-array, table-slice, chart.point-array, and chart.point-slice ids can now receive series storage
   for fixture-backed array history snapshots. Polyline arrays, remaining
   map/matrix values, drawing-object collections, and broader aliasing rules
   remain undesigned.

@@ -185,7 +185,7 @@ History and snapshots:
 
 - Scalar array, scalar slice, label-array, label-slice, line-array,
   line-slice, box-slice, linefill-array, linefill-slice, box-array,
-  table-array, table-slice, and chart.point-slice variable history snapshots are
+  table-array, table-slice, chart.point-array, and chart.point-slice variable history snapshots are
   fixture-backed for the official
   `previous = a[1]; na(previous) ? na : previous.get(0)` read path: runtime
   commits retained array values as independent snapshots and returns a fresh

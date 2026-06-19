@@ -40,7 +40,7 @@ indicator-level `max_bars_back` support.
   `dynamic_history_offset`.
 - Scalar array, scalar slice, label-array, label-slice, line-array,
   line-slice, box-slice, linefill-array, linefill-slice, box-array,
-  table-array, table-slice, and chart.point-slice variable history snapshots are
+  table-array, table-slice, chart.point-array, and chart.point-slice variable history snapshots are
   fixture-backed for the official `previous = a[1]` and
   `na(previous) ? na : previous.get(0)` pattern. Polyline arrays, map, matrix,
   drawing-object collections, and richer aliasing cases remain undesigned.

@@ -1046,7 +1046,7 @@ runtime execution. See [`SERIES_MODEL.md`](SERIES_MODEL.md).
 Array variable history is supported for the fixture-backed scalar array,
 scalar slice, label-array, label-slice, line-array, line-slice, box-slice,
 linefill-array, linefill-slice, box-array, table-array, table-slice, and
-chart.point-slice read paths, including the official
+chart.point-array and chart.point-slice read paths, including the official
 `previous = a[1]` and `na(previous) ? na : previous.get(0)` pattern. When a
 retained series value is an array id, runtime stores an independent array
 snapshot for history and returns a fresh copy from positive-offset history
