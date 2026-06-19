@@ -1,4 +1,4 @@
 //@version=5
 indicator("Unsupported label.new modes")
-label.new(bar_index, high, "High", xloc=xloc.bar_time, yloc=yloc.abovebar, style="label.style_unknown", size="size.massive")
+label.new(bar_index, high, "High", xloc=xloc.bar_time, yloc="yloc.middle", style="label.style_unknown", size="size.massive")
 plot(close)

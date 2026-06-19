@@ -2,6 +2,8 @@
 indicator("Label yloc")
 var label_id = label.new(bar_index, high, "start")
 var independent_label = label.new(bar_index, low, "independent")
+var above_label = label.new(bar_index, high, "above", yloc=yloc.abovebar)
+var below_label = label.new(bar_index, low, "below", yloc=yloc.belowbar)
 if bar_index == 1
     label.set_yloc(label_id, yloc.abovebar)
 if bar_index == 2
