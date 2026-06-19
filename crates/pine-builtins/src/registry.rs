@@ -119,6 +119,14 @@ mod tests {
         assert_eq!(signature.params[12].accepts, crate::Accepts::ConstNumeric);
         assert_eq!(signature.params[13].name, "pyramiding");
         assert_eq!(signature.params[13].accepts, crate::Accepts::ConstNumeric);
+        assert_eq!(signature.params[14].name, "max_polylines_count");
+        assert_eq!(
+            signature.params[14].accepts,
+            crate::Accepts::Exact(pine_ir::PineType::new(
+                pine_ir::Qualifier::Const,
+                pine_ir::ValueKind::Int
+            ))
+        );
         assert!(!signature.variadic);
     }
 

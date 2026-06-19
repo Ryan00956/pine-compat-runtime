@@ -1185,6 +1185,35 @@ impl Analyzer {
                 continue;
             }
 
+            let is_max_polylines_count = arg.name.as_deref() == Some("max_polylines_count")
+                || (arg.name.is_none()
+                    && signature
+                        .params
+                        .get(index)
+                        .is_some_and(|param| param.name == "max_polylines_count"));
+            if is_max_polylines_count {
+                if arg.name.is_none() {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_CALL_ARG_NAME",
+                        "`indicator` argument `max_polylines_count` must be named in the current subset",
+                        arg.span,
+                    ));
+                    continue;
+                }
+                if let Some(value) = const_int_value(&arg.value) {
+                    if !(1..=100).contains(&value) {
+                        self.diagnostics.push(Diagnostic::error(
+                            "E_CALL_ARG_VALUE",
+                            "`indicator` argument `max_polylines_count` must be between 1 and 100",
+                            arg.span,
+                        ));
+                    } else {
+                        self.drawing_settings.max_polylines_count = Some(value as u32);
+                    }
+                }
+                continue;
+            }
+
             let is_max_bars_back = arg.name.as_deref() == Some("max_bars_back")
                 || (arg.name.is_none()
                     && signature

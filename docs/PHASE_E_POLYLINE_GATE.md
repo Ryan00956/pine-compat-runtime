@@ -38,8 +38,10 @@ snapshots in runtime `schemaVersion: 7`. `polyline.delete` appends deletion
 snapshots and `polyline.all` returns currently existing ids. Realtime rollback
 is fixture-backed for creation, deletion, copied point lists, and `polyline.all`
 reads. `polyline.new` also has fixture-backed fixed 100-polyline runtime-limit
-coverage. General polyline arrays plus declaration-driven max-count and
-eviction parity remain outside this lifecycle slice.
+coverage. Named `max_polylines_count` declaration parsing is fixture-backed and
+stored in HIR, but runtime eviction does not consume it yet. General polyline
+arrays plus declaration-driven max-count eviction parity remain outside this
+lifecycle slice.
 
 Adding a narrow `polyline.new(na)` or ad hoc tuple-based point list would create
 a different language surface from Pine and would bypass the array/type model
@@ -61,9 +63,9 @@ that conformance relies on. The implementation order is therefore:
    add fixture-backed rejection past the runtime's fixed 100-polyline creation
    limit.
 
-The runtime must not mark general polyline arrays, declaration-driven
-`max_polylines_count`, or garbage-collection/eviction parity supported before
-those slices are fixture-backed. `array.new_polyline` remains out of scope until
+The runtime must not mark general polyline arrays or declaration-driven
+`max_polylines_count` garbage-collection/eviction parity supported before those
+slices are fixture-backed. `array.new_polyline` remains out of scope until
 polyline id arrays have a deliberate storage and mutation model.
 
 `polyline.new` is backed by `tests/fixtures/runtime/polyline_new.pine`.

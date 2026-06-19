@@ -134,8 +134,8 @@ appearance are not implemented by this fixed chart metadata subset.
 `price` field reads/mutation. Point arrays can feed the partial
 `polyline.new` snapshot subset. `polyline.delete` and `polyline.all` cover the
 historical and forming-bar rollback lifecycle subset; drawing point overloads,
-typed declarations, general polyline arrays, and declaration-driven polyline
-max-count/eviction parity remain separately gated.
+typed declarations, general polyline arrays, and runtime use of
+declaration-driven polyline max-count/eviction parity remain separately gated.
 
 Bar state:
 
@@ -494,9 +494,9 @@ ohlc4 = (open + high + low + close) / 4
 ## Declarations
 
 ```text
-indicator(title: const string, shorttitle?: const string, overlay?: const bool, format?: const string, precision?: const int, scale?: const string, max_bars_back?: const int, ...)
+indicator(title: const string, shorttitle?: const string, overlay?: const bool, format?: const string, precision?: const int, scale?: const string, max_bars_back?: const int, max_polylines_count?: const int named-only subset, ...)
   -> void
-strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric)
+strategy(title: const string, shorttitle?: const string, overlay?: const bool, max_bars_back?: const int, initial_capital?: const numeric, default_qty_type?: const string, default_qty_value?: const numeric, commission_type?: const string, commission_value?: const numeric, slippage?: const numeric, backtest_fill_limits_assumption?: const numeric, margin_long?: const numeric, margin_short?: const numeric, pyramiding?: const numeric, max_polylines_count?: const int named-only subset)
   -> void
 strategy.entry(id: simple string, direction: string-compatible, qty?: series/simple numeric, limit?: series/simple numeric, stop?: series/simple numeric, comment?: string-compatible, alert_message?: string-compatible, disable_alert?: bool-compatible)
   -> void
@@ -565,6 +565,10 @@ placement or price-scale layout fields; those remain host-owned.
 values from 0 through 16. The runtime rejects other const string format values
 and out-of-range precision values. Declaration formatting remains host-owned and
 does not add runtime JSON fields.
+`indicator(..., max_polylines_count=N)` accepts named const integer values from
+1 through 100 and stores them in HIR for the future drawing GC runtime slice.
+The positional declaration slot and runtime eviction behavior remain outside the
+current subset.
 `strategy(...)` defaults `default_qty_type` to `strategy.fixed` and
 `default_qty_value` to `1`, so `strategy.entry(..., qty=...)` may omit `qty` and
 use the configured or default fixed quantity.
@@ -601,6 +605,10 @@ same-direction long `strategy.entry()` market entries to that many open trades
 for the current position. The default remains `1`. Short entries, reversals,
 `strategy.order()`, same-tick price-based entry exceptions, and broader
 multi-entry exit/reporting semantics remain unsupported unless fixture-backed.
+`strategy(..., max_polylines_count=N)` accepts named const integer values from
+1 through 100 and stores them in HIR for the future drawing GC runtime slice.
+The positional declaration slot and runtime eviction behavior remain outside the
+current subset.
 `strategy.close(id)` can close a requested pyramided long entry id; multi-entry
 `strategy.close_all()` can flatten all accepted open long entries. Fixture-backed
 absolute stop/limit `strategy.exit` calls can target a requested open pyramided

@@ -123,6 +123,7 @@ impl Analyzer {
         Some(HirProgram {
             script_mode,
             strategy_settings: self.strategy_settings,
+            drawing_settings: self.drawing_settings,
             symbols,
             statements,
             next_series_id: self.next_series_id,

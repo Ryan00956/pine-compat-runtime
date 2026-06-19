@@ -45,6 +45,7 @@ pub fn analyze_input(input: &AnalysisInput) -> Analysis {
         expr_types: HashMap::new(),
         script_declaration: None,
         strategy_settings: Default::default(),
+        drawing_settings: Default::default(),
         function_stack: Vec::new(),
         next_symbol_id: initial_symbol_count(),
         next_series_id: initial_series_count(),

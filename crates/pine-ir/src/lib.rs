@@ -32,6 +32,11 @@ pub enum ScriptMode {
     Strategy,
 }
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct DrawingSettings {
+    pub max_polylines_count: Option<u32>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Qualifier {
     Const,
@@ -91,6 +96,7 @@ impl PineType {
 pub struct HirProgram {
     pub script_mode: ScriptMode,
     pub strategy_settings: StrategySettings,
+    pub drawing_settings: DrawingSettings,
     pub symbols: Vec<HirSymbol>,
     pub statements: Vec<HirStmt>,
     pub next_series_id: u32,

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use pine_ir::{
-    CallSiteId, PersistenceKind, PineType, Qualifier, ScriptMode, SeriesId, StrategySettings,
-    SymbolId, VarSlotId,
+    CallSiteId, DrawingSettings, PersistenceKind, PineType, Qualifier, ScriptMode, SeriesId,
+    StrategySettings, SymbolId, VarSlotId,
 };
 use pine_syntax::{Diagnostic, FunctionBody, Program, Severity, Span};
 
@@ -48,6 +48,7 @@ pub(crate) struct Analyzer {
     pub(crate) expr_types: HashMap<(usize, usize), PineType>,
     pub(crate) script_declaration: Option<(ScriptMode, Span)>,
     pub(crate) strategy_settings: StrategySettings,
+    pub(crate) drawing_settings: DrawingSettings,
     pub(crate) function_stack: Vec<String>,
     pub(crate) next_symbol_id: u32,
     pub(crate) next_series_id: u32,
