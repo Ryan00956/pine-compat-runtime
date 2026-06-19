@@ -340,6 +340,49 @@ const LINE_NEW_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const LINE_NEW_POINT_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "first_point",
+        accepts: Accepts::ChartPointCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "second_point",
+        accepts: Accepts::ChartPointCompatible,
+        optional: false,
+    },
+    BuiltinParam {
+        name: "xloc",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "extend",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "color",
+        accepts: Accepts::ColorCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "style",
+        accepts: Accepts::ConstString,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "width",
+        accepts: Accepts::IntCompatible,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "force_overlay",
+        accepts: Accepts::ConstBool,
+        optional: true,
+    },
+];
+
 const LINEFILL_NEW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "line1",
@@ -1067,6 +1110,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         name: "line.new",
         phase: BuiltinPhase::Phase1Core,
         params: LINE_NEW_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_LINE),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "line.new",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINE_NEW_POINT_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_LINE),
         variadic: false,
     },

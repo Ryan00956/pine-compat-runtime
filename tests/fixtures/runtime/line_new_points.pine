@@ -1,0 +1,11 @@
+//@version=5
+indicator("Line new chart points")
+if bar_index == 1
+    first = chart.point.from_index(bar_index, low)
+    second = chart.point.from_index(bar_index + 1, high)
+    line.new(first, second, extend=extend.right, color=color.green, style=line.style_dotted, width=2)
+if bar_index == 2
+    time_first = chart.point.from_time(time, low)
+    time_second = chart.point.from_time(time + 60000, high)
+    line.new(first_point=time_first, second_point=time_second, xloc=xloc.bar_time, style=line.style_dashed)
+plot(close)

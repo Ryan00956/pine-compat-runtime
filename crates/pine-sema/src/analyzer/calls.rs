@@ -540,6 +540,9 @@ impl Analyzer {
             self.validate_timestamp_args(signature, args, arg_types);
             return;
         }
+        if self.validate_line_new_args(signature, args, arg_types) {
+            return;
+        }
 
         let required_count = signature
             .params

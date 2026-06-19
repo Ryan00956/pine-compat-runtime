@@ -4,7 +4,13 @@ use crate::*;
 
 impl<'a> HistoricalRuntime<'a> {
     pub(super) fn eval_line_new(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        if line_has_named_point_args(args) {
+            return self.eval_line_new_from_points(args, PineValue::Na);
+        }
         let x1 = self.eval_required_line_arg(args, 0, "x1")?;
+        if matches!(x1, PineValue::ChartPoint(_)) {
+            return self.eval_line_new_from_points(args, x1);
+        }
         let y1 = self.eval_required_line_arg(args, 1, "y1")?;
         let x2 = self.eval_required_line_arg(args, 2, "x2")?;
         let y2 = self.eval_required_line_arg(args, 3, "y2")?;
@@ -15,6 +21,57 @@ impl<'a> HistoricalRuntime<'a> {
         let width = self.eval_line_option_value(args, 8, "width", PineValue::Int(1))?;
         let _force_overlay =
             self.eval_line_option_value(args, 9, "force_overlay", PineValue::Bool(false))?;
+        self.create_line(LineFields {
+            x1,
+            y1,
+            x2,
+            y2,
+            xloc,
+            extend,
+            color,
+            style,
+            width,
+        })
+    }
+
+    fn eval_line_new_from_points(
+        &mut self,
+        args: &[HirCallArg],
+        first: PineValue,
+    ) -> Result<PineValue, RuntimeError> {
+        let first = if line_has_named_point_args(args) {
+            self.eval_required_line_arg(args, 0, "first_point")?
+        } else {
+            first
+        };
+        let second = self.eval_required_line_arg(args, 1, "second_point")?;
+        let xloc = self.eval_line_option(args, 2, "xloc", "xloc.bar_index")?;
+        let extend = self.eval_line_option(args, 3, "extend", "extend.none")?;
+        let color = self.eval_line_option_value(args, 4, "color", PineValue::Na)?;
+        let style = self.eval_line_option(args, 5, "style", "line.style_solid")?;
+        let width = self.eval_line_option_value(args, 6, "width", PineValue::Int(1))?;
+        let _force_overlay =
+            self.eval_line_option_value(args, 7, "force_overlay", PineValue::Bool(false))?;
+        let Some((x1, y1)) = line_point_coordinates(first, &xloc) else {
+            return Ok(PineValue::Na);
+        };
+        let Some((x2, y2)) = line_point_coordinates(second, &xloc) else {
+            return Ok(PineValue::Na);
+        };
+        self.create_line(LineFields {
+            x1,
+            y1,
+            x2,
+            y2,
+            xloc,
+            extend,
+            color,
+            style,
+            width,
+        })
+    }
+
+    fn create_line(&mut self, fields: LineFields) -> Result<PineValue, RuntimeError> {
         self.evict_oldest_lines_at_limit()?;
         let id = self.next_line_id;
         self.next_line_id = self
@@ -28,15 +85,15 @@ impl<'a> HistoricalRuntime<'a> {
             snapshots: vec![LineSnapshot {
                 bar_index: self.bars,
                 exists: true,
-                x1,
-                y1,
-                x2,
-                y2,
-                xloc,
-                color,
-                width,
-                style,
-                extend,
+                x1: fields.x1,
+                y1: fields.y1,
+                x2: fields.x2,
+                y2: fields.y2,
+                xloc: fields.xloc,
+                color: fields.color,
+                width: fields.width,
+                style: fields.style,
+                extend: fields.extend,
             }],
         });
         Ok(PineValue::Line(id))
@@ -499,6 +556,34 @@ impl<'a> HistoricalRuntime<'a> {
         }
         Ok(PineValue::Void)
     }
+}
+
+struct LineFields {
+    x1: PineValue,
+    y1: PineValue,
+    x2: PineValue,
+    y2: PineValue,
+    xloc: PineValue,
+    extend: PineValue,
+    color: PineValue,
+    style: PineValue,
+    width: PineValue,
+}
+
+fn line_has_named_point_args(args: &[HirCallArg]) -> bool {
+    args.iter()
+        .any(|arg| matches!(arg.name.as_deref(), Some("first_point" | "second_point")))
+}
+
+fn line_point_coordinates(point: PineValue, xloc: &PineValue) -> Option<(PineValue, PineValue)> {
+    let PineValue::ChartPoint(point) = point else {
+        return None;
+    };
+    let x = match xloc {
+        PineValue::String(value) if value == "xloc.bar_time" => point.field(0),
+        _ => point.field(1),
+    };
+    Some((x, point.field(2)))
 }
 
 fn line_call_arg_expr<'a>(args: &'a [HirCallArg], index: usize, name: &str) -> Option<&'a HirExpr> {

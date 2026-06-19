@@ -429,8 +429,9 @@ Line snapshots cover `x1`, `y1`,
 `x2`, `y2`, `xloc`, `color`, `width`, `style`, and `extend`. `line.new` can
 initialize those host-neutral style snapshot fields, including official line
 style and extend constants, for the x1/y1/x2/y2 overload when `xloc` is omitted
-or `xloc.bar_index`, or when `xloc.bar_time` stores time-coordinate x values;
-chart-point overloads remain outside the current runtime output contract.
+or `xloc.bar_index`, when `xloc.bar_time` stores time-coordinate x values, or
+from two `chart.point` values using `point.index` for `xloc.bar_index` and
+`point.time` for `xloc.bar_time`.
 Supported `line.set_*` mutators include geometry, color, width, official style,
 official extend, and `line.set_xloc` for `xloc.bar_index`/`xloc.bar_time`,
 which rewrites x1, x2, and xloc from ordinary and independent while-loop

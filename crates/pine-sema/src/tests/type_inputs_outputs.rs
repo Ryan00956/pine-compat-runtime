@@ -949,6 +949,26 @@ fn accepts_minimal_line_new() {
 }
 
 #[test]
+fn accepts_line_new_chart_point_overload() {
+    let analysis = analyze(
+        "first = chart.point.from_index(bar_index, low)\nsecond = chart.point.from_index(bar_index + 1, high)\nid = line.new(first, second, extend=extend.right, color=color.green, style=line.style_dotted, width=2)\ntime_first = chart.point.from_time(time, low)\ntime_second = chart.point.from_time(time + 60000, high)\ntime_id = line.new(first_point=time_first, second_point=time_second, xloc=xloc.bar_time, style=line.style_dashed)\nplot(line.get_x1(id) + line.get_x1(time_id))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "line.new")
+    );
+}
+
+#[test]
 fn accepts_minimal_linefill_new() {
     let analysis = analyze(
         "upper = line.new(bar_index, high, bar_index + 1, high)\nlower = line.new(bar_index, low, bar_index + 1, low)\nfill = linefill.new(upper, lower, color.new(color.green, 80))\nlinefill.set_color(fill, color.red)\nfill.set_color(color.blue)\nlinefill.set_color(na, color.yellow)\nfirst = linefill.get_line1(fill)\nsecond = fill.get_line2()\nall_fills = linefill.all\nfirst_fill = array.get(all_fills, 0)\nmissing_first = linefill.get_line1(na)\nmissing = linefill.new(na, lower, color.red)\nlinefill.delete(na)\nlinefill.delete(missing)\nlinefill.delete(fill)\nplot(line.get_x1(first) + line.get_x2(second) + line.get_x1(linefill.get_line1(first_fill)) + array.size(all_fills) + nz(line.get_x1(missing_first), 0))\n",

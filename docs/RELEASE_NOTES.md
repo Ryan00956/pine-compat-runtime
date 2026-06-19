@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed `line.new(first_point, second_point, ...)` chart-point
+  overload support: point-based line snapshots use `point.index` for
+  `xloc.bar_index` and `point.time` for `xloc.bar_time`, while preserving the
+  existing line style, extend, color, and width snapshot fields.
 - Added fixture-backed `box.new()` and `box.set_xloc()` `xloc.bar_time`
   snapshot support: box snapshots now retain `xloc`, and time-coordinate
   left/right values are exposed to JSON/Python outputs.
