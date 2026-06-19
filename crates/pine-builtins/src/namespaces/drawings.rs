@@ -212,7 +212,7 @@ const LABEL_SET_SIZE_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "size",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringOrIntCompatible,
         optional: false,
     },
 ];

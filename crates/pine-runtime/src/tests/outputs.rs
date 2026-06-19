@@ -1100,7 +1100,7 @@ label.set_text(id, "changed")
 label.set_color(id, color.green)
 label.set_textcolor(id, color.white)
 label.set_style(id, label.style_label_up)
-label.set_size(id, size.small)
+label.set_size(id, 12)
 label.set_tooltip(id, "Tip")
 label.set_textalign(id, text.align_left)
 label.set_text_font_family(id, font.family_monospace)
@@ -1134,10 +1134,7 @@ plot(close)
         label.snapshots[6].style,
         PineValue::String("label.style_label_up".to_owned())
     );
-    assert_eq!(
-        label.snapshots[7].size,
-        PineValue::String("size.small".to_owned())
-    );
+    assert_eq!(label.snapshots[7].size, PineValue::Int(12));
     assert_eq!(
         label.snapshots[8].tooltip,
         PineValue::String("Tip".to_owned())

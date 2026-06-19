@@ -72,7 +72,7 @@ while tooltip_i < 1
 size_i = 0
 while size_i < 1
     if bar_index == 3
-        label.set_size(label_id, size.small)
+        label.set_size(label_id, 12)
     size_i := size_i + 1
 independent_get_x_value = label.get_x(label_id)
 independent_get_x_i = 0

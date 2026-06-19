@@ -878,7 +878,7 @@ impl Analyzer {
                 self.validate_label_string_arg(signature, args, 1, "style", LABEL_STYLES);
             }
             "label.set_size" => {
-                self.validate_label_string_arg(signature, args, 1, "size", LABEL_SIZES);
+                self.validate_text_size_arg(signature, args, 1, "size");
             }
             "label.set_textalign" => {
                 self.validate_label_string_arg(signature, args, 1, "textalign", TEXT_HALIGNS);

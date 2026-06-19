@@ -634,6 +634,36 @@ fn rejects_label_new_non_int_size() {
 }
 
 #[test]
+fn accepts_label_set_int_size() {
+    let analysis =
+        analyze("id = label.new(bar_index, high, \"High\")\nlabel.set_size(id, 12)\nplot(close)\n");
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+}
+
+#[test]
+fn rejects_label_set_non_int_size() {
+    let analysis = analyze(
+        "id = label.new(bar_index, high, \"High\")\nlabel.set_size(id, 12.5)\nplot(close)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_label_mutation_methods() {
     let analysis = analyze(
         "id = label.new(bar_index, high, \"High\")\ncopy = label.copy(id)\nlabel.set_x(id, bar_index)\nlabel.set_xloc(id, time, xloc.bar_time)\nlabel.set_y(id, low)\nlabel.set_xy(id, bar_index, close)\nlabel.set_yloc(id, yloc.abovebar)\nlabel.set_text(id, \"Close\")\nlabel.set_color(id, color.green)\nlabel.set_textcolor(id, color.white)\nlabel.set_style(id, label.style_label_up)\nlabel.set_size(id, size.small)\nlabel.set_tooltip(id, \"Tip\")\nlabel.set_textalign(id, text.align_left)\nlabel.set_text_font_family(id, font.family_monospace)\nlabel.set_text_formatting(id, text.format_bold + text.format_italic)\nlabel.set_text_formatting(na, text.format_italic)\nlabel.set_text(na, \"noop\")\nlabel.delete(na)\nlabel.delete(id)\nplot(label.get_x(copy))\nplot(close)\n",
