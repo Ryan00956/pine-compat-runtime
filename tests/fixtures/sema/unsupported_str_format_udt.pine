@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported str format UDT")
+type Point
+    float x
+
+p = Point.new(close)
+text = str.format("Point {0}", p)
+plot(close)
