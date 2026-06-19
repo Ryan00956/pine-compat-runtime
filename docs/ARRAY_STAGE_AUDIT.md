@@ -184,13 +184,13 @@ Maps and matrices:
 History and snapshots:
 
 - Scalar array, scalar slice, label-array, label-slice, line-array,
-  line-slice, linefill-array, box-array, and table-array variable history snapshots are
+  line-slice, box-slice, linefill-array, box-array, and table-array variable history snapshots are
   fixture-backed for the official
   `previous = a[1]; na(previous) ? na : previous.get(0)` read path: runtime
   commits retained array values as independent snapshots and returns a fresh
   copy on history reads.
 - Remaining array history behavior still needs design for polyline arrays,
-  non-label/line object slice history, and broader mutation/aliasing semantics.
+  non-label/line/box object slice history, and broader mutation/aliasing semantics.
 
 Slice semantics:
 
