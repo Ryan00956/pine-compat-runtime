@@ -36,6 +36,8 @@ const LABEL_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
 
 const LINE_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
 
+const BOX_XLOCS: &[&str] = &["xloc.bar_index", "xloc.bar_time"];
+
 const LABEL_YLOCS: &[&str] = &["yloc.price", "yloc.abovebar", "yloc.belowbar"];
 
 const LINE_STYLES: &[&str] = &[
@@ -930,7 +932,7 @@ impl Analyzer {
                     BOX_BORDER_STYLES,
                 );
                 self.validate_label_string_arg(signature, args, 7, "extend", LINE_EXTENDS);
-                self.validate_label_string_arg(signature, args, 8, "xloc", &["xloc.bar_index"]);
+                self.validate_label_string_arg(signature, args, 8, "xloc", BOX_XLOCS);
                 self.validate_text_size_arg(signature, args, 11, "text_size");
                 self.validate_label_string_arg(signature, args, 13, "text_halign", TEXT_HALIGNS);
                 self.validate_label_string_arg(signature, args, 14, "text_valign", TEXT_VALIGNS);
@@ -957,7 +959,7 @@ impl Analyzer {
                 self.validate_label_string_arg(signature, args, 1, "extend", LINE_EXTENDS);
             }
             "box.set_xloc" => {
-                self.validate_label_string_arg(signature, args, 3, "xloc", &["xloc.bar_index"]);
+                self.validate_label_string_arg(signature, args, 3, "xloc", BOX_XLOCS);
             }
             "box.set_border_style" => {
                 self.validate_label_string_arg(signature, args, 1, "style", BOX_BORDER_STYLES);

@@ -447,19 +447,20 @@ across the latest existing x1/y1/x2/y2 snapshot; time-coordinate lines return
 `na` because timestamp interpolation remains outside the supported getter
 subset. Box snapshots
 cover `left`, `top`,
-`right`, `bottom`, `bgColor`, `borderColor`, `borderWidth`, `borderStyle`,
+`right`, `bottom`, `xloc`, `bgColor`, `borderColor`, `borderWidth`, `borderStyle`,
 `extend`, `text`, `textColor`, `textSize`, `textHalign`, `textValign`,
 `textWrap`, `textFontFamily`, and `textFormatting`. `box.new` can initialize
 those host-neutral style and text snapshot fields, including
 solid/dotted/dashed border styles and official extend constants, for the
 left/top/right/bottom overload when `xloc` is omitted or `xloc.bar_index`;
-chart-point overloads and
-`xloc.bar_time` coordinate semantics remain outside the current runtime output
-contract. Supported `box.set_*` mutators include geometry, background, border
+`xloc.bar_time` stores time-coordinate left/right values, while chart-point
+overloads remain outside the current runtime output contract. Supported
+`box.set_*` mutators include geometry, background, border
 color/width/style, official extend, text and text-layout snapshot setters from
 ordinary and independent while-loop control-flow blocks, and the
-`xloc.bar_index` `box.set_xloc` subset that rewrites left and right from
-ordinary and independent while-loop control-flow blocks. `box.copy` cloning
+`box.set_xloc` subset for `xloc.bar_index`/`xloc.bar_time` that rewrites left,
+right, and xloc from ordinary and independent while-loop control-flow blocks.
+`box.copy` cloning
 from ordinary and independent while-loop control-flow blocks and `box.delete`
 deletion from ordinary and independent while-loop control-flow blocks reuse the
 same snapshot model;

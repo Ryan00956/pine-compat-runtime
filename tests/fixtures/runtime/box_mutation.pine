@@ -6,6 +6,7 @@ if bar_index == 1
 if bar_index == 2
     box.set_rightbottom(box_id, bar_index, close)
     box.set_xloc(box_id, bar_index - 1, bar_index + 1, xloc.bar_index)
+    box.set_xloc(box_id, time, time + 60000, xloc.bar_time)
     box.set_bgcolor(box_id, color.green)
 for i = 0 to 0
     if bar_index == 3
@@ -26,6 +27,6 @@ for i = 0 to 0
         box.set_text_wrap(box_id, text.wrap_auto)
         box.set_text_font_family(box_id, font.family_monospace)
         box.set_text_formatting(box_id, text.format_bold + text.format_italic)
-box.set_xloc(na, bar_index, bar_index + 1, xloc.bar_index)
+box.set_xloc(na, time, time + 60000, xloc.bar_time)
 box.set_text_formatting(na, text.format_italic)
 plot(close)

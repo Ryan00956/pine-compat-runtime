@@ -490,6 +490,7 @@ fn box_snapshots_to_py(
             item.set_item("top", value_to_py(py, &snapshot.top)?)?;
             item.set_item("right", value_to_py(py, &snapshot.right)?)?;
             item.set_item("bottom", value_to_py(py, &snapshot.bottom)?)?;
+            item.set_item("xloc", value_to_py(py, &snapshot.xloc)?)?;
             item.set_item("bgColor", value_to_py(py, &snapshot.bg_color)?)?;
             item.set_item("borderColor", value_to_py(py, &snapshot.border_color)?)?;
             item.set_item("borderWidth", value_to_py(py, &snapshot.border_width)?)?;

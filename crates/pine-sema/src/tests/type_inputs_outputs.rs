@@ -1071,7 +1071,7 @@ fn rejects_line_side_effects_inside_functions() {
 #[test]
 fn accepts_minimal_box_new() {
     let analysis = analyze(
-        "id = box.new(bar_index, high, bar_index, low)\nother = box.new(left=0, top=open, right=bar_index, bottom=close)\nstyled = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text=\"box text\", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)\nborder_solid = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_style=line.style_solid)\nborder_dotted = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_style=line.style_dotted)\nextend_left = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, extend=extend.left)\nextend_both = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, extend=extend.both)\nextend_none = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, extend=extend.none)\ncopy = box.copy(id)\nbox.set_left(id, bar_index)\nbox.set_top(id, high)\nbox.set_right(id, bar_index)\nbox.set_bottom(id, low)\nbox.set_lefttop(id, bar_index, close)\nbox.set_rightbottom(id, bar_index, open)\nbox.set_bgcolor(id, color.green)\nbox.set_border_color(id, color.white)\nbox.set_border_width(id, 2)\nbox.set_border_style(id, line.style_solid)\nbox.set_border_style(id, line.style_dotted)\nbox.set_border_style(id, line.style_dashed)\nbox.set_extend(id, extend.right)\nbox.set_extend(id, extend.left)\nbox.set_extend(id, extend.both)\nbox.set_extend(id, extend.none)\nbox.set_xloc(id, bar_index - 2, bar_index + 2, xloc.bar_index)\nbox.set_text(id, \"box text\")\nbox.set_text_color(id, color.white)\nbox.set_text_size(id, size.small)\nbox.set_text_halign(id, text.align_left)\nbox.set_text_valign(id, text.align_top)\nbox.set_text_wrap(id, text.wrap_auto)\nbox.set_text_font_family(id, font.family_monospace)\nbox.set_text_formatting(id, text.format_bold + text.format_italic)\nbox.set_text_formatting(na, text.format_italic)\nbox.delete(na)\nbox.delete(id)\nplot(box.get_top(copy))\nplot(box.get_bottom(copy))\nplot(box.get_left(copy))\nplot(box.get_right(copy))\nplot(close)\n",
+        "id = box.new(bar_index, high, bar_index, low)\nother = box.new(left=0, top=open, right=bar_index, bottom=close)\nstyled = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_color=color.white, border_width=2, border_style=line.style_dashed, extend=extend.right, xloc=xloc.bar_index, bgcolor=color.green, text=\"box text\", text_size=size.small, text_color=color.white, text_halign=text.align_left, text_valign=text.align_top, text_wrap=text.wrap_auto, text_font_family=font.family_monospace, force_overlay=false, text_formatting=text.format_bold + text.format_italic)\ntime_box = box.new(left=time, top=high, right=time + 60000, bottom=low, xloc=xloc.bar_time)\nborder_solid = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_style=line.style_solid)\nborder_dotted = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, border_style=line.style_dotted)\nextend_left = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, extend=extend.left)\nextend_both = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, extend=extend.both)\nextend_none = box.new(left=bar_index, top=high, right=bar_index + 1, bottom=low, extend=extend.none)\ncopy = box.copy(id)\nbox.set_left(id, bar_index)\nbox.set_top(id, high)\nbox.set_right(id, bar_index)\nbox.set_bottom(id, low)\nbox.set_lefttop(id, bar_index, close)\nbox.set_rightbottom(id, bar_index, open)\nbox.set_bgcolor(id, color.green)\nbox.set_border_color(id, color.white)\nbox.set_border_width(id, 2)\nbox.set_border_style(id, line.style_solid)\nbox.set_border_style(id, line.style_dotted)\nbox.set_border_style(id, line.style_dashed)\nbox.set_extend(id, extend.right)\nbox.set_extend(id, extend.left)\nbox.set_extend(id, extend.both)\nbox.set_extend(id, extend.none)\nbox.set_xloc(id, bar_index - 2, bar_index + 2, xloc.bar_index)\nbox.set_xloc(time_box, time, time + 60000, xloc.bar_time)\nbox.set_text(id, \"box text\")\nbox.set_text_color(id, color.white)\nbox.set_text_size(id, size.small)\nbox.set_text_halign(id, text.align_left)\nbox.set_text_valign(id, text.align_top)\nbox.set_text_wrap(id, text.wrap_auto)\nbox.set_text_font_family(id, font.family_monospace)\nbox.set_text_formatting(id, text.format_bold + text.format_italic)\nbox.set_text_formatting(na, text.format_italic)\nbox.delete(na)\nbox.delete(id)\nplot(box.get_top(copy))\nplot(box.get_bottom(copy))\nplot(box.get_left(copy))\nplot(box.get_right(copy))\nplot(close)\n",
     );
 
     assert!(
@@ -1342,20 +1342,17 @@ fn rejects_box_set_float_text_size() {
 }
 
 #[test]
-fn rejects_unsupported_box_set_xloc_values() {
+fn accepts_box_set_xloc_bar_time() {
     let analysis = analyze(
         "id = box.new(bar_index, high, bar_index + 1, low)\nbox.set_xloc(id, time, time + 60000, xloc.bar_time)\nplot(close)\n",
     );
 
     assert!(
-        analysis
-            .diagnostics
-            .iter()
-            .any(|diagnostic| diagnostic.message.contains("xloc.bar_index")),
+        analysis.diagnostics.is_empty(),
         "{:?}",
         analysis.diagnostics
     );
-    assert!(analysis.hir.is_none());
+    assert!(analysis.hir.is_some());
 }
 
 #[test]

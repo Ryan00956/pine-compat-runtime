@@ -695,12 +695,12 @@ the same lifecycle rules with bar-index left/right coordinates, price top/bottom
 coordinates,
 selected background/border fields, snapshot cloning, non-reused ids, and a
 declaration-driven max-count eviction. `box.new` can initialize existing box snapshot fields
-for background, border, extend, text, text color, text size, text alignment,
-text wrap, font family, and text formatting when `xloc` is omitted or
-`xloc.bar_index`; `force_overlay` is accepted but remains a host display
-responsibility. The chart-point overload, `xloc.bar_time` coordinate
-semantics, and time-coordinate `box.set_xloc` remain unsupported; `box.set_xloc`
-with `xloc.bar_index` updates the box's left and right snapshot values. Tables use deterministic ids,
+for xloc, background, border, extend, text, text color, text size, text
+alignment, text wrap, font family, and text formatting when `xloc` is omitted,
+`xloc.bar_index`, or `xloc.bar_time`; `force_overlay` is accepted but remains a
+host display responsibility. The chart-point overload remains unsupported;
+`box.set_xloc` with `xloc.bar_index` or `xloc.bar_time` updates the box's left,
+right, and xloc snapshot values. Tables use deterministic ids,
 fixed positive
 dimensions, optional `table.new` background-color, frame-color, frame-width,
 border-color, and border-width initialization, and sparse cell snapshots for
@@ -824,10 +824,10 @@ called from ordinary and independent while-loop control-flow blocks.
 `box.set_border_style`, and `box.set_extend` update the host-neutral style
 snapshot, including when called from ordinary and independent while-loop
 control-flow blocks; visual extension remains a host responsibility.
-`box.set_xloc` with `xloc.bar_index` updates the box's left and right values in
-the host-neutral snapshot, including when called from ordinary and independent
-while-loop control-flow blocks; time-coordinate box x-location remains
-unsupported. `box.set_text` records the box text string in the
+`box.set_xloc` with `xloc.bar_index` or `xloc.bar_time` updates the box's left,
+right, and xloc values in the host-neutral snapshot, including when called from
+ordinary and independent while-loop control-flow blocks. `box.set_text` records
+the box text string in the
 host-neutral snapshot. `box.set_text_color` records the text color in the
 host-neutral snapshot. `box.set_text_size` records the selected size constant in
 the host-neutral snapshot. `box.set_text_halign` records the selected horizontal

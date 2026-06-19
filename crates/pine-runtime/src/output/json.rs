@@ -639,6 +639,8 @@ fn boxes_json(boxes: &[BoxOutput]) -> String {
                 output.push_str(&value_json(&snapshot.right));
                 output.push_str(",\"bottom\":");
                 output.push_str(&value_json(&snapshot.bottom));
+                output.push_str(",\"xloc\":");
+                output.push_str(&value_json(&snapshot.xloc));
                 output.push_str(",\"bgColor\":");
                 output.push_str(&value_json(&snapshot.bg_color));
                 output.push_str(",\"borderColor\":");

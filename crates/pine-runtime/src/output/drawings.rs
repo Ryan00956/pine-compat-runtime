@@ -96,6 +96,7 @@ pub struct BoxSnapshot {
     pub top: PineValue,
     pub right: PineValue,
     pub bottom: PineValue,
+    pub xloc: PineValue,
     pub bg_color: PineValue,
     pub border_color: PineValue,
     pub border_width: PineValue,

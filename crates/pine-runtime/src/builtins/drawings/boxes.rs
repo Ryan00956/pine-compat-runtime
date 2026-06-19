@@ -13,7 +13,7 @@ impl<'a> HistoricalRuntime<'a> {
             self.eval_box_option_value(args, 5, "border_width", PineValue::Int(1))?;
         let border_style = self.eval_box_option(args, 6, "border_style", "line.style_solid")?;
         let extend = self.eval_box_option(args, 7, "extend", "extend.none")?;
-        let _xloc = self.eval_box_option(args, 8, "xloc", "xloc.bar_index")?;
+        let xloc = self.eval_box_option(args, 8, "xloc", "xloc.bar_index")?;
         let bg_color = self.eval_box_option_value(args, 9, "bgcolor", PineValue::Na)?;
         let text =
             self.eval_box_option_value(args, 10, "text", PineValue::String(String::new()))?;
@@ -45,6 +45,7 @@ impl<'a> HistoricalRuntime<'a> {
                 top,
                 right,
                 bottom,
+                xloc,
                 bg_color,
                 border_color,
                 border_width,
@@ -195,10 +196,11 @@ impl<'a> HistoricalRuntime<'a> {
         let id = self.eval_box_id_arg(args)?;
         let left = self.eval_required_box_arg(args, 1, "left")?;
         let right = self.eval_required_box_arg(args, 2, "right")?;
-        let _xloc = self.eval_required_box_arg(args, 3, "xloc")?;
+        let xloc = self.eval_required_box_arg(args, 3, "xloc")?;
         self.mutate_box(id, |snapshot| {
             snapshot.left = left;
             snapshot.right = right;
+            snapshot.xloc = xloc;
         })
     }
 

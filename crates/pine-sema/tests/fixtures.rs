@@ -1421,7 +1421,7 @@ fn reports_unsupported_line_new_modes_fixture() {
 fn reports_unsupported_box_new_modes_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_box_new_modes.pine",
-        &["xloc.bar_index", "text.format_"],
+        &["text.format_"],
     );
 }
 
@@ -1430,14 +1430,6 @@ fn reports_unsupported_box_border_style_arrow_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_box_border_style_arrow.pine",
         &["line.style_solid", "line.style_dotted", "line.style_dashed"],
-    );
-}
-
-#[test]
-fn reports_unsupported_box_set_xloc_values_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_box_set_xloc_values.pine",
-        &["xloc.bar_index"],
     );
 }
 

@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.new()` and `box.set_xloc()` `xloc.bar_time`
+  snapshot support: box snapshots now retain `xloc`, and time-coordinate
+  left/right values are exposed to JSON/Python outputs.
 - Added fixture-backed `line.new()` and `line.set_xloc()` `xloc.bar_time`
   snapshot support: line snapshots now retain `xloc`, time-coordinate x1/x2
   values are exposed to JSON/Python outputs, and `line.get_price()` continues
@@ -585,8 +588,8 @@
   search substring now returns position 0 while a `na` source still returns
   `na`.
 - Added fixture-backed drawing method-syntax coverage for supported
-  coordinate/location mutators while keeping unsupported chart-point and
-  line/box time-coordinate variants out of scope.
+  coordinate/location mutators while keeping unsupported chart-point variants
+  out of scope.
 - Added fixture-backed `array.sort` and `array.reverse` branch/loop control-flow
   coverage for scalar arrays while keeping UDF array mutation side effects
   unsupported.
@@ -1101,7 +1104,7 @@
 - Added fixture-backed `box.set_text` boundary coverage for unsupported later
   box text style/layout methods.
 - Added fixture-backed `box.set_xloc` boundary coverage for unsupported
-  `xloc.bar_time` and chart-point box methods.
+  chart-point box methods.
 - Added fixture-backed `box.set_extend` boundary coverage for unsupported later
   box methods.
 - Added fixture-backed `box.set_border_style` boundary coverage for unsupported
@@ -2221,7 +2224,7 @@
   methods, chart-point overloads, or unsupported xloc/time variants.
 - Added fixture-backed `box.set_xloc()` support for the `xloc.bar_index`
   subset. It updates the latest existing box snapshot's left and right values;
-  `na` and deleted boxes remain no-ops, and `xloc.bar_time` stays unsupported.
+  `na` and deleted boxes remain no-ops.
 - Added fixture-backed `line.set_xloc()` support for the `xloc.bar_index`
   subset. It updates the latest existing line snapshot's x1 and x2 values;
   `na` and deleted lines remain no-ops.

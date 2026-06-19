@@ -710,19 +710,20 @@ snapshots to the oldest active line before creating new ones.
 `line.get_price` uses bar-index x1/y1/x2/y2 interpolation and extrapolation and
 returns `na` for `na`, deleted, vertical, nonnumeric, or time-coordinate lines;
 timestamp interpolation remains unsupported. The executable box subset covers
-`box.new` left/top/right/bottom creation with optional background, border,
-extend, text, text-color, text-size, horizontal-alignment, vertical-alignment,
-text-wrap, font-family, and text-formatting initialization for existing
-host-neutral snapshot fields when `xloc` is omitted or `xloc.bar_index`;
-chart-point overloads and `xloc.bar_time` remain unsupported.
+`box.new` left/top/right/bottom creation with optional xloc, background,
+border, extend, text, text-color, text-size, horizontal-alignment,
+vertical-alignment, text-wrap, font-family, and text-formatting initialization
+for existing host-neutral snapshot fields when `xloc` is omitted,
+`xloc.bar_index`, or `xloc.bar_time`; chart-point overloads remain unsupported.
 It also covers selected geometry mutators from ordinary and independent
 while-loop control-flow blocks, selected background/border/extend mutators from
 ordinary and independent while-loop control-flow blocks, selected
 text/text-color/text-size/horizontal-alignment/vertical-alignment/text-wrap/
 font-family/text-formatting mutators from ordinary and independent while-loop
 control-flow blocks,
-`box.set_xloc` for the `xloc.bar_index` subset that updates left and right
-snapshots from ordinary and independent while-loop control-flow blocks,
+`box.set_xloc` for the `xloc.bar_index`/`xloc.bar_time` subset that updates
+left, right, and xloc snapshots from ordinary and independent while-loop
+control-flow blocks,
 `box.delete` from ordinary and independent while-loop control-flow blocks, and
 fixture-backed cloning with `box.copy` over the latest existing box
 snapshot from ordinary and independent while-loop control-flow blocks, `box.all`
@@ -785,7 +786,7 @@ functions can also use Pine method syntax, where the object receiver becomes
 the first function argument; for example, `id.set_text("x")` is analyzed and
 lowered as `label.set_text(id, "x")` when `id` is a label. This method syntax
 does not widen the supported method set: unsupported drawing methods,
-chart-point overloads, and unsupported line/box xloc time-coordinate variants
+chart-point overloads and unsupported box chart-point coordinate variants
 remain unsupported.
 Deleting `na`,
 mutating `na`, or mutating an already deleted
@@ -854,9 +855,9 @@ boxes, and shares the effective box limit. `box.set_bgcolor`,
 `box.set_border_color`, `box.set_border_width`, `box.set_border_style`, and
 `box.set_extend` update box style snapshots, including when called from
 ordinary and independent while-loop control-flow blocks. `box.set_xloc` with
-`xloc.bar_index` updates left and right values in box snapshots, including when
-called from ordinary and independent while-loop control-flow blocks;
-time-coordinate box x-location remains unsupported. `box.set_left`, `box.set_top`,
+`xloc.bar_index` or `xloc.bar_time` updates left, right, and xloc values in box
+snapshots, including when called from ordinary and independent while-loop
+control-flow blocks. `box.set_left`, `box.set_top`,
 `box.set_right`, `box.set_bottom`, `box.set_lefttop`, and
 `box.set_rightbottom` update box geometry snapshots, including when called from
 ordinary and independent while-loop control-flow blocks. `box.set_text`,
