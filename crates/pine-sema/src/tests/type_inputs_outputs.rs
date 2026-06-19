@@ -1499,6 +1499,23 @@ fn rejects_invalid_table_cell_text_size() {
 }
 
 #[test]
+fn rejects_table_cell_float_text_size() {
+    let analysis = analyze(
+        "id = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"A\", text_size=19.5)\nplot(close)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_table_cell_set_int_text_size() {
     let analysis = analyze(
         "id = table.new(position.top_right, 1, 1)\ntable.cell(id, 0, 0, \"A\")\ntable.cell_set_text_size(id, 0, 0, 19)\nplot(close)\n",
