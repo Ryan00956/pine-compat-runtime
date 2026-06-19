@@ -79,6 +79,12 @@ current timeframe metadata subset exposes `timeframe.period` and
 `timeframe.main_period` as the runtime's single chart timeframe string. Main
 timeframe declaration overrides and requested-context differences are not
 claimed until a separate fixture-backed slice designs that context model.
+Input rows in `tests/fixtures/conformance.tsv` include two separate claims:
+the executable Pine `defval`/metadata subset covered by runtime fixtures, and
+the host override subset covered by Rust runtime, CLI, Python, and WASM entry
+point tests. Host overrides are keyed by analysis `inputs[].callSiteId` and are
+limited to scalar/string-like `input.*` calls; host-side `input.source`
+overrides remain outside the supported contract.
 Typed variable declarations are partial: `int`, `float`, `bool`, `string`,
 `color`, `chart.point`, and drawing-id `label`, `line`, `linefill`, `box`,
 `table`, and `polyline` declarations, plus scalar `array<int>`,
