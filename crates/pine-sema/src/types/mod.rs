@@ -245,6 +245,10 @@ pub(crate) fn can_assign(target: PineType, value: PineType) -> bool {
         && value.kind == ValueKind::Int
         && (qualifier_at_most(value.qualifier, target.qualifier)
             || target.qualifier == Qualifier::Series)
+        || target.kind == ValueKind::ChartPoint
+            && value.kind == ValueKind::Na
+            && (qualifier_at_most(value.qualifier, target.qualifier)
+                || target.qualifier == Qualifier::Series)
 }
 pub(crate) fn qualifier_at_most(actual: Qualifier, max: Qualifier) -> bool {
     qualifier_rank(actual) <= qualifier_rank(max)

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported chart point typed declaration initial value")
+
+chart.point point = close
+plot(close)

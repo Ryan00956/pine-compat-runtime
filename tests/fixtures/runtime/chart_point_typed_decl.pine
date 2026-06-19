@@ -1,0 +1,18 @@
+//@version=5
+indicator("Chart point typed declaration")
+
+chart.point current = chart.point.now(close)
+chart.point indexed = chart.point.from_index(bar_index + 1, high)
+var chart.point persistent = na
+
+persistent := na
+persistent := chart.point.copy(indexed)
+persistent.price := persistent.price + 2
+
+plot(current.time)
+plot(current.index)
+plot(current.price)
+plot(indexed.index)
+plot(indexed.price)
+plot(persistent.index)
+plot(persistent.price)

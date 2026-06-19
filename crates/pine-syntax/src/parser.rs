@@ -135,6 +135,21 @@ impl Parser {
             None
         };
 
+        if let Some((declared_type, name)) = self.try_parse_chart_point_typed_decl_name() {
+            let start = self.tokens[self.pos - 4].span;
+            self.expect(TokenKind::Eq, "expected `=` in variable declaration")?;
+            let value = self.parse_expr(0)?;
+            return Some(Stmt {
+                span: start.merge(value.span),
+                kind: StmtKind::Decl {
+                    mode: mode.unwrap_or(DeclMode::Normal),
+                    declared_type: Some(declared_type),
+                    name,
+                    value,
+                },
+            });
+        }
+
         if let TokenKind::Identifier(name) = self.current().kind.clone() {
             let start = self.current().span;
             if self.looks_like_function_decl() {
@@ -149,6 +164,7 @@ impl Parser {
                     span: start.merge(value.span),
                     kind: StmtKind::Decl {
                         mode: mode.unwrap_or(DeclMode::Normal),
+                        declared_type: None,
                         name,
                         value,
                     },
@@ -208,6 +224,32 @@ impl Parser {
             span: expr.span,
             kind: StmtKind::Expr(expr),
         })
+    }
+
+    fn try_parse_chart_point_typed_decl_name(&mut self) -> Option<(String, String)> {
+        if !self.nth_at(1, TokenKind::Dot) || !self.nth_at(4, TokenKind::Eq) {
+            return None;
+        }
+
+        let TokenKind::Identifier(namespace) = self.current().kind.clone() else {
+            return None;
+        };
+        let TokenKind::Identifier(type_name) = self.tokens.get(self.pos + 2)?.kind.clone() else {
+            return None;
+        };
+        let TokenKind::Identifier(name) = self.tokens.get(self.pos + 3)?.kind.clone() else {
+            return None;
+        };
+
+        if namespace != "chart" || type_name != "point" {
+            return None;
+        }
+
+        self.bump();
+        self.bump();
+        self.bump();
+        self.bump();
+        Some(("chart.point".to_owned(), name))
     }
 
     fn parse_tuple_decl(&mut self) -> Option<Stmt> {
@@ -989,6 +1031,44 @@ mod tests {
             ExprKind::Identifier("array.new<chart.point>".to_owned())
         );
         assert_eq!(args.len(), 2);
+    }
+
+    #[test]
+    fn parses_chart_point_typed_declaration() {
+        let parsed = parse("chart.point p = chart.point.now(close)\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl {
+            mode,
+            declared_type,
+            name,
+            ..
+        } = &parsed.program.statements[0].kind
+        else {
+            panic!("expected declaration");
+        };
+        assert_eq!(*mode, DeclMode::Normal);
+        assert_eq!(declared_type.as_deref(), Some("chart.point"));
+        assert_eq!(name, "p");
+    }
+
+    #[test]
+    fn parses_var_chart_point_typed_declaration() {
+        let parsed = parse("var chart.point p = na\n");
+
+        assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+        let StmtKind::Decl {
+            mode,
+            declared_type,
+            name,
+            ..
+        } = &parsed.program.statements[0].kind
+        else {
+            panic!("expected declaration");
+        };
+        assert_eq!(*mode, DeclMode::Var);
+        assert_eq!(declared_type.as_deref(), Some("chart.point"));
+        assert_eq!(name, "p");
     }
 
     #[test]

@@ -45,6 +45,8 @@ improved over time, but codes should remain stable once published.
 - `E_CALL_ARITY`: wrong number of call arguments.
 - `E_CALL_TARGET`: invalid function call target.
 - `E_CONDITION_TYPE`: condition expression is not bool.
+- `E_DECL_TYPE`: typed declaration uses a type name outside the supported
+  subset.
 - `E_FUNCTION_ARG_DUPLICATE`: user-defined function argument was provided more
   than once.
 - `E_FUNCTION_ARG_NAME`: unknown user-defined function named argument.

@@ -51,6 +51,7 @@ pub enum StmtKind {
     },
     Decl {
         mode: DeclMode,
+        declared_type: Option<String>,
         name: String,
         value: Expr,
     },

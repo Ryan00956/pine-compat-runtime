@@ -180,20 +180,38 @@ impl Analyzer {
                     );
                 }
             }
-            StmtKind::Decl { mode, name, value } => {
+            StmtKind::Decl {
+                mode,
+                declared_type,
+                name,
+                value,
+            } => {
                 let value_type = self.analyze_expr(value).unwrap_or(UNKNOWN);
+                let declared_pine_type =
+                    self.declared_pine_type(declared_type.as_deref(), statement.span);
+                if let Some(target_type) = declared_pine_type {
+                    self.validate_typed_declaration(name, target_type, value_type, statement.span);
+                    self.compatibility.supported.push(FeatureUse {
+                        feature: format!(
+                            "{} typed declarations",
+                            declared_type.as_deref().unwrap_or("typed")
+                        ),
+                        span: statement.span,
+                    });
+                }
+                let symbol_type = declared_pine_type.unwrap_or(value_type);
                 let (persistence, var_slot_id) =
-                    self.declaration_persistence(*mode, value_type, statement.span);
+                    self.declaration_persistence(*mode, symbol_type, statement.span);
                 let symbol = if self.block_depth > 0 || self.function_depth > 0 {
                     self.define_local_symbol_with_persistence(
                         name,
-                        value_type,
+                        symbol_type,
                         persistence,
                         var_slot_id,
                         self.function_depth == 0,
                     )
                 } else {
-                    self.define_symbol_with_persistence(name, value_type, persistence, var_slot_id)
+                    self.define_symbol_with_persistence(name, symbol_type, persistence, var_slot_id)
                 };
                 if let Some(type_name) = self.user_type_name_of_expr(value) {
                     self.mark_symbol_user_type(symbol, type_name);
@@ -317,6 +335,45 @@ impl Analyzer {
                 (PersistenceKind::Varip, Some(self.alloc_var_slot()))
             }
         }
+    }
+
+    fn declared_pine_type(&mut self, declared_type: Option<&str>, span: Span) -> Option<PineType> {
+        match declared_type {
+            Some("chart.point") => Some(PineType::new(Qualifier::Series, ValueKind::ChartPoint)),
+            Some(type_name) => {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_DECL_TYPE",
+                    format!("typed declaration `{type_name}` is not supported"),
+                    span,
+                ));
+                None
+            }
+            None => None,
+        }
+    }
+
+    fn validate_typed_declaration(
+        &mut self,
+        name: &str,
+        target_type: PineType,
+        value_type: PineType,
+        span: Span,
+    ) {
+        if target_type.kind == ValueKind::ChartPoint {
+            if !accepts_type(Accepts::ChartPointCompatible, value_type) {
+                self.diagnostics.push(Diagnostic::error(
+                    "E_ASSIGN_TYPE",
+                    format!(
+                        "cannot initialize `{name}` of type chart.point with {:?} {:?}",
+                        value_type.qualifier, value_type.kind
+                    ),
+                    span,
+                ));
+            }
+            return;
+        }
+
+        self.validate_assignment(name, target_type, value_type, span);
     }
 
     pub(crate) fn analyze_tuple_decl(&mut self, statement: &pine_syntax::Stmt) {

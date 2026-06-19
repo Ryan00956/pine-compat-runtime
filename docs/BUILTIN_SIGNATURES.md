@@ -146,7 +146,8 @@ appearance are not implemented by this fixed chart metadata subset.
 `chart.point` values, and point arrays can feed the partial `polyline.new`
 snapshot subset. `polyline.delete`, `polyline.all`, and declaration-driven
 polyline max-count eviction cover the historical and forming-bar rollback
-lifecycle subset; typed declarations and general polyline arrays remain
+lifecycle subset. `chart.point` typed declarations are fixture-backed for
+chart-point or `na` initializers, while general polyline arrays remain
 separately gated.
 
 Bar state:

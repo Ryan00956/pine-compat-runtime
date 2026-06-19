@@ -1534,6 +1534,14 @@ fn reports_unsupported_array_new_chart_point_initial_fixture() {
 }
 
 #[test]
+fn reports_unsupported_chart_point_typed_decl_initial_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_chart_point_typed_decl_initial.pine",
+        &["cannot initialize `point` of type chart.point with Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_new_int_initial_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_new_int_initial.pine",

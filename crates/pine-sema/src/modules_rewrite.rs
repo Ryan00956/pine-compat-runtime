@@ -63,8 +63,14 @@ fn rewrite_stmt(statement: &Stmt, context: &RewriteContext) -> Stmt {
             condition: rewrite_expr(condition, context),
             body: rewrite_statements(body, context),
         },
-        StmtKind::Decl { mode, name, value } => StmtKind::Decl {
+        StmtKind::Decl {
+            mode,
+            declared_type,
+            name,
+            value,
+        } => StmtKind::Decl {
             mode: *mode,
+            declared_type: declared_type.clone(),
             name: name.clone(),
             value: rewrite_expr(value, context),
         },
