@@ -1,4 +1,0 @@
-//@version=5
-indicator("Unsupported array new linefill constructor")
-values = array.new_linefill(0)
-plot(close)
