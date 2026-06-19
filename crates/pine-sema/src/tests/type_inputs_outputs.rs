@@ -1261,6 +1261,23 @@ fn rejects_invalid_box_set_text_size() {
 }
 
 #[test]
+fn rejects_box_set_float_text_size() {
+    let analysis = analyze(
+        "id = box.new(bar_index, high, bar_index, low)\nbox.set_text_size(id, 19.5)\nplot(close)\n",
+    );
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn rejects_unsupported_box_set_xloc_values() {
     let analysis = analyze(
         "id = box.new(bar_index, high, bar_index + 1, low)\nbox.set_xloc(id, time, time + 60000, xloc.bar_time)\nplot(close)\n",
