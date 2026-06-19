@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Refreshed the `polyline.*` implementation gate with an official-semantics
+  sequence covering `chart.point`, `array<chart.point>`, polyline snapshots,
+  deletion, `.all`, rollback, and host parity before support is claimed.
 - Added fixture-backed partial `array.new_linefill` and `array.from(linefill)`
   support for linefill id arrays plus generic object-array mutation, read, and
   search helpers.

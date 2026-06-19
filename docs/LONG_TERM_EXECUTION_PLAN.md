@@ -348,6 +348,8 @@ Object families:
 
 Required design:
 
+- `chart.point` value semantics and `array<chart.point>` construction are
+  prerequisites for any `polyline.new` runtime claim.
 - Runtime object ids and lifetime rules.
 - Per-bar creation, mutation, and deletion semantics.
 - Rollback behavior for forming bars.

@@ -164,8 +164,9 @@ These are not blockers for closing Phase E:
 - Remaining drawing collection support is now concentrated on `polyline.*` and
   chart-point/point-array semantics; the current linefill object lifecycle and
   object-array construction/read/mutation/search subset is fixture-backed.
-- `polyline.*` remains unsupported until the runtime has `chart.point` values
-  and typed point-list arrays.
+- `polyline.*` remains unsupported until the runtime has fixture-backed
+  `chart.point` values, typed point-list arrays, polyline snapshots, deletion,
+  `.all`, and host-surface parity.
 - Advanced label, line, box, and table methods remain diagnostic-only until
   they have semantic signatures, runtime behavior, public snapshots, fixtures,
   and conformance rows.
