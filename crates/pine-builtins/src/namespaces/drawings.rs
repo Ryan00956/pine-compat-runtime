@@ -548,7 +548,7 @@ const BOX_NEW_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "text_size",
-        accepts: Accepts::StringCastScalar,
+        accepts: Accepts::StringOrIntCompatible,
         optional: true,
     },
     BuiltinParam {

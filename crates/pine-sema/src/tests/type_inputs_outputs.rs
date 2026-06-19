@@ -1214,6 +1214,22 @@ fn rejects_invalid_box_new_text_size() {
 }
 
 #[test]
+fn rejects_box_new_float_text_size() {
+    let analysis =
+        analyze("id = box.new(bar_index, high, bar_index, low, text_size=19.5)\nplot(close)\n");
+
+    assert!(
+        analysis
+            .diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == "E_CALL_ARG_TYPE"),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_none());
+}
+
+#[test]
 fn accepts_box_set_int_text_size() {
     let analysis = analyze(
         "id = box.new(bar_index, high, bar_index, low)\nbox.set_text_size(id, 19)\nplot(close)\n",
