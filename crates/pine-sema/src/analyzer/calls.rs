@@ -1185,46 +1185,7 @@ impl Analyzer {
                 continue;
             }
 
-            let drawing_count = [("max_lines_count", 500), ("max_polylines_count", 100)]
-                .into_iter()
-                .find(|(name, _)| {
-                    arg.name.as_deref() == Some(*name)
-                        || (arg.name.is_none()
-                            && signature
-                                .params
-                                .get(index)
-                                .is_some_and(|param| param.name == *name))
-                });
-            if let Some((name, max)) = drawing_count {
-                if arg.name.is_none() {
-                    let message = format!(
-                        "`indicator` argument `{name}` must be named in the current subset"
-                    );
-                    self.diagnostics
-                        .push(Diagnostic::error("E_CALL_ARG_NAME", message, arg.span));
-                    continue;
-                }
-                if let Some(value) = const_int_value(&arg.value) {
-                    if !(1..=max).contains(&value) {
-                        let message =
-                            format!("`indicator` argument `{name}` must be between 1 and {max}");
-                        self.diagnostics.push(Diagnostic::error(
-                            "E_CALL_ARG_VALUE",
-                            message,
-                            arg.span,
-                        ));
-                    } else {
-                        match name {
-                            "max_lines_count" => {
-                                self.drawing_settings.max_lines_count = Some(value as u32);
-                            }
-                            "max_polylines_count" => {
-                                self.drawing_settings.max_polylines_count = Some(value as u32);
-                            }
-                            _ => unreachable!("known drawing-count declaration"),
-                        }
-                    }
-                }
+            if self.validate_indicator_drawing_count_arg(signature, arg, index) {
                 continue;
             }
 

@@ -587,11 +587,11 @@ plot(close)
 }
 
 #[test]
-fn rejects_box_creation_past_limit() {
+fn evicts_oldest_box_after_default_limit() {
     let source = SourceFile::new(
         "test.pine",
-        r#"indicator("box limit")
-for i = 0 to 500
+        r#"indicator("box default limit")
+for i = 0 to 50
     box.new(i, close, i, open)
 plot(close)
 "#,
@@ -603,10 +603,46 @@ plot(close)
         analysis.diagnostics
     );
 
-    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
-        .expect_err("expected box limit error");
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
 
-    assert!(error.message.contains("box count cannot exceed"));
+    assert_eq!(result.boxes.len(), 51);
+    assert_eq!(result.boxes[0].snapshots.len(), 2);
+    assert!(!result.boxes[0].snapshots.last().unwrap().exists);
+    assert_eq!(
+        result
+            .boxes
+            .iter()
+            .filter(|box_output| box_output.snapshots.last().unwrap().exists)
+            .count(),
+        50
+    );
+}
+
+#[test]
+fn evicts_oldest_box_when_creation_exceeds_declared_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("box limit", max_boxes_count=2)
+for i = 0 to 2
+    box.new(i, close, i, open)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let result = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)]).expect("runtime result");
+
+    assert_eq!(result.boxes.len(), 3);
+    assert_eq!(result.boxes[0].snapshots.len(), 2);
+    assert!(!result.boxes[0].snapshots.last().unwrap().exists);
+    assert_eq!(result.boxes[0].snapshots.last().unwrap().bar_index, 0);
+    assert!(result.boxes[1].snapshots.last().unwrap().exists);
+    assert!(result.boxes[2].snapshots.last().unwrap().exists);
 }
 
 #[test]

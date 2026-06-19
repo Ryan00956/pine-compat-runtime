@@ -801,12 +801,16 @@ and returns `na` for `na`, deleted, vertical, or nonnumeric lines;
 time-coordinate price lookup remains unsupported. `box.copy` clones the latest
 existing box snapshot into a new deterministic id, including when called from
 ordinary and independent while-loop control-flow blocks, returns `na` for `na`
-or deleted boxes, and shares the box object limit. `box.delete` removes the
-latest existing box snapshot, including when called from ordinary and
-independent while-loop control-flow blocks, and deleting `na` or already deleted
-boxes is a no-op. `box.all` returns currently existing box ids in
+or deleted boxes, and shares the effective box limit. `box.new` and `box.copy`
+use the default 50-box runtime limit when declarations omit `max_boxes_count`,
+or the named declaration value from 1 through 500, and evict the oldest active
+box by appending a deletion snapshot before creating the new box. `box.delete`
+removes the latest existing box snapshot, including when called from ordinary
+and independent while-loop control-flow blocks, and deleting `na` or already
+deleted boxes is a no-op. `box.all` returns currently existing box ids in
 creation order, including when read from ordinary and independent while-loop
-control-flow blocks after box deletion. `box.set_left`, `box.set_top`,
+control-flow blocks after box deletion or max-count eviction. `box.set_left`,
+`box.set_top`,
 `box.set_right`, `box.set_bottom`, `box.set_lefttop`, and
 `box.set_rightbottom` update the host-neutral geometry snapshot, including when
 called from ordinary and independent while-loop control-flow blocks.

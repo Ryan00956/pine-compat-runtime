@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added fixture-backed `box.new`/`box.copy` max-count eviction: omitted
+  declarations use the runtime's default 50-box limit, while named
+  `max_boxes_count` values from 1 through 500 are consumed from
+  indicator/strategy HIR and evict the oldest active box snapshots before new
+  creation.
 - Added fixture-backed `line.new`/`line.copy` max-count eviction: omitted
   declarations use the runtime's default 50-line limit, while named
   `max_lines_count` values from 1 through 500 are consumed from
@@ -3230,8 +3235,8 @@
   remain unsupported.
 - Added the initial `box.*` lifecycle: deterministic box ids, sparse public
   `boxes` snapshots for creation/mutation/deletion, selected geometry/
-  background/border mutators, realtime rollback coverage, and a deterministic
-  500-box runtime limit. Advanced box methods remain unsupported.
+  background/border mutators, and realtime rollback coverage. Advanced box
+  methods remain unsupported.
 - Added the initial `table.*` lifecycle: deterministic table ids, sparse public
   `tables` snapshots for fixed-dimension table creation and `table.cell`
   text/background/text-color writes, realtime rollback coverage, a

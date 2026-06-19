@@ -84,7 +84,7 @@ Phase G marks `strategy` as partial. The executable subset accepts
 `strategy(title, shorttitle, overlay, max_bars_back, initial_capital,
 default_qty_type, default_qty_value, commission_type, commission_value,
 slippage, backtest_fill_limits_assumption, margin_long, margin_short,
-pyramiding, named max_lines_count, named max_polylines_count)` where
+pyramiding, named max_boxes_count, named max_lines_count, named max_polylines_count)` where
 `initial_capital` must be a positive const numeric value when provided. Phase L
 accepts `default_qty_type=strategy.fixed` with positive const numeric
 `default_qty_value`; Strategy Internal Stage 12 accepts
@@ -728,7 +728,8 @@ snapshot from ordinary and independent while-loop control-flow blocks, `box.all`
 reads from ordinary and independent while-loop control-flow blocks after deletion, fixture-backed
 `box.get_left`, `box.get_right`, `box.get_top`, and `box.get_bottom` reads from
 ordinary and independent while-loop control-flow blocks after mutation, with
-sparse snapshots and a 500-box runtime limit.
+sparse snapshots plus default 50/named 1-500 `max_boxes_count` oldest-active
+box eviction before new creation.
 The executable table subset covers
 `table.new` position/dimension creation with optional `bgcolor`,
 `frame_color`, `frame_width`, `border_color`, and `border_width` initialization
@@ -846,7 +847,7 @@ line deletion or max-count eviction.
 `box.copy` clones the latest existing box
 snapshot into a new deterministic id, including when called from ordinary and
 independent while-loop control-flow blocks, returns `na` for `na` or deleted
-boxes, and shares the box runtime limit. `box.set_bgcolor`,
+boxes, and shares the effective box limit. `box.set_bgcolor`,
 `box.set_border_color`, `box.set_border_width`, `box.set_border_style`, and
 `box.set_extend` update box style snapshots, including when called from
 ordinary and independent while-loop control-flow blocks. `box.set_xloc` with

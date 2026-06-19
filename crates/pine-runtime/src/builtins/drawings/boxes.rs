@@ -28,11 +28,7 @@ impl<'a> HistoricalRuntime<'a> {
             self.eval_box_option_value(args, 17, "force_overlay", PineValue::Bool(false))?;
         let text_formatting =
             self.eval_box_text_formatting_option_value(args, 18, "text_formatting")?;
-        if self.boxes.len() >= MAX_BOXES {
-            return Err(RuntimeError {
-                message: format!("box count cannot exceed {MAX_BOXES}"),
-            });
-        }
+        self.evict_oldest_boxes_at_limit()?;
         let id = self.next_box_id;
         self.next_box_id = self
             .next_box_id
@@ -340,11 +336,7 @@ impl<'a> HistoricalRuntime<'a> {
         if !latest.exists {
             return Ok(PineValue::Na);
         }
-        if self.boxes.len() >= MAX_BOXES {
-            return Err(RuntimeError {
-                message: format!("box count cannot exceed {MAX_BOXES}"),
-            });
-        }
+        self.evict_oldest_boxes_at_limit()?;
         let copied_id = self.next_box_id;
         self.next_box_id = self
             .next_box_id
@@ -359,6 +351,50 @@ impl<'a> HistoricalRuntime<'a> {
             snapshots: vec![copied],
         });
         Ok(PineValue::Box(copied_id))
+    }
+
+    fn evict_oldest_boxes_at_limit(&mut self) -> Result<(), RuntimeError> {
+        let limit = self.max_box_count();
+        while self.active_box_count() >= limit {
+            let Some(box_output) = self.boxes.iter_mut().find(|box_output| {
+                box_output
+                    .snapshots
+                    .last()
+                    .is_some_and(|snapshot| snapshot.exists)
+            }) else {
+                break;
+            };
+            let Some(latest) = box_output.snapshots.last().cloned() else {
+                return Err(RuntimeError {
+                    message: format!("box `{}` has no snapshots", box_output.id),
+                });
+            };
+            let mut next = latest;
+            next.bar_index = self.bars;
+            next.exists = false;
+            box_output.snapshots.push(next);
+        }
+        Ok(())
+    }
+
+    fn active_box_count(&self) -> usize {
+        self.boxes
+            .iter()
+            .filter(|box_output| {
+                box_output
+                    .snapshots
+                    .last()
+                    .is_some_and(|snapshot| snapshot.exists)
+            })
+            .count()
+    }
+
+    fn max_box_count(&self) -> usize {
+        self.program
+            .drawing_settings
+            .max_boxes_count
+            .map_or(DEFAULT_MAX_BOXES, |value| value as usize)
+            .clamp(1, MAX_BOXES)
     }
 
     pub(super) fn eval_box_get_top(

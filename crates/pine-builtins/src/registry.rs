@@ -119,7 +119,7 @@ mod tests {
         assert_eq!(signature.params[12].accepts, crate::Accepts::ConstNumeric);
         assert_eq!(signature.params[13].name, "pyramiding");
         assert_eq!(signature.params[13].accepts, crate::Accepts::ConstNumeric);
-        assert_eq!(signature.params[14].name, "max_lines_count");
+        assert_eq!(signature.params[14].name, "max_boxes_count");
         assert_eq!(
             signature.params[14].accepts,
             crate::Accepts::Exact(pine_ir::PineType::new(
@@ -127,9 +127,17 @@ mod tests {
                 pine_ir::ValueKind::Int
             ))
         );
-        assert_eq!(signature.params[15].name, "max_polylines_count");
+        assert_eq!(signature.params[15].name, "max_lines_count");
         assert_eq!(
             signature.params[15].accepts,
+            crate::Accepts::Exact(pine_ir::PineType::new(
+                pine_ir::Qualifier::Const,
+                pine_ir::ValueKind::Int
+            ))
+        );
+        assert_eq!(signature.params[16].name, "max_polylines_count");
+        assert_eq!(
+            signature.params[16].accepts,
             crate::Accepts::Exact(pine_ir::PineType::new(
                 pine_ir::Qualifier::Const,
                 pine_ir::ValueKind::Int
