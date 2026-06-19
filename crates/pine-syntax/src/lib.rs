@@ -4,6 +4,8 @@ mod ast;
 mod diagnostic;
 mod lexer;
 mod parser;
+#[cfg(test)]
+mod parser_tests;
 mod source;
 
 pub use ast::{
