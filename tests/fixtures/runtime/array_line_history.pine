@@ -1,0 +1,8 @@
+//@version=5
+indicator("Line array history")
+current = line.new(bar_index, close, bar_index + 1, high)
+ids = array.new_line(1)
+ids.set(0, current)
+previous_ids = ids[1]
+previous_id = na(previous_ids) ? na : previous_ids.get(0)
+plot(na(previous_id) ? na : line.get_x1(previous_id))

@@ -483,6 +483,17 @@ fn run_script_csv_returns_array_label_history_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_array_line_history_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_line_history.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("array line history fixture should run");
+
+    assert_snapshot("runtime_array_line_history.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_array_slice_history_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_slice_history.pine"),

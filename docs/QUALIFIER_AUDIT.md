@@ -53,7 +53,7 @@ Important current rules:
   smaller set of coarse acceptors.
 - History offsets accept non-negative integer literals plus integer expressions
   at any implemented qualifier, including `series int`.
-- Scalar array, scalar slice, and label-array ids can now receive series
+- Scalar array, scalar slice, label-array, and line-array ids can now receive series
   storage for fixture-backed array history snapshots. Other object arrays,
   non-scalar slice history, map/matrix values, and broader aliasing rules remain
   undesigned.

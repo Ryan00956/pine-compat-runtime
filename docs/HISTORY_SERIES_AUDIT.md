@@ -38,7 +38,7 @@ indicator-level `max_bars_back` support.
   `negative_history_offset`.
 - Non-integer dynamic offsets such as `close[close]` are rejected with
   `dynamic_history_offset`.
-- Scalar array, scalar slice, and label-array variable history snapshots are
+- Scalar array, scalar slice, label-array, and line-array variable history snapshots are
   fixture-backed for the official `previous = a[1]` and
   `na(previous) ? na : previous.get(0)` pattern. Other object arrays, map,
   matrix, drawing-object collection, and non-scalar slice-history snapshots

@@ -183,12 +183,12 @@ Maps and matrices:
 
 History and snapshots:
 
-- Scalar array, scalar slice, and label-array variable history snapshots are
+- Scalar array, scalar slice, label-array, and line-array variable history snapshots are
   fixture-backed for the official
   `previous = a[1]; na(previous) ? na : previous.get(0)` read path: runtime
   commits retained array values as independent snapshots and returns a fresh
   copy on history reads.
-- Remaining array history behavior still needs design for non-label object
+- Remaining array history behavior still needs design for remaining object
   arrays, non-scalar slice history, and broader mutation/aliasing semantics.
 
 Slice semantics:
