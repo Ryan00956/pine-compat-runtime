@@ -1126,9 +1126,11 @@ host-neutral `polylines[].snapshots[]` entry, and records `curved`, `closed`,
 existing id and treats `na` or already-deleted ids as no-ops. `polyline.all`
 returns currently existing polyline ids in creation order. Realtime forming-bar
 updates roll back abandoned polyline creations, deletions, copied point lists,
-and `polyline.all` reads from the last confirmed drawing state. General
-polyline arrays and richer limit parity remain outside the supported subset
-until host-surface parity is fixture-backed.
+and `polyline.all` reads from the last confirmed drawing state. The historical
+runtime rejects `polyline.new` creation past the fixed 100-polyline limit.
+General polyline arrays plus declaration-driven `max_polylines_count` and
+eviction parity remain outside the supported subset until host-surface parity is
+fixture-backed.
 
 ## Determinism
 

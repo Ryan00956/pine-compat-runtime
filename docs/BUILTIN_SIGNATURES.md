@@ -134,8 +134,8 @@ appearance are not implemented by this fixed chart metadata subset.
 `price` field reads/mutation. Point arrays can feed the partial
 `polyline.new` snapshot subset. `polyline.delete` and `polyline.all` cover the
 historical and forming-bar rollback lifecycle subset; drawing point overloads,
-typed declarations, general polyline arrays, and richer limit parity remain
-separately gated.
+typed declarations, general polyline arrays, and declaration-driven polyline
+max-count/eviction parity remain separately gated.
 
 Bar state:
 

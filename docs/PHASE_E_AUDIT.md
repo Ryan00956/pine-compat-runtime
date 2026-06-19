@@ -169,8 +169,9 @@ These are not blockers for closing Phase E:
   constructor/copy/field/point-array subset, and `polyline.new`,
   `polyline.delete`, and `polyline.all` snapshots are fixture-backed for the
   historical and realtime rollback runtime subset.
-- General polyline arrays and richer polyline limit parity remain unsupported
-  until dedicated slices implement and verify them.
+- General polyline arrays plus declaration-driven polyline max-count and
+  eviction parity remain unsupported until dedicated slices implement and verify
+  them.
 - Advanced label, line, box, and table methods remain diagnostic-only until
   they have semantic signatures, runtime behavior, public snapshots, fixtures,
   and conformance rows.

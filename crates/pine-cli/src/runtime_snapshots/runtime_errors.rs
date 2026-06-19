@@ -112,6 +112,10 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "box count cannot exceed 500",
     ),
     (
+        "tests/fixtures/regressions/polyline_new_limit.pine",
+        "polyline count cannot exceed 100",
+    ),
+    (
         "tests/fixtures/regressions/table_new_count_limit.pine",
         "table count cannot exceed 50",
     ),

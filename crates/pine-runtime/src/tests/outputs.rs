@@ -574,6 +574,31 @@ plot(close)
 }
 
 #[test]
+fn rejects_polyline_creation_past_limit() {
+    let source = SourceFile::new(
+        "test.pine",
+        r#"indicator("polyline limit")
+points = array.new<chart.point>()
+array.push(points, chart.point.from_index(bar_index, close))
+for i = 0 to 100
+    polyline.new(points)
+plot(close)
+"#,
+    );
+    let analysis = analyze_source(&source);
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+
+    let error = run_historical(&analysis.hir.expect("HIR"), &[bar(1.0)])
+        .expect_err("expected polyline limit error");
+
+    assert!(error.message.contains("polyline count cannot exceed"));
+}
+
+#[test]
 fn box_copy_deleted_id_is_noop_at_limit() {
     let source = SourceFile::new(
         "test.pine",

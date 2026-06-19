@@ -37,8 +37,9 @@ top-level field mutation, and `array.new<chart.point>()` plus
 snapshots in runtime `schemaVersion: 7`. `polyline.delete` appends deletion
 snapshots and `polyline.all` returns currently existing ids. Realtime rollback
 is fixture-backed for creation, deletion, copied point lists, and `polyline.all`
-reads. General polyline arrays and richer limit parity remain outside this
-lifecycle slice.
+reads. `polyline.new` also has fixture-backed fixed 100-polyline runtime-limit
+coverage. General polyline arrays plus declaration-driven max-count and
+eviction parity remain outside this lifecycle slice.
 
 Adding a narrow `polyline.new(na)` or ad hoc tuple-based point list would create
 a different language surface from Pine and would bypass the array/type model
@@ -56,17 +57,20 @@ that conformance relies on. The implementation order is therefore:
    conformance rows and matrix gates for the partial polyline claim.
 4. Realtime rollback slice: done.
    add forming-bar creation/deletion rollback and `polyline.all` evidence.
-5. Limit parity slice:
-   add richer limit/garbage-collection parity evidence.
+5. Fixed runtime-limit slice: done.
+   add fixture-backed rejection past the runtime's fixed 100-polyline creation
+   limit.
 
-The runtime must not mark general polyline arrays or richer limit parity
-supported before those slices are fixture-backed. `array.new_polyline` remains
-out of scope until polyline id arrays have a deliberate storage and mutation
-model.
+The runtime must not mark general polyline arrays, declaration-driven
+`max_polylines_count`, or garbage-collection/eviction parity supported before
+those slices are fixture-backed. `array.new_polyline` remains out of scope until
+polyline id arrays have a deliberate storage and mutation model.
 
 `polyline.new` is backed by `tests/fixtures/runtime/polyline_new.pine`.
 `polyline.delete`, method-call deletion, and `polyline.all` collection reads are
 backed by `tests/fixtures/runtime/polyline_lifecycle.pine`, with forming-bar
-rollback backed by `tests/fixtures/realtime/polyline_rollback.pine`. General
-polyline arrays remain explicitly unsupported through the existing
-`array.new_polyline` boundary fixtures.
+rollback backed by `tests/fixtures/realtime/polyline_rollback.pine`. The fixed
+100-polyline runtime limit is backed by
+`tests/fixtures/regressions/polyline_new_limit.pine`. General polyline arrays
+remain explicitly unsupported through the existing `array.new_polyline` boundary
+fixtures.
