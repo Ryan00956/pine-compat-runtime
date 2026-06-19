@@ -49,6 +49,13 @@ cloneIf(p, flip) =>
         Point.new(p.x, p.y)
     else
         Point.new(p.x + 10, p.y)
+aliasIf(p, flip) =>
+    if flip
+        q = p
+        q
+    else
+        q = p
+        q
 cloneForAlias(p, count) =>
     for i = 0 to count
         q = p
@@ -70,6 +77,7 @@ clonedViaMakeNamed = cloneViaMakeNamed(p)
 clonedTernary = cloneTernary(p, bar_index < 2)
 clonedSwitch = cloneSwitch(p, bar_index)
 clonedIf = cloneIf(p, bar_index < 2)
+aliasedIf = aliasIf(p, bar_index < 2)
 clonedForAlias = cloneForAlias(p, 2)
 made = make(close, open)
 madeAlias = makeAlias(close, open)
@@ -91,6 +99,7 @@ plot(clonedViaMakeNamed.x + clonedViaMakeNamed.y + bar_index)
 plot(clonedTernary.x + clonedTernary.y + bar_index)
 plot(clonedSwitch.x + clonedSwitch.y + bar_index)
 plot(clonedIf.x + clonedIf.y + bar_index)
+plot(aliasedIf.x + aliasedIf.y + bar_index + 20)
 plot(clonedForAlias.x + clonedForAlias.y + bar_index)
 plot(made.x + made.y + bar_index)
 plot(madeAlias.x + madeAlias.y + bar_index)
