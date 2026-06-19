@@ -45,6 +45,7 @@ pub enum Accepts {
     ColorCompatible,
     StringCompatible,
     StringConvertible,
+    StringOrIntCompatible,
     CastScalar,
     StringCastScalar,
     ValueWhenSource,

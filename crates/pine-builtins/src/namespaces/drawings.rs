@@ -47,7 +47,7 @@ const LABEL_NEW_PARAMS: &[BuiltinParam] = &[
     },
     BuiltinParam {
         name: "size",
-        accepts: Accepts::ConstString,
+        accepts: Accepts::StringOrIntCompatible,
         optional: true,
     },
     BuiltinParam {

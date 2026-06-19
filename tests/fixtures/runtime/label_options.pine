@@ -1,6 +1,6 @@
 //@version=5
 indicator("Label options")
 if bar_index == 0
-    label_id = label.new(x=bar_index, y=high, text="start", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, tooltip="Tip")
+    label_id = label.new(x=bar_index, y=high, text="start", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=12, tooltip="Tip")
     styled = label.new(x=bar_index, y=low, text="styled", textalign=text.align_right, text_font_family=font.family_monospace, text_formatting=text.format_bold)
 plot(close)

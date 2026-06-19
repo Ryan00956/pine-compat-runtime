@@ -863,7 +863,7 @@ impl Analyzer {
                 self.validate_label_string_arg(signature, args, 3, "xloc", &["xloc.bar_index"]);
                 self.validate_label_string_arg(signature, args, 4, "yloc", &["yloc.price"]);
                 self.validate_label_string_arg(signature, args, 6, "style", LABEL_STYLES);
-                self.validate_label_string_arg(signature, args, 8, "size", LABEL_SIZES);
+                self.validate_text_size_arg(signature, args, 8, "size");
                 self.validate_label_string_arg(signature, args, 9, "textalign", TEXT_HALIGNS);
                 self.validate_label_string_arg(
                     signature,
@@ -1113,7 +1113,7 @@ impl Analyzer {
                 self.diagnostics.push(Diagnostic::error(
                     "E_CALL_ARG_VALUE",
                     format!(
-                        "`{}` argument `{name}` only supports {} or int text sizes",
+                        "`{}` argument `{name}` only supports {} or int sizes",
                         signature.name,
                         LABEL_SIZES.join(", ")
                     ),

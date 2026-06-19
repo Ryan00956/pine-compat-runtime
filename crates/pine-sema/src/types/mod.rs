@@ -135,6 +135,12 @@ pub(crate) fn accepts_type(accepts: Accepts, arg_type: PineType) -> bool {
                     | ValueKind::Na
             ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
         }
+        Accepts::StringOrIntCompatible => {
+            matches!(
+                arg_type.kind,
+                ValueKind::String | ValueKind::Int | ValueKind::Na
+            ) && qualifier_at_most(arg_type.qualifier, Qualifier::Series)
+        }
         Accepts::CastScalar => {
             matches!(
                 arg_type.kind,

@@ -1036,7 +1036,7 @@ fn collects_label_new_options() {
     let source = SourceFile::new(
         "test.pine",
         r#"indicator("label options")
-label.new(x=bar_index, y=high, text="bar", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, tooltip="Tip")
+label.new(x=bar_index, y=high, text="bar", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=12, tooltip="Tip")
 label.new(x=bar_index, y=low, text="styled", textalign=text.align_right, text_font_family=font.family_monospace, text_formatting=text.format_bold)
 plot(close)
 "#,
@@ -1064,7 +1064,7 @@ plot(close)
         PineValue::String("label.style_label_up".to_owned())
     );
     assert_eq!(snapshot.text_color, PineValue::Color(0xFFFFFF));
-    assert_eq!(snapshot.size, PineValue::String("size.small".to_owned()));
+    assert_eq!(snapshot.size, PineValue::Int(12));
     assert_eq!(snapshot.tooltip, PineValue::String("Tip".to_owned()));
     assert_eq!(
         snapshot.text_align,
