@@ -691,6 +691,62 @@ fn reports_unsupported_ta_valuewhen_occurrence_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_accdist_call_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_accdist_call.pine",
+        &["unknown function `ta.accdist`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_ao_arguments_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_ao_arguments.pine",
+        &["`ta.ao` expects at most 0 argument(s), got 1"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_bop_arguments_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_bop_arguments.pine",
+        &["`ta.bop` expects at most 0 argument(s), got 1"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_cum_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_cum_source.pine",
+        &["`ta.cum` argument `source` does not accept Const Bool"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_cross_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_cross_source.pine",
+        &["`ta.cross` argument `source2` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_crossover_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_crossover_source.pine",
+        &["`ta.crossover` argument `source2` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_crossunder_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_crossunder_source.pine",
+        &["`ta.crossunder` argument `source2` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
