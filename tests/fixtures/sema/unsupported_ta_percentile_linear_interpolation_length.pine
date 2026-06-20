@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.percentile_linear_interpolation Length")
+plot(ta.percentile_linear_interpolation(close, 2.5, 50))
