@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.tr Handle NA")
+plot(ta.tr("true"))
