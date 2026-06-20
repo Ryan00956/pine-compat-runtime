@@ -50,6 +50,13 @@ impl<'a> HistoricalRuntime<'a> {
         self.eval_array_new_with_kind(args, "array.new_linefill", ArrayElementKind::LineFill)
     }
 
+    pub(crate) fn eval_array_new_polyline(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        self.eval_array_new_with_kind(args, "array.new_polyline", ArrayElementKind::Polyline)
+    }
+
     pub(crate) fn eval_array_new_label(
         &mut self,
         args: &[HirCallArg],

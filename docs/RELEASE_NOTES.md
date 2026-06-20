@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added fixture-backed `array.new_polyline` and `array.from(polyline, ...)`
+  support for runtime-owned polyline id arrays, including generic object-array
+  storage, mutation, read, search, copy, slice, concat, reverse, clear, and
+  method-call behavior. Official `array.new<polyline>` template syntax and
+  typed `array<polyline>` declarations remain unsupported.
 - Added fixture-backed pure local UDT method coverage for constructors that
   return values from additional local UDT parameter fields through ternary,
   switch, final if/else, and final for bodies, with matching semantic analyzer
@@ -91,7 +96,8 @@
   use the runtime's default 50-polyline limit, while named
   `max_polylines_count` values from 1 through 100 are consumed from
   indicator/strategy HIR and evict the oldest active polyline snapshots before
-  new creation. General polyline arrays remain unsupported.
+  new creation. Typed `array<polyline>` declarations and
+  `array.new<polyline>` template syntax remain unsupported.
 - Added fixture-backed realtime rollback coverage for the supported
   `polyline.new` / `polyline.delete` / `polyline.all` lifecycle subset,
   proving abandoned forming-bar creation, deletion, copied point lists, and

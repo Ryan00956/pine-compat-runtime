@@ -63,15 +63,16 @@ that conformance relies on. The implementation order is therefore:
    add fixture-backed oldest-active-object eviction for the runtime's default
    polyline limit and declaration-driven `max_polylines_count` values.
 
-The runtime must not mark general polyline arrays supported before those slices
-are fixture-backed. `array.new_polyline` remains out of scope until polyline id
-arrays have a deliberate storage and mutation model.
+Polyline id arrays now have a fixture-backed storage and mutation model through
+`array.new_polyline`, `array.from(polyline, ...)`, and the generic object-array
+helper subset. Official `array.new<polyline>` template syntax and typed
+`array<polyline>` declarations remain outside this slice.
 
 `polyline.new` is backed by `tests/fixtures/runtime/polyline_new.pine`.
 `polyline.delete`, method-call deletion, and `polyline.all` collection reads are
 backed by `tests/fixtures/runtime/polyline_lifecycle.pine`, with forming-bar
 rollback backed by `tests/fixtures/realtime/polyline_rollback.pine`. The
 polyline max-count eviction path is backed by
-`tests/fixtures/runtime/polyline_limit_eviction.pine`. General polyline arrays
-remain explicitly unsupported through the existing `array.new_polyline` boundary
-fixtures.
+`tests/fixtures/runtime/polyline_limit_eviction.pine`. Polyline id array
+construction and generic object-array helpers are backed by
+`tests/fixtures/runtime/polyline_array.pine`.

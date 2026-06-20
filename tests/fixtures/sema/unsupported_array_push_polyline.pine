@@ -1,5 +1,0 @@
-//@version=5
-indicator("Unsupported array push polyline")
-a = array.new_polyline(0)
-a.push(na)
-plot(close)

@@ -1,5 +1,0 @@
-//@version=5
-indicator("Unsupported array shift polyline")
-a = array.new_polyline(0)
-value = a.shift()
-plot(close)

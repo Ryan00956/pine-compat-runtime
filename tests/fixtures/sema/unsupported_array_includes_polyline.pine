@@ -1,4 +1,0 @@
-//@version=5
-indicator("Unsupported array includes polyline")
-a = array.new_polyline(0)
-plot(a.includes(na) ? 1 : 0)

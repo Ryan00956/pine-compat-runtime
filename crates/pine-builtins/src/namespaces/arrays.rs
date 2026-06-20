@@ -93,6 +93,19 @@ const ARRAY_NEW_LINEFILL_PARAMS: &[BuiltinParam] = &[
     },
 ];
 
+const ARRAY_NEW_POLYLINE_PARAMS: &[BuiltinParam] = &[
+    BuiltinParam {
+        name: "size",
+        accepts: Accepts::SimpleInt,
+        optional: true,
+    },
+    BuiltinParam {
+        name: "initial_value",
+        accepts: Accepts::PolylineCompatible,
+        optional: true,
+    },
+];
+
 const ARRAY_NEW_LABEL_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "size",
@@ -411,6 +424,13 @@ pub(crate) const SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: ARRAY_NEW_LINEFILL_PARAMS,
         returns: ReturnSpec::Fixed(SIMPLE_LINE_FILL_ARRAY),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "array.new_polyline",
+        phase: BuiltinPhase::Phase1Core,
+        params: ARRAY_NEW_POLYLINE_PARAMS,
+        returns: ReturnSpec::Fixed(SIMPLE_POLYLINE_ARRAY),
         variadic: false,
     },
     BuiltinSignature {

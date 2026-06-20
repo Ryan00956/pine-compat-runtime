@@ -1,6 +1,0 @@
-//@version=5
-indicator("Unsupported array concat polyline")
-left = array.new_polyline(0)
-right = array.new_polyline(0)
-result = array.concat(left, right)
-plot(array.size(result))

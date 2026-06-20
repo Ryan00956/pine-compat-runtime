@@ -1,5 +1,0 @@
-//@version=5
-indicator("Unsupported array get polyline")
-a = array.new_polyline(1)
-value = a.get(0)
-plot(close)

@@ -1195,8 +1195,11 @@ runtime keeps at most the effective polyline limit active by appending
 ones. Omitted declarations use the runtime's default 50-polyline display limit;
 named `max_polylines_count` declaration arguments from 1 through 100 are parsed
 into HIR for indicators and strategies and consumed by this polyline eviction
-path. General polyline arrays remain outside the supported runtime subset until
-host-surface parity is fixture-backed.
+path. The current polyline id array subset is fixture-backed through
+`array.new_polyline`, `array.from(polyline, ...)`, and generic object-array
+storage, mutation, read, search, copy, slice, concat, reverse, and clear
+helpers. Official `array.new<polyline>` template syntax and typed
+`array<polyline>` declarations remain outside the supported runtime subset.
 
 ## Determinism
 

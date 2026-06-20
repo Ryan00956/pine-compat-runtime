@@ -1098,3 +1098,24 @@ fn accepts_linefill_array_constructor() {
     );
     assert!(analysis.hir.is_some());
 }
+
+#[test]
+fn accepts_polyline_array_constructor() {
+    let analysis = analyze(
+        "points = array.new<chart.point>()\narray.push(points, chart.point.from_index(bar_index, close))\nid = polyline.new(points)\nvalues = array.new_polyline(1, id)\nfrom_values = array.from(id)\narray.push(values, na)\nfirst = array.get(values, 0)\nplot(array.size(values) + array.size(from_values) + (first == id ? 1 : 0))\n",
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(
+        analysis
+            .compatibility
+            .supported
+            .iter()
+            .any(|feature| feature.feature == "array.new_polyline")
+    );
+    assert!(analysis.hir.is_some());
+}

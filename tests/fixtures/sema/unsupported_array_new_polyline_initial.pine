@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.new_polyline Initial")
+x = array.new_polyline(1, "polyline")
+plot(close)
