@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.tsi Short Length")
+plot(ta.tsi(close, 1.5, 3))
