@@ -1,0 +1,3 @@
+//@version=5
+indicator("PVI edge cases")
+plot(ta.pvi)
