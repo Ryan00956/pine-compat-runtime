@@ -1,0 +1,10 @@
+//@version=5
+indicator("TR Edge Cases")
+tr_default = ta.tr()
+tr_strict = ta.tr(false)
+tr_handle_na = ta.tr(true)
+tr_variable = ta.tr
+plot(tr_default)
+plot(tr_strict)
+plot(tr_handle_na)
+plot(tr_variable)
