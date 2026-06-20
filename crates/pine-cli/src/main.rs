@@ -1379,6 +1379,9 @@ mod tests {
             "tests/fixtures/runtime/correlation_edge_cases.pine" => {
                 include_str!("../../../tests/fixtures/runtime/correlation_edge_cases_bars.csv")
             }
+            "tests/fixtures/runtime/covariance_edge_cases.pine" => {
+                include_str!("../../../tests/fixtures/runtime/covariance_edge_cases_bars.csv")
+            }
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }
     }

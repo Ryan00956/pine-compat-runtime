@@ -282,6 +282,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "runtime_covariance.json",
         "tests/fixtures/runtime/covariance.pine",
     ),
+    (
+        "runtime_covariance_edge_cases.json",
+        "tests/fixtures/runtime/covariance_edge_cases.pine",
+    ),
     ("runtime_median.json", "tests/fixtures/runtime/median.pine"),
     ("runtime_mode.json", "tests/fixtures/runtime/mode.pine"),
     (

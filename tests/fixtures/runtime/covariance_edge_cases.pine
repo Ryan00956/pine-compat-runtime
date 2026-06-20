@@ -1,0 +1,12 @@
+//@version=5
+indicator("Covariance edge cases")
+same = ta.covariance(close, close, 3)
+inverse = ta.covariance(close, -close, 3)
+flat = ta.covariance(close, open, 3)
+with_na = ta.covariance(close, bar_index == 3 ? na : high, 3)
+invalid = ta.covariance(close, high, 0)
+plot(same)
+plot(inverse)
+plot(flat)
+plot(with_na)
+plot(invalid)
