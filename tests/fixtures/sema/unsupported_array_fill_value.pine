@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.fill Value")
+values = array.new_bool(2)
+array.fill(values, close)
+plot(close)
