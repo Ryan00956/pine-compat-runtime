@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported array.new_table Initial")
+x = array.new_table(1, "table")
