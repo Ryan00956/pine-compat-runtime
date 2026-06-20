@@ -1,0 +1,11 @@
+//@version=5
+indicator("RSI Edge Cases")
+missing_source = bar_index == 3 ? na : close
+down_source = 10 - close
+flat_source = close - close + 1
+plot(ta.rsi(close, 2))
+plot(ta.rsi(close, 1))
+plot(ta.rsi(close, 0))
+plot(ta.rsi(missing_source, 2))
+plot(ta.rsi(down_source, 2))
+plot(ta.rsi(flat_source, 2))
