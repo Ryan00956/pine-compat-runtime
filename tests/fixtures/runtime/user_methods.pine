@@ -26,6 +26,13 @@ method choose(Point p, Point other) => other
 method chooseBlock(Point p, Point other) =>
     copy = other
     copy
+method chooseIf(Point p, Point other, bool flip) =>
+    if flip
+        copy = other
+        copy
+    else
+        copy = other
+        copy
 method wrap(Point p, Point other) => p.choose(other)
 method clone(Point p) => Point.new(p.x)
 method cloneOther(Point p, Point other) => Point.new(other.x)
@@ -82,6 +89,7 @@ sameIf = p.keepIf(bar_index < 2)
 sameFor = p.keepFor(2)
 chosen = p.choose(q)
 chosenBlock = p.chooseBlock(q)
+chosenIf = p.chooseIf(q, bar_index < 2)
 wrapped = p.wrap(q)
 cloned = p.clone()
 clonedOther = p.cloneOther(q)
@@ -108,6 +116,7 @@ plot(same.x + close)
 plot(sameBlock.x + close)
 plot(chosen.x + close)
 plot(chosenBlock.x + close)
+plot(chosenIf.x + close + 20)
 plot(wrapped.x + close)
 plot(cloned.x + close)
 plot(clonedOther.x + close)
