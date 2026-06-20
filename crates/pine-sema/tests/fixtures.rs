@@ -2674,6 +2674,14 @@ fn reports_unsupported_array_covariance_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_covariance_id2_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_covariance_id2.pine",
+        &["`array.covariance` argument `id2` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_percentrank_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_percentrank_bool.pine",
