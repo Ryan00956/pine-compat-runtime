@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.lowestbars Source")
+x = ta.lowestbars("x", 3)
