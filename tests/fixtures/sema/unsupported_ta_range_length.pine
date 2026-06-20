@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.range Length")
+plot(ta.range(close, 1.5))
