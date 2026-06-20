@@ -1,0 +1,12 @@
+//@version=5
+indicator("Percent Rank edge cases")
+rank = ta.percentrank(close, 3)
+low_rank = ta.percentrank(bar_index == 3 ? 1 : close, 3)
+simple = ta.percentrank(3, 3)
+with_na = ta.percentrank(bar_index == 3 ? na : close, 3)
+invalid = ta.percentrank(close, 0)
+plot(rank)
+plot(low_rank)
+plot(simple)
+plot(with_na)
+plot(invalid)

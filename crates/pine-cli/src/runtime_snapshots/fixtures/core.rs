@@ -316,6 +316,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "runtime_percentrank.json",
         "tests/fixtures/runtime/percentrank.pine",
     ),
+    (
+        "runtime_percentrank_edge_cases.json",
+        "tests/fixtures/runtime/percentrank_edge_cases.pine",
+    ),
     ("runtime_stdev.json", "tests/fixtures/runtime/stdev.pine"),
     (
         "runtime_variance.json",
