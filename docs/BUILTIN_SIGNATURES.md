@@ -103,6 +103,12 @@ label.new(point: chart.point-compatible, text?: string-compatible, xloc?: const 
 label.set_point(id: label-compatible, point: chart.point-compatible) -> void
 line.new(x1: int-compatible, y1: numeric-compatible, x2: int-compatible, y2: numeric-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
 line.new(first_point: chart.point-compatible, second_point: chart.point-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
+linefill.new(line1: line-compatible, line2: line-compatible, color: color-compatible) -> series linefill
+linefill.set_color(id: linefill-compatible, color: color-compatible) -> void
+linefill.get_line1(id: linefill-compatible) -> series line
+linefill.get_line2(id: linefill-compatible) -> series line
+linefill.delete(id: linefill-compatible) -> void
+linefill.all -> simple array<linefill>
 line.set_first_point(id: line-compatible, point: chart.point-compatible) -> void
 line.set_second_point(id: line-compatible, point: chart.point-compatible) -> void
 box.new(left: int-compatible, top: numeric-compatible, right: int-compatible, bottom: numeric-compatible, border_color?: color-compatible, border_width?: int-compatible, border_style?: const string, extend?: const string, xloc?: const string, bgcolor?: color-compatible, text?: string-compatible, text_size?: string-or-int-compatible, text_color?: color-compatible, text_halign?: const string, text_valign?: const string, text_wrap?: const string, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series box
