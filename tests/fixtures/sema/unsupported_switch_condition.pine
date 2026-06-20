@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported switch Condition")
+x = switch
+    "true" => 1
+    => 0
