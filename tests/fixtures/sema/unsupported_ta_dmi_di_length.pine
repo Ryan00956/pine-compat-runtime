@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported ta.dmi diLength")
+[plus, minus, adx] = ta.dmi(1.5, 2)
+plot(plus)
+plot(minus)
+plot(adx)
