@@ -3818,6 +3818,16 @@ fn reports_unsupported_array_binary_search_rightmost_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_rightmost_value_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_binary_search_rightmost_value.pine",
+        &[
+            "`array.binary_search_rightmost` argument `value` does not accept Const String for int arrays",
+        ],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_standardize_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_standardize_bool.pine",
