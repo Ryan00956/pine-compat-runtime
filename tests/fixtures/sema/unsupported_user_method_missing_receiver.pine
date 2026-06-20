@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported user method missing receiver")
+type Point
+    float x
+
+method value() => close
+plot(value())
