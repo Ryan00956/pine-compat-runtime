@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported ta.kc Mult")
+[basis, upper, lower] = ta.kc(close, 3, close)
+plot(basis)

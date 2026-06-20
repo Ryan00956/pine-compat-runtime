@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported ta.kc useTrueRange")
+[basis, upper, lower] = ta.kc(close, 3, 2, "bad")
+plot(basis)
