@@ -2408,14 +2408,6 @@ fn reports_unsupported_array_typed_decl_initial_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_polyline_typed_decl_fixture() {
-    assert_diagnostic_messages(
-        "tests/fixtures/sema/unsupported_array_polyline_typed_decl.pine",
-        &["typed declaration `array<polyline>` is not supported"],
-    );
-}
-
-#[test]
 fn reports_unsupported_array_new_int_initial_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_array_new_int_initial.pine",

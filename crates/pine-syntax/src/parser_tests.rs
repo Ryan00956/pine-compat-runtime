@@ -85,6 +85,24 @@ fn parses_object_array_new_template_call() {
 }
 
 #[test]
+fn parses_polyline_array_new_template_call() {
+    let parsed = parse("paths = array.new<polyline>(1, polyline.new(points))\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl { value, .. } = &parsed.program.statements[0].kind else {
+        panic!("expected declaration");
+    };
+    let ExprKind::Call { callee, args } = &value.kind else {
+        panic!("expected call");
+    };
+    assert_eq!(
+        callee.kind,
+        ExprKind::Identifier("array.new_polyline".to_owned())
+    );
+    assert_eq!(args.len(), 2);
+}
+
+#[test]
 fn parses_chart_point_typed_declaration() {
     let parsed = parse("chart.point p = chart.point.now(close)\n");
 
@@ -177,6 +195,25 @@ fn parses_dotted_array_typed_declaration() {
     assert_eq!(*mode, DeclMode::Normal);
     assert_eq!(declared_type.as_deref(), Some("array<chart.point>"));
     assert_eq!(name, "points");
+}
+
+#[test]
+fn parses_polyline_array_typed_declaration() {
+    let parsed = parse("array<polyline> paths = array.new<polyline>()\n");
+
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let StmtKind::Decl {
+        mode,
+        declared_type,
+        name,
+        ..
+    } = &parsed.program.statements[0].kind
+    else {
+        panic!("expected declaration");
+    };
+    assert_eq!(*mode, DeclMode::Normal);
+    assert_eq!(declared_type.as_deref(), Some("array<polyline>"));
+    assert_eq!(name, "paths");
 }
 
 #[test]

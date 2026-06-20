@@ -64,9 +64,9 @@ that conformance relies on. The implementation order is therefore:
    polyline limit and declaration-driven `max_polylines_count` values.
 
 Polyline id arrays now have a fixture-backed storage and mutation model through
-`array.new_polyline`, `array.from(polyline, ...)`, and the generic object-array
-helper subset. Official `array.new<polyline>` template syntax and typed
-`array<polyline>` declarations remain outside this slice.
+`array.new_polyline`, official `array.new<polyline>` template syntax,
+typed `array<polyline>`/`polyline[]` declarations, `array.from(polyline, ...)`,
+and the generic object-array helper subset.
 
 `polyline.new` is backed by `tests/fixtures/runtime/polyline_new.pine`.
 `polyline.delete`, method-call deletion, and `polyline.all` collection reads are

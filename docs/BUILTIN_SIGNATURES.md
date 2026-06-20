@@ -584,13 +584,14 @@ Typed variable declarations are fixture-backed for `int`, `float`, `bool`,
 `string`, `color`, `chart.point`, and drawing-id `label`, `line`, `linefill`,
 `box`, `table`, and `polyline` values, plus scalar `array<int>`,
 `array<float>`, `array<bool>`, `array<string>`, `array<color>`, and
-object-id `array<label>`, `array<line>`, `array<linefill>`, `array<box>`,
-`array<table>`, and `array<chart.point>` values, with compatible or `na`
+object-id `array<label>`, `array<line>`, `array<linefill>`,
+`array<polyline>`, `array<box>`, `array<table>`, and `array<chart.point>`
+values, with compatible or `na`
 initializers. The equivalent `type[]` aliases are fixture-backed for the same
 supported array element types, including `var` declarations and the scalar
 typed-array `varip` subset. These declarations assign the declared value kind to
 the symbol, so later compatible reassignment works after `na` initialization.
-Bare `array`, `array<polyline>`/`polyline[]`, UDT, map, matrix, and other typed
+Bare `array`, UDT, map, matrix, and other typed
 declarations remain unsupported with semantic diagnostics unless covered by a
 narrower fixture-backed row.
 `indicator(..., scale=...)` accepts the fixture-backed `scale.left`,
@@ -1021,6 +1022,7 @@ array.new<line>(size?: simple int, initial_value?: line-compatible) -> simple li
 array.new_linefill(size?: simple int, initial_value?: linefill-compatible) -> simple linefill-array
 array.new<linefill>(size?: simple int, initial_value?: linefill-compatible) -> simple linefill-array
 array.new_polyline(size?: simple int, initial_value?: polyline-compatible) -> simple polyline-array
+array.new<polyline>(size?: simple int, initial_value?: polyline-compatible) -> simple polyline-array
 array.new_box(size?: simple int, initial_value?: box-compatible) -> simple box-array
 array.new<box>(size?: simple int, initial_value?: box-compatible) -> simple box-array
 array.new_table(size?: simple int, initial_value?: table-compatible) -> simple table-array
@@ -1076,8 +1078,8 @@ The supported typed-array subset covers float, int, bool, string, color, label,
 line, linefill, polyline, box, table, and chart.point arrays. Scalar and drawing-object
 arrays can be constructed through the supported type-specific `array.new_*`
 calls or the official `array.new<type>`
-syntax for float, int, bool, string, color, label, line, linefill, box, and
-table, while polyline arrays are constructed through `array.new_polyline`.
+syntax for float, int, bool, string, color, label, line, linefill, polyline,
+box, and table.
 Float arrays accept int or float values and store them as floats. Int
 arrays accept int values. Bool arrays accept bool values. String arrays accept
 string values. Color arrays accept color values. Label, line, linefill, polyline, box,

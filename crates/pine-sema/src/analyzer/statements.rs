@@ -361,6 +361,9 @@ impl Analyzer {
             Some("array<linefill>") => {
                 Some(PineType::new(Qualifier::Series, ValueKind::LineFillArray))
             }
+            Some("array<polyline>") => {
+                Some(PineType::new(Qualifier::Series, ValueKind::PolylineArray))
+            }
             Some("array<box>") => Some(PineType::new(Qualifier::Series, ValueKind::BoxArray)),
             Some("array<table>") => Some(PineType::new(Qualifier::Series, ValueKind::TableArray)),
             Some("array<chart.point>") => {
@@ -487,6 +490,7 @@ fn typed_declaration_name(kind: ValueKind) -> &'static str {
         ValueKind::LabelArray => "array<label>",
         ValueKind::LineArray => "array<line>",
         ValueKind::LineFillArray => "array<linefill>",
+        ValueKind::PolylineArray => "array<polyline>",
         ValueKind::BoxArray => "array<box>",
         ValueKind::TableArray => "array<table>",
         ValueKind::ChartPointArray => "array<chart.point>",

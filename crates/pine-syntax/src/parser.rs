@@ -1017,6 +1017,9 @@ impl Parser {
                 TokenKind::Identifier(type_name) if type_name == "linefill" => {
                     Some(("array.new_linefill", 2))
                 }
+                TokenKind::Identifier(type_name) if type_name == "polyline" => {
+                    Some(("array.new_polyline", 2))
+                }
                 TokenKind::Identifier(type_name) if type_name == "box" => {
                     Some(("array.new_box", 2))
                 }
