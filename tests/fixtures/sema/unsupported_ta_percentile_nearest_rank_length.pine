@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.percentile_nearest_rank Length")
+plot(ta.percentile_nearest_rank(close, 2.5, 50))
