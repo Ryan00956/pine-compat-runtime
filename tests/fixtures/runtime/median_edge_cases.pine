@@ -1,0 +1,12 @@
+//@version=5
+indicator("Median edge cases")
+odd = ta.median(close, 3)
+even = ta.median(close, 4)
+simple = ta.median(3, 3)
+with_na = ta.median(bar_index == 3 ? na : close, 3)
+invalid = ta.median(close, 0)
+plot(odd)
+plot(even)
+plot(simple)
+plot(with_na)
+plot(invalid)
