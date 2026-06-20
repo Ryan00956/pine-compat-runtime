@@ -3873,6 +3873,14 @@ fn reports_unsupported_array_concat_mismatch_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_concat_id2_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_concat_id2.pine",
+        &["`array.concat` argument `id2` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_concat_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_concat_polyline.pine",

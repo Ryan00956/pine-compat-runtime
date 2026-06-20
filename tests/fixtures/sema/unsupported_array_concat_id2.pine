@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.concat Id2")
+values = array.new_int(1, 1)
+returned = array.concat(values, close)
+plot(array.size(returned))
