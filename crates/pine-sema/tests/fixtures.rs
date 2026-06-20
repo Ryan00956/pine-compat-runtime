@@ -2277,6 +2277,14 @@ fn reports_unsupported_array_sort_indices_color_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_indices_order_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_indices_order.pine",
+        &["`array.sort_indices` argument `order` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_stdev_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_stdev_bool.pine",
