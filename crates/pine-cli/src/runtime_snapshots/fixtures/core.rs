@@ -186,6 +186,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/conditional_ta.pine",
     ),
     ("runtime_ta.json", "tests/fixtures/runtime/ta.pine"),
+    (
+        "runtime_ema_rma_edge_cases.json",
+        "tests/fixtures/runtime/ema_rma_edge_cases.pine",
+    ),
     ("runtime_stoch.json", "tests/fixtures/runtime/stoch.pine"),
     ("runtime_wpr.json", "tests/fixtures/runtime/wpr.pine"),
     (

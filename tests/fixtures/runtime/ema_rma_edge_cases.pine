@@ -1,0 +1,11 @@
+//@version=5
+indicator("EMA/RMA Edge Cases")
+missing_source = bar_index == 2 ? na : close
+plot(ta.ema(close, 2))
+plot(ta.ema(close, 1))
+plot(ta.ema(close, 0))
+plot(ta.ema(missing_source, 2))
+plot(ta.rma(close, 2))
+plot(ta.rma(close, 1))
+plot(ta.rma(close, -1))
+plot(ta.rma(missing_source, 2))
