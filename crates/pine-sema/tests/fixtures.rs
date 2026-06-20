@@ -3877,6 +3877,14 @@ fn reports_unsupported_user_method_param_type_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_method_recursive_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_method_recursive.pine",
+        "E_RECURSIVE_METHOD",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_unknown_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_method_unknown.pine",

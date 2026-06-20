@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported recursive user method")
+type Point
+    float x
+
+method loop(Point p) => p.loop()
+p = Point.new(close)
+plot(p.loop())
