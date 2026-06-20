@@ -98,7 +98,7 @@ chart.point.now(price: numeric-compatible) -> series chart.point
 chart.point.from_index(index: int-compatible, price: numeric-compatible) -> series chart.point
 chart.point.from_time(time: int-compatible, price: numeric-compatible) -> series chart.point
 chart.point.copy(id: chart.point-compatible) -> series chart.point
-label.new(point: chart.point-compatible, text: string-compatible, xloc?: const string, yloc?: const string, color?: color-compatible, style?: const string, textcolor?: color-compatible, size?: string-or-int-compatible, textalign?: const string, tooltip?: string-compatible, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series label
+label.new(point: chart.point-compatible, text?: string-compatible, xloc?: const string, yloc?: const string, color?: color-compatible, style?: const string, textcolor?: color-compatible, size?: string-or-int-compatible, textalign?: const string, tooltip?: string-compatible, text_font_family?: const string, force_overlay?: const bool, text_formatting?: int-compatible) -> series label
 label.set_point(id: label-compatible, point: chart.point-compatible) -> void
 line.new(x1: int-compatible, y1: numeric-compatible, x2: int-compatible, y2: numeric-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line
 line.new(first_point: chart.point-compatible, second_point: chart.point-compatible, xloc?: const string, extend?: const string, color?: color-compatible, style?: const string, width?: int-compatible, force_overlay?: const bool) -> series line

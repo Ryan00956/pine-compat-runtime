@@ -39,14 +39,9 @@ impl<'a> HistoricalRuntime<'a> {
                 message: "label.new missing y argument".to_owned(),
             });
         };
-        let Some(text_arg) = label_call_arg_expr(args, 2, "text") else {
-            return Err(RuntimeError {
-                message: "label.new missing text argument".to_owned(),
-            });
-        };
-
         let y = self.eval_expr(y_arg)?;
-        let text = self.eval_expr(text_arg)?;
+        let text =
+            self.eval_label_option_value(args, 2, "text", PineValue::String(String::new()))?;
         let xloc = self.eval_label_option(args, 3, "xloc", "xloc.bar_index")?;
         let yloc = self.eval_label_option(args, 4, "yloc", "yloc.price")?;
         let color = self.eval_label_option_value(args, 5, "color", PineValue::Color(0x2196F3))?;
@@ -88,7 +83,8 @@ impl<'a> HistoricalRuntime<'a> {
         } else {
             point
         };
-        let text = self.eval_required_label_arg(args, 1, "text")?;
+        let text =
+            self.eval_label_option_value(args, 1, "text", PineValue::String(String::new()))?;
         let xloc = self.eval_label_option(args, 2, "xloc", "xloc.bar_index")?;
         let yloc = self.eval_label_option(args, 3, "yloc", "yloc.price")?;
         let color = self.eval_label_option_value(args, 4, "color", PineValue::Color(0x2196F3))?;

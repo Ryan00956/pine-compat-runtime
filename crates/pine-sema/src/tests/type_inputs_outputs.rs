@@ -547,7 +547,7 @@ fn accepts_plotcandle() {
 #[test]
 fn accepts_minimal_label_new() {
     let analysis = analyze(
-        "id = label.new(bar_index, high, \"High\")\nother = label.new(x=1, y=close, text=\"Close\", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, textalign=text.align_right, tooltip=\"Tip\", text_font_family=font.family_monospace, text_formatting=text.format_bold)\ntime_label = label.new(time, close, \"Time\", xloc=xloc.bar_time)\nabove = label.new(bar_index, high, \"Above\", yloc=yloc.abovebar)\nbelow = label.new(bar_index, low, \"Below\", yloc=yloc.belowbar)\nsquare = label.new(bar_index, high, \"Square\", style=label.style_square)\ndiamond = label.new(bar_index, high, \"Diamond\", style=label.style_diamond)\ncenter = label.new(bar_index, high, \"Center\", style=label.style_label_center)\nplot(close)\n",
+        "id = label.new(bar_index, high, \"High\")\nomitted_text = label.new(bar_index, high)\nnamed_omitted_text = label.new(x=bar_index, y=high, xloc=xloc.bar_index)\nother = label.new(x=1, y=close, text=\"Close\", xloc=xloc.bar_index, yloc=yloc.price, color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, textalign=text.align_right, tooltip=\"Tip\", text_font_family=font.family_monospace, text_formatting=text.format_bold)\ntime_label = label.new(time, close, \"Time\", xloc=xloc.bar_time)\nabove = label.new(bar_index, high, \"Above\", yloc=yloc.abovebar)\nbelow = label.new(bar_index, low, \"Below\", yloc=yloc.belowbar)\nsquare = label.new(bar_index, high, \"Square\", style=label.style_square)\ndiamond = label.new(bar_index, high, \"Diamond\", style=label.style_diamond)\ncenter = label.new(bar_index, high, \"Center\", style=label.style_label_center)\nplot(close)\n",
     );
 
     assert!(
@@ -568,7 +568,7 @@ fn accepts_minimal_label_new() {
 #[test]
 fn accepts_label_new_chart_point_overload() {
     let analysis = analyze(
-        "index_point = chart.point.from_index(bar_index + 1, high)\nid = label.new(index_point, \"index\", color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, textalign=text.align_left, tooltip=\"Tip\", text_font_family=font.family_monospace, text_formatting=text.format_bold)\ntime_point = chart.point.from_time(time + 60000, low)\ntime_id = label.new(point=time_point, text=\"time\", xloc=xloc.bar_time, yloc=yloc.belowbar)\nmissing = label.new(point=na, text=\"missing\")\nplot(label.get_x(id) + label.get_x(time_id) + nz(label.get_x(missing), 0))\n",
+        "index_point = chart.point.from_index(bar_index + 1, high)\nid = label.new(index_point, \"index\", color=color.green, style=label.style_label_up, textcolor=color.white, size=size.small, textalign=text.align_left, tooltip=\"Tip\", text_font_family=font.family_monospace, text_formatting=text.format_bold)\ntime_point = chart.point.from_time(time + 60000, low)\ntime_id = label.new(point=time_point, xloc=xloc.bar_time, yloc=yloc.belowbar)\nmissing = label.new(point=na)\nplot(label.get_x(id) + label.get_x(time_id) + nz(label.get_x(missing), 0))\n",
     );
 
     assert!(

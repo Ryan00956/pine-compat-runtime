@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added support for omitted `label.new` text in scalar and chart-point overloads,
+  defaulting the runtime snapshot text to an empty string.
 - Aligned `label.new` omitted `color` and `textcolor` runtime snapshots for
   scalar and chart-point overloads with the official defaults.
 - Aligned `box.new` omitted `border_color`, `bgcolor`, `text_color`, and

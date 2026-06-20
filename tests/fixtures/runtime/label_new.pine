@@ -2,4 +2,6 @@
 indicator("Label new")
 if bar_index == 0
     label_id = label.new(bar_index, high, "start")
+if bar_index == 1
+    empty_text = label.new(bar_index, high)
 plot(close)

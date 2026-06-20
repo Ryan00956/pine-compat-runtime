@@ -72,7 +72,7 @@ struct BoxNewParam {
 const LABEL_NEW_SCALAR_PARAMS: &[LabelNewParam] = &[
     label_param("x", Accepts::IntCompatible, false),
     label_param("y", Accepts::NumericCompatible, false),
-    label_param("text", Accepts::StringCompatible, false),
+    label_param("text", Accepts::StringCompatible, true),
     label_param("xloc", Accepts::ConstString, true),
     label_param("yloc", Accepts::ConstString, true),
     label_param("color", Accepts::ColorCompatible, true),
@@ -88,7 +88,7 @@ const LABEL_NEW_SCALAR_PARAMS: &[LabelNewParam] = &[
 
 const LABEL_NEW_POINT_PARAMS: &[LabelNewParam] = &[
     label_param("point", Accepts::ChartPointCompatible, false),
-    label_param("text", Accepts::StringCompatible, false),
+    label_param("text", Accepts::StringCompatible, true),
     label_param("xloc", Accepts::ConstString, true),
     label_param("yloc", Accepts::ConstString, true),
     label_param("color", Accepts::ColorCompatible, true),

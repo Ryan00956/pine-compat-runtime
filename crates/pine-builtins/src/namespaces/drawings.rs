@@ -26,7 +26,7 @@ const LABEL_NEW_PARAMS: &[BuiltinParam] = &[
     BuiltinParam {
         name: "text",
         accepts: Accepts::StringCompatible,
-        optional: false,
+        optional: true,
     },
     BuiltinParam {
         name: "xloc",
@@ -87,7 +87,7 @@ const LABEL_NEW_PARAMS: &[BuiltinParam] = &[
 
 const LABEL_NEW_POINT_PARAMS: &[BuiltinParam] = &[
     param("point", Accepts::ChartPointCompatible, false),
-    param("text", Accepts::StringCompatible, false),
+    param("text", Accepts::StringCompatible, true),
     param("xloc", Accepts::ConstString, true),
     param("yloc", Accepts::ConstString, true),
     param("color", Accepts::ColorCompatible, true),
