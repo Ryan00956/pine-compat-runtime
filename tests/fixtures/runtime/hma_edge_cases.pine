@@ -1,0 +1,9 @@
+//@version=5
+indicator("HMA edge cases")
+missing_source = bar_index == 1 ? na : close
+flat_source = close - close + 3
+plot(ta.hma(close, 0))
+plot(ta.hma(close, -1))
+plot(ta.hma(close, 2))
+plot(ta.hma(missing_source, 2))
+plot(ta.hma(flat_source, 2))
