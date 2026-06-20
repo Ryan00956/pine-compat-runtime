@@ -1,0 +1,8 @@
+//@version=5
+indicator("WPR edge cases")
+value = ta.wpr(3)
+single_bar = ta.wpr(1)
+invalid = ta.wpr(0)
+plot(value)
+plot(single_bar)
+plot(na(invalid) ? 1 : 0)
