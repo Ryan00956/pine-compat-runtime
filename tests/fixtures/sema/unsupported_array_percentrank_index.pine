@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.percentrank Index")
+values = array.new_int(2, 1)
+plot(array.percentrank(values, "0"))
