@@ -1,0 +1,10 @@
+//@version=5
+indicator("COG Edge Cases")
+missing_source = bar_index == 2 ? na : close
+zero_source = close - close
+plot(ta.cog(close, 3))
+plot(ta.cog(close, 1))
+plot(ta.cog(close, 0))
+plot(ta.cog(close, -1))
+plot(ta.cog(zero_source, 2))
+plot(ta.cog(missing_source, 3))
