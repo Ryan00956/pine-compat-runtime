@@ -113,7 +113,7 @@ plot(close)
         assert_eq!(snapshot.y1, PineValue::Float(bar_index as f64 + 1.0));
         assert_eq!(snapshot.x2, PineValue::Int(bar_index as i64));
         assert_eq!(snapshot.y2, PineValue::Float(bar_index as f64 + 1.0));
-        assert_eq!(snapshot.color, PineValue::Na);
+        assert_eq!(snapshot.color, PineValue::Color(0x2196F3));
         assert_eq!(snapshot.width, PineValue::Int(1));
         assert_eq!(
             snapshot.style,

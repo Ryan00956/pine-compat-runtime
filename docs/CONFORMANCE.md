@@ -714,8 +714,9 @@ independent while-loop control-flow read coverage, with default 50/named 1-500
 executable line subset covers `line.new` x1/y1/x2/y2 creation with optional
 xloc, extend, color, style, and width initialization for existing host-neutral
 snapshot fields when `xloc` is omitted, `xloc.bar_index`, or `xloc.bar_time`,
-plus the `chart.point` first_point/second_point overload using point indexes or
-times according to `xloc`. It also covers selected
+with omitted color defaulting to `color.blue`, plus the `chart.point`
+first_point/second_point overload using point indexes or times according to
+`xloc`. It also covers selected
 endpoint/color/width/style/extend mutators, `line.set_first_point` and
 `line.set_second_point` using point indexes or times according to each line's
 current `xloc`, and `line.set_xloc` for the `xloc.bar_index`/`xloc.bar_time`

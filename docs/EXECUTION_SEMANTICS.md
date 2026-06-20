@@ -692,9 +692,10 @@ bar-index x coordinates, price y coordinates,
 selected color/width/style and extend fields, snapshot cloning, non-reused ids,
 and declaration-driven max-count eviction. `line.new` can initialize existing line
 snapshot fields for xloc, extend, color, style, and width when `xloc` is
-omitted, `xloc.bar_index`, or `xloc.bar_time`; the chart-point overload uses
-`point.index` or `point.time` according to `xloc`; `force_overlay` is accepted
-but remains a host display responsibility. Selected `line.set_*` mutators update
+omitted, `xloc.bar_index`, or `xloc.bar_time`; omitted `color` records the
+official `color.blue` default. The chart-point overload uses `point.index` or
+`point.time` according to `xloc`; `force_overlay` is accepted but remains a
+host display responsibility. Selected `line.set_*` mutators update
 endpoint/color/width/style/extend snapshots, and `line.set_xloc` with
 `xloc.bar_index` or `xloc.bar_time` updates the line's x1, x2, and xloc
 snapshot values, including when called from ordinary and independent while-loop

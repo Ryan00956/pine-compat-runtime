@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Aligned `line.new` omitted `color` runtime snapshots for both coordinate and
+  chart-point overloads with the official `color.blue` default.
 - Aligned `polyline.new` omitted `line_color` runtime snapshots with the
   official `color.blue` default and extended the fixture-backed snapshot
   coverage for omitted style arguments.

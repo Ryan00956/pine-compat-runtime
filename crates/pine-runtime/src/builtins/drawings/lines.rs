@@ -16,7 +16,7 @@ impl<'a> HistoricalRuntime<'a> {
         let y2 = self.eval_required_line_arg(args, 3, "y2")?;
         let xloc = self.eval_line_option(args, 4, "xloc", "xloc.bar_index")?;
         let extend = self.eval_line_option(args, 5, "extend", "extend.none")?;
-        let color = self.eval_line_option_value(args, 6, "color", PineValue::Na)?;
+        let color = self.eval_line_option_value(args, 6, "color", PineValue::Color(0x2196F3))?;
         let style = self.eval_line_option(args, 7, "style", "line.style_solid")?;
         let width = self.eval_line_option_value(args, 8, "width", PineValue::Int(1))?;
         let _force_overlay =
@@ -47,7 +47,7 @@ impl<'a> HistoricalRuntime<'a> {
         let second = self.eval_required_line_arg(args, 1, "second_point")?;
         let xloc = self.eval_line_option(args, 2, "xloc", "xloc.bar_index")?;
         let extend = self.eval_line_option(args, 3, "extend", "extend.none")?;
-        let color = self.eval_line_option_value(args, 4, "color", PineValue::Na)?;
+        let color = self.eval_line_option_value(args, 4, "color", PineValue::Color(0x2196F3))?;
         let style = self.eval_line_option(args, 5, "style", "line.style_solid")?;
         let width = self.eval_line_option_value(args, 6, "width", PineValue::Int(1))?;
         let _force_overlay =
