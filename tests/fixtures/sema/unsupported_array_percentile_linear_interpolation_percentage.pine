@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.percentile_linear_interpolation Percentage")
+values = array.new_int(2, 1)
+plot(array.percentile_linear_interpolation(values, "50"))
