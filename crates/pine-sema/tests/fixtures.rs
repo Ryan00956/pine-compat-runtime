@@ -369,6 +369,70 @@ fn reports_unsupported_ta_mom_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_highest_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_highest_length.pine",
+        &["`ta.highest` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_highest_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_highest_source.pine",
+        &["`ta.highest` argument `source` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_lowest_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_lowest_length.pine",
+        &["`ta.lowest` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_lowest_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_lowest_source.pine",
+        &["`ta.lowest` argument `source` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_highestbars_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_highestbars_length.pine",
+        &["`ta.highestbars` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_highestbars_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_highestbars_source.pine",
+        &["`ta.highestbars` argument `source` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_lowestbars_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_lowestbars_length.pine",
+        &["`ta.lowestbars` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_lowestbars_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_lowestbars_source.pine",
+        &["`ta.lowestbars` argument `source` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
