@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.lowestbars Length")
+plot(ta.lowestbars(close, 1.5))
