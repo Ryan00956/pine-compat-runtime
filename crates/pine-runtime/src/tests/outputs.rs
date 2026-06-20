@@ -382,8 +382,8 @@ plot(close)
         assert_eq!(snapshot.top, PineValue::Float(bar_index as f64 + 1.0));
         assert_eq!(snapshot.right, PineValue::Int(bar_index as i64));
         assert_eq!(snapshot.bottom, PineValue::Float(bar_index as f64 + 1.0));
-        assert_eq!(snapshot.bg_color, PineValue::Na);
-        assert_eq!(snapshot.border_color, PineValue::Na);
+        assert_eq!(snapshot.bg_color, PineValue::Color(0x2196F3));
+        assert_eq!(snapshot.border_color, PineValue::Color(0x2196F3));
         assert_eq!(snapshot.border_width, PineValue::Int(1));
         assert_eq!(
             snapshot.border_style,
@@ -391,10 +391,10 @@ plot(close)
         );
         assert_eq!(snapshot.extend, PineValue::String("extend.none".to_owned()));
         assert_eq!(snapshot.text, PineValue::String(String::new()));
-        assert_eq!(snapshot.text_color, PineValue::Na);
+        assert_eq!(snapshot.text_color, PineValue::Color(0x363A45));
         assert_eq!(
             snapshot.text_size,
-            PineValue::String("size.normal".to_owned())
+            PineValue::String("size.auto".to_owned())
         );
         assert_eq!(
             snapshot.text_halign,

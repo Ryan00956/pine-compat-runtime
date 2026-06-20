@@ -741,7 +741,9 @@ top_left/bottom_right creation with optional xloc, background, border, extend,
 text, text-color, text-size, horizontal-alignment, vertical-alignment,
 text-wrap, font-family, and text-formatting initialization for existing
 host-neutral snapshot fields when `xloc` is omitted, `xloc.bar_index`, or
-`xloc.bar_time`.
+`xloc.bar_time`. Omitted `border_color` and `bgcolor` use the official
+`color.blue` default, omitted `text_color` uses the official `color.black`
+default, and omitted `text_size` uses the official `size.auto` default.
 It also covers selected geometry mutators from ordinary and independent
 while-loop control-flow blocks, selected background/border/extend mutators from
 ordinary and independent while-loop control-flow blocks, selected
@@ -968,8 +970,11 @@ declaration values from 1 through 100 to evict oldest active polyline
 snapshots before creating new ones. `line.new`, `line.set_first_point`,
 `line.set_second_point`, `box.new`, `box.set_top_left_point`,
 `box.set_bottom_right_point`, `label.new`, and `label.set_point` can consume
-`chart.point` values. `chart.point` typed declarations are fixture-backed for
-chart-point or `na` initializers. Polyline id arrays are fixture-backed through
+`chart.point` values. `box.new` chart-point snapshots use the same official
+default `border_color`, `bgcolor`, `text_color`, and `text_size` values as the
+scalar overload when those arguments are omitted. `chart.point` typed
+declarations are fixture-backed for chart-point or `na` initializers. Polyline
+id arrays are fixture-backed through
 `array.new_polyline`, official `array.new<polyline>` template syntax, typed
 `array<polyline>`/`polyline[]` declarations, `array.from(polyline, ...)`,
 the generic object-array helper subset, and array/slice history snapshots.

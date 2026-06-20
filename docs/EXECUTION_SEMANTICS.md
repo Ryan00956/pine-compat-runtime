@@ -706,9 +706,12 @@ selected background/border fields, snapshot cloning, non-reused ids, and a
 declaration-driven max-count eviction. `box.new` can initialize existing box snapshot fields
 for xloc, background, border, extend, text, text color, text size, text
 alignment, text wrap, font family, and text formatting when `xloc` is omitted,
-`xloc.bar_index`, or `xloc.bar_time`; the chart-point overload uses
-`point.index` or `point.time` according to `xloc`; `force_overlay` is accepted
-but remains a host display responsibility.
+`xloc.bar_index`, or `xloc.bar_time`; omitted `border_color` and `bgcolor`
+record the official `color.blue` default, omitted `text_color` records the
+official `color.black` default, and omitted `text_size` records the official
+`size.auto` default. The chart-point overload uses `point.index` or `point.time`
+according to `xloc`; `force_overlay` is accepted but remains a host display
+responsibility.
 `box.set_xloc` with `xloc.bar_index` or `xloc.bar_time` updates the box's left,
 right, and xloc snapshot values. Tables use deterministic ids,
 fixed positive
@@ -1168,7 +1171,9 @@ storage/read/mutation/search. `line.new` can create line snapshots from two
 `point.time` for `xloc.bar_time`, while retaining the existing line style,
 extend, color, and width snapshot fields. `box.new` can create box snapshots
 from two `chart.point` values using the same `xloc` coordinate selection while
-retaining the existing box style, text, and fill snapshot fields. `label.new`
+retaining the existing box style, text, and fill snapshot fields, including the
+official default `color.blue` for omitted `border_color`/`bgcolor`, `color.black`
+for omitted `text_color`, and `size.auto` for omitted `text_size`. `label.new`
 can create label snapshots from one `chart.point`, selecting `point.index` for
 `xloc.bar_index` and `point.time` for `xloc.bar_time`, while using
 `point.price` for y and retaining the existing label text/style fields.

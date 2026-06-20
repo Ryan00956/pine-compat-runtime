@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Aligned `box.new` omitted `border_color`, `bgcolor`, `text_color`, and
+  `text_size` runtime snapshots for scalar and chart-point overloads with the
+  official defaults.
 - Aligned `line.new` omitted `color` runtime snapshots for both coordinate and
   chart-point overloads with the official `color.blue` default.
 - Aligned `polyline.new` omitted `line_color` runtime snapshots with the

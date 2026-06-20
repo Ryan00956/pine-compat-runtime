@@ -14,17 +14,20 @@ impl<'a> HistoricalRuntime<'a> {
         let top = self.eval_required_box_arg(args, 1, "top")?;
         let right = self.eval_required_box_arg(args, 2, "right")?;
         let bottom = self.eval_required_box_arg(args, 3, "bottom")?;
-        let border_color = self.eval_box_option_value(args, 4, "border_color", PineValue::Na)?;
+        let border_color =
+            self.eval_box_option_value(args, 4, "border_color", PineValue::Color(0x2196F3))?;
         let border_width =
             self.eval_box_option_value(args, 5, "border_width", PineValue::Int(1))?;
         let border_style = self.eval_box_option(args, 6, "border_style", "line.style_solid")?;
         let extend = self.eval_box_option(args, 7, "extend", "extend.none")?;
         let xloc = self.eval_box_option(args, 8, "xloc", "xloc.bar_index")?;
-        let bg_color = self.eval_box_option_value(args, 9, "bgcolor", PineValue::Na)?;
+        let bg_color =
+            self.eval_box_option_value(args, 9, "bgcolor", PineValue::Color(0x2196F3))?;
         let text =
             self.eval_box_option_value(args, 10, "text", PineValue::String(String::new()))?;
-        let text_size = self.eval_box_option(args, 11, "text_size", "size.normal")?;
-        let text_color = self.eval_box_option_value(args, 12, "text_color", PineValue::Na)?;
+        let text_size = self.eval_box_option(args, 11, "text_size", "size.auto")?;
+        let text_color =
+            self.eval_box_option_value(args, 12, "text_color", PineValue::Color(0x363A45))?;
         let text_halign = self.eval_box_option(args, 13, "text_halign", "text.align_center")?;
         let text_valign = self.eval_box_option(args, 14, "text_valign", "text.align_center")?;
         let text_wrap = self.eval_box_option(args, 15, "text_wrap", "text.wrap_none")?;
@@ -67,16 +70,19 @@ impl<'a> HistoricalRuntime<'a> {
             top_left
         };
         let bottom_right = self.eval_required_box_arg(args, 1, "bottom_right")?;
-        let border_color = self.eval_box_option_value(args, 2, "border_color", PineValue::Na)?;
+        let border_color =
+            self.eval_box_option_value(args, 2, "border_color", PineValue::Color(0x2196F3))?;
         let border_width =
             self.eval_box_option_value(args, 3, "border_width", PineValue::Int(1))?;
         let border_style = self.eval_box_option(args, 4, "border_style", "line.style_solid")?;
         let extend = self.eval_box_option(args, 5, "extend", "extend.none")?;
         let xloc = self.eval_box_option(args, 6, "xloc", "xloc.bar_index")?;
-        let bg_color = self.eval_box_option_value(args, 7, "bgcolor", PineValue::Na)?;
+        let bg_color =
+            self.eval_box_option_value(args, 7, "bgcolor", PineValue::Color(0x2196F3))?;
         let text = self.eval_box_option_value(args, 8, "text", PineValue::String(String::new()))?;
-        let text_size = self.eval_box_option(args, 9, "text_size", "size.normal")?;
-        let text_color = self.eval_box_option_value(args, 10, "text_color", PineValue::Na)?;
+        let text_size = self.eval_box_option(args, 9, "text_size", "size.auto")?;
+        let text_color =
+            self.eval_box_option_value(args, 10, "text_color", PineValue::Color(0x363A45))?;
         let text_halign = self.eval_box_option(args, 11, "text_halign", "text.align_center")?;
         let text_valign = self.eval_box_option(args, 12, "text_valign", "text.align_center")?;
         let text_wrap = self.eval_box_option(args, 13, "text_wrap", "text.wrap_none")?;
