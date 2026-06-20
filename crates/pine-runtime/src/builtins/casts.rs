@@ -19,6 +19,7 @@ impl<'a> HistoricalRuntime<'a> {
             "label" => self.eval_label_cast(args),
             "line" => self.eval_line_cast(args),
             "linefill" => self.eval_linefill_cast(args),
+            "table" => self.eval_table_cast(args),
             _ => return None,
         })
     }
@@ -122,6 +123,17 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         Ok(match self.eval_expr(&args[0].value)? {
             PineValue::LineFill(value) => PineValue::LineFill(value),
+            PineValue::Na => PineValue::Na,
+            _ => PineValue::Na,
+        })
+    }
+
+    pub(crate) fn eval_table_cast(
+        &mut self,
+        args: &[HirCallArg],
+    ) -> Result<PineValue, RuntimeError> {
+        Ok(match self.eval_expr(&args[0].value)? {
+            PineValue::Table(value) => PineValue::Table(value),
             PineValue::Na => PineValue::Na,
             _ => PineValue::Na,
         })

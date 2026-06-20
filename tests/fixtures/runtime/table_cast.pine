@@ -1,0 +1,7 @@
+//@version=5
+indicator("Table cast")
+id = table.new(position.top_right, 1, 1)
+cast_id = table(id)
+missing_id = table(na)
+table.cell(cast_id, 0, 0, "cast")
+plot(na(missing_id) ? 1 : 0)

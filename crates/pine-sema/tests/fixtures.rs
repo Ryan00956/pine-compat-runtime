@@ -2520,6 +2520,14 @@ fn reports_unsupported_linefill_cast_source_fixture() {
 }
 
 #[test]
+fn reports_unsupported_table_cast_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_table_cast_source.pine",
+        &["`table` argument `x` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_new_polyline_constructor_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_new_polyline_constructor.pine",

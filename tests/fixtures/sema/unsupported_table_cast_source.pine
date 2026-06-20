@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported table cast source")
+plot(na(table("x")) ? 1 : 0)

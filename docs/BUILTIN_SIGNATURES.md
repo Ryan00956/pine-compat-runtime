@@ -489,6 +489,7 @@ box(x: box|na) -> box
 label(x: label|na) -> label
 line(x: line|na) -> line
 linefill(x: linefill|na) -> linefill
+table(x: table|na) -> table
 ```
 
 `int` truncates finite floats toward zero and maps bools to `1`/`0`.
@@ -499,8 +500,9 @@ and returns `na` for `string(na)`. `color` preserves color values and returns
 `na` for `color(na)`. `box` preserves box ids and returns `na` for `box(na)`.
 `label` preserves label ids and returns `na` for `label(na)`. `line` preserves
 line ids and returns `na` for `line(na)`. `linefill` preserves linefill ids and
-returns `na` for `linefill(na)`. Numeric-to-color and other object casts are not
-part of the current subset.
+returns `na` for `linefill(na)`. `table` preserves table ids and returns `na`
+for `table(na)`. Numeric-to-color and other object casts are not part of the
+current subset.
 
 Derived values:
 

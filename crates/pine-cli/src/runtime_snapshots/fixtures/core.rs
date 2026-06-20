@@ -737,6 +737,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/table_new.pine",
     ),
     (
+        "runtime_table_cast.json",
+        "tests/fixtures/runtime/table_cast.pine",
+    ),
+    (
         "runtime_table_array.json",
         "tests/fixtures/runtime/table_array.pine",
     ),
