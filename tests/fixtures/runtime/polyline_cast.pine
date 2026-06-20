@@ -1,0 +1,11 @@
+//@version=5
+indicator("Polyline cast")
+var points = array.new<chart.point>()
+array.push(points, chart.point.from_index(bar_index, close))
+id = polyline.new(points, line_color=color.red)
+cast_id = polyline(id)
+missing_id = polyline(na)
+if bar_index == 1
+    polyline.delete(cast_id)
+plot(array.size(polyline.all))
+plot(na(missing_id) ? 1 : 0)

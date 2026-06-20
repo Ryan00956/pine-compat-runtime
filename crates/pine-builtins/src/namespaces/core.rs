@@ -546,6 +546,12 @@ const LINEFILL_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const POLYLINE_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "x",
+    accepts: Accepts::PolylineCompatible,
+    optional: false,
+}];
+
 const TABLE_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "x",
     accepts: Accepts::TableCompatible,
@@ -747,6 +753,13 @@ pub(crate) const CAST_SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: LINEFILL_CAST_PARAMS,
         returns: ReturnSpec::Fixed(SERIES_LINE_FILL),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "polyline",
+        phase: BuiltinPhase::Phase1Core,
+        params: POLYLINE_CAST_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_POLYLINE),
         variadic: false,
     },
     BuiltinSignature {

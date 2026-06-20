@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported polyline cast source")
+plot(na(polyline("x")) ? 1 : 0)

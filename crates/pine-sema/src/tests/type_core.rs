@@ -23,7 +23,7 @@ fn accepts_fixnan() {
 #[test]
 fn accepts_type_casts() {
     let analysis = analyze(
-        "length = int(2.9)\nscale = float(length)\nflag = bool(close - open)\ntext = string(close)\nshade = color(color.red)\nmissing = color(na)\nmissing_box = box(na)\nmissing_label = label(na)\nmissing_line = line(na)\nmissing_fill = linefill(na)\nmissing_table = table(na)\nplot(flag ? ta.sma(close, length) + scale + str.length(text) + (shade == color.red and na(missing) and na(missing_box) and na(missing_label) and na(missing_line) and na(missing_fill) and na(missing_table) ? 1 : 0) : float(na))\n",
+        "length = int(2.9)\nscale = float(length)\nflag = bool(close - open)\ntext = string(close)\nshade = color(color.red)\nmissing = color(na)\nmissing_box = box(na)\nmissing_label = label(na)\nmissing_line = line(na)\nmissing_fill = linefill(na)\nmissing_polyline = polyline(na)\nmissing_table = table(na)\nplot(flag ? ta.sma(close, length) + scale + str.length(text) + (shade == color.red and na(missing) and na(missing_box) and na(missing_label) and na(missing_line) and na(missing_fill) and na(missing_polyline) and na(missing_table) ? 1 : 0) : float(na))\n",
     );
 
     assert!(
@@ -32,7 +32,8 @@ fn accepts_type_casts() {
         analysis.diagnostics
     );
     for feature in [
-        "int", "float", "bool", "string", "color", "box", "label", "line", "linefill", "table",
+        "int", "float", "bool", "string", "color", "box", "label", "line", "linefill", "polyline",
+        "table",
     ] {
         assert!(
             analysis
