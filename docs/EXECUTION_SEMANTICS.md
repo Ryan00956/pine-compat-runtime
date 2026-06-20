@@ -564,14 +564,18 @@ passed as the first internal argument and the method body is evaluated through
 the same lowered expression path as a local UDF body. A pure method may accept
 additional local UDT parameters and return the receiver itself, a block-local
 alias chain that starts from the receiver or another local UDT parameter,
-another local UDT parameter directly or through a nested method passthrough
-call, or construct and return a local UDT from receiver or local UDT parameter
-scalar fields, inferred scalar parameters, or block-local scalar aliases of
-those parameters, using positional or named constructor field arguments; the
-caller may store that returned UDT value and read its fields. Method side
-effects, recursive methods, unsupported parameter families, mismatched UDT
-parameter identity, unknown receivers, and imported methods are rejected during
-semantic analysis.
+final if/else or final for local UDT aliases of those values, another local UDT
+parameter directly or through a nested method passthrough call, or construct
+and return a local UDT directly, through nested pure constructor-helper UDF
+calls, or through same-local-UDT ternary, switch, final if/else constructor
+branches, or final for bodies. Supported method constructors may read receiver
+or local UDT parameter scalar fields, scalar fields through block-local receiver
+or local UDT parameter aliases, block-local scalar aliases of those fields,
+inferred scalar parameters, or block-local scalar aliases of those parameters,
+using positional or named constructor field arguments; the caller may store
+that returned UDT value and read its fields. Method side effects, recursive
+methods, unsupported parameter families, mismatched UDT parameter identity,
+unknown receivers, and imported methods are rejected during semantic analysis.
 
 ### `varip`
 
