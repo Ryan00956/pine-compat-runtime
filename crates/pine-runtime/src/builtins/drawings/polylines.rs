@@ -11,7 +11,8 @@ impl<'a> HistoricalRuntime<'a> {
         let curved = self.eval_polyline_option_value(args, 1, "curved", PineValue::Bool(false))?;
         let closed = self.eval_polyline_option_value(args, 2, "closed", PineValue::Bool(false))?;
         let xloc = self.eval_polyline_option(args, 3, "xloc", "xloc.bar_index")?;
-        let line_color = self.eval_polyline_option_value(args, 4, "line_color", PineValue::Na)?;
+        let line_color =
+            self.eval_polyline_option_value(args, 4, "line_color", PineValue::Color(0x2196F3))?;
         let fill_color = self.eval_polyline_option_value(args, 5, "fill_color", PineValue::Na)?;
         let line_style = self.eval_polyline_option(args, 6, "line_style", "line.style_solid")?;
         let line_width =

@@ -6,5 +6,6 @@ array.push(points, chart.point.from_index(bar_index, close))
 
 if barstate.islastconfirmedhistory
     polyline.new(points, curved=true, closed=false, xloc=xloc.bar_index, line_color=color.red, fill_color=color.new(color.blue, 80), line_style=line.style_dashed, line_width=2, force_overlay=true)
+    polyline.new(points, fill_color=na)
 
 plot(array.size(points))

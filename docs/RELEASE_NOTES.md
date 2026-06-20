@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Aligned `polyline.new` omitted `line_color` runtime snapshots with the
+  official `color.blue` default and extended the fixture-backed snapshot
+  coverage for omitted style arguments.
 - Added fixture-backed `array.new_polyline` and `array.from(polyline, ...)`
   support for runtime-owned polyline id arrays, including generic object-array
   storage, mutation, read, search, copy, slice, concat, reverse, clear, and

@@ -1184,8 +1184,10 @@ creates runtime-owned polyline ids from an
 `array<chart.point>` input, copies the current point-list values into a
 host-neutral `polylines[].snapshots[]` entry, and records `curved`, `closed`,
 `xloc`, `lineColor`, `fillColor`, `lineStyle`, `lineWidth`, and
-`forceOverlay`. `polyline.delete` appends an `exists: false` snapshot for an
-existing id and treats `na` or already-deleted ids as no-ops.
+`forceOverlay`. When `line_color` is omitted, `polyline.new` records the
+official default `color.blue`; omitted `fill_color` remains `na`.
+`polyline.delete` appends an `exists: false` snapshot for an existing id and
+treats `na` or already-deleted ids as no-ops.
 `polyline.all`
 returns currently existing polyline ids in creation order. Realtime forming-bar
 updates roll back abandoned polyline creations, deletions, copied point lists,
