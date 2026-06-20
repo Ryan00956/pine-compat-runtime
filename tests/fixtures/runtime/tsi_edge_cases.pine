@@ -1,0 +1,8 @@
+//@version=5
+indicator("TSI Edge Cases")
+missing_source = bar_index == 2 ? na : close
+plot(ta.tsi(close, 2, 3))
+plot(ta.tsi(close, 1, 2))
+plot(ta.tsi(close, 0, 3))
+plot(ta.tsi(close, 2, -1))
+plot(ta.tsi(missing_source, 2, 3))
