@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.wvad Call")
+plot(ta.wvad())
