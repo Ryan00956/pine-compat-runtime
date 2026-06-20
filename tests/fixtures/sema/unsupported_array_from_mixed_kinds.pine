@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.from Mixed Kinds")
+values = array.from(1, "two")
+plot(close)

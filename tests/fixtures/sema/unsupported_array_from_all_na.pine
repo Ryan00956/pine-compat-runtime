@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.from All Na")
+values = array.from(na, na)
+plot(close)
