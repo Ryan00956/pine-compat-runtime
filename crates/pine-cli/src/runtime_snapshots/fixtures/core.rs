@@ -236,6 +236,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/valuewhen.pine",
     ),
     (
+        "runtime_valuewhen_edge_cases.json",
+        "tests/fixtures/runtime/valuewhen_edge_cases.pine",
+    ),
+    (
         "runtime_extremes.json",
         "tests/fixtures/runtime/extremes.pine",
     ),

@@ -1,0 +1,17 @@
+//@version=5
+indicator("Value When Edge Cases")
+condition = bar_index == 0 ? false : bar_index == 1 ? true : bar_index == 2 ? na : bar_index == 3 ? true : bar_index == 4 ? false : bar_index == 5 ? true : false
+last_close = ta.valuewhen(condition, close, 0)
+previous_close = ta.valuewhen(condition, close, 1)
+third_close = ta.valuewhen(condition, close, 2)
+missing_occurrence = ta.valuewhen(condition, close, 3)
+negative_occurrence = ta.valuewhen(condition, close, -1)
+last_index = ta.valuewhen(condition, bar_index, 0)
+last_flag = ta.valuewhen(condition, close > open, 0)
+plot(last_close)
+plot(previous_close)
+plot(third_close)
+plot(missing_occurrence)
+plot(negative_occurrence)
+plot(last_index)
+plot(na(last_flag) ? 0 : last_flag ? 1 : -1)
