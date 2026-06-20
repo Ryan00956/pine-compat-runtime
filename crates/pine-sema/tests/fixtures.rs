@@ -2917,6 +2917,14 @@ fn reports_unsupported_array_percentile_nearest_rank_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_percentile_nearest_rank_percentage_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_percentile_nearest_rank_percentage.pine",
+        &["`array.percentile_nearest_rank` argument `percentage` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_mode_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_mode_bool.pine",
