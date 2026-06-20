@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.tema Length")
+plot(ta.tema(close, 1.5))
