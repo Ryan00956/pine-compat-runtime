@@ -293,6 +293,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     ),
     ("runtime_mode.json", "tests/fixtures/runtime/mode.pine"),
     (
+        "runtime_mode_edge_cases.json",
+        "tests/fixtures/runtime/mode_edge_cases.pine",
+    ),
+    (
         "runtime_percentile_linear_interpolation.json",
         "tests/fixtures/runtime/percentile_linear_interpolation.pine",
     ),

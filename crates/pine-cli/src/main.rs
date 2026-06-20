@@ -1385,6 +1385,9 @@ mod tests {
             "tests/fixtures/runtime/median_edge_cases.pine" => {
                 include_str!("../../../tests/fixtures/runtime/median_edge_cases_bars.csv")
             }
+            "tests/fixtures/runtime/mode_edge_cases.pine" => {
+                include_str!("../../../tests/fixtures/runtime/mode_edge_cases_bars.csv")
+            }
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }
     }
