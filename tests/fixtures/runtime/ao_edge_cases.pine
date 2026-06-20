@@ -1,0 +1,4 @@
+//@version=5
+indicator("AO edge cases")
+value = ta.ao()
+plot(value)
