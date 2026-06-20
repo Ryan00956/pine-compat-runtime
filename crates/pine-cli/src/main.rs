@@ -6,6 +6,8 @@ mod conformance;
 mod json;
 mod library_sources;
 #[cfg(test)]
+mod object_cast_contract_tests;
+#[cfg(test)]
 mod runtime_snapshots;
 
 fn main() -> ExitCode {
