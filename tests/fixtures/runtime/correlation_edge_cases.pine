@@ -1,0 +1,10 @@
+//@version=5
+indicator("Correlation edge cases")
+same = ta.correlation(close, close, 3)
+inverse = ta.correlation(close, -close, 3)
+flat = ta.correlation(close, open, 3)
+with_na = ta.correlation(close, bar_index == 3 ? na : high, 3)
+plot(same)
+plot(inverse)
+plot(flat)
+plot(with_na)
