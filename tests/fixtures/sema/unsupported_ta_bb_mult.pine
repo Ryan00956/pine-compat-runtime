@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported ta.bb Mult")
+[basis, upper, lower] = ta.bb(close, 3, "bad")
+plot(basis)

@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported ta.bb Length")
+[basis, upper, lower] = ta.bb(close, 1.5, 2)
+plot(basis)
