@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.insert Value")
+values = array.new_bool()
+array.insert(values, 0, close)
+plot(close)
