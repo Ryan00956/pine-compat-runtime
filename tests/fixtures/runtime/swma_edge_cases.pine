@@ -1,0 +1,6 @@
+//@version=5
+indicator("SWMA edge cases")
+missing_source = bar_index == 2 ? na : close
+flat_source = close - close + 3
+plot(ta.swma(missing_source))
+plot(ta.swma(flat_source))

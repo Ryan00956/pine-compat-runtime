@@ -289,6 +289,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
         "runtime_hma_edge_cases.json",
         "tests/fixtures/runtime/hma_edge_cases.pine",
     ),
+    (
+        "runtime_swma_edge_cases.json",
+        "tests/fixtures/runtime/swma_edge_cases.pine",
+    ),
     ("runtime_if.json", "tests/fixtures/runtime/if.pine"),
     (
         "runtime_dema_tema.json",
