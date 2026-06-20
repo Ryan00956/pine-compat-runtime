@@ -2447,6 +2447,14 @@ fn reports_unsupported_array_variance_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_variance_biased_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_variance_biased.pine",
+        &["`array.variance` argument `biased` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_every_string_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_every_string.pine",

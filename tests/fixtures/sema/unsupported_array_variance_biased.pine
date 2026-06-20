@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.variance Biased")
+values = array.new_int(2, 1)
+plot(array.variance(values, close))
