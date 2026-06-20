@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.unshift Value")
+values = array.new_bool(1, true)
+array.unshift(values, close)
