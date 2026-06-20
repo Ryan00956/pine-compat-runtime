@@ -1,0 +1,10 @@
+//@version=5
+indicator("Cum edge cases")
+reset_source = bar_index == 1 ? na : close
+reset_after_na = ta.cum(reset_source)
+first_callsite = ta.cum(close)
+second_callsite = ta.cum(close)
+plot(reset_after_na)
+plot(first_callsite)
+plot(second_callsite)
+plot(first_callsite == second_callsite ? 1 : 0)
