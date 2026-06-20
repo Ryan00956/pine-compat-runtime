@@ -51,6 +51,9 @@ pub(crate) fn runtime_fixture_bars_csv(fixture: &str) -> Option<&'static str> {
         "tests/fixtures/runtime/extremes_edge_cases.pine" => Some(include_str!(
             "../../../../tests/fixtures/runtime/extremes_edge_cases_bars.csv"
         )),
+        "tests/fixtures/runtime/extreme_bars_edge_cases.pine" => Some(include_str!(
+            "../../../../tests/fixtures/runtime/extreme_bars_edge_cases_bars.csv"
+        )),
         "tests/fixtures/runtime/median_edge_cases.pine" => Some(include_str!(
             "../../../../tests/fixtures/runtime/median_edge_cases_bars.csv"
         )),
