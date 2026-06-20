@@ -323,6 +323,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/kc_edge_cases.pine",
     ),
     ("runtime_kcw.json", "tests/fixtures/runtime/kcw.pine"),
+    (
+        "runtime_kcw_edge_cases.json",
+        "tests/fixtures/runtime/kcw_edge_cases.pine",
+    ),
     ("runtime_pivots.json", "tests/fixtures/runtime/pivots.pine"),
     (
         "runtime_pivot_point_levels.json",
