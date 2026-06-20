@@ -217,6 +217,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     ),
     ("runtime_swma.json", "tests/fixtures/runtime/swma.pine"),
     ("runtime_alma.json", "tests/fixtures/runtime/alma.pine"),
+    (
+        "runtime_alma_edge_cases.json",
+        "tests/fixtures/runtime/alma_edge_cases.pine",
+    ),
     ("runtime_linreg.json", "tests/fixtures/runtime/linreg.pine"),
     (
         "runtime_accdist.json",
