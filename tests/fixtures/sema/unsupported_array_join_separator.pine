@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.join Separator")
+values = array.new_string(1, "a")
+plot(str.length(array.join(values, close)))

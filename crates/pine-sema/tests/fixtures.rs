@@ -2015,6 +2015,14 @@ fn reports_unsupported_array_join_udt_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_join_separator_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_join_separator.pine",
+        &["`array.join` argument `separator` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_slice_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_slice_polyline.pine",
