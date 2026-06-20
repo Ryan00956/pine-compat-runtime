@@ -217,6 +217,54 @@ fn reports_unsupported_ta_bbw_mult_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_kc_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_kc_length.pine",
+        &["`ta.kc` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_kc_mult_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_kc_mult.pine",
+        &["`ta.kc` argument `mult` does not accept Series Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_kc_use_true_range_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_kc_use_true_range.pine",
+        &["`ta.kc` argument `useTrueRange` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_kcw_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_kcw_length.pine",
+        &["`ta.kcw` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_kcw_mult_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_kcw_mult.pine",
+        &["`ta.kcw` argument `mult` does not accept Series Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_kcw_use_true_range_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_kcw_use_true_range.pine",
+        &["`ta.kcw` argument `useTrueRange` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
