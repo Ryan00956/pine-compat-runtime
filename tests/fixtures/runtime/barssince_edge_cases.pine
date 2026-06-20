@@ -1,0 +1,11 @@
+//@version=5
+indicator("Bars Since Edge Cases")
+condition = bar_index == 0 ? false : bar_index == 1 ? na : bar_index == 2 ? true : bar_index == 3 ? false : bar_index == 4 ? na : bar_index == 5 ? false : bar_index == 6 ? true : false
+late_condition = bar_index < 4 ? false : bar_index == 4 ? true : false
+na_before_true = bar_index < 3 ? na : bar_index == 3 ? true : false
+value = ta.barssince(condition)
+late_value = ta.barssince(late_condition)
+na_first_value = ta.barssince(na_before_true)
+plot(value)
+plot(late_value)
+plot(na_first_value)
