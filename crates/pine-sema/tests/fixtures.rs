@@ -3869,6 +3869,14 @@ fn reports_unsupported_user_method_arg_type_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_method_unknown_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_method_unknown.pine",
+        "E_UNKNOWN_METHOD",
+    );
+}
+
+#[test]
 fn reports_non_array_method_fixture_as_receiver_diagnostic() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_non_array_method.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");

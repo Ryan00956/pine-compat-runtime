@@ -1,0 +1,7 @@
+//@version=5
+indicator("Unsupported unknown user method")
+type Point
+    float x
+
+p = Point.new(close)
+plot(p.missing())
