@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.variance Length")
+plot(ta.variance(close, 1.5))

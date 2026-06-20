@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.variance Biased")
+plot(ta.variance(close, 3, 1))
