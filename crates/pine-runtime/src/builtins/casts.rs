@@ -14,6 +14,7 @@ impl<'a> HistoricalRuntime<'a> {
             "float" => self.eval_float_cast(args),
             "bool" => self.eval_bool_cast(args),
             "string" => self.eval_string_cast(args),
+            "box" => self.eval_box_cast(args),
             "color" => self.eval_color_cast(args),
             "label" => self.eval_label_cast(args),
             "line" => self.eval_line_cast(args),
@@ -80,6 +81,14 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<PineValue, RuntimeError> {
         Ok(match self.eval_expr(&args[0].value)? {
             PineValue::Color(value) => PineValue::Color(value),
+            PineValue::Na => PineValue::Na,
+            _ => PineValue::Na,
+        })
+    }
+
+    pub(crate) fn eval_box_cast(&mut self, args: &[HirCallArg]) -> Result<PineValue, RuntimeError> {
+        Ok(match self.eval_expr(&args[0].value)? {
+            PineValue::Box(value) => PineValue::Box(value),
             PineValue::Na => PineValue::Na,
             _ => PineValue::Na,
         })

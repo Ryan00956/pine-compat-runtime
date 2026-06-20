@@ -721,6 +721,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/box_getters.pine",
     ),
     (
+        "runtime_box_cast.json",
+        "tests/fixtures/runtime/box_cast.pine",
+    ),
+    (
         "runtime_box_array.json",
         "tests/fixtures/runtime/box_array.pine",
     ),

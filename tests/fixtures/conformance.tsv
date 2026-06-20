@@ -72,6 +72,7 @@ float	supported	numeric/bool/na scalar cast subset	tests/fixtures/runtime/casts.
 bool	supported	numeric/bool/na scalar cast subset	tests/fixtures/runtime/casts.pine
 string	supported	numeric/bool/string/na scalar cast subset	tests/fixtures/runtime/casts.pine
 color	supported	color/na scalar cast subset	tests/fixtures/runtime/casts.pine
+box	supported	box/na object cast subset returning box ids unchanged and returning na for box(na); non-box values are rejected at semantic analysis	tests/fixtures/runtime/casts.pine;tests/fixtures/runtime/box_cast.pine;tests/fixtures/sema/unsupported_box_cast_source.pine
 label	supported	label/na object cast subset returning label ids unchanged and returning na for label(na); non-label values are rejected at semantic analysis	tests/fixtures/runtime/casts.pine;tests/fixtures/runtime/label_cast.pine;tests/fixtures/sema/unsupported_label_cast_source.pine
 line	supported	line/na object cast subset returning line ids unchanged and returning na for line(na); non-line values are rejected at semantic analysis	tests/fixtures/runtime/casts.pine;tests/fixtures/runtime/line_cast.pine;tests/fixtures/sema/unsupported_line_cast_source.pine
 linefill	supported	linefill/na object cast subset returning linefill ids unchanged and returning na for linefill(na); non-linefill values are rejected at semantic analysis	tests/fixtures/runtime/casts.pine;tests/fixtures/runtime/linefill_cast.pine;tests/fixtures/sema/unsupported_linefill_cast_source.pine

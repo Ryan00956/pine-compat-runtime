@@ -66,6 +66,7 @@ const RUNTIME_DISPATCHED_CALLS: &[&str] = &[
     "chart.point.from_time",
     "chart.point.new",
     "chart.point.now",
+    "box",
     "box.copy",
     "box.delete",
     "box.get_bottom",

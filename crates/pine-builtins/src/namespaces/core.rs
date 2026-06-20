@@ -522,6 +522,12 @@ const COLOR_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const BOX_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "x",
+    accepts: Accepts::BoxCompatible,
+    optional: false,
+}];
+
 const LABEL_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "x",
     accepts: Accepts::LabelCompatible,
@@ -707,6 +713,13 @@ pub(crate) const CAST_SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: COLOR_CAST_PARAMS,
         returns: ReturnSpec::ColorFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "box",
+        phase: BuiltinPhase::Phase1Core,
+        params: BOX_CAST_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_BOX),
         variadic: false,
     },
     BuiltinSignature {
