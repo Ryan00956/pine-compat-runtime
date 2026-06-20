@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.median Length")
+plot(ta.median(close, 2.5))
