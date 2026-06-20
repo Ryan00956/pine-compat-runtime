@@ -129,6 +129,30 @@ fn reports_unsupported_ta_rsi_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_macd_fastlen_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_macd_fastlen.pine",
+        &["`ta.macd` argument `fastlen` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_macd_slowlen_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_macd_slowlen.pine",
+        &["`ta.macd` argument `slowlen` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_macd_siglen_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_macd_siglen.pine",
+        &["`ta.macd` argument `siglen` does not accept Const Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
