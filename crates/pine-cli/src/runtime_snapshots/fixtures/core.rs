@@ -301,6 +301,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/percentile_linear_interpolation.pine",
     ),
     (
+        "runtime_percentile_linear_interpolation_edge_cases.json",
+        "tests/fixtures/runtime/percentile_linear_interpolation_edge_cases.pine",
+    ),
+    (
         "runtime_percentile_nearest_rank.json",
         "tests/fixtures/runtime/percentile_nearest_rank.pine",
     ),
