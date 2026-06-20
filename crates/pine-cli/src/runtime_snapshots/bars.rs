@@ -47,6 +47,9 @@ pub(crate) fn runtime_fixture_bars_csv(fixture: &str) -> Option<&'static str> {
                 "../../../../tests/fixtures/runtime/percentile_linear_interpolation_edge_cases_bars.csv"
             ))
         }
+        "tests/fixtures/runtime/percentile_nearest_rank_edge_cases.pine" => Some(include_str!(
+            "../../../../tests/fixtures/runtime/percentile_nearest_rank_edge_cases_bars.csv"
+        )),
         _ => None,
     }
 }
