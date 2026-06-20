@@ -1710,6 +1710,14 @@ fn reports_unsupported_array_new_table_initial_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_new_linefill_initial_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_new_linefill_initial.pine",
+        &["`array.new_linefill` argument `initial_value` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_new_polyline_constructor_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_new_polyline_constructor.pine",
