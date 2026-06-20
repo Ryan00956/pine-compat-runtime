@@ -1,0 +1,8 @@
+//@version=5
+indicator("All-time extremes edge cases")
+max_source = bar_index == 0 ? na : bar_index == 2 ? na : close
+min_source = bar_index == 0 ? na : bar_index == 2 ? na : 5 - close
+highest = ta.max(max_source)
+lowest = ta.min(min_source)
+plot(highest)
+plot(lowest)
