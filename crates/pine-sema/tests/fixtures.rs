@@ -265,6 +265,38 @@ fn reports_unsupported_ta_kcw_use_true_range_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_dmi_di_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_dmi_di_length.pine",
+        &["`ta.dmi` argument `diLength` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_dmi_adx_smoothing_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_dmi_adx_smoothing.pine",
+        &["`ta.dmi` argument `adxSmoothing` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_tsi_short_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_tsi_short_length.pine",
+        &["`ta.tsi` argument `short_length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_tsi_long_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_tsi_long_length.pine",
+        &["`ta.tsi` argument `long_length` does not accept Const Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
