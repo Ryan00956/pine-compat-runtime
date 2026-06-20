@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.bbw Length")
+plot(ta.bbw(close, 1.5, 2))
