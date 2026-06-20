@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.covariance Length")
+plot(ta.covariance(close, high, 2.5))
