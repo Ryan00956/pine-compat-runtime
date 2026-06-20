@@ -329,6 +329,46 @@ fn reports_unsupported_ta_cog_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_dev_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_dev_length.pine",
+        &["`ta.dev` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_median_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_median_length.pine",
+        &["`ta.median` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_mfi_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_mfi_length.pine",
+        &["`ta.mfi` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_mode_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_mode_length.pine",
+        &["`ta.mode` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_mom_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_mom_length.pine",
+        &["`ta.mom` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
