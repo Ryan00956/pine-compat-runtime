@@ -1,0 +1,12 @@
+//@version=5
+indicator("Unsupported user method argument type")
+type Point
+    float x
+type LabelInfo
+    float x
+
+method choose(Point p, Point other) => other
+p = Point.new(close)
+info = LabelInfo.new(open)
+chosen = p.choose(info)
+plot(chosen.x)
