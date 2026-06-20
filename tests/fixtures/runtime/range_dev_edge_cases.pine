@@ -1,0 +1,12 @@
+//@version=5
+indicator("Range/dev edge cases")
+missing_source = bar_index == 1 ? na : close
+flat_source = close - close + 3
+plot(ta.range(close, 0))
+plot(ta.range(close, -1))
+plot(ta.range(missing_source, 2))
+plot(ta.range(flat_source, 3))
+plot(ta.dev(close, 0))
+plot(ta.dev(close, -1))
+plot(ta.dev(missing_source, 2))
+plot(ta.dev(flat_source, 3))

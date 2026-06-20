@@ -261,6 +261,10 @@ pub(crate) const RUNTIME_SNAPSHOT_FIXTURES: &[(&str, &str)] = &[
     ),
     ("runtime_range.json", "tests/fixtures/runtime/range.pine"),
     ("runtime_dev.json", "tests/fixtures/runtime/dev.pine"),
+    (
+        "runtime_range_dev_edge_cases.json",
+        "tests/fixtures/runtime/range_dev_edge_cases.pine",
+    ),
     ("runtime_vwma.json", "tests/fixtures/runtime/vwma.pine"),
     ("runtime_mfi.json", "tests/fixtures/runtime/mfi.pine"),
     ("runtime_wma.json", "tests/fixtures/runtime/wma.pine"),
