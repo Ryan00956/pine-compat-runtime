@@ -23,7 +23,7 @@ fn accepts_fixnan() {
 #[test]
 fn accepts_type_casts() {
     let analysis = analyze(
-        "length = int(2.9)\nscale = float(length)\nflag = bool(close - open)\nlabel = string(close)\nshade = color(color.red)\nmissing = color(na)\nmissing_fill = linefill(na)\nplot(flag ? ta.sma(close, length) + scale + str.length(label) + (shade == color.red and na(missing) and na(missing_fill) ? 1 : 0) : float(na))\n",
+        "length = int(2.9)\nscale = float(length)\nflag = bool(close - open)\nlabel = string(close)\nshade = color(color.red)\nmissing = color(na)\nmissing_line = line(na)\nmissing_fill = linefill(na)\nplot(flag ? ta.sma(close, length) + scale + str.length(label) + (shade == color.red and na(missing) and na(missing_line) and na(missing_fill) ? 1 : 0) : float(na))\n",
     );
 
     assert!(
@@ -31,7 +31,9 @@ fn accepts_type_casts() {
         "{:?}",
         analysis.diagnostics
     );
-    for feature in ["int", "float", "bool", "string", "color", "linefill"] {
+    for feature in [
+        "int", "float", "bool", "string", "color", "line", "linefill",
+    ] {
         assert!(
             analysis
                 .compatibility

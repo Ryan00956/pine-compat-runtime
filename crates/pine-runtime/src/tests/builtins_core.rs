@@ -397,6 +397,7 @@ missing_int = int(na)
 missing_float = float(na)
 missing_bool = bool(na)
 missing_string = string(na)
+missing_line = line(na)
 missing_linefill = linefill(na)
 plot(truncated)
 plot(from_bool)
@@ -406,7 +407,7 @@ plot(str.length(text_number))
 plot(text_bool == "true" ? 1 : 0)
 plot(text_string == "ok" ? 1 : 0)
 plot(shade == color.green ? 1 : 0)
-plot(na(missing_int) and na(missing_float) and not missing_bool and na(missing_string) and na(missing_color) and na(missing_linefill) ? 1 : 0)
+plot(na(missing_int) and na(missing_float) and not missing_bool and na(missing_string) and na(missing_color) and na(missing_line) and na(missing_linefill) ? 1 : 0)
 "#,
     );
     let analysis = analyze_source(&source);

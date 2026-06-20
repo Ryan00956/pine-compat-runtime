@@ -1,0 +1,7 @@
+//@version=5
+indicator("Line cast")
+id = line.new(bar_index, low, bar_index + 1, high)
+cast_id = line(id)
+missing_id = line(na)
+plot(line.get_x1(cast_id))
+plot(na(missing_id) ? 1 : 0)

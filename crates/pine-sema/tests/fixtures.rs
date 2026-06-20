@@ -2488,6 +2488,14 @@ fn reports_unsupported_array_new_linefill_initial_fixture() {
 }
 
 #[test]
+fn reports_unsupported_line_cast_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_line_cast_source.pine",
+        &["`line` argument `x` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_linefill_cast_source_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_linefill_cast_source.pine",
