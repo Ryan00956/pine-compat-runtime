@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported duplicate user method parameter")
+type Point
+    float x
+
+method choose(Point p, float value, float value) => p.x + value
+p = Point.new(close)
+plot(p.choose(open, high))

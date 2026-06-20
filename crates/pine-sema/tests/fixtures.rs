@@ -3877,6 +3877,14 @@ fn reports_unsupported_user_method_duplicate_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_method_duplicate_param_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_method_duplicate_param.pine",
+        "E_METHOD_PARAM",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_param_type_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_method_param_type.pine",
