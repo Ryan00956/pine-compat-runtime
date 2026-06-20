@@ -2366,6 +2366,14 @@ fn reports_unsupported_array_stdev_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_stdev_biased_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_stdev_biased.pine",
+        &["`array.stdev` argument `biased` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_variance_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_variance_bool.pine",
