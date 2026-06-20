@@ -1,0 +1,3 @@
+//@version=5
+indicator("WVAD edge cases")
+plot(ta.wvad)
