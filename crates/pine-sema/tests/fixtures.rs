@@ -489,6 +489,38 @@ fn reports_unsupported_ta_wpr_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_correlation_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_correlation_length.pine",
+        &["`ta.correlation` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_covariance_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_covariance_length.pine",
+        &["`ta.covariance` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_linreg_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_linreg_length.pine",
+        &["`ta.linreg` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_linreg_offset_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_linreg_offset.pine",
+        &["`ta.linreg` argument `offset` does not accept Const Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
