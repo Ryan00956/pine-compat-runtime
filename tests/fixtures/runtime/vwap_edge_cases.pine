@@ -1,0 +1,12 @@
+//@version=5
+indicator("VWAP edge cases")
+source = bar_index == 3 ? na : close
+anchor = bar_index == 2
+plot(ta.vwap)
+plot(ta.vwap(close))
+plot(ta.vwap(close, anchor))
+[basis, upper, lower] = ta.vwap(source, anchor, 2.0)
+plot(basis)
+plot(upper)
+plot(lower)
+plot(ta.vwap(source))
