@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.covariance Biased")
+left = array.new_int(2, 1)
+right = array.new_int(2, 2)
+plot(array.covariance(left, right, close))
