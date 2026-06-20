@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported label cast source")
+plot(na(label("x")) ? 1 : 0)

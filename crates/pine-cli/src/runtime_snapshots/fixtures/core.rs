@@ -581,6 +581,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/label_getters.pine",
     ),
     (
+        "runtime_label_cast.json",
+        "tests/fixtures/runtime/label_cast.pine",
+    ),
+    (
         "runtime_label_xloc.json",
         "tests/fixtures/runtime/label_xloc.pine",
     ),

@@ -1,0 +1,7 @@
+//@version=5
+indicator("Label cast")
+id = label.new(bar_index, high, "cast")
+cast_id = label(id)
+missing_id = label(na)
+plot(label.get_x(cast_id))
+plot(na(missing_id) ? 1 : 0)
