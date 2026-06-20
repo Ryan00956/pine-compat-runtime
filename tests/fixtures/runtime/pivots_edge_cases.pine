@@ -1,0 +1,24 @@
+//@version=5
+indicator("Pivots edge cases")
+high_source = bar_index == 1 ? 3 : bar_index == 2 ? 2 : bar_index == 3 ? 4 : 1
+low_source = bar_index == 1 ? 1 : bar_index == 2 ? 2 : bar_index == 3 ? 0 : 3
+tie_high_source = bar_index == 1 or bar_index == 2 ? 2 : 1
+missing_source = bar_index == 1 ? na : high_source
+pivot_high = ta.pivothigh(high_source, 1, 1)
+pivot_low = ta.pivotlow(low_source, 1, 1)
+tie_high = ta.pivothigh(tie_high_source, 1, 1)
+missing_high = ta.pivothigh(missing_source, 1, 1)
+negative_left = ta.pivothigh(high_source, -1, 1)
+negative_right = ta.pivotlow(low_source, 1, -1)
+zero_bars_high = ta.pivothigh(high_source, 0, 0)
+default_high = ta.pivothigh(0, 0)
+default_low = ta.pivotlow(0, 0)
+plot(pivot_high)
+plot(pivot_low)
+plot(na(tie_high) ? 1 : 0)
+plot(missing_high)
+plot(na(negative_left) ? 1 : 0)
+plot(na(negative_right) ? 1 : 0)
+plot(zero_bars_high)
+plot(default_high)
+plot(default_low)
