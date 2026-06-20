@@ -97,6 +97,14 @@ fn reports_unsupported_ta_ema_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_dema_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_dema_length.pine",
+        &["`ta.dema` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
