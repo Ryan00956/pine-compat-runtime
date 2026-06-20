@@ -1823,6 +1823,14 @@ fn reports_unsupported_array_insert_value_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_insert_index_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_insert_index.pine",
+        &["`array.insert` argument `index` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_set_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_set_polyline.pine",
