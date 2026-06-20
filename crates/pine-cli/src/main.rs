@@ -1346,6 +1346,9 @@ mod tests {
             "tests/fixtures/runtime/strategy_pyramiding_exit_same_id.pine" => include_str!(
                 "../../../tests/fixtures/runtime/strategy_pyramiding_exit_same_id_bars.csv"
             ),
+            "tests/fixtures/runtime/vwma_edge_cases.pine" => {
+                include_str!("../../../tests/fixtures/runtime/vwma_edge_cases_bars.csv")
+            }
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }
     }
