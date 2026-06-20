@@ -185,6 +185,38 @@ fn reports_unsupported_ta_alma_floor_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_bb_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_bb_length.pine",
+        &["`ta.bb` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_bb_mult_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_bb_mult.pine",
+        &["`ta.bb` argument `mult` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_bbw_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_bbw_length.pine",
+        &["`ta.bbw` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_bbw_mult_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_bbw_mult.pine",
+        &["`ta.bbw` argument `mult` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
