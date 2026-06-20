@@ -1,0 +1,9 @@
+//@version=5
+indicator("Supertrend Edge Cases")
+[line, direction] = ta.supertrend(2, 3)
+[zero_period_line, zero_period_direction] = ta.supertrend(2, 0)
+[negative_period_line, negative_period_direction] = ta.supertrend(2, -1)
+plot(line)
+plot(direction)
+plot(na(zero_period_line) and na(zero_period_direction) ? 1 : 0)
+plot(na(negative_period_line) and na(negative_period_direction) ? 1 : 0)

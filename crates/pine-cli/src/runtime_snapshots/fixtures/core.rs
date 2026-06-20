@@ -213,6 +213,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "runtime_supertrend.json",
         "tests/fixtures/runtime/supertrend.pine",
     ),
+    (
+        "runtime_supertrend_edge_cases.json",
+        "tests/fixtures/runtime/supertrend_edge_cases.pine",
+    ),
     ("runtime_dmi.json", "tests/fixtures/runtime/dmi.pine"),
     ("runtime_sar.json", "tests/fixtures/runtime/sar.pine"),
     ("runtime_cross.json", "tests/fixtures/runtime/cross.pine"),
