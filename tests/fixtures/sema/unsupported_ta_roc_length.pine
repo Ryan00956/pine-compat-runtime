@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.roc Length")
+plot(ta.roc(close, 1.5))
