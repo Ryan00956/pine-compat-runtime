@@ -1678,6 +1678,14 @@ fn reports_unsupported_array_new_color_initial_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_new_line_initial_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_new_line_initial.pine",
+        &["`array.new_line` argument `initial_value` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_new_polyline_constructor_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_new_polyline_constructor.pine",
