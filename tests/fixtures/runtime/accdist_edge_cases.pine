@@ -1,0 +1,3 @@
+//@version=5
+indicator("Accumulation/Distribution edge cases")
+plot(ta.accdist)
