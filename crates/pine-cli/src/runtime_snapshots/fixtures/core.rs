@@ -371,6 +371,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "runtime_swma_edge_cases.json",
         "tests/fixtures/runtime/swma_edge_cases.pine",
     ),
+    (
+        "runtime_stoch_edge_cases.json",
+        "tests/fixtures/runtime/stoch_edge_cases.pine",
+    ),
     ("runtime_if.json", "tests/fixtures/runtime/if.pine"),
     (
         "runtime_dema_tema.json",
