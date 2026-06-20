@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported array.new_line Initial")
+x = array.new_line(1, "line")
