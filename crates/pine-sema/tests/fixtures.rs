@@ -2040,6 +2040,14 @@ fn reports_unsupported_array_slice_index_from_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_slice_index_to_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_slice_index_to.pine",
+        &["`array.slice` argument `index_to` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_includes_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_includes_polyline.pine",
