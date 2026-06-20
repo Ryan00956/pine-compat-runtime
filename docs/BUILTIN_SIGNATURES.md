@@ -147,8 +147,10 @@ appearance are not implemented by this fixed chart metadata subset.
 snapshot subset. `polyline.delete`, `polyline.all`, and declaration-driven
 polyline max-count eviction cover the historical and forming-bar rollback
 lifecycle subset. `chart.point` typed declarations are fixture-backed for
-chart-point or `na` initializers, while general polyline arrays remain
-separately gated.
+chart-point or `na` initializers. Polyline id arrays are fixture-backed through
+`array.new_polyline`, official `array.new<polyline>` template syntax,
+`array.from(polyline, ...)`, typed declarations, generic object-array helpers,
+and array/slice history snapshots.
 
 Bar state:
 

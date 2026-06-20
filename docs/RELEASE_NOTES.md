@@ -28,8 +28,10 @@
   execution values, while keeping existing default-`defval` behavior when no
   override is supplied.
 - Added fixture-backed scalar array, scalar slice, label-array, label-slice,
-  line-array, line-slice, box-slice, linefill-array, linefill-slice, box-array,
-  table-array, table-slice, chart.point-array, and chart.point-slice variable history snapshots for Pine-style `previous = a[1]` and
+  line-array, line-slice, box-slice, linefill-array, linefill-slice,
+  polyline-array, polyline-slice, box-array, table-array, table-slice,
+  chart.point-array, and chart.point-slice variable history snapshots for
+  Pine-style `previous = a[1]` and
   `na(previous) ? na : previous.get(0)` reads, with retained array values copied
   into history and positive-offset history reads returning a fresh array copy.
 - Added fixture-backed Pine-style shallow `array.slice` window semantics:
@@ -105,14 +107,13 @@
   current-id reads do not leak into confirmed runtime state.
 - Added fixture-backed partial `polyline.delete` and `polyline.all` lifecycle
   support, including deletion snapshots, namespace and method-call deletion,
-  `na` no-op behavior, and current-id filtering in `polyline.all`; general
-  polyline arrays plus runtime declaration-driven max-count/eviction parity
-  remain unsupported.
+  `na` no-op behavior, and current-id filtering in `polyline.all`. Later
+  bullets extend polyline arrays and declaration-driven max-count eviction.
 - Added fixture-backed partial `polyline.new` support over
   `array<chart.point>` inputs, with runtime-owned polyline ids, copied point
   lists, style fields, CLI/Python/WASM `polylines` output, and runtime
-  `schemaVersion: 7`; general polyline arrays plus runtime
-  declaration-driven max-count/eviction parity remain unsupported.
+  `schemaVersion: 7`. Later bullets extend polyline arrays and
+  declaration-driven max-count eviction.
 - Added fixture-backed `array.new<chart.point>()` parsing, semantic validation,
   and runtime construction for chart-point arrays, including optional
   `initial_value` handling.
@@ -121,8 +122,7 @@
   historical polyline lifecycle subset.
 - Added fixture-backed partial `chart.point` constructor, copy, field read, and
   top-level field mutation support as the first executable prerequisite for
-  future polyline work; general polyline arrays plus runtime
-  declaration-driven max-count/eviction parity remain unsupported.
+  follow-up polyline work.
 - Refreshed the `polyline.*` implementation gate with an official-semantics
   sequence covering `chart.point`, `array<chart.point>`, polyline snapshots,
   deletion, `.all`, rollback, and host parity before support is claimed.
