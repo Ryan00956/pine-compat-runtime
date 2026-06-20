@@ -261,6 +261,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/vwap_edge_cases.pine",
     ),
     ("runtime_wad.json", "tests/fixtures/runtime/wad.pine"),
+    (
+        "runtime_wad_edge_cases.json",
+        "tests/fixtures/runtime/wad_edge_cases.pine",
+    ),
     ("runtime_wvad.json", "tests/fixtures/runtime/wvad.pine"),
     (
         "runtime_correlation.json",
