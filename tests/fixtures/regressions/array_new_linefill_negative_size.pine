@@ -1,0 +1,3 @@
+indicator("Array new linefill negative size")
+values = array.new_linefill(-1)
+plot(array.size(values))

@@ -80,6 +80,14 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array.new_line size cannot exceed 100000 elements",
     ),
     (
+        "tests/fixtures/regressions/array_new_linefill_negative_size.pine",
+        "array.new_linefill size cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/array_new_linefill_size_limit.pine",
+        "array.new_linefill size cannot exceed 100000 elements",
+    ),
+    (
         "tests/fixtures/regressions/array_new_label_negative_size.pine",
         "array.new_label size cannot be negative",
     ),
