@@ -2222,10 +2222,34 @@ fn reports_unsupported_table_cell_method_fixture() {
 }
 
 #[test]
+fn reports_unsupported_if_condition_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_if_condition.pine",
+        &["condition must be bool, got Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_switch_condition_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_switch_condition.pine",
+        &["condition must be bool, got Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_switch_statement_block_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_switch_statement_block.pine",
         "E_PARSE_SWITCH_BLOCK",
+    );
+}
+
+#[test]
+fn reports_unsupported_while_condition_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_while_condition.pine",
+        &["condition must be bool, got Const String"],
     );
 }
 
