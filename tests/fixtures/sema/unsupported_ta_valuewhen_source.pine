@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.valuewhen Source")
+x = ta.valuewhen(close > open, "x", 0)
