@@ -69,6 +69,11 @@ method cloneSwitch(Point p, int mode) =>
         0 => Point.new(p.x)
         1 => Point.new(p.x + 5)
         => Point.new(p.x + 10)
+method cloneOtherSwitch(Point p, Point other, int mode) =>
+    switch mode
+        0 => Point.new(other.x)
+        1 => Point.new(other.x + 5)
+        => Point.new(other.x + 10)
 method cloneIf(Point p, bool flip) =>
     if flip
         Point.new(p.x)
@@ -120,6 +125,7 @@ clonedOtherViaMakeNamed = p.cloneOtherViaMakeNamed(q)
 clonedTernary = p.cloneTernary(bar_index < 2)
 clonedOtherTernary = p.cloneOtherTernary(q, bar_index < 2)
 clonedSwitch = p.cloneSwitch(bar_index)
+clonedOtherSwitch = p.cloneOtherSwitch(q, bar_index)
 clonedIf = p.cloneIf(bar_index < 2)
 clonedOtherIf = p.cloneOtherIf(q, bar_index < 2)
 clonedFor = p.cloneFor(2)
@@ -151,6 +157,7 @@ plot(clonedOtherViaMakeNamed.x + close)
 plot(clonedTernary.x + close)
 plot(clonedOtherTernary.x + close + 60)
 plot(clonedSwitch.x + close)
+plot(clonedOtherSwitch.x + close + 70)
 plot(clonedIf.x + close)
 plot(clonedOtherIf.x + close + 40)
 plot(clonedFor.x + close)
