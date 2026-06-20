@@ -49,9 +49,10 @@ impl<'a> HistoricalRuntime<'a> {
         let text = self.eval_expr(text_arg)?;
         let xloc = self.eval_label_option(args, 3, "xloc", "xloc.bar_index")?;
         let yloc = self.eval_label_option(args, 4, "yloc", "yloc.price")?;
-        let color = self.eval_label_option_value(args, 5, "color", PineValue::Na)?;
+        let color = self.eval_label_option_value(args, 5, "color", PineValue::Color(0x2196F3))?;
         let style = self.eval_label_option(args, 6, "style", "label.style_label_down")?;
-        let text_color = self.eval_label_option_value(args, 7, "textcolor", PineValue::Na)?;
+        let text_color =
+            self.eval_label_option_value(args, 7, "textcolor", PineValue::Color(0xFFFFFF))?;
         let size = self.eval_label_option(args, 8, "size", "size.normal")?;
         let text_align = self.eval_label_option(args, 9, "textalign", "text.align_center")?;
         let tooltip =
@@ -90,9 +91,10 @@ impl<'a> HistoricalRuntime<'a> {
         let text = self.eval_required_label_arg(args, 1, "text")?;
         let xloc = self.eval_label_option(args, 2, "xloc", "xloc.bar_index")?;
         let yloc = self.eval_label_option(args, 3, "yloc", "yloc.price")?;
-        let color = self.eval_label_option_value(args, 4, "color", PineValue::Na)?;
+        let color = self.eval_label_option_value(args, 4, "color", PineValue::Color(0x2196F3))?;
         let style = self.eval_label_option(args, 5, "style", "label.style_label_down")?;
-        let text_color = self.eval_label_option_value(args, 6, "textcolor", PineValue::Na)?;
+        let text_color =
+            self.eval_label_option_value(args, 6, "textcolor", PineValue::Color(0xFFFFFF))?;
         let size = self.eval_label_option(args, 7, "size", "size.normal")?;
         let text_align = self.eval_label_option(args, 8, "textalign", "text.align_center")?;
         let tooltip =

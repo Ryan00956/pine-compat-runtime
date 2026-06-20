@@ -763,10 +763,11 @@ from ordinary and independent while-loop control-flow blocks.
 horizontal text alignment constant. `label.set_text_font_family` stores the
 selected font-family constant. `label.new` can initialize `xloc`, `yloc`,
 color, official style, text color, size, `textalign`, `text_font_family`, and a
-`text_formatting` mask in the host-neutral snapshot; its chart-point overload
-uses `point.index` for `xloc.bar_index`, `point.time` for `xloc.bar_time`, and
-`point.price` for y. `force_overlay` is accepted but remains a host display
-responsibility.
+`text_formatting` mask in the host-neutral snapshot; omitted `color` records the
+official `color.blue` default and omitted `textcolor` records the official
+`color.white` default. Its chart-point overload uses `point.index` for
+`xloc.bar_index`, `point.time` for `xloc.bar_time`, and `point.price` for y.
+`force_overlay` is accepted but remains a host display responsibility.
 `label.set_text_formatting` stores the selected
 `text.format_none`/`text.format_bold`/`text.format_italic` mask, including
 bold+italic combinations. Visual placement for above/below-bar and time/index
@@ -1176,7 +1177,9 @@ official default `color.blue` for omitted `border_color`/`bgcolor`, `color.black
 for omitted `text_color`, and `size.auto` for omitted `text_size`. `label.new`
 can create label snapshots from one `chart.point`, selecting `point.index` for
 `xloc.bar_index` and `point.time` for `xloc.bar_time`, while using
-`point.price` for y and retaining the existing label text/style fields.
+`point.price` for y and retaining the existing label text/style fields,
+including the official default `color.blue` for omitted `color` and
+`color.white` for omitted `textcolor`.
 `line.set_first_point` and
 `line.set_second_point` update the selected endpoint from a `chart.point`,
 using the line's current `xloc` to choose `point.index` or `point.time` for the

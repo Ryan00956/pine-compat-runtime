@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Aligned `label.new` omitted `color` and `textcolor` runtime snapshots for
+  scalar and chart-point overloads with the official defaults.
 - Aligned `box.new` omitted `border_color`, `bgcolor`, `text_color`, and
   `text_size` runtime snapshots for scalar and chart-point overloads with the
   official defaults.

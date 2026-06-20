@@ -65,12 +65,12 @@ plot(close)
             PineValue::String("xloc.bar_index".to_owned())
         );
         assert_eq!(snapshot.yloc, PineValue::String("yloc.price".to_owned()));
-        assert_eq!(snapshot.color, PineValue::Na);
+        assert_eq!(snapshot.color, PineValue::Color(0x2196F3));
         assert_eq!(
             snapshot.style,
             PineValue::String("label.style_label_down".to_owned())
         );
-        assert_eq!(snapshot.text_color, PineValue::Na);
+        assert_eq!(snapshot.text_color, PineValue::Color(0xFFFFFF));
         assert_eq!(snapshot.size, PineValue::String("size.normal".to_owned()));
         assert_eq!(snapshot.tooltip, PineValue::String(String::new()));
     }
@@ -1212,6 +1212,8 @@ plot(close)
     assert_eq!(snapshot.text_formatting, PineValue::Int(0));
 
     let styled = &result.labels[1].snapshots[0];
+    assert_eq!(styled.color, PineValue::Color(0x2196F3));
+    assert_eq!(styled.text_color, PineValue::Color(0xFFFFFF));
     assert_eq!(
         styled.text_align,
         PineValue::String("text.align_right".to_owned())
@@ -1255,7 +1257,7 @@ plot(close)
     let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
     let label = &result.labels[0];
 
-    assert_eq!(label.snapshots.len(), 12);
+    assert_eq!(label.snapshots.len(), 11);
     assert_eq!(label.snapshots[0].x, PineValue::Int(0));
     assert_eq!(label.snapshots[1].x, PineValue::Int(1));
     assert_eq!(label.snapshots[2].y, PineValue::Float(2.0));
@@ -1264,25 +1266,24 @@ plot(close)
         PineValue::String("changed".to_owned())
     );
     assert_eq!(label.snapshots[4].color, PineValue::Color(0x4CAF50));
-    assert_eq!(label.snapshots[5].text_color, PineValue::Color(0xFFFFFF));
     assert_eq!(
-        label.snapshots[6].style,
+        label.snapshots[5].style,
         PineValue::String("label.style_label_up".to_owned())
     );
-    assert_eq!(label.snapshots[7].size, PineValue::Int(12));
+    assert_eq!(label.snapshots[6].size, PineValue::Int(12));
     assert_eq!(
-        label.snapshots[8].tooltip,
+        label.snapshots[7].tooltip,
         PineValue::String("Tip".to_owned())
     );
     assert_eq!(
-        label.snapshots[9].text_align,
+        label.snapshots[8].text_align,
         PineValue::String("text.align_left".to_owned())
     );
     assert_eq!(
-        label.snapshots[10].text_font_family,
+        label.snapshots[9].text_font_family,
         PineValue::String("font.family_monospace".to_owned())
     );
-    assert_eq!(label.snapshots[11].text_formatting, PineValue::Int(3));
+    assert_eq!(label.snapshots[10].text_formatting, PineValue::Int(3));
 }
 
 #[test]

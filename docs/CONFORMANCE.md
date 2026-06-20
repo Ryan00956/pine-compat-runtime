@@ -684,7 +684,8 @@ representative nested output families such as `plotShapes` and `plotCandles`.
 The Phase E drawing-object scaffold adds `labels`, `lines`, `boxes`, and
 `tables` as top-level runtime keys in `schemaVersion: 2`. The executable label
 subset covers `label.new` creation snapshots with bar-index or bar-time x
-locations, price/abovebar/belowbar y locations, official label styles, and
+locations, price/abovebar/belowbar y locations, official label styles, official
+`color.blue` and `color.white` defaults for omitted color/textcolor values, and
 host-neutral text metadata, plus the `chart.point` point/text overload using
 point indexes or times based on `xloc`, selected `label.set_*` mutators including
 fixture-backed `label.set_x`, `label.set_y`, `label.set_xy`, `label.set_text`,
@@ -825,8 +826,9 @@ drawing object is a no-op where deletion exists; supported label getters return
 are stable and not reused. `label.new` can initialize host-neutral label
 `xloc` values `xloc.bar_index`/`xloc.bar_time`, including from a `chart.point`
 by selecting `point.index` or `point.time`, `yloc` values `yloc.price`,
-`yloc.abovebar`, and `yloc.belowbar`, color/text-color fields, official
-`label.style_*` values, size constants or integer sizes, `textalign`,
+`yloc.abovebar`, and `yloc.belowbar`, color/text-color fields with official
+`color.blue`/`color.white` defaults when omitted, official `label.style_*`
+values, size constants or integer sizes, `textalign`,
 `text_font_family`, and `text_formatting` snapshot fields; its `force_overlay`
 argument is accepted but left to the host display layer.
 `label.set_x`, `label.set_y`, `label.set_xy`, `label.set_point`,
