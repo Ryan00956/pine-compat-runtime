@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported ta.macd Signal Length")
+[macdLine, signalLine, histLine] = ta.macd(close, 12, 26, 1.5)
+plot(macdLine)
