@@ -7,6 +7,8 @@
   storage, mutation, read, search, copy, slice, concat, reverse, clear, and
   method-call behavior, plus official `array.new<polyline>` template syntax
   and typed `array<polyline>`/`polyline[]` declarations.
+- Added fixture-backed polyline array and slice history snapshots across the
+  WASM host contract.
 - Added fixture-backed pure local UDT method coverage for constructors that
   return values from additional local UDT parameter fields through ternary,
   switch, final if/else, and final for bodies, with matching semantic analyzer

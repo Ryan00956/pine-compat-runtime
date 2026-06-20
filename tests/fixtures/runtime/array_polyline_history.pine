@@ -1,0 +1,11 @@
+//@version=5
+indicator("Polyline array history")
+points = array.new<chart.point>()
+points.push(chart.point.from_index(bar_index, close))
+current = polyline.new(points)
+ids = array.new<polyline>(1)
+ids.set(0, current)
+previous_ids = ids[1]
+previous_id = na(previous_ids) ? na : previous_ids.get(0)
+visible = polyline.all
+plot(na(previous_id) ? na : array.indexof(visible, previous_id))

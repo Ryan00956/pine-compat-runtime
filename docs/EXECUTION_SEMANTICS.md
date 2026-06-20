@@ -1049,15 +1049,15 @@ runtime execution. See [`SERIES_MODEL.md`](SERIES_MODEL.md).
 
 Array variable history is supported for the fixture-backed scalar array,
 scalar slice, label-array, label-slice, line-array, line-slice, box-slice,
-linefill-array, linefill-slice, box-array, table-array, table-slice, and
-chart.point-array and chart.point-slice read paths, including the official
-`previous = a[1]` and `na(previous) ? na : previous.get(0)` pattern. When a
+linefill-array, linefill-slice, polyline-array, polyline-slice, box-array,
+table-array, table-slice, and chart.point-array and chart.point-slice read
+paths, including the official `previous = a[1]` and
+`na(previous) ? na : previous.get(0)` pattern. When a
 retained series value is an array id, runtime stores an independent array
 snapshot for history and returns a fresh copy from positive-offset history
 reads, so reading or mutating the historical copy does not alias the current
-array id. Broader array-history edges, including polyline arrays, future
-collection families, and richer mutation/aliasing cases, remain outside the
-current contract.
+array id. Broader array-history edges, including future collection families and
+richer mutation/aliasing cases, remain outside the current contract.
 
 ## `na`
 
@@ -1199,7 +1199,7 @@ path. The current polyline id array subset is fixture-backed through
 `array.new_polyline`, official `array.new<polyline>` template syntax,
 typed `array<polyline>`/`polyline[]` declarations, `array.from(polyline, ...)`,
 and generic object-array storage, mutation, read, search, copy, slice, concat,
-reverse, and clear helpers.
+reverse, clear, and array/slice history snapshots.
 
 ## Determinism
 

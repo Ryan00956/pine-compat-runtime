@@ -1,0 +1,12 @@
+//@version=5
+indicator("Polyline array slice history")
+points = array.new<chart.point>()
+points.push(chart.point.from_index(bar_index, close))
+current = polyline.new(points)
+source = array.new<polyline>(2)
+source.set(0, current)
+window = source.slice(0, 1)
+previous_window = window[1]
+previous_id = na(previous_window) ? na : previous_window.get(0)
+visible = polyline.all
+plot(na(previous_id) ? na : array.indexof(visible, previous_id))

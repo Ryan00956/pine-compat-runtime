@@ -610,6 +610,17 @@ fn run_script_csv_returns_array_linefill_history_fixture_contract() {
 }
 
 #[test]
+fn run_script_csv_returns_array_polyline_history_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_polyline_history.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("array polyline history fixture should run");
+
+    assert_snapshot("runtime_array_polyline_history.json", &output);
+}
+
+#[test]
 fn run_script_csv_returns_array_table_history_fixture_contract() {
     let output = run_script_csv(
         include_str!("../../../../tests/fixtures/runtime/array_table_history.pine"),
@@ -684,6 +695,17 @@ fn run_script_csv_returns_array_linefill_slice_history_fixture_contract() {
     .expect("array linefill slice history fixture should run");
 
     assert_snapshot("runtime_array_linefill_slice_history.json", &output);
+}
+
+#[test]
+fn run_script_csv_returns_array_polyline_slice_history_fixture_contract() {
+    let output = run_script_csv(
+        include_str!("../../../../tests/fixtures/runtime/array_polyline_slice_history.pine"),
+        include_str!("../../../../tests/fixtures/runtime/bars.csv"),
+    )
+    .expect("array polyline slice history fixture should run");
+
+    assert_snapshot("runtime_array_polyline_slice_history.json", &output);
 }
 
 #[test]
