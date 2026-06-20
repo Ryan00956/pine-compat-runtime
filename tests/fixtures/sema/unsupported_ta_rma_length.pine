@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.rma Length")
+plot(ta.rma(close, 1.5))
