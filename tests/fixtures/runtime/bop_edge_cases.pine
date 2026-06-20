@@ -1,0 +1,4 @@
+//@version=5
+indicator("BOP edge cases")
+value = ta.bop()
+plot(value)
