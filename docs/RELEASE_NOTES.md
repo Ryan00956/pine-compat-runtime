@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Added fixture-backed pure local UDT method coverage for constructors that
+  return values from additional local UDT parameter fields through ternary,
+  switch, final if/else, and final for bodies, with matching semantic analyzer
+  regression tests and execution-semantics documentation.
 - Bumped machine-readable analysis reports to `schemaVersion: 3` and added
   top-level `inputs` metadata for executable scripts, exposing each `input*`
   call's call-site id, function name, and literal title when available.
