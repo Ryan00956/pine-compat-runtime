@@ -401,6 +401,22 @@ fn reports_unsupported_ta_lowest_source_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_max_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_max_source.pine",
+        &["`ta.max` argument `source` does not accept Const Bool"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_min_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_min_source.pine",
+        &["`ta.min` argument `source` does not accept Const Bool"],
+    );
+}
+
+#[test]
 fn reports_unsupported_ta_highestbars_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_highestbars_length.pine",
@@ -477,6 +493,14 @@ fn reports_unsupported_ta_wma_length_fixture() {
     assert_diagnostic_messages(
         "tests/fixtures/sema/unsupported_ta_wma_length.pine",
         &["`ta.wma` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_hma_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_hma_length.pine",
+        &["`ta.hma` argument `length` does not accept Const Float"],
     );
 }
 
