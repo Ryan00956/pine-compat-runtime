@@ -1900,6 +1900,14 @@ fn reports_unsupported_array_remove_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_remove_index_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_remove_index.pine",
+        &["`array.remove` argument `index` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_unshift_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_unshift_polyline.pine",
