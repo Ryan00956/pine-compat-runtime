@@ -1,0 +1,6 @@
+//@version=5
+indicator("Unsupported ta.dmi adxSmoothing")
+[plus, minus, adx] = ta.dmi(2, 1.5)
+plot(plus)
+plot(minus)
+plot(adx)
