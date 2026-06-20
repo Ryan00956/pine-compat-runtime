@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.mode Length")
+plot(ta.mode(close, 2.5))
