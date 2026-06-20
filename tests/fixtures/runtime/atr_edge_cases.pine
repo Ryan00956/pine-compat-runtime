@@ -1,0 +1,6 @@
+//@version=5
+indicator("ATR Edge Cases")
+plot(ta.atr(2))
+plot(ta.atr(1))
+plot(ta.atr(0))
+plot(ta.atr(-1))
