@@ -1748,9 +1748,9 @@ fn reports_unsupported_array_last_polyline_fixture() {
 }
 
 #[test]
-fn reports_unsupported_array_from_linefill_fixture() {
+fn reports_unsupported_array_from_array_argument_fixture() {
     assert_diagnostic_fixture(
-        "tests/fixtures/sema/unsupported_array_from_linefill.pine",
+        "tests/fixtures/sema/unsupported_array_from_array_argument.pine",
         "E_CALL_ARG_TYPE",
     );
 }

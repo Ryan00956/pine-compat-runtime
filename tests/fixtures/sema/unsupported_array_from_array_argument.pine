@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported array.from Array Argument")
+values = array.from(array.new_linefill(0))
+plot(close)
