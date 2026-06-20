@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.kcw useTrueRange")
+plot(ta.kcw(close, 3, 2, "bad"))
