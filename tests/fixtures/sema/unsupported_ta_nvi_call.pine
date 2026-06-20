@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.nvi Call")
+plot(ta.nvi())
