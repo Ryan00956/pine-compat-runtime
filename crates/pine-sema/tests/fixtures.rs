@@ -747,6 +747,62 @@ fn reports_unsupported_ta_crossunder_source_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_iii_call_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_iii_call.pine",
+        &["unknown function `ta.iii`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_nvi_call_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_nvi_call.pine",
+        &["unknown function `ta.nvi`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_obv_call_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_obv_call.pine",
+        &["unknown function `ta.obv`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_pvi_call_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_pvi_call.pine",
+        &["unknown function `ta.pvi`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_pvt_call_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_pvt_call.pine",
+        &["unknown function `ta.pvt`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_wad_call_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_wad_call.pine",
+        &["unknown function `ta.wad`"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_wvad_call_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_wvad_call.pine",
+        &["unknown function `ta.wvad`"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
