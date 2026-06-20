@@ -582,6 +582,30 @@ plot(made.x + close)
 }
 
 #[test]
+fn accepts_udt_final_for_constructor_return_from_user_method_udt_param_fields() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method cloneOtherFor(Point p, Point other, int count) =>
+    for i = 0 to count
+        Point.new(other.x + i)
+p = Point.new(close)
+q = Point.new(open)
+made = p.cloneOtherFor(q, 2)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_final_for_udt_alias_return_from_user_method_receiver() {
     let analysis = analyze(
         r#"type Point
