@@ -1,0 +1,11 @@
+//@version=5
+indicator("MFI edge cases")
+missing_source = bar_index == 2 ? na : close
+value = ta.mfi(close, 2)
+missing = ta.mfi(missing_source, 2)
+flat = ta.mfi(close - close + 3, 2)
+invalid = ta.mfi(close, -1)
+plot(value)
+plot(missing)
+plot(na(flat) ? 1 : 0)
+plot(na(invalid) ? 1 : 0)

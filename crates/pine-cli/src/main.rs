@@ -1349,6 +1349,9 @@ mod tests {
             "tests/fixtures/runtime/vwma_edge_cases.pine" => {
                 include_str!("../../../tests/fixtures/runtime/vwma_edge_cases_bars.csv")
             }
+            "tests/fixtures/runtime/mfi_edge_cases.pine" => {
+                include_str!("../../../tests/fixtures/runtime/mfi_edge_cases_bars.csv")
+            }
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }
     }
