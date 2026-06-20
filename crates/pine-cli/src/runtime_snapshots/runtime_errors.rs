@@ -112,6 +112,14 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array.new_table size cannot exceed 100000 elements",
     ),
     (
+        "tests/fixtures/regressions/array_new_chart_point_negative_size.pine",
+        "array.new<chart.point> size cannot be negative",
+    ),
+    (
+        "tests/fixtures/regressions/array_new_chart_point_size_limit.pine",
+        "array.new<chart.point> size cannot exceed 100000 elements",
+    ),
+    (
         "tests/fixtures/regressions/table_new_count_limit.pine",
         "table count cannot exceed 50",
     ),
