@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.max Source")
+plot(ta.max(true))
