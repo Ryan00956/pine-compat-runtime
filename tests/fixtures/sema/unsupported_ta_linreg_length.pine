@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.linreg Length")
+plot(ta.linreg(close, 1.5, 0))
