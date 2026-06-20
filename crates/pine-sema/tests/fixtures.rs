@@ -1832,6 +1832,14 @@ fn reports_unsupported_array_set_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_set_value_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_set_value.pine",
+        &["`array.set` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_get_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_get_polyline.pine",
