@@ -1,0 +1,10 @@
+//@version=5
+indicator("CMO Edge Cases")
+missing_source = bar_index == 2 ? na : close
+flat_source = close - close + 1
+plot(ta.cmo(close, 3))
+plot(ta.cmo(close, 1))
+plot(ta.cmo(close, 0))
+plot(ta.cmo(close, -1))
+plot(ta.cmo(flat_source, 2))
+plot(ta.cmo(missing_source, 3))
