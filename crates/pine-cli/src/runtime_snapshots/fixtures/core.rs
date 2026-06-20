@@ -224,6 +224,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/extremes.pine",
     ),
     (
+        "runtime_extremes_edge_cases.json",
+        "tests/fixtures/runtime/extremes_edge_cases.pine",
+    ),
+    (
         "runtime_extreme_bars.json",
         "tests/fixtures/runtime/extreme_bars.pine",
     ),
