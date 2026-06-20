@@ -1364,6 +1364,9 @@ mod tests {
             "tests/fixtures/runtime/pvi_edge_cases.pine" => {
                 include_str!("../../../tests/fixtures/runtime/pvi_edge_cases_bars.csv")
             }
+            "tests/fixtures/runtime/pvt_edge_cases.pine" => {
+                include_str!("../../../tests/fixtures/runtime/pvt_edge_cases_bars.csv")
+            }
             _ => include_str!("../../../tests/fixtures/runtime/bars.csv"),
         }
     }
