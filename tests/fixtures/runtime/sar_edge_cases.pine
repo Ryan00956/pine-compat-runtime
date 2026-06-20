@@ -1,0 +1,7 @@
+//@version=5
+indicator("SAR Edge Cases")
+missing = float(na)
+plot(ta.sar(0.02, 0.02, 0.2))
+plot(na(ta.sar(missing, 0.02, 0.2)) ? 1 : 0)
+plot(na(ta.sar(0.02, missing, 0.2)) ? 1 : 0)
+plot(na(ta.sar(0.02, 0.02, missing)) ? 1 : 0)
