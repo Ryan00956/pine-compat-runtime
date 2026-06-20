@@ -1,0 +1,10 @@
+//@version=5
+indicator("CCI Edge Cases")
+missing_source = bar_index == 2 ? na : close
+flat_source = close - close + 1
+plot(ta.cci(close, 3))
+plot(ta.cci(close, 1))
+plot(ta.cci(close, 0))
+plot(ta.cci(close, -1))
+plot(ta.cci(flat_source, 2))
+plot(ta.cci(missing_source, 3))
