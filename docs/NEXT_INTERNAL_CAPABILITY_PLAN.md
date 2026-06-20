@@ -132,13 +132,23 @@ state.
 Goal: expand the local structured-data subset without weakening type identity or
 method resolution.
 
+Recent closure:
+
+- Local scalar-field UDT mutation outside UDF/method bodies now has branch,
+  `for`, and `while` coverage.
+- Pure local UDT methods now have fixture-backed receiver and additional local
+  UDT parameter passthrough, alias, nested-method passthrough, constructor
+  helper, and same-local-UDT ternary, switch, final if/else, and final `for`
+  constructor-return coverage.
+
 Good next slices:
 
-- Field mutation for local scalar-field UDT values.
-- More UDT parameter and return-value fixtures.
-- More pure method forms on local UDT receivers.
 - Clearer diagnostics for unsupported imported UDTs, imported methods, and
   side-effecting methods.
+- Negative fixture maintenance for unsupported method parameter families or
+  mismatched local UDT identity.
+- Audit-only sync work when UDT/method matrix, semantic docs, and runtime
+  fixtures drift.
 
 Keep out of scope until separately designed:
 
@@ -148,8 +158,9 @@ Keep out of scope until separately designed:
 - UDT history references and `varip` UDT values.
 - Side effects inside methods.
 
-Recommended first slice: local scalar-field mutation, if the semantic and runtime
-storage model can be made explicit and covered by fixtures.
+Recommended first slice: one diagnostics fixture/message improvement for an
+already unsupported UDT or method boundary, without widening imported UDTs,
+imported methods, UDT arrays, UDT history, `varip`, or method side effects.
 
 ## Direction 5: Request Support
 
