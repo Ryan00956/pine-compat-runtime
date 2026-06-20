@@ -2058,6 +2058,14 @@ fn reports_unsupported_array_indexof_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_indexof_value_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_indexof_value.pine",
+        &["`array.indexof` argument `value` does not accept Series Float for bool arrays"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_lastindexof_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_lastindexof_polyline.pine",
