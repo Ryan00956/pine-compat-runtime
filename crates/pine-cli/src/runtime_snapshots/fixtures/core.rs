@@ -235,6 +235,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/accdist_edge_cases.pine",
     ),
     ("runtime_iii.json", "tests/fixtures/runtime/iii.pine"),
+    (
+        "runtime_iii_edge_cases.json",
+        "tests/fixtures/runtime/iii_edge_cases.pine",
+    ),
     ("runtime_nvi.json", "tests/fixtures/runtime/nvi.pine"),
     ("runtime_obv.json", "tests/fixtures/runtime/obv.pine"),
     ("runtime_pvi.json", "tests/fixtures/runtime/pvi.pine"),
