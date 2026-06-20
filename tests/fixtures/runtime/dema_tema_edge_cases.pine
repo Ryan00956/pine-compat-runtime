@@ -1,0 +1,11 @@
+//@version=5
+indicator("DEMA/TEMA Edge Cases")
+missing_source = bar_index == 2 ? na : close
+plot(ta.dema(close, 2))
+plot(ta.dema(close, 1))
+plot(ta.dema(close, 0))
+plot(ta.dema(missing_source, 2))
+plot(ta.tema(close, 2))
+plot(ta.tema(close, 1))
+plot(ta.tema(close, -1))
+plot(ta.tema(missing_source, 2))
