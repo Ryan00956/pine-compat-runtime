@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.fill Index To")
+values = array.new_int(2, 1)
+array.fill(values, 2, 0, "1")
+plot(close)

@@ -1942,6 +1942,14 @@ fn reports_unsupported_array_fill_index_from_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_fill_index_to_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_fill_index_to.pine",
+        &["`array.fill` argument `index_to` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_join_label_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_join_label.pine",
