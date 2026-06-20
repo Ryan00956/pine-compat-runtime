@@ -2188,6 +2188,14 @@ fn reports_unsupported_array_sort_udt_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_sort_order_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_sort_order.pine",
+        &["`array.sort` argument `order` does not accept Series Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_sort_indices_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_sort_indices_bool.pine",

@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.sort Order")
+values = array.new_int(2, 1)
+array.sort(values, close)
+plot(array.get(values, 0))
