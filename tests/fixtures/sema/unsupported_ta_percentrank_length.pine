@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.percentrank Length")
+plot(ta.percentrank(close, 2.5))
