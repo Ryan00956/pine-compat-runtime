@@ -3638,6 +3638,14 @@ fn reports_unsupported_array_binary_search_chart_point_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_binary_search_value_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_binary_search_value.pine",
+        &["`array.binary_search` argument `value` does not accept Const String for int arrays"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_binary_search_leftmost_bool_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_array_binary_search_leftmost_bool.pine",
