@@ -383,6 +383,28 @@ plot(made.x + close)
 }
 
 #[test]
+fn accepts_udt_ternary_constructor_return_from_user_method_udt_param_fields() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+method cloneOtherTernary(Point p, Point other, bool flip) => flip ? Point.new(other.x) : Point.new(other.x + 10)
+p = Point.new(close)
+q = Point.new(open)
+made = p.cloneOtherTernary(q, bar_index < 2)
+plot(made.x + close)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udt_switch_constructor_return_from_user_method_receiver_fields() {
     let analysis = analyze(
         r#"type Point
