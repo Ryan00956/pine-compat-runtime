@@ -123,6 +123,9 @@ mod tests {
     }
 
     fn expected_partial_builtin(name: &str) -> bool {
+        if matches!(name, "linefill.get_line1" | "linefill.get_line2") {
+            return false;
+        }
         [
             "array.",
             "label.",
