@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.highest Length")
+plot(ta.highest(close, 1.5))
