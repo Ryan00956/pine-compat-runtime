@@ -3869,6 +3869,14 @@ fn reports_unsupported_user_method_arg_type_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_method_param_type_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_method_param_type.pine",
+        "E_METHOD_PARAM",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_unknown_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_method_unknown.pine",

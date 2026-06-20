@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported user method parameter type")
+type Point
+    float x
+
+method withLine(Point p, line id) => p.x
+p = Point.new(close)
+plot(p.withLine(na))
