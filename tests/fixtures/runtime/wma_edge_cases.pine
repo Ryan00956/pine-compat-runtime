@@ -1,0 +1,8 @@
+//@version=5
+indicator("WMA edge cases")
+missing_source = bar_index == 1 ? na : close
+flat_source = close - close + 3
+plot(ta.wma(close, 0))
+plot(ta.wma(close, -1))
+plot(ta.wma(missing_source, 2))
+plot(ta.wma(flat_source, 3))
