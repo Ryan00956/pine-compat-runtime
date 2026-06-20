@@ -563,6 +563,62 @@ fn reports_unsupported_ta_percentrank_length_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_stdev_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_stdev_length.pine",
+        &["`ta.stdev` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_stdev_biased_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_stdev_biased.pine",
+        &["`ta.stdev` argument `biased` does not accept Const Int"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_variance_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_variance_length.pine",
+        &["`ta.variance` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_variance_biased_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_variance_biased.pine",
+        &["`ta.variance` argument `biased` does not accept Const Int"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_stoch_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_stoch_length.pine",
+        &["`ta.stoch` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_supertrend_factor_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_supertrend_factor.pine",
+        &["`ta.supertrend` argument `factor` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_supertrend_atr_period_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_supertrend_atr_period.pine",
+        &["`ta.supertrend` argument `atrPeriod` does not accept Const Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
