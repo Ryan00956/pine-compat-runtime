@@ -522,6 +522,12 @@ const COLOR_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     optional: false,
 }];
 
+const LINEFILL_CAST_PARAMS: &[BuiltinParam] = &[BuiltinParam {
+    name: "x",
+    accepts: Accepts::LineFillCompatible,
+    optional: false,
+}];
+
 const NA_PARAMS: &[BuiltinParam] = &[BuiltinParam {
     name: "x",
     accepts: Accepts::Any,
@@ -689,6 +695,13 @@ pub(crate) const CAST_SIGNATURES: &[BuiltinSignature] = &[
         phase: BuiltinPhase::Phase1Core,
         params: COLOR_CAST_PARAMS,
         returns: ReturnSpec::ColorFromArg(0),
+        variadic: false,
+    },
+    BuiltinSignature {
+        name: "linefill",
+        phase: BuiltinPhase::Phase1Core,
+        params: LINEFILL_CAST_PARAMS,
+        returns: ReturnSpec::Fixed(SERIES_LINE_FILL),
         variadic: false,
     },
 ];

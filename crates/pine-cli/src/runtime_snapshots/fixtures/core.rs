@@ -653,6 +653,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
         "tests/fixtures/runtime/linefill_getters.pine",
     ),
     (
+        "runtime_linefill_cast.json",
+        "tests/fixtures/runtime/linefill_cast.pine",
+    ),
+    (
         "runtime_linefill_all.json",
         "tests/fixtures/runtime/linefill_all.pine",
     ),

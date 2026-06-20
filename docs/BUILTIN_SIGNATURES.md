@@ -485,6 +485,7 @@ float(x: int|float|bool|na) -> float with same qualifier
 bool(x: int|float|bool|na) -> bool with same qualifier
 string(x: int|float|bool|string|na) -> string with same qualifier
 color(x: color|na) -> color with same qualifier
+linefill(x: linefill|na) -> linefill
 ```
 
 `int` truncates finite floats toward zero and maps bools to `1`/`0`.
@@ -492,7 +493,8 @@ color(x: color|na) -> color with same qualifier
 `false`, and nonzero numeric values to `true`. `int(na)` and `float(na)`
 return `na`. `string` maps scalar values using the default numeric text format
 and returns `na` for `string(na)`. `color` preserves color values and returns
-`na` for `color(na)`. Numeric-to-color and object casts are not part of the
+`na` for `color(na)`. `linefill` preserves linefill ids and returns `na` for
+`linefill(na)`. Numeric-to-color and other object casts are not part of the
 current subset.
 
 Derived values:

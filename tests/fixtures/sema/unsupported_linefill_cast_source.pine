@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported linefill cast source")
+plot(na(linefill("x")) ? 1 : 0)
