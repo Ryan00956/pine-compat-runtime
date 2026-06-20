@@ -1,0 +1,16 @@
+//@version=5
+indicator("Trend Edge Cases")
+rising_source = bar_index == 0 ? 1 : bar_index == 1 ? 2 : bar_index == 2 ? 2 : bar_index == 3 ? 3 : bar_index == 4 ? na : bar_index == 5 ? 1 : bar_index == 6 ? 0 : 4
+falling_source = bar_index == 0 ? 4 : bar_index == 1 ? 3 : bar_index == 2 ? 3 : bar_index == 3 ? 2 : bar_index == 4 ? na : bar_index == 5 ? 3 : bar_index == 6 ? 4 : 0
+up = ta.rising(rising_source, 2)
+down = ta.falling(falling_source, 2)
+invalid_up = ta.rising(rising_source, 0)
+invalid_down = ta.falling(falling_source, -1)
+na_up = ta.rising(bar_index == 2 ? na : close, 2)
+na_down = ta.falling(bar_index == 2 ? na : close, 2)
+plot(up ? 1 : 0)
+plot(down ? 1 : 0)
+plot(invalid_up ? 1 : 0)
+plot(invalid_down ? 1 : 0)
+plot(na_up ? 1 : 0)
+plot(na_down ? 1 : 0)

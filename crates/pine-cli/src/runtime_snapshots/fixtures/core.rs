@@ -220,6 +220,10 @@ pub(crate) const CORE_RUNTIME_SNAPSHOT_FIXTURES: &[RuntimeSnapshotFixture] = &[
     ),
     ("runtime_trend.json", "tests/fixtures/runtime/trend.pine"),
     (
+        "runtime_trend_edge_cases.json",
+        "tests/fixtures/runtime/trend_edge_cases.pine",
+    ),
+    (
         "runtime_barssince.json",
         "tests/fixtures/runtime/barssince.pine",
     ),
