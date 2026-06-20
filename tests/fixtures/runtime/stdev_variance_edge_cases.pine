@@ -1,0 +1,14 @@
+//@version=5
+indicator("Stdev/variance edge cases")
+missing_source = bar_index == 1 ? na : close
+flat_source = close - close + 3
+plot(ta.stdev(close, 0))
+plot(ta.stdev(close, -1))
+plot(ta.stdev(close, 1, false))
+plot(ta.stdev(missing_source, 2))
+plot(ta.stdev(flat_source, 3))
+plot(ta.variance(close, 0))
+plot(ta.variance(close, -1))
+plot(ta.variance(close, 1, false))
+plot(ta.variance(missing_source, 2))
+plot(ta.variance(flat_source, 3))
