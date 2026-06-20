@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported ta.supertrend atrPeriod")
+[line, direction] = ta.supertrend(3.0, 1.5)
+plot(line)
