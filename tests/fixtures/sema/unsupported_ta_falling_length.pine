@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.falling Length")
+plot(ta.falling(close, 1.5) ? 1 : 0)
