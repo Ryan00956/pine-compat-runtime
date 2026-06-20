@@ -619,6 +619,78 @@ fn reports_unsupported_ta_supertrend_atr_period_fixture() {
 }
 
 #[test]
+fn reports_unsupported_ta_barssince_condition_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_barssince_condition.pine",
+        &["`ta.barssince` argument `condition` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_change_length_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_change_length.pine",
+        &["`ta.change` argument `length` does not accept Const Float"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_sar_start_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_sar_start.pine",
+        &["`ta.sar` argument `start` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_sar_inc_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_sar_inc.pine",
+        &["`ta.sar` argument `inc` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_sar_max_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_sar_max.pine",
+        &["`ta.sar` argument `max` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_tr_handle_na_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_tr_handle_na.pine",
+        &["`ta.tr` argument `handle_na` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_valuewhen_condition_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_valuewhen_condition.pine",
+        &["`ta.valuewhen` argument `condition` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_valuewhen_source_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_valuewhen_source.pine",
+        &["`ta.valuewhen` argument `source` does not accept Const String"],
+    );
+}
+
+#[test]
+fn reports_unsupported_ta_valuewhen_occurrence_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_ta_valuewhen_occurrence.pine",
+        &["`ta.valuewhen` argument `occurrence` does not accept Const Float"],
+    );
+}
+
+#[test]
 fn reports_unsupported_varip_fixture() {
     let path = workspace_fixture("tests/fixtures/sema/unsupported_varip.pine");
     let text = fs::read_to_string(&path).expect("fixture should be readable");
