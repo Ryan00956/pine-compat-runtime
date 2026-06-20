@@ -677,7 +677,7 @@ mod tests {
     #[test]
     #[rustfmt::skip]
     fn runtime_outputs_match_golden_snapshots() {
-        for (snapshot, fixture) in crate::runtime_snapshots::RUNTIME_SNAPSHOT_FIXTURES {
+        for (snapshot, fixture) in crate::runtime_snapshots::runtime_snapshot_fixtures() {
             assert_snapshot(snapshot, &runtime_fixture_json(fixture));
         }
         for (snapshot, fixture, library_sources) in crate::runtime_snapshots::RUNTIME_LIBRARY_SNAPSHOT_FIXTURES {
