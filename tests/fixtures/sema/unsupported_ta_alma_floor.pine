@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.alma Floor")
+plot(ta.alma(close, 3, 0.85, 6, 1))

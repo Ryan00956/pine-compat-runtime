@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.alma Offset")
+plot(ta.alma(close, 3, true, 6))
