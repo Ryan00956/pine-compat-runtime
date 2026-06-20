@@ -1849,6 +1849,14 @@ fn reports_unsupported_array_get_polyline_fixture() {
 }
 
 #[test]
+fn reports_unsupported_array_get_index_fixture() {
+    assert_diagnostic_messages(
+        "tests/fixtures/sema/unsupported_array_get_index.pine",
+        &["`array.get` argument `index` does not accept Const String"],
+    );
+}
+
+#[test]
 fn reports_unsupported_array_push_polyline_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_array_push_polyline.pine",

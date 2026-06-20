@@ -1,0 +1,5 @@
+//@version=5
+indicator("Unsupported array.get Index")
+values = array.new_int(1, 1)
+value = array.get(values, "0")
+plot(close)
