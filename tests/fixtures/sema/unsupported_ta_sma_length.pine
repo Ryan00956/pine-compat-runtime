@@ -1,0 +1,3 @@
+//@version=5
+indicator("Unsupported ta.sma Length")
+plot(ta.sma(close, 1.5))
