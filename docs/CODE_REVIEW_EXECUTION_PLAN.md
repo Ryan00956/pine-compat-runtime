@@ -663,7 +663,7 @@ run_historical(program, bars)
 
 ### 阶段 11 审查结论（2026-05-31）
 
-**总体**：输出为**手写 JSON 拼接**（非 serde），但字符串转义 RFC 合规、字段顺序固定、序列化确定。主要问题是**非有限浮点未在序列化边界归一化**（可能产出非法 JSON），以及手写拼接的长期维护成本。
+**总体**：输出为**手写 JSON 拼接**（非 serde），但字符串转义 RFC 合规、字段顺序固定、序列化确定。早期记录的**非有限浮点未在序列化边界归一化**问题已关闭；当前主要剩余项是手写拼接的长期维护成本。
 
 **输出 schema 字段清单**
 - 顶层（[json.rs](crates/pine-runtime/src/output/json.rs) `public_runtime_result_json`）：`schemaVersion`(=3, [model.rs](crates/pine-runtime/src/output/model.rs))、`plots`/`plotChars`/`plotShapes`/`plotArrows`/`plotBars`/`plotCandles`、`bgColors`/`barColors`、`hlines`/`fills`、`labels`/`lines`/`boxes`/`tables`、`alerts`、可选 `strategy`、`diagnostics`。
@@ -677,16 +677,16 @@ run_historical(program, bars)
 
 **良好实践（已验证）**
 - **字符串转义 RFC 合规**：`json_escape` 处理 `" \ \n \r \t \b \f` 及所有 `<0x20` 控制字符（`\u00xx`）；value_json 对 `String` 一律走 json_escape — label text/tooltip、plotchar/plotshape text、alert message、strategy id/direction 均安全转义，无 JSON 注入/截断风险。
-- Na/Void/Array → `null`（合法 JSON）；color 为 u32 数值。
+- Na/Void/Array → `null`（合法 JSON）；`f64_json` 将非有限 float 统一写为 `null`，覆盖 plot 值、`value_json` 与 strategy 数值字段；color 为 u32 数值。
 - profiled 变体结构稳定，schemaVersion 常量化。
 
 **发现的问题（仅记录，未修改）**
-- [中] 非有限浮点未在序列化边界归一化：`value_json` 对 `PineValue::Float` 直接 `value.to_string()`，`NaN → "NaN"`、`±Inf → "inf"/"-inf"` 均为**非法 JSON**；strategy `qty`/`price`/`profit` 等字段同样以 `{}` 格式化 f64，非有限亦非法。虽多数算术经 `finite_float_or_na` 归 `Na`，但序列化边界本身无 finite 检查，任何漏网的非有限 Float 会产出非法 JSON。建议：序列化边界对非有限 Float 归一为 `null`（纵深防御）。
+- [已关闭] 非有限浮点未在序列化边界归一化：当前 [json.rs](crates/pine-runtime/src/output/json.rs) 通过 `f64_json` 将 `NaN`/`±Inf` 统一输出为 `null`，覆盖 `value_json`、plots、strategy orders/trades/position/equity/alerts，并由 `runtime_json_serializes_non_finite_plot_floats_as_null` 与 strategy 非有限序列化单测守护。
 - [信息] 顶层 `"diagnostics"` 硬编码为 `[]`：当前运行时诊断仅来自 broker（经 `strategy.diagnostics` 输出），顶层恒空；若未来新增非策略运行时诊断会被静默丢弃。
 - [信息] 手写 JSON 拼接（非 serde）：维护成本高、新增字符串字段需记得走 json_escape（现有已正确覆盖）；profiled 变体用 `output.pop()` 依赖末尾为 `'}'` 的隐式契约。建议长期考虑 serde_json 或集中式 writer。
 - [信息] 整数值 Float（如 15.0）经 Display 输出为 `"15"`（承接阶段 6 整数坍缩，JSON 层无 `.0`）；极端值产生超长数字串但仍为合法 JSON。
 
-**结论**：输出序列化在转义安全与确定性上表现良好、跨平台稳定，但存在 [中] 非有限浮点未在边界归一化（可能产出非法 JSON），以及手写拼接的维护性信息项。可进入阶段 12（CLI）。
+**结论**：输出序列化在转义安全与确定性上表现良好、跨平台稳定；非有限浮点非法 JSON 的历史缺陷已关闭。当前剩余的是手写拼接的维护性信息项。可进入阶段 12（CLI）。
 
 ---
 
@@ -709,7 +709,7 @@ run_historical(program, bars)
 
 ### 阶段 12 审查结论（2026-05-31）
 
-**总体**：CLI 为手写位置/标志参数解析，错误信息清晰、`run` 的 stdout/stderr 分离得当、单测覆盖充分。主要问题是 **`analyze` 无论诊断严重度都退出 0**（CI 无法依退出码检错）与 **CSV 数值解析接受 `NaN`/`inf`**（非有限 bar 数据注入运行时，与阶段 11 联动）。
+**总体**：CLI 为手写位置/标志参数解析，错误信息清晰、`run` 的 stdout/stderr 分离得当、单测覆盖充分。早期记录的 **CSV 数值解析接受 `NaN`/`inf`** 问题已关闭；本阶段仍保留 `analyze` 退出码等 CLI 行为项供后续单独复核。
 
 **CLI 输入健壮性清单**
 - 子命令：`analyze` / `fmt-ast` / `run` / `matrix`（[main.rs](crates/pine-cli/src/main.rs)）；未知命令/标志→ `usage()` 作为 Err → 退出 1。
@@ -724,11 +724,11 @@ run_historical(program, bars)
 
 **发现的问题（仅记录，未修改）**
 - [中] `analyze` 无条件返回 `Ok(())`（[analyze.rs](crates/pine-cli/src/commands/analyze.rs)）：即使诊断含 error 严重度也退出 0，且诊断走 **stdout**（`println!`）— 与 `run` 的 stderr+Err 不一致；CI/脚本无法通过退出码检测分析错误。建议：有 error 诊断时返回非零退出码并将诊断写 stderr。
-- [中] CSV 数值解析接受非有限值：`parse_column` 用 `f64::from_str`，会将 `"NaN"`/`"inf"`/`"infinity"` 解析为 NaN/±Inf，无 finite 校验 — 恶意/畸形 CSV 可将非有限 bar 数据送入运行时，与阶段 11 的非有限浮点输出问题联动（可产出非法 JSON）。建议：在 CSV 边界拒绝非有限 OHLCV。
+- [已关闭] CSV 数值解析接受非有限值：当前 [bars_csv.rs](crates/pine-cli/src/bars_csv.rs) 的 `parse_f64_column` 要求 OHLCV `is_finite()`，`NaN`/`inf`/`infinity` 均报错，并由 `rejects_non_finite_ohlcv_values` 覆盖。
 - [低] 主 `--bars` 未在 CLI 层校验时间单调递增/无重复（request-bars 经 provider 有 validate_requested_bars，但主 bars 直进 run_historical）；`fs::read_to_string` 一次性读入整个文件，无大小上限（超大 CSV 可 OOM）。
 - [信息] json_escape 在 [pine-cli/json.rs](crates/pine-cli/src/json.rs) 与 pine-runtime output 中重复实现（逻辑一致）— 可考虑提取共享。
 
-**结论**：CLI 边界处理总体稳健、错误信息友好，但存在 [中] `analyze` 退出码不反映诊断严重度与 [中] CSV 接受非有限值两项。可进入阶段 13（Python 绑定）。
+**结论**：CLI 边界处理总体稳健、错误信息友好；CSV 非有限 OHLCV 注入的历史问题已关闭。`analyze` 退出码等 CLI 行为项留待后续单独复核。可进入阶段 13（Python 绑定）。
 
 ---
 
@@ -749,7 +749,7 @@ run_historical(program, bars)
 
 ### 阶段 13 审查结论（2026-06-01）
 
-**总体**：`pine-python`（764 行，仅 lib.rs）是一层薄 PyO3 包装：`compile_script`/`analyze_script`/`run_script` + `Program.run`，把 Python dict/sequence 转为 `Bar`/`AnalysisInput`/`RequestEnvironment`，再把 `Analysis`/`RuntimeResult` 逐字段镜像为 Python dict/list。无业务逻辑、无 I/O，与 CLI/WASM 共享同一 sema/runtime 入口。结构清晰、错误统一映射为 `PyValueError`、输出字段与 JSON 模型同构。未发现「高」级问题；主要是与 CLI/WASM 的**跨 host 表示分歧（非有限浮点）**与若干**承接性/范围观察**。
+**总体**：`pine-python`（764 行，仅 lib.rs）是一层薄 PyO3 包装：`compile_script`/`analyze_script`/`run_script` + `Program.run`，把 Python dict/sequence 转为 `Bar`/`AnalysisInput`/`RequestEnvironment`，再把 `Analysis`/`RuntimeResult` 逐字段镜像为 Python dict/list。无业务逻辑、无 I/O，与 CLI/WASM 共享同一 sema/runtime 入口。结构清晰、错误统一映射为 `PyValueError`、输出字段与 JSON 模型同构。未发现「高」级问题；早期记录的非有限浮点跨 host 表示分歧已关闭，剩余为承接性/范围观察。
 
 **Python API 表面核对（产出 1）**
 - 顶层函数：`compile_script(source, library_sources=None) -> Program`、`analyze_script(source, library_sources=None) -> dict`、`run_script(source, bars, request_bars=None, library_sources=None) -> dict`；类 `Program.run(bars, request_bars=None) -> dict`。模块名 `pine_compat`。
@@ -769,16 +769,16 @@ run_historical(program, bars)
 - `request_bars` 缺失时回退 `RequestEnvironment::default()`（`NoRequestDataProvider`），与 CLI/WASM 一致；缺数据报 `missing request data ...`（测试覆盖）。
 
 **发现的问题（仅记录，未修改）**
-- [中・跨 host 分歧] 非有限浮点表示在 Python 与 CLI/WASM 间不一致：[lib.rs](crates/pine-python/src/lib.rs) `append_value` 对 `PineValue::Float(v)` 直接 `output.append(*v)`，PyO3 将 `NaN`/`±Inf` 转为 Python 原生 `float('nan')`/`float('inf')`；而 CLI/WASM 的 JSON 边界输出字面量 `NaN`/`inf`（非法 JSON，承接阶段 11[中]）。后果：同一程序在 Python host 得到原生 nan/inf 对象，若调用方再 `json.dumps(result)` 会产出非标准的 `NaN`/`Infinity` token——三个 host 对非有限值的最终表示不收敛。strategy `qty`/`price`/`profit` 等 f64 字段同理。建议与阶段 11 一并在序列化/转换边界统一归一为 `null`/`None`。— [lib.rs](crates/pine-python/src/lib.rs)
+- [已关闭・跨 host 分歧] 非有限浮点表示在 Python 与 CLI/WASM 间不一致：当前 [outputs.rs](crates/pine-python/src/outputs.rs) 的 `append_value`、`set_finite_f64`、`set_option_finite_f64` 将非有限 float 统一转为 `None`，与 JSON 边界的 `null` 收敛；`test_run_script_converts_non_finite_plot_values_to_none` 覆盖 plot 输出。
 - [低] compile/run 失败丢失结构化诊断：`compile_script`/`run_script` 把诊断拼成单一字符串抛出，调用方要拿到结构化 code/span 必须**另行调用 `analyze_script`（二次分析）**。与 WASM `compile*` 行为一致（非 Python 独有），但 Python 已有结构化 `analyze_script` 可绕过。建议评估让异常携带结构化诊断（如自定义异常类型）。— [lib.rs](crates/pine-python/src/lib.rs)
 - [低] `compile_script`/`run_script` 对**任意严重度**诊断都拒绝（`if !analysis.diagnostics.is_empty()`），而 `analyze_script` 的 `executable` 取 `hir.is_some()`。若未来 sema 发射 warning/info 级诊断且仍产出 HIR，会出现 `analyze_script(executable=True)` 但 `compile_script` 抛错的自相矛盾。当前 sema 不发非 error 诊断（承接阶段 1）故不可达；三 host（CLI/WASM/Python）行为一致。建议改为按 `has_errors()` 门控以与 `executable` 对齐。— [lib.rs](crates/pine-python/src/lib.rs)
 - [信息] Python 无 profile API：CLI 有 `--profile` → `public_runtime_profiled_result_json`，而 `Program.run`/`run_script` 无 profile 参数，Python host 无法获取 `RuntimeProfile`（WASM 亦无）。属能力范围差异，相对 CLI 的缺口。— [lib.rs](crates/pine-python/src/lib.rs)
 - [信息] 运行期全程持有 GIL：`run` 未用 `Python::allow_threads` 包裹 `run_historical_with_request_environment`，长脚本/长 bar 流会阻塞其他 Python 线程；正确性无虞，仅并发性能观察。— [lib.rs](crates/pine-python/src/lib.rs)
 - [信息] `value_to_py` 分配开销：每个标量值都先建一个单元素 `PyList`、append 后取 `get_item(0)` 再 unbind——是绕开「无独立 to-object」的实现技巧，但对长序列产生 O(n) 次额外 list 分配。建议改用直接构造 `PyObject` 的辅助。— [lib.rs](crates/pine-python/src/lib.rs)
-- [信息・承接阶段 12] bar 输入无有限性/单调性校验：`parse_bar` 以 `.extract::<f64>()` 取 OHLCV，无 finite 校验，Python `float('nan')`/`float('inf')` 可直接注入运行时（联动阶段 11 非法 JSON / 本阶段非有限 Float）；主 bars 亦不校验 time 单调/去重（request 流经 `from_streams` 有校验）。dict 路径静默忽略多余键、sequence 路径严格要求 6 元——两路径宽严不一。— [lib.rs](crates/pine-python/src/lib.rs)
+- [信息・承接阶段 12] bar 输入有限性已补：Python `float('nan')`/`float('inf')` 会被拒绝（`test_run_script_rejects_non_finite_bar_values` 覆盖）。主 bars 时间单调/去重仍未在 Python host 层校验（request 流经 `from_streams` 有校验）；dict 路径静默忽略多余键、sequence 路径严格要求 6 元——两路径宽严不一。— [lib.rs](crates/pine-python/src/lib.rs)
 - [信息・承接阶段 1/3/4/6] 深递归崩溃面经 Python 暴露：各层递归无深度上限（解析/语义/内联/求值），深嵌套脚本会栈溢出 SIGABRT——这是**不可被 Python 捕获**的进程级中止，会直接杀死宿主解释器。绑定继承了该 DoS/崩溃面。建议随阶段 16 统一加深度上限治理。
 
-**结论**：Python 绑定是忠实、字段同构、错误统一的薄封装，pytest 回归充分，与 CLI/WASM 行为基本一致，无「高/中(独有)」级缺陷。唯一跨 host 分歧是 [中] 非有限浮点表示（Python 原生 nan/inf vs JSON 非法 token），其余为承接性观察（无 profile、GIL、value_to_py 分配、bar 无 finite 校验、深递归崩溃面）。可进入阶段 14（WASM 绑定）。
+**结论**：Python 绑定是忠实、字段同构、错误统一的薄封装，pytest 回归充分，与 CLI/WASM 行为基本一致，无「高/中(独有)」级缺陷。非有限浮点跨 host 表示与 bar 非有限输入的历史问题已关闭；其余为承接性观察（无 profile、GIL、value_to_py 分配、bar 时间校验、深递归崩溃面）。可进入阶段 14（WASM 绑定）。
 
 ---
 
@@ -802,7 +802,7 @@ run_historical(program, bars)
 
 ### 阶段 14 审查结论（2026-06-01）
 
-**总体**：`pine-wasm`（lib.rs + analysis_json/request_bars/library_sources 共 ~1.2k 行含测试）是 `wasm-bindgen 0.2.121` 薄绑定：8 个顶层函数 + `Program.runCsv*`，输入/输出全部以**字符串**穿越 JS↔Rust 边界（源码、CSV、JSON 入参；结果为 JSON 字符串）。run 路径直接复用 runtime 的 `public_runtime_result_json`，与 CLI **字节一致**；确定性处理（库源/请求键用 `BTreeMap` 排序）比 Python 更显式。未发现「高」级问题。主要是承接阶段 11 的非有限浮点在 WASM 边界**影响被放大**（整段结果在 JS 端不可 `JSON.parse`），以及 CSV 解析代码三处重复、duplicate 键静默坍缩等。
+**总体**：`pine-wasm`（lib.rs + analysis_json/request_bars/library_sources 共 ~1.2k 行含测试）是 `wasm-bindgen 0.2.121` 薄绑定：8 个顶层函数 + `Program.runCsv*`，输入/输出全部以**字符串**穿越 JS↔Rust 边界（源码、CSV、JSON 入参；结果为 JSON 字符串）。run 路径直接复用 runtime 的 `public_runtime_result_json`，与 CLI **字节一致**；确定性处理（库源/请求键用 `BTreeMap` 排序）比 Python 更显式。未发现「高」级问题。早期记录的非有限 JSON/CSV 边界问题已关闭，剩余主要是 duplicate 键静默坍缩与代码重复等。
 
 **WASM API 表面核对（产出 1）**
 - 编译/分析：`compileScript`/`compileScriptWithLibraries` → `Program`（失败抛 `JsValue` 字符串）；`analyzeScript`/`analyzeScriptWithLibraries` → JSON 字符串（**不抛**，错误经 `analysis_error_json` 内嵌 `E_HOST_INPUT` 诊断）。
@@ -812,7 +812,7 @@ run_historical(program, bars)
 
 **跨 host 一致性结论（产出 2）**
 - **run 输出与 CLI 字节一致**：二者都调 `public_runtime_result_json`，无独立序列化器，天然 parity（测试 `run_csv_with_request_bars_matches_direct_request_api` 还验证「直接 API == 编译后 API == 重复运行」三者全等，确定性达标）。
-- CSV 解析：WASM [lib.rs](crates/pine-wasm/src/lib.rs) 的 `parse_bars_csv` 与 CLI [bars_csv.rs](crates/pine-cli/src/bars_csv.rs) **逐字符相同**（跳空行、首行含 "close" 视表头、严格 6 列、`parse::<T>`）——行为一致但属复制粘贴重复。
+- CSV 解析：WASM [run.rs](crates/pine-wasm/src/run.rs) 的 `parse_bars_csv` 与 CLI [bars_csv.rs](crates/pine-cli/src/bars_csv.rs) 行为一致（跳空行、首行含 "close" 视表头、严格 6 列、拒绝非有限 OHLCV）——行为一致但仍有复制粘贴重复。
 - `ChartContext::default()`（symbol=`NASDAQ:AAPL`）与 CLI/Python 一致；空 `request_bars` → `NoRequestDataProvider`，与 CLI 空 specs 一致。
 - analysis JSON 与 Python 的 `analysis_to_py` 是**两套并行序列化器**（手写 JSON vs 构造 dict），字段集相同但需手工保持同步。
 
@@ -823,8 +823,8 @@ run_historical(program, bars)
 - 边界错误不 panic：所有 host 输入错误走 `Result<_, String>` → `JsValue`，分析错误内嵌 `E_HOST_INPUT`（已登记于 [DIAGNOSTIC_CODES.md](docs/DIAGNOSTIC_CODES.md)）。
 
 **发现的问题（仅记录，未修改）**
-- [中・承接阶段 11，WASM 边界放大] 非有限浮点使整段结果在 JS 端不可解析：run 输出经 `public_runtime_result_json`，非有限 Float 序列化为字面量 `NaN`/`inf`（阶段 11[中]）。WASM 把结果作为 **JSON 字符串**交给 host，浏览器 `JSON.parse("...NaN...")` 会**抛 SyntaxError**——任一漏网非有限值导致**整个结果对象无法在 JS 反序列化**（比 Python 得到原生 nan/inf 更严重）。叠加 CSV 接受 `NaN`/`inf`（下条），可由畸形输入触发。建议与阶段 11 一并在序列化边界归一为 `null`。— [lib.rs](crates/pine-wasm/src/lib.rs)、[output/json.rs](crates/pine-runtime/src/output/json.rs)
-- [中・承接阶段 12] CSV 数值解析接受非有限值：`parse_bars_csv`/`parse_column` 用 `value.parse::<f64>()`，`NaN`/`inf`/`infinity` 被接受为非有限 OHLCV 注入运行时（与上条联动可产出不可解析结果）。与 CLI 同源同病。建议 CSV 边界拒绝非有限。— [lib.rs](crates/pine-wasm/src/lib.rs)
+- [已关闭・承接阶段 11，WASM 边界放大] 非有限浮点使整段结果在 JS 端不可解析：WASM run 输出共享 `public_runtime_result_json`，已随 `f64_json` 修复为非有限 float→`null`；测试覆盖输出中不含 `NaN`。
+- [已关闭・承接阶段 12] CSV 数值解析接受非有限值：当前 [run.rs](crates/pine-wasm/src/run.rs) 的 `parse_f64_column` 拒绝 `NaN`/`inf`/`infinity`，并由 `run_script_csv_rejects_non_finite_ohlcv_values` 覆盖。
 - [低] duplicate JSON 键静默坍缩，与 CLI 的去重语义分歧：`request_environment_from_json` 经 `serde_json` 解析对象时，重复的 `SYMBOL:TIMEFRAME` 键被 serde 静默坍缩为最后一个（测试 `request_bars_documents_duplicate_json_key_collapse` 文档化此行为），**不触发** provider 的 `DuplicateKey`；而 CLI 多个 `--request-bars` 同键会被 `from_streams` 报「duplicate request data ...」。`library_sources` 经 `BTreeMap` 同样坍缩重复键。跨 host 行为不一致（WASM 后者胜、CLI 报错）。建议统一为显式拒绝或文档明示。— [request_bars.rs](crates/pine-wasm/src/request_bars.rs)、[library_sources.rs](crates/pine-wasm/src/library_sources.rs)
 - [信息] CSV 解析 + json_escape 代码三处重复：`parse_bars_csv` 在 [pine-wasm/lib.rs](crates/pine-wasm/src/lib.rs) 与 [pine-cli/bars_csv.rs](crates/pine-cli/src/bars_csv.rs) 完全复制；`json_escape` 在 runtime output、[pine-cli/json.rs](crates/pine-cli/src/json.rs)、[pine-wasm/analysis_json.rs](crates/pine-wasm/src/analysis_json.rs) 三处各一份（承接阶段 12[信息]）。漂移风险，建议提取共享 crate/模块。
 - [信息] analysis 报告双序列化器：WASM 手写 `analysis_json` 与 Python `analysis_to_py` 各实现一遍，字段集需手工同步（与阶段 11 手写 JSON 维护性观察同类）；run 输出则因共用 `public_runtime_result_json` 无此问题。建议 analysis 也收敛到单一 writer。— [analysis_json.rs](crates/pine-wasm/src/analysis_json.rs)
@@ -832,7 +832,7 @@ run_historical(program, bars)
 - [信息] 无 panic hook：未依赖 `console_error_panic_hook`，深递归栈溢出（承接阶段 1/3/4/6）在 wasm 触发 unreachable trap，host JS 仅得无消息的 `RuntimeError`，难诊断；建议 release 仍考虑设置 panic hook 改善可观测性。— [Cargo.toml](crates/pine-wasm/Cargo.toml)
 - [信息・共享范围限制] chart 上下文不可配置：WASM/Python/CLI 三 host 均硬编码 `ChartContext::default()`（`NASDAQ:AAPL` + 默认 tf），host 无法设置图表 symbol/timeframe；`request.security` 同 symbol 快路径恒以默认 symbol 匹配。属共享 scope 限制，留待阶段 16。— [chart.rs](crates/pine-runtime/src/request/chart.rs)
 
-**结论**：WASM 绑定输入校验完备、确定性显式（BTreeMap 排序）、run 输出与 CLI 字节一致、转义合规，质量良好，无「高/中(独有)」级缺陷。最需重视的是 [中] 非有限浮点在 WASM 字符串边界被放大为**整段不可 JSON.parse**（承接阶段 11/12，建议优先随序列化边界归一修复），其余为 duplicate 键坍缩分歧与代码重复/双序列化器等工程项。可进入阶段 15（测试/快照/一致性）。
+**结论**：WASM 绑定输入校验完备、确定性显式（BTreeMap 排序）、run 输出与 CLI 字节一致、转义合规，质量良好，无「高/中(独有)」级缺陷。非有限浮点在 WASM 字符串边界被放大的历史问题已随序列化/CSV 边界修复关闭；剩余为 duplicate 键坍缩分歧与代码重复/双序列化器等工程项。可进入阶段 15（测试/快照/一致性）。
 
 ---
 
@@ -873,7 +873,7 @@ run_historical(program, bars)
 - [低][已关闭] 整数坍缩高危缺陷已补回归守护：阶段 6/7 实测的 `for i = 0 to n-1`、`array.get(a, k-1)`、`ta.sma(close, n*1)` 静默失效路径，当前由 `runs_for_loop_with_computed_integer_bound`、`runs_array_get_with_computed_integer_index`、`runs_sma_with_computed_integer_length`、`runs_math_sum_with_computed_integer_length` 以及 `computed_array_operands.pine`/`computed_lengths.pine` 覆盖。后续要求是保留这些回归，不再把该项列为活跃缺口。
 - [低] 语法层 fixture 回归近空白：[syntax/tests/fixtures.rs](crates/pine-syntax/tests/fixtures.rs) 仅 1 个 test（phase1_basic）；深嵌套递归（阶段1[中] 栈溢出）、多字节列号（阶段1[低]）等无 fixture 回归（仅 src 内联单测覆盖部分）。
 - [信息] 8 个死 fixture（引用于零处）：`tests/fixtures/sema/unsupported_strategy_exit_{stop,stop_limit,stop_profit,limit_loss,profit_loss,profit_qty,qty_stop,trailing_partial_quantity}.pine`——这些组合现多已 supported（存在对应 `supported_strategy_exit_*` 并被测），旧 unsupported 版残留为死文件。建议清理或纳入测试。
-- [信息] 非有限/不可解析输出无 fixture：阶段 11/12/14 的非有限 Float→非法 JSON / 不可 `JSON.parse` 在测试体系中**无对应用例**（无 NaN/inf 注入、无非有限 OHLCV CSV 测试），该跨 host 缺陷无回归守护。
+- [信息][已关闭] 非有限/不可解析输出无 fixture：阶段 11/12/14 的非有限 Float→非法 JSON / 不可 `JSON.parse` 历史缺口已补 runtime JSON、CLI CSV、WASM CSV、Python 输出/输入回归；后续要求是保留这些跨 host 守护。
 - [信息] 跨平台浮点格式无显式快照矩阵：f64 `Display`（阶段11）的跨平台字节稳定性靠假设，无跨架构 CI 快照断言（属阶段16 确定性主线，可在此登记）。
 
 **良好实践（已验证）**
@@ -919,7 +919,7 @@ run_historical(program, bars)
 - 运行时执行路径（处理不可信 bars/HIR）**几乎无 panic 面**：runtime+builtins 非测试代码仅 1 处 `unreachable!`（[arrays.rs](crates/pine-runtime/src/builtins/arrays.rs) min/max 内部枚举守卫，不可由输入触发），无可达 unwrap。143 个 `unwrap()`/26 个 `panic!` 集中在 sema/syntax 编译期，且字面量解析已优雅降级（阶段 1）。
 - DoS 上限齐备：`MAX_WHILE_ITERATIONS`、`MAX_SERIES_HISTORY_VALUES=1e6`、`MAX_ARRAY_ELEMENTS=1e5`、绘图 `MAX_*=500`，溢出用 `checked_*`（阶段 6/8）。
 - **唯一系统性崩溃面 = 无界递归栈溢出**（阶段 1/3/4/6 一致）：解析/语义/内联/求值各层无深度上限，深嵌套脚本（实测 ~2000 层括号 ≈4KB 即 SIGABRT），且经 **所有 host 暴露**——Python 为不可捕获的进程级中止、WASM 为无消息 trap。这是面向「可嵌入、接受 host 源码」运行时最需治理的安全项。
-- 不可信输入注入面（承接）：CSV/bars 接受 `NaN`/`inf`（阶段 12/14）、CSV 无大小上限可 OOM（阶段 12）、非有限 Float 产出非法 JSON / WASM 整段不可 `JSON.parse`（阶段 11/14）。
+- 不可信输入注入面（承接）：CSV/bars 接受 `NaN`/`inf` 与非有限 Float 产出非法 JSON / WASM 整段不可 `JSON.parse` 的历史问题已关闭；剩余输入面主要是 CSV 无大小上限可 OOM（阶段 12）。
 
 **合规主线（实测通过）**
 - [COMPATIBILITY_AND_LEGAL.md](docs/COMPATIBILITY_AND_LEGAL.md) 定义了完整 clean-room 政策（首选/避免措辞、非关联声明、实现规则、fixture 政策），README 含非关联声明。
@@ -932,12 +932,12 @@ run_historical(program, bars)
 | --- | --- | --- | --- | --- |
 | **P0** | 整数算术坍缩为 Float，`for i=0 to n-1`/计算下标/`ta.*` 计算长度静默失效 | 高（已关闭） | 6/7 | 当前实现已通过 `numeric_add`/`numeric_sub`/`numeric_mul`/`numeric_mod` 保留 `Int`；继续保留计算上界/下标/长度回归 |
 | **P1-a** | 无界递归 → 栈溢出，跨所有 host 崩溃 DoS | 中(安全) | 1/3/4/6 | 解析/语义/内联/求值统一加嵌套深度上限并转诊断 |
-| **P1-b** | 非有限 Float 未在序列化/输入边界归一（非法 JSON、WASM 不可解析） | 中 | 11/12/14 | 序列化边界非有限→`null`；CSV/bars 拒绝非有限 OHLCV |
+| **P1-b** | 非有限 Float 未在序列化/输入边界归一（非法 JSON、WASM 不可解析） | 中（已关闭） | 11/12/14 | 当前已通过 `f64_json` 非有限→`null`、CLI/WASM/Python bar 边界拒绝非有限 OHLCV，并保留跨 host 回归 |
 | **P1-c** | `ta.*` 隐式历史回看表与 runtime 强耦合，漂移静默低估缓冲区 | 中 | 3/6 | 回看需求与 builtin 签名/实现绑定为单一数据源 + 端到端回归 |
 | **P2** | 与 TradingView 口径分歧：缺省下单量应为 1、撮合时序、绘图上限/淘汰策略、时区仅 UTC、request 时间框整数倍+仅 3 参、数组越界/负下标 | 中 | 7/8/9/10 | 对齐 TradingView 或在兼容性文档显式声明口径 |
 | **P3** | 工程/文档：22 诊断码未登记、运行时错误无 span、`analyze` 退出码、conformance 无机器校验 + 数值 golden 缺口、parse_bars_csv/json_escape 重复、8 死 fixture、文档漂移、包元数据 | 低/信息 | 0/2/6/11/12/14/15/16 | 批量清理，多数可独立小改 |
 
-**结论**：经 16 阶段系统走读，`pine-compat-runtime` 整体工程质量高——架构红线清晰、确定性与 clean-room 合规可靠、失败路径与增量一致性测试扎实、运行时执行路径防御充分。历史 P0 整数算术坍缩已关闭并有计算上界/下标/长度回归覆盖；当前优先级前列转为跨所有阶段反复出现的无界递归（安全）、非有限浮点边界（输出正确性）、`ta.*` 历史耦合（正确性）三项「中」级横切问题。其余为与 TradingView 的兼容口径分歧（多为文档化范围限制）与工程/文档清理项。建议按已关闭 P0 回归守护、P1→P3 的顺序继续推进。**全部 16 阶段审查完成。**
+**结论**：经 16 阶段系统走读，`pine-compat-runtime` 整体工程质量高——架构红线清晰、确定性与 clean-room 合规可靠、失败路径与增量一致性测试扎实、运行时执行路径防御充分。历史 P0 整数算术坍缩与 P1-b 非有限边界均已关闭并有回归覆盖；当前优先级前列转为无界递归（安全）与 `ta.*` 历史耦合（正确性）两项「中」级横切问题。其余为与 TradingView 的兼容口径分歧（多为文档化范围限制）与工程/文档清理项。建议按已关闭项回归守护、剩余 P1→P3 的顺序继续推进。**全部 16 阶段审查完成。**
 
 ---
 
@@ -976,10 +976,10 @@ run_historical(program, bars)
 - [阶段10][中] crates/pine-runtime/src/builtins/requests.rs — validate_provider_timeframe 要求 requested 为 chart 的整数倍且不低于 chart，否则 RuntimeError；TradingView 支持任意 HTF（如 3m→05m）与 LTF 请求 — 兼容缺口，阶段16 在兼容性文档明确。
 - [阶段10][中·scope] crates/pine-runtime/src/builtins/requests.rs — 仅支持 request.security 3 参形式，gaps/lookahead 不支持（无法表达 barmerge.lookahead_on），无 request.security_lower_tf/financial/dividends/economic — 与 BUILTIN_SIGNATURES 核对 sema 是否一致拒绝。
 - [阶段10][低] crates/pine-runtime/src/request/provider.rs (RequestCacheKey) — 缓存键用 format!("{:?}", expression.kind) 作判别量：每次分配字符串、依赖 Debug 稳定性、可能碰撞 — 去掉表达式判别量（call_site_id 已足）或改用结构化身份；嵌套 request.security 无深度/环检测。
-- [阶段11][中] crates/pine-runtime/src/output/json.rs (value_json) — 非有限浮点未在序列化边界归一化：NaN→"NaN"、±Inf→"inf"/"-inf" 为非法 JSON（strategy qty/price/profit 同）；多数算术经 finite_float_or_na 归 Na 但边界无 finite 检查 — 序列化边界对非有限 Float 归一为 null。
+- [阶段11][中][已关闭] crates/pine-runtime/src/output/json.rs (value_json/f64_json) — 非有限浮点未在序列化边界归一化曾导致 NaN/inf 非法 JSON — 当前非有限 Float 统一输出 null，覆盖 value_json、plots 与 strategy 数值字段。
 - [阶段11][信息] crates/pine-runtime/src/output/json.rs — 顶层 "diagnostics" 硬编码为 []（运行时诊断仅经 strategy.diagnostics 输出，未来非策略诊断会被丢弃）；手写 JSON 拼接非 serde，新增字符串字段需走 json_escape，profiled 变体依赖末尾 '}' 隐式契约 — 长期考虑 serde_json/集中 writer。
 - [阶段12][中] crates/pine-cli/src/commands/analyze.rs — analyze 无条件 Ok(())：诊断含 error 也退出 0且诊断走 stdout（与 run 的 stderr+Err 不一致），CI 无法依退出码检错 — 有 error 诊断时返回非零退出码并写 stderr。
-- [阶段12][中] crates/pine-cli/src/bars_csv.rs (parse_column) — f64::from_str 接受 "NaN"/"inf"/"infinity"，无 finite 校验，非有限 bar 数据可入运行时（联动阶段11 非法 JSON） — CSV 边界拒绝非有限 OHLCV。
+- [阶段12][中][已关闭] crates/pine-cli/src/bars_csv.rs (parse_f64_column) — f64::from_str 曾接受 "NaN"/"inf"/"infinity"，非有限 bar 数据可入运行时 — 当前 CSV 边界拒绝非有限 OHLCV。
 - [阶段12][低/信息] crates/pine-cli/src/commands/run.rs + bars_csv.rs — 主 --bars 未在 CLI 层校验时间单调/去重（request-bars 有校验）；fs::read_to_string 一次性读入无大小上限（超大 CSV OOM）；json_escape 在 cli 与 runtime 重复实现。
 - [阶段3][信息] crates/pine-sema/src/analyzer/unsupported.rs — 不支持原因串夹带内部阶段标签（Phase J/1/L）且粒度不一 — 统一面向用户措辞。
 - [阶段4][低] crates/pine-sema/src/lowering/mod.rs — UDF/方法/导入函数按调用点内联，递归无深度/规模上限，深链/广复用 UDF 使 HIR 按乘法膨胀，可栈溢出/内存激增 — 与阶段1/3 递归上限合并治理。
@@ -988,13 +988,13 @@ run_historical(program, bars)
 - [阶段5][信息] crates/pine-builtins/src/constants/floats.rs — syminfo.mintick=0.01 / pointvalue=1.0 硬编码常量，跨品种数值偏差 — 运行时阶段核实是否有覆盖路径。
 - [阶段5][信息] crates/pine-builtins/src/registry.rs — 签名↔runtime 一致靠人工维护，无编译期强约束 — 加 reconciliation 单测遍历 PHASE_1_BUILTINS 校验 runtime 分发。
 - [阶段5][信息] 签名总数 252 与 runtime 250 callee 分发已实测对齐，差集均为声明/输入类与字符串常量（无真缺口/孤儿实现）。
-- [阶段13][中] crates/pine-python/src/lib.rs (append_value) — 非有限浮点跨 host 分歧：PyO3 把 NaN/±Inf 转为 Python 原生 float('nan')/float('inf')，而 CLI/WASM JSON 边界输出非法 token NaN/inf（承接阶段11[中]），三 host 最终表示不收敛（json.dumps 会产 NaN/Infinity）；strategy qty/price/profit 同 — 与阶段11 一并在边界归一为 null/None。
+- [阶段13][中][已关闭] crates/pine-python/src/outputs.rs (append_value/set_finite_f64) — 非有限浮点跨 host 分歧曾使 Python 输出 nan/inf、JSON 输出非法 token — 当前非有限 Float 统一转 None，与 JSON null 收敛。
 - [阶段13][低] crates/pine-python/src/lib.rs — compile_script/run_script 失败把诊断拼成单一字符串抛 PyValueError，丢失结构化 code/severity/span，调用方需另行 analyze_script 二次分析 — 评估让异常携带结构化诊断。
 - [阶段13][低] crates/pine-python/src/lib.rs — compile/run 对任意严重度诊断都拒绝（!diagnostics.is_empty()），与 analyze_script 的 executable=hir.is_some() 不对齐；未来 warning/info 诊断会致 executable=True 但 compile 抛错（当前 sema 不发非 error 诊断故不可达，三 host 一致） — 改为按 has_errors() 门控。
 - [阶段13][信息] crates/pine-python/src/lib.rs — Python 无 profile API（CLI 有 --profile→profiled JSON，WASM 亦无）；run 全程持 GIL 未 allow_threads；value_to_py 每标量分配单元素 PyList 取 item0（长序列 O(n) 额外分配） — 评估补 profile 入口 + allow_threads + 直接构造对象。
-- [阶段13][信息] crates/pine-python/src/lib.rs — bar 输入无 finite/单调校验（float('nan')/inf 可注入运行时，承接阶段12[中]/11；主 bars 不校验 time 单调）；dict 路径静默忽略多余键、sequence 路径严格 6 元宽严不一；深递归栈溢出 SIGABRT 经 Python 暴露为不可捕获的进程级中止（承接阶段1/3/4/6） — 随阶段16 统一治理。
-- [阶段14][中] crates/pine-wasm/src/lib.rs + output/json.rs — 非有限浮点在 WASM 字符串边界放大：结果为 JSON 字符串交 host，含 NaN/inf 时浏览器 JSON.parse 抛 SyntaxError → 整段结果不可反序列化（比 Python 原生 nan/inf 更严重，承接阶段11[中]） — 随序列化边界归一为 null 一并修复。
-- [阶段14][中] crates/pine-wasm/src/lib.rs (parse_bars_csv/parse_column) — 与 CLI 同源，f64 parse 接受 NaN/inf/infinity 注入运行时（承接阶段12[中]，与上条联动可产不可解析结果） — CSV 边界拒绝非有限。
+- [阶段13][信息] crates/pine-python/src/lib.rs — bar 输入已拒绝非有限 OHLCV；主 bars 仍不校验 time 单调，dict 路径静默忽略多余键、sequence 路径严格 6 元宽严不一；深递归栈溢出 SIGABRT 经 Python 暴露为不可捕获的进程级中止（承接阶段1/3/4/6） — 随阶段16 统一治理。
+- [阶段14][中][已关闭] crates/pine-wasm/src/run.rs + output/json.rs — 非有限浮点在 WASM 字符串边界曾放大为浏览器 JSON.parse 失败 — 当前 run 输出非有限→null，CSV 非有限 OHLCV 被拒绝，并有 WASM 回归。
+- [阶段14][中][已关闭] crates/pine-wasm/src/run.rs (parse_bars_csv/parse_f64_column) — 与 CLI 同源，f64 parse 曾接受 NaN/inf/infinity 注入运行时 — 当前 CSV 边界拒绝非有限。
 - [阶段14][低] crates/pine-wasm/src/request_bars.rs + library_sources.rs — serde_json 解析对象时重复 SYMBOL:TIMEFRAME / 库源键被静默坍缩为最后一个（测试已文档化），不触发 provider DuplicateKey；而 CLI 多 --request-bars 同键会报错 — 跨 host 去重语义不一致，统一为显式拒绝或文档明示。
 - [阶段14][信息] crates/pine-wasm/src/lib.rs + pine-cli/src/bars_csv.rs + 三处 json_escape — parse_bars_csv 在 wasm/cli 完全复制、json_escape 在 runtime/cli/wasm 三份（承接阶段12[信息]）；analysis 报告 WASM 手写 JSON 与 Python dict 双序列化器需手工同步（run 输出共用 public_runtime_result_json 无此问题） — 提取共享模块/收敛单一 writer。
 - [阶段14][信息] crates/pine-wasm/Cargo.toml + src/request/chart.rs — WASM 无 profile API（同 Python 缺、CLI 有）；未设 console_error_panic_hook，栈溢出 trap 在 JS 端无消息难诊断；chart 上下文三 host 均硬编码 ChartContext::default()（NASDAQ:AAPL）不可配置 — 评估补 profile 入口/panic hook/可配置 chart 上下文（阶段16）。
@@ -1003,9 +1003,9 @@ run_historical(program, bars)
 - [阶段15][低][已关闭] tests/fixtures — 整数坍缩(阶段6/7)曾无回归 fixture；当前已补计算循环上界、数组下标/尺寸、`ta.*`/`math.*` 计算长度用例 — 后续保留这些 fixture 作为回归守护。
 - [阶段15][低] crates/pine-syntax/tests/fixtures.rs — 语法层 fixture 回归仅 1 个 test；深嵌套递归(阶段1[中])、多字节列号(阶段1[低])无 fixture 回归 — 补语法边界 fixture。
 - [阶段15][信息] tests/fixtures/sema/unsupported_strategy_exit_{stop,stop_limit,stop_profit,limit_loss,profit_loss,profit_qty,qty_stop,trailing_partial_quantity}.pine — 8 个死 fixture 引用于零处(对应组合现已 supported，旧 unsupported 版残留) — 清理或纳入测试。
-- [阶段15][信息] tests/fixtures — 非有限 Float→非法 JSON/不可 JSON.parse(阶段11/12/14) 无对应 fixture(无 NaN/inf 注入、无非有限 OHLCV CSV)；f64 Display 跨平台稳定性无跨架构快照矩阵 — 补非有限注入用例 + 阶段16 确定性矩阵。
+- [阶段15][信息][已关闭] tests/fixtures — 非有限 Float→非法 JSON/不可 JSON.parse(阶段11/12/14) 曾无对应 fixture；当前已补 runtime JSON、CLI CSV、WASM CSV、Python 输出/输入回归；f64 Display 跨平台稳定性仍无跨架构快照矩阵。
 - [阶段16][中] docs/DIAGNOSTIC_CODES.md — 实测 22 个已发射诊断码未登记(E_LEX_INDENT/E_PARSE_BLOCK/FOR/FUNCTION/E_LOOP_*4/E_SCRIPT_DECL_*2/E_STRATEGY_MODE/PRICE/QTY/E_STRATEGY_EXIT_*5/E_UNKNOWN_FUNCTION/METHOD/COLOR/E_METHOD_RECEIVER_TYPE)，含 5 个 broker 运行时码；诊断码为公开 DX 契约 — 全部补登。
 - [阶段16][信息·确定性通过] core 五 crate 实测无时钟/随机/网络/文件/env 调用，chrono 关 clock；HashMap 仅按键控存储不入输出顺序；增量==全量 parity 覆盖全 runtime fixture — 残留 f64 Display 跨平台无 CI 快照矩阵。
 - [阶段16][信息·安全] runtime+builtins 执行路径实测仅 1 处守卫式 unreachable、无可达 unwrap，DoS 上限齐备；唯一系统性崩溃面=无界递归栈溢出(阶段1/3/4/6)经所有 host 暴露(Python SIGABRT/WASM trap) — 统一深度上限治理(P1)。
 - [阶段16][信息·合规通过] COMPATIBILITY_AND_LEGAL.md clean-room 政策完备且被遵守，代码仅 1 处注释陈述 Pine == 语义，无品牌/错误文案复制 — 轻微：包元数据 repository 空且无非关联声明(承接阶段0)。
-- [阶段16][汇总] 历史 P0 整数坍缩(高,正确性根因) 已关闭并有回归守护；后续优先修复排序转为 P1 无界递归/非有限浮点边界/ta.* 历史耦合(中) → P2 TradingView 口径分歧 → P3 工程文档清理；全部 16 阶段审查完成。
+- [阶段16][汇总] 历史 P0 整数坍缩(高,正确性根因) 与 P1-b 非有限边界(中) 已关闭并有回归守护；后续优先修复排序转为 P1 无界递归/ta.* 历史耦合(中) → P2 TradingView 口径分歧 → P3 工程文档清理；全部 16 阶段审查完成。
