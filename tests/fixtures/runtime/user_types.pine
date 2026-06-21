@@ -55,6 +55,10 @@ else
 if bar_index == 2
     typed_var_if := Point.new(high + 360, low)
 plot(typed_var_if.x + typed_var_if.y)
+var Point typed_var_ternary = bar_index == 0 ? Point.new(high + 365, low) : Point.new(high + 370, low)
+if bar_index == 2
+    typed_var_ternary := Point.new(high + 375, low)
+plot(typed_var_ternary.x + typed_var_ternary.y)
 if bar_index >= 0
     Point block_typed_point = na
     block_typed_point := Point.new(high + 40, low)

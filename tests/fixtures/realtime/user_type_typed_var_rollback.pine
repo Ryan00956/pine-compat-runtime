@@ -16,3 +16,7 @@ else
 if bar_index > 0
     q := Point.new(q.x + 1)
 plot(q.x)
+var Point r = bar_index == 0 ? Point.new(close + 30) : Point.new(close + 40)
+if bar_index > 0
+    r := Point.new(r.x + 1)
+plot(r.x)
