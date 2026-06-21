@@ -25,9 +25,9 @@
   aliases.
 - Added fixture-backed scalar `if` expression support with required `else`
   branches and branch-local declarations.
-- Added fixture-backed typed local UDT method declarations initialized from
-  same-local-UDT `for` expressions using receiver and local UDT parameter
-  aliases.
+- Added fixture-backed typed local UDT method declarations initialized and
+  reassigned from same-local-UDT `for` expressions using receiver and local UDT
+  parameter aliases.
 - Added fixture-backed UDF-local typed UDT declarations initialized and
   reassigned from same-local-UDT `for` expressions using UDT and scalar field
   aliases.

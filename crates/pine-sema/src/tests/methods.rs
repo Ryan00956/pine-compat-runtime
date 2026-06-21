@@ -989,7 +989,8 @@ method makeTyped(Point p, Point other, int count) =>
     ox = otherCopy.x
     Point made = for i = 0 to count
         Point.new(x=px + ox + i)
-    made := Point.new(x=made.x + 2)
+    made := for i = 0 to count
+        Point.new(x=made.x + i + 2)
     made
 p = Point.new(close)
 q = Point.new(open)
