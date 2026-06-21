@@ -1058,7 +1058,8 @@ makeTyped(source, count) =>
     ay = copy.y
     Point p = for i = 0 to count
         Point.new(y=ay, x=ax + i)
-    p := Point.new(y=p.y, x=p.x + 2)
+    p := for i = 0 to count
+        Point.new(y=p.y, x=p.x + i + 2)
     p
 source = Point.new(close, open)
 made = makeTyped(source, 2)

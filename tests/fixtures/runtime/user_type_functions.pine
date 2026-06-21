@@ -111,7 +111,8 @@ makeTypedForFrom(p, count) =>
     ay = copy.y
     Point typed = for i = 0 to count
         Point.new(y=ay, x=ax + i + 110)
-    typed := Point.new(y=typed.y, x=typed.x + 5)
+    typed := for i = 0 to count
+        Point.new(y=typed.y, x=typed.x + i + 5)
     typed
 cloneViaMake(p) => make(p.x, p.y)
 cloneViaMakeNamed(p) => makeNamed(p.x, p.y)
