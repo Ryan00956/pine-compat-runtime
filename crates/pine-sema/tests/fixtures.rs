@@ -4750,6 +4750,14 @@ fn reports_unsupported_user_type_constructor_arg_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_type_unknown_field_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_type_unknown_field.pine",
+        "E_UDT_UNKNOWN_FIELD",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_type_varip_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_type_varip.pine",
