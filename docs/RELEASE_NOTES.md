@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added fixture-backed top-level typed UDT declarations initialized and
+  reassigned from same-local-UDT `for` expressions.
 - Added fixture-backed typed UDT `var` declarations initialized from
   same-local-UDT `for` expressions, including realtime rollback coverage.
 - Added fixture-backed typed UDT `var` declarations initialized from
