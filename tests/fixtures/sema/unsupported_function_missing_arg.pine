@@ -1,0 +1,4 @@
+//@version=5
+indicator("Unsupported UDF missing arg")
+double(x) => x * 2
+plot(double())
