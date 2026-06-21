@@ -332,9 +332,10 @@ kept the existing sema lowering regression over the major implicit `ta.*`
 requirements, and added a runtime reviewed-list reconciliation test
 (`runtime_implicit_history_calls_match_shared_metadata`). Bound the existing
 `ta.sar` end-to-end numeric regression to its HIR retention requirements
-(`high[2]`, `low[2]`, `close[1]`) and the existing `ta.dmi` numeric regression
-to `high[1]`, `low[1]`, and `close[1]`. Remaining work is oracle-backed or
-golden numeric fixtures for the rest of the high-risk indicators.
+(`high[2]`, `low[2]`, `close[1]`), the existing `ta.dmi` numeric regression to
+`high[1]`, `low[1]`, and `close[1]`, and the existing `ta.supertrend` numeric
+regression to `close[1]`. Remaining work is oracle-backed or golden numeric
+fixtures for the rest of the high-risk indicators.
 
 **Verification**
 
@@ -355,6 +356,8 @@ golden numeric fixtures for the rest of the high-risk indicators.
   HIR retention requirements for `high[2]`, `low[2]`, and `close[1]`.
 - `runs_dmi_over_historical_bars` asserts both the DMI numeric sequences and the
   HIR retention requirements for `high[1]`, `low[1]`, and `close[1]`.
+- `runs_supertrend_over_historical_bars` asserts both the Supertrend numeric
+  sequences and the HIR retention requirement for `close[1]`.
 
 **Result: Partially fixed; broader numeric oracle/golden coverage remains**
 
@@ -579,9 +582,9 @@ supported behavior.
 
 The CR-010 metadata phase has started: implicit history requirements are now a
 shared declaration consumed by sema, reviewed runtime implicit-history reads are
-reconciled against that metadata, and the SAR/DMI numeric regressions are tied
-to HIR retention requirements. A debug/test-only assertion can still be
-considered once runtime history reads can distinguish "normal
+reconciled against that metadata, and the SAR/DMI/Supertrend numeric
+regressions are tied to HIR retention requirements. A debug/test-only assertion
+can still be considered once runtime history reads can distinguish "normal
 warmup/out-of-range" from "declared retention too small".
 
 **Verification**
@@ -593,7 +596,7 @@ warmup/out-of-range" from "declared retention too small".
 - `SeriesStore::read` returns `PineValue::Na` when the requested offset is not in
   the retained buffer.
 
-**Result: Partially addressed via shared metadata, reviewed-list reconciliation, and SAR/DMI retention-bound numeric regressions; runtime retention diagnostics remain deferred**
+**Result: Partially addressed via shared metadata, reviewed-list reconciliation, and SAR/DMI/Supertrend retention-bound numeric regressions; runtime retention diagnostics remain deferred**
 
 ---
 
@@ -2266,6 +2269,6 @@ outcomes are tracked under the individual CR entries:
 - non-finite input/output boundaries were fixed and regression-tested under
   CR-031/034/043/048/049/058;
 - `ta.*` history coupling remains a structural follow-up under CR-010/016/021:
-  shared metadata, reviewed-list runtime reconciliation, and SAR/DMI
-  retention-bound numeric coverage now exist, but broader oracle-backed fixture
-  work is still pending.
+  shared metadata, reviewed-list runtime reconciliation, and
+  SAR/DMI/Supertrend retention-bound numeric coverage now exist, but broader
+  oracle-backed fixture work is still pending.

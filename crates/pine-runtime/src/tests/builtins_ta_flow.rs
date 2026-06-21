@@ -409,6 +409,9 @@ plot(na(bad_line) and na(bad_direction) ? 1 : 0)
         "{:?}",
         analysis.diagnostics
     );
+    let hir = analysis.hir.expect("HIR");
+    assert_eq!(hir.history.max_constant_offset, 1);
+    assert_builtin_series_history(&hir, "close", 1);
 
     let bars = vec![
         bar_ohlc(10.0, 11.0, 9.0, 10.0),
@@ -418,7 +421,7 @@ plot(na(bad_line) and na(bad_direction) ? 1 : 0)
         bar_ohlc(15.0, 17.0, 14.0, 16.0),
         bar_ohlc(16.0, 14.0, 8.0, 9.0),
     ];
-    let result = run_historical(&analysis.hir.expect("HIR"), &bars).expect("runtime result");
+    let result = run_historical(&hir, &bars).expect("runtime result");
 
     assert_values_close(
         &result.plots[0].values,
