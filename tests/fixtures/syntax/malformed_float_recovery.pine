@@ -1,0 +1,4 @@
+//@version=5
+indicator("Malformed float recovery")
+huge = 1e9999
+plot(close)

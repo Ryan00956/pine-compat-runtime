@@ -215,7 +215,15 @@ impl<'a> Lexer<'a> {
         let raw = &self.text[start..self.pos];
         let kind = if is_float {
             match raw.parse::<f64>() {
-                Ok(value) => TokenKind::Float(value),
+                Ok(value) if value.is_finite() => TokenKind::Float(value),
+                Ok(_) => {
+                    self.diagnostics.push(Diagnostic::error(
+                        "E_LEX_FLOAT",
+                        "invalid float literal",
+                        Span::new(start, self.pos),
+                    ));
+                    TokenKind::Float(0.0)
+                }
                 Err(_) => {
                     self.diagnostics.push(Diagnostic::error(
                         "E_LEX_FLOAT",

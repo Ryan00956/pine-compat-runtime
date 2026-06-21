@@ -51,6 +51,14 @@ fn reports_malformed_number_fixture_and_recovers() {
 }
 
 #[test]
+fn reports_malformed_float_fixture_and_recovers() {
+    let (_, parsed) = parse_fixture("tests/fixtures/syntax/malformed_float_recovery.pine");
+
+    assert!(has_diagnostic(&parsed.diagnostics, "E_LEX_FLOAT"));
+    assert_eq!(parsed.program.statements.len(), 3);
+}
+
+#[test]
 fn reports_utf8_diagnostic_columns_in_characters() {
     let (source, parsed) = parse_fixture("tests/fixtures/syntax/utf8_diagnostic_column.pine");
     let diagnostic = parsed

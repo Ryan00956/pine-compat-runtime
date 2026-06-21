@@ -228,6 +228,7 @@ color.from_gradient	supported	linear RGBA interpolation with exact lower/upper e
 hex color literal	supported	#RRGGBB and #RRGGBBAA literals normalize to const colors	tests/fixtures/runtime/colors.pine;tests/fixtures/syntax/phase1_basic.pine
 scientific numeric literal	supported	integer and decimal float literals with e/E exponent notation parse as floats	tests/fixtures/syntax/phase1_basic.pine
 integer literal bounds	unsupported	integer literals outside the supported lexer range are rejected during lexing	tests/fixtures/syntax/malformed_number_recovery.pine
+float literal bounds	unsupported	float literals outside the finite lexer range are rejected during lexing	tests/fixtures/syntax/malformed_float_recovery.pine
 syntax diagnostics	partial	stable parser and lexer diagnostics for malformed expressions with recovery to later top-level statements and character-based source columns on UTF-8 lines; broader diagnostic wording and formatting remain host-owned	tests/fixtures/syntax/parse_error_recovery.pine;tests/fixtures/syntax/utf8_diagnostic_column.pine
 soft keyword identifiers	supported	soft Phase J keywords such as export can still be used as ordinary identifiers outside declaration grammar	tests/fixtures/syntax/soft_keyword_export_identifier.pine
 expression nesting depth	unsupported	deeply nested source expressions beyond the parser expression-depth budget are rejected during parsing	tests/fixtures/syntax/deep_expression_limit.pine

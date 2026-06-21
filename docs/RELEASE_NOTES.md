@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed lexer rejection for non-finite float literals so
+  overflowing scientific notation reports `E_LEX_FLOAT` instead of silently
+  becoming infinity.
 - Added fixture-backed UDF-local UDT scalar field mutation for local variables
   while keeping global/parameter UDF mutation and method field mutation
   rejected as side effects.
