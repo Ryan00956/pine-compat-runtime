@@ -5044,6 +5044,14 @@ fn reports_unsupported_user_method_recursive_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_method_call_depth_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_method_call_depth.pine",
+        "E_FUNCTION_CALL_DEPTH",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_unknown_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_method_unknown.pine",
