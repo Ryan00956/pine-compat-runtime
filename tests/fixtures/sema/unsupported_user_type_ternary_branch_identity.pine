@@ -1,0 +1,8 @@
+//@version=5
+type Point
+    float x
+type Other
+    float x
+
+value = close > open ? Point.new(close) : Other.new(open)
+plot(value.x)

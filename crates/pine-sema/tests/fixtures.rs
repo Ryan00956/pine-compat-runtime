@@ -4767,6 +4767,14 @@ fn reports_unsupported_user_type_nested_constructor_identity_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_type_ternary_branch_identity_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_type_ternary_branch_identity.pine",
+        "E_BRANCH_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_type_field_mutation_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_type_field_mutation.pine",
