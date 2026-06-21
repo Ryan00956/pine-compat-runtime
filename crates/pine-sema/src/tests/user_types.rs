@@ -548,6 +548,34 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_udf_local_user_type_typed_declaration_with_na_initializer_from_udt_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+makeTyped(source) =>
+    copy = source
+    ax = copy.x
+    ay = copy.y
+    Point p = na
+    p := Point.new(y=ay, x=ax)
+    p
+source = Point.new(close, open)
+made = makeTyped(source)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udf_local_user_type_typed_declaration_with_constructor_initializer() {
     let analysis = analyze(
         r#"type Point
