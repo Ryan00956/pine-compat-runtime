@@ -1,0 +1,12 @@
+//@version=5
+type Point
+    float x
+type Other
+    float x
+type Wrapper
+    Point inner
+
+p = Point.new(close)
+w = Wrapper.new(p)
+w.inner := Other.new(high)
+plot(w.inner.x)

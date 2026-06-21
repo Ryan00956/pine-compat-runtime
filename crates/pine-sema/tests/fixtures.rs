@@ -4751,6 +4751,14 @@ fn reports_unsupported_user_type_initializer_identity_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_type_nested_field_assign_identity_fixture() {
+    assert_diagnostic_fixture(
+        "tests/fixtures/sema/unsupported_user_type_nested_field_assign_identity.pine",
+        "E_ASSIGN_TYPE",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_type_field_mutation_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_type_field_mutation.pine",
