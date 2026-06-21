@@ -270,6 +270,30 @@ plot(sum)
 }
 
 #[test]
+fn accepts_udf_local_user_type_typed_declaration_with_na_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+makeTyped(x, y) =>
+    Point p = na
+    p := Point.new(x, y)
+    p
+made = makeTyped(close, open)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_mismatched_user_type_typed_declaration_reassignment() {
     let analysis = analyze(
         r#"type Point
