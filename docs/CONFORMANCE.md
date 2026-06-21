@@ -626,11 +626,11 @@ passthrough/returns through positional or named arguments with direct returns,
 block-local aliases, or nested passthrough calls, plus UDF construction/returns,
 directly, through nested pure
 constructor-helper UDF calls, or through same-local-UDT ternary, switch, final
-if/else constructor branches, or final for bodies, from local UDT parameter
-scalar fields, scalar fields read through block-local UDT aliases of those
-parameters, block-local scalar aliases of those fields, inferred scalar
-parameters, or block-local scalar aliases of those scalar parameters using
-positional or named constructor field arguments.
+if/else constructor branches, same-local-UDT `if` expressions, or final for
+bodies, from local UDT parameter scalar fields, scalar fields read through
+block-local UDT aliases of those parameters, block-local scalar aliases of
+those fields, inferred scalar parameters, or block-local scalar aliases of
+those scalar parameters using positional or named constructor field arguments.
 Local scalar fields can be reassigned outside UDF/method bodies, including in
 branch, `for` loop, and `while` loop bodies. Field mutation inside UDFs or
 methods, `varip`, history references on UDT values, UDT fields, UDT arrays, and
@@ -641,11 +641,12 @@ receiver or local UDT parameter alias passthrough returns, final if/else or
 final for local UDT alias passthrough returns, nested-method UDT parameter
 passthrough returns, plus local UDT constructor returns, directly, through
 nested pure constructor-helper UDF calls, or through same-local-UDT ternary,
-switch, final if/else constructor branches, or final for bodies, from receiver
-or local UDT parameter scalar fields, scalar fields read through block-local
-receiver or local UDT parameter aliases, block-local scalar aliases of those
-fields, inferred scalar parameters, or block-local scalar aliases of those
-parameters using positional or named constructor field arguments. The receiver
+switch, final if/else constructor branches, same-local-UDT `if` expressions,
+or final for bodies, from receiver or local UDT parameter scalar fields, scalar
+fields read through block-local receiver or local UDT parameter aliases,
+block-local scalar aliases of those fields, inferred scalar parameters, or
+block-local scalar aliases of those parameters using positional or named
+constructor field arguments. The receiver
 is passed as the first internal parameter. Returned receiver values,
 block-local receiver aliases, final if/else or final for local UDT aliases,
 local UDT parameter values, block-local local UDT parameter aliases, or
@@ -1271,8 +1272,8 @@ linefill.all         partial      snapshot array of currently existing linefill 
 request.security_lower_tf unsupported lower-timeframe array-returning request API is not implemented
 request.*            unsupported  request families beyond the narrow request.security subsets
 import               partial      host-provided exact-key imports with aliases, exported const expressions, and pure exported functions only
-user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, local for-expression constructor results, var persistence, scalar field mutation outside UDF/method bodies including branch, for-loop, and while-loop bodies, UDF parameter passthrough/returns through positional or named arguments with direct returns, UDT block-local aliases, final if/else or final for local UDT aliases, or nested passthrough calls, and UDF constructor returns, directly, through nested pure constructor-helper UDF calls, or through same-local-UDT ternary, switch, final if/else constructor branches, or final for bodies, from local UDT parameter scalar fields, scalar fields read through block-local UDT aliases of those parameters, block-local scalar aliases of those fields, inferred scalar parameters, or block-local scalar aliases of those scalar parameters using positional or named constructor field arguments only
-user-defined methods partial      pure methods on local UDT receivers with scalar or local UDT parameters, direct UDT passthrough returns, block-local receiver or local UDT parameter alias passthrough returns, final if/else or final for local UDT alias passthrough returns, nested-method UDT parameter passthrough returns, and local UDT constructor returns, directly, through nested pure constructor-helper UDF calls, or through same-local-UDT ternary, switch, final if/else constructor branches, or final for bodies, from receiver or local UDT parameter scalar fields, scalar fields read through block-local receiver or local UDT parameter aliases, block-local scalar aliases of those fields, inferred scalar parameters, or block-local scalar aliases of those parameters using positional or named constructor field arguments only
+user-defined types   partial      local scalar-field type declarations, Type.new constructors, field reads, ordinary variables, local for-expression constructor results, var persistence, scalar field mutation outside UDF/method bodies including branch, for-loop, and while-loop bodies, UDF parameter passthrough/returns through positional or named arguments with direct returns, UDT block-local aliases, final if/else or final for local UDT aliases, or nested passthrough calls, and UDF constructor returns, directly, through nested pure constructor-helper UDF calls, or through same-local-UDT ternary, switch, `if` expression, final if/else constructor branches, or final for bodies, from local UDT parameter scalar fields, scalar fields read through block-local UDT aliases of those parameters, block-local scalar aliases of those fields, inferred scalar parameters, or block-local scalar aliases of those scalar parameters using positional or named constructor field arguments only
+user-defined methods partial      pure methods on local UDT receivers with scalar or local UDT parameters, direct UDT passthrough returns, block-local receiver or local UDT parameter alias passthrough returns, final if/else or final for local UDT alias passthrough returns, nested-method UDT parameter passthrough returns, and local UDT constructor returns, directly, through nested pure constructor-helper UDF calls, or through same-local-UDT ternary, switch, `if` expression, final if/else constructor branches, or final for bodies, from receiver or local UDT parameter scalar fields, scalar fields read through block-local receiver or local UDT parameter aliases, block-local scalar aliases of those fields, inferred scalar parameters, or block-local scalar aliases of those parameters using positional or named constructor field arguments only
 ```
 
 The matrix should be generated from conformance metadata once the test harness

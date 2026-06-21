@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added fixture-backed typed local UDT declarations initialized from
+  same-local-UDT `if` expressions in UDF and method bodies using branch-local
+  aliases.
 - Added fixture-backed scalar `if` expression support with required `else`
   branches and branch-local declarations.
 - Added fixture-backed typed local UDT method declarations initialized from

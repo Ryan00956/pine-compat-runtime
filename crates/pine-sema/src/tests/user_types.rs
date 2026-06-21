@@ -680,6 +680,42 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_udf_local_user_type_typed_declaration_with_if_initializer_from_udt_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+makeTyped(source, flip) =>
+    copy = source
+    ax = copy.x
+    ay = copy.y
+    Point p = if flip
+        branch = Point.new(y=ay, x=ax)
+        branch
+    else
+        branch = Point.new(y=source.y, x=source.x + 1)
+        branch
+    p := if flip
+        Point.new(y=p.y, x=p.x + 2)
+    else
+        Point.new(y=p.y, x=p.x + 3)
+    p
+source = Point.new(close, open)
+made = makeTyped(source, bar_index < 2)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn accepts_udf_local_user_type_typed_declaration_with_switch_initializer() {
     let analysis = analyze(
         r#"type Point

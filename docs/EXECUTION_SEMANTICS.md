@@ -547,12 +547,12 @@ block-local alias chain that starts from that parameter, or return a nested
 passthrough UDF call that maps back to that parameter. Pure UDFs may also
 construct and return a local UDT, directly,
 through nested pure constructor-helper UDF calls, or through same-local-UDT
-ternary, switch, final if/else constructor branches, or final for bodies, from
-local UDT parameter scalar fields, scalar fields read through block-local UDT
-aliases of those parameters, block-local scalar aliases of those fields, scalar
-parameters whose types are inferred from the call arguments, or block-local
-scalar aliases of those scalar parameters, using positional or named
-constructor field arguments.
+ternary, switch, `if` expression, final if/else constructor branches, or final
+for bodies, from local UDT parameter scalar fields, scalar fields read through
+block-local UDT aliases of those parameters, block-local scalar aliases of
+those fields, scalar parameters whose types are inferred from the call
+arguments, or block-local scalar aliases of those scalar parameters, using
+positional or named constructor field arguments.
 Positional and named UDF call arguments both preserve the parameter identity.
 The caller may then store the returned value and read its fields. Field
 mutation inside UDFs or methods, UDT history references, UDT `varip`, nested
@@ -567,13 +567,14 @@ alias chain that starts from the receiver or another local UDT parameter,
 final if/else or final for local UDT aliases of those values, another local UDT
 parameter directly or through a nested method passthrough call, or construct
 and return a local UDT directly, through nested pure constructor-helper UDF
-calls, or through same-local-UDT ternary, switch, final if/else constructor
-branches, or final for bodies. Supported method constructors may read receiver
-or local UDT parameter scalar fields, scalar fields through block-local receiver
-or local UDT parameter aliases, block-local scalar aliases of those fields,
-inferred scalar parameters, or block-local scalar aliases of those parameters,
-using positional or named constructor field arguments; the caller may store
-that returned UDT value and read its fields. Method side effects, recursive
+calls, or through same-local-UDT ternary, switch, `if` expression, final
+if/else constructor branches, or final for bodies. Supported method
+constructors may read receiver or local UDT parameter scalar fields, scalar
+fields through block-local receiver or local UDT parameter aliases, block-local
+scalar aliases of those fields, inferred scalar parameters, or block-local
+scalar aliases of those parameters, using positional or named constructor field
+arguments; the caller may store that returned UDT value and read its fields.
+Method side effects, recursive
 methods, unsupported parameter families, mismatched UDT parameter identity,
 unknown receivers, and imported methods are rejected during semantic analysis.
 

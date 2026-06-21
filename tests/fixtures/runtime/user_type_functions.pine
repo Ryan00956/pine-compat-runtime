@@ -90,6 +90,21 @@ makeTypedSwitchFrom(p, mode) =>
         3 => Point.new(y=typed.y, x=typed.x + 5)
         => Point.new(y=typed.y, x=typed.x + 10)
     typed
+makeTypedIfFrom(p, flip) =>
+    copy = p
+    ax = copy.x
+    ay = copy.y
+    Point typed = if flip
+        branch = Point.new(y=ay, x=ax + 120)
+        branch
+    else
+        branch = Point.new(y=copy.y, x=copy.x + 125)
+        branch
+    typed := if flip
+        Point.new(y=typed.y, x=typed.x + 5)
+    else
+        Point.new(y=typed.y, x=typed.x + 10)
+    typed
 makeTypedForFrom(p, count) =>
     copy = p
     ax = copy.x
@@ -157,6 +172,7 @@ madeTypedTernary = makeTypedTernary(close, open, bar_index < 2)
 madeTypedTernaryFrom = makeTypedTernaryFrom(p, bar_index < 2)
 madeTypedSwitch = makeTypedSwitch(close, open, bar_index)
 madeTypedSwitchFrom = makeTypedSwitchFrom(p, bar_index)
+madeTypedIfFrom = makeTypedIfFrom(p, bar_index < 2)
 madeTypedForFrom = makeTypedForFrom(p, 2)
 plot(same.x - same.y)
 plot(same.x + same.y)
@@ -189,4 +205,5 @@ plot(madeTypedTernary.x + madeTypedTernary.y + bar_index)
 plot(madeTypedTernaryFrom.x + madeTypedTernaryFrom.y + bar_index)
 plot(madeTypedSwitch.x + madeTypedSwitch.y + bar_index)
 plot(madeTypedSwitchFrom.x + madeTypedSwitchFrom.y + bar_index)
+plot(madeTypedIfFrom.x + madeTypedIfFrom.y + bar_index)
 plot(madeTypedForFrom.x + madeTypedForFrom.y + bar_index)

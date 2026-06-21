@@ -138,8 +138,8 @@ Recent closure:
   `for`, and `while` coverage.
 - Pure local UDT methods now have fixture-backed receiver and additional local
   UDT parameter passthrough, alias, nested-method passthrough, constructor
-  helper, and same-local-UDT ternary, switch, final if/else, and final `for`
-  constructor-return coverage.
+  helper, and same-local-UDT ternary, switch, `if` expression, final if/else,
+  and final `for` constructor-return coverage.
 
 Good next slices:
 
