@@ -547,11 +547,11 @@ expression, return the final iteration's UDT value, and allow the caller to
 store that value and read its fields. Top-level, block-local, and
 loop-local typed UDT declarations may also initialize from same-local-UDT
 ternary, switch, or `if` expressions and later reassign to the same local UDT
-type; top-level typed UDT declarations may also initialize or reassign from
-same-local-UDT `for` expressions. UDFs may pass a local UDT value through a
-parameter and return that same parameter, or return a block-local alias chain
-that starts from that parameter, or return a nested passthrough UDF call that
-maps back to that parameter. Pure UDFs may also
+type; top-level and block-local typed UDT declarations may also initialize or
+reassign from same-local-UDT `for` expressions. UDFs may pass a local UDT value
+through a parameter and return that same parameter, or return a block-local
+alias chain that starts from that parameter, or return a nested passthrough UDF
+call that maps back to that parameter. Pure UDFs may also
 construct and return a local UDT, directly,
 through nested pure constructor-helper UDF calls, or through same-local-UDT
 ternary, switch, `if` expression, final if/else constructor branches, or final

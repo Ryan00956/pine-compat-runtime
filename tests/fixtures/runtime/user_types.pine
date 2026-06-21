@@ -108,6 +108,12 @@ if bar_index >= 0
         3 => Point.new(high + 180, low)
         => Point.new(high + 185, low)
     plot(block_typed_switch.x + block_typed_switch.y)
+if bar_index >= 0
+    Point block_typed_for = for block_typed_for_i = 0 to 1
+        Point.new(high + block_typed_for_i + 420, low)
+    block_typed_for := for block_typed_for_j = 0 to 1
+        Point.new(high + block_typed_for_j + 425, low)
+    plot(block_typed_for.x + block_typed_for.y)
 loop_typed_sum = close > 0 ? 0.0 : 0.0
 for typed_i = 0 to 1
     Point loop_typed_point = na

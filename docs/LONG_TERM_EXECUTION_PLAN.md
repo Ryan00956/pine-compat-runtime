@@ -527,7 +527,7 @@ Delivered scope:
 - Local scalar-field user-defined types with `Type.new(...)`, field reads,
   ordinary variables, local for-expression constructor results,
   top-level/block-local/loop-local same-UDT ternary, switch, or `if`
-  expression initialization, top-level same-UDT `for` expression
+  expression initialization, top-level/block-local same-UDT `for` expression
   initialization and reassignment, `var` persistence from `na`, same-UDT
   constructors, same-UDT ternary expressions, same-UDT switch expressions,
   same-UDT `if` expressions, or same-UDT `for` expressions, scalar field
