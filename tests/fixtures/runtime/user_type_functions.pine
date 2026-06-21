@@ -44,6 +44,13 @@ makeTypedConstructed(x, y) =>
     Point typed = Point.new(x + 30, y)
     typed := Point.new(typed.x + 5, typed.y)
     typed
+makeTypedConstructedFrom(p) =>
+    copy = p
+    ax = copy.x
+    ay = copy.y
+    Point typed = Point.new(y=ay, x=ax + 35)
+    typed := Point.new(y=typed.y, x=typed.x + 5)
+    typed
 makeTypedTernary(x, y, flip) =>
     Point typed = flip ? Point.new(x + 40, y) : Point.new(x + 45, y)
     typed := flip ? Point.new(typed.x + 5, typed.y) : Point.new(typed.x + 10, typed.y)
@@ -129,6 +136,7 @@ madeNamed = makeNamed(close, open)
 madeNamedAlias = makeNamedAlias(close, open)
 madeTyped = makeTyped(close, open)
 madeTypedConstructed = makeTypedConstructed(close, open)
+madeTypedConstructedFrom = makeTypedConstructedFrom(p)
 madeTypedTernary = makeTypedTernary(close, open, bar_index < 2)
 madeTypedTernaryFrom = makeTypedTernaryFrom(p, bar_index < 2)
 madeTypedSwitch = makeTypedSwitch(close, open, bar_index)
@@ -158,6 +166,7 @@ plot(madeNamed.x + madeNamed.y + bar_index)
 plot(madeNamedAlias.x + madeNamedAlias.y + bar_index)
 plot(madeTyped.x + madeTyped.y + bar_index)
 plot(madeTypedConstructed.x + madeTypedConstructed.y + bar_index)
+plot(madeTypedConstructedFrom.x + madeTypedConstructedFrom.y + bar_index)
 plot(madeTypedTernary.x + madeTypedTernary.y + bar_index)
 plot(madeTypedTernaryFrom.x + madeTypedTernaryFrom.y + bar_index)
 plot(madeTypedSwitch.x + madeTypedSwitch.y + bar_index)
