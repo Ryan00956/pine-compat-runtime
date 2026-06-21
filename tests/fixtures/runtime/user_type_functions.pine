@@ -64,6 +64,18 @@ makeTypedSwitch(x, y, mode) =>
         3 => Point.new(typed.x + 5, typed.y)
         => Point.new(typed.x + 10, typed.y)
     typed
+makeTypedSwitchFrom(p, mode) =>
+    copy = p
+    ax = copy.x
+    ay = copy.y
+    Point typed = switch mode
+        0 => Point.new(y=ay, x=ax + 90)
+        1 => Point.new(y=copy.y, x=copy.x + 95)
+        => Point.new(y=p.y, x=p.x + 100)
+    typed := switch mode
+        3 => Point.new(y=typed.y, x=typed.x + 5)
+        => Point.new(y=typed.y, x=typed.x + 10)
+    typed
 cloneViaMake(p) => make(p.x, p.y)
 cloneViaMakeNamed(p) => makeNamed(p.x, p.y)
 cloneTernary(p, flip) => flip ? Point.new(p.x, p.y) : Point.new(p.x + 10, p.y)
@@ -120,6 +132,7 @@ madeTypedConstructed = makeTypedConstructed(close, open)
 madeTypedTernary = makeTypedTernary(close, open, bar_index < 2)
 madeTypedTernaryFrom = makeTypedTernaryFrom(p, bar_index < 2)
 madeTypedSwitch = makeTypedSwitch(close, open, bar_index)
+madeTypedSwitchFrom = makeTypedSwitchFrom(p, bar_index)
 plot(same.x - same.y)
 plot(same.x + same.y)
 plot(wrapped.x + wrapped.y + bar_index)
@@ -148,3 +161,4 @@ plot(madeTypedConstructed.x + madeTypedConstructed.y + bar_index)
 plot(madeTypedTernary.x + madeTypedTernary.y + bar_index)
 plot(madeTypedTernaryFrom.x + madeTypedTernaryFrom.y + bar_index)
 plot(madeTypedSwitch.x + madeTypedSwitch.y + bar_index)
+plot(madeTypedSwitchFrom.x + madeTypedSwitchFrom.y + bar_index)

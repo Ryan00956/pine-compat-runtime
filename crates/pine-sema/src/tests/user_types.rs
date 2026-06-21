@@ -653,6 +653,39 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_udf_local_user_type_typed_declaration_with_switch_initializer_from_udt_aliases() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+makeTyped(source, mode) =>
+    copy = source
+    ax = copy.x
+    ay = copy.y
+    Point p = switch mode
+        0 => Point.new(y=ay, x=ax)
+        1 => Point.new(y=source.y, x=source.x + 1)
+        => Point.new(y=copy.y, x=copy.x + 2)
+    p := switch mode
+        3 => Point.new(y=p.y, x=p.x + 3)
+        => Point.new(y=p.y, x=p.x + 4)
+    p
+source = Point.new(close, open)
+made = makeTyped(source, bar_index)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_mismatched_user_type_typed_declaration_reassignment() {
     let analysis = analyze(
         r#"type Point
