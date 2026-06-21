@@ -4769,6 +4769,15 @@ fn reports_unsupported_user_method_side_effect_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_method_field_mutation_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_user_method_field_mutation.pine",
+        "function_side_effect",
+        "mutating user-defined type fields inside user-defined functions or methods",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_arg_type_fixture() {
     assert_diagnostic_fixture(
         "tests/fixtures/sema/unsupported_user_method_arg_type.pine",

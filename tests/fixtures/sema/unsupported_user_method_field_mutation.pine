@@ -1,0 +1,12 @@
+//@version=5
+type Point
+    float x
+
+method mutateLocal(Point p) =>
+    local = Point.new(p.x)
+    local.x := local.x + 1
+    local
+
+p = Point.new(close)
+q = p.mutateLocal()
+plot(q.x)
