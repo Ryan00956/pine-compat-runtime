@@ -769,7 +769,7 @@ metadata change.
   - `docs/LANGUAGE_SCOPE.md`
   - `tests/fixtures/conformance.tsv`
 
-**Classification: Confirmed documented compatibility gap, no code fix in this pass**
+**Classification: Fixed compatibility gap**
 
 The runtime intentionally supports only UTC-equivalent timezone strings today:
 `UTC`, `Etc/UTC`, `GMT`, `Z`, `+0000`, and `+00:00`. IANA/exchange timezone
@@ -904,33 +904,32 @@ conformance notes, and output snapshots together.
 **Classification: Confirmed documented compatibility gap, no code fix in this pass**
 
 Negative indexes themselves are supported by official Pine and by this runtime.
-The confirmed divergence is out-of-bounds handling: current `array.get` returns
-`na`, and mutation/removal paths either no-op or return `na`, while official
-Pine raises runtime errors for indexes outside the positive or negative bounds.
+The confirmed divergence was out-of-bounds handling: `array.get` returned `na`,
+and mutation/removal paths either no-op'd or returned `na`, while official Pine
+raises runtime errors for indexes outside the positive or negative bounds.
 
-This repo currently documents and tests the forgiving behavior. Changing it to
-errors would be a behavior-contract change across array access, mutation,
-fixtures, conformance notes, and host-visible runtime failures.
+This pass aligns existing-array out-of-bounds reads and mutations with runtime
+errors while preserving valid negative indexing from the array end.
 
 **Action**
 
-No code change. Keep the current partial array contract until a dedicated
-array-bounds compatibility phase decides to align with official Pine errors and
-updates docs/tests together.
+- `array_read_index` and `array_insert_index` now return `RuntimeError` when a
+  real array exists but normalization fails.
+- Valid negative indexes remain supported for `array.get`, `array.set`,
+  `array.insert`, and `array.remove`.
+- Empty `array.pop`/`array.shift` behavior remains documented separately as
+  `na`; direct empty `array.remove` is a bounds runtime error.
 
 **Verification**
 
-- `eval_array_get` returns `PineValue::Na` when `normalize_array_index` fails.
-- `eval_array_set` only mutates if normalization finds a valid slot; otherwise
-  it returns `Void`.
-- `docs/BUILTIN_SIGNATURES.md` documents invalid insert/remove/fill/slice
-  behavior as no-op or `na` in the current subset.
-- `tests/fixtures/conformance.tsv` marks array features as partial and documents
-  negative-index and selected out-of-range behavior.
-- Existing array tests cover valid negative indexes and forgiving invalid-index
-  results.
+- Unit tests cover positive and negative out-of-bounds `array.get`, mutation
+  paths, and direct empty `array.remove`.
+- Runtime-error fixtures cover `array.get` positive/negative bounds,
+  `array.set` bounds, `array.insert` bounds, and empty `array.remove`.
+- `docs/BUILTIN_SIGNATURES.md`, `docs/EXECUTION_SEMANTICS.md`, and
+  `tests/fixtures/conformance.tsv` now document out-of-bounds runtime errors.
 
-**Result: Deferred, no fix applied**
+**Result: Fixed**
 
 ---
 

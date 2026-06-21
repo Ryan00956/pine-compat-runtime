@@ -226,7 +226,7 @@ need character semantics.
 
 - `CODE_REVIEW_EXECUTION_PLAN.md:955`
 
-**Status: Partially confirmed**
+**Status: Fixed**
 
 **Evidence**
 
@@ -852,7 +852,7 @@ recursion.
   linearly scan `program.symbols`; realtime forming updates clone a large
   `HistoricalRuntime`.
 
-**Status: Partially confirmed**
+**Status: Fixed**
 
 **Current code evidence**
 
@@ -871,7 +871,7 @@ runtime. In normal compile flow, parser/sema limits should prevent that HIR from
 being produced after CR-005/CR-012 are fixed. Runtime should still defend itself
 because HIR is an internal contract shared across host bindings and tests.
 
-**Recommended fix**
+**Fix**
 
 - Add a runtime evaluation budget, separate from parser/sema budgets.
 - Track recursion through `HistoricalRuntime::eval_expr` and any recursive
@@ -2199,11 +2199,10 @@ will fail once they exceed 500 objects.
 
 - [arrays.rs](../crates/pine-runtime/src/builtins/arrays.rs) implements negative
   indexing through `normalize_array_index`: `-1` maps to the last element.
-- If normalization fails, `array.get` returns `Na`, while mutation paths such as
-  `array.set` and `array.insert` no-op.
-- Current project docs and conformance explicitly claim this behavior:
-  `tests/fixtures/conformance.tsv` says `array.get`/`array.set` support negative
-  indexes and documents no-op/`na` behavior for some out-of-range paths.
+- If normalization fails on an existing array, `array.get`, `array.set`,
+  `array.insert`, and `array.remove` now return `RuntimeError`.
+- Current project docs and conformance now document in-range negative indexes
+  plus runtime errors for indexes outside the positive or negative bounds.
 
 **Behavior evidence**
 
@@ -2218,7 +2217,8 @@ cargo run -q -p pine-cli -- run <(printf '%s\n' \
   'plot(array.get(a, 3))') --bars tests/fixtures/runtime/bars.csv
 ```
 
-Observed output: `array.get(a, -1)` returns `30`; `array.get(a, 3)` returns `null`.
+Current behavior: `array.get(a, -1)` returns `30`; `array.get(a, 3)` raises
+`RuntimeError`.
 
 External reference: TradingView's official arrays documentation supports
 negative indexing, but says indexes outside the positive or negative bounds
@@ -2230,22 +2230,20 @@ https://www.tradingview.com/pine-script-docs/language/arrays/
 Partially confirmed because the original review phrased negative indexes
 themselves as a difference, but current official docs also support negative
 indexing. The confirmed compatibility gap is out-of-bounds handling: this engine
-returns `Na`/no-op while official Pine raises a runtime error.
+formerly returned `Na`/no-op while official Pine raises a runtime error.
 
 **Recommended fix**
 
-- If aligning with Pine, change out-of-bounds array accesses/mutations to return
-  `RuntimeError` with a stable diagnostic/code path.
 - Keep negative indexing within bounds; it is supported by official Pine and by
   current project docs.
-- If preserving the forgiving behavior, keep conformance as `partial` and make
-  `EXECUTION_SEMANTICS.md` explicit that this is intentional divergence.
+- Keep `array.pop`/`array.shift` empty-array behavior documented separately.
 
 **Verification after fix**
 
-- Add tests for positive overflow, negative overflow, valid negative indexes,
-  empty arrays, and mutation paths.
-- Run `cargo test -p pine-runtime`.
+- Unit tests cover positive overflow, negative overflow, mutation paths, and
+  empty-array `array.remove`.
+- CLI runtime-error fixtures cover `array.get` positive/negative bounds,
+  `array.set` bounds, `array.insert` bounds, and empty `array.remove`.
 
 ---
 

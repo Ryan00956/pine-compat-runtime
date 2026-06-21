@@ -507,10 +507,10 @@ run_historical(program, bars)
 
 ### 阶段 8 审查结论（2026-05-31）
 
-**总体**：类型化数组、绘图对象、输出副作用、转换均具备完备的内存上限与确定性输出顺序。主要问题是几项**与 TradingView 的语义分歧**：绘图对象上限固定为 500 且溢出报错（而非淘汰最旧）、忽略脚本的 `max_*_count` 声明；数组越界/负下标的处理与 Pine 不同。
+**总体**：类型化数组、绘图对象、输出副作用、转换均具备完备的内存上限与确定性输出顺序。主要问题是几项**与 TradingView 的语义分歧**：绘图对象上限固定为 500 且溢出报错（而非淘汰最旧）、忽略脚本的 `max_*_count` 声明。数组越界语义已在后续 CR-023 slice 中对齐为运行时错误，合法负下标继续支持。
 
 **集合/绘图边界条件清单**
-- 数组下标：`normalize_array_index` 支持负下标（`len+index`，Python 式回绕）与越界检查；越界返 `Na`、`array.set`/`insert` 越界静默丢弃。
+- 数组下标：`normalize_array_index` 支持合法负下标（`len+index`）与越界检查；越界 `array.get`/`set`/`insert`/`remove` 已对齐为 `RuntimeError`。
 - 内存上限：`MAX_ARRAY_ELEMENTS=100_000`（`new`/`from`/`push`/`insert`）、`MAX_LABELS/LINES/BOXES=500`、`MAX_TABLES`/`MAX_TABLE_CELLS`，超限均报 `RuntimeError`。
 - ID 管理：`next_label_id`/`next_line_id`/`next_array_id` 等用 `checked_add` 防溢出。
 - 转换：`int(x)` 截断 `Float→Int`（`value.trunc() as i64`）、`float`/`bool`/`string`/`color` 均防 `NaN`/非有限。
@@ -520,17 +520,17 @@ run_historical(program, bars)
 
 **良好实践（已验证）**
 - 所有集合/绘图写入路径都有明确内存上限 + `checked_add` ID 防溢出，无静默无限增长。
-- 负下标/越界由 `normalize_array_index` 统一处理，不 panic。
+- 合法负下标与越界由 `normalize_array_index` 统一处理，不 panic。
 - 排序/二分查找对 `na`/非有限/空串作为“特殊值”统一排序，避免 `partial_cmp` panic。
 - 输出按 `call_site_id` + bar 对齐，多次运行顺序确定（可复现）。
 
 **发现的问题（仅记录，未修改）**
 - [中] 绘图上限固定 + 溢出报错，且忽略 `max_*_count` 声明：[labels.rs](crates/pine-runtime/src/builtins/drawings/labels.rs)/[lines.rs](crates/pine-runtime/src/builtins/drawings/lines.rs)/[boxes.rs](crates/pine-runtime/src/builtins/drawings/boxes.rs) 在 `len() >= MAX_*` 时返 `RuntimeError`。全仓未引用 `max_labels_count`/`max_lines_count`/`max_boxes_count`（grep 无命中）。而 TradingView 默认保留最近 N（默认 50、可声明至 500）并**静默淘汰最旧**。后果：逐 bar 画图超 500 根的脚本在本引擎**报错中止**，而 TradingView 正常运行。建议：读取声明的 `max_*_count` 并改为环形淘汰最旧对象。
-- [中] 数组越界/负下标语义分歧：[arrays.rs](crates/pine-runtime/src/builtins/arrays.rs) `array.get` 越界返 `Na`、`normalize_array_index` 对负下标按 `len+index` 回绕。Pine 对越界与负下标均抛“数组下标越界”运行时错误。越界静默返 `Na` 可能掩盖逻辑错误；需对照确认是否为有意放宽。
+- [中][已关闭] 数组越界语义分歧：[arrays.rs](crates/pine-runtime/src/builtins/arrays.rs) 曾在 `array.get` 越界时返 `Na`，`array.set`/`insert`/`remove` 越界时静默 no-op 或返 `Na`。CR-023 已改为对现有数组的正向/负向越界下标抛 `RuntimeError`；合法负下标保留，因为官方 Pine 也支持。
 - [信息·已关闭] 数组下标/`array.new_*` 尺寸参数的算术整数路径已由 `computed_array_operands.pine` 与 `runs_array_get_with_computed_integer_index` 覆盖，阶段 6/7 早期记录的 `array.get(a, k-1)→na` 不再复现。
 - [信息] 绘图样式/位置默认值字符串硬编码（`label.style_label_down`/`yloc.price`/`shape.xcross` 等），与 Pine 常量需逐项对照（阶段 11/16）。
 
-**结论**：数组/绘图/输出实现内存有界、顺序确定、边界不 panic，但存在 [中] 绘图上限固定/溢出报错/忽略声明、[中] 数组越界/负下标与 Pine 的语义分歧。阶段 6/7 整数坍缩在数组下标的历史延伸已关闭并有回归覆盖。可进入阶段 9（策略与撮合）。
+**结论**：数组/绘图/输出实现内存有界、顺序确定、边界不 panic；阶段 8 原记录的数组越界语义分歧已由 CR-023 关闭，仍存在 [中] 绘图上限固定/溢出报错/忽略声明。阶段 6/7 整数坍缩在数组下标的历史延伸已关闭并有回归覆盖。可进入阶段 9（策略与撮合）。
 
 ---
 
@@ -934,7 +934,7 @@ run_historical(program, bars)
 | **P1-a** | 无界递归 → 栈溢出，跨所有 host 崩溃 DoS | 中(安全，已关闭) | 1/3/4/6 | 当前 parser/sema/lowering/runtime 均有深度/预算上限；继续保留深嵌套回归 |
 | **P1-b** | 非有限 Float 未在序列化/输入边界归一（非法 JSON、WASM 不可解析） | 中（已关闭） | 11/12/14 | 当前已通过 `f64_json` 非有限→`null`、CLI/WASM/Python bar 边界拒绝非有限 OHLCV，并保留跨 host 回归 |
 | **P1-c** | `ta.*` 隐式历史回看表与 runtime 强耦合，漂移静默低估缓冲区 | 中（已关闭/guarded） | 3/6 | 已引入 `pine-builtins` 共享 history metadata、sema 消费、runtime reviewed-list 对账、fixed-offset runtime debug assertion helper 与 `ta.sar`/`ta.dmi`/`ta.supertrend`/`ta.kc`/`ta.kcw`/`ta.mfi`/`ta.tsi`/`ta.cross*` retention+数值基准 |
-| **P2** | 与 TradingView 口径分歧：缺省下单量应为 1、撮合时序、绘图上限/淘汰策略、时区仅 UTC、request 时间框整数倍+仅 3 参、数组越界/负下标 | 中 | 7/8/9/10 | 对齐 TradingView 或在兼容性文档显式声明口径 |
+| **P2** | 与 TradingView 口径分歧：撮合时序、绘图上限/淘汰策略、时区仅 UTC、request 时间框整数倍+仅 3 参；缺省下单量与数组越界已关闭 | 中 | 7/8/9/10 | 对齐 TradingView 或在兼容性文档显式声明口径 |
 | **P3** | 工程/文档：22 诊断码未登记、运行时错误无 span、`analyze` 退出码、conformance 无机器校验 + 数值 golden 缺口、parse_bars_csv/json_escape 重复、8 死 fixture、文档漂移、包元数据 | 低/信息 | 0/2/6/11/12/14/15/16 | 批量清理，多数可独立小改 |
 
 **结论**：经 16 阶段系统走读，`pine-compat-runtime` 整体工程质量高——架构红线清晰、确定性与 clean-room 合规可靠、失败路径与增量一致性测试扎实、运行时执行路径防御充分。历史 P0 整数算术坍缩、P1-a 无界递归崩溃面与 P1-b 非有限边界均已关闭并有回归覆盖；当前优先级前列转为 `ta.*` 历史耦合（正确性）这一「中」级横切问题。其余为与 TradingView 的兼容口径分歧（多为文档化范围限制）与工程/文档清理项。建议按已关闭项回归守护、剩余 P1→P3 的顺序继续推进。**全部 16 阶段审查完成。**
@@ -968,7 +968,7 @@ run_historical(program, bars)
 - [阶段7][中] crates/pine-runtime/src/builtins/time.rs — 时区仅支持 UTC 等价物（is_supported_utc_timezone），非 UTC 时区使 time 组件/str.format_time 报 RuntimeError，与 Pine IANA/交易所时区不兼容 — 对照 LANGUAGE_SCOPE 确认是否有意裁剪。
 - [阶段7][信息] crates/pine-runtime/src/builtins/ta/averages.rs — ema/rma/rsi 暖机期以首个源值播种，可能与 TradingView 首 length 根有偏差；math.* 函数与二元 `Int +/-/*/% Int` 当前均保留 Int — 用 conformance fixtures 继续核实暖机口径。
 - [阶段8][中] crates/pine-runtime/src/builtins/drawings/{labels,lines,boxes}.rs — 绘图上限固定 500 且溢出报 RuntimeError（非淘汰最旧），且全仓未引用 max_labels_count/max_lines_count/max_boxes_count 声明 — 读取声明上限并改为环形淘汰最旧，对齐 TradingView。
-- [阶段8][中] crates/pine-runtime/src/builtins/arrays.rs — array.get 越界返 Na、负下标按 len+index Python 式回绕，而 Pine 对越界/负下标抛运行时错误 — 需对照确认是否有意放宽；越界静默 Na 可能掩盖逻辑错误。
+- [阶段8][中][已关闭] crates/pine-runtime/src/builtins/arrays.rs — array.get 曾越界返 Na，array.set/insert/remove 曾越界 no-op 或返 Na；CR-023 已改为现有数组正向/负向越界均抛 RuntimeError，合法负下标继续支持。
 - [阶段8][信息][已关闭] crates/pine-runtime/src/builtins/arrays.rs — 数组下标/array.new_* 尺寸参数的算术整数路径已由 `computed_array_operands.pine` 覆盖；绘图样式默认值字符串硬编码待对照（阶段11/16）。
 - [阶段9][中] crates/pine-ir/src/lib.rs + crates/pine-runtime/src/builtins/strategy.rs — 未声明 default_qty_value 且 entry 无 qty 时 default_entry_qty()=None→unwrap_or(NaN)→拒单不开仓，而 TradingView 缺省 default_qty_value=1 会开 1 手 — 缺省回退为 1.0 对齐 TradingView。
 - [阶段9][中] crates/pine-runtime/src/builtins/strategy.rs + strategy/broker — 撮合时序简化：entry 当根收盘价立即成交、exit 次根 high/low，而 TradingView 默认次根开盘成交且支持 intrabar；未建模 process_orders_on_close/calc_on_order_fills — 阶段16 在兼容性文档显式声明口径差异。

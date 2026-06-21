@@ -16,6 +16,26 @@ pub(crate) const RUNTIME_ERROR_FIXTURES: &[(&str, &str)] = &[
         "array.insert cannot exceed 100000 elements",
     ),
     (
+        "tests/fixtures/regressions/array_get_positive_bounds.pine",
+        "array index 3 is out of bounds for array of size 3",
+    ),
+    (
+        "tests/fixtures/regressions/array_get_negative_bounds.pine",
+        "array index -4 is out of bounds for array of size 3",
+    ),
+    (
+        "tests/fixtures/regressions/array_set_bounds.pine",
+        "array index 3 is out of bounds for array of size 3",
+    ),
+    (
+        "tests/fixtures/regressions/array_insert_bounds.pine",
+        "array index 4 is out of bounds for array of size 3",
+    ),
+    (
+        "tests/fixtures/regressions/array_remove_empty_bounds.pine",
+        "array index 0 is out of bounds for array of size 0",
+    ),
+    (
         "tests/fixtures/regressions/array_slice_parent_out_of_bounds.pine",
         "array slice is out of bounds of the parent array",
     ),

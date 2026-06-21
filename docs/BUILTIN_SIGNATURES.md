@@ -1208,9 +1208,10 @@ unsupported.
 may also be called with method syntax on a supported array receiver.
 `array.get`, `array.set`, `array.insert`, and `array.remove` support negative
 indexes from the array end. `array.insert` inserts a compatible value before
-the requested index; greater-than-size or otherwise invalid indexes are no-ops.
-`array.remove` removes and returns an element, or returns `na` for an invalid
-index. `array.fill` fills the whole array by default or the half-open
+the requested index; greater-than-size or otherwise out-of-bounds indexes are
+runtime errors. `array.remove` removes and returns an element, while
+out-of-bounds indexes are runtime errors. `array.fill` fills the whole array by
+default or the half-open
 `[index_from, index_to)` window when bounds are supplied; invalid ranges are
 no-ops. `array.slice` returns a same-kind shallow window over the parent
 array's half-open `[index_from, index_to)` range; slice reads and writes mirror

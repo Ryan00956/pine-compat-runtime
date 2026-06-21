@@ -1,0 +1,3 @@
+indicator("Array remove empty bounds")
+values = array.new_float()
+plot(array.remove(values, 0))

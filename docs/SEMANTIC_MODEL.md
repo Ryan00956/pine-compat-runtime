@@ -518,9 +518,10 @@ same kind, appends the second array's current values to the first array in
 place, and returns the first array id. `array.get`, `array.set`, `array.insert`,
 and `array.remove`
 support negative indexes from the array end. `array.insert` inserts before a
-valid index, appends when the positive index equals the current size, and is a
-no-op for invalid indexes. `array.remove` removes and returns a valid indexed
-element, or returns `na` when the index is invalid. `array.fill`
+valid index, appends when the positive index equals the current size, and
+raises a runtime error for out-of-bounds indexes. `array.remove` removes and
+returns a valid indexed element, or raises a runtime error when the index is
+out of bounds. `array.fill`
 replaces all elements by default or a half-open `[index_from, index_to)` window
 when bounds are supplied; invalid ranges are no-ops.
 `array.indexof` and `array.lastindexof` return `-1` when the value is not
@@ -563,11 +564,12 @@ source array unchanged.
 converts supported array elements to string with the default numeric format,
 uses `,` as the default separator, and returns an empty string for empty arrays.
 Color elements render as normalized integer color values. Out-of-range
-`array.get`, empty `array.pop`, empty `array.shift`, and `array.first`/`array.last` on empty arrays
-return `na`; out-of-range `array.remove` returns `na`; out-of-range
-`array.set`, `array.insert`, and `array.fill` are no-ops. Negative array sizes fail at
-runtime. Each array can contain at most 100,000 elements; creation, push,
-unshift, insert, or concat operations beyond that limit fail at runtime.
+`array.get`, `array.set`, `array.insert`, and `array.remove` on an existing
+array raise runtime errors; empty `array.pop`, empty `array.shift`, and
+`array.first`/`array.last` on empty arrays return `na`. Out-of-range
+`array.fill` ranges are no-ops. Negative array sizes fail at runtime. Each
+array can contain at most 100,000 elements; creation, push, unshift, insert, or
+concat operations beyond that limit fail at runtime.
 
 User-defined functions may receive supported arrays and use read-only
 operations such as `array.size` and `array.get`. Array mutation inside

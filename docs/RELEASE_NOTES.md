@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Aligned existing-array `array.get`, `array.set`, `array.insert`, and
+  `array.remove` out-of-bounds indexes with runtime errors while preserving
+  valid negative indexing from the array end.
 - Added fixture-backed lexer rejection for non-finite float literals so
   overflowing scientific notation reports `E_LEX_FLOAT` instead of silently
   becoming infinity.

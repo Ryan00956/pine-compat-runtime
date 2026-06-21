@@ -12,6 +12,12 @@ mod support;
 pub(crate) use support::*;
 
 impl<'a> HistoricalRuntime<'a> {
+    fn array_index_out_of_bounds(index: i64, len: usize) -> RuntimeError {
+        RuntimeError {
+            message: format!("array index {index} is out of bounds for array of size {len}"),
+        }
+    }
+
     pub(crate) fn array_values_clone(
         &self,
         id: u32,
@@ -59,14 +65,19 @@ impl<'a> HistoricalRuntime<'a> {
     fn array_read_index(&self, id: u32, index: i64) -> Result<Option<(u32, usize)>, RuntimeError> {
         if let Some(slice) = self.array_slices.get(&id).copied() {
             self.validate_array_slice(slice)?;
-            return Ok(normalize_array_index(index, slice.len)
-                .map(|index| (slice.parent_id, slice.start + index)));
+            let Some(index) = normalize_array_index(index, slice.len) else {
+                return Err(Self::array_index_out_of_bounds(index, slice.len));
+            };
+            return Ok(Some((slice.parent_id, slice.start + index)));
         }
 
         let Some(values) = self.array_store.get(&id) else {
             return Ok(None);
         };
-        Ok(normalize_array_index(index, values.len()).map(|index| (id, index)))
+        let Some(index) = normalize_array_index(index, values.len()) else {
+            return Err(Self::array_index_out_of_bounds(index, values.len()));
+        };
+        Ok(Some((id, index)))
     }
 
     fn array_insert_index(
@@ -76,14 +87,19 @@ impl<'a> HistoricalRuntime<'a> {
     ) -> Result<Option<(u32, usize)>, RuntimeError> {
         if let Some(slice) = self.array_slices.get(&id).copied() {
             self.validate_array_slice(slice)?;
-            return Ok(normalize_array_insert_index(index, slice.len)
-                .map(|index| (slice.parent_id, slice.start + index)));
+            let Some(index) = normalize_array_insert_index(index, slice.len) else {
+                return Err(Self::array_index_out_of_bounds(index, slice.len));
+            };
+            return Ok(Some((slice.parent_id, slice.start + index)));
         }
 
         let Some(values) = self.array_store.get(&id) else {
             return Ok(None);
         };
-        Ok(normalize_array_insert_index(index, values.len()).map(|index| (id, index)))
+        let Some(index) = normalize_array_insert_index(index, values.len()) else {
+            return Err(Self::array_index_out_of_bounds(index, values.len()));
+        };
+        Ok(Some((id, index)))
     }
 
     fn array_parent_len_for_insert(&self, id: u32) -> Option<usize> {
@@ -361,6 +377,12 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Na);
         };
+        let Some(len) = self.array_len(id)? else {
+            return Ok(PineValue::Na);
+        };
+        if len == 0 {
+            return Ok(PineValue::Na);
+        }
         Ok(self.array_remove_value(id, 0)?.unwrap_or(PineValue::Na))
     }
 
@@ -456,6 +478,12 @@ impl<'a> HistoricalRuntime<'a> {
         let PineValue::Array(id) = id else {
             return Ok(PineValue::Na);
         };
+        let Some(len) = self.array_len(id)? else {
+            return Ok(PineValue::Na);
+        };
+        if len == 0 {
+            return Ok(PineValue::Na);
+        }
         Ok(self.array_get_cloned(id, 0)?.unwrap_or(PineValue::Na))
     }
 

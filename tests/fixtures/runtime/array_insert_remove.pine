@@ -29,10 +29,6 @@ flags = array.new_bool()
 flags.insert(0, true)
 plot(flags.remove(0) ? flags.size() : 99)
 
-plot(na(array.remove(flags, 0)) ? 1 : 0)
-array.insert(flags, 3, false)
-plot(flags.size())
-
 negative = array.from(10, 20, 30)
 plot(negative.get(-1) + negative.get(-3))
 negative.set(-2, 99)
@@ -42,10 +38,6 @@ plot(negative.get(2) * 100 + negative.get(-1))
 negative_head = negative.remove(-4)
 negative_tail = negative.remove(-1)
 plot(negative_head + negative_tail + negative.size())
-plot(na(negative.get(-3)) and na(negative.remove(-3)) ? 1 : 0)
-plot(negative.size() == 2 ? 1 : 0)
-negative.insert(9, 40)
-plot(negative.size() == 2 and negative.get(0) == 99 and negative.get(1) == 25 ? 1 : 0)
 
 computed_index = 1
 computed_positions = array.from(5, 15)

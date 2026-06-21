@@ -74,6 +74,7 @@
 | CR-018/CR-061 | expressions.rs/historical.rs/lib.rs | ✅ | `eval_expr` 加 `MAX_RUNTIME_EVAL_DEPTH=512` 包装，溢出返 `RuntimeError`；series 缓存写入移至外层包装，语义等价。 |
 | CR-019 | conformance/tests | ✅ | 计算长度（computed_lengths.pine）回归 + conformance 更新，根因即 CR-015。 |
 | CR-024 | conformance/tests | ✅ | 计算数组下标/大小（computed_array_operands.pine）回归 + conformance 更新。 |
+| CR-023 | arrays.rs / arrays.rs tests / runtime-error fixtures / docs | ✅ | 数组现有数组正向/负向越界从 `na`/no-op 改为 `RuntimeError`；合法负下标继续支持，并同步 conformance 与执行语义。 |
 | CR-030 | request/provider.rs, builtins/requests.rs | ✅ | 缓存键去掉 `format!("{:?}", expr.kind)` 的 Debug 字符串身份，改用 `CallSiteId + symbol + timeframe`；不同 call site 仍由 id 区分，动态 symbol/timeframe 仍在键内，正确。 |
 | CR-047/CR-061 | 跨 crate 预算 | ✅ | 由 sema/lowering/runtime 三层深度与资源预算共同约束跨宿主深递归崩溃面。 |
 
@@ -99,7 +100,7 @@
 | CR-058 | 非有限值测试 | ✅ | 非有限测试已补；f64 跨平台 CI 矩阵按声明 Deferred。 |
 | CR-059 | docs/DIAGNOSTIC_CODES.md + cli 测试 | ✅ | 新增 `diagnostic_reference_documents_emitted_codes` 守卫，扫描全部 `E_*` 并要求文档覆盖（已绿，证明文档已补齐新代码）。 |
 | CR-014/CR-017/CR-042/CR-063 | — | ⬜ | Superseded/无独立改动，符合声明。 |
-| CR-020/021/022/023/026/027/028/029/040/044/046/053/054/060 | — | ⬜ | 均 Deferred / 设计说明，已核对未改代码。 |
+| CR-020/021/022/026/027/028/029/040/044/046/053/054/060 | — | ⬜ | 均 Deferred / 设计说明，已核对未改代码。 |
 
 ## 遗留与建议（轻微，非阻断）
 

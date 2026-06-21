@@ -627,9 +627,9 @@ and rollback rules are explicitly designed.
 
 Array bounds are stable in the current subset: `array.get`, `array.set`,
 `array.insert`, and `array.remove` support negative indexes from the array end.
-Indexes outside the current length make `array.get` and `array.remove` return
-`na`, while `array.set` and `array.insert` ignore invalid indexes. Positive
-`array.insert` at `size` appends; greater-than-size insert indexes are ignored.
+Indexes outside the current positive or negative bounds are runtime errors.
+Positive `array.insert` at `size` appends; greater-than-size insert indexes are
+runtime errors.
 `array.pop` or `array.shift` on an empty array returns `na`. `array.first` and
 `array.last` also return `na` for empty arrays.
 `array.fill` replaces all elements by default, or a half-open `[index_from,
