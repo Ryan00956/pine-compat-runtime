@@ -1918,6 +1918,9 @@ or nuance during verification.
   now binds `runs_sar_over_historical_bars` to the expected `high[2]`,
   `low[2]`, and `close[1]` HIR retention requirements while retaining the SAR
   numeric sequence assertion.
+- The same file now binds `runs_dmi_over_historical_bars` to the expected
+  `high[1]`, `low[1]`, and `close[1]` HIR retention requirements while
+  retaining the DMI numeric sequence assertions.
 - The remaining coupling is runtime implementation drift outside that reviewed
   list: runtime reads are not yet compile-time-bound to the shared metadata by a
   runtime helper.
@@ -1937,9 +1940,9 @@ retained, results can become `Na` without a diagnostic.
 - Avoid relying only on ad hoc runtime source scans.
 - Consider a runtime helper/debug assertion if future design needs a stronger
   binding between runtime reads and declared retention.
-- Extend end-to-end numeric regressions beyond the current SAR coverage to the
-  remaining high-risk builtins: `ta.dmi`, `ta.supertrend`, `ta.kc/kcw`,
-  `ta.tsi`, `ta.mfi`, and cross helpers.
+- Extend end-to-end numeric regressions beyond the current SAR/DMI coverage to
+  the remaining high-risk builtins: `ta.supertrend`, `ta.kc/kcw`, `ta.tsi`,
+  `ta.mfi`, and cross helpers.
 
 **Verification after fix**
 
@@ -1977,20 +1980,20 @@ depth looks like normal warmup `na` rather than an internal contract violation.
 
 **Recommended fix**
 
-- Continue CR-010 by extending oracle/golden tests beyond the current SAR
-  retention-bound numeric regression and by considering a runtime helper/debug
+- Continue CR-010 by extending oracle/golden tests beyond the current SAR/DMI
+  retention-bound numeric regressions and by considering a runtime helper/debug
   assertion for retention under-declaration.
 - In debug/test builds, consider adding an assertion or diagnostic path when a
   builtin reads beyond declared retention. This could be implemented as a
   runtime history access helper that knows the required offset and callsite.
 - Continue adding golden or fixture tests where deeper history is required after
   warmup, so a too-small buffer changes expected values and fails tests. The SAR
-  path now has one such retention-bound numeric regression.
+  and DMI paths now have retention-bound numeric regressions.
 
 **Verification after fix**
 
-- Extend targeted fixtures/tests beyond the current SAR two-bar built-in history
-  regression.
+- Extend targeted fixtures/tests beyond the current SAR and DMI built-in history
+  regressions.
 - Run `cargo test -p pine-runtime --test incremental` and relevant numeric tests.
 
 ---
