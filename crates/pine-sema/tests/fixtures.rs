@@ -4930,6 +4930,15 @@ fn reports_unsupported_user_method_side_effect_fixture() {
 }
 
 #[test]
+fn reports_unsupported_user_method_side_effect_arg_fixture() {
+    assert_unsupported_fixture(
+        "tests/fixtures/sema/unsupported_user_method_side_effect_arg.pine",
+        "function_side_effect",
+        "side-effecting calls cannot be passed as user-defined method arguments",
+    );
+}
+
+#[test]
 fn reports_unsupported_user_method_field_mutation_fixture() {
     assert_unsupported_fixture(
         "tests/fixtures/sema/unsupported_user_method_field_mutation.pine",

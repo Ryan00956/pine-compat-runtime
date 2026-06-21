@@ -1,0 +1,8 @@
+//@version=5
+indicator("Unsupported user method side effect argument")
+type Point
+    float x
+
+method shift(Point p, float delta) => p.x + delta
+p = Point.new(close)
+plot(p.shift(input.float(1.0)))
