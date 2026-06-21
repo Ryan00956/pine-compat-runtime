@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added runtime fixture coverage for while-loop typed UDT declarations
+  initialized and reassigned from same-local-UDT `for` expressions.
 - Added fixture-backed loop-local typed UDT declarations initialized and
   reassigned from same-local-UDT `for` expressions.
 - Added fixture-backed block-local typed UDT declarations initialized and

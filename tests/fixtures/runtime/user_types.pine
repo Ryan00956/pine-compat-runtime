@@ -212,6 +212,16 @@ while while_typed_switch_i < 2
     while_typed_switch_sum := while_typed_switch_sum + while_typed_switch.x + while_typed_switch.y
     while_typed_switch_i := while_typed_switch_i + 1
 plot(while_typed_switch_sum)
+while_typed_for_sum = close > 0 ? 0.0 : 0.0
+while_typed_for_i = 0
+while while_typed_for_i < 2
+    Point while_typed_for = for while_typed_for_j = 0 to 1
+        Point.new(high + while_typed_for_i + while_typed_for_j + 440, low)
+    while_typed_for := for while_typed_for_j = 0 to 1
+        Point.new(high + while_typed_for_i + while_typed_for_j + 445, low)
+    while_typed_for_sum := while_typed_for_sum + while_typed_for.x + while_typed_for.y
+    while_typed_for_i := while_typed_for_i + 1
+plot(while_typed_for_sum)
 p.x := high
 plot(p.x + p.y)
 branch = Point.new(close, open)
