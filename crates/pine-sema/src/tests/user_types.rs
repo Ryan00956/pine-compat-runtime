@@ -572,6 +572,30 @@ plot(made.x + made.y)
 }
 
 #[test]
+fn accepts_udf_local_user_type_typed_declaration_with_ternary_initializer() {
+    let analysis = analyze(
+        r#"type Point
+    float x
+    float y
+makeTyped(x, y, flip) =>
+    Point p = flip ? Point.new(x, y) : Point.new(x + 1, y)
+    p := flip ? Point.new(x + 2, y) : Point.new(x + 3, y)
+    p
+made = makeTyped(close, open, bar_index < 2)
+plot(made.x + made.y)
+"#,
+    );
+
+    assert!(
+        analysis.diagnostics.is_empty(),
+        "{:?}",
+        analysis.diagnostics
+    );
+    assert!(analysis.hir.is_some());
+    assert!(analysis.compatibility.unsupported.is_empty());
+}
+
+#[test]
 fn rejects_mismatched_user_type_typed_declaration_reassignment() {
     let analysis = analyze(
         r#"type Point
